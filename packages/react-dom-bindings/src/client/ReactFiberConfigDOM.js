@@ -1359,12 +1359,13 @@ export function validateHydratableInstance(
   type: string,
   props: Props,
   hostContext: HostContext,
-): void {
+): boolean {
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
-    validateDOMNesting(type, hostContextDev.ancestorInfo);
+    return validateDOMNesting(type, hostContextDev.ancestorInfo);
   }
+  return true;
 }
 
 export function hydrateInstance(
@@ -1398,14 +1399,15 @@ export function hydrateInstance(
 export function validateHydratableTextInstance(
   text: string,
   hostContext: HostContext,
-): void {
+): boolean {
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     const ancestor = hostContextDev.ancestorInfo.current;
     if (ancestor != null) {
-      validateTextNesting(text, ancestor.tag);
+      return validateTextNesting(text, ancestor.tag);
     }
   }
+  return true;
 }
 
 export function hydrateTextInstance(
