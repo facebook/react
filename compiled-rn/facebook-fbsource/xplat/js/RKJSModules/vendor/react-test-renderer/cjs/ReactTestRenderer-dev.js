@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c84520e2b9d33ee51d806026be234a8a>>
+ * @generated SignedSource<<20ec57c573e0a0a7a0d1a3309fa44b1b>>
  */
 
 "use strict";
@@ -4112,6 +4112,12 @@ if (__DEV__) {
         return describeComponentFrame(name, ownerName);
       }
     }
+    function describeDebugInfoFrame(name, env) {
+      return describeBuiltInComponentFrame(
+        name + (env ? " (" + env + ")" : ""),
+        null
+      );
+    }
 
     {
       var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
@@ -4190,7 +4196,22 @@ if (__DEV__) {
         var node = workInProgress;
 
         do {
-          info += describeFiber(node); // $FlowFixMe[incompatible-type] we bail out when we get a null
+          info += describeFiber(node);
+
+          if (true) {
+            // Add any Server Component stack frames in reverse order.
+            var debugInfo = node._debugInfo;
+
+            if (debugInfo) {
+              for (var i = debugInfo.length - 1; i >= 0; i--) {
+                var entry = debugInfo[i];
+
+                if (typeof entry.name === "string") {
+                  info += describeDebugInfoFrame(entry.name, entry.env);
+                }
+              }
+            }
+          } // $FlowFixMe[incompatible-type] we bail out when we get a null
 
           node = node.return;
         } while (node);
@@ -25707,7 +25728,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-66c834640-20240223";
+    var ReactVersion = "18.3.0-canary-8fb0233a8-20240223";
 
     // Might add PROFILE later.
 

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2b24b949db80030833f17449b6904d8c>>
+ * @generated SignedSource<<5be82410d05ff93f97b00ace398de099>>
  */
 
 "use strict";
@@ -8028,6 +8028,12 @@ to return true:wantsResponderID|                            |
         return describeComponentFrame(name, ownerName);
       }
     }
+    function describeDebugInfoFrame(name, env) {
+      return describeBuiltInComponentFrame(
+        name + (env ? " (" + env + ")" : ""),
+        null
+      );
+    }
     var reentry = false;
     var componentFrameCache;
 
@@ -8359,7 +8365,22 @@ to return true:wantsResponderID|                            |
         var node = workInProgress;
 
         do {
-          info += describeFiber(node); // $FlowFixMe[incompatible-type] we bail out when we get a null
+          info += describeFiber(node);
+
+          if (true) {
+            // Add any Server Component stack frames in reverse order.
+            var debugInfo = node._debugInfo;
+
+            if (debugInfo) {
+              for (var i = debugInfo.length - 1; i >= 0; i--) {
+                var entry = debugInfo[i];
+
+                if (typeof entry.name === "string") {
+                  info += describeDebugInfoFrame(entry.name, entry.env);
+                }
+              }
+            }
+          } // $FlowFixMe[incompatible-type] we bail out when we get a null
 
           node = node.return;
         } while (node);
@@ -28458,7 +28479,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-a4796866";
+    var ReactVersion = "18.3.0-canary-0c89aec8";
 
     function createPortal$1(
       children,
