@@ -12,6 +12,8 @@ import type {Rect} from '../utils';
 import type {NativeType} from '../../types';
 import type Agent from '../../agent';
 
+import {isReactNativeEnvironment} from 'react-devtools-shared/src/backend/utils';
+
 const OUTLINE_COLOR = '#f0f0f0';
 
 // Note these colors are in sync with DevTools Profiler chart colors.
@@ -30,17 +32,16 @@ const COLORS = [
 
 let canvas: HTMLCanvasElement | null = null;
 
-export function draw(nodeToData: Map<NativeType, Data>, agent: Agent): void {
-  if (window.document == null) {
-    const nodesToDraw = [];
-    iterateNodes(nodeToData, (_, color, node) => {
-      nodesToDraw.push({node, color});
-    });
+function drawNative(nodeToData: Map<NativeType, Data>, agent: Agent) {
+  const nodesToDraw = [];
+  iterateNodes(nodeToData, (_, color, node) => {
+    nodesToDraw.push({node, color});
+  });
 
-    agent.emit('drawTraceUpdates', nodesToDraw);
-    return;
-  }
+  agent.emit('drawTraceUpdates', nodesToDraw);
+}
 
+function drawWeb(nodeToData: Map<NativeType, Data>) {
   if (canvas === null) {
     initialize();
   }
@@ -56,6 +57,12 @@ export function draw(nodeToData: Map<NativeType, Data>, agent: Agent): void {
       drawBorder(context, rect, color);
     }
   });
+}
+
+export function draw(nodeToData: Map<NativeType, Data>, agent: Agent): void {
+  return isReactNativeEnvironment()
+    ? drawNative(nodeToData, agent)
+    : drawWeb(nodeToData);
 }
 
 function iterateNodes(
@@ -97,18 +104,21 @@ function drawBorder(
   context.setLineDash([0]);
 }
 
-export function destroy(agent: Agent): void {
-  if (window.document == null) {
-    agent.emit('disableTraceUpdates');
-    return;
-  }
+function destroyNative(agent: Agent) {
+  agent.emit('disableTraceUpdates');
+}
 
+function destroyWeb() {
   if (canvas !== null) {
     if (canvas.parentNode != null) {
       canvas.parentNode.removeChild(canvas);
     }
     canvas = null;
   }
+}
+
+export function destroy(agent: Agent): void {
+  return isReactNativeEnvironment() ? destroyNative(agent) : destroyWeb();
 }
 
 function initialize(): void {

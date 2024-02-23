@@ -8,11 +8,11 @@
  */
 
 const {printOwnersList} = require('../devtools/utils');
+const {getVersionedRenderImplementation} = require('./utils');
 
 describe('Store owners list', () => {
   let React;
   let act;
-  let legacyRender;
   let store;
 
   beforeEach(() => {
@@ -23,8 +23,9 @@ describe('Store owners list', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   function getFormattedOwnersList(elementID) {
     const ownersList = store.getOwnersListForElement(elementID);
@@ -43,7 +44,7 @@ describe('Store owners list', () => {
     const Leaf = () => <div>Leaf</div>;
     const Intermediate = ({children}) => <Wrapper>{children}</Wrapper>;
 
-    act(() => legacyRender(<Root />, document.createElement('div')));
+    act(() => render(<Root />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Root>
@@ -80,7 +81,7 @@ describe('Store owners list', () => {
       <Wrapper key="wrapper">{children}</Wrapper>,
     ];
 
-    act(() => legacyRender(<Root />, document.createElement('div')));
+    act(() => render(<Root />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Root>
@@ -122,14 +123,7 @@ describe('Store owners list', () => {
     const Leaf = () => <div>Leaf</div>;
     const Intermediate = ({children}) => <Wrapper>{children}</Wrapper>;
 
-    const container = document.createElement('div');
-
-    act(() =>
-      legacyRender(
-        <Root includeDirect={false} includeIndirect={true} />,
-        container,
-      ),
-    );
+    act(() => render(<Root includeDirect={false} includeIndirect={true} />));
 
     const rootID = store.getElementIDAtIndex(0);
     expect(store).toMatchInlineSnapshot(`
@@ -145,12 +139,7 @@ describe('Store owners list', () => {
               <Leaf>"
     `);
 
-    act(() =>
-      legacyRender(
-        <Root includeDirect={true} includeIndirect={true} />,
-        container,
-      ),
-    );
+    act(() => render(<Root includeDirect={true} includeIndirect={true} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Root>
@@ -166,12 +155,7 @@ describe('Store owners list', () => {
               <Leaf>"
     `);
 
-    act(() =>
-      legacyRender(
-        <Root includeDirect={true} includeIndirect={false} />,
-        container,
-      ),
-    );
+    act(() => render(<Root includeDirect={true} includeIndirect={false} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Root>
@@ -182,12 +166,7 @@ describe('Store owners list', () => {
             <Leaf>"
     `);
 
-    act(() =>
-      legacyRender(
-        <Root includeDirect={false} includeIndirect={false} />,
-        container,
-      ),
-    );
+    act(() => render(<Root includeDirect={false} includeIndirect={false} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
           <Root>
@@ -204,8 +183,7 @@ describe('Store owners list', () => {
         : [<Leaf key="C" />, <Leaf key="B" />, <Leaf key="A" />];
     const Leaf = () => <div>Leaf</div>;
 
-    const container = document.createElement('div');
-    act(() => legacyRender(<Root ascending={true} />, container));
+    act(() => render(<Root ascending={true} />));
 
     const rootID = store.getElementIDAtIndex(0);
     expect(store).toMatchInlineSnapshot(`
@@ -222,7 +200,7 @@ describe('Store owners list', () => {
             <Leaf key="C">"
     `);
 
-    act(() => legacyRender(<Root ascending={false} />, container));
+    act(() => render(<Root ascending={false} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Root>

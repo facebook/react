@@ -7,10 +7,13 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext, ReactConsumerType} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 
-import {enableLegacyHidden} from 'shared/ReactFeatureFlags';
+import {
+  enableLegacyHidden,
+  enableRenderableContext,
+} from 'shared/ReactFeatureFlags';
 
 import {
   FunctionComponent,
@@ -68,11 +71,21 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
     case CacheComponent:
       return 'Cache';
     case ContextConsumer:
-      const context: ReactContext<any> = (type: any);
-      return getContextName(context) + '.Consumer';
+      if (enableRenderableContext) {
+        const consumer: ReactConsumerType<any> = (type: any);
+        return getContextName(consumer._context) + '.Consumer';
+      } else {
+        const context: ReactContext<any> = (type: any);
+        return getContextName(context) + '.Consumer';
+      }
     case ContextProvider:
-      const provider: ReactProviderType<any> = (type: any);
-      return getContextName(provider._context) + '.Provider';
+      if (enableRenderableContext) {
+        const context: ReactContext<any> = (type: any);
+        return getContextName(context) + '.Provider';
+      } else {
+        const provider = (type: any);
+        return getContextName(provider._context) + '.Provider';
+      }
     case DehydratedFragment:
       return 'DehydratedFragment';
     case ForwardRef:

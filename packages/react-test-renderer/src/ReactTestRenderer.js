@@ -54,12 +54,13 @@ import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-const act = React.unstable_act;
+const act = React.act;
 
 // TODO: Remove from public bundle
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
+  isConcurrent: boolean,
   unstable_isConcurrent: boolean,
   unstable_strictMode: boolean,
   unstable_concurrentUpdatesByDefault: boolean,
@@ -479,7 +480,10 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
+    if (
+      options.unstable_isConcurrent === true ||
+      options.isConcurrent === true
+    ) {
       isConcurrent = true;
     }
     if (options.unstable_strictMode === true) {

@@ -7,12 +7,11 @@
  * @flow
  */
 
-import {normalizeCodeLocInfo} from './utils';
+import {getVersionedRenderImplementation, normalizeCodeLocInfo} from './utils';
 
 describe('component stack', () => {
   let React;
   let act;
-  let legacyRender;
   let mockError;
   let mockWarn;
 
@@ -30,10 +29,11 @@ describe('component stack', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
 
     React = require('react');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >=16.9
   it('should log the current component stack along with an error or warning', () => {
@@ -45,9 +45,7 @@ describe('component stack', () => {
       return null;
     };
 
-    const container = document.createElement('div');
-
-    act(() => legacyRender(<Grandparent />, container));
+    act(() => render(<Grandparent />));
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
@@ -79,8 +77,7 @@ describe('component stack', () => {
       return null;
     };
 
-    const container = document.createElement('div');
-    act(() => legacyRender(<Example test="abc" />, container));
+    act(() => render(<Example test="abc" />));
 
     expect(useEffectCount).toBe(1);
 

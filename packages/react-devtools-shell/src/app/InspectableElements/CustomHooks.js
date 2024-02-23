@@ -17,8 +17,11 @@ import {
   useContext,
   useDebugValue,
   useEffect,
+  useOptimistic,
   useState,
+  use,
 } from 'react';
+import {useFormState} from 'react-dom';
 
 const object = {
   string: 'abc',
@@ -73,6 +76,8 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
   // eslint-disable-next-line no-unused-vars
   const contextValueA = useContext(ContextA);
+  useOptimistic<number, mixed>(1);
+  use(ContextA);
 
   // eslint-disable-next-line no-unused-vars
   const [_, __] = useState(object);
@@ -115,6 +120,18 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
+function Forms() {
+  const [state, formAction] = useFormState((n: number, formData: FormData) => {
+    return n + 1;
+  }, 0);
+  return (
+    <form>
+      {state}
+      <button formAction={formAction}>Increment</button>
+    </form>
+  );
+}
+
 export default function CustomHooks(): React.Node {
   return (
     <Fragment>
@@ -122,6 +139,7 @@ export default function CustomHooks(): React.Node {
       <MemoWithHooks />
       <ForwardRefWithHooks />
       <HocWithHooks />
+      <Forms />
     </Fragment>
   );
 }

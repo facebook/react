@@ -18,14 +18,10 @@ export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
 export opaque type BinaryChunk = string;
 
-export function scheduleWork(callback: () => void) {
-  // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
-}
-
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

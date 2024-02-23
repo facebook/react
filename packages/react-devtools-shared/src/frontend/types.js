@@ -14,7 +14,6 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   Dehydrated,
   Unserializable,
@@ -151,6 +150,10 @@ export type Element = {
   // This element is not in a StrictMode compliant subtree.
   // Only true for React versions supporting StrictMode.
   isStrictModeNonCompliant: boolean,
+
+  // If component is compiled with Forget, the backend will send its name as Forget(...)
+  // Later, on the frontend side, we will strip HOC names and Forget prefix.
+  compiledWithForget: boolean,
 };
 
 export type SerializedElement = {
@@ -158,6 +161,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
   type: ElementType,
 };
 
@@ -215,7 +219,7 @@ export type InspectedElement = {
   owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
-  source: Source | null,
+  source: null, // TODO: Reinstate a way to load this lazily.
 
   type: ElementType,
 

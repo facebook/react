@@ -13,6 +13,7 @@ import type {
   StartTransitionOptions,
   Usable,
 } from 'shared/ReactTypes';
+import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentCache from './ReactCurrentCache';
@@ -72,22 +73,11 @@ export function getCacheForType<T>(resourceType: () => T): T {
 export function useContext<T>(Context: ReactContext<T>): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    // TODO: add a more generic warning for invalid values.
-    if ((Context: any)._context !== undefined) {
-      const realContext = (Context: any)._context;
-      // Don't deduplicate because this legitimately causes bugs
-      // and nobody should be using this in existing code.
-      if (realContext.Consumer === Context) {
-        console.error(
-          'Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be ' +
-            'removed in a future major release. Did you mean to call useContext(Context) instead?',
-        );
-      } else if (realContext.Provider === Context) {
-        console.error(
-          'Calling useContext(Context.Provider) is not supported. ' +
-            'Did you mean to call useContext(Context) instead?',
-        );
-      }
+    if (Context.$$typeof === REACT_CONSUMER_TYPE) {
+      console.error(
+        'Calling useContext(Context.Consumer) is not supported and will cause bugs. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
     }
   }
   return dispatcher.useContext(Context);

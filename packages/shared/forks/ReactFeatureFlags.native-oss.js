@@ -10,8 +10,9 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 
-export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
@@ -21,17 +22,16 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableCache = false;
 export const enableLegacyCache = false;
-export const enableCacheElement = false;
+export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Native
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
-export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
@@ -47,11 +47,15 @@ export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableRetryLaneExpiration = false;
+export const enableRenderableContext = false;
 
-export const createRootStrictEffectsByDefault = false;
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
+
 export const enableUseRefAccessWarning = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
@@ -63,25 +67,31 @@ export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
-export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFizzExternalRuntime = false;
-export const enableDeferRootSchedulingToMicrotask = true;
+export const enableFizzExternalRuntime = true;
+export const enableDeferRootSchedulingToMicrotask = false;
+export const enableInfiniteRenderLoopDetection = false;
 
 export const enableAsyncActions = false;
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+export const disableClientCache = true;
+
+export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
+
+// TODO: Should turn this on in next "major" RN release.
+export const enableRefAsProp = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -25,9 +25,9 @@ import {ElementTypeRoot} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
-  separateDisplayNameAndHOCs,
   shallowDiffers,
   utfDecodeStringWithRanges,
+  parseElementDisplayNameFromBackend,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -1033,6 +1033,7 @@ export default class Store extends EventEmitter<{
               parentID: 0,
               type,
               weight: 0,
+              compiledWithForget: false,
             });
 
             haveRootsChanged = true;
@@ -1071,8 +1072,11 @@ export default class Store extends EventEmitter<{
 
             parentElement.children.push(id);
 
-            const [displayNameWithoutHOCs, hocDisplayNames] =
-              separateDisplayNameAndHOCs(displayName, type);
+            const {
+              formattedDisplayName: displayNameWithoutHOCs,
+              hocDisplayNames,
+              compiledWithForget,
+            } = parseElementDisplayNameFromBackend(displayName, type);
 
             const element: Element = {
               children: [],
@@ -1087,6 +1091,7 @@ export default class Store extends EventEmitter<{
               parentID,
               type,
               weight: 1,
+              compiledWithForget,
             };
 
             this._idToElement.set(id, element);

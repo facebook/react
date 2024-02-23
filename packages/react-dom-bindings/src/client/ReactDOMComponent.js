@@ -69,7 +69,6 @@ import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
-  enableHostSingletons,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -394,8 +393,7 @@ function setProp(
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
         const canSetTextContent =
-          (!enableHostSingletons || tag !== 'body') &&
-          (tag !== 'textarea' || value !== '');
+          tag !== 'body' && (tag !== 'textarea' || value !== '');
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
@@ -403,7 +401,7 @@ function setProp(
         if (__DEV__) {
           validateTextNesting('' + value, tag);
         }
-        const canSetTextContent = !enableHostSingletons || tag !== 'body';
+        const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
           setTextContent(domElement, '' + value);
         }
@@ -436,7 +434,11 @@ function setProp(
     case 'src':
     case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && key === 'href')
+        ) {
           if (__DEV__) {
             if (key === 'src') {
               console.error(
@@ -638,7 +640,9 @@ function setProp(
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
+      // TODO: `ref` is pretty common, should we move it up?
       // Noop
       break;
     }
@@ -986,7 +990,8 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
       // Noop
       break;
     }
@@ -2192,6 +2197,7 @@ function diffHydratedCustomComponent(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2267,7 +2273,7 @@ function diffHydratedCustomComponent(
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 function diffHydratedGenericElement(
   domElement: Element,
@@ -2305,6 +2311,7 @@ function diffHydratedGenericElement(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2352,7 +2359,11 @@ function diffHydratedGenericElement(
       case 'src':
       case 'href':
         if (enableFilterEmptyStringAttributesDOM) {
-          if (value === '') {
+          if (
+            value === '' &&
+            // <a href=""> is fine for "reload" links.
+            !(tag === 'a' && propKey === 'href')
+          ) {
             if (__DEV__) {
               if (propKey === 'src') {
                 console.error(
@@ -2822,7 +2833,7 @@ export function diffHydratedProperties(
         // we can get away with it.
         // Host singletons get their children appended and don't use the text
         // content mechanism.
-        if (!enableHostSingletons || tag !== 'body') {
+        if (tag !== 'body') {
           domElement.textContent = (children: any);
         }
       }

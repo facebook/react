@@ -15,7 +15,7 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
+let ReactDOMClient;
 let ReactDOMServer;
 
 function initModules() {
@@ -23,14 +23,13 @@ function initModules() {
   jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -52,6 +51,38 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('simple strings', async render => {
         const e = await render(<div width={'30'} />);
         expect(e.getAttribute('width')).toBe('30');
+      });
+
+      itRenders('empty src on img', async render => {
+        const e = await render(
+          <img src="" />,
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
+        );
+        expect(e.getAttribute('src')).toBe(
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
+        );
+      });
+
+      itRenders('empty href on anchor', async render => {
+        const e = await render(<a href="" />);
+        expect(e.getAttribute('href')).toBe('');
+      });
+
+      itRenders('empty href on other tags', async render => {
+        const e = await render(
+          // <link href="" /> would be more sensible.
+          // However, that results in a hydration warning as well.
+          // Our test helpers do not support different error counts for initial
+          // server render and hydration.
+          // The number of errors on the server need to be equal to the number of
+          // errors during hydration.
+          // So we use a <div> instead.
+          <div href="" />,
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
+        );
+        expect(e.getAttribute('href')).toBe(
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
+        );
       });
 
       itRenders('no string prop with true value', async render => {
@@ -606,7 +637,12 @@ describe('ReactDOMServerIntegration', () => {
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
-          ReactDOM.render(<nonstandard />, document.createElement('div'));
+          ReactDOM.flushSync(() => {
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
+            root.render(<nonstandard />);
+          });
         }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard foo="bar" />);

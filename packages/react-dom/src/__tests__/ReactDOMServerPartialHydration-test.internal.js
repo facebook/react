@@ -776,14 +776,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span2 = container.getElementsByTagName('span')[0];
     // This is a new node.
     expect(span).not.toBe(span2);
-
-    if (gate(flags => flags.dfsEffectsRefactor)) {
-      // The effects list refactor causes this to be null because the Suspense Activity's child
-      // is null. However, since we can't hydrate Suspense in legacy this change in behavior is ok
-      expect(ref.current).toBe(null);
-    } else {
-      expect(ref.current).toBe(span2);
-    }
+    expect(ref.current).toBe(null);
 
     // Resolving the promise should render the final content.
     suspend = false;

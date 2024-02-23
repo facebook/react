@@ -92,7 +92,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
-  enableHostSingletons,
   enableTrustedTypesIntegration,
   enableFormActions,
   enableAsyncActions,
@@ -939,32 +938,18 @@ export function unhideTextInstance(
 }
 
 export function clearContainer(container: Container): void {
-  if (enableHostSingletons) {
-    const nodeType = container.nodeType;
-    if (nodeType === DOCUMENT_NODE) {
-      clearContainerSparingly(container);
-    } else if (nodeType === ELEMENT_NODE) {
-      switch (container.nodeName) {
-        case 'HEAD':
-        case 'HTML':
-        case 'BODY':
-          clearContainerSparingly(container);
-          return;
-        default: {
-          container.textContent = '';
-        }
-      }
-    }
-  } else {
-    if (container.nodeType === ELEMENT_NODE) {
-      // We have refined the container to Element type
-      const element: Element = (container: any);
-      element.textContent = '';
-    } else if (container.nodeType === DOCUMENT_NODE) {
-      // We have refined the container to Document type
-      const doc: Document = (container: any);
-      if (doc.documentElement) {
-        doc.removeChild(doc.documentElement);
+  const nodeType = container.nodeType;
+  if (nodeType === DOCUMENT_NODE) {
+    clearContainerSparingly(container);
+  } else if (nodeType === ELEMENT_NODE) {
+    switch (container.nodeName) {
+      case 'HEAD':
+      case 'HTML':
+      case 'BODY':
+        clearContainerSparingly(container);
+        return;
+      default: {
+        container.textContent = '';
       }
     }
   }
@@ -1053,7 +1038,7 @@ export function canHydrateInstance(
     const element: Element = (instance: any);
     const anyProps = (props: any);
     if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
-      if (!inRootOrSingleton || !enableHostSingletons) {
+      if (!inRootOrSingleton) {
         // Usually we error for mismatched tags.
         if (
           enableFormActions &&
@@ -1067,7 +1052,7 @@ export function canHydrateInstance(
         }
       }
       // In root or singleton parents we skip past mismatched instances.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       // Match
       if (
         enableFormActions &&
@@ -1212,7 +1197,7 @@ export function canHydrateTextInstance(
     ) {
       // If we have extra hidden inputs, we don't mismatch. This allows us to
       // embed extra form data in the original form.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1230,7 +1215,7 @@ export function canHydrateSuspenseInstance(
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1292,7 +1277,7 @@ export function canHydrateFormStateMarker(
   inRootOrSingleton: boolean,
 ): null | FormStateMarkerInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1501,9 +1486,7 @@ export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
   return (
-    (enableHostSingletons ||
-      (parentType !== 'head' && parentType !== 'body')) &&
-    (!enableFormActions || (parentType !== 'form' && parentType !== 'button'))
+    !enableFormActions || (parentType !== 'form' && parentType !== 'button')
   );
 }
 
@@ -3498,10 +3481,20 @@ function onUnsuspend(this: SuspendedState) {
   }
 }
 
+// We use a value that is type distinct from precedence to track which one is last.
+// This ensures there is no collision with user defined precedences. Normally we would
+// just track this in module scope but since the precedences are tracked per HoistableRoot
+// we need to associate it to something other than a global scope hence why we try to
+// colocate it with the map of precedences in the first place
+const LAST_PRECEDENCE = null;
+
 // This is typecast to non-null because it will always be set before read.
 // it is important that this not be used except when the stack guarantees it exists.
 // Currentlyt his is only during insertSuspendedStylesheet.
-let precedencesByRoot: Map<HoistableRoot, Map<string, Instance>> = (null: any);
+let precedencesByRoot: Map<
+  HoistableRoot,
+  Map<string | typeof LAST_PRECEDENCE, Instance>,
+> = (null: any);
 
 function insertSuspendedStylesheets(
   state: SuspendedState,
@@ -3556,15 +3549,15 @@ function insertStylesheetIntoRoot(
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
       ) {
-        precedences.set('p' + node.dataset.precedence, node);
+        precedences.set(node.dataset.precedence, node);
         last = node;
       }
     }
     if (last) {
-      precedences.set('last', last);
+      precedences.set(LAST_PRECEDENCE, last);
     }
   } else {
-    last = precedences.get('last');
+    last = precedences.get(LAST_PRECEDENCE);
   }
 
   // We only call this after we have constructed an instance so we assume it here
@@ -3572,9 +3565,9 @@ function insertStylesheetIntoRoot(
   // We will always have a precedence for stylesheet instances
   const precedence: string = (instance.getAttribute('data-precedence'): any);
 
-  const prior = precedences.get('p' + precedence) || last;
+  const prior = precedences.get(precedence) || last;
   if (prior === last) {
-    precedences.set('last', instance);
+    precedences.set(LAST_PRECEDENCE, instance);
   }
   precedences.set(precedence, instance);
 

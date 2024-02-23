@@ -268,6 +268,7 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([null]);
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('warns correctly for refs on SFCs', () => {
     function Bar() {
       return <div>Hello, world</div>;
@@ -288,8 +289,7 @@ describe('ReactTestRenderer', () => {
     expect(() => ReactTestRenderer.create(<Foo />)).toErrorDev(
       'Warning: Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n\n' +
-        'Check the render method of `Foo`.\n' +
+        'Did you mean to use React.forwardRef()?\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
@@ -982,9 +982,14 @@ describe('ReactTestRenderer', () => {
       </div>
     ));
 
+    let refFn;
+
     class App extends React.Component {
       render() {
-        return <InnerRefed ref={r => (this.ref = r)} />;
+        refFn = inst => {
+          this.ref = inst;
+        };
+        return <InnerRefed ref={refFn} />;
       }
     }
 
@@ -1005,7 +1010,11 @@ describe('ReactTestRenderer', () => {
             {
               instance: null,
               nodeType: 'host',
-              props: {},
+              props: gate(flags => flags.enableRefAsProp)
+                ? {
+                    ref: refFn,
+                  }
+                : {},
               rendered: [],
               type: 'span',
             },

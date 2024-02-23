@@ -33,13 +33,13 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
   enableLegacyHidden,
-  enableHostSingletons,
   enableSuspenseCallback,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
   enableFloat,
+  enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
 
@@ -75,8 +75,6 @@ import {
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
-  Ref,
-  RefStatic,
   Placement,
   Update,
   Visibility,
@@ -186,10 +184,6 @@ function markUpdate(workInProgress: Fiber) {
   workInProgress.flags |= Update;
 }
 
-function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref | RefStatic;
-}
-
 /**
  * In persistent mode, return whether this update needs to clone the subtree.
  */
@@ -233,9 +227,7 @@ function appendAllChildren(
         appendInitialChild(parent, node.stateNode);
       } else if (
         node.tag === HostPortal ||
-        (enableHostSingletons && supportsSingletons
-          ? node.tag === HostSingleton
-          : false)
+        (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -1085,9 +1077,6 @@ function completeWork(
           // @TODO refactor this block to create the instance here in complete
           // phase if we are not hydrating.
           markUpdate(workInProgress);
-          if (workInProgress.ref !== null) {
-            markRef(workInProgress);
-          }
           if (nextResource !== null) {
             // This is a Hoistable Resource
 
@@ -1121,9 +1110,6 @@ function completeWork(
             // We are transitioning to, from, or between Hoistable Resources
             // and require an update
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
           if (nextResource !== null) {
             // This is a Hoistable Resource
@@ -1177,7 +1163,7 @@ function completeWork(
       // Fall through
     }
     case HostSingleton: {
-      if (enableHostSingletons && supportsSingletons) {
+      if (supportsSingletons) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
@@ -1195,10 +1181,6 @@ function completeWork(
               newProps,
               renderLanes,
             );
-          }
-
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
         } else {
           if (!newProps) {
@@ -1234,11 +1216,6 @@ function completeWork(
             workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
-
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
         bubbleProperties(workInProgress);
         return null;
@@ -1256,10 +1233,6 @@ function completeWork(
           newProps,
           renderLanes,
         );
-
-        if (current.ref !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
       } else {
         if (!newProps) {
           if (workInProgress.stateNode === null) {
@@ -1311,11 +1284,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-        }
-
-        if (workInProgress.ref !== null) {
-          // If there is a ref on a host node we need to schedule a callback
-          markRef(workInProgress);
         }
       }
       bubbleProperties(workInProgress);
@@ -1508,7 +1476,12 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      const context: ReactContext<any> = workInProgress.type._context;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
@@ -1736,15 +1709,15 @@ function completeWork(
           workInProgress.stateNode = scopeInstance;
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
-            markRef(workInProgress);
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
           }
         } else {
           if (workInProgress.ref !== null) {
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
         }
         bubbleProperties(workInProgress);

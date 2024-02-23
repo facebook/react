@@ -25,7 +25,7 @@ import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
-import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -39,7 +39,9 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 
-const act = React.unstable_act;
+// TODO: Add a warning if this API is accessed with advice to switch to
+// importing directly from the React package instead.
+const act = React.act;
 
 function Event(suffix) {}
 
@@ -66,7 +68,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === ClassComponent ||
       node.tag === FunctionComponent ||
       (enableFloat ? node.tag === HostHoistable : false) ||
-      (enableHostSingletons ? node.tag === HostSingleton : false)
+      node.tag === HostSingleton
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
@@ -419,11 +421,7 @@ function getParent(inst) {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (
-    inst &&
-    inst.tag !== HostComponent &&
-    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
-  );
+  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
   if (inst) {
     return inst;
   }

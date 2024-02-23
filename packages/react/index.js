@@ -8,8 +8,6 @@
  */
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
-export type StatelessFunctionalComponent<P> =
-  React$StatelessFunctionalComponent<P>;
 export type ComponentType<-P> = React$ComponentType<P>;
 export type AbstractComponent<
   -Config,
@@ -32,7 +30,7 @@ export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 // We can't use export * from in Flow for some reason.
 export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  act,
   Children,
   Component,
   Fragment,
@@ -45,7 +43,6 @@ export {
   createElement,
   createFactory,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -82,4 +79,4 @@ export {
   useState,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';

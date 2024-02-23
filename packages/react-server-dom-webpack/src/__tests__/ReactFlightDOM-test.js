@@ -32,6 +32,7 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactDOMFizzServer;
+let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
@@ -49,7 +50,7 @@ describe('ReactFlightDOM', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -71,6 +72,7 @@ describe('ReactFlightDOM', () => {
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server.node');
+    ReactDOMStaticServer = require('react-dom/static.node');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {
@@ -566,6 +568,32 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('throws when accessing a symbol prop from client exports', () => {
+    const symbol = Symbol('test');
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function read() {
+      return ClientModule[symbol];
+    }
+    expect(read).toThrowError(
+      'Cannot read Symbol exports. ' +
+        'Only named exports are supported on a client module imported on the server.',
+    );
+  });
+
+  it('does not throw when toString:ing client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    expect(Object.prototype.toString.call(ClientModule)).toBe(
+      '[object Object]',
+    );
+    expect(Object.prototype.toString.call(ClientModule.Component)).toBe(
+      '[object Function]',
+    );
+  });
+
   it('does not throw when React inspects any deep props', () => {
     const ClientModule = clientExports({
       Component: function () {},
@@ -917,9 +945,7 @@ describe('ReactFlightDOM', () => {
       abort('for reasons');
     });
     if (__DEV__) {
-      expect(container.innerHTML).toBe(
-        '<p>Error: for reasons + a dev digest</p>',
-      );
+      expect(container.innerHTML).toBe('<p>for reasons + a dev digest</p>');
     } else {
       expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
     }
@@ -1300,6 +1326,91 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
+  // @gate enablePostpone
+  it('should allow postponing in Flight through a serialized promise', async () => {
+    const Context = React.createContext();
+    const ContextProvider = Context.Provider;
+
+    function Foo() {
+      const value = React.use(React.useContext(Context));
+      return <span>{value}</span>;
+    }
+
+    const ClientModule = clientExports({
+      ContextProvider,
+      Foo,
+    });
+
+    async function getFoo() {
+      React.unstable_postpone('foo');
+    }
+
+    function App() {
+      return (
+        <ClientModule.ContextProvider value={getFoo()}>
+          <div>
+            <Suspense fallback="loading...">
+              <ClientModule.Foo />
+            </Suspense>
+          </div>
+        </ClientModule.ContextProvider>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <App />,
+      webpackMap,
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function Response() {
+      return getResponse();
+    }
+
+    const errors = [];
+    function onError(error, errorInfo) {
+      errors.push(error, errorInfo);
+    }
+    const result = await ReactDOMStaticServer.prerenderToNodeStream(
+      <Response />,
+      {
+        onError,
+      },
+    );
+
+    const prelude = await new Promise((resolve, reject) => {
+      let content = '';
+      result.prelude.on('data', chunk => {
+        content += Buffer.from(chunk).toString('utf8');
+      });
+      result.prelude.on('error', error => {
+        reject(error);
+      });
+      result.prelude.on('end', () => resolve(content));
+    });
+
+    expect(errors).toEqual([]);
+    const doc = new JSDOM(prelude).window.document;
+    expect(getMeaningfulChildren(doc)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+  });
+
   it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1569,5 +1680,48 @@ describe('ReactFlightDOM', () => {
 
     await collectHints(readable);
     expect(hintRows.length).toEqual(6);
+  });
+
+  it('should be able to include a client reference in printed errors', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function ({prop}) {
+      return 'This should never render';
+    });
+
+    const ClientReference = clientExports({});
+
+    class InvalidValue {}
+
+    const {writable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <div>
+        <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+
+    expect(reportedErrors.length).toBe(1);
+    if (__DEV__) {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <... prop={client} invalid={function InvalidValue}>\n' +
+          '                             ^^^^^^^^^^^^^^^^^^^^^^^',
+      );
+    } else {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  {prop: client, invalid: function InvalidValue}\n' +
+          '                          ^^^^^^^^^^^^^^^^^^^^^',
+      );
+    }
   });
 });

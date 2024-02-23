@@ -9,18 +9,17 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('profiling charts', () => {
   let React;
   let Scheduler;
-  let legacyRender;
   let store: Store;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
-
-    legacyRender = utils.legacyRender;
 
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -29,6 +28,8 @@ describe('profiling charts', () => {
     React = require('react');
     Scheduler = require('scheduler');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   function getFlamegraphChartData(rootID, commitIndex) {
     const commitTree = store.profilerStore.profilingCache.getCommitTree({
@@ -78,11 +79,9 @@ describe('profiling charts', () => {
         return null;
       });
 
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -91,7 +90,7 @@ describe('profiling charts', () => {
               <Child key="third"> [Memo]
       `);
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -228,11 +227,9 @@ describe('profiling charts', () => {
         return null;
       });
 
-      const container = document.createElement('div');
-
       utils.act(() => store.profilerStore.startProfiling());
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>
@@ -241,7 +238,7 @@ describe('profiling charts', () => {
               <Child key="third"> [Memo]
       `);
 
-      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => render(<Parent />));
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Parent>

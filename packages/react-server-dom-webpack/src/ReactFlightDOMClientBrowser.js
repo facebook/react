@@ -37,6 +37,7 @@ function createResponseFromOptions(options: void | Options) {
     null,
     null,
     options && options.callServer ? options.callServer : undefined,
+    undefined, // encodeFormAction
     undefined, // nonce
   );
 }
