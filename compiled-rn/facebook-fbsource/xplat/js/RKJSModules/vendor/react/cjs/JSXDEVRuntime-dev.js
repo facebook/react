@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<952f9cf06e97636903903803eab63151>>
+ * @generated SignedSource<<5c2ba7284b4fa8017480bbd7751f531d>>
  */
 
 "use strict";
@@ -1044,14 +1044,6 @@ if (__DEV__) {
               "it's defined in, or you might have mixed up default and named imports.";
           }
 
-          var sourceInfo = getSourceInfoErrorAddendum(source);
-
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
-          }
-
           var typeString;
 
           if (type === null) {
@@ -1236,18 +1228,6 @@ if (__DEV__) {
           if (name) {
             return "\n\nCheck the render method of `" + name + "`.";
           }
-        }
-
-        return "";
-      }
-    }
-
-    function getSourceInfoErrorAddendum(source) {
-      {
-        if (source !== undefined) {
-          var fileName = source.fileName.replace(/^.*[\\\/]/, "");
-          var lineNumber = source.lineNumber;
-          return "\n\nCheck your code at " + fileName + ":" + lineNumber + ".";
         }
 
         return "";

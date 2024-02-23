@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5829f9269f50c47e26af16e11355c71d>>
+ * @generated SignedSource<<44c5c601c5193aa81af150ccb4208604>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-d579e7748-20240223";
+    var ReactVersion = "18.3.0-canary-16d3f7833-20240223";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1462,14 +1462,6 @@ if (__DEV__) {
               "it's defined in, or you might have mixed up default and named imports.";
           }
 
-          var sourceInfo = getSourceInfoErrorAddendum(source);
-
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
-          }
-
           var typeString;
 
           if (type === null) {
@@ -1668,14 +1660,6 @@ if (__DEV__) {
             info +=
               " You likely forgot to export your component from the file " +
               "it's defined in, or you might have mixed up default and named imports.";
-          }
-
-          var sourceInfo = getSourceInfoErrorAddendumForProps(config);
-
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
           }
 
           var typeString;
@@ -1990,26 +1974,6 @@ if (__DEV__) {
           if (name) {
             return "\n\nCheck the render method of `" + name + "`.";
           }
-        }
-
-        return "";
-      }
-    }
-
-    function getSourceInfoErrorAddendumForProps(elementProps) {
-      if (elementProps !== null && elementProps !== undefined) {
-        return getSourceInfoErrorAddendum(elementProps.__source);
-      }
-
-      return "";
-    }
-
-    function getSourceInfoErrorAddendum(source) {
-      {
-        if (source !== undefined) {
-          var fileName = source.fileName.replace(/^.*[\\\/]/, "");
-          var lineNumber = source.lineNumber;
-          return "\n\nCheck your code at " + fileName + ":" + lineNumber + ".";
         }
 
         return "";
