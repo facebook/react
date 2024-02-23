@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bf21f6d72f3518f207e57e11607507ed>>
+ * @generated SignedSource<<4c526192e135ce4617cc964ef360f7e3>>
  */
 
 "use strict";
@@ -3241,7 +3241,8 @@ to return true:wantsResponderID|                            |
       passChildrenWhenCloningPersistedNodes =
         dynamicFlags.passChildrenWhenCloningPersistedNodes,
       useMicrotasksForSchedulingInFabric =
-        dynamicFlags.useMicrotasksForSchedulingInFabric; // The rest of the flags are static for better dead code elimination.
+        dynamicFlags.useMicrotasksForSchedulingInFabric,
+      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane; // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
@@ -4005,7 +4006,9 @@ to return true:wantsResponderID|                            |
     var DefaultLane =
       /*                     */
       32;
-    var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane;
+    var SyncUpdateLanes = enableUnifiedSyncLane
+      ? SyncLane | InputContinuousLane | DefaultLane
+      : SyncLane;
     var TransitionHydrationLane =
       /*                */
       64;
@@ -4161,7 +4164,7 @@ to return true:wantsResponderID|                            |
     var nextRetryLane = RetryLane1;
 
     function getHighestPriorityLanes(lanes) {
-      {
+      if (enableUnifiedSyncLane) {
         var pendingSyncLanes = lanes & SyncUpdateLanes;
 
         if (pendingSyncLanes !== 0) {
@@ -4761,7 +4764,7 @@ to return true:wantsResponderID|                            |
       var renderLane = getHighestPriorityLane(renderLanes);
       var lane;
 
-      if ((renderLane & SyncUpdateLanes) !== NoLane) {
+      if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
         lane = SyncHydrationLane;
       } else {
         switch (renderLane) {
@@ -28015,7 +28018,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2e1e0d6f";
+    var ReactVersion = "18.3.0-canary-0435735f";
 
     function createPortal$1(
       children,

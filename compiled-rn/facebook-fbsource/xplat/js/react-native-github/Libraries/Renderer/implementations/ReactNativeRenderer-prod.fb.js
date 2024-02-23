@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<786bf0054cebdca0cc5ce47ddff76e92>>
+ * @generated SignedSource<<c90fc76115b45993d7589415fc0a0c2f>>
  */
 
 "use strict";
@@ -1164,6 +1164,7 @@ var ReactSharedInternals =
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+  enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1726,11 +1727,14 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var nextTransitionLane = 128,
+var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
+  nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  var pendingSyncLanes = lanes & 42;
-  if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  }
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -5819,7 +5823,8 @@ function updateDehydratedSuspenseComponent(
     didPrimaryChildrenDefer = workInProgressRoot;
     if (null !== didPrimaryChildrenDefer) {
       nextProps = renderLanes & -renderLanes;
-      if (0 !== (nextProps & 42)) nextProps = 1;
+      if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
+        nextProps = 1;
       else
         switch (nextProps) {
           case 2:
@@ -8809,7 +8814,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (transitions & 4194218) && 0 !== (remainingLanes & 42)
+  0 !== (transitions & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -9905,7 +9910,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1138 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-32080511",
+    version: "18.3.0-canary-82f6e470",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9948,7 +9953,7 @@ var internals$jscomp$inline_1377 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-32080511"
+  reconcilerVersion: "18.3.0-canary-82f6e470"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1378 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
