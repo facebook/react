@@ -10,6 +10,15 @@
 
 'use strict';
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      return '\n    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
+
 const heldValues = [];
 let finalizationCallback;
 function FinalizationRegistryMock(callback) {
@@ -68,6 +77,14 @@ describe('ReactFlight', () => {
           hasError: true,
           error,
         };
+      }
+      componentDidCatch(error, errorInfo) {
+        expect(error).toBe(this.state.error);
+        if (this.props.expectedStack !== undefined) {
+          expect(normalizeCodeLocInfo(errorInfo.componentStack)).toBe(
+            this.props.expectedStack,
+          );
+        }
       }
       componentDidMount() {
         expect(this.state.hasError).toBe(true);
@@ -898,6 +915,91 @@ describe('ReactFlight', () => {
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
     });
+  });
+
+  it('should include server components in error boundary stacks in dev', async () => {
+    const ClientErrorBoundary = clientReference(ErrorBoundary);
+
+    function Throw({value}) {
+      throw value;
+    }
+
+    const expectedStack = __DEV__
+      ? // TODO: This should include Throw but it doesn't have a Fiber.
+        '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      : '\n    in div' + '\n    in ErrorBoundary (at **)';
+
+    function App() {
+      return (
+        <ClientErrorBoundary
+          expectedMessage="This is a real Error."
+          expectedStack={expectedStack}>
+          <div>
+            <Throw value={new TypeError('This is a real Error.')} />
+          </div>
+        </ClientErrorBoundary>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        if (x instanceof Error) {
+          return `digest("${x.message}")`;
+        } else if (Array.isArray(x)) {
+          return `digest([])`;
+        } else if (typeof x === 'object' && x !== null) {
+          return `digest({})`;
+        }
+        return `digest(${String(x)})`;
+      },
+    });
+
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    });
+  });
+
+  it('should include server components in warning stacks', async () => {
+    function Component() {
+      // Trigger key warning
+      return <div>{[<span />]}</div>;
+    }
+    const ClientComponent = clientReference(Component);
+
+    function Indirection({children}) {
+      return children;
+    }
+
+    function App() {
+      return (
+        <Indirection>
+          <ClientComponent />
+        </Indirection>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<App />);
+
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          ReactNoop.render(ReactNoopFlightClient.read(transport));
+        });
+      });
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `Component`. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in Component (at **)\n' +
+        '    in Indirection (at **)\n' +
+        '    in App (at **)',
+    );
   });
 
   it('should trigger the inner most error boundary inside a Client Component', async () => {
