@@ -51,6 +51,21 @@ function cleanNodeOrArray(node) {
 }
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    ReactFeatureFlags.enableReactTestRendererWarning = false;
+  });
+
+  it('should warn if enableReactTestRendererWarning is enabled', () => {
+    ReactFeatureFlags.enableReactTestRendererWarning = true;
+    expect(() => {
+      ReactTestRenderer.create(<div />);
+    }).toWarnDev(
+      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      {withoutStack: true},
+    );
+  });
+
   it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;
