@@ -387,6 +387,7 @@ export default [
   "memo: The first argument must be a component. Instead received: %s",
   "onError returned something with a type other than \"string\". onError should return a string and may return null or undefined but must not return anything else. It received something of type \"%s\" instead",
   "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
+  "react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer",
   "render(...): Expected the last optional `callback` argument to be a function. Instead received: %s.",
   "render(...): It looks like the React-rendered content of this container was removed without using React. This is not supported and will cause errors. Instead, call ReactDOM.unmountComponentAtNode to empty a container.",
   "render(...): Replacing React-rendered children with a new root component. If you intended to update the children of this node, you should instead have the existing children update their state and render the new components instead of calling ReactDOM.render.",
