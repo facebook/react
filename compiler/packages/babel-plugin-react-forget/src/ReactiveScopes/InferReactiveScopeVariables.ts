@@ -205,6 +205,10 @@ export function findDisjointMutableValues(
         for (const [, phiId] of phi.operands) {
           scopeIdentifiers.union([phi.id, phiId]);
         }
+      } else if (fn.env.config.enableForest) {
+        for (const [, phiId] of phi.operands) {
+          scopeIdentifiers.union([phi.id, phiId]);
+        }
       }
     }
 
