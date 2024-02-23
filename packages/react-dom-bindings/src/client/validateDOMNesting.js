@@ -477,14 +477,16 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        '%s cannot appear as a child of <%s>.%s',
+        'In HTML, %s cannot be a child of <%s>.%s\n' +
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
         info,
       );
     } else {
       console.error(
-        '%s cannot appear as a descendant of ' + '<%s>.',
+        'In HTML, %s cannot be a descendant of <%s>.\n' +
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
       );
@@ -508,12 +510,17 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
     didWarn[warnKey] = true;
 
     if (/\S/.test(childText)) {
-      console.error('Text nodes cannot appear as a child of <%s>.', parentTag);
+      console.error(
+        'In HTML, text nodes cannot be a child of <%s>.\n' +
+          'This will cause a hydration error.',
+        parentTag,
+      );
     } else {
       console.error(
-        'Whitespace text nodes cannot appear as a child of <%s>. ' +
+        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.',
+          'each line of your source code.\n' +
+          'This will cause a hydration error.',
         parentTag,
       );
     }
