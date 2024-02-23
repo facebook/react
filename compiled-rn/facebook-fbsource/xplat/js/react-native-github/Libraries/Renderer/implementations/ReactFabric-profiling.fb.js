@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bfa7c893ceec829541615729b8d25246>>
+ * @generated SignedSource<<0350e17049e5f4e18145e2eb8636ec13>>
  */
 
 "use strict";
@@ -80,8 +80,7 @@ function executeDispatch(event, listener, inst) {
 function executeDirectDispatch(event) {
   var dispatchListener = event._dispatchListeners,
     dispatchInstance = event._dispatchInstances;
-  if (isArrayImpl(dispatchListener))
-    throw Error("executeDirectDispatch(...): Invalid `event`.");
+  if (isArrayImpl(dispatchListener)) throw Error("Invalid `event`.");
   event.currentTarget = dispatchListener
     ? getNodeFromInstance$1(dispatchInstance)
     : null;
@@ -340,9 +339,7 @@ var instrumentationCallback,
   };
 function accumulate(current, next) {
   if (null == next)
-    throw Error(
-      "accumulate(...): Accumulated items must not be null or undefined."
-    );
+    throw Error("Accumulated items must not be null or undefined.");
   return null == current
     ? next
     : isArrayImpl(current)
@@ -353,9 +350,7 @@ function accumulate(current, next) {
 }
 function accumulateInto(current, next) {
   if (null == next)
-    throw Error(
-      "accumulateInto(...): Accumulated items must not be null or undefined."
-    );
+    throw Error("Accumulated items must not be null or undefined.");
   if (null == current) return next;
   if (isArrayImpl(current)) {
     if (isArrayImpl(next)) return current.push.apply(current, next), current;
@@ -10390,7 +10385,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1147 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-9dda16fd",
+    version: "18.3.0-canary-ffa714ed",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10446,7 +10441,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9dda16fd"
+  reconcilerVersion: "18.3.0-canary-ffa714ed"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

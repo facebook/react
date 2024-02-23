@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5be82410d05ff93f97b00ace398de099>>
+ * @generated SignedSource<<50e7f5f201ab5dea1513a63712db8d3a>>
  */
 
 "use strict";
@@ -399,7 +399,7 @@ if (__DEV__) {
       {
         if (!getNodeFromInstance || !getInstanceFromNode) {
           error(
-            "EventPluginUtils.setComponentTree(...): Injected " +
+            "Injected " +
               "module is missing getNodeFromInstance or getInstanceFromNode."
           );
         }
@@ -534,7 +534,7 @@ if (__DEV__) {
       var dispatchInstance = event._dispatchInstances;
 
       if (isArray(dispatchListener)) {
-        throw new Error("executeDirectDispatch(...): Invalid `event`.");
+        throw new Error("Invalid `event`.");
       }
 
       event.currentTarget = dispatchListener
@@ -1160,9 +1160,7 @@ if (__DEV__) {
 
     function accumulate(current, next) {
       if (next == null) {
-        throw new Error(
-          "accumulate(...): Accumulated items must not be null or undefined."
-        );
+        throw new Error("Accumulated items must not be null or undefined.");
       }
 
       if (current == null) {
@@ -1200,9 +1198,7 @@ if (__DEV__) {
 
     function accumulateInto(current, next) {
       if (next == null) {
-        throw new Error(
-          "accumulateInto(...): Accumulated items must not be null or undefined."
-        );
+        throw new Error("Accumulated items must not be null or undefined.");
       }
 
       if (current == null) {
@@ -14453,21 +14449,20 @@ to return true:wantsResponderID|                            |
       Object.freeze(fakeInternalInstance);
     }
 
-    function warnOnInvalidCallback(callback, callerName) {
+    function warnOnInvalidCallback(callback) {
       {
         if (callback === null || typeof callback === "function") {
           return;
-        }
+        } // eslint-disable-next-line react-internal/safe-string-coercion
 
-        var key = callerName + "_" + callback;
+        var key = String(callback);
 
         if (!didWarnOnInvalidCallback.has(key)) {
           didWarnOnInvalidCallback.add(key);
 
           error(
-            "%s(...): Expected the last optional `callback` argument to be a " +
+            "Expected the last optional `callback` argument to be a " +
               "function. Instead received: %s.",
-            callerName,
             callback
           );
         }
@@ -14541,7 +14536,7 @@ to return true:wantsResponderID|                            |
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "setState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -14567,7 +14562,7 @@ to return true:wantsResponderID|                            |
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "replaceState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -14593,7 +14588,7 @@ to return true:wantsResponderID|                            |
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "forceUpdate");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -14677,13 +14672,13 @@ to return true:wantsResponderID|                            |
         if (!renderPresent) {
           if (ctor.prototype && typeof ctor.prototype.render === "function") {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: did you accidentally return an object from the constructor?",
               name
             );
           } else {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: you may have forgotten to define `render`.",
               name
             );
@@ -14818,9 +14813,8 @@ to return true:wantsResponderID|                            |
 
         if (instance.props !== undefined && hasMutatedProps) {
           error(
-            "%s(...): When calling super() in `%s`, make sure to pass " +
+            "When calling super() in `%s`, make sure to pass " +
               "up the same props that your component's constructor was passed.",
-            name,
             name
           );
         }
@@ -17344,7 +17338,8 @@ to return true:wantsResponderID|                            |
         if (Component) {
           if (Component.childContextTypes) {
             error(
-              "%s(...): childContextTypes cannot be defined on a function component.",
+              "childContextTypes cannot be defined on a function component.\n" +
+                "  %s.childContextTypes = ...",
               Component.displayName || Component.name || "Component"
             );
           }
@@ -28479,7 +28474,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-0c89aec8";
+    var ReactVersion = "18.3.0-canary-0d6ee362";
 
     function createPortal$1(
       children,
@@ -28676,7 +28671,7 @@ to return true:wantsResponderID|                            |
         {
           if (typeof callback !== "function") {
             error(
-              "render(...): Expected the last optional `callback` argument to be a " +
+              "Expected the last optional `callback` argument to be a " +
                 "function. Instead received: %s.",
               callback
             );

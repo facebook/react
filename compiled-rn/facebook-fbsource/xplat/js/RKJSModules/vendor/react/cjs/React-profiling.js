@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<04ca2715fce5363a86317b200bb764c0>>
+ * @generated SignedSource<<0c357b236599560d718ddaa394fc28e0>>
  */
 
 "use strict";
@@ -64,7 +64,7 @@ Component.prototype.setState = function (partialState, callback) {
     null != partialState
   )
     throw Error(
-      "setState(...): takes an object of state variables to update or a function which returns an object of state variables."
+      "takes an object of state variables to update or a function which returns an object of state variables."
     );
   this.updater.enqueueSetState(this, partialState, callback, "setState");
 };
@@ -389,9 +389,7 @@ exports.cache = function (fn) {
 exports.cloneElement = function (element, config, children) {
   if (null === element || void 0 === element)
     throw Error(
-      "React.cloneElement(...): The argument must be a React element, but you passed " +
-        element +
-        "."
+      "The argument must be a React element, but you passed " + element + "."
     );
   var props = assign({}, element.props),
     key = element.key,
@@ -596,7 +594,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-8fb0233a8-20240223";
+exports.version = "18.3.0-canary-d579e7748-20240223";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
