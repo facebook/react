@@ -48,7 +48,7 @@ describe('ReactDOMComponentTree', () => {
     const anotherComponent = <div />;
     const instance = ReactDOM.render(component, container);
     expect(() => ReactDOM.render(anotherComponent, instance)).toErrorDev(
-      'render(...): Replacing React-rendered children with a new root ' +
+      'Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +
         'and render the new components instead of calling ReactDOM.render.',

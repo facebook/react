@@ -477,15 +477,14 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s',
+        '%s cannot appear as a child of <%s>.%s',
         tagDisplayName,
         ancestorTag,
         info,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.',
+        '%s cannot appear as a descendant of ' + '<%s>.',
         tagDisplayName,
         ancestorTag,
       );
@@ -507,13 +506,10 @@ function validateTextNesting(childText: string, parentTag: string): void {
     didWarn[warnKey] = true;
 
     if (/\S/.test(childText)) {
-      console.error(
-        'validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.',
-        parentTag,
-      );
+      console.error('Text nodes cannot appear as a child of <%s>.', parentTag);
     } else {
       console.error(
-        'validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. ' +
+        'Whitespace text nodes cannot appear as a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
           'each line of your source code.',
         parentTag,

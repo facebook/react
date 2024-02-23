@@ -334,14 +334,14 @@ describe('ReactTypeScriptClass', function() {
       ).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Empty instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Empty instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Empty instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Empty instance: ' +
+        'you may have forgotten to define `render`.',
     ]);
   });
 

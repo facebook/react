@@ -46,7 +46,7 @@ describe('ReactDOMOption', () => {
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
     }).toErrorDev(
-      'validateDOMNesting(...): <div> cannot appear as a child of <option>.\n' +
+      '<div> cannot appear as a child of <option>.\n' +
         '    in div (at **)\n' +
         '    in option (at **)',
     );
@@ -263,7 +263,7 @@ describe('ReactDOMOption', () => {
       [
         'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
         'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
-        'Warning: validateDOMNesting(...): <div> cannot appear as a child of <option>',
+        'Warning: <div> cannot appear as a child of <option>',
       ],
       {withoutStack: 1},
     );

@@ -381,7 +381,7 @@ describe('ReactDOMForm', () => {
         );
       });
     }).toErrorDev([
-      'Warning: validateDOMNesting(...): <form> cannot appear as a descendant of <form>.' +
+      'Warning: <form> cannot appear as a descendant of <form>.' +
         '\n    in form (at **)' +
         '\n    in form (at **)',
     ]);

@@ -56,10 +56,10 @@ describe 'ReactCoffeeScriptClass', ->
       ).toThrow()
     ).toErrorDev([
       # A failed component renders four times in DEV in concurrent mode
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
+      'No `render` method found on the Foo instance',
+      'No `render` method found on the Foo instance',
+      'No `render` method found on the Foo instance',
+      'No `render` method found on the Foo instance',
     ])
 
   it 'renders a simple stateless component with prop', ->

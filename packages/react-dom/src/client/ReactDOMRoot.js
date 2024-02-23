@@ -109,7 +109,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     if (__DEV__) {
       if (typeof arguments[1] === 'function') {
         console.error(
-          'render(...): does not support the second callback argument. ' +
+          'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       } else if (isValidContainer(arguments[1])) {
@@ -134,7 +134,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
     if (__DEV__) {
       if (typeof arguments[0] === 'function') {
         console.error(
-          'unmount(...): does not support a callback argument. ' +
+          'does not support a callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       }
@@ -164,7 +164,7 @@ export function createRoot(
   options?: CreateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('createRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);
@@ -258,7 +258,7 @@ export function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('hydrateRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);

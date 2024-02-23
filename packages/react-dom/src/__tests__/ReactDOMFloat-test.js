@@ -523,7 +523,7 @@ describe('ReactDOMFloat', () => {
     }).toErrorDev(
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        'Warning: validateDOMNesting(...): <noscript> cannot appear as a child of <#document>.',
+        'Warning: <noscript> cannot appear as a child of <#document>.',
       ],
       {withoutStack: 1},
     );
@@ -538,7 +538,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
-      'Warning: validateDOMNesting(...): <template> cannot appear as a child of <html>.',
+      'Warning: <template> cannot appear as a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -551,7 +551,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style> to the <style> tag.',
-      'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
+      'Warning: <style> cannot appear as a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -574,7 +574,7 @@ describe('ReactDOMFloat', () => {
     }).toErrorDev(
       [
         'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
-        'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.',
+        'Warning: <link> cannot appear as a child of <#document>.',
       ],
       {withoutStack: 1},
     );
@@ -591,7 +591,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
-      'Warning: validateDOMNesting(...): <script> cannot appear as a child of <html>.',
+      'Warning: <script> cannot appear as a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -2552,11 +2552,11 @@ body {
       'Cannot render a <style> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <style> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'Cannot render a <link> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <link> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
       'Cannot render a <script> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <script> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.',
-      'validateDOMNesting(...): <meta> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <title> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <style> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <link> cannot appear as a child of <html>',
-      'validateDOMNesting(...): <script> cannot appear as a child of <html>',
+      '<meta> cannot appear as a child of <html>',
+      '<title> cannot appear as a child of <html>',
+      '<style> cannot appear as a child of <html>',
+      '<link> cannot appear as a child of <html>',
+      '<script> cannot appear as a child of <html>',
     ]);
   });
 
