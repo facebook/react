@@ -33,3 +33,48 @@ export function isClientReference(reference: Object): boolean {
 export function isServerReference(reference: Object): boolean {
   return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
+
+export function createClientReference<T>(
+  id: string,
+  exportName: string,
+): ClientReference<T> {
+  return {
+    $$typeof: CLIENT_REFERENCE_TAG,
+    $$id: id,
+    $$name: exportName,
+  };
+}
+
+// $FlowFixMe[method-unbinding]
+const FunctionBind = Function.prototype.bind;
+// $FlowFixMe[method-unbinding]
+const ArraySlice = Array.prototype.slice;
+function bind(this: ServerReference<any>): any {
+  // $FlowFixMe[unsupported-syntax]
+  const newFn = FunctionBind.apply(this, arguments);
+  if (this.$$typeof === SERVER_REFERENCE_TAG) {
+    const args = ArraySlice.call(arguments, 1);
+    return Object.defineProperties((newFn: any), {
+      $$typeof: {value: SERVER_REFERENCE_TAG},
+      $$id: {value: this.$$id},
+      $$name: {value: this.$$name},
+      $$bound: {value: this.$$bound ? this.$$bound.concat(args) : args},
+      bind: {value: bind},
+    });
+  }
+  return newFn;
+}
+
+export function registerServerReference<T>(
+  reference: ServerReference<T>,
+  id: string,
+  exportName: string,
+): ServerReference<T> {
+  return Object.defineProperties((reference: any), {
+    $$typeof: {value: SERVER_REFERENCE_TAG},
+    $$id: {value: id},
+    $$name: {value: exportName},
+    $$bound: {value: null},
+    bind: {value: bind},
+  });
+}

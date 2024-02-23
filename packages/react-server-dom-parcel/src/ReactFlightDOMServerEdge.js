@@ -29,6 +29,11 @@ import {
   decodeFormState,
 } from 'react-server/src/ReactFlightActionServer';
 
+export {
+  createClientReference,
+  registerServerReference,
+} from './ReactFlightParcelReferences';
+
 type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,

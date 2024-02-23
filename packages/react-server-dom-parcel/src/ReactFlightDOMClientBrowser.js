@@ -10,6 +10,7 @@
 import type {Thenable} from 'shared/ReactTypes.js';
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
+import type {ServerReferenceId} from './ReactFlightClientConfigBundlerParcel';
 
 import {
   createResponse,
@@ -21,22 +22,32 @@ import {
 
 import {
   processReply,
-  createServerReference,
+  createServerReference as createServerReferenceImpl,
 } from 'react-client/src/ReactFlightReplyClient';
 
-type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
+type CallServerCallback = <A, T>(ServerReferenceId, args: A) => Promise<T>;
 
-export type Options = {
-  callServer?: CallServerCallback,
-};
+let callServer: CallServerCallback | null = null;
+export function setServerCallback(fn: CallServerCallback) {
+  callServer = fn;
+}
 
-function createResponseFromOptions(options: void | Options) {
-  return createResponse(
-    null,
-    null,
-    options && options.callServer ? options.callServer : undefined,
-    undefined, // nonce
-  );
+function callCurrentServerCallback<A, T>(
+  id: ServerReferenceId,
+  args: A,
+): Promise<T> {
+  if (!callServer) {
+    throw new Error(
+      'No server callback has been registered. Call setServerCallback to register one.',
+    );
+  }
+  callServer(id, args);
+}
+
+export function createServerReference<A: Iterable<any>, T>(
+  id: ServerReferenceId,
+): (...A) => Promise<T> {
+  return createServerReferenceImpl(id, callCurrentServerCallback);
 }
 
 function startReadingFromStream(
@@ -66,20 +77,26 @@ function startReadingFromStream(
   reader.read().then(progress).catch(error);
 }
 
-function createFromReadableStream<T>(
-  stream: ReadableStream,
-  options?: Options,
-): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
+function createFromReadableStream<T>(stream: ReadableStream): Thenable<T> {
+  const response: FlightResponse = createResponse(
+    null,
+    null,
+    callCurrentServerCallback,
+    undefined, // nonce
+  );
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
 
 function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
+  const response: FlightResponse = createResponse(
+    null,
+    null,
+    callCurrentServerCallback,
+    undefined, // nonce
+  );
   promiseForResponse.then(
     function (r) {
       startReadingFromStream(response, (r.body: any));
@@ -101,9 +118,4 @@ function encodeReply(
   });
 }
 
-export {
-  createFromFetch,
-  createFromReadableStream,
-  encodeReply,
-  createServerReference,
-};
+export {createFromFetch, createFromReadableStream, encodeReply};

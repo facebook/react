@@ -40,6 +40,11 @@ import {
   decodeFormState,
 } from 'react-server/src/ReactFlightActionServer';
 
+export {
+  createClientReference,
+  registerServerReference,
+} from './ReactFlightParcelReferences';
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
