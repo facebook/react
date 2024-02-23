@@ -9,6 +9,7 @@ import { Environment } from "../HIR";
 import {
   HIRFunction,
   Identifier,
+  IdentifierId,
   Instruction,
   makeInstructionId,
   makeScopeId,
@@ -190,6 +191,10 @@ export function findDisjointMutableValues(
   fn: HIRFunction
 ): DisjointSet<Identifier> {
   const scopeIdentifiers = new DisjointSet<Identifier>();
+  const declarations: Map<IdentifierId, Place> | null = fn.env.config
+    .enableForest
+    ? new Map()
+    : null;
   for (const [_, block] of fn.body.blocks) {
     /*
      * If a phi is mutated after creation, then we need to alias all of its operands such that they
@@ -218,7 +223,14 @@ export function findDisjointMutableValues(
       if (range.end > range.start + 1 || mayAllocate(fn.env, instr)) {
         operands.push(instr.lvalue!.identifier);
       }
-      if (
+      if (instr.value.kind === "DeclareLocal") {
+        if (declarations !== null) {
+          declarations.set(
+            instr.value.lvalue.place.identifier.id,
+            instr.value.lvalue.place
+          );
+        }
+      } else if (
         instr.value.kind === "StoreLocal" ||
         instr.value.kind === "StoreContext"
       ) {
@@ -233,6 +245,14 @@ export function findDisjointMutableValues(
           instr.value.value.identifier.mutableRange.start > 0
         ) {
           operands.push(instr.value.value.identifier);
+        }
+        if (declarations !== null) {
+          const declaration = declarations.get(
+            instr.value.lvalue.place.identifier.id
+          );
+          if (declaration !== undefined) {
+            operands.push(declaration.identifier);
+          }
         }
       } else if (instr.value.kind === "Destructure") {
         for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
