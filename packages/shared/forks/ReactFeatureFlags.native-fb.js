@@ -24,6 +24,7 @@ export const {
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
   useMicrotasksForSchedulingInFabric,
+  enableUnifiedSyncLane,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -51,7 +52,6 @@ export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableScopeAPI = false;
-export const enableUnifiedSyncLane = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
