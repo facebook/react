@@ -1355,6 +1355,18 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+export function validateHydratableInstance(
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): void {
+  if (__DEV__) {
+    // TODO: take namespace into account when validating.
+    const hostContextDev: HostContextDev = (hostContext: any);
+    validateDOMNesting(type, hostContextDev.ancestorInfo);
+  }
+}
+
 export function hydrateInstance(
   instance: Instance,
   type: string,
@@ -1381,6 +1393,19 @@ export function hydrateInstance(
     shouldWarnDev,
     hostContext,
   );
+}
+
+export function validateHydratableTextInstance(
+  text: string,
+  hostContext: HostContext,
+): void {
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    const ancestor = hostContextDev.ancestorInfo.current;
+    if (ancestor != null) {
+      validateTextNesting(text, ancestor.tag);
+    }
+  }
 }
 
 export function hydrateTextInstance(

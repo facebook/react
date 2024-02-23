@@ -75,6 +75,8 @@ import {
   canHydrateFormStateMarker,
   isFormStateMarkerMatching,
   isHydratableText,
+  validateHydratableInstance,
+  validateHydratableTextInstance
 } from './ReactFiberConfig';
 import {OffscreenLane} from './ReactFiberLane';
 import {
@@ -446,6 +448,11 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
+
+  // Validate that this is ok to render here before any mismatches.
+  const currentHostContext = getHostContext();
+  validateHydratableInstance(fiber.type, fiber.pendingProps, currentHostContext);
+
   const initialInstance = nextHydratableInstance;
   const nextInstance = nextHydratableInstance;
   if (!nextInstance) {
@@ -496,6 +503,12 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   }
   const text = fiber.pendingProps;
   const isHydratable = isHydratableText(text);
+
+  if (isHydratable) {
+    // Validate that this is ok to render here before any mismatches.
+    const currentHostContext = getHostContext();
+    validateHydratableTextInstance(text, currentHostContext);
+  }
 
   const initialInstance = nextHydratableInstance;
   const nextInstance = nextHydratableInstance;
