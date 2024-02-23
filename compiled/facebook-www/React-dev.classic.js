@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-b8eb15b2";
+    var ReactVersion = "18.3.0-www-classic-7910dce1";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -289,7 +289,7 @@ if (__DEV__) {
         partialState != null
       ) {
         throw new Error(
-          "setState(...): takes an object of state variables to update or a " +
+          "takes an object of state variables to update or a " +
             "function which returns an object of state variables."
         );
       }
@@ -1932,7 +1932,7 @@ if (__DEV__) {
     function cloneElement(element, config, children) {
       if (element === null || element === undefined) {
         throw new Error(
-          "React.cloneElement(...): The argument must be a React element, but you passed " +
+          "The argument must be a React element, but you passed " +
             element +
             "."
         );
@@ -2859,7 +2859,7 @@ if (__DEV__) {
             // $FlowFixMe[missing-local-annot]
             set: function (newDefaultProps) {
               error(
-                "React.lazy(...): It is not supported to assign `defaultProps` to " +
+                "It is not supported to assign `defaultProps` to " +
                   "a lazy component import. Either specify them where the component " +
                   "is defined, or create a wrapping component around it."
               );
@@ -2880,7 +2880,7 @@ if (__DEV__) {
             // $FlowFixMe[missing-local-annot]
             set: function (newPropTypes) {
               error(
-                "React.lazy(...): It is not supported to assign `propTypes` to " +
+                "It is not supported to assign `propTypes` to " +
                   "a lazy component import. Either specify them where the component " +
                   "is defined, or create a wrapping component around it."
               );

@@ -1115,8 +1115,7 @@ if (__DEV__) {
       }
 
       throw new Error(
-        methodName +
-          "(...): the first argument must be a React class instance. " +
+        "The first argument must be a React class instance. " +
           ("Instead received: " + received + ".")
       );
     }
@@ -1181,7 +1180,7 @@ if (__DEV__) {
     }
 
     function findAllInRenderedTree(inst, test) {
-      validateClassInstance(inst, "findAllInRenderedTree");
+      validateClassInstance(inst);
 
       if (!inst) {
         return [];
@@ -1197,7 +1196,7 @@ if (__DEV__) {
      */
 
     function scryRenderedDOMComponentsWithClass(root, classNames) {
-      validateClassInstance(root, "scryRenderedDOMComponentsWithClass");
+      validateClassInstance(root);
       return findAllInRenderedTree(root, function (inst) {
         if (isDOMComponent(inst)) {
           var className = inst.className;
@@ -1236,7 +1235,7 @@ if (__DEV__) {
      */
 
     function findRenderedDOMComponentWithClass(root, className) {
-      validateClassInstance(root, "findRenderedDOMComponentWithClass");
+      validateClassInstance(root);
       var all = scryRenderedDOMComponentsWithClass(root, className);
 
       if (all.length !== 1) {
@@ -1258,7 +1257,7 @@ if (__DEV__) {
      */
 
     function scryRenderedDOMComponentsWithTag(root, tagName) {
-      validateClassInstance(root, "scryRenderedDOMComponentsWithTag");
+      validateClassInstance(root);
       return findAllInRenderedTree(root, function (inst) {
         return (
           isDOMComponent(inst) &&
@@ -1274,7 +1273,7 @@ if (__DEV__) {
      */
 
     function findRenderedDOMComponentWithTag(root, tagName) {
-      validateClassInstance(root, "findRenderedDOMComponentWithTag");
+      validateClassInstance(root);
       var all = scryRenderedDOMComponentsWithTag(root, tagName);
 
       if (all.length !== 1) {
@@ -1295,7 +1294,7 @@ if (__DEV__) {
      */
 
     function scryRenderedComponentsWithType(root, componentType) {
-      validateClassInstance(root, "scryRenderedComponentsWithType");
+      validateClassInstance(root);
       return findAllInRenderedTree(root, function (inst) {
         return isCompositeComponentWithType(inst, componentType);
       });
@@ -1308,7 +1307,7 @@ if (__DEV__) {
      */
 
     function findRenderedComponentWithType(root, componentType) {
-      validateClassInstance(root, "findRenderedComponentWithType");
+      validateClassInstance(root);
       var all = scryRenderedComponentsWithType(root, componentType);
 
       if (all.length !== 1) {

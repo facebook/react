@@ -17084,7 +17084,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1783 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-97e7ee15",
+  version: "18.3.0-www-modern-b3aa24eb",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2154 = {
@@ -17115,7 +17115,7 @@ var internals$jscomp$inline_2154 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-97e7ee15"
+  reconcilerVersion: "18.3.0-www-modern-b3aa24eb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2155 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17140,7 +17140,7 @@ exports.createHasPseudoClassSelector = function (selectors) {
 exports.createPortal = function (children, container) {
   var key =
     2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null;
-  if (!isValidContainer(container)) throw Error(formatProdErrorMessage(200));
+  if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   return createPortal$1(children, container, null, key);
 };
 exports.createRoleSelector = function (role) {
@@ -17312,7 +17312,7 @@ exports.getFindAllNodesFailureDescription = function (hostRoot, selectors) {
   return null;
 };
 exports.hydrateRoot = function (container, children, options) {
-  if (!isValidContainer(container)) throw Error(formatProdErrorMessage(405));
+  if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
     identifierPrefix = "",
@@ -17536,4 +17536,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-97e7ee15";
+exports.version = "18.3.0-www-modern-b3aa24eb";

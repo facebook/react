@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-b6af9ab5";
+    var ReactVersion = "18.3.0-www-modern-787d1085";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -12389,21 +12389,20 @@ if (__DEV__) {
       Object.freeze(fakeInternalInstance);
     }
 
-    function warnOnInvalidCallback(callback, callerName) {
+    function warnOnInvalidCallback(callback) {
       {
         if (callback === null || typeof callback === "function") {
           return;
-        }
+        } // eslint-disable-next-line react-internal/safe-string-coercion
 
-        var key = callerName + "_" + callback;
+        var key = String(callback);
 
         if (!didWarnOnInvalidCallback.has(key)) {
           didWarnOnInvalidCallback.add(key);
 
           error(
-            "%s(...): Expected the last optional `callback` argument to be a " +
+            "Expected the last optional `callback` argument to be a " +
               "function. Instead received: %s.",
-            callerName,
             callback
           );
         }
@@ -12477,7 +12476,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "setState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -12512,7 +12511,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "replaceState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -12547,7 +12546,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "forceUpdate");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -12640,13 +12639,13 @@ if (__DEV__) {
         if (!renderPresent) {
           if (ctor.prototype && typeof ctor.prototype.render === "function") {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: did you accidentally return an object from the constructor?",
               name
             );
           } else {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: you may have forgotten to define `render`.",
               name
             );
@@ -12775,9 +12774,8 @@ if (__DEV__) {
 
         if (instance.props !== undefined && hasMutatedProps) {
           error(
-            "%s(...): When calling super() in `%s`, make sure to pass " +
+            "When calling super() in `%s`, make sure to pass " +
               "up the same props that your component's constructor was passed.",
-            name,
             name
           );
         }
@@ -15759,7 +15757,8 @@ if (__DEV__) {
         if (Component) {
           if (Component.childContextTypes) {
             error(
-              "%s(...): childContextTypes cannot be defined on a function component.",
+              "childContextTypes cannot be defined on a function component.\n" +
+                "  %s.childContextTypes = ...",
               Component.displayName || Component.name || "Component"
             );
           }
@@ -29834,7 +29833,7 @@ if (__DEV__) {
         {
           if (typeof callback !== "function") {
             error(
-              "render(...): Expected the last optional `callback` argument to be a " +
+              "Expected the last optional `callback` argument to be a " +
                 "function. Instead received: %s.",
               callback
             );

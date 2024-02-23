@@ -5205,15 +5205,14 @@ if (__DEV__) {
           }
 
           error(
-            "validateDOMNesting(...): %s cannot appear as a child of <%s>.%s",
+            "%s cannot appear as a child of <%s>.%s",
             tagDisplayName,
             ancestorTag,
             info
           );
         } else {
           error(
-            "validateDOMNesting(...): %s cannot appear as a descendant of " +
-              "<%s>.",
+            "%s cannot appear as a descendant of " + "<%s>.",
             tagDisplayName,
             ancestorTag
           );
@@ -5236,13 +5235,10 @@ if (__DEV__) {
         didWarn[warnKey] = true;
 
         if (/\S/.test(childText)) {
-          error(
-            "validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.",
-            parentTag
-          );
+          error("Text nodes cannot appear as a child of <%s>.", parentTag);
         } else {
           error(
-            "validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. " +
+            "Whitespace text nodes cannot appear as a child of <%s>. " +
               "Make sure you don't have any extra whitespace between tags on " +
               "each line of your source code.",
             parentTag
@@ -17550,21 +17546,20 @@ if (__DEV__) {
       Object.freeze(fakeInternalInstance);
     }
 
-    function warnOnInvalidCallback(callback, callerName) {
+    function warnOnInvalidCallback(callback) {
       {
         if (callback === null || typeof callback === "function") {
           return;
-        }
+        } // eslint-disable-next-line react-internal/safe-string-coercion
 
-        var key = callerName + "_" + callback;
+        var key = String(callback);
 
         if (!didWarnOnInvalidCallback.has(key)) {
           didWarnOnInvalidCallback.add(key);
 
           error(
-            "%s(...): Expected the last optional `callback` argument to be a " +
+            "Expected the last optional `callback` argument to be a " +
               "function. Instead received: %s.",
-            callerName,
             callback
           );
         }
@@ -17638,7 +17633,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "setState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -17673,7 +17668,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "replaceState");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -17708,7 +17703,7 @@ if (__DEV__) {
 
         if (callback !== undefined && callback !== null) {
           {
-            warnOnInvalidCallback(callback, "forceUpdate");
+            warnOnInvalidCallback(callback);
           }
 
           update.callback = callback;
@@ -17801,13 +17796,13 @@ if (__DEV__) {
         if (!renderPresent) {
           if (ctor.prototype && typeof ctor.prototype.render === "function") {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: did you accidentally return an object from the constructor?",
               name
             );
           } else {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: you may have forgotten to define `render`.",
               name
             );
@@ -17936,9 +17931,8 @@ if (__DEV__) {
 
         if (instance.props !== undefined && hasMutatedProps) {
           error(
-            "%s(...): When calling super() in `%s`, make sure to pass " +
+            "When calling super() in `%s`, make sure to pass " +
               "up the same props that your component's constructor was passed.",
-            name,
             name
           );
         }
@@ -21133,7 +21127,8 @@ if (__DEV__) {
         if (Component) {
           if (Component.childContextTypes) {
             error(
-              "%s(...): childContextTypes cannot be defined on a function component.",
+              "childContextTypes cannot be defined on a function component.\n" +
+                "  %s.childContextTypes = ...",
               Component.displayName || Component.name || "Component"
             );
           }
@@ -36420,7 +36415,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-e0cecec0";
+    var ReactVersion = "18.3.0-www-modern-dac10aba";
 
     function createPortal$1(
       children,
@@ -36589,7 +36584,7 @@ if (__DEV__) {
         {
           if (typeof callback !== "function") {
             error(
-              "render(...): Expected the last optional `callback` argument to be a " +
+              "Expected the last optional `callback` argument to be a " +
                 "function. Instead received: %s.",
               callback
             );
@@ -48263,7 +48258,7 @@ if (__DEV__) {
         {
           if (typeof arguments[1] === "function") {
             error(
-              "render(...): does not support the second callback argument. " +
+              "does not support the second callback argument. " +
                 "To execute a side effect after rendering, declare it in a component body with useEffect()."
             );
           } else if (isValidContainer(arguments[1])) {
@@ -48287,7 +48282,7 @@ if (__DEV__) {
         {
           if (typeof arguments[0] === "function") {
             error(
-              "unmount(...): does not support a callback argument. " +
+              "does not support a callback argument. " +
                 "To execute a side effect after rendering, declare it in a component body with useEffect()."
             );
           }
@@ -48318,9 +48313,7 @@ if (__DEV__) {
 
     function createRoot$2(container, options) {
       if (!isValidContainer(container)) {
-        throw new Error(
-          "createRoot(...): Target container is not a DOM element."
-        );
+        throw new Error("Target container is not a DOM element.");
       }
 
       warnIfReactDOMContainerInDEV(container);
@@ -48407,9 +48400,7 @@ if (__DEV__) {
       scheduleHydration;
     function hydrateRoot$2(container, initialChildren, options) {
       if (!isValidContainer(container)) {
-        throw new Error(
-          "hydrateRoot(...): Target container is not a DOM element."
-        );
+        throw new Error("Target container is not a DOM element.");
       }
 
       warnIfReactDOMContainerInDEV(container);

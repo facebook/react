@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-4b346c06";
+    var ReactVersion = "18.3.0-www-modern-05662545";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -8885,21 +8885,20 @@ if (__DEV__) {
       didWarnOnInvalidCallback = new Set();
     }
 
-    function warnOnInvalidCallback(callback, callerName) {
+    function warnOnInvalidCallback(callback) {
       {
         if (callback === null || typeof callback === "function") {
           return;
-        }
+        } // eslint-disable-next-line react-internal/safe-string-coercion
 
-        var key = callerName + "_" + callback;
+        var key = String(callback);
 
         if (!didWarnOnInvalidCallback.has(key)) {
           didWarnOnInvalidCallback.add(key);
 
           error(
-            "%s(...): Expected the last optional `callback` argument to be a " +
+            "Expected the last optional `callback` argument to be a " +
               "function. Instead received: %s.",
-            callerName,
             callback
           );
         }
@@ -8937,10 +8936,9 @@ if (__DEV__) {
         }
 
         error(
-          "%s(...): Can only update a mounting component. " +
+          "Can only update a mounting component. " +
             "This usually means you called %s() outside componentWillMount() on the server. " +
             "This is a no-op.\n\nPlease check the code for the %s component.",
-          callerName,
           callerName,
           componentName
         );
@@ -8964,7 +8962,7 @@ if (__DEV__) {
 
           {
             if (callback !== undefined && callback !== null) {
-              warnOnInvalidCallback(callback, "setState");
+              warnOnInvalidCallback(callback);
             }
           }
         }
@@ -8976,7 +8974,7 @@ if (__DEV__) {
 
         {
           if (callback !== undefined && callback !== null) {
-            warnOnInvalidCallback(callback, "setState");
+            warnOnInvalidCallback(callback);
           }
         }
       },
@@ -8989,7 +8987,7 @@ if (__DEV__) {
         } else {
           {
             if (callback !== undefined && callback !== null) {
-              warnOnInvalidCallback(callback, "setState");
+              warnOnInvalidCallback(callback);
             }
           }
         }
@@ -9175,13 +9173,13 @@ if (__DEV__) {
         if (!renderPresent) {
           if (ctor.prototype && typeof ctor.prototype.render === "function") {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: did you accidentally return an object from the constructor?",
               name
             );
           } else {
             error(
-              "%s(...): No `render` method found on the returned component " +
+              "No `render` method found on the %s " +
                 "instance: you may have forgotten to define `render`.",
               name
             );
@@ -9310,9 +9308,8 @@ if (__DEV__) {
 
         if (instance.props !== undefined && hasMutatedProps) {
           error(
-            "%s(...): When calling super() in `%s`, make sure to pass " +
+            "When calling super() in `%s`, make sure to pass " +
               "up the same props that your component's constructor was passed.",
-            name,
             name
           );
         }
@@ -12004,7 +12001,8 @@ if (__DEV__) {
         if (Component) {
           if (Component.childContextTypes) {
             error(
-              "%s(...): childContextTypes cannot be defined on a function component.",
+              "childContextTypes cannot be defined on a function component.\n" +
+                "  %s.childContextTypes = ...",
               Component.displayName || Component.name || "Component"
             );
           }

@@ -1601,7 +1601,7 @@ if (__DEV__) {
     function cloneElement(element, config, children) {
       if (element === null || element === undefined) {
         throw new Error(
-          "React.cloneElement(...): The argument must be a React element, but you passed " +
+          "The argument must be a React element, but you passed " +
             element +
             "."
         );
@@ -2556,7 +2556,7 @@ if (__DEV__) {
             // $FlowFixMe[missing-local-annot]
             set: function (newDefaultProps) {
               error(
-                "React.lazy(...): It is not supported to assign `defaultProps` to " +
+                "It is not supported to assign `defaultProps` to " +
                   "a lazy component import. Either specify them where the component " +
                   "is defined, or create a wrapping component around it."
               );
@@ -2577,7 +2577,7 @@ if (__DEV__) {
             // $FlowFixMe[missing-local-annot]
             set: function (newPropTypes) {
               error(
-                "React.lazy(...): It is not supported to assign `propTypes` to " +
+                "It is not supported to assign `propTypes` to " +
                   "a lazy component import. Either specify them where the component " +
                   "is defined, or create a wrapping component around it."
               );
@@ -2836,7 +2836,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-44998407";
+    var ReactVersion = "18.3.0-www-modern-915264c7";
 
     // Patch fetch
     var Children = {
