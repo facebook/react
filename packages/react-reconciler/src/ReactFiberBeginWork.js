@@ -1512,11 +1512,11 @@ function updateHostComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  pushHostContext(workInProgress);
-
   if (current === null) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
+
+  pushHostContext(workInProgress);
 
   const type = workInProgress.type;
   const nextProps = workInProgress.pendingProps;

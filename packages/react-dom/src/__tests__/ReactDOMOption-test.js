@@ -46,7 +46,8 @@ describe('ReactDOMOption', () => {
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
     }).toErrorDev(
-      '<div> cannot appear as a child of <option>.\n' +
+      'In HTML, <div> cannot be a child of <option>.\n' +
+        'This will cause a hydration error.\n' +
         '    in div (at **)\n' +
         '    in option (at **)',
     );
@@ -263,7 +264,7 @@ describe('ReactDOMOption', () => {
       [
         'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
         'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
-        'Warning: <div> cannot appear as a child of <option>',
+        'Warning: In HTML, <div> cannot be a child of <option>',
       ],
       {withoutStack: 1},
     );

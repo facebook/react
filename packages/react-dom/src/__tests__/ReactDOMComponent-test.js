@@ -2188,8 +2188,9 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: <tr> cannot appear as a child of ' +
-          '<div>.' +
+        'Warning: In HTML, <tr> cannot be a child of ' +
+          '<div>.\n' +
+          'This will cause a hydration error.' +
           '\n    in tr (at **)' +
           '\n    in div (at **)',
       ]);
@@ -2208,8 +2209,9 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'Warning: <p> cannot appear as a descendant ' +
-          'of <p>.' +
+        'Warning: In HTML, <p> cannot be a descendant ' +
+          'of <p>.\n' +
+          'This will cause a hydration error.' +
           // There is no outer `p` here because root container is not part of the stack.
           '\n    in p (at **)' +
           '\n    in span (at **)',
@@ -2241,22 +2243,25 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev([
-        'Warning: <tr> cannot appear as a child of ' +
+        'Warning: In HTML, <tr> cannot be a child of ' +
           '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
-          'by the browser.' +
+          'by the browser.\n' +
+          'This will cause a hydration error.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: Text nodes cannot appear as a ' +
-          'child of <tr>.' +
+        'Warning: In HTML, text nodes cannot be a ' +
+          'child of <tr>.\n' +
+          'This will cause a hydration error.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: Whitespace text nodes cannot ' +
-          "appear as a child of <table>. Make sure you don't have any extra " +
-          'whitespace between tags on each line of your source code.' +
+        'Warning: In HTML, whitespace text nodes cannot ' +
+          "be a child of <table>. Make sure you don't have any extra " +
+          'whitespace between tags on each line of your source code.\n' +
+          'This will cause a hydration error.' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2283,9 +2288,10 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo> </Foo>);
         });
       }).toErrorDev([
-        'Warning: Whitespace text nodes cannot ' +
-          "appear as a child of <table>. Make sure you don't have any extra " +
-          'whitespace between tags on each line of your source code.' +
+        'Warning: In HTML, whitespace text nodes cannot ' +
+          "be a child of <table>. Make sure you don't have any extra " +
+          'whitespace between tags on each line of your source code.\n' +
+          'This will cause a hydration error.' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2311,8 +2317,9 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: Text nodes cannot appear as a ' +
-          'child of <tr>.' +
+        'Warning: In HTML, text nodes cannot be a ' +
+          'child of <tr>.\n' +
+          'This will cause a hydration error.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in tbody (at **)' +
