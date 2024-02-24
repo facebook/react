@@ -5044,7 +5044,7 @@ if (__DEV__) {
         var invalidParentOrAncestor = invalidParent || invalidAncestor;
 
         if (!invalidParentOrAncestor) {
-          return;
+          return true;
         }
 
         var ancestorTag = invalidParentOrAncestor.tag;
@@ -5052,7 +5052,7 @@ if (__DEV__) {
           String(!!invalidParent) + "|" + childTag + "|" + ancestorTag;
 
         if (didWarn[warnKey]) {
-          return;
+          return false;
         }
 
         didWarn[warnKey] = true;
@@ -5068,45 +5068,56 @@ if (__DEV__) {
           }
 
           error(
-            "%s cannot appear as a child of <%s>.%s",
+            "In HTML, %s cannot be a child of <%s>.%s\n" +
+              "This will cause a hydration error.",
             tagDisplayName,
             ancestorTag,
             info
           );
         } else {
           error(
-            "%s cannot appear as a descendant of " + "<%s>.",
+            "In HTML, %s cannot be a descendant of <%s>.\n" +
+              "This will cause a hydration error.",
             tagDisplayName,
             ancestorTag
           );
         }
+
+        return false;
       }
     }
 
     function validateTextNesting(childText, parentTag) {
       {
         if (isTagValidWithParent("#text", parentTag)) {
-          return;
+          return true;
         } // eslint-disable-next-line react-internal/safe-string-coercion
 
         var warnKey = "#text|" + parentTag;
 
         if (didWarn[warnKey]) {
-          return;
+          return false;
         }
 
         didWarn[warnKey] = true;
 
         if (/\S/.test(childText)) {
-          error("Text nodes cannot appear as a child of <%s>.", parentTag);
+          error(
+            "In HTML, text nodes cannot be a child of <%s>.\n" +
+              "This will cause a hydration error.",
+            parentTag
+          );
         } else {
           error(
-            "Whitespace text nodes cannot appear as a child of <%s>. " +
+            "In HTML, whitespace text nodes cannot be a child of <%s>. " +
               "Make sure you don't have any extra whitespace between tags on " +
-              "each line of your source code.",
+              "each line of your source code.\n" +
+              "This will cause a hydration error.",
             parentTag
           );
         }
+
+        return false;
       }
     }
 
@@ -8168,7 +8179,6 @@ if (__DEV__) {
     }
 
     function deleteHydratableInstance(returnFiber, instance) {
-      warnUnhydratedInstance(returnFiber, instance);
       var childToDelete = createFiberFromHostInstanceForDeletion();
       childToDelete.stateNode = instance;
       childToDelete.return = returnFiber;
@@ -8182,7 +8192,7 @@ if (__DEV__) {
       }
     }
 
-    function warnNonhydratedInstance(returnFiber, fiber) {
+    function warnNonHydratedInstance(returnFiber, fiber) {
       {
         if (didSuspendOrErrorDEV) {
           // Inside a boundary that already suspended. We're currently rendering the
@@ -8294,7 +8304,6 @@ if (__DEV__) {
 
     function insertNonHydratedInstance(returnFiber, fiber) {
       fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-      warnNonhydratedInstance(returnFiber, fiber);
     }
 
     function tryHydrateInstance(fiber, nextInstance) {
@@ -8407,18 +8416,32 @@ if (__DEV__) {
     function tryToClaimNextHydratableInstance(fiber) {
       if (!isHydrating) {
         return;
-      }
+      } // Validate that this is ok to render here before any mismatches.
 
+      var currentHostContext = getHostContext();
+      var shouldKeepWarning = validateHydratableInstance(
+        fiber.type,
+        fiber.pendingProps,
+        currentHostContext
+      );
       var initialInstance = nextHydratableInstance;
       var nextInstance = nextHydratableInstance;
 
       if (!nextInstance) {
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           throwOnHydrationMismatch();
         } // Nothing to hydrate. Make it an insertion.
 
         insertNonHydratedInstance(hydrationParentFiber, fiber);
+
+        if (shouldKeepWarning) {
+          warnNonHydratedInstance(hydrationParentFiber, fiber);
+        }
+
         isHydrating = false;
         hydrationParentFiber = fiber;
         nextHydratableInstance = initialInstance;
@@ -8429,7 +8452,10 @@ if (__DEV__) {
 
       if (!tryHydrateInstance(fiber, nextInstance)) {
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           throwOnHydrationMismatch();
         } // If we can't hydrate this instance let's try the next one.
         // We use this as a heuristic. It's based on intuition and not data so it
@@ -8444,6 +8470,11 @@ if (__DEV__) {
         ) {
           // Nothing to hydrate. Make it an insertion.
           insertNonHydratedInstance(hydrationParentFiber, fiber);
+
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           isHydrating = false;
           hydrationParentFiber = fiber;
           nextHydratableInstance = initialInstance;
@@ -8452,6 +8483,13 @@ if (__DEV__) {
         // superfluous and we'll delete it. Since we can't eagerly delete it
         // we'll have to schedule a deletion. To do that, this node needs a dummy
         // fiber associated with it.
+
+        if (shouldKeepWarning) {
+          warnUnhydratedInstance(
+            prevHydrationParentFiber,
+            firstAttemptedInstance
+          );
+        }
 
         deleteHydratableInstance(
           prevHydrationParentFiber,
@@ -8467,6 +8505,17 @@ if (__DEV__) {
 
       var text = fiber.pendingProps;
       var isHydratable = isHydratableText(text);
+      var shouldKeepWarning = true;
+
+      if (isHydratable) {
+        // Validate that this is ok to render here before any mismatches.
+        var currentHostContext = getHostContext();
+        shouldKeepWarning = validateHydratableTextInstance(
+          text,
+          currentHostContext
+        );
+      }
+
       var initialInstance = nextHydratableInstance;
       var nextInstance = nextHydratableInstance;
 
@@ -8474,11 +8523,19 @@ if (__DEV__) {
         // We exclude non hydrabable text because we know there are no matching hydratables.
         // We either throw or insert depending on the render mode.
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           throwOnHydrationMismatch();
         } // Nothing to hydrate. Make it an insertion.
 
         insertNonHydratedInstance(hydrationParentFiber, fiber);
+
+        if (shouldKeepWarning) {
+          warnNonHydratedInstance(hydrationParentFiber, fiber);
+        }
+
         isHydrating = false;
         hydrationParentFiber = fiber;
         nextHydratableInstance = initialInstance;
@@ -8489,7 +8546,10 @@ if (__DEV__) {
 
       if (!tryHydrateText(fiber, nextInstance)) {
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           throwOnHydrationMismatch();
         } // If we can't hydrate this instance let's try the next one.
         // We use this as a heuristic. It's based on intuition and not data so it
@@ -8504,6 +8564,11 @@ if (__DEV__) {
         ) {
           // Nothing to hydrate. Make it an insertion.
           insertNonHydratedInstance(hydrationParentFiber, fiber);
+
+          if (shouldKeepWarning) {
+            warnNonHydratedInstance(hydrationParentFiber, fiber);
+          }
+
           isHydrating = false;
           hydrationParentFiber = fiber;
           nextHydratableInstance = initialInstance;
@@ -8512,6 +8577,13 @@ if (__DEV__) {
         // superfluous and we'll delete it. Since we can't eagerly delete it
         // we'll have to schedule a deletion. To do that, this node needs a dummy
         // fiber associated with it.
+
+        if (shouldKeepWarning) {
+          warnUnhydratedInstance(
+            prevHydrationParentFiber,
+            firstAttemptedInstance
+          );
+        }
 
         deleteHydratableInstance(
           prevHydrationParentFiber,
@@ -8530,11 +8602,12 @@ if (__DEV__) {
 
       if (!nextInstance) {
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          warnNonHydratedInstance(hydrationParentFiber, fiber);
           throwOnHydrationMismatch();
         } // Nothing to hydrate. Make it an insertion.
 
         insertNonHydratedInstance(hydrationParentFiber, fiber);
+        warnNonHydratedInstance(hydrationParentFiber, fiber);
         isHydrating = false;
         hydrationParentFiber = fiber;
         nextHydratableInstance = initialInstance;
@@ -8545,7 +8618,7 @@ if (__DEV__) {
 
       if (!tryHydrateSuspense(fiber, nextInstance)) {
         if (shouldClientRenderOnMismatch(fiber)) {
-          warnNonhydratedInstance(hydrationParentFiber, fiber);
+          warnNonHydratedInstance(hydrationParentFiber, fiber);
           throwOnHydrationMismatch();
         } // If we can't hydrate this instance let's try the next one.
         // We use this as a heuristic. It's based on intuition and not data so it
@@ -8560,6 +8633,7 @@ if (__DEV__) {
         ) {
           // Nothing to hydrate. Make it an insertion.
           insertNonHydratedInstance(hydrationParentFiber, fiber);
+          warnNonHydratedInstance(hydrationParentFiber, fiber);
           isHydrating = false;
           hydrationParentFiber = fiber;
           nextHydratableInstance = initialInstance;
@@ -8569,6 +8643,10 @@ if (__DEV__) {
         // we'll have to schedule a deletion. To do that, this node needs a dummy
         // fiber associated with it.
 
+        warnUnhydratedInstance(
+          prevHydrationParentFiber,
+          firstAttemptedInstance
+        );
         deleteHydratableInstance(
           prevHydrationParentFiber,
           firstAttemptedInstance
@@ -8785,6 +8863,7 @@ if (__DEV__) {
             throwOnHydrationMismatch();
           } else {
             while (nextInstance) {
+              warnUnhydratedInstance(fiber, nextInstance);
               deleteHydratableInstance(fiber, nextInstance);
               nextInstance = getNextHydratableSibling(nextInstance);
             }
@@ -20581,12 +20660,11 @@ if (__DEV__) {
     }
 
     function updateHostComponent$1(current, workInProgress, renderLanes) {
-      pushHostContext(workInProgress);
-
       if (current === null) {
         tryToClaimNextHydratableInstance(workInProgress);
       }
 
+      pushHostContext(workInProgress);
       var type = workInProgress.type;
       var nextProps = workInProgress.pendingProps;
       var prevProps = current !== null ? current.memoizedProps : null;
@@ -35791,7 +35869,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-a35e6921";
+    var ReactVersion = "18.3.0-www-modern-8fdd8f89";
 
     function createPortal$1(
       children,
@@ -45483,6 +45561,13 @@ if (__DEV__) {
     function getFirstHydratableChildWithinSuspenseInstance(parentInstance) {
       return getNextHydratable(parentInstance.nextSibling);
     }
+    function validateHydratableInstance(type, props, hostContext) {
+      {
+        // TODO: take namespace into account when validating.
+        var hostContextDev = hostContext;
+        return validateDOMNesting(type, hostContextDev.ancestorInfo);
+      }
+    }
     function hydrateInstance(
       instance,
       type,
@@ -45507,6 +45592,18 @@ if (__DEV__) {
         shouldWarnDev,
         hostContext
       );
+    }
+    function validateHydratableTextInstance(text, hostContext) {
+      {
+        var hostContextDev = hostContext;
+        var ancestor = hostContextDev.ancestorInfo.current;
+
+        if (ancestor != null) {
+          return validateTextNesting(text, ancestor.tag);
+        }
+      }
+
+      return true;
     }
     function hydrateTextInstance(
       textInstance,

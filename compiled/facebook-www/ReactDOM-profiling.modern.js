@@ -12215,7 +12215,6 @@ beginWork = function (current, workInProgress, renderLanes) {
       );
     case 5:
       return (
-        pushHostContext(workInProgress),
         null === current &&
           isHydrating &&
           (((init = Component = nextHydratableInstance), init)
@@ -12240,6 +12239,7 @@ beginWork = function (current, workInProgress, renderLanes) {
               (isHydrating = !1),
               (hydrationParentFiber = workInProgress),
               (nextHydratableInstance = Component))),
+        pushHostContext(workInProgress),
         (init = workInProgress.type),
         (prevState = workInProgress.pendingProps),
         (nextState = null !== current ? current.memoizedProps : null),
@@ -17457,7 +17457,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1863 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-787d1085",
+  version: "18.3.0-www-modern-7015f801",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17502,7 +17502,7 @@ var devToolsConfig$jscomp$inline_1863 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-787d1085"
+  reconcilerVersion: "18.3.0-www-modern-7015f801"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17760,7 +17760,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-787d1085";
+exports.version = "18.3.0-www-modern-7015f801";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

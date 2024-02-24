@@ -11486,7 +11486,6 @@ beginWork = function (current, workInProgress, renderLanes) {
       );
     case 5:
       return (
-        pushHostContext(workInProgress),
         null === current &&
           isHydrating &&
           (((init = Component = nextHydratableInstance), init)
@@ -11511,6 +11510,7 @@ beginWork = function (current, workInProgress, renderLanes) {
               (isHydrating = !1),
               (hydrationParentFiber = workInProgress),
               (nextHydratableInstance = Component))),
+        pushHostContext(workInProgress),
         (init = workInProgress.type),
         (prevState = workInProgress.pendingProps),
         (nextState = null !== current ? current.memoizedProps : null),
@@ -16694,7 +16694,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7fe0e911",
+  version: "18.3.0-www-modern-e1a7b81e",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2143 = {
@@ -16725,7 +16725,7 @@ var internals$jscomp$inline_2143 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7fe0e911"
+  reconcilerVersion: "18.3.0-www-modern-e1a7b81e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16996,4 +16996,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-7fe0e911";
+exports.version = "18.3.0-www-modern-e1a7b81e";

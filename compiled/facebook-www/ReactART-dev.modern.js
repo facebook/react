@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-787d1085";
+    var ReactVersion = "18.3.0-www-modern-7015f801";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -15418,7 +15418,6 @@ if (__DEV__) {
 
     function updateHostComponent$1(current, workInProgress, renderLanes) {
       pushHostContext(workInProgress);
-
       var type = workInProgress.type;
       var nextProps = workInProgress.pendingProps;
       var prevProps = current !== null ? current.memoizedProps : null;
