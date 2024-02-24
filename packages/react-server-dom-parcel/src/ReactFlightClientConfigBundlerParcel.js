@@ -62,7 +62,7 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     // as a CommonJS module as is.
     return moduleExports;
   }
-  if (metadata[NAME] === '') {
+  if (metadata[NAME] === 'default') {
     // This is a placeholder value that represents that the caller accessed the
     // default property of this if it was an ESM interop module.
     return moduleExports.__esModule ? moduleExports.default : moduleExports;
