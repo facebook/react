@@ -17,7 +17,7 @@ export function inferAliasForPhis(
       const isPhiMutatedAfterCreation: boolean =
         phi.id.mutableRange.end >
         (block.instructions.at(0)?.id ?? block.terminal.id);
-      if (isPhiMutatedAfterCreation || func.env.config.enableForest) {
+      if (isPhiMutatedAfterCreation) {
         for (const [, operand] of phi.operands) {
           aliases.union([phi.id, operand]);
         }

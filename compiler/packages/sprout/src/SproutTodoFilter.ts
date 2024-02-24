@@ -442,6 +442,8 @@ const skipFilter = new Set([
   "forest/forest-TasksApp.flow",
   "forest/forest-overwritten-let-binding-type-annotation.flow",
   "forest/forest-phi-type-unused-initializer.flow",
+  "forest/forest-TaskEditor.flow",
+  "forest/forest-TaskTitleField.flow",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",

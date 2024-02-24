@@ -251,6 +251,19 @@ export function findDisjointMutableValues(
             instr.value.lvalue.place.identifier.id
           );
           if (declaration !== undefined) {
+            declaration.identifier.mutableRange.end = makeInstructionId(
+              Math.max(
+                declaration.identifier.mutableRange.end,
+                instr.value.lvalue.place.identifier.mutableRange.end
+              )
+            );
+            instr.value.lvalue.place.identifier.mutableRange.start =
+              makeInstructionId(
+                Math.min(
+                  declaration.identifier.mutableRange.start,
+                  instr.value.lvalue.place.identifier.mutableRange.start
+                )
+              );
             operands.push(declaration.identifier);
           }
         }
