@@ -25,7 +25,7 @@ import {
   createServerReference as createServerReferenceImpl,
 } from 'react-client/src/ReactFlightReplyClient';
 
-type CallServerCallback = <A, T>(ServerReferenceId, args: A) => Promise<T>;
+type CallServerCallback = <A, T>(id: string, args: A) => Promise<T>;
 
 let callServer: CallServerCallback | null = null;
 export function setServerCallback(fn: CallServerCallback) {
@@ -77,7 +77,7 @@ function startReadingFromStream(
   reader.read().then(progress).catch(error);
 }
 
-function createFromReadableStream<T>(stream: ReadableStream): Thenable<T> {
+export function createFromReadableStream<T>(stream: ReadableStream): Thenable<T> {
   const response: FlightResponse = createResponse(
     null,
     null,
@@ -88,7 +88,7 @@ function createFromReadableStream<T>(stream: ReadableStream): Thenable<T> {
   return getRoot(response);
 }
 
-function createFromFetch<T>(
+export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
@@ -108,7 +108,7 @@ function createFromFetch<T>(
   return getRoot(response);
 }
 
-function encodeReply(
+export function encodeReply(
   value: ReactServerValue,
 ): Promise<
   string | URLSearchParams | FormData,
@@ -117,5 +117,3 @@ function encodeReply(
     processReply(value, '', resolve, reject);
   });
 }
-
-export {createFromFetch, createFromReadableStream, encodeReply};

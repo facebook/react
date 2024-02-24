@@ -8,7 +8,8 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {ReactFormState, ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import {preloadModule, requireModule, resolveServerReference, type ServerManifest, type ServerReferenceId} from './ReactFlightClientConfigBundlerParcel';
 
 import {
   createRequest,
@@ -25,8 +26,8 @@ import {
 } from 'react-server/src/ReactFlightReplyServer';
 
 import {
-  decodeAction,
-  decodeFormState,
+  decodeAction as decodeActionImpl,
+  decodeFormState as decodeFormStateImpl,
 } from 'react-server/src/ReactFlightActionServer';
 
 export {
@@ -42,7 +43,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
 };
 
-function renderToReadableStream(
+export function renderToReadableStream(
   model: ReactClientValue,
   options?: Options,
 ): ReadableStream {
@@ -86,16 +87,41 @@ function renderToReadableStream(
   return stream;
 }
 
-function decodeReply<T>(body: string | FormData): Thenable<T> {
+let serverManifest = {};
+export function registerServerActions(manifest: ServerManifest) {
+  // This function is called by the bundler to register the manifest.
+  serverManifest = manifest;
+}
+
+export function decodeReply<T>(body: string | FormData): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(null, '', body);
+  const response = createResponse(serverManifest, '', body);
   const root = getRoot<T>(response);
   close(response);
   return root;
 }
 
-export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};
+export function decodeAction<T>(body: FormData): Promise<() => T> | null {
+  return decodeActionImpl(body, serverManifest);
+}
+
+export function decodeFormState<S>(
+  actionResult: S,
+  body: FormData,
+): Promise<ReactFormState<S, ServerReferenceId> | null> {
+  return decodeFormStateImpl(actionResult, body, serverManifest);
+}
+
+export async function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+  const reference = resolveServerReference(serverManifest, id);
+  await preloadModule(reference);
+  const fn = requireModule(reference);
+  if (typeof fn !== 'function') {
+    throw new Error('Server actions must be functions');
+  }
+  return fn;
+}

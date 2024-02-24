@@ -37,7 +37,7 @@ export type Options = {
   nonce?: string,
 };
 
-function createFromNodeStream<T>(
+export function createFromNodeStream<T>(
   stream: Readable,
   options?: Options,
 ): Thenable<T> {
@@ -56,5 +56,3 @@ function createFromNodeStream<T>(
   stream.on('end', () => close(response));
   return getRoot(response);
 }
-
-export {createFromNodeStream};

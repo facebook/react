@@ -12,7 +12,6 @@ import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
-  $$name: string,
   $$bound: null | Array<ReactClientValue>,
 };
 
@@ -57,7 +56,6 @@ function bind(this: ServerReference<any>): any {
     return Object.defineProperties((newFn: any), {
       $$typeof: {value: SERVER_REFERENCE_TAG},
       $$id: {value: this.$$id},
-      $$name: {value: this.$$name},
       $$bound: {value: this.$$bound ? this.$$bound.concat(args) : args},
       bind: {value: bind},
     });
@@ -72,8 +70,7 @@ export function registerServerReference<T>(
 ): ServerReference<T> {
   return Object.defineProperties((reference: any), {
     $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: id},
-    $$name: {value: exportName},
+    $$id: {value: id + '#' + exportName},
     $$bound: {value: null},
     bind: {value: bind},
   });

@@ -77,7 +77,7 @@ function startReadingFromStream(
   reader.read().then(progress).catch(error);
 }
 
-function createFromReadableStream<T>(
+export function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
@@ -86,7 +86,7 @@ function createFromReadableStream<T>(
   return getRoot(response);
 }
 
-function createFromFetch<T>(
+export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
 ): Thenable<T> {
@@ -102,7 +102,7 @@ function createFromFetch<T>(
   return getRoot(response);
 }
 
-function encodeReply(
+export function encodeReply(
   value: ReactServerValue,
 ): Promise<
   string | URLSearchParams | FormData,
@@ -111,5 +111,3 @@ function encodeReply(
     processReply(value, '', resolve, reject);
   });
 }
-
-export {createFromFetch, createFromReadableStream, encodeReply};

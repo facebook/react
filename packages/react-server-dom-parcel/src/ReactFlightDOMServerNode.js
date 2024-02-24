@@ -14,7 +14,8 @@ import type {
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {ReactFormState, ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {ServerManifest, ServerReferenceId} from './ReactFlightClientConfigBundlerParcel';
 
 import {
   createRequest,
@@ -36,9 +37,14 @@ import {
 } from 'react-server/src/ReactFlightReplyServer';
 
 import {
-  decodeAction,
-  decodeFormState,
+  decodeAction as decodeActionImpl,
+  decodeFormState as decodeFormStateImpl,
 } from 'react-server/src/ReactFlightActionServer';
+import {
+  preloadModule,
+  requireModule,
+  resolveServerReference,
+} from './ReactFlightClientConfigBundlerParcel';
 
 export {
   createClientReference,
@@ -69,7 +75,7 @@ type PipeableStream = {
   pipe<T: Writable>(destination: T): T,
 };
 
-function renderToPipeableStream(
+export function renderToPipeableStream(
   model: ReactClientValue,
   options?: Options,
 ): PipeableStream {
@@ -112,8 +118,14 @@ function renderToPipeableStream(
   };
 }
 
-function decodeReplyFromBusboy<T>(busboyStream: Busboy): Thenable<T> {
-  const response = createResponse(null, '');
+let serverManifest = {};
+export function registerServerActions(manifest: ServerManifest) {
+  // This function is called by the bundler to register the manifest.
+  serverManifest = manifest;
+}
+
+export function decodeReplyFromBusboy<T>(busboyStream: Busboy): Thenable<T> {
+  const response = createResponse(serverManifest, '');
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {
@@ -164,22 +176,35 @@ function decodeReplyFromBusboy<T>(busboyStream: Busboy): Thenable<T> {
   return getRoot(response);
 }
 
-function decodeReply<T>(body: string | FormData): Thenable<T> {
+export function decodeReply<T>(body: string | FormData): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(null, '', body);
+  const response = createResponse(serverManifest, '', body);
   const root = getRoot<T>(response);
   close(response);
   return root;
 }
 
-export {
-  renderToPipeableStream,
-  decodeReplyFromBusboy,
-  decodeReply,
-  decodeAction,
-  decodeFormState,
-};
+export function decodeAction<T>(body: FormData): Promise<() => T> | null {
+  return decodeActionImpl(body, serverManifest);
+}
+
+export function decodeFormState<S>(
+  actionResult: S,
+  body: FormData,
+): Promise<ReactFormState<S, ServerReferenceId> | null> {
+  return decodeFormStateImpl(actionResult, body, serverManifest);
+}
+
+export async function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+  const reference = resolveServerReference<any>(serverManifest, id);
+  await preloadModule(reference);
+  const fn = requireModule(reference);
+  if (typeof fn !== 'function') {
+    throw new Error('Server actions must be functions');
+  }
+  return fn;
+}
