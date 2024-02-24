@@ -1043,7 +1043,7 @@ describe('ReactUpdates', () => {
           component.setState({}, 'no');
         });
       }).toErrorDev(
-        'setState(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       ),
     ).rejects.toThrowError(
@@ -1062,7 +1062,7 @@ describe('ReactUpdates', () => {
           component.setState({}, {foo: 'bar'});
         });
       }).toErrorDev(
-        'setState(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       ),
     ).rejects.toThrowError(
@@ -1112,7 +1112,7 @@ describe('ReactUpdates', () => {
           component.forceUpdate('no');
         });
       }).toErrorDev(
-        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       ),
     ).rejects.toThrowError(
@@ -1131,7 +1131,7 @@ describe('ReactUpdates', () => {
           component.forceUpdate({foo: 'bar'});
         });
       }).toErrorDev(
-        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       ),
     ).rejects.toThrowError(

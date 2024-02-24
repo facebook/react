@@ -187,6 +187,11 @@ export const enableInfiniteRenderLoopDetection = true;
 // during element creation.
 export const enableRefAsProp = __NEXT_MAJOR__;
 
+// Not ready to break experimental yet.
+// Needs more internal cleanup
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

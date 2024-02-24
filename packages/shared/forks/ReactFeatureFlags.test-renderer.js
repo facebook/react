@@ -98,6 +98,7 @@ export const enableInfiniteRenderLoopDetection = false;
 // flags should be handled by the Fiber config.
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = __NEXT_MAJOR__;
+export const enableReactTestRendererWarning = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

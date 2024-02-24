@@ -183,7 +183,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -195,7 +195,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -207,7 +207,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -236,7 +236,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -249,7 +249,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -262,7 +262,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(

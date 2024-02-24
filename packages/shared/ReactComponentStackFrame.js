@@ -51,6 +51,13 @@ export function describeBuiltInComponentFrame(
   }
 }
 
+export function describeDebugInfoFrame(name: string, env: ?string): string {
+  return describeBuiltInComponentFrame(
+    name + (env ? ' (' + env + ')' : ''),
+    null,
+  );
+}
+
 let reentry = false;
 let componentFrameCache;
 if (__DEV__) {

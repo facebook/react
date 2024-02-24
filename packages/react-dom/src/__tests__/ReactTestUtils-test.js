@@ -281,19 +281,19 @@ describe('ReactTestUtils', () => {
     expect(() => {
       ReactTestUtils.findAllInRenderedTree([], 'span');
     }).toThrow(
-      'findAllInRenderedTree(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: an array.',
     );
     expect(() => {
       ReactTestUtils.scryRenderedDOMComponentsWithClass(10, 'button');
     }).toThrow(
-      'scryRenderedDOMComponentsWithClass(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: 10.',
     );
     expect(() => {
       ReactTestUtils.findRenderedDOMComponentWithClass('hello', 'button');
     }).toThrow(
-      'findRenderedDOMComponentWithClass(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: hello.',
     );
     expect(() => {
@@ -302,26 +302,26 @@ describe('ReactTestUtils', () => {
         'span',
       );
     }).toThrow(
-      'scryRenderedDOMComponentsWithTag(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: object with keys {x, y}.',
     );
     const div = document.createElement('div');
     expect(() => {
       ReactTestUtils.findRenderedDOMComponentWithTag(div, 'span');
     }).toThrow(
-      'findRenderedDOMComponentWithTag(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: a DOM node.',
     );
     expect(() => {
       ReactTestUtils.scryRenderedComponentsWithType(true, 'span');
     }).toThrow(
-      'scryRenderedComponentsWithType(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: true.',
     );
     expect(() => {
       ReactTestUtils.findRenderedComponentWithType(true, 'span');
     }).toThrow(
-      'findRenderedComponentWithType(...): the first argument must be a React class instance. ' +
+      'The first argument must be a React class instance. ' +
         'Instead received: true.',
     );
   });

@@ -64,14 +64,14 @@ describe('ReactES6Class', () => {
       expect(() => ReactDOM.flushSync(() => root.render(<Foo />))).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Foo instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Foo instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Foo instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the Foo instance: ' +
+        'you may have forgotten to define `render`.',
     ]);
   });
 

@@ -1512,11 +1512,11 @@ function updateHostComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  pushHostContext(workInProgress);
-
   if (current === null) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
+
+  pushHostContext(workInProgress);
 
   const type = workInProgress.type;
   const nextProps = workInProgress.pendingProps;
@@ -1994,7 +1994,8 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     if (Component) {
       if (Component.childContextTypes) {
         console.error(
-          '%s(...): childContextTypes cannot be defined on a function component.',
+          'childContextTypes cannot be defined on a function component.\n' +
+            '  %s.childContextTypes = ...',
           Component.displayName || Component.name || 'Component',
         );
       }

@@ -41,9 +41,7 @@ describe('ReactMount', () => {
       const nodeArray = document.getElementsByTagName('div');
       expect(() => {
         ReactDOM.unmountComponentAtNode(nodeArray);
-      }).toThrowError(
-        'unmountComponentAtNode(...): Target container is not a DOM element.',
-      );
+      }).toThrowError('Target container is not a DOM element.');
     });
 
     it('returns false on non-React containers', () => {
@@ -201,7 +199,7 @@ describe('ReactMount', () => {
     const rootNode = container.firstChild;
 
     expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
-      'Warning: render(...): Replacing React-rendered children with a new ' +
+      'Warning: Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
         'render the new components instead of calling ReactDOM.render.',

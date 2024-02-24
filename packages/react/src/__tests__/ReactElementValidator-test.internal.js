@@ -310,12 +310,12 @@ describe('ReactElementValidator', () => {
     }).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.' +
-        '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+        'components) but got: null.\n' +
+        '    in ParentComp (at **)',
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.' +
-        '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+        'components) but got: null.\n' +
+        '    in ParentComp (at **)',
     ]);
   });
 
@@ -427,7 +427,7 @@ describe('ReactElementValidator', () => {
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.\n\nCheck your code at **.',
+        'default and named imports.',
       {withoutStack: true},
     );
   });
