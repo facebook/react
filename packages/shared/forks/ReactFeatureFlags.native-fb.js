@@ -66,7 +66,7 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
-export const enableRenderableContext = false;
+export const enableRenderableContext = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
