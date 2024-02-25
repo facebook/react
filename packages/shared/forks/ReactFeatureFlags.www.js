@@ -38,6 +38,7 @@ export const {
   enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
+  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -59,7 +60,6 @@ export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFormActions = true;
 export const enableAsyncActions = true;
