@@ -35,7 +35,6 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
-  enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch,

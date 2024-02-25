@@ -121,8 +121,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
-export const enableRenderableContext = false;
-
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
 /**

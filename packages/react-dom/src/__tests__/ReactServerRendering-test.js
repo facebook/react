@@ -1001,7 +1001,6 @@ describe('ReactDOMServer', () => {
     ]);
   });
 
-  // @gate enableRenderableContext || !__DEV__
   it('should warn if an invalid contextType is defined', () => {
     const Context = React.createContext();
     class ComponentA extends React.Component {

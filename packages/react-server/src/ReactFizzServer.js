@@ -128,7 +128,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
@@ -144,7 +143,6 @@ import {
   enableFloat,
   enableCache,
   enablePostpone,
-  enableRenderableContext,
   enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 
@@ -1724,9 +1722,10 @@ function renderContextConsumer(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  context: ReactContext<any>,
+  type: ReactConsumerType<any>,
   props: Object,
 ): void {
+  const context = type._context;
   const render = props.children;
 
   if (__DEV__) {
@@ -1906,38 +1905,13 @@ function renderElement(
         renderMemo(request, task, keyPath, type, props, ref);
         return;
       }
-      case REACT_PROVIDER_TYPE: {
-        if (!enableRenderableContext) {
-          const context: ReactContext<any> = (type: any)._context;
-          renderContextProvider(request, task, keyPath, context, props);
-          return;
-        }
-        // Fall through
-      }
       case REACT_CONTEXT_TYPE: {
-        if (enableRenderableContext) {
-          const context = type;
-          renderContextProvider(request, task, keyPath, context, props);
-          return;
-        } else {
-          let context: ReactContext<any> = (type: any);
-          if (__DEV__) {
-            if ((context: any)._context !== undefined) {
-              context = (context: any)._context;
-            }
-          }
-          renderContextConsumer(request, task, keyPath, context, props);
-          return;
-        }
+        renderContextProvider(request, task, keyPath, type, props);
+        return;
       }
       case REACT_CONSUMER_TYPE: {
-        if (enableRenderableContext) {
-          const context: ReactContext<any> = (type: ReactConsumerType<any>)
-            ._context;
-          renderContextConsumer(request, task, keyPath, context, props);
-          return;
-        }
-        // Fall through
+        renderContextConsumer(request, task, keyPath, type, props);
+        return;
       }
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, keyPath, type, props);
