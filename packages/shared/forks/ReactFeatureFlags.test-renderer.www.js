@@ -49,7 +49,7 @@ export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableRenderableContext = false;
+export const enableRenderableContext = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
