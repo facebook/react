@@ -21,7 +21,6 @@ import type {
 import {
   findDOMNode,
   render,
-  hydrate,
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
@@ -172,7 +171,6 @@ export {
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs
   findDOMNode,
-  hydrate,
   render,
   unmountComponentAtNode,
   // exposeConcurrentModeAPIs

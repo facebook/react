@@ -52,15 +52,11 @@ module.exports = function (initModules) {
   async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     if (forceHydrate) {
       await act(() => {
-        if (ReactDOMClient) {
-          ReactDOMClient.hydrateRoot(domElement, reactElement, {
-            onRecoverableError: () => {
-              // TODO: assert on recoverable error count.
-            },
-          });
-        } else {
-          ReactDOM.hydrate(reactElement, domElement);
-        }
+        ReactDOMClient.hydrateRoot(domElement, reactElement, {
+          onRecoverableError: () => {
+            // TODO: assert on recoverable error count.
+          },
+        });
       });
     } else {
       await act(() => {

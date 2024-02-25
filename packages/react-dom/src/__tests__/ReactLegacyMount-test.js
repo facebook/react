@@ -13,10 +13,7 @@ const {COMMENT_NODE} = require('react-dom-bindings/src/client/HTMLNodeType');
 
 let React;
 let ReactDOM;
-let ReactDOMServer;
-let Scheduler;
 let ReactDOMClient;
-let assertLog;
 let waitForAll;
 
 describe('ReactMount', () => {
@@ -26,11 +23,8 @@ describe('ReactMount', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactDOMServer = require('react-dom/server');
-    Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
-    assertLog = InternalTestUtils.assertLog;
     waitForAll = InternalTestUtils.waitForAll;
   });
 
@@ -139,25 +133,6 @@ describe('ReactMount', () => {
   });
 
   // @gate !disableLegacyMode
-  it('does not warn if mounting into left padded rendered markup', () => {
-    const container = document.createElement('container');
-    container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
-
-    // This should probably ideally warn but we ignore extra markup at the root.
-    ReactDOM.hydrate(<div />, container);
-  });
-
-  // @gate !disableLegacyMode
-  it('should warn if mounting into right padded rendered markup', () => {
-    const container = document.createElement('container');
-    container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
-
-    expect(() => ReactDOM.hydrate(<div />, container)).toErrorDev(
-      'Did not expect server HTML to contain the text node " " in <container>.',
-    );
-  });
-
-  // @gate !disableLegacyMode
   it('should not warn if mounting into non-empty node', () => {
     const container = document.createElement('container');
     container.innerHTML = '<div></div>';
@@ -172,25 +147,6 @@ describe('ReactMount', () => {
 
     // HostSingletons make the warning for document.body unecessary
     ReactDOM.render(<div />, iFrame.contentDocument.body);
-  });
-
-  // @gate !disableLegacyMode
-  it('should account for escaping on a checksum mismatch', () => {
-    const div = document.createElement('div');
-    const markup = ReactDOMServer.renderToString(
-      <div>This markup contains an nbsp entity: &nbsp; server text</div>,
-    );
-    div.innerHTML = markup;
-
-    expect(() =>
-      ReactDOM.hydrate(
-        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-        div,
-      ),
-    ).toErrorDev(
-      'Server: "This markup contains an nbsp entity:   server text" ' +
-        'Client: "This markup contains an nbsp entity:   client text"',
-    );
   });
 
   // @gate !disableLegacyMode
@@ -411,17 +367,6 @@ describe('ReactMount', () => {
     await waitForAll([]);
     // This works now but we could disallow it:
     expect(container.textContent).toEqual('Bye');
-  });
-
-  // @gate !disableLegacyMode
-  it('callback passed to legacy hydrate() API', () => {
-    const container = document.createElement('div');
-    container.innerHTML = '<div>Hi</div>';
-    ReactDOM.hydrate(<div>Hi</div>, container, () => {
-      Scheduler.log('callback');
-    });
-    expect(container.textContent).toEqual('Hi');
-    assertLog(['callback']);
   });
 
   // @gate !disableLegacyMode

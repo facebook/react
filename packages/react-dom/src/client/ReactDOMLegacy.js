@@ -260,54 +260,6 @@ export function findDOMNode(
   return findHostInstance(componentOrElement);
 }
 
-export function hydrate(
-  element: React$Node,
-  container: Container,
-  callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
-  if (disableLegacyMode) {
-    if (__DEV__) {
-      console.error(
-        'ReactDOM.hydrate was removed in React 19. Use hydrateRoot instead',
-      );
-    }
-    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
-  }
-  if (__DEV__) {
-    console.error(
-      'ReactDOM.hydrate has not been supported since React 18. Use hydrateRoot ' +
-        'instead. Until you switch to the new API, your app will behave as ' +
-        "if it's running React 17. Learn " +
-        'more: https://react.dev/link/switch-to-createroot',
-    );
-  }
-
-  if (!isValidContainerLegacy(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (__DEV__) {
-    const isModernRoot =
-      isContainerMarkedAsRoot(container) &&
-      container._reactRootContainer === undefined;
-    if (isModernRoot) {
-      console.error(
-        'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
-          'Did you mean to call hydrateRoot(container, element)?',
-      );
-    }
-  }
-  // TODO: throw or warn if we couldn't hydrate?
-  return legacyRenderSubtreeIntoContainer(
-    null,
-    element,
-    container,
-    true,
-    callback,
-  );
-}
-
 export function render(
   element: React$Element<any>,
   container: Container,
