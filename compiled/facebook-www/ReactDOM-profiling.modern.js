@@ -71,6 +71,8 @@ var assign = Object.assign,
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  enableClientRenderFallbackOnTextMismatch =
+    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableProfilerNestedUpdateScheduledHook =
     dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
@@ -7479,29 +7481,52 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          newProps = workInProgress.stateNode;
-          current = workInProgress.memoizedProps;
-          newProps[internalInstanceKey] = workInProgress;
-          if ((renderLanes = newProps.nodeValue !== current))
-            if (
-              ((currentResource = hydrationParentFiber),
-              null !== currentResource)
-            )
-              switch (currentResource.tag) {
-                case 3:
-                  newProps = newProps.nodeValue;
-                  normalizeMarkupForTextOrAttribute(current);
-                  normalizeMarkupForTextOrAttribute(newProps);
-                  break;
-                case 27:
-                case 5:
-                  !0 !==
-                    currentResource.memoizedProps.suppressHydrationWarning &&
-                    ((newProps = newProps.nodeValue),
-                    normalizeMarkupForTextOrAttribute(current),
-                    normalizeMarkupForTextOrAttribute(newProps));
-              }
-          renderLanes && markUpdate(workInProgress);
+          a: {
+            current = workInProgress.stateNode;
+            renderLanes = workInProgress.memoizedProps;
+            current[internalInstanceKey] = workInProgress;
+            if ((newProps = current.nodeValue !== renderLanes))
+              if (
+                ((currentResource = hydrationParentFiber),
+                null !== currentResource)
+              )
+                switch (currentResource.tag) {
+                  case 3:
+                    currentResource = 0 !== (currentResource.mode & 1);
+                    checkForUnmatchedText(
+                      current.nodeValue,
+                      renderLanes,
+                      currentResource
+                    );
+                    if (
+                      currentResource &&
+                      enableClientRenderFallbackOnTextMismatch
+                    ) {
+                      current = !1;
+                      break a;
+                    }
+                    break;
+                  case 27:
+                  case 5:
+                    var isConcurrentMode$27 = 0 !== (currentResource.mode & 1);
+                    !0 !==
+                      currentResource.memoizedProps.suppressHydrationWarning &&
+                      checkForUnmatchedText(
+                        current.nodeValue,
+                        renderLanes,
+                        isConcurrentMode$27
+                      );
+                    if (
+                      isConcurrentMode$27 &&
+                      enableClientRenderFallbackOnTextMismatch
+                    ) {
+                      current = !1;
+                      break a;
+                    }
+                }
+            current = newProps;
+          }
+          current && markUpdate(workInProgress);
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -7577,19 +7602,18 @@ function completeWork(current, workInProgress, renderLanes) {
         );
       renderLanes = null !== newProps;
       current = null !== current && null !== current.memoizedState;
-      if (renderLanes) {
-        newProps = workInProgress.child;
-        currentResource = null;
+      renderLanes &&
+        ((newProps = workInProgress.child),
+        (currentResource = null),
         null !== newProps.alternate &&
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
-          (currentResource = newProps.alternate.memoizedState.cachePool.pool);
-        var cache$136 = null;
+          (currentResource = newProps.alternate.memoizedState.cachePool.pool),
+        (isConcurrentMode$27 = null),
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
-          (cache$136 = newProps.memoizedState.cachePool.pool);
-        cache$136 !== currentResource && (newProps.flags |= 2048);
-      }
+          (isConcurrentMode$27 = newProps.memoizedState.cachePool.pool),
+        isConcurrentMode$27 !== currentResource && (newProps.flags |= 2048));
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
         renderLanes && (workInProgress.child.flags |= 8192));
@@ -7630,8 +7654,8 @@ function completeWork(current, workInProgress, renderLanes) {
       if (null === currentResource)
         return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      cache$136 = currentResource.rendering;
-      if (null === cache$136)
+      isConcurrentMode$27 = currentResource.rendering;
+      if (null === isConcurrentMode$27)
         if (newProps) cutOffTailIfNeeded(currentResource, !1);
         else {
           if (
@@ -7639,11 +7663,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              cache$136 = findFirstSuspended(current);
-              if (null !== cache$136) {
+              isConcurrentMode$27 = findFirstSuspended(current);
+              if (null !== isConcurrentMode$27) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(currentResource, !1);
-                current = cache$136.updateQueue;
+                current = isConcurrentMode$27.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -7668,7 +7692,10 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(cache$136)), null !== current)) {
+          if (
+            ((current = findFirstSuspended(isConcurrentMode$27)),
+            null !== current)
+          ) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -7678,7 +7705,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(currentResource, !0),
               null === currentResource.tail &&
                 "hidden" === currentResource.tailMode &&
-                !cache$136.alternate &&
+                !isConcurrentMode$27.alternate &&
                 !isHydrating)
             )
               return bubbleProperties(workInProgress), null;
@@ -7691,13 +7718,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(currentResource, !1),
               (workInProgress.lanes = 4194304));
         currentResource.isBackwards
-          ? ((cache$136.sibling = workInProgress.child),
-            (workInProgress.child = cache$136))
+          ? ((isConcurrentMode$27.sibling = workInProgress.child),
+            (workInProgress.child = isConcurrentMode$27))
           : ((current = currentResource.last),
             null !== current
-              ? (current.sibling = cache$136)
-              : (workInProgress.child = cache$136),
-            (currentResource.last = cache$136));
+              ? (current.sibling = isConcurrentMode$27)
+              : (workInProgress.child = isConcurrentMode$27),
+            (currentResource.last = isConcurrentMode$27));
       }
       if (null !== currentResource.tail)
         return (
@@ -15398,6 +15425,15 @@ function normalizeMarkupForTextOrAttribute(markup) {
     .replace(NORMALIZE_NEWLINES_REGEX, "\n")
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
 }
+function checkForUnmatchedText(serverText, clientText, isConcurrentMode) {
+  clientText = normalizeMarkupForTextOrAttribute(clientText);
+  if (
+    normalizeMarkupForTextOrAttribute(serverText) !== clientText &&
+    isConcurrentMode &&
+    enableClientRenderFallbackOnTextMismatch
+  )
+    throw Error(formatProdErrorMessage(425));
+}
 function noop$1() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
@@ -16565,6 +16601,7 @@ function hydrateInstance(
 ) {
   instance[internalInstanceKey] = internalInstanceHandle;
   instance[internalPropsKey] = props;
+  hostContext = 0 !== (internalInstanceHandle.mode & 1);
   switch (type) {
     case "dialog":
       listenToNonDelegatedEvent("cancel", instance);
@@ -16577,8 +16614,15 @@ function hydrateInstance(
       break;
     case "video":
     case "audio":
-      for (hostContext = 0; hostContext < mediaEventTypes.length; hostContext++)
-        listenToNonDelegatedEvent(mediaEventTypes[hostContext], instance);
+      for (
+        internalInstanceHandle = 0;
+        internalInstanceHandle < mediaEventTypes.length;
+        internalInstanceHandle++
+      )
+        listenToNonDelegatedEvent(
+          mediaEventTypes[internalInstanceHandle],
+          instance
+        );
       break;
     case "source":
       listenToNonDelegatedEvent("error", instance);
@@ -16614,14 +16658,19 @@ function hydrateInstance(
         initTextarea(instance, props.value, props.defaultValue),
         track(instance);
   }
-  hostContext = props.children;
-  ("string" !== typeof hostContext && "number" !== typeof hostContext) ||
-    instance.textContent === "" + hostContext ||
+  internalInstanceHandle = props.children;
+  ("string" !== typeof internalInstanceHandle &&
+    "number" !== typeof internalInstanceHandle) ||
+    instance.textContent === "" + internalInstanceHandle ||
     (!0 !== props.suppressHydrationWarning &&
-      ((internalInstanceHandle = instance.textContent),
-      normalizeMarkupForTextOrAttribute(hostContext),
-      normalizeMarkupForTextOrAttribute(internalInstanceHandle)),
-    "body" !== type && (instance.textContent = hostContext));
+      checkForUnmatchedText(
+        instance.textContent,
+        internalInstanceHandle,
+        hostContext
+      ),
+    (hostContext && enableClientRenderFallbackOnTextMismatch) ||
+      "body" === type ||
+      (instance.textContent = internalInstanceHandle));
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
   null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
   null != props.onClick && (instance.onclick = noop$1);
@@ -17457,7 +17506,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1863 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7015f801",
+  version: "18.3.0-www-modern-09bf94a7",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17502,7 +17551,7 @@ var devToolsConfig$jscomp$inline_1863 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7015f801"
+  reconcilerVersion: "18.3.0-www-modern-09bf94a7"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17760,7 +17809,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-7015f801";
+exports.version = "18.3.0-www-modern-09bf94a7";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

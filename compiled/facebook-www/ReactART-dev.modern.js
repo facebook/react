@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-7015f801";
+    var ReactVersion = "18.3.0-www-modern-09bf94a7";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -189,7 +189,8 @@ if (__DEV__) {
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, true is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+    // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;

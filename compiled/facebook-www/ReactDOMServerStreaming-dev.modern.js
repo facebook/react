@@ -679,7 +679,8 @@ if (__DEV__) {
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, true is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+    // On WWW, true is used for a new modern build.
     var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]
