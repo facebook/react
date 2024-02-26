@@ -26,7 +26,7 @@ const run = async () => {
       params.version = await getLatestNextVersion();
     }
 
-    params.packages = await getPublicPackages(isExperimental);
+    params.packages = getPublicPackages(isExperimental);
 
     // Map of package name to upcoming stable version.
     // This Map is initially populated with guesses based on local versions.
