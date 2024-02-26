@@ -9,11 +9,9 @@
 
 declare function isArray(a: mixed): boolean %checks(Array.isArray(a));
 
-const isArrayImpl = Array.isArray;
-
 // eslint-disable-next-line no-redeclare
 function isArray(a: mixed): boolean {
-  return isArrayImpl(a);
+  return Array.isArray(a);
 }
 
 export default isArray;
