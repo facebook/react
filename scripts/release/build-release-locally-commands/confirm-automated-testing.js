@@ -6,7 +6,7 @@ const clear = require('clear');
 const {confirm} = require('../utils');
 const theme = require('../theme');
 
-const run = async () => {
+async function run() {
   clear();
 
   console.log(
@@ -21,4 +21,4 @@ const run = async () => {
   clear();
 };
 
-module.exports = run;
+export run;
