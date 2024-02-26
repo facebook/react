@@ -16,8 +16,9 @@ export const {
   userBlockingPriorityTimeout,
   normalPriorityTimeout,
   lowPriorityTimeout,
-  frameYieldMs,
 } = dynamicFeatureFlags;
+
+export const frameYieldMs = 10;
 export const enableSchedulerDebugging = true;
 export const enableProfiling: boolean =
   __PROFILE__ && enableProfilingFeatureFlag;
