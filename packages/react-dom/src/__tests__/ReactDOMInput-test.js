@@ -657,12 +657,31 @@ describe('ReactDOMInput', () => {
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
+  it('should render bigint defaultValue for SSR', () => {
+    const markup = ReactDOMServer.renderToString(
+      <input type="text" defaultValue={5n} />,
+    );
+    const div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('5');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
+  });
+
   it('should render value for SSR', () => {
     const element = <input type="text" value="1" onChange={() => {}} />;
     const markup = ReactDOMServer.renderToString(element);
     const div = document.createElement('div');
     div.innerHTML = markup;
     expect(div.firstChild.getAttribute('value')).toBe('1');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
+  });
+
+  it('should render bigint value for SSR', () => {
+    const element = <input type="text" value={5n} onChange={() => {}} />;
+    const markup = ReactDOMServer.renderToString(element);
+    const div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('5');
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
@@ -828,6 +847,16 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
+  });
+
+  // @gate enableBigIntSupport
+  it('should display `value` of bigint 5', async () => {
+    await act(() => {
+      root.render(<input type="text" value={5n} onChange={emptyFunction} />);
+    });
+    const node = container.firstChild;
+
+    expect(node.value).toBe('5');
   });
 
   it('should allow setting `value` to `true`', async () => {

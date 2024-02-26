@@ -104,5 +104,7 @@ export const enableRefAsProp = false;
 
 export const enableReactTestRendererWarning = false;
 
+export const enableBigIntSupport = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

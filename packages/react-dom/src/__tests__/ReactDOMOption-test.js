@@ -172,6 +172,13 @@ describe('ReactDOMOption', () => {
     expect(node.value).toBe('hello');
   });
 
+  // @gate enableBigIntSupport
+  it('should support bigint values', () => {
+    const node = ReactTestUtils.renderIntoDocument(<option>{5n}</option>);
+    expect(node.innerHTML).toBe('5');
+    expect(node.value).toBe('5');
+  });
+
   it('should be able to use dangerouslySetInnerHTML on option', () => {
     const stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     let node;

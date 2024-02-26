@@ -272,7 +272,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Error in host config.');
     }
     return (
-      typeof props.children === 'string' || typeof props.children === 'number'
+      typeof props.children === 'string' ||
+      typeof props.children === 'number' ||
+      typeof props.children === 'bigint'
     );
   }
 
@@ -828,7 +830,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return childToJSX(child[0], null);
       }
       const children = child.map(c => childToJSX(c, null));
-      if (children.every(c => typeof c === 'string' || typeof c === 'number')) {
+      if (
+        children.every(
+          c =>
+            typeof c === 'string' ||
+            typeof c === 'number' ||
+            typeof c === 'bigint',
+        )
+      ) {
         return children.join('');
       }
       return children;

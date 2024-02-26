@@ -218,11 +218,15 @@ describe('ReactDOMServerIntegrationSelect', () => {
   itRenders('a select option with flattened children', async render => {
     const e = await render(
       <select value="bar" readOnly={true}>
-        <option value="bar">A {'B'}</option>
+        <option value="bar">
+          A {'B'} {5n}
+        </option>
       </select>,
     );
     const option = e.options[0];
-    expect(option.textContent).toBe('A B');
+    expect(option.textContent).toBe(
+      gate(flags => flags.enableBigIntSupport) ? 'A B 5' : 'A B ',
+    );
     expect(option.value).toBe('bar');
     expect(option.selected).toBe(true);
   });

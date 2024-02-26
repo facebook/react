@@ -139,6 +139,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
   disableModulePatternComponents,
+  enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
@@ -2364,7 +2365,10 @@ function renderNodeDestructive(
     return;
   }
 
-  if (typeof node === 'number') {
+  if (
+    typeof node === 'number' ||
+    (enableBigIntSupport && typeof node === 'bigint')
+  ) {
     const segment = task.blockedSegment;
     if (segment === null) {
       // We assume a text node doesn't have a representation in the replay set,
