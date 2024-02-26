@@ -37,7 +37,6 @@ export const {
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
   useModernStrictMode,
-  enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
@@ -63,6 +62,7 @@ export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFormActions = true;
 export const enableAsyncActions = true;
+export const enableRefAsProp = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
