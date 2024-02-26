@@ -31,6 +31,7 @@ export const useModernStrictMode = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;
 export const enableClientRenderFallbackOnTextMismatch = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
+export const enableBigIntSupport = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

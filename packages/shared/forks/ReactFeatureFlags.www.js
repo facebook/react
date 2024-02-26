@@ -38,6 +38,7 @@ export const {
   useModernStrictMode,
   enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch,
+  enableBigIntSupport,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -117,8 +118,6 @@ export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
-
-export const enableBigIntSupport = false;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
