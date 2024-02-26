@@ -130,7 +130,6 @@ if (__DEV__) {
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
       enableClientRenderFallbackOnTextMismatch =
@@ -3576,30 +3575,21 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) {
-              return null;
-            } else {
-              var provider = type;
-              return getContextName$1(provider._context) + ".Provider";
-            }
+          case REACT_PROVIDER_TYPE: {
+            return null;
+          }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            if (enableRenderableContext) {
+            {
               return getContextName$1(context) + ".Provider";
-            } else {
-              return getContextName$1(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext) {
-              var consumer = type;
-              return getContextName$1(consumer._context) + ".Consumer";
-            } else {
-              return null;
-            }
+          case REACT_CONSUMER_TYPE: {
+            var consumer = type;
+            return getContextName$1(consumer._context) + ".Consumer";
+          }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName$1(type, type.render, "ForwardRef");
@@ -3652,23 +3642,15 @@ if (__DEV__) {
         case CacheComponent:
           return "Cache";
 
-        case ContextConsumer:
-          if (enableRenderableContext) {
-            var consumer = type;
-            return getContextName(consumer._context) + ".Consumer";
-          } else {
-            var context = type;
-            return getContextName(context) + ".Consumer";
-          }
+        case ContextConsumer: {
+          var consumer = type;
+          return getContextName(consumer._context) + ".Consumer";
+        }
 
-        case ContextProvider:
-          if (enableRenderableContext) {
-            var _context = type;
-            return getContextName(_context) + ".Provider";
-          } else {
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
-          }
+        case ContextProvider: {
+          var _context = type;
+          return getContextName(_context) + ".Provider";
+        }
 
         case DehydratedFragment:
           return "DehydratedFragment";
@@ -22653,10 +22635,8 @@ if (__DEV__) {
     function updateContextProvider(current, workInProgress, renderLanes) {
       var context;
 
-      if (enableRenderableContext) {
+      {
         context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
       }
 
       var newProps = workInProgress.pendingProps;
@@ -22710,17 +22690,9 @@ if (__DEV__) {
     function updateContextConsumer(current, workInProgress, renderLanes) {
       var context;
 
-      if (enableRenderableContext) {
+      {
         var consumerType = workInProgress.type;
         context = consumerType._context;
-      } else {
-        context = workInProgress.type;
-
-        {
-          if (context._context !== undefined) {
-            context = context._context;
-          }
-        }
       }
 
       var newProps = workInProgress.pendingProps;
@@ -22962,10 +22934,8 @@ if (__DEV__) {
           var newValue = workInProgress.memoizedProps.value;
           var context;
 
-          if (enableRenderableContext) {
+          {
             context = workInProgress.type;
-          } else {
-            context = workInProgress.type._context;
           }
 
           pushProvider(workInProgress, context, newValue);
@@ -23956,10 +23926,8 @@ if (__DEV__) {
           if (oldProps !== null) {
             var context = void 0;
 
-            if (enableRenderableContext) {
+            {
               context = parent.type;
-            } else {
-              context = parent.type._context;
             }
 
             var newProps = parent.pendingProps;
@@ -24498,10 +24466,7 @@ if (__DEV__) {
     }
 
     function collectNearestContextValues(node, context, childContextValues) {
-      if (
-        node.tag === ContextProvider &&
-        (enableRenderableContext ? node.type : node.type._context) === context
-      ) {
+      if (node.tag === ContextProvider && node.type === context) {
         var contextValue = node.memoizedProps.value;
         childContextValues.push(contextValue);
       } else {
@@ -25543,10 +25508,8 @@ if (__DEV__) {
           // Pop provider fiber
           var context;
 
-          if (enableRenderableContext) {
+          {
             context = workInProgress.type;
-          } else {
-            context = workInProgress.type._context;
           }
 
           popProvider(context, workInProgress);
@@ -26025,10 +25988,8 @@ if (__DEV__) {
         case ContextProvider:
           var context;
 
-          if (enableRenderableContext) {
+          {
             context = workInProgress.type;
-          } else {
-            context = workInProgress.type._context;
           }
 
           popProvider(context, workInProgress);
@@ -26123,10 +26084,8 @@ if (__DEV__) {
         case ContextProvider:
           var context;
 
-          if (enableRenderableContext) {
+          {
             context = interruptedWork.type;
-          } else {
-            context = interruptedWork.type._context;
           }
 
           popProvider(context, interruptedWork);
@@ -36041,27 +36000,18 @@ if (__DEV__) {
             if (typeof type === "object" && type !== null) {
               switch (type.$$typeof) {
                 case REACT_PROVIDER_TYPE:
-                  if (!enableRenderableContext) {
-                    fiberTag = ContextProvider;
-                    break getTag;
-                  }
 
                 // Fall through
 
-                case REACT_CONTEXT_TYPE:
-                  if (enableRenderableContext) {
-                    fiberTag = ContextProvider;
-                    break getTag;
-                  } else {
-                    fiberTag = ContextConsumer;
-                    break getTag;
-                  }
+                case REACT_CONTEXT_TYPE: {
+                  fiberTag = ContextProvider;
+                  break getTag;
+                }
 
-                case REACT_CONSUMER_TYPE:
-                  if (enableRenderableContext) {
-                    fiberTag = ContextConsumer;
-                    break getTag;
-                  }
+                case REACT_CONSUMER_TYPE: {
+                  fiberTag = ContextConsumer;
+                  break getTag;
+                }
 
                 // Fall through
 
@@ -36494,7 +36444,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-e34d1476";
+    var ReactVersion = "18.3.0-www-modern-f419684e";
 
     function createPortal$1(
       children,

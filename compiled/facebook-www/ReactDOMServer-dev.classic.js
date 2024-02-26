@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-e9f80209";
+    var ReactVersion = "18.3.0-www-classic-a992081e";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -681,7 +681,6 @@ if (__DEV__) {
     var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, false is used for a new modern build.
     var enableFloat = true;
@@ -8564,30 +8563,21 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) {
-              return null;
-            } else {
-              var provider = type;
-              return getContextName(provider._context) + ".Provider";
-            }
+          case REACT_PROVIDER_TYPE: {
+            return null;
+          }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            if (enableRenderableContext) {
+            {
               return getContextName(context) + ".Provider";
-            } else {
-              return getContextName(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext) {
-              var consumer = type;
-              return getContextName(consumer._context) + ".Consumer";
-            } else {
-              return null;
-            }
+          case REACT_CONSUMER_TYPE: {
+            var consumer = type;
+            return getContextName(consumer._context) + ".Consumer";
+          }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -12387,35 +12377,18 @@ if (__DEV__) {
             return;
           }
 
-          case REACT_PROVIDER_TYPE: {
-            if (!enableRenderableContext) {
-              var context = type._context;
-              renderContextProvider(request, task, keyPath, context, props);
-              return;
-            } // Fall through
-          }
+          case REACT_PROVIDER_TYPE:
 
           case REACT_CONTEXT_TYPE: {
-            if (enableRenderableContext) {
+            {
               var _context = type;
               renderContextProvider(request, task, keyPath, _context, props);
-              return;
-            } else {
-              var _context2 = type;
-
-              {
-                if (_context2._context !== undefined) {
-                  _context2 = _context2._context;
-                }
-              }
-
-              renderContextConsumer(request, task, keyPath, _context2, props);
               return;
             }
           }
 
           case REACT_CONSUMER_TYPE: {
-            if (enableRenderableContext) {
+            {
               var _context3 = type._context;
               renderContextConsumer(request, task, keyPath, _context3, props);
               return;

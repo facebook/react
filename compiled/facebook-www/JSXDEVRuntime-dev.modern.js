@@ -109,9 +109,9 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, true is used for a new modern build.
+    var enableRenderableContext = true;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -193,30 +193,21 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) {
-              return null;
-            } else {
-              var provider = type;
-              return getContextName(provider._context) + ".Provider";
-            }
+          case REACT_PROVIDER_TYPE: {
+            return null;
+          }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            if (enableRenderableContext) {
+            {
               return getContextName(context) + ".Provider";
-            } else {
-              return getContextName(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext) {
-              var consumer = type;
-              return getContextName(consumer._context) + ".Consumer";
-            } else {
-              return null;
-            }
+          case REACT_CONSUMER_TYPE: {
+            var consumer = type;
+            return getContextName(consumer._context) + ".Consumer";
+          }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -356,8 +347,8 @@ if (__DEV__) {
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
-          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
-          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
+          !enableRenderableContext ||
+          type.$$typeof === REACT_CONSUMER_TYPE ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used

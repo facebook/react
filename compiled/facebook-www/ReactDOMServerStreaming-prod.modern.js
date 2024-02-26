@@ -124,7 +124,6 @@ var assign = Object.assign,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
@@ -2625,17 +2624,10 @@ function getComponentNameFromType(type) {
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
-      case REACT_PROVIDER_TYPE:
-        if (enableRenderableContext) break;
-        else return (type._context.displayName || "Context") + ".Provider";
       case REACT_CONTEXT_TYPE:
-        return enableRenderableContext
-          ? (type.displayName || "Context") + ".Provider"
-          : (type.displayName || "Context") + ".Consumer";
+        return (type.displayName || "Context") + ".Provider";
       case REACT_CONSUMER_TYPE:
-        if (enableRenderableContext)
-          return (type._context.displayName || "Context") + ".Consumer";
-        break;
+        return (type._context.displayName || "Context") + ".Consumer";
       case REACT_FORWARD_REF_TYPE:
         var innerType = type.render;
         type = type.displayName;
@@ -3562,41 +3554,6 @@ function resolveDefaultProps(Component, baseProps) {
   }
   return baseProps;
 }
-function renderContextConsumer(request, task, keyPath, context, props) {
-  props = props.children;
-  context = props(context._currentValue);
-  props = task.keyPath;
-  task.keyPath = keyPath;
-  renderNodeDestructive(request, task, context, -1);
-  task.keyPath = props;
-}
-function renderContextProvider(request, task, keyPath, context, props) {
-  var value = props.value,
-    children = props.children;
-  props = task.keyPath;
-  var prevValue = context._currentValue;
-  context._currentValue = value;
-  var prevNode = currentActiveSnapshot;
-  currentActiveSnapshot = context = {
-    parent: prevNode,
-    depth: null === prevNode ? 0 : prevNode.depth + 1,
-    context: context,
-    parentValue: prevValue,
-    value: value
-  };
-  task.context = context;
-  task.keyPath = keyPath;
-  renderNodeDestructive(request, task, children, -1);
-  request = currentActiveSnapshot;
-  if (null === request)
-    throw Error(
-      "Tried to pop a Context at the root of the app. This is a bug in React."
-    );
-  request.context._currentValue = request.parentValue;
-  request = currentActiveSnapshot = request.parent;
-  task.context = request;
-  task.keyPath = props;
-}
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
@@ -3976,20 +3933,41 @@ function renderElement(request, task, keyPath, type, props, ref) {
           renderElement(request, task, keyPath, type, props, ref);
           return;
         case REACT_PROVIDER_TYPE:
-          if (!enableRenderableContext) {
-            renderContextProvider(request, task, keyPath, type._context, props);
-            return;
-          }
         case REACT_CONTEXT_TYPE:
-          enableRenderableContext
-            ? renderContextProvider(request, task, keyPath, type, props)
-            : renderContextConsumer(request, task, keyPath, type, props);
+          JSCompiler_inline_result = props.children;
+          ref = task.keyPath;
+          props = props.value;
+          contextType = type._currentValue;
+          type._currentValue = props;
+          initialState = currentActiveSnapshot;
+          currentActiveSnapshot = props = {
+            parent: initialState,
+            depth: null === initialState ? 0 : initialState.depth + 1,
+            context: type,
+            parentValue: contextType,
+            value: props
+          };
+          task.context = props;
+          task.keyPath = keyPath;
+          renderNodeDestructive(request, task, JSCompiler_inline_result, -1);
+          request = currentActiveSnapshot;
+          if (null === request)
+            throw Error(
+              "Tried to pop a Context at the root of the app. This is a bug in React."
+            );
+          request.context._currentValue = request.parentValue;
+          request = currentActiveSnapshot = request.parent;
+          task.context = request;
+          task.keyPath = ref;
           return;
         case REACT_CONSUMER_TYPE:
-          if (enableRenderableContext) {
-            renderContextConsumer(request, task, keyPath, type._context, props);
-            return;
-          }
+          props = props.children;
+          props = props(type._context._currentValue);
+          type = task.keyPath;
+          task.keyPath = keyPath;
+          renderNodeDestructive(request, task, props, -1);
+          task.keyPath = type;
+          return;
         case REACT_LAZY_TYPE:
           ref = task.componentStack;
           task.componentStack = createBuiltInComponentStack(task, "Lazy");
@@ -4450,15 +4428,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$43) {
+    } catch (thrownValue$41) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$43 === SuspenseException
+          thrownValue$41 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$43),
+            : thrownValue$41),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5139,11 +5117,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$47 = partialBoundaries[i];
+      var boundary$45 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$47.completedSegments;
+        var completedSegments = boundary$45.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -5153,7 +5131,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$47,
+              boundary$45,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -5165,7 +5143,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeHoistablesForBoundary(
           boundary,
-          boundary$47.contentState,
+          boundary$45.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5220,8 +5198,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$49) {
-    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
+  } catch (error$47) {
+    logRecoverableError(request, error$47, {}), fatalError(request, error$47);
   }
 }
 exports.abortStream = function (stream, reason) {
