@@ -25,6 +25,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import * as SharedRuntime from "shared-runtime";
 function useFoo() {
   const $ = useMemoCache(2);
+  const MyLocal = SharedRuntime;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => <MyLocal.Text value={4} />;
@@ -50,3 +51,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>4</div>

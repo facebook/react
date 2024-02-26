@@ -3803,6 +3803,7 @@ function gatherCapturedDeps(
      */
     let dependency:
       | NodePath<t.MemberExpression>
+      | NodePath<t.JSXMemberExpression>
       | NodePath<t.Identifier>
       | NodePath<t.JSXIdentifier>;
     if (path.isJSXOpeningElement()) {
@@ -3820,7 +3821,25 @@ function gatherCapturedDeps(
         "Invalid logic in gatherCapturedDeps"
       );
       baseIdentifier = current;
-      dependency = current;
+
+      /*
+       * Get the expression to depend on, which may involve PropertyLoads
+       * for member expressions
+       */
+      let currentDep:
+        | NodePath<t.JSXMemberExpression>
+        | NodePath<t.Identifier>
+        | NodePath<t.JSXIdentifier> = baseIdentifier;
+
+      while (true) {
+        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
+        if (nextDep && nextDep.isJSXMemberExpression()) {
+          currentDep = nextDep;
+        } else {
+          break;
+        }
+      }
+      dependency = currentDep;
     } else if (path.isMemberExpression()) {
       // Calculate baseIdentifier
       let currentId: NodePath<Expression> = path;
@@ -3885,6 +3904,15 @@ function gatherCapturedDeps(
       }
 
       exprKey += "." + pathTokens.reverse().join(".");
+    } else if (dependency.isJSXMemberExpression()) {
+      let pathTokens = [];
+      let current: NodePath<t.JSXMemberExpression | t.JSXIdentifier> =
+        dependency;
+      while (current.isJSXMemberExpression()) {
+        const property = current.get("property");
+        pathTokens.push(property.node.name);
+        current = current.get("object");
+      }
     }
 
     if (!seenPaths.has(exprKey)) {
@@ -3895,6 +3923,8 @@ function gatherCapturedDeps(
           place: lowerIdentifier(builder, dependency),
           loc: path.node.loc ?? GeneratedSource,
         });
+      } else if (dependency.isJSXMemberExpression()) {
+        loweredDep = lowerJsxMemberExpression(builder, dependency);
       } else {
         loweredDep = lowerExpressionToTemporary(builder, dependency);
       }
