@@ -88,6 +88,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     const moduleObject = payload._result;
     if (__DEV__) {
       if (moduleObject === undefined) {
+        // in this block moduleObject is always undefined
         console.error(
           'lazy: Expected the result of a dynamic imp' +
             'ort() call. ' +
@@ -96,11 +97,9 @@ function lazyInitializer<T>(payload: Payload<T>): T {
             'const MyComponent = lazy(() => imp' +
             "ort('./MyComponent'))\n\n" +
             'Did you accidentally put curly braces around the import?',
-          moduleObject,
+          undefined,
         );
       }
-    }
-    if (__DEV__) {
       if (!('default' in moduleObject)) {
         console.error(
           'lazy: Expected the result of a dynamic imp' +
