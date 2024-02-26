@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<44c5c601c5193aa81af150ccb4208604>>
+ * @generated SignedSource<<11b286062c8512965799ad8e36092d6b>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-6c3b8dbfe-20240226";
+    var ReactVersion = "18.3.0-canary-2f240c91e-20240226";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -490,6 +490,21 @@ if (__DEV__) {
       return isArrayImpl(a);
     }
 
+    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // the exports object every time a flag is read.
+
+    var enableComponentStackLocations =
+      dynamicFlags.enableComponentStackLocations;
+    // The rest of the flags are static for better dead code elimination.
+    var enableDebugTracing = false;
+    var enableScopeAPI = false;
+    var enableRenderableContext = false;
+    var enableLegacyHidden = false;
+    var enableTransitionTracing = false;
+    // because JSX is an extremely hot path.
+
+    var enableRefAsProp = false;
+
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
      * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -563,21 +578,6 @@ if (__DEV__) {
         }
       }
     }
-
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
-    // the exports object every time a flag is read.
-
-    var enableComponentStackLocations =
-      dynamicFlags.enableComponentStackLocations;
-    // The rest of the flags are static for better dead code elimination.
-    var enableDebugTracing = false;
-    var enableScopeAPI = false;
-    var enableRenderableContext = false;
-    var enableLegacyHidden = false;
-    var enableTransitionTracing = false;
-    // because JSX is an extremely hot path.
-
-    var enableRefAsProp = false;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -2309,6 +2309,12 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
+          case "bigint": {
+            break;
+          }
+
+          // fallthrough for enabled BigInt support
+
           case "string":
           case "number":
             invokeCallback = true;
