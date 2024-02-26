@@ -14,7 +14,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let PropTypes;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 
 function initModules() {
@@ -22,18 +22,22 @@ function initModules() {
   jest.resetModules();
   PropTypes = require('prop-types');
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
   };
 }
 
-const {resetModules, itRenders, itThrowsWhenRendering} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  itThrowsWhenRendering,
+  clientRenderOnBadMarkup,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -272,7 +276,10 @@ describe('ReactDOMServerIntegration', () => {
             return {foo: 'bar'};
           }
         }
-        const e = await render(<ForgetfulParent />, 1);
+        const e = await render(
+          <ForgetfulParent />,
+          render === clientRenderOnBadMarkup ? 4 : 1,
+        );
         expect(e.textContent).toBe('nope');
       },
     );
