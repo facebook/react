@@ -39,18 +39,12 @@ export function pop<T: Node>(heap: Heap<T>): T | null {
 
 function siftUp<T: Node>(heap: Heap<T>, node: T, i: number): void {
   let index = i;
-  while (index > 0) {
-    const parentIndex = (index - 1) >>> 1;
-    const parent = heap[parentIndex];
-    if (compare(parent, node) > 0) {
-      // The parent is larger. Swap positions.
-      heap[parentIndex] = node;
-      heap[index] = parent;
-      index = parentIndex;
-    } else {
-      // The parent is smaller. Exit.
-      return;
-    }
+  let parentIndex = (index - 1) >>> 1;
+  // The parent is larger and index more than 0. Swap positions.
+  while (index > 0 && compare(heap[parentIndex], node) > 0) {
+    swap(heap, parentIndex, index);
+    index = parentIndex;
+    parentIndex = (index - 1) >>> 1;
   }
 }
 
@@ -59,30 +53,18 @@ function siftDown<T: Node>(heap: Heap<T>, node: T, i: number): void {
   const length = heap.length;
   const halfLength = length >>> 1;
   while (index < halfLength) {
-    const leftIndex = (index + 1) * 2 - 1;
-    const left = heap[leftIndex];
+    const leftIndex = (index << 1) + 1;
     const rightIndex = leftIndex + 1;
-    const right = heap[rightIndex];
-
-    // If the left or right node is smaller, swap with the smaller of those.
-    if (compare(left, node) < 0) {
-      if (rightIndex < length && compare(right, left) < 0) {
-        heap[index] = right;
-        heap[rightIndex] = node;
-        index = rightIndex;
-      } else {
-        heap[index] = left;
-        heap[leftIndex] = node;
-        index = leftIndex;
-      }
-    } else if (rightIndex < length && compare(right, node) < 0) {
-      heap[index] = right;
-      heap[rightIndex] = node;
-      index = rightIndex;
-    } else {
-      // Neither child is smaller. Exit.
-      return;
+    // Find least index.Assume left child is least.
+    let leastIndex = leftIndex;
+    if (rightIndex < length && compare(heap[rightIndex], heap[leftIndex]) < 0) {
+      leastIndex = rightIndex;
     }
+    // Least greater or equal to node.Exit.
+    if (compare(heap[leastIndex], node) >= 0) return;
+    // Swap node and least.
+    swap(heap, leastIndex, index);
+    index = leastIndex;
   }
 }
 
@@ -90,4 +72,9 @@ function compare(a: Node, b: Node) {
   // Compare sort index first, then task id.
   const diff = a.sortIndex - b.sortIndex;
   return diff !== 0 ? diff : a.id - b.id;
+}
+function swap(heap: Heap, indexA, indexB) {
+  const temp = heap[indexA];
+  heap[indexA] = heap[indexB];
+  heap[indexB] = temp;
 }
