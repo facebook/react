@@ -158,7 +158,8 @@ describe('EnterLeaveEventPlugin', () => {
   });
 
   // Test for https://github.com/facebook/react/issues/16763.
-  it('should call mouseEnter once from sibling rendered inside a rendered component in legacy roots', done => {
+  // @gate !disableLegacyMode
+  it('should call mouseEnter once from sibling rendered inside a rendered component in legacy roots', async () => {
     const mockFn = jest.fn();
 
     class Parent extends React.Component {
@@ -191,8 +192,6 @@ describe('EnterLeaveEventPlugin', () => {
             relatedTarget: this.firstEl.current,
           }),
         );
-        expect(mockFn.mock.calls.length).toBe(1);
-        done();
       }
 
       render() {
@@ -205,10 +204,14 @@ describe('EnterLeaveEventPlugin', () => {
       }
     }
 
-    ReactDOM.render(<Parent />, container);
+    await act(() => {
+      ReactDOM.render(<Parent />, container);
+    });
+    expect(mockFn.mock.calls.length).toBe(1);
   });
 
-  it('should call mouseEnter when pressing a non tracked React node in legacy root', done => {
+  // @gate !disableLegacyMode
+  it('should call mouseEnter when pressing a non tracked React node in legacy root', async () => {
     const mockFn = jest.fn();
 
     class Parent extends React.Component {
@@ -243,8 +246,6 @@ describe('EnterLeaveEventPlugin', () => {
             relatedTarget: this.siblingEl.current,
           }),
         );
-        expect(mockFn.mock.calls.length).toBe(1);
-        done();
       }
 
       render() {
@@ -256,7 +257,10 @@ describe('EnterLeaveEventPlugin', () => {
       }
     }
 
-    ReactDOM.render(<Parent />, container);
+    await act(() => {
+      ReactDOM.render(<Parent />, container);
+    });
+    expect(mockFn.mock.calls.length).toBe(1);
   });
 
   it('should work with portals outside of the root that has onMouseLeave', async () => {

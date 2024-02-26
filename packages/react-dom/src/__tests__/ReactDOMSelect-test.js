@@ -965,6 +965,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // c
   });
 
+  // @gate !disableLegacyMode
   it('should allow controlling `value` in a nested legacy render', async () => {
     let selectNode;
 

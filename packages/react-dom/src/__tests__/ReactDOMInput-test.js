@@ -733,7 +733,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('foobar');
   });
 
-  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', () => {
+  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -744,19 +744,16 @@ describe('ReactDOMInput', () => {
         return '2020-01-01';
       }
     }
-    const legacyContainer = document.createElement('div');
-    document.body.appendChild(legacyContainer);
-    const test = () =>
-      ReactDOM.render(
-        <input defaultValue={new TemporalLike()} type="date" />,
-        legacyContainer,
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<input defaultValue={new TemporalLike()} type="date" />);
+        });
+      }).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+          'strings, not TemporalLike. This value must be coerced to a string before using it here.',
       );
-    expect(() =>
-      expect(test).toThrowError(new TypeError('prod message')),
-    ).toErrorDev(
-      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
-    );
+    }).rejects.toThrowError(new TypeError('prod message'));
   });
 
   it('should throw for text inputs if `defaultValue` is an object where valueOf() throws', async () => {
@@ -1736,6 +1733,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
+  // @gate !disableLegacyMode
   it('should control radio buttons if the tree updates during render in legacy mode', async () => {
     container.remove();
     container = document.createElement('div');

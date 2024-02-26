@@ -14,6 +14,7 @@ import type {
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {
   getInstanceFromNode,
@@ -264,6 +265,14 @@ export function hydrate(
   container: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
+  if (disableLegacyMode) {
+    if (__DEV__) {
+      console.error(
+        'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot instead',
+      );
+    }
+    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
+  }
   if (__DEV__) {
     console.error(
       'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot ' +
@@ -304,6 +313,14 @@ export function render(
   container: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
+  if (disableLegacyMode) {
+    if (__DEV__) {
+      console.error(
+        'ReactDOM.render is no longer supported in React 18. Use createRoot instead.',
+      );
+    }
+    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
+  }
   if (__DEV__) {
     console.error(
       'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
@@ -344,6 +361,14 @@ export function unstable_renderSubtreeIntoContainer(
   containerNode: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
+  if (disableLegacyMode) {
+    if (__DEV__) {
+      console.error(
+        'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported in React 18. Consider using a portal instead.',
+      );
+    }
+    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
+  }
   if (__DEV__) {
     console.error(
       'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +

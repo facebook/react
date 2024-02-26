@@ -332,7 +332,7 @@ describe('ReactDOMComponent', () => {
       });
     });
 
-    it('throws with Temporal-like objects as style values', () => {
+    it('throws with Temporal-like objects as style values', async () => {
       class TemporalLike {
         valueOf() {
           // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -344,14 +344,17 @@ describe('ReactDOMComponent', () => {
         }
       }
       const style = {fontSize: new TemporalLike()};
-      const div = document.createElement('div');
-      const test = () => ReactDOM.render(<span style={style} />, div);
-      expect(() =>
-        expect(test).toThrowError(new TypeError('prod message')),
-      ).toErrorDev(
-        'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
-      );
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await expect(async () => {
+        await expect(async () => {
+          await act(() => {
+            root.render(<span style={style} />);
+          });
+        }).toErrorDev(
+          'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
+            ' This value must be coerced to a string before using it here.',
+        );
+      }).rejects.toThrowError(new TypeError('prod message'));
     });
 
     it('should update styles if initially null', async () => {
@@ -3688,6 +3691,7 @@ describe('ReactDOMComponent', () => {
       expect(typeof portalContainer.onclick).toBe('function');
     });
 
+    // @gate !disableLegacyMode
     it('does not add onclick handler to the React root in legacy mode', () => {
       const container = document.createElement('div');
 

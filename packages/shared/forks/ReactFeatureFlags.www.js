@@ -126,5 +126,7 @@ export const enableBigIntSupport = false;
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
+export const disableLegacyMode = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

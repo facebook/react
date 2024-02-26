@@ -77,6 +77,7 @@ describe('ReactStrictMode', () => {
   });
 
   // @gate __DEV__
+  // @gate !disableLegacyMode
   it('should invoke only precommit lifecycle methods twice in legacy roots', async () => {
     let log = [];
     let shouldComponentUpdate = false;
@@ -242,6 +243,7 @@ describe('ReactStrictMode', () => {
     ]);
   });
 
+  // @gate !disableLegacyMode
   it('should invoke only precommit lifecycle methods twice in DEV legacy roots', async () => {
     const {StrictMode} = React;
 

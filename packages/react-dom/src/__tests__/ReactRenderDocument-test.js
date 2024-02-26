@@ -373,6 +373,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
+    // @gate !disableLegacyMode
     it('supports findDOMNode on full-page components in legacy mode', () => {
       const tree = (
         <html>

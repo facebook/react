@@ -26,6 +26,7 @@ describe('ReactComponent', () => {
     act = require('internal-test-utils').act;
   });
 
+  // @gate !disableLegacyMode
   it('should throw on invalid render targets in legacy roots', () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
@@ -455,6 +456,7 @@ describe('ReactComponent', () => {
     /* eslint-enable indent */
   });
 
+  // @gate !disableLegacyMode
   it('fires the callback after a component is rendered in legacy roots', () => {
     const callback = jest.fn();
     const container = document.createElement('div');

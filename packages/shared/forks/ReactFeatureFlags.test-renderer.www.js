@@ -94,6 +94,7 @@ export const enableRefAsProp = false;
 export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
+export const disableLegacyMode = false;
 
 export const enableBigIntSupport = false;
 
