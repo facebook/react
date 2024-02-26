@@ -16,11 +16,7 @@ export const {
   userBlockingPriorityTimeout,
   normalPriorityTimeout,
   lowPriorityTimeout,
-  enableIsInputPending,
-  enableIsInputPendingContinuous,
   frameYieldMs,
-  continuousYieldMs,
-  maxYieldMs,
 } = dynamicFeatureFlags;
 export const enableSchedulerDebugging = true;
 export const enableProfiling: boolean =

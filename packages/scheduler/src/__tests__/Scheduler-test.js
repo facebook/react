@@ -339,15 +339,7 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Task with no pending input',
-      // Even though there's no input, eventually Scheduler will yield
-      // regardless in case there's a pending main thread task we don't know
-      // about, like a network event.
-      gate(flags =>
-        flags.enableIsInputPending
-          ? 'Yield at 10ms'
-          : // When isInputPending is disabled, we always yield quickly
-            'Yield at 5ms',
-      ),
+      'Yield at 5ms',
     ]);
 
     runtime.resetTime();
@@ -393,15 +385,7 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog([
         'Message Event',
         'Task with no pending input',
-        // Even though there's no input, eventually Scheduler will yield
-        // regardless in case there's a pending main thread task we don't know
-        // about, like a network event.
-        gate(flags =>
-          flags.enableIsInputPending
-            ? 'Yield at 10ms'
-            : // When isInputPending is disabled, we always yield quickly
-              'Yield at 5ms',
-        ),
+        'Yield at 5ms',
       ]);
 
       runtime.resetTime();
@@ -419,14 +403,7 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog([
         'Message Event',
         'Task with continuous input',
-        // This time we yielded quickly to unblock the continuous event. But not
-        // as quickly as for a discrete event.
-        gate(flags =>
-          flags.enableIsInputPending
-            ? 'Yield at 10ms'
-            : // When isInputPending is disabled, we always yield quickly
-              'Yield at 5ms',
-        ),
+        'Yield at 5ms',
         'Continuous Event',
       ]);
     },
@@ -448,16 +425,7 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog(['Post Message']);
 
     runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task with no paint',
-      gate(flags =>
-        flags.enableIsInputPending
-          ? 'Yield at 10ms'
-          : // When isInputPending is disabled, we always yield quickly
-            'Yield at 5ms',
-      ),
-    ]);
+    runtime.assertLog(['Message Event', 'Task with no paint', 'Yield at 5ms']);
 
     runtime.resetTime();
 
