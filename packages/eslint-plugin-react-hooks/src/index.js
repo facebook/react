@@ -9,6 +9,7 @@
 
 import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
+import PureRender from './PureRender';
 
 export const configs = {
   recommended: {
@@ -23,4 +24,5 @@ export const configs = {
 export const rules = {
   'rules-of-hooks': RulesOfHooks,
   'exhaustive-deps': ExhaustiveDeps,
+  'pure-render': PureRender,
 };
