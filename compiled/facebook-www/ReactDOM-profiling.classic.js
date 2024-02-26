@@ -1142,6 +1142,8 @@ function getStackByFiberInDevAndProd(workInProgress) {
 }
 function getToStringValue(value) {
   switch (typeof value) {
+    case "bigint":
+      return "";
     case "boolean":
     case "number":
     case "string":
@@ -17950,7 +17952,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1903 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a6e3a333",
+  version: "18.3.0-www-classic-56d34b21",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17994,7 +17996,7 @@ var devToolsConfig$jscomp$inline_1903 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a6e3a333"
+  reconcilerVersion: "18.3.0-www-classic-56d34b21"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18324,7 +18326,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-a6e3a333";
+exports.version = "18.3.0-www-classic-56d34b21";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

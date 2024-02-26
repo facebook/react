@@ -152,6 +152,7 @@ if (__DEV__) {
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
+    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var ReactSharedInternals =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -3660,6 +3661,13 @@ if (__DEV__) {
     }
     function getToStringValue(value) {
       switch (typeof value) {
+        case "bigint": {
+          // bigint is assigned as empty string
+          return "";
+        }
+
+        // fallthrough for BigInt support
+
         case "boolean":
         case "number":
         case "string":
@@ -4279,7 +4287,11 @@ if (__DEV__) {
                 return;
               }
 
-              if (typeof child === "string" || typeof child === "number") {
+              if (
+                typeof child === "string" ||
+                typeof child === "number" ||
+                enableBigIntSupport
+              ) {
                 return;
               }
 
@@ -11538,12 +11550,14 @@ if (__DEV__) {
       function createChild(returnFiber, newChild, lanes, debugInfo) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
           // node.
           var created = createFiberFromText(
+            // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             returnFiber.mode,
             lanes
@@ -11671,7 +11685,8 @@ if (__DEV__) {
 
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -11682,7 +11697,7 @@ if (__DEV__) {
 
           return updateTextNode(
             returnFiber,
-            oldFiber,
+            oldFiber, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             lanes,
             debugInfo
@@ -11797,14 +11812,15 @@ if (__DEV__) {
       ) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
           var matchedFiber = existingChildren.get(newIdx) || null;
           return updateTextNode(
             returnFiber,
-            matchedFiber,
+            matchedFiber, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             lanes,
             debugInfo
@@ -12675,12 +12691,13 @@ if (__DEV__) {
 
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
               returnFiber,
-              currentFirstChild,
+              currentFirstChild, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
               "" + newChild,
               lanes
             )
@@ -35820,7 +35837,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-47456a78";
+    var ReactVersion = "18.3.0-www-modern-bb7d97c5";
 
     function createPortal$1(
       children,
@@ -41438,14 +41455,16 @@ if (__DEV__) {
             if (canSetTextContent) {
               setTextContent(domElement, value);
             }
-          } else if (typeof value === "number") {
+          } else if (typeof value === "number" || enableBigIntSupport) {
             {
+              // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
               validateTextNesting("" + value, tag);
             }
 
             var _canSetTextContent = tag !== "body";
 
             if (_canSetTextContent) {
+              // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
               setTextContent(domElement, "" + value);
             }
           }
@@ -42072,7 +42091,8 @@ if (__DEV__) {
         case "children": {
           if (typeof value === "string") {
             setTextContent(domElement, value);
-          } else if (typeof value === "number") {
+          } else if (typeof value === "number" || enableBigIntSupport) {
+            // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             setTextContent(domElement, "" + value);
           }
 
@@ -44207,7 +44227,12 @@ if (__DEV__) {
       // TODO: Warn if there is more than a single textNode as a child.
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
 
-      if (typeof children === "string" || typeof children === "number") {
+      if (
+        typeof children === "string" ||
+        typeof children === "number" ||
+        enableBigIntSupport
+      ) {
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         if (domElement.textContent !== "" + children) {
           if (props.suppressHydrationWarning !== true) {
             checkForUnmatchedText(
@@ -44821,6 +44846,7 @@ if (__DEV__) {
         type === "noscript" ||
         typeof props.children === "string" ||
         typeof props.children === "number" ||
+        enableBigIntSupport ||
         (typeof props.dangerouslySetInnerHTML === "object" &&
           props.dangerouslySetInnerHTML !== null &&
           props.dangerouslySetInnerHTML.__html != null)

@@ -2017,6 +2017,12 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
+          case "bigint": {
+            break;
+          }
+
+          // fallthrough for enabled BigInt support
+
           case "string":
           case "number":
             invokeCallback = true;
@@ -2792,7 +2798,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-9547fe3f";
+    var ReactVersion = "18.3.0-www-modern-7c3fd7c0";
 
     // Patch fetch
     var Children = {

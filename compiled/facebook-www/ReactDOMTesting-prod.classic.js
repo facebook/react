@@ -1090,6 +1090,8 @@ function getStackByFiberInDevAndProd(workInProgress) {
 }
 function getToStringValue(value) {
   switch (typeof value) {
+    case "bigint":
+      return "";
     case "boolean":
     case "number":
     case "string":
@@ -17510,7 +17512,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-48808038",
+  version: "18.3.0-www-classic-f64bbc43",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2190 = {
@@ -17540,7 +17542,7 @@ var internals$jscomp$inline_2190 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-48808038"
+  reconcilerVersion: "18.3.0-www-classic-f64bbc43"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2191 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18034,4 +18036,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-48808038";
+exports.version = "18.3.0-www-classic-f64bbc43";

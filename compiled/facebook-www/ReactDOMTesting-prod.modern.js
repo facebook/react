@@ -999,6 +999,8 @@ function getComponentNameFromType(type) {
 }
 function getToStringValue(value) {
   switch (typeof value) {
+    case "bigint":
+      return "";
     case "boolean":
     case "number":
     case "string":
@@ -17091,7 +17093,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1782 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-bb161668",
+  version: "18.3.0-www-modern-e084bed2",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2153 = {
@@ -17122,7 +17124,7 @@ var internals$jscomp$inline_2153 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-bb161668"
+  reconcilerVersion: "18.3.0-www-modern-e084bed2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2154 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17543,4 +17545,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-bb161668";
+exports.version = "18.3.0-www-modern-e084bed2";

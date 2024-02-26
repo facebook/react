@@ -997,6 +997,8 @@ function getStackByFiberInDevAndProd(workInProgress) {
 Symbol.for("react.client.reference");
 function getToStringValue(value) {
   switch (typeof value) {
+    case "bigint":
+      return "";
     case "boolean":
     case "number":
     case "string":
@@ -17471,7 +17473,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1862 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1f3124f7",
+  version: "18.3.0-www-modern-615fb07a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17516,7 +17518,7 @@ var devToolsConfig$jscomp$inline_1862 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-1f3124f7"
+  reconcilerVersion: "18.3.0-www-modern-615fb07a"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17774,7 +17776,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-1f3124f7";
+exports.version = "18.3.0-www-modern-615fb07a";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

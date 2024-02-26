@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-c6726149";
+    var ReactVersion = "18.3.0-www-classic-cca960ca";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -396,6 +396,15 @@ if (__DEV__) {
       return isArrayImpl(a);
     }
 
+    // Re-export dynamic flags from the www version.
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+    // On WWW, false is used for a new modern build.
+    var enableRenderableContext = true;
+
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
      * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -469,15 +478,6 @@ if (__DEV__) {
         }
       }
     }
-
-    // Re-export dynamic flags from the www version.
-    var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
-    // On WWW, false is used for a new modern build.
-    var enableRenderableContext = true;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -2348,6 +2348,12 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
+          case "bigint": {
+            break;
+          }
+
+          // fallthrough for enabled BigInt support
+
           case "string":
           case "number":
             invokeCallback = true;

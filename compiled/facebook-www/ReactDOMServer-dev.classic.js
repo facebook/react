@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-a992081e";
+    var ReactVersion = "18.3.0-www-classic-79137864";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -684,6 +684,7 @@ if (__DEV__) {
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, false is used for a new modern build.
     var enableFloat = true;
+    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -2267,7 +2268,11 @@ if (__DEV__) {
      */
 
     function escapeTextForBrowser(text) {
-      if (typeof text === "boolean" || typeof text === "number") {
+      if (
+        typeof text === "boolean" ||
+        typeof text === "number" ||
+        enableBigIntSupport
+      ) {
         // this shortcircuit helps perf for types that we know will never have
         // special characters, especially given that this function is used often
         // for numeric dom ids.
@@ -3788,7 +3793,8 @@ if (__DEV__) {
           if (
             !didWarnInvalidOptionChildren &&
             typeof child !== "string" &&
-            typeof child !== "number"
+            typeof child !== "number" &&
+            !enableBigIntSupport
           ) {
             didWarnInvalidOptionChildren = true;
 
@@ -5172,11 +5178,12 @@ if (__DEV__) {
 
           if (Array.isArray(children) && children.length > 1) {
             error(
-              "React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an Array with length %s instead." +
+              "React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an Array with length %s instead." +
                 " Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value" +
                 " which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes." +
                 " For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop" +
                 " is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.",
+              "",
               children.length
             );
           } else if (typeof child === "function" || typeof child === "symbol") {
@@ -5184,25 +5191,28 @@ if (__DEV__) {
               typeof child === "function" ? "a Function" : "a Sybmol";
 
             error(
-              "React expect children of <title> tags to be a string, number, or object with a novel `toString` method but found %s instead." +
+              "React expect children of <title> tags to be a string, number%s, or object with a novel `toString` method but found %s instead." +
                 " Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>" +
                 " tags to a single string value.",
+              "",
               childType
             );
           } else if (child && child.toString === {}.toString) {
             if (child.$$typeof != null) {
               error(
-                "React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that appears to be" +
+                "React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that appears to be" +
                   " a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to" +
                   " be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is" +
-                  " a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML."
+                  " a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.",
+                ""
               );
             } else {
               error(
-                "React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that does not implement" +
+                "React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that does not implement" +
                   " a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags" +
                   " to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>" +
-                  " is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>."
+                  " is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.",
+                ""
               );
             }
           }
@@ -12830,7 +12840,7 @@ if (__DEV__) {
         return;
       }
 
-      if (typeof node === "number") {
+      if (typeof node === "number" || enableBigIntSupport) {
         var _segment = task.blockedSegment;
 
         if (_segment === null);

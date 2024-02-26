@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-361724d4";
+    var ReactVersion = "18.3.0-www-classic-10cc6982";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -198,6 +198,7 @@ if (__DEV__) {
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
+    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -6865,12 +6866,14 @@ if (__DEV__) {
       function createChild(returnFiber, newChild, lanes, debugInfo) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
           // node.
           var created = createFiberFromText(
+            // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             returnFiber.mode,
             lanes
@@ -6998,7 +7001,8 @@ if (__DEV__) {
 
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -7009,7 +7013,7 @@ if (__DEV__) {
 
           return updateTextNode(
             returnFiber,
-            oldFiber,
+            oldFiber, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             lanes,
             debugInfo
@@ -7124,14 +7128,15 @@ if (__DEV__) {
       ) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
           var matchedFiber = existingChildren.get(newIdx) || null;
           return updateTextNode(
             returnFiber,
-            matchedFiber,
+            matchedFiber, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             "" + newChild,
             lanes,
             debugInfo
@@ -7972,12 +7977,13 @@ if (__DEV__) {
 
         if (
           (typeof newChild === "string" && newChild !== "") ||
-          typeof newChild === "number"
+          typeof newChild === "number" ||
+          enableBigIntSupport
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
               returnFiber,
-              currentFirstChild,
+              currentFirstChild, // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
               "" + newChild,
               lanes
             )
