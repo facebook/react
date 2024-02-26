@@ -1472,6 +1472,13 @@ cssom@0.3.x, "cssom@>= 0.3.2 < 0.4.0":
   dependencies:
     cssom "0.3.x"
 
+d@1, d@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/d/-/d-1.0.1.tgz#8698095372d58dbee346ffd0c7093f99f8f9eb5a"
+  dependencies:
+    es5-ext "^0.10.50"
+    type "^1.0.1"
+
 d@^0.1.1, d@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/d/-/d-0.1.1.tgz#da184c535d18d8ee7ba2aa229b914009fae11309"
@@ -1692,12 +1699,14 @@ error-ex@^1.2.0:
   dependencies:
     is-arrayish "^0.2.1"
 
-es5-ext@^0.10.7, es5-ext@^0.10.8, es5-ext@~0.10.11, es5-ext@~0.10.2, es5-ext@~0.10.7:
-  version "0.10.12"
-  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.12.tgz#aa84641d4db76b62abba5e45fd805ecbab140047"
+es5-ext@^0.10.35, es5-ext@^0.10.50, es5-ext@^0.10.62, es5-ext@^0.10.7, es5-ext@^0.10.8, es5-ext@~0.10.11, es5-ext@~0.10.14, es5-ext@~0.10.2, es5-ext@~0.10.7:
+  version "0.10.63"
+  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.63.tgz#9c222a63b6a332ac80b1e373b426af723b895bd6"
   dependencies:
-    es6-iterator "2"
-    es6-symbol "~3.1"
+    es6-iterator "^2.0.3"
+    es6-symbol "^3.1.3"
+    esniff "^2.0.1"
+    next-tick "^1.1.0"
 
 es6-iterator@2:
   version "2.0.0"
@@ -1706,6 +1715,14 @@ es6-iterator@2:
     d "^0.1.1"
     es5-ext "^0.10.7"
     es6-symbol "3"
+
+es6-iterator@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/es6-iterator/-/es6-iterator-2.0.3.tgz#a7de889141a05a94b0854403b2d0a0fbfa98f3b7"
+  dependencies:
+    d "1"
+    es5-ext "^0.10.35"
+    es6-symbol "^3.1.1"
 
 es6-map@^0.1.3:
   version "0.1.4"
@@ -1728,12 +1745,19 @@ es6-set@~0.1.3:
     es6-symbol "3"
     event-emitter "~0.3.4"
 
-es6-symbol@3, es6-symbol@~3.1, es6-symbol@~3.1.0:
+es6-symbol@3, es6-symbol@~3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/es6-symbol/-/es6-symbol-3.1.0.tgz#94481c655e7a7cad82eba832d97d5433496d7ffa"
   dependencies:
     d "~0.1.1"
     es5-ext "~0.10.11"
+
+es6-symbol@^3.1.1, es6-symbol@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/es6-symbol/-/es6-symbol-3.1.3.tgz#bad5d3c1bcdac28269f4cb331e431c78ac705d18"
+  dependencies:
+    d "^1.0.1"
+    ext "^1.1.2"
 
 es6-weak-map@^2.0.1:
   version "2.0.1"
@@ -1877,6 +1901,15 @@ eslint@3.16.1:
     text-table "~0.2.0"
     user-home "^2.0.0"
 
+esniff@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/esniff/-/esniff-2.0.1.tgz#a4d4b43a5c71c7ec51c51098c1d8a29081f9b308"
+  dependencies:
+    d "^1.0.1"
+    es5-ext "^0.10.62"
+    event-emitter "^0.3.5"
+    type "^2.7.2"
+
 espree@^3.4.0:
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/espree/-/espree-3.4.1.tgz#28a83ab4aaed71ed8fe0f5efe61b76a05c13c4d2"
@@ -1918,6 +1951,13 @@ esutils@^2.0.0, esutils@^2.0.2:
 etag@~1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.7.0.tgz#03d30b5f67dd6e632d2945d30d6652731a34d5d8"
+
+event-emitter@^0.3.5:
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/event-emitter/-/event-emitter-0.3.5.tgz#df8c69eef1647923c7157b9ce83840610b02cc39"
+  dependencies:
+    d "1"
+    es5-ext "~0.10.14"
 
 event-emitter@~0.3.4:
   version "0.3.4"
@@ -1992,6 +2032,12 @@ express@^4.13.3:
     type-is "~1.6.13"
     utils-merge "1.0.0"
     vary "~1.1.0"
+
+ext@^1.1.2:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/ext/-/ext-1.7.0.tgz#0ea4383c0103d60e70be99e9a7f11027a33c4f5f"
+  dependencies:
+    type "^2.7.2"
 
 extend@~3.0.0:
   version "3.0.0"
@@ -3424,6 +3470,10 @@ negotiator@0.6.1:
 neo-async@^2.6.0:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.1.tgz#ac27ada66167fa8849a6addd837f6b189ad2081c"
+
+next-tick@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.1.0.tgz#1836ee30ad56d67ef281b22bd199f709449b35eb"
 
 no-case@^2.2.0:
   version "2.3.1"
@@ -4959,6 +5009,14 @@ type-is@~1.6.13:
   dependencies:
     media-typer "0.3.0"
     mime-types "~2.1.13"
+
+type@^1.0.1:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/type/-/type-1.2.0.tgz#848dd7698dafa3e54a6c479e759c4bc3f18847a0"
+
+type@^2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/type/-/type-2.7.2.tgz#2376a15a3a28b1efa0f5350dcf72d24df6ef98d0"
 
 typedarray@^0.0.6:
   version "0.0.6"
