@@ -123,6 +123,9 @@ describe('ReactDOMServerHydration', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
+      const enableClientRenderFallbackOnTextMismatch = gate(
+        flags => flags.enableClientRenderFallbackOnTextMismatch,
+      );
       await expect(async () => {
         root = await act(() => {
           return ReactDOMClient.hydrateRoot(
@@ -139,11 +142,13 @@ describe('ReactDOMServerHydration', () => {
           );
         });
       }).toErrorDev(
-        [
-          'Text content did not match. Server: "x" Client: "y"',
-          'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-        ],
-        {withoutStack: 1},
+        enableClientRenderFallbackOnTextMismatch
+          ? [
+              'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+              'Text content did not match. Server: "x" Client: "y"',
+            ]
+          : ['Text content did not match. Server: "x" Client: "y"'],
+        {withoutStack: enableClientRenderFallbackOnTextMismatch ? 1 : 0},
       );
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -213,6 +218,9 @@ describe('ReactDOMServerHydration', () => {
     const onFocusAfterHydration = jest.fn();
     element.firstChild.focus = onFocusBeforeHydration;
 
+    const enableClientRenderFallbackOnTextMismatch = gate(
+      flags => flags.enableClientRenderFallbackOnTextMismatch,
+    );
     await expect(async () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(
@@ -224,11 +232,15 @@ describe('ReactDOMServerHydration', () => {
         );
       });
     }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-        'Warning: Text content did not match. Server: "server" Client: "client"',
-      ],
-      {withoutStack: 1},
+      enableClientRenderFallbackOnTextMismatch
+        ? [
+            'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+          ]
+        : [
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+          ],
+      {withoutStack: enableClientRenderFallbackOnTextMismatch ? 1 : 0},
     );
 
     expect(onFocusBeforeHydration).not.toHaveBeenCalled();
@@ -583,6 +595,9 @@ describe('ReactDOMServerHydration', () => {
     );
     domElement.innerHTML = markup;
 
+    const enableClientRenderFallbackOnTextMismatch = gate(
+      flags => flags.enableClientRenderFallbackOnTextMismatch,
+    );
     await expect(async () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(
@@ -596,11 +611,15 @@ describe('ReactDOMServerHydration', () => {
 
       expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-        'Warning: Text content did not match. Server: "server" Client: "client"',
-      ],
-      {withoutStack: 1},
+      enableClientRenderFallbackOnTextMismatch
+        ? [
+            'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+          ]
+        : [
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+          ],
+      {withoutStack: enableClientRenderFallbackOnTextMismatch ? 1 : 0},
     );
   });
 
