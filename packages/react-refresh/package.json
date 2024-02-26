@@ -21,7 +21,11 @@
     ".": "./runtime.js",
     "./runtime": "./runtime.js",
     "./babel": "./babel.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./cjs/react-refresh-babel.development.js": "./cjs/react-refresh-babel.development.js",
+    "./cjs/react-refresh-babel.production.js": "./cjs/react-refresh-babel.production.js",
+    "./cjs/react-refresh-runtime.development.js": "./cjs/react-refresh-runtime.development.js",
+    "./cjs/react-refresh-runtime.production.js": "./cjs/react-refresh-runtime.production.js"
   },
   "repository": {
     "type": "git",
