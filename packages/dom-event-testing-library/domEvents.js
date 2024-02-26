@@ -36,7 +36,7 @@ function emptyFunction() {}
 function createEvent(type, data = {}) {
   const event = document.createEvent('CustomEvent');
   event.initCustomEvent(type, true, true);
-  if (data != null) {
+  if (data !== null) {
     Object.keys(data).forEach(key => {
       const value = data[key];
       if (key === 'timeStamp' && !value) {
@@ -49,17 +49,14 @@ function createEvent(type, data = {}) {
 }
 
 function createGetModifierState(keyArg, data) {
-  if (keyArg === 'Alt') {
-    return data.altKey || false;
-  }
-  if (keyArg === 'Control') {
-    return data.ctrlKey || false;
-  }
-  if (keyArg === 'Meta') {
-    return data.metaKey || false;
-  }
-  if (keyArg === 'Shift') {
-    return data.shiftKey || false;
+  const map = {
+    Alt: 'altKey',
+    Control: 'ctrlKey',
+    Meta: 'metaKey',
+    Shift: 'shiftKey',
+  };
+  if (keyArg in map) {
+    return data[map[keyArg]] || false;
   }
 }
 
@@ -379,11 +376,11 @@ export function pointerup(payload) {
 export function mousedown(payload) {
   // The value of 'button' and 'buttons' for 'mousedown' must not be none.
   const button =
-    payload == null || payload.button === buttonType.none
+    payload === null || payload.button === buttonType.none
       ? buttonType.primary
       : payload.button;
   const buttons =
-    payload == null || payload.buttons === buttonsType.none
+    payload === null || payload.buttons === buttonsType.none
       ? buttonsType.primary
       : payload.buttons;
   return createMouseEvent('mousedown', {
