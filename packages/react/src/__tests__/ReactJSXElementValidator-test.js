@@ -11,8 +11,9 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
+let act;
 let React;
-let ReactTestUtils;
+let ReactDOMClient;
 
 describe('ReactJSXElementValidator', () => {
   let Component;
@@ -21,8 +22,9 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    act = require('internal-test-utils').act;
     React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
 
     Component = class extends React.Component {
       render() {
@@ -38,15 +40,18 @@ describe('ReactJSXElementValidator', () => {
     RequiredPropComponent.displayName = 'RequiredPropComponent';
   });
 
-  it('warns for keys for arrays of elements in children position', () => {
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <Component>{[<Component />, <Component />]}</Component>,
-      ),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+  it('warns for keys for arrays of elements in children position', async () => {
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<Component>{[<Component />, <Component />]}</Component>);
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
-  it('warns for keys for arrays of elements with owner info', () => {
+  it('warns for keys for arrays of elements with owner info', async () => {
     class InnerComponent extends React.Component {
       render() {
         return <Component>{this.props.childSet}</Component>;
@@ -59,16 +64,20 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<ComponentWrapper />),
-    ).toErrorDev(
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<ComponentWrapper />);
+      });
+    }).toErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the render method of `InnerComponent`. ' +
         'It was passed a child from ComponentWrapper. ',
-    );
+    ]);
   });
 
-  it('warns for keys for iterables of elements in rest args', () => {
+  it('warns for keys for iterables of elements in rest args', async () => {
     const iterable = {
       '@@iterator': function () {
         let i = 0;
@@ -81,18 +90,30 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<Component>{iterable}</Component>);
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
-  it('does not warn for arrays of elements with keys', () => {
-    ReactTestUtils.renderIntoDocument(
-      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>,
-    );
+  it('does not warn for arrays of elements with keys', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Component>
+          {[<Component key="#1" />, <Component key="#2" />]}
+        </Component>,
+      );
+    });
   });
 
-  it('does not warn for iterable elements with keys', () => {
+  it('does not warn for iterable elements with keys', async () => {
     const iterable = {
       '@@iterator': function () {
         let i = 0;
@@ -108,10 +129,15 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Component>{iterable}</Component>);
+    });
   });
 
-  it('does not warn for numeric keys in entry iterable as a child', () => {
+  it('does not warn for numeric keys in entry iterable as a child', async () => {
     const iterable = {
       '@@iterator': function () {
         let i = 0;
@@ -125,23 +151,31 @@ describe('ReactJSXElementValidator', () => {
     };
     iterable.entries = iterable['@@iterator'];
 
-    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component>{iterable}</Component>);
+    });
   });
 
-  it('does not warn when the element is directly as children', () => {
-    ReactTestUtils.renderIntoDocument(
-      <Component>
-        <Component />
-        <Component />
-      </Component>,
-    );
+  it('does not warn when the element is directly as children', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <Component>
+          <Component />
+          <Component />
+        </Component>,
+      );
+    });
   });
 
   it('does not warn when the child array contains non-elements', () => {
     void (<Component>{[{}, {}]}</Component>);
   });
 
-  it('should give context for errors in nested components.', () => {
+  it('should give context for errors in nested components.', async () => {
     class MyComp extends React.Component {
       render() {
         return [<div />];
@@ -152,7 +186,14 @@ describe('ReactJSXElementValidator', () => {
         return <MyComp />;
       }
     }
-    expect(() => ReactTestUtils.renderIntoDocument(<ParentComp />)).toErrorDev(
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<ParentComp />);
+      });
+    }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
         'See https://reactjs.org/link/warning-keys for more information.\n' +
         '    in MyComp (at **)\n' +
@@ -189,20 +230,26 @@ describe('ReactJSXElementValidator', () => {
     void (<Div />);
   });
 
-  it('warns for fragments with illegal attributes', () => {
+  it('warns for fragments with illegal attributes', async () => {
     class Foo extends React.Component {
       render() {
         return <React.Fragment a={1}>hello</React.Fragment>;
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).toErrorDev(
       'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
         'can only have `key` and `children` props.',
     );
   });
 
-  it('warns for fragments with refs', () => {
+  it('warns for fragments with refs', async () => {
     class Foo extends React.Component {
       render() {
         return (
@@ -217,35 +264,51 @@ describe('ReactJSXElementValidator', () => {
     }
 
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
-        'Invalid prop `ref` supplied to `React.Fragment`.',
-      );
+      await expect(async () => {
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev('Invalid prop `ref` supplied to `React.Fragment`.');
     } else {
-      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
-        'Invalid attribute `ref` supplied to `React.Fragment`.',
-      );
+      await expect(async () => {
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev('Invalid attribute `ref` supplied to `React.Fragment`.');
     }
   });
 
-  it('does not warn for fragments of multiple elements without keys', () => {
-    ReactTestUtils.renderIntoDocument(
-      <>
-        <span>1</span>
-        <span>2</span>
-      </>,
-    );
+  it('does not warn for fragments of multiple elements without keys', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <>
+          <span>1</span>
+          <span>2</span>
+        </>,
+      );
+    });
   });
 
-  it('warns for fragments of multiple elements with same key', () => {
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <>
-          <span key="a">1</span>
-          <span key="a">2</span>
-          <span key="b">3</span>
-        </>,
-      ),
-    ).toErrorDev('Encountered two children with the same key, `a`.', {
+  it('warns for fragments of multiple elements with same key', async () => {
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <>
+            <span key="a">1</span>
+            <span key="a">2</span>
+            <span key="b">3</span>
+          </>,
+        );
+      });
+    }).toErrorDev('Encountered two children with the same key, `a`.', {
       withoutStack: true,
     });
   });
