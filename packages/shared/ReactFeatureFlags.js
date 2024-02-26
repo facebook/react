@@ -102,8 +102,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 
 export const enableFloat = true;
 
-export const enableBigIntSupport = __EXPERIMENTAL__;
-
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
@@ -175,6 +173,8 @@ export const disableClientCache = false;
 
 // Changes Server Components Reconciliation when they have keys
 export const enableServerComponentKeys = __NEXT_MAJOR__;
+
+export const enableBigIntSupport = __NEXT_MAJOR__;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused

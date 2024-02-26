@@ -72,8 +72,6 @@ export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 
-export const enableBigIntSupport = false;
-
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
@@ -96,6 +94,8 @@ export const enableServerComponentLogs = true;
 export const enableRefAsProp = false;
 
 export const enableReactTestRendererWarning = false;
+
+export const enableBigIntSupport = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -58,7 +58,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
-export const enableBigIntSupport = false;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
@@ -120,6 +119,8 @@ export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
+
+export const enableBigIntSupport = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
