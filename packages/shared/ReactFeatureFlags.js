@@ -145,7 +145,7 @@ export const disableLegacyContext = false;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
