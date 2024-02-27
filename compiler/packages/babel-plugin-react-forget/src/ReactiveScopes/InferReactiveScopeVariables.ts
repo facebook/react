@@ -154,13 +154,11 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "NextIterableOf":
     case "NextPropertyOf":
     case "Debugger":
-    case "Memoize": {
-      return false;
-    }
+    case "Memoize":
     case "UnaryExpression":
     case "BinaryExpression":
     case "PropertyLoad": {
-      return env.config.enableForest;
+      return false;
     }
     case "CallExpression":
     case "MethodCall": {
