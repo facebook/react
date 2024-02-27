@@ -171,7 +171,7 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Extra attributes',
+      'Extra attribute',
     );
   });
 

@@ -254,8 +254,9 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
-        '"text-decoration:none;color:black;height:10px" Client: ' +
-        '"text-decoration:none;color:white;height:10px"',
+        '{"text-decoration":"none","color":"black","height":"10px"}' +
+        ' Client: ' +
+        '{"textDecoration":"none","color":"white","height":"10px"}',
     );
   });
 
@@ -303,8 +304,9 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
-        '"text-decoration: none; color: black; height: 10px;" Client: ' +
-        '"text-decoration:none;color:black;height:10px"',
+        '{"text-decoration":"none","color":"black","height":"10px"}' +
+        ' Client: ' +
+        '{"textDecoration":"none","color":"black","height":"10px"}', // note that this is no difference
     );
   });
 

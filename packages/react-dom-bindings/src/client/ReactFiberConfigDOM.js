@@ -52,6 +52,8 @@ import {hasRole} from './DOMAccessibilityRoles';
 import {
   setInitialProperties,
   updateProperties,
+  hydrateProperties,
+  hydrateText,
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
@@ -1361,14 +1363,23 @@ export function hydrateInstance(
   props: Props,
   hostContext: HostContext,
   internalInstanceHandle: Object,
-  shouldWarnDev: boolean,
 ): void {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
   // get attached.
   updateFiberProps(instance, props);
 
-  diffHydratedProperties(instance, type, props, shouldWarnDev, hostContext);
+  hydrateProperties(instance, type, props, hostContext);
+}
+
+// Returns a Map of properties that were different on the server.
+export function diffHydratedPropertiesForDevWarnings(
+  instance: Instance,
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): Map<string, mixed> {
+  return diffHydratedProperties(instance, type, props, hostContext);
 }
 
 export function validateHydratableTextInstance(
@@ -1389,11 +1400,25 @@ export function hydrateTextInstance(
   textInstance: TextInstance,
   text: string,
   internalInstanceHandle: Object,
-  shouldWarnDev: boolean,
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
-  return diffHydratedText(textInstance, text);
+  return hydrateText(textInstance, text);
+}
+
+// Returns the server text if it differs from the client.
+export function diffHydratedTextForDevWarnings(
+  textInstance: TextInstance,
+  text: string,
+  parentProps: null | Props,
+): null | string {
+  if (
+    parentProps === null ||
+    parentProps[SUPPRESS_HYDRATION_WARNING] !== true
+  ) {
+    return diffHydratedText(textInstance, text);
+  }
+  return null;
 }
 
 export function hydrateSuspenseInstance(
@@ -1489,9 +1514,8 @@ export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
   text: string,
-  shouldWarnDev: boolean,
 ) {
-  checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
+  checkForUnmatchedText(textInstance.nodeValue, text);
 }
 
 export function didNotMatchHydratedTextInstance(
@@ -1500,10 +1524,9 @@ export function didNotMatchHydratedTextInstance(
   parentInstance: Instance,
   textInstance: TextInstance,
   text: string,
-  shouldWarnDev: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
+    checkForUnmatchedText(textInstance.nodeValue, text);
   }
 }
 

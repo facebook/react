@@ -38,7 +38,9 @@ import {
   getFirstHydratableChildWithinContainer,
   getFirstHydratableChildWithinSuspenseInstance,
   hydrateInstance,
+  diffHydratedPropertiesForDevWarnings,
   hydrateTextInstance,
+  diffHydratedTextForDevWarnings,
   hydrateSuspenseInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   shouldDeleteUnhydratedTailInstances,
@@ -185,6 +187,11 @@ function warnNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
       // data, so it's probably a false positive.
       return;
     }
+
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
 
     switch (returnFiber.tag) {
       case HostRoot: {
@@ -465,6 +472,9 @@ export function tryToClaimNextHydratableFormMarkerInstance(
   return false;
 }
 
+// Temp
+let didWarnInvalidHydration = false;
+
 function prepareToHydrateHostInstance(
   fiber: Fiber,
   hostContext: HostContext,
@@ -477,14 +487,55 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
-  const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
+  if (__DEV__) {
+    const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
+    if (shouldWarnIfMismatchDev) {
+      const differences = diffHydratedPropertiesForDevWarnings(
+        instance,
+        fiber.type,
+        fiber.memoizedProps,
+        hostContext,
+      );
+      if (differences.size > 0) {
+        if (differences.has('children') && !didWarnInvalidHydration) {
+          didWarnInvalidHydration = true;
+          const serverValue = differences.get('children');
+          const clientValue = fiber.memoizedProps.children;
+          console.error(
+            'Text content did not match. Server: "%s" Client: "%s"',
+            serverValue,
+            clientValue,
+          );
+        }
+        differences.forEach((serverValue, propName) => {
+          if (didWarnInvalidHydration) {
+            return;
+          }
+          didWarnInvalidHydration = true;
+          const clientValue = fiber.memoizedProps[propName];
+          if (propName === 'children') {
+            // Already handled above
+          } else if (clientValue != null) {
+            console.error(
+              'Prop `%s` did not match. Server: %s Client: %s',
+              propName,
+              JSON.stringify(serverValue),
+              JSON.stringify(clientValue),
+            );
+          } else {
+            console.error('Extra attribute from the server: %s', propName);
+          }
+        });
+      }
+    }
+  }
+
   hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
     hostContext,
     fiber,
-    shouldWarnIfMismatchDev,
   );
 }
 
@@ -499,13 +550,8 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const textIsDifferent = hydrateTextInstance(
-    textInstance,
-    textContent,
-    fiber,
-    shouldWarnIfMismatchDev,
-  );
-  if (textIsDifferent) {
+  const textIsDifferent = hydrateTextInstance(textInstance, textContent, fiber);
+  if (textIsDifferent && shouldWarnIfMismatchDev) {
     // We assume that prepareToHydrateHostTextInstance is called in a context where the
     // hydration parent is the parent host component of this host text.
     const returnFiber = hydrationParentFiber;
@@ -513,11 +559,25 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
       switch (returnFiber.tag) {
         case HostRoot: {
           const parentContainer = returnFiber.stateNode.containerInfo;
+          if (__DEV__) {
+            const difference = diffHydratedTextForDevWarnings(
+              textInstance,
+              textContent,
+              null,
+            );
+            if (difference !== null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              console.error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                difference,
+                textContent,
+              );
+            }
+          }
           didNotMatchHydratedContainerTextInstance(
             parentContainer,
             textInstance,
             textContent,
-            shouldWarnIfMismatchDev,
           );
           break;
         }
@@ -526,17 +586,32 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
           const parentType = returnFiber.type;
           const parentProps = returnFiber.memoizedProps;
           const parentInstance = returnFiber.stateNode;
+          if (__DEV__) {
+            const difference = diffHydratedTextForDevWarnings(
+              textInstance,
+              textContent,
+              parentProps,
+            );
+            if (difference !== null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              console.error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                difference,
+                textContent,
+              );
+            }
+          }
           didNotMatchHydratedTextInstance(
             parentType,
             parentProps,
             parentInstance,
             textInstance,
             textContent,
-            shouldWarnIfMismatchDev,
           );
           break;
         }
       }
+      // TODO: What if it's a SuspenseInstance?
     }
   }
 }
