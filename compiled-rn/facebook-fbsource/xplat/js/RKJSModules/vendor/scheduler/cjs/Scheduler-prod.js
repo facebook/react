@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cd7ed3a069445a95189053c07769d208>>
+ * @generated SignedSource<<cff8a50048229c976ba8e49d76cca4f5>>
  */
 
 "use strict";
@@ -83,11 +83,6 @@ var taskQueue = [],
   localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
   localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null,
   localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
-"undefined" !== typeof navigator &&
-void 0 !== navigator.scheduling &&
-void 0 !== navigator.scheduling.isInputPending
-  ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
-  : null;
 function advanceTimers(currentTime) {
   for (var timer = peek(timerQueue); null !== timer; ) {
     if (null === timer.callback) pop(timerQueue);

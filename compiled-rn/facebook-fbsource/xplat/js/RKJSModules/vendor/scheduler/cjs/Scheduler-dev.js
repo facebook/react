@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<329119982dc400f73a57d3f8fddc6fb4>>
+ * @generated SignedSource<<58af4bb9ea8656229bd048421236ac87>>
  */
 
 "use strict";
@@ -161,12 +161,6 @@ if (__DEV__) {
       typeof clearTimeout === "function" ? clearTimeout : null;
     var localSetImmediate =
       typeof setImmediate !== "undefined" ? setImmediate : null; // IE and Node.js + jsdom
-
-    typeof navigator !== "undefined" && // $FlowFixMe[prop-missing]
-    navigator.scheduling !== undefined && // $FlowFixMe[incompatible-type]
-    navigator.scheduling.isInputPending !== undefined
-      ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
-      : null;
 
     function advanceTimers(currentTime) {
       // Check for tasks that are no longer delayed and add them to the queue.
@@ -490,7 +484,7 @@ if (__DEV__) {
         // The main thread has only been blocked for a really short amount of time;
         // smaller than a single frame. Don't yield yet.
         return false;
-      } // The main thread has been blocked for a non-negligible amount of time. We
+      } // Yield now.
 
       return true;
     }
@@ -540,7 +534,7 @@ if (__DEV__) {
             isMessageLoopRunning = false;
           }
         }
-      } // Yielding to the browser will give it a chance to paint, so we can
+      }
     };
 
     var schedulePerformWorkUntilDeadline;
