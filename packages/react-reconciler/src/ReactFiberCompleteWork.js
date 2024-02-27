@@ -1306,9 +1306,7 @@ function completeWork(
         const currentHostContext = getHostContext();
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
-          if (prepareToHydrateHostTextInstance(workInProgress)) {
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostTextInstance(workInProgress);
         } else {
           workInProgress.stateNode = createTextInstance(
             newText,
