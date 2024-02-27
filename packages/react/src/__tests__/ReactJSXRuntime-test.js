@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let JSXRuntime;
 let JSXDEVRuntime;
 let act;
@@ -29,7 +28,6 @@ describe('ReactJSXRuntime', () => {
     JSXDEVRuntime = require('react/jsx-dev-runtime');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
   });
 
@@ -72,7 +70,7 @@ describe('ReactJSXRuntime', () => {
     expect(container.firstChild.textContent).toBe('persimmon');
   });
 
-  it('should normalize props with default values', () => {
+  it('should normalize props with default values', async () => {
     class Component extends React.Component {
       render() {
         return JSXRuntime.jsx('span', {children: this.props.prop});
@@ -80,18 +78,33 @@ describe('ReactJSXRuntime', () => {
     }
     Component.defaultProps = {prop: 'testKey'};
 
-    const instance = ReactTestUtils.renderIntoDocument(
-      JSXRuntime.jsx(Component, {}),
-    );
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(
+        JSXRuntime.jsx(Component, {ref: current => (instance = current)}),
+      );
+    });
+
     expect(instance.props.prop).toBe('testKey');
 
-    const inst2 = ReactTestUtils.renderIntoDocument(
-      JSXRuntime.jsx(Component, {prop: null}),
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    let inst2;
+    await act(() => {
+      root.render(
+        JSXRuntime.jsx(Component, {
+          prop: null,
+          ref: current => (inst2 = current),
+        }),
+      );
+    });
+
     expect(inst2.props.prop).toBe(null);
   });
 
-  it('throws when changing a prop (in dev) after element creation', () => {
+  it('throws when changing a prop (in dev) after element creation', async () => {
     class Outer extends React.Component {
       render() {
         const el = JSXRuntime.jsx('div', {className: 'moo'});
@@ -109,9 +122,13 @@ describe('ReactJSXRuntime', () => {
         return el;
       }
     }
-    const outer = ReactTestUtils.renderIntoDocument(
-      JSXRuntime.jsx(Outer, {color: 'orange'}),
-    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Outer, {color: 'orange'}));
+    });
+
+    const outer = container.firstChild;
     if (__DEV__) {
       expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
     } else {
@@ -151,15 +168,24 @@ describe('ReactJSXRuntime', () => {
     }
   });
 
-  it('does not warn for NaN props', () => {
+  it('does not warn for NaN props', async () => {
     class Test extends React.Component {
       render() {
         return JSXRuntime.jsx('div', {});
       }
     }
-    const test = ReactTestUtils.renderIntoDocument(
-      JSXRuntime.jsx(Test, {value: +undefined}),
-    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let test;
+    await act(() => {
+      root.render(
+        JSXRuntime.jsx(Test, {
+          value: +undefined,
+          ref: current => (test = current),
+        }),
+      );
+    });
+
     expect(test.props.value).toBeNaN();
   });
 
