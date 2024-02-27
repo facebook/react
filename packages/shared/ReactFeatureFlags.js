@@ -121,8 +121,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
-export const enableRenderableContext = false;
-
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
 /**
@@ -175,6 +173,8 @@ export const disableClientCache = false;
 export const enableServerComponentKeys = __NEXT_MAJOR__;
 
 export const enableBigIntSupport = __NEXT_MAJOR__;
+
+export const enableRenderableContext = __NEXT_MAJOR__;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused
