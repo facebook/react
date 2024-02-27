@@ -91,6 +91,7 @@ export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const enableRefAsProp = false;
+export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 

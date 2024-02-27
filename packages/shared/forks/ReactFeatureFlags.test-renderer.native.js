@@ -88,6 +88,7 @@ export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableRefAsProp = false;
+export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 

@@ -44,7 +44,7 @@ import {
 import isArray from 'shared/isArray';
 import assign from 'shared/assign';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -266,6 +266,7 @@ function coerceRef(
 
   let coercedRef;
   if (
+    !disableStringRefs &&
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
     typeof mixedRef !== 'object'

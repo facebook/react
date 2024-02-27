@@ -173,6 +173,7 @@ describe('ReactFunctionComponent', () => {
     ).resolves.not.toThrowError();
   });
 
+  // @gate !disableStringRefs
   it('should throw on string refs in pure functions', async () => {
     function Child() {
       return <div ref="me" />;

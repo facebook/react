@@ -98,6 +98,7 @@ export const enableInfiniteRenderLoopDetection = false;
 // flags should be handled by the Fiber config.
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = __NEXT_MAJOR__;
+export const disableStringRefs = __NEXT_MAJOR__;
 export const enableReactTestRendererWarning = false;
 export const enableBigIntSupport = __NEXT_MAJOR__;
 

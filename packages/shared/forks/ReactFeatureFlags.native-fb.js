@@ -101,6 +101,7 @@ export const enableInfiniteRenderLoopDetection = false;
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
 export const enableRefAsProp = false;
+export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 

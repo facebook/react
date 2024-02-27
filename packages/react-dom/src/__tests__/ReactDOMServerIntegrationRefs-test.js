@@ -76,6 +76,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(refElement).toBe(e);
     });
 
+    // @gate !disableStringRefs
     it('should have string refs on client when rendered over server markup', async () => {
       class RefsComponent extends React.Component {
         render() {

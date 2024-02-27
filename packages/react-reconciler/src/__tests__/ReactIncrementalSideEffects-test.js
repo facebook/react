@@ -1346,6 +1346,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
+  // @gate !disableStringRefs
   it('supports string refs', async () => {
     let fooInstance = null;
 

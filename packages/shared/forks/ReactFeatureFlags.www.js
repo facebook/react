@@ -121,5 +121,9 @@ export const enableReactTestRendererWarning = false;
 
 export const enableBigIntSupport = false;
 
+// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
+// because JSX is an extremely hot path.
+export const disableStringRefs = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
