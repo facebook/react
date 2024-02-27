@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e02ad0f633511d087c31638317ef702>>
+ * @generated SignedSource<<c7f09b0ccfd717d023bd590c0cbfdace>>
  */
 
 "use strict";
@@ -19037,6 +19037,8 @@ if (__DEV__) {
           }
         } else {
           {
+            // TODO: We should move these warnings to happen during the render
+            // phase (markRef).
             if (!ref.hasOwnProperty("current")) {
               error(
                 "Unexpected ref object provided for %s. " +
@@ -25733,7 +25735,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-3bcd2de01-20240227";
+    var ReactVersion = "18.3.0-canary-c9798954e-20240227";
 
     // Might add PROFILE later.
 

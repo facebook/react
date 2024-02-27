@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<11b286062c8512965799ad8e36092d6b>>
+ * @generated SignedSource<<867e292594b7b59489bd57d16c996264>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-3bcd2de01-20240227";
+    var ReactVersion = "18.3.0-canary-c9798954e-20240227";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1582,7 +1582,9 @@ if (__DEV__) {
             ref = config.ref;
           }
 
-          warnIfStringRefCannotBeAutoConverted(config, self);
+          {
+            warnIfStringRefCannotBeAutoConverted(config, self);
+          }
         } // Remaining properties are added to a new props object
 
         for (propName in config) {

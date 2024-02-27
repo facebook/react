@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<36563f58fdb8036d760d09bb1e80c450>>
+ * @generated SignedSource<<cfbc1c43d4da5c44f22471790ecd61bf>>
  */
 
 "use strict";
@@ -21790,6 +21790,8 @@ to return true:wantsResponderID|                            |
           }
         } else {
           {
+            // TODO: We should move these warnings to happen during the render
+            // phase (markRef).
             if (!ref.hasOwnProperty("current")) {
               error(
                 "Unexpected ref object provided for %s. " +
@@ -28040,7 +28042,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-49d61be7";
+    var ReactVersion = "18.3.0-canary-26c89f2f";
 
     function createPortal$1(
       children,

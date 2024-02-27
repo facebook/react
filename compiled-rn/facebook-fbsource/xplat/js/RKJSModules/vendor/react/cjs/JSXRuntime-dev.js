@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d28cb56e803fdd0613a38024515d9d50>>
+ * @generated SignedSource<<80a0567bc7edf5be863000f879120fd9>>
  */
 
 "use strict";
@@ -1200,7 +1200,9 @@ if (__DEV__) {
             ref = config.ref;
           }
 
-          warnIfStringRefCannotBeAutoConverted(config, self);
+          {
+            warnIfStringRefCannotBeAutoConverted(config, self);
+          }
         } // Remaining properties are added to a new props object
 
         for (propName in config) {
