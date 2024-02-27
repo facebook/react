@@ -414,9 +414,7 @@ describe('ref swapping', () => {
       await act(() => {
         root.render(<div ref={Symbol('foo')} />);
       });
-    }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-    );
+    }).rejects.toThrow('Expected ref to be a function');
   });
 
   // @gate !enableRefAsProp
@@ -434,9 +432,7 @@ describe('ref swapping', () => {
           key: null,
         });
       });
-    }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-    );
+    }).rejects.toThrow('Expected ref to be a function');
   });
 });
 

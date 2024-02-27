@@ -1035,9 +1035,8 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
     }
   } else {
     if (typeof ref !== 'function' && typeof ref !== 'object') {
-      // TODO: Remove "string" from error message.
       throw new Error(
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+        'Expected ref to be a function, an object returned by React.createRef(), or undefined/null.',
       );
     }
     if (current === null || current.ref !== ref) {
