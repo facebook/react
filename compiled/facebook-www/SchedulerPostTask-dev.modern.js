@@ -35,8 +35,7 @@ if (__DEV__) {
 
     var yieldInterval = 5;
     var deadline = 0;
-    var currentPriorityLevel_DEPRECATED = NormalPriority; // `isInputPending` is not available. Since we have no way of knowing if
-    // there's pending input, always yield at the end of the frame.
+    var currentPriorityLevel_DEPRECATED = NormalPriority; // Always yield at the end of the frame.
 
     function unstable_shouldYield() {
       return getCurrentTime() >= deadline;

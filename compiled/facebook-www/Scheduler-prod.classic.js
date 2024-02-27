@@ -14,13 +14,7 @@
 var dynamicFeatureFlags = require("SchedulerFeatureFlags"),
   userBlockingPriorityTimeout = dynamicFeatureFlags.userBlockingPriorityTimeout,
   normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
-  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
-  enableIsInputPending = dynamicFeatureFlags.enableIsInputPending,
-  enableIsInputPendingContinuous =
-    dynamicFeatureFlags.enableIsInputPendingContinuous,
-  frameYieldMs = dynamicFeatureFlags.frameYieldMs,
-  continuousYieldMs = dynamicFeatureFlags.continuousYieldMs,
-  maxYieldMs = dynamicFeatureFlags.maxYieldMs;
+  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -93,14 +87,7 @@ var taskQueue = [],
   isHostTimeoutScheduled = !1,
   localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
   localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null,
-  localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null,
-  isInputPending =
-    "undefined" !== typeof navigator &&
-    void 0 !== navigator.scheduling &&
-    void 0 !== navigator.scheduling.isInputPending
-      ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
-      : null,
-  continuousOptions = { includeContinuous: enableIsInputPendingContinuous };
+  localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
 function advanceTimers(currentTime) {
   for (var timer = peek(timerQueue); null !== timer; ) {
     if (null === timer.callback) pop(timerQueue);
@@ -126,20 +113,10 @@ function handleTimeout(currentTime) {
 }
 var isMessageLoopRunning = !1,
   taskTimeoutID = -1,
-  frameInterval = frameYieldMs,
-  startTime = -1,
-  needsPaint = !1;
+  frameInterval = 10,
+  startTime = -1;
 function shouldYieldToHost() {
-  var timeElapsed = exports.unstable_now() - startTime;
-  if (timeElapsed < frameInterval) return !1;
-  if (enableIsInputPending) {
-    if (needsPaint) return !0;
-    if (timeElapsed < continuousYieldMs) {
-      if (null !== isInputPending) return isInputPending();
-    } else if (timeElapsed < maxYieldMs && null !== isInputPending)
-      return isInputPending(continuousOptions);
-  }
-  return !0;
+  return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
 }
 function performWorkUntilDeadline() {
   if (isMessageLoopRunning) {
@@ -212,7 +189,6 @@ function performWorkUntilDeadline() {
         : (isMessageLoopRunning = !1);
     }
   }
-  needsPaint = !1;
 }
 var schedulePerformWorkUntilDeadline;
 if ("function" === typeof localSetImmediate)
@@ -259,7 +235,7 @@ exports.unstable_forceFrameRate = function (fps) {
     ? console.error(
         "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
       )
-    : (frameInterval = 0 < fps ? Math.floor(1e3 / fps) : frameYieldMs);
+    : (frameInterval = 0 < fps ? Math.floor(1e3 / fps) : 10);
 };
 exports.unstable_getCurrentPriorityLevel = function () {
   return currentPriorityLevel;
@@ -288,13 +264,7 @@ exports.unstable_next = function (eventHandler) {
 exports.unstable_pauseExecution = function () {
   isSchedulerPaused = !0;
 };
-exports.unstable_requestPaint = function () {
-  enableIsInputPending &&
-    void 0 !== navigator &&
-    void 0 !== navigator.scheduling &&
-    void 0 !== navigator.scheduling.isInputPending &&
-    (needsPaint = !0);
-};
+exports.unstable_requestPaint = function () {};
 exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case 1:
