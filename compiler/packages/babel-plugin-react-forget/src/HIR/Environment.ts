@@ -24,10 +24,12 @@ import {
   FunctionType,
   IdentifierId,
   PolyType,
+  ScopeId,
   Type,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
+  makeScopeId,
 } from "./HIR";
 import {
   BuiltInMixedReadonlyId,
@@ -412,6 +414,7 @@ export class Environment {
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
+  #nextScope: number = 0;
   config: EnvironmentConfig;
 
   #contextIdentifiers: Set<t.Identifier>;
@@ -458,6 +461,10 @@ export class Environment {
 
   get nextBlockId(): BlockId {
     return makeBlockId(this.#nextBlock++);
+  }
+
+  get nextScopeId(): ScopeId {
+    return makeScopeId(this.#nextScope++);
   }
 
   isContextIdentifier(node: t.Identifier): boolean {

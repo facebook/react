@@ -12,7 +12,6 @@ import {
   IdentifierId,
   Instruction,
   makeInstructionId,
-  makeScopeId,
   Place,
   ReactiveScope,
 } from "../HIR/HIR";
@@ -102,7 +101,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
     let scope = scopes.get(groupIdentifier);
     if (scope === undefined) {
       scope = {
-        id: makeScopeId(scopes.size),
+        id: fn.env.nextScopeId,
         range: identifier.mutableRange,
         dependencies: new Set(),
         declarations: new Map(),
