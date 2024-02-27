@@ -35,6 +35,7 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
+  enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch,
@@ -53,7 +54,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
-export const enableRenderableContext = true;
+
 export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
 export const enableFloat = true;

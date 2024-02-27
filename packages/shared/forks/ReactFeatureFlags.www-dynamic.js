@@ -27,6 +27,7 @@ export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;
+export const enableRenderableContext = __VARIANT__;
 export const useModernStrictMode = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;
 export const enableClientRenderFallbackOnTextMismatch = __VARIANT__;
