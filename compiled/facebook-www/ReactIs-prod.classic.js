@@ -15,9 +15,9 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
-  REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-Symbol.for("react.provider");
-var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
+  REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -33,6 +33,7 @@ var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
   if ("object" === typeof object && null !== object) {
@@ -54,7 +55,9 @@ function typeOf(object) {
               case REACT_MEMO_TYPE:
                 return object;
               case REACT_CONSUMER_TYPE:
-                return object;
+                if (enableRenderableContext) return object;
+              case REACT_PROVIDER_TYPE:
+                if (!enableRenderableContext) return object;
               default:
                 return $$typeof;
             }
@@ -64,8 +67,13 @@ function typeOf(object) {
     }
   }
 }
-exports.ContextConsumer = REACT_CONSUMER_TYPE;
-exports.ContextProvider = REACT_CONTEXT_TYPE;
+var ContextProvider = enableRenderableContext
+  ? REACT_CONTEXT_TYPE
+  : REACT_PROVIDER_TYPE;
+exports.ContextConsumer = enableRenderableContext
+  ? REACT_CONSUMER_TYPE
+  : REACT_CONTEXT_TYPE;
+exports.ContextProvider = ContextProvider;
 exports.Element = REACT_ELEMENT_TYPE;
 exports.ForwardRef = REACT_FORWARD_REF_TYPE;
 exports.Fragment = REACT_FRAGMENT_TYPE;
@@ -77,10 +85,14 @@ exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.isContextConsumer = function (object) {
-  return typeOf(object) === REACT_CONSUMER_TYPE;
+  return enableRenderableContext
+    ? typeOf(object) === REACT_CONSUMER_TYPE
+    : typeOf(object) === REACT_CONTEXT_TYPE;
 };
 exports.isContextProvider = function (object) {
-  return typeOf(object) === REACT_CONTEXT_TYPE;
+  return enableRenderableContext
+    ? typeOf(object) === REACT_CONTEXT_TYPE
+    : typeOf(object) === REACT_PROVIDER_TYPE;
 };
 exports.isElement = function (object) {
   return (
@@ -135,7 +147,8 @@ exports.isValidElementType = function (type) {
       (type.$$typeof === REACT_LAZY_TYPE ||
         type.$$typeof === REACT_MEMO_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
-        type.$$typeof === REACT_CONSUMER_TYPE ||
+        (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+        (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
         type.$$typeof === REACT_CLIENT_REFERENCE ||
         void 0 !== type.getModuleId))

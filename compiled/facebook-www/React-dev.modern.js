@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-c68f569b";
+    var ReactVersion = "18.3.0-www-modern-99dd25e6";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -401,9 +401,9 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, true is used for a new modern build.
-    var enableRenderableContext = true;
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -559,21 +559,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE: {
-            return null;
-          }
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName(provider._context) + ".Provider";
+            }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            {
+            if (enableRenderableContext) {
               return getContextName(context) + ".Provider";
+            } else {
+              return getContextName(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE: {
-            var consumer = type;
-            return getContextName(consumer._context) + ".Consumer";
-          }
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -722,8 +731,8 @@ if (__DEV__) {
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
-          !enableRenderableContext ||
-          type.$$typeof === REACT_CONSUMER_TYPE ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -2595,12 +2604,70 @@ if (__DEV__) {
         Consumer: null
       };
 
-      {
+      if (enableRenderableContext) {
         context.Provider = context;
         context.Consumer = {
           $$typeof: REACT_CONSUMER_TYPE,
           _context: context
         };
+      } else {
+        context.Provider = {
+          $$typeof: REACT_PROVIDER_TYPE,
+          _context: context
+        };
+
+        {
+          var Consumer = {
+            $$typeof: REACT_CONTEXT_TYPE,
+            _context: context
+          };
+          Object.defineProperties(Consumer, {
+            Provider: {
+              get: function () {
+                return context.Provider;
+              },
+              set: function (_Provider) {
+                context.Provider = _Provider;
+              }
+            },
+            _currentValue: {
+              get: function () {
+                return context._currentValue;
+              },
+              set: function (_currentValue) {
+                context._currentValue = _currentValue;
+              }
+            },
+            _currentValue2: {
+              get: function () {
+                return context._currentValue2;
+              },
+              set: function (_currentValue2) {
+                context._currentValue2 = _currentValue2;
+              }
+            },
+            _threadCount: {
+              get: function () {
+                return context._threadCount;
+              },
+              set: function (_threadCount) {
+                context._threadCount = _threadCount;
+              }
+            },
+            Consumer: {
+              get: function () {
+                return context.Consumer;
+              }
+            },
+            displayName: {
+              get: function () {
+                return context.displayName;
+              },
+              set: function (displayName) {}
+            }
+          });
+          context.Consumer = Consumer;
+        }
       }
 
       {

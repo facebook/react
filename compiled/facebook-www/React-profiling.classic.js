@@ -20,6 +20,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -87,6 +88,7 @@ pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
@@ -478,11 +480,17 @@ exports.createContext = function (defaultValue) {
     Provider: null,
     Consumer: null
   };
-  defaultValue.Provider = defaultValue;
-  defaultValue.Consumer = {
-    $$typeof: REACT_CONSUMER_TYPE,
-    _context: defaultValue
-  };
+  enableRenderableContext
+    ? ((defaultValue.Provider = defaultValue),
+      (defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      }))
+    : ((defaultValue.Provider = {
+        $$typeof: REACT_PROVIDER_TYPE,
+        _context: defaultValue
+      }),
+      (defaultValue.Consumer = defaultValue));
   return defaultValue;
 };
 exports.createElement = createElement;
@@ -629,7 +637,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-f64bbc43";
+exports.version = "18.3.0-www-classic-012fabe8";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
