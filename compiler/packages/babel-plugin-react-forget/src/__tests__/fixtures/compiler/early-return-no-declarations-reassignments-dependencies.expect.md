@@ -118,13 +118,3 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
-### Eval output
-(kind: ok) [42]
-[42]
-[3.14]
-[3.14]
-[42]
-[3.14]
-[42]
-[3.14]
-logs: ['fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough']

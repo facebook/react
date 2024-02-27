@@ -97,19 +97,21 @@ export async function readTestFilter(): Promise<TestFilter | null> {
 export function getBasename(fixture: TestFixture): string {
   return stripExtension(path.basename(fixture.inputPath), INPUT_EXTENSIONS);
 }
-export function isExpectError(fixture: TestFixture): boolean {
-  const basename = getBasename(fixture);
+export function isExpectError(fixture: TestFixture | string): boolean {
+  const basename = typeof fixture === "string" ? fixture : getBasename(fixture);
   return basename.startsWith("error.") || basename.startsWith("todo.error");
 }
 
 export type TestFixture =
   | {
+      fixturePath: string;
       input: string | null;
       inputPath: string;
       snapshot: string | null;
       snapshotPath: string;
     }
   | {
+      fixturePath: string;
       input: null;
       inputPath: string;
       snapshot: string;
@@ -181,6 +183,7 @@ export async function getFixtures(
   for (const [partialPath, { value, filepath }] of inputs) {
     const output = outputs.get(partialPath) ?? null;
     fixtures.set(partialPath, {
+      fixturePath: partialPath,
       input: value,
       inputPath: filepath,
       snapshot: output,
@@ -191,6 +194,7 @@ export async function getFixtures(
   for (const [partialPath, output] of outputs) {
     if (!fixtures.has(partialPath)) {
       fixtures.set(partialPath, {
+        fixturePath: partialPath,
         input: null,
         inputPath: "none",
         snapshot: output,

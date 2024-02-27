@@ -6,11 +6,11 @@
  */
 
 import { render } from "@testing-library/react";
-import { PROJECT_ROOT } from "fixture-test-utils";
 import { JSDOM } from "jsdom";
 import util from "util";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { PROJECT_ROOT } from "../constants";
 import { initFbt, toJSON } from "./shared-runtime";
 const React = require("react");
 

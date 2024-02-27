@@ -13,6 +13,7 @@ import invariant from "invariant";
 import type { PluginOptions } from "../Entrypoint";
 import ReactForgetBabelPlugin from "./BabelPlugin";
 
+export const DEFAULT_PLUGINS = ["babel-plugin-fbt", "babel-plugin-fbt-runtime"];
 export function runReactForgetBabelPlugin(
   text: string,
   file: string,

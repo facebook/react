@@ -15,7 +15,7 @@ export const COMPILER_PATH = path.join(
   process.cwd(),
   "dist",
   "Babel",
-  "RunReactForgetBabelPlugin.js"
+  "BabelPlugin.js"
 );
 export const LOGGER_PATH = path.join(
   process.cwd(),

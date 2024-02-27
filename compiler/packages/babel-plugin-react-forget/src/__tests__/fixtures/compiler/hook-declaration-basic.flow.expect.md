@@ -13,7 +13,7 @@ export default hook useFoo(bar: number) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function useFoo(bar) {
+export default function useFoo(bar) {
   const $ = useMemoCache(2);
   let t0;
   if ($[0] !== bar) {

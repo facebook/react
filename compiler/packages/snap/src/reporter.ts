@@ -16,10 +16,12 @@ function wrapWithTripleBackticks(s: string, ext: string | null = null): string {
 ${s}
 \`\`\``;
 }
+const SPROUT_SEPARATOR = "\n### Eval output\n";
 
 export function writeOutputToString(
   input: string,
-  output: string | null,
+  compilerOutput: string | null,
+  evaluatorOutput: string | null,
   errorMessage: string | null
 ) {
   // leading newline intentional
@@ -29,11 +31,11 @@ export function writeOutputToString(
 ${wrapWithTripleBackticks(input, "javascript")}
 `; // trailing newline + space internional
 
-  if (output != null) {
+  if (compilerOutput != null) {
     result += `
 ## Code
 
-${output == null ? "[ none ]" : wrapWithTripleBackticks(output, "javascript")}
+${wrapWithTripleBackticks(compilerOutput, "javascript")}
 `;
   } else {
     result += "\n";
@@ -46,7 +48,11 @@ ${output == null ? "[ none ]" : wrapWithTripleBackticks(output, "javascript")}
 ${wrapWithTripleBackticks(errorMessage.replace(/^\/.*?:\s/, ""))}
           \n`;
   }
-  return result + `      `;
+  result += `      `;
+  if (evaluatorOutput != null) {
+    result += SPROUT_SEPARATOR + evaluatorOutput;
+  }
+  return result;
 }
 
 export type TestResult = {
@@ -56,31 +62,7 @@ export type TestResult = {
   unexpectedError: string | null;
 };
 export type TestResults = Map<string, TestResult>;
-export enum UpdateSnapshotKind {
-  Snap,
-  Sprout,
-}
-const SPROUT_SEPARATOR = "\n### Eval output\n";
-export function getUpdatedSnapshot(
-  currentSnapshot: string | null,
-  data: string,
-  kind: UpdateSnapshotKind
-): string {
-  let currentData = currentSnapshot?.split(SPROUT_SEPARATOR) ?? [];
-  invariant(
-    currentData.length <= 2,
-    "Found duplicate sprout snapshots in fixture!"
-  );
-  if (kind === UpdateSnapshotKind.Snap) {
-    const sproutData = currentData[1] ?? null;
-    const sproutSnapshot =
-      sproutData != null ? SPROUT_SEPARATOR + sproutData : "";
-    return data + sproutSnapshot;
-  } else {
-    const snapSnapshot = currentData[0] ?? "";
-    return snapSnapshot + SPROUT_SEPARATOR + data;
-  }
-}
+
 /**
  * Update the fixtures directory given the compilation results
  */

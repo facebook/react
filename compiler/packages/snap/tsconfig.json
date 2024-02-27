@@ -19,9 +19,6 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../fixture-test-utils"
-    },
-    {
       "path": "../babel-plugin-react-forget"
     }
   ]

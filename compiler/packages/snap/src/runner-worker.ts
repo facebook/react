@@ -6,18 +6,17 @@
  */
 
 import { codeFrameColumns } from "@babel/code-frame";
-import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
+import type { PluginObj } from "@babel/core";
 import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
+import { TransformResult, transformFixtureInput } from "./compiler";
 import {
-  TestFixture,
-  TestResult,
-  UpdateSnapshotKind,
-  getBasename,
-  getUpdatedSnapshot,
-  isExpectError,
-  transformFixtureInput,
-  writeOutputToString,
-} from "fixture-test-utils";
+  COMPILER_PATH,
+  LOGGER_PATH,
+  PARSE_CONFIG_PRAGMA_PATH,
+} from "./constants";
+import { TestFixture, getBasename, isExpectError } from "./fixture-utils";
+import { TestResult, writeOutputToString } from "./reporter";
+import { runSprout } from "./sprout";
 
 const originalConsoleError = console.error;
 
@@ -34,15 +33,16 @@ export function clearRequireCache() {
   });
 }
 
-export async function compile(
-  compilerPath: string,
-  loggerPath: string,
-  parseConfigPragmaPath: string,
-  fixture: TestFixture,
+function compile(
+  input: string,
+  fixturePath: string,
   compilerVersion: number,
-  implicitDebugMode: boolean,
-  isOnlyFixture: boolean
-): Promise<TestResult> {
+  shouldLog: boolean,
+  includeEvaluator: boolean
+): {
+  error: string | null;
+  compileResult: TransformResult | null;
+} {
   const seenConsoleErrors: Array<string> = [];
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
@@ -51,47 +51,38 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
-  const basename = getBasename(fixture);
-  const expectError = isExpectError(fixture);
 
-  // Input will be null if the input file did not exist, in which case the output file
-  // is stale
-  if (input === null) {
-    return {
-      outputPath,
-      actual: null,
-      expected,
-      unexpectedError: null,
-    };
-  }
-
-  let code: string | null = null;
+  let compileResult: TransformResult | null = null;
   let error: string | null = null;
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const { runReactForgetBabelPlugin } = require(compilerPath) as {
-      runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
+    const { default: ReactForgetBabelPlugin } = require(COMPILER_PATH) as {
+      default: PluginObj;
     };
-    const { toggleLogging } = require(loggerPath);
-    const { parseConfigPragma } = require(parseConfigPragmaPath) as {
+    const { toggleLogging } = require(LOGGER_PATH);
+    const { parseConfigPragma } = require(PARSE_CONFIG_PRAGMA_PATH) as {
       parseConfigPragma: typeof ParseConfigPragma;
     };
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
-    const shouldLogPragma = input.split("\n")[0].includes("@debug");
-    toggleLogging(isOnlyFixture && (shouldLogPragma || implicitDebugMode));
-    code =
-      transformFixtureInput(
-        input,
-        basename,
-        runReactForgetBabelPlugin,
-        parseConfigPragma
-      ).code ?? null;
+    toggleLogging(shouldLog);
+    const result = transformFixtureInput(
+      input,
+      fixturePath,
+      parseConfigPragma,
+      ReactForgetBabelPlugin,
+      includeEvaluator
+    );
+
+    if (result.kind === "err") {
+      error = result.msg;
+    } else {
+      compileResult = result.value;
+    }
   } catch (e) {
-    if (isOnlyFixture && !expectError) {
+    if (shouldLog) {
       console.error(e.stack);
     }
     error = e.message.replace(/\u001b[^m]*m/g, "");
@@ -128,6 +119,41 @@ export async function compile(
       error = `ConsoleError: ${consoleError}`;
     }
   }
+  console.error = originalConsoleError;
+
+  return {
+    error,
+    compileResult,
+  };
+}
+
+export async function transformFixture(
+  fixture: TestFixture,
+  compilerVersion: number,
+  shouldLog: boolean,
+  includeEvaluator: boolean
+): Promise<TestResult> {
+  const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
+  const basename = getBasename(fixture);
+  const expectError = isExpectError(fixture);
+
+  // Input will be null if the input file did not exist, in which case the output file
+  // is stale
+  if (input === null) {
+    return {
+      outputPath,
+      actual: null,
+      expected,
+      unexpectedError: null,
+    };
+  }
+  const { compileResult, error } = compile(
+    input,
+    fixture.fixturePath,
+    compilerVersion,
+    shouldLog,
+    includeEvaluator
+  );
 
   let unexpectedError: string | null = null;
   if (expectError) {
@@ -137,16 +163,38 @@ export async function compile(
   } else {
     if (error !== null) {
       unexpectedError = `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error}`;
-    } else if (code == null || code.length === 0) {
+    } else if (compileResult == null) {
       unexpectedError = `Expected output for fixture '${basename}'.`;
     }
   }
 
-  console.error = originalConsoleError;
-  const output = writeOutputToString(input, code, error);
+  const snapOutput: string | null = compileResult?.forgetOutput ?? null;
+  let sproutOutput: string | null = null;
+  if (compileResult?.evaluatorCode != null) {
+    const sproutResult = runSprout(
+      compileResult.evaluatorCode.original,
+      compileResult.evaluatorCode.forget
+    );
+    if (sproutResult.kind === "invalid") {
+      unexpectedError ??= "";
+      unexpectedError += `\n\n${sproutResult.value}`;
+    } else {
+      sproutOutput = sproutResult.value;
+    }
+  } else if (!includeEvaluator && expected != null) {
+    sproutOutput = expected.split("\n### Eval output\n")[1];
+  }
+
+  const actualOutput = writeOutputToString(
+    input,
+    snapOutput,
+    sproutOutput,
+    error
+  );
+
   return {
     outputPath,
-    actual: getUpdatedSnapshot(expected, output, UpdateSnapshotKind.Snap),
+    actual: actualOutput,
     expected,
     unexpectedError,
   };

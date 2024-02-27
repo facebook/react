@@ -7,37 +7,7 @@ We hope to add fuzzing capabilities to Sprout, synthesizing sets of program inpu
 Sprout is now enabled for all fixtures! If Sprout cannot execute your fixture due to some technical limitations, add your fixture to [`SproutTodoFilter.ts`](./src/SproutTodoFilter.ts) with a comment explaining why.
 
 ### Sprout CLI
-Sprout can be run from `packages/babel-plugin-react-forget`. When adding new fixtures to Sprout, please check that fixture outputs look reasonable with `yarn sprout --filter --verbose`.
-
-```sh
-# rebuild when sprout or babel-plugin-react-forget changes
-$ yarn sprout:build
-
-# evaluate all test fixtures not listed in SproutTodoFilter
-$ yarn sprout
-
-# show all sprout options
-$ yarn sprout --help
-Options:
-  --sync     Run compiler in main thread.
-                          [boolean] [default: false]
-  --filter   Evaluate fixtures in filter mode.
-                          [boolean] [default: false]
-  --verbose  Print all fixture outputs and logs.
-                          [boolean] [default: false]
-```
-
-Sprout can be run in filter mode with `yarn sprout --filter`. Just like Snap, Sprout expects `babel-plugin-react-forget/testfilter.txt` be formatted as such.
-- *first line:* `// @only` or `// @skip`
-- *all other lines:* a test fixture name, i.e. the relative path from the compiler fixtures dir, without a `.js` or `.expect.md` extension.
-
-Example:
-```c
-// @only
-console-readonly
-constant-propagate-global-phis
-dce-loop
-```
+Sprout is now run as a part of snap, except when in filter mode.
 
 ### Adding fixtures to Sprout
 
