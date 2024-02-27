@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-10cc6982";
+    var ReactVersion = "18.3.0-www-classic-1b14a8b4";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -198,7 +198,7 @@ if (__DEV__) {
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
+    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -22173,6 +22173,8 @@ if (__DEV__) {
           }
         } else {
           {
+            // TODO: We should move these warnings to happen during the render
+            // phase (markRef).
             if (!ref.hasOwnProperty("current")) {
               error(
                 "Unexpected ref object provided for %s. " +

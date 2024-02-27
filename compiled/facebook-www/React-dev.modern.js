@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-f3ad7d8a";
+    var ReactVersion = "18.3.0-www-modern-c68f569b";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1621,7 +1621,9 @@ if (__DEV__) {
             ref = config.ref;
           }
 
-          warnIfStringRefCannotBeAutoConverted(config, self);
+          {
+            warnIfStringRefCannotBeAutoConverted(config, self);
+          }
         } // Remaining properties are added to a new props object
 
         for (propName in config) {

@@ -19330,6 +19330,8 @@ if (__DEV__) {
           }
         } else {
           {
+            // TODO: We should move these warnings to happen during the render
+            // phase (markRef).
             if (!ref.hasOwnProperty("current")) {
               error(
                 "Unexpected ref object provided for %s. " +
@@ -26097,7 +26099,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-55fd2e28";
+    var ReactVersion = "18.3.0-www-modern-bcdfc2da";
 
     // Might add PROFILE later.
 

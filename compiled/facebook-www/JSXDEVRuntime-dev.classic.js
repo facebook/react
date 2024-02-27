@@ -1216,7 +1216,9 @@ if (__DEV__) {
             ref = config.ref;
           }
 
-          warnIfStringRefCannotBeAutoConverted(config, self);
+          {
+            warnIfStringRefCannotBeAutoConverted(config, self);
+          }
         } // Remaining properties are added to a new props object
 
         for (propName in config) {

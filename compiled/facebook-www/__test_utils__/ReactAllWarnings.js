@@ -277,6 +277,7 @@ export default [
   "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
   "Should have found matching lanes. This is a bug in React.",
   "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect().",
+  "String refs are no longer supported.",
   "Style property values shouldn't contain a semicolon. Try \"%s: %s\" instead.",
   "Symbols are not valid as a React child.\n  %s",
   "Symbols are not valid as a React child.\n  <%s>%s</%s>",

@@ -1334,7 +1334,9 @@ if (__DEV__) {
             ref = config.ref;
           }
 
-          warnIfStringRefCannotBeAutoConverted(config, self);
+          {
+            warnIfStringRefCannotBeAutoConverted(config, self);
+          }
         } // Remaining properties are added to a new props object
 
         for (propName in config) {
@@ -2798,7 +2800,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-7c3fd7c0";
+    var ReactVersion = "18.3.0-www-modern-6846d4a2";
 
     // Patch fetch
     var Children = {

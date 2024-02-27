@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-4a76bb56";
+    var ReactVersion = "18.3.0-www-modern-cc760041";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -684,7 +684,7 @@ if (__DEV__) {
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, true is used for a new modern build.
     var enableFloat = true;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
+    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;

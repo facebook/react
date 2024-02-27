@@ -681,7 +681,7 @@ if (__DEV__) {
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, true is used for a new modern build.
     var enableFloat = true;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
+    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;

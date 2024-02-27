@@ -144,7 +144,7 @@ if (__DEV__) {
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
+    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     var ReactSharedInternals =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -27685,6 +27685,8 @@ if (__DEV__) {
           }
         } else {
           {
+            // TODO: We should move these warnings to happen during the render
+            // phase (markRef).
             if (!ref.hasOwnProperty("current")) {
               error(
                 "Unexpected ref object provided for %s. " +
@@ -36461,7 +36463,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-ebf69536";
+    var ReactVersion = "18.3.0-www-modern-7c91c8e8";
 
     function createPortal$1(
       children,
