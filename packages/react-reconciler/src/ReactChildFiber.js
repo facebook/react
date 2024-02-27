@@ -157,17 +157,17 @@ function convertStringRefToCallbackRef(
   returnFiber: Fiber,
   current: Fiber | null,
   element: ReactElement,
-  mixedRef: any,
+  mixedRef: string | number | boolean,
 ): CoercedStringRef {
+  if (__DEV__) {
+    checkPropStringCoercion(mixedRef, 'ref');
+  }
+  const stringRef = '' + (mixedRef: any);
+
   const owner: ?Fiber = (element._owner: any);
   if (!owner) {
-    if (typeof mixedRef !== 'string') {
-      throw new Error(
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-      );
-    }
     throw new Error(
-      `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
+      `Element ref was specified as a string (${stringRef}) but no owner was set. This could happen for one of` +
         ' the following reasons:\n' +
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
@@ -183,13 +183,6 @@ function convertStringRefToCallbackRef(
         'https://reactjs.org/link/strict-mode-string-ref',
     );
   }
-
-  // At this point, we know the ref isn't an object or function but it could
-  // be a number. Coerce it to a string.
-  if (__DEV__) {
-    checkPropStringCoercion(mixedRef, 'ref');
-  }
-  const stringRef = '' + mixedRef;
 
   if (__DEV__) {
     if (
@@ -267,12 +260,10 @@ function coerceRef(
   let coercedRef;
   if (
     !disableStringRefs &&
-    mixedRef !== null &&
-    typeof mixedRef !== 'function' &&
-    typeof mixedRef !== 'object'
+    (typeof mixedRef === 'string' ||
+      typeof mixedRef === 'number' ||
+      typeof mixedRef === 'boolean')
   ) {
-    // Assume this is a string ref. If it's not, then this will throw an error
-    // to the user.
     coercedRef = convertStringRefToCallbackRef(
       returnFiber,
       current,

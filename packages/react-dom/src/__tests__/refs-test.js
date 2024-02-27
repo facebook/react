@@ -401,14 +401,14 @@ describe('ref swapping', () => {
         root.render(<div ref={10} />);
       });
     }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Element ref was specified as a string (10) but no owner was set.',
     );
     await expect(async () => {
       await act(() => {
         root.render(<div ref={true} />);
       });
     }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Element ref was specified as a string (true) but no owner was set.',
     );
     await expect(async () => {
       await act(() => {
