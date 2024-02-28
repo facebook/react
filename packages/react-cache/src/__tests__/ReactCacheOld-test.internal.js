@@ -13,7 +13,7 @@ let ReactCache;
 let createResource;
 let React;
 let ReactFeatureFlags;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let Suspense;
 let TextResource;
@@ -34,7 +34,7 @@ describe('ReactCache', () => {
     Suspense = React.Suspense;
     ReactCache = require('react-cache');
     createResource = ReactCache.unstable_createResource;
-    ReactTestRenderer = require('react-test-renderer');
+    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -120,9 +120,8 @@ describe('ReactCache', () => {
       );
     }
 
-    ReactTestRenderer.create(<App />, {
-      isConcurrent: true,
-    });
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
 
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
@@ -140,9 +139,8 @@ describe('ReactCache', () => {
       );
     }
 
-    const root = ReactTestRenderer.create(<App />, {
-      isConcurrent: true,
-    });
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
 
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
@@ -157,7 +155,7 @@ describe('ReactCache', () => {
     assertLog(['Promise rejected [Hi]', 'Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
-    root.update(<App />);
+    root.render(<App />);
     await waitForThrow('Failed to load: Hi');
     assertLog(['Error! [Hi]', 'Error! [Hi]']);
   });
@@ -176,13 +174,11 @@ describe('ReactCache', () => {
       return BadTextResource.read(['Hi', 100]);
     }
 
-    ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <App />
       </Suspense>,
-      {
-        isConcurrent: true,
-      },
     );
 
     if (__DEV__) {
@@ -202,16 +198,14 @@ describe('ReactCache', () => {
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
+    const root = ReactNoop.createRoot();
     // Render 1, 2, and 3
-    const root = ReactTestRenderer.create(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={2} />
         <AsyncText ms={100} text={3} />
       </Suspense>,
-      {
-        isConcurrent: true,
-      },
     );
     await waitForAll(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
@@ -228,7 +222,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('123');
 
     // Render 1, 4, 5
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={4} />
@@ -255,7 +249,7 @@ describe('ReactCache', () => {
     // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
     // recently used values are 2 and 3. They should have been evicted.
 
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <AsyncText ms={100} text={1} />
         <AsyncText ms={100} text={2} />
@@ -293,13 +287,11 @@ describe('ReactCache', () => {
       return <Text text="Result" />;
     }
 
-    const root = ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <App />
       </Suspense>,
-      {
-        isConcurrent: true,
-      },
     );
 
     await waitForAll(['Loading...']);
@@ -351,13 +343,11 @@ describe('ReactCache', () => {
       }
     }
 
-    const root = ReactTestRenderer.create(
+    const root = ReactNoop.createRoot();
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadAsyncText text="Hi" />
       </Suspense>,
-      {
-        isConcurrent: true,
-      },
     );
 
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
@@ -367,13 +357,10 @@ describe('ReactCache', () => {
     // cached value.
     resolveThenable('Hi muahahaha I am different');
 
-    root.update(
+    root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <BadAsyncText text="Hi" />
       </Suspense>,
-      {
-        isConcurrent: true,
-      },
     );
 
     assertLog([]);

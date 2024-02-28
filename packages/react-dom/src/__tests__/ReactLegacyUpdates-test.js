@@ -872,7 +872,7 @@ describe('ReactLegacyUpdates', () => {
 
     expect(() => {
       expect(() => component.setState({}, 'no')).toErrorDev(
-        'setState(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -882,7 +882,7 @@ describe('ReactLegacyUpdates', () => {
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
       expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
-        'setState(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -915,7 +915,7 @@ describe('ReactLegacyUpdates', () => {
 
     expect(() => {
       expect(() => component.forceUpdate('no')).toErrorDev(
-        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -925,7 +925,7 @@ describe('ReactLegacyUpdates', () => {
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => {
       expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
-        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(

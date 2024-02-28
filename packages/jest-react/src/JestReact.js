@@ -6,6 +6,7 @@
  */
 
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
 import isArray from 'shared/isArray';
 
@@ -38,6 +39,34 @@ function assertYieldsWereCleared(root) {
   }
 }
 
+function createJSXElementForTestComparison(type, props) {
+  if (__DEV__ && enableRefAsProp) {
+    const element = {
+      $$typeof: REACT_ELEMENT_TYPE,
+      type: type,
+      key: null,
+      props: props,
+      _owner: null,
+      _store: __DEV__ ? {} : undefined,
+    };
+    Object.defineProperty(element, 'ref', {
+      enumerable: false,
+      value: null,
+    });
+    return element;
+  } else {
+    return {
+      $$typeof: REACT_ELEMENT_TYPE,
+      type: type,
+      key: null,
+      ref: null,
+      props: props,
+      _owner: null,
+      _store: __DEV__ ? {} : undefined,
+    };
+  }
+}
+
 export function unstable_toMatchRenderedOutput(root, expectedJSX) {
   assertYieldsWereCleared(root);
   const actualJSON = root.toJSON();
@@ -55,17 +84,9 @@ export function unstable_toMatchRenderedOutput(root, expectedJSX) {
       if (actualJSXChildren === null || typeof actualJSXChildren === 'string') {
         actualJSX = actualJSXChildren;
       } else {
-        actualJSX = {
-          $$typeof: REACT_ELEMENT_TYPE,
-          type: REACT_FRAGMENT_TYPE,
-          key: null,
-          ref: null,
-          props: {
-            children: actualJSXChildren,
-          },
-          _owner: null,
-          _store: __DEV__ ? {} : undefined,
-        };
+        actualJSX = createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {
+          children: actualJSXChildren,
+        });
       }
     }
   } else {
@@ -82,18 +103,12 @@ function jsonChildToJSXChild(jsonChild) {
     return jsonChild;
   } else {
     const jsxChildren = jsonChildrenToJSXChildren(jsonChild.children);
-    return {
-      $$typeof: REACT_ELEMENT_TYPE,
-      type: jsonChild.type,
-      key: null,
-      ref: null,
-      props:
-        jsxChildren === null
-          ? jsonChild.props
-          : {...jsonChild.props, children: jsxChildren},
-      _owner: null,
-      _store: __DEV__ ? {} : undefined,
-    };
+    return createJSXElementForTestComparison(
+      jsonChild.type,
+      jsxChildren === null
+        ? jsonChild.props
+        : {...jsonChild.props, children: jsxChildren},
+    );
   }
 }
 

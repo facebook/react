@@ -101,23 +101,6 @@ describe('SchedulerBrowser', () => {
       this.port2 = port2;
     };
 
-    const scheduling = {
-      isInputPending(options) {
-        if (this !== scheduling) {
-          throw new Error(
-            'isInputPending called with incorrect `this` context',
-          );
-        }
-
-        return (
-          hasPendingDiscreteEvent ||
-          (options && options.includeContinuous && hasPendingContinuousEvent)
-        );
-      },
-    };
-
-    global.navigator = {scheduling};
-
     function ensureLogIsEmpty() {
       if (eventLog.length !== 0) {
         throw Error('Log is not empty. Call assertLog before continuing.');
@@ -218,7 +201,7 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Task',
-      'Yield at 5ms',
+      gate(flags => (flags.www ? 'Yield at 10ms' : 'Yield at 5ms')),
       'Post Message',
     ]);
 
@@ -318,164 +301,6 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog(['Post Message']);
     runtime.fireMessageEvent();
     runtime.assertLog(['Message Event', 'B']);
-  });
-
-  it('when isInputPending is available, we can wait longer before yielding', () => {
-    function blockUntilSchedulerAsksToYield() {
-      while (!Scheduler.unstable_shouldYield()) {
-        runtime.advanceTime(1);
-      }
-      runtime.log(`Yield at ${performance.now()}ms`);
-    }
-
-    // First show what happens when we don't request a paint
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('Task with no pending input');
-      blockUntilSchedulerAsksToYield();
-    });
-    runtime.assertLog(['Post Message']);
-
-    runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task with no pending input',
-      // Even though there's no input, eventually Scheduler will yield
-      // regardless in case there's a pending main thread task we don't know
-      // about, like a network event.
-      gate(flags =>
-        flags.enableIsInputPending
-          ? 'Yield at 10ms'
-          : // When isInputPending is disabled, we always yield quickly
-            'Yield at 5ms',
-      ),
-    ]);
-
-    runtime.resetTime();
-
-    // Now do the same thing, but while the task is running, simulate an
-    // input event.
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('Task with pending input');
-      runtime.scheduleDiscreteEvent();
-      blockUntilSchedulerAsksToYield();
-    });
-    runtime.assertLog(['Post Message']);
-
-    runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task with pending input',
-      // This time we yielded quickly to unblock the discrete event.
-      'Yield at 5ms',
-      'Discrete Event',
-    ]);
-  });
-
-  it(
-    'isInputPending will also check for continuous inputs, but after a ' +
-      'slightly larger threshold',
-    () => {
-      function blockUntilSchedulerAsksToYield() {
-        while (!Scheduler.unstable_shouldYield()) {
-          runtime.advanceTime(1);
-        }
-        runtime.log(`Yield at ${performance.now()}ms`);
-      }
-
-      // First show what happens when we don't request a paint
-      scheduleCallback(NormalPriority, () => {
-        runtime.log('Task with no pending input');
-        blockUntilSchedulerAsksToYield();
-      });
-      runtime.assertLog(['Post Message']);
-
-      runtime.fireMessageEvent();
-      runtime.assertLog([
-        'Message Event',
-        'Task with no pending input',
-        // Even though there's no input, eventually Scheduler will yield
-        // regardless in case there's a pending main thread task we don't know
-        // about, like a network event.
-        gate(flags =>
-          flags.enableIsInputPending
-            ? 'Yield at 10ms'
-            : // When isInputPending is disabled, we always yield quickly
-              'Yield at 5ms',
-        ),
-      ]);
-
-      runtime.resetTime();
-
-      // Now do the same thing, but while the task is running, simulate a
-      // continuous input event.
-      scheduleCallback(NormalPriority, () => {
-        runtime.log('Task with continuous input');
-        runtime.scheduleContinuousEvent();
-        blockUntilSchedulerAsksToYield();
-      });
-      runtime.assertLog(['Post Message']);
-
-      runtime.fireMessageEvent();
-      runtime.assertLog([
-        'Message Event',
-        'Task with continuous input',
-        // This time we yielded quickly to unblock the continuous event. But not
-        // as quickly as for a discrete event.
-        gate(flags =>
-          flags.enableIsInputPending
-            ? 'Yield at 10ms'
-            : // When isInputPending is disabled, we always yield quickly
-              'Yield at 5ms',
-        ),
-        'Continuous Event',
-      ]);
-    },
-  );
-
-  it('requestPaint forces a yield at the end of the next frame interval', () => {
-    function blockUntilSchedulerAsksToYield() {
-      while (!Scheduler.unstable_shouldYield()) {
-        runtime.advanceTime(1);
-      }
-      runtime.log(`Yield at ${performance.now()}ms`);
-    }
-
-    // First show what happens when we don't request a paint
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('Task with no paint');
-      blockUntilSchedulerAsksToYield();
-    });
-    runtime.assertLog(['Post Message']);
-
-    runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task with no paint',
-      gate(flags =>
-        flags.enableIsInputPending
-          ? 'Yield at 10ms'
-          : // When isInputPending is disabled, we always yield quickly
-            'Yield at 5ms',
-      ),
-    ]);
-
-    runtime.resetTime();
-
-    // Now do the same thing, but call requestPaint inside the task
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('Task with paint');
-      requestPaint();
-      blockUntilSchedulerAsksToYield();
-    });
-    runtime.assertLog(['Post Message']);
-
-    runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task with paint',
-      // This time we yielded quickly (5ms) because we requested a paint.
-      'Yield at 5ms',
-    ]);
   });
 
   it('yielding continues in a new task regardless of how much time is remaining', () => {

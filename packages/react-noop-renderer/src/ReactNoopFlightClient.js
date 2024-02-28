@@ -43,6 +43,10 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   parseModel(response: Response, json) {
     return JSON.parse(json, response._fromJSON);
   },
+  printToConsole(methodName, args, badgeName) {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, args);
+  },
 });
 
 function read<T>(source: Source): Thenable<T> {

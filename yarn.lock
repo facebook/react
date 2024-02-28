@@ -1445,12 +1445,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.11.2, @babel/runtime@npm:^7.8.4":
-  version: 7.11.2
-  resolution: "@babel/runtime@npm:7.11.2"
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.11.2, @babel/runtime@npm:^7.8.4":
+  version: 7.23.9
+  resolution: "@babel/runtime@npm:7.23.9"
   dependencies:
-    regenerator-runtime: "npm:^0.13.4"
-  checksum: 10c0/f284240921a3d752ec307de9fd485181bb619bf5ad0f6b7bb91e9b74604796ded1aad9187b607e9a3ae857471cf0069c931a4716121e1c57b1c5c43a914dcb03
+    regenerator-runtime: "npm:^0.14.0"
+  checksum: 10c0/e71205fdd7082b2656512cc98e647d9ea7e222e4fe5c36e9e5adc026446fcc3ba7b3cdff8b0b694a0b78bb85db83e7b1e3d4c56ef90726682b74f13249cf952d
   languageName: node
   linkType: hard
 
@@ -12946,17 +12946,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"memoize-one@npm:>=3.1.1 <6, memoize-one@npm:^5.1.1":
+  version: 5.2.1
+  resolution: "memoize-one@npm:5.2.1"
+  checksum: 10c0/fd22dbe9a978a2b4f30d6a491fc02fb90792432ad0dab840dc96c1734d2bd7c9cdeb6a26130ec60507eb43230559523615873168bcbe8fafab221c30b11d54c1
+  languageName: node
+  linkType: hard
+
 "memoize-one@npm:^3.1.1":
   version: 3.1.1
   resolution: "memoize-one@npm:3.1.1"
   checksum: 10c0/fa174364bd878d19728bd3dc05e91fbb1f8bf50bb2a688280e75a7209d0993573e95ebe8daa827c2f75ae8ece00c8893eed9c5ff794f95147b606b80e1092cba
-  languageName: node
-  linkType: hard
-
-"memoize-one@npm:^5.1.1":
-  version: 5.1.1
-  resolution: "memoize-one@npm:5.1.1"
-  checksum: 10c0/df6b4319d402a069ef7f274729dc2390a623f444abb15f5324b558afff253b7d407015a02f69d24f133fd413c029652a9ed2645d0387c90b7419d61b32f9fb4f
   languageName: node
   linkType: hard
 
@@ -15396,7 +15396,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-devtools-core@npm:5.0.0, react-devtools-core@workspace:packages/react-devtools-core":
+"react-devtools-core@npm:5.0.1, react-devtools-core@workspace:packages/react-devtools-core":
   version: 0.0.0-use.local
   resolution: "react-devtools-core@workspace:packages/react-devtools-core"
   dependencies:
@@ -15516,7 +15516,8 @@ __metadata:
     memoize-one: "npm:^3.1.1"
     react-15: "npm:react@^15"
     react-dom-15: "npm:react-dom@^15"
-    react-virtualized-auto-sizer: "npm:^1.0.6"
+    react-virtualized-auto-sizer: "npm:^1.0.23"
+    react-window: "npm:^1.8.10"
   languageName: unknown
   linkType: soft
 
@@ -15562,7 +15563,7 @@ __metadata:
     memoize-one: "npm:^5.1.1"
     nullthrows: "npm:^1.1.1"
     pretty-ms: "npm:^7.0.0"
-    react-virtualized-auto-sizer: "npm:^1.0.6"
+    react-virtualized-auto-sizer: "npm:^1.0.23"
     regenerator-runtime: "npm:^0.13.7"
     style-loader: "npm:^1.2.1"
     url-loader: "npm:^4.1.0"
@@ -15581,7 +15582,7 @@ __metadata:
     electron: "npm:^23.1.2"
     ip: "npm:^1.1.4"
     minimist: "npm:^1.2.3"
-    react-devtools-core: "npm:5.0.0"
+    react-devtools-core: "npm:5.0.1"
     update-notifier: "npm:^2.1.0"
   bin:
     react-devtools: ./bin.js
@@ -15840,13 +15841,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-virtualized-auto-sizer@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "react-virtualized-auto-sizer@npm:1.0.6"
+"react-virtualized-auto-sizer@npm:^1.0.23":
+  version: 1.0.23
+  resolution: "react-virtualized-auto-sizer@npm:1.0.23"
   peerDependencies:
-    react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0
-    react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0
-  checksum: 10c0/b5000ba87e29a951737c1492a1047f13a0a4fd10039a2adbabcf6dc5870f9179c7fb400b6357fd44fcdaef2464da7432dc31948a6bb13737fe7e7344f88abcf6
+    react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0
+    react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0
+  checksum: 10c0/0bc34e7dad46a1b1ea6f25a70c2536ffe7ca8ad7fe4ba569cd3e96146f9e527f56f991e0b22ec1a8ff2e6e838c23b577295eb835bdeee84ab8efbd89a7b95484
+  languageName: node
+  linkType: hard
+
+"react-window@npm:^1.8.10":
+  version: 1.8.10
+  resolution: "react-window@npm:1.8.10"
+  dependencies:
+    "@babel/runtime": "npm:^7.0.0"
+    memoize-one: "npm:>=3.1.1 <6"
+  peerDependencies:
+    react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+  checksum: 10c0/eda9afb667d9784513dcc2755b65edf3a1412e7877975322993c1382908aaef0c0b948b7e3b2d705e353306556274d90f7ab19ac40aef2184fa39d4c1e2232ea
   languageName: node
   linkType: hard
 
@@ -16010,6 +16024,13 @@ __metadata:
   version: 0.13.11
   resolution: "regenerator-runtime@npm:0.13.11"
   checksum: 10c0/12b069dc774001fbb0014f6a28f11c09ebfe3c0d984d88c9bced77fdb6fedbacbca434d24da9ae9371bfbf23f754869307fb51a4c98a8b8b18e5ef748677ca24
+  languageName: node
+  linkType: hard
+
+"regenerator-runtime@npm:^0.14.0":
+  version: 0.14.1
+  resolution: "regenerator-runtime@npm:0.14.1"
+  checksum: 10c0/1b16eb2c4bceb1665c89de70dcb64126a22bc8eb958feef3cd68fe11ac6d2a4899b5cd1b80b0774c7c03591dc57d16631a7f69d2daa2ec98100e2f29f7ec4cc4
   languageName: node
   linkType: hard
 
@@ -17320,12 +17341,12 @@ __metadata:
   linkType: hard
 
 "socks@npm:^2.6.1, socks@npm:^2.7.1":
-  version: 2.8.0
-  resolution: "socks@npm:2.8.0"
+  version: 2.8.1
+  resolution: "socks@npm:2.8.1"
   dependencies:
     ip-address: "npm:^9.0.5"
     smart-buffer: "npm:^4.2.0"
-  checksum: 10c0/208fa5d5ae47857653c4fc039d47e4c1e76313b24052151a949aa98f027f9aaba8fc6c5dc0f7f2d9ceeb94e9940217581f2d9798436563c1494b67a6cb68611f
+  checksum: 10c0/ac77b515c260473cc7c4452f09b20939e22510ce3ae48385c516d1d5784374d5cc75be3cb18ff66cc985a7f4f2ef8fef84e984c5ec70aad58355ed59241f40a8
   languageName: node
   linkType: hard
 

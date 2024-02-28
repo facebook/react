@@ -14,7 +14,6 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let PropTypes;
 
 const clone = function (o) {
@@ -97,7 +96,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
   });
 
@@ -189,7 +187,7 @@ describe('ReactComponentLifeCycle', () => {
 
   // You could assign state here, but not access members of it, unless you
   // had provided a getInitialState method.
-  it('throws when accessing state in componentWillMount', () => {
+  it('throws when accessing state in componentWillMount', async () => {
     class StatefulComponent extends React.Component {
       UNSAFE_componentWillMount() {
         void this.state.yada;
@@ -200,10 +198,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = <StatefulComponent />;
-    expect(function () {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<StatefulComponent />);
+      }),
+    ).rejects.toThrow();
   });
 
   it('should allow update state inside of componentWillMount', () => {
@@ -217,9 +218,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = <StatefulComponent />;
-    expect(function () {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+    expect(async function () {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).not.toThrow();
   });
 
@@ -557,7 +562,7 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  it('should allow state updates in componentDidMount', () => {
+  it('should allow state updates in componentDidMount', async () => {
     /**
      * calls setState in an componentDidMount.
      */
@@ -575,13 +580,19 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = (
-      <SetStateInComponentDidMount
-        valueToUseInitially="hello"
-        valueToUseInOnDOMReady="goodbye"
-      />
-    );
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    let instance;
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <SetStateInComponentDidMount
+          ref={current => (instance = current)}
+          valueToUseInitially="hello"
+          valueToUseInOnDOMReady="goodbye"
+        />,
+      );
+    });
+
     expect(instance.state.stateField).toBe('goodbye');
   });
 

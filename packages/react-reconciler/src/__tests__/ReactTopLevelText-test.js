@@ -39,4 +39,12 @@ describe('ReactTopLevelText', () => {
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('10');
   });
+
+  // @gate enableBigIntSupport
+  it('should render a component returning bigints directly from render', async () => {
+    const Text = ({value}) => value;
+    ReactNoop.render(<Text value={10n} />);
+    await waitForAll([]);
+    expect(ReactNoop).toMatchRenderedOutput('10');
+  });
 });

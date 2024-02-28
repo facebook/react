@@ -15,7 +15,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 describe('ReactDOMServerIntegration', () => {
   function initModules() {
@@ -25,13 +24,11 @@ describe('ReactDOMServerIntegration', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
 
     // Make them available to the helpers.
     return {
       ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 
@@ -465,13 +462,11 @@ describe('ReactDOMServerIntegration (legacy)', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
 
     // Make them available to the helpers.
     return {
       ReactDOM,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 

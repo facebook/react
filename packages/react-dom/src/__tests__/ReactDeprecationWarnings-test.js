@@ -64,6 +64,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  // @gate !disableStringRefs
   it('should warn when given string refs', async () => {
     class RefComponent extends React.Component {
       render() {
@@ -87,6 +88,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  // @gate !disableStringRefs
   it('should warn when owner and self are the same for string refs', async () => {
     class RefComponent extends React.Component {
       render() {
@@ -109,6 +111,7 @@ describe('ReactDeprecationWarnings', () => {
     await waitForAll([]);
   });
 
+  // @gate !disableStringRefs
   it('should warn when owner and self are different for string refs', async () => {
     class RefComponent extends React.Component {
       render() {
@@ -139,39 +142,39 @@ describe('ReactDeprecationWarnings', () => {
     ]);
   });
 
-  if (__DEV__) {
-    it('should warn when owner and self are different for string refs', async () => {
-      class RefComponent extends React.Component {
-        render() {
-          return null;
-        }
+  // @gate __DEV__
+  // @gate !disableStringRefs
+  it('should warn when owner and self are different for string refs', async () => {
+    class RefComponent extends React.Component {
+      render() {
+        return null;
       }
-      class Component extends React.Component {
-        render() {
-          return JSXDEVRuntime.jsxDEV(
-            RefComponent,
-            {ref: 'refComponent'},
-            null,
-            false,
-            {},
-            {},
-          );
-        }
+    }
+    class Component extends React.Component {
+      render() {
+        return JSXDEVRuntime.jsxDEV(
+          RefComponent,
+          {ref: 'refComponent'},
+          null,
+          false,
+          {},
+          {},
+        );
       }
+    }
 
-      ReactNoop.render(<Component />);
-      await expect(async () => await waitForAll([])).toErrorDev([
-        'Warning: Component "Component" contains the string ref "refComponent". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'This case cannot be automatically converted to an arrow function. ' +
-          'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: ' +
-          'https://reactjs.org/link/strict-mode-string-ref',
-        'Warning: Component "Component" contains the string ref "refComponent". ' +
-          'Support for string refs will be removed in a future major release. We recommend ' +
-          'using useRef() or createRef() instead. Learn more about using refs safely here: ' +
-          'https://reactjs.org/link/strict-mode-string-ref',
-      ]);
-    });
-  }
+    ReactNoop.render(<Component />);
+    await expect(async () => await waitForAll([])).toErrorDev([
+      'Warning: Component "Component" contains the string ref "refComponent". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'This case cannot be automatically converted to an arrow function. ' +
+        'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: ' +
+        'https://reactjs.org/link/strict-mode-string-ref',
+      'Warning: Component "Component" contains the string ref "refComponent". ' +
+        'Support for string refs will be removed in a future major release. We recommend ' +
+        'using useRef() or createRef() instead. Learn more about using refs safely here: ' +
+        'https://reactjs.org/link/strict-mode-string-ref',
+    ]);
+  });
 });

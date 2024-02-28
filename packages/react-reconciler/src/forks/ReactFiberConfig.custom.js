@@ -193,6 +193,9 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$config.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$config.errorHydratingContainer;
+export const validateHydratableInstance = $$$config.validateHydratableInstance;
+export const validateHydratableTextInstance =
+  $$$config.validateHydratableTextInstance;
 
 // -------------------
 //     Resources

@@ -33,9 +33,7 @@ describe('create-react-class-integration', () => {
   it('should throw when `render` is not specified', () => {
     expect(function () {
       createReactClass({});
-    }).toThrowError(
-      'createClass(...): Class specification must implement a `render` method.',
-    );
+    }).toThrowError('Class specification must implement a `render` method.');
   });
 
   it('should copy prop types onto the Constructor', () => {
@@ -218,13 +216,13 @@ describe('create-react-class-integration', () => {
         },
       }),
     ).toErrorDev([
-      'createClass(...): `mixins` is now a static property and should ' +
+      '`mixins` is now a static property and should ' +
         'be defined inside "statics".',
-      'createClass(...): `propTypes` is now a static property and should ' +
+      '`propTypes` is now a static property and should ' +
         'be defined inside "statics".',
-      'createClass(...): `contextTypes` is now a static property and ' +
+      '`contextTypes` is now a static property and ' +
         'should be defined inside "statics".',
-      'createClass(...): `childContextTypes` is now a static property and ' +
+      '`childContextTypes` is now a static property and ' +
         'should be defined inside "statics".',
     ]);
   });

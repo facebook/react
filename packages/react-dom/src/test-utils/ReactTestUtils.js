@@ -116,7 +116,7 @@ function validateClassInstance(inst, methodName) {
   }
 
   throw new Error(
-    `${methodName}(...): the first argument must be a React class instance. ` +
+    `The first argument must be a React class instance. ` +
       `Instead received: ${received}.`,
   );
 }

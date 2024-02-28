@@ -89,6 +89,7 @@ import {
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
+  enableBigIntSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
@@ -548,6 +549,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
+    (enableBigIntSupport && typeof props.children === 'bigint') ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
       props.dangerouslySetInnerHTML !== null &&
       props.dangerouslySetInnerHTML.__html != null)
@@ -1355,6 +1357,19 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+export function validateHydratableInstance(
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  if (__DEV__) {
+    // TODO: take namespace into account when validating.
+    const hostContextDev: HostContextDev = (hostContext: any);
+    return validateDOMNesting(type, hostContextDev.ancestorInfo);
+  }
+  return true;
+}
+
 export function hydrateInstance(
   instance: Instance,
   type: string,
@@ -1381,6 +1396,20 @@ export function hydrateInstance(
     shouldWarnDev,
     hostContext,
   );
+}
+
+export function validateHydratableTextInstance(
+  text: string,
+  hostContext: HostContext,
+): boolean {
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    const ancestor = hostContextDev.ancestorInfo.current;
+    if (ancestor != null) {
+      return validateTextNesting(text, ancestor.tag);
+    }
+  }
+  return true;
 }
 
 export function hydrateTextInstance(

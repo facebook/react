@@ -21,9 +21,7 @@ function accumulate<T>(
   next: T | Array<T>,
 ): T | Array<T> {
   if (next == null) {
-    throw new Error(
-      'accumulate(...): Accumulated items must not be null or undefined.',
-    );
+    throw new Error('Accumulated items must not be null or undefined.');
   }
 
   if (current == null) {

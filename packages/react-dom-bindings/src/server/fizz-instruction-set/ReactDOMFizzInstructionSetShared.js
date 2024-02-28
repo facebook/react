@@ -131,7 +131,7 @@ export function completeSegment(containerID, placeholderID) {
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 export function listenToFormSubmissionsForReplaying() {
   // A global replay queue ensures actions are replayed in order.
@@ -196,9 +196,8 @@ export function listenToFormSubmissionsForReplaying() {
     // javascript: URL placeholder value. So we might not be the first to declare it.
     // We attach it to the form's root node, which is the shared environment context
     // where we preserve sequencing and where we'll pick it up from during hydration.
-    // In practice, this is just the same as document but we might support shadow trees
-    // in the future.
-    const root = form.getRootNode();
+    // If there's no ownerDocument, then this is the document.
+    const root = form.ownerDocument || form;
     (root['$$reactFormReplay'] = root['$$reactFormReplay'] || []).push(
       form,
       submitter,

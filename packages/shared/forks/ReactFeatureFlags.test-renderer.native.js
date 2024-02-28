@@ -85,6 +85,14 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
+
+export const enableRefAsProp = false;
+export const disableStringRefs = false;
+
+export const enableReactTestRendererWarning = false;
+
+export const enableBigIntSupport = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

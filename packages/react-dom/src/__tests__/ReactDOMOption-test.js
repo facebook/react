@@ -46,7 +46,8 @@ describe('ReactDOMOption', () => {
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
     }).toErrorDev(
-      'validateDOMNesting(...): <div> cannot appear as a child of <option>.\n' +
+      'In HTML, <div> cannot be a child of <option>.\n' +
+        'This will cause a hydration error.\n' +
         '    in div (at **)\n' +
         '    in option (at **)',
     );
@@ -171,6 +172,13 @@ describe('ReactDOMOption', () => {
     expect(node.value).toBe('hello');
   });
 
+  // @gate enableBigIntSupport
+  it('should support bigint values', () => {
+    const node = ReactTestUtils.renderIntoDocument(<option>{5n}</option>);
+    expect(node.innerHTML).toBe('5');
+    expect(node.value).toBe('5');
+  });
+
   it('should be able to use dangerouslySetInnerHTML on option', () => {
     const stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     let node;
@@ -263,7 +271,7 @@ describe('ReactDOMOption', () => {
       [
         'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
         'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
-        'Warning: validateDOMNesting(...): <div> cannot appear as a child of <option>',
+        'Warning: In HTML, <div> cannot be a child of <option>',
       ],
       {withoutStack: 1},
     );

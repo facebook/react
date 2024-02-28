@@ -8,6 +8,7 @@
  */
 
 import {Children} from 'react';
+import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -26,7 +27,11 @@ export function validateOptionProps(element: Element, props: Object) {
           if (child == null) {
             return;
           }
-          if (typeof child === 'string' || typeof child === 'number') {
+          if (
+            typeof child === 'string' ||
+            typeof child === 'number' ||
+            (enableBigIntSupport && typeof child === 'bigint')
+          ) {
             return;
           }
           if (!didWarnInvalidChild) {

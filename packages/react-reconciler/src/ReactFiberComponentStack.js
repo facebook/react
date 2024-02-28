@@ -26,6 +26,7 @@ import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
   describeClassComponentFrame,
+  describeDebugInfoFrame,
 } from 'shared/ReactComponentStackFrame';
 
 function describeFiber(fiber: Fiber): string {
@@ -64,6 +65,18 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
     let node: Fiber = workInProgress;
     do {
       info += describeFiber(node);
+      if (__DEV__) {
+        // Add any Server Component stack frames in reverse order.
+        const debugInfo = node._debugInfo;
+        if (debugInfo) {
+          for (let i = debugInfo.length - 1; i >= 0; i--) {
+            const entry = debugInfo[i];
+            if (typeof entry.name === 'string') {
+              info += describeDebugInfoFrame(entry.name, entry.env);
+            }
+          }
+        }
+      }
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);

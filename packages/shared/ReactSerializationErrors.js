@@ -98,14 +98,22 @@ export function describeValueForErrorMessage(value: mixed): string {
       if (isArray(value)) {
         return '[...]';
       }
+      if (value !== null && value.$$typeof === CLIENT_REFERENCE_TAG) {
+        return describeClientReference(value);
+      }
       const name = objectName(value);
       if (name === 'Object') {
         return '{...}';
       }
       return name;
     }
-    case 'function':
-      return 'function';
+    case 'function': {
+      if ((value: any).$$typeof === CLIENT_REFERENCE_TAG) {
+        return describeClientReference(value);
+      }
+      const name = (value: any).displayName || value.name;
+      return name ? 'function ' + name : 'function';
+    }
     default:
       // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);
@@ -140,6 +148,12 @@ function describeElementType(type: any): string {
     }
   }
   return '';
+}
+
+const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
+
+function describeClientReference(ref: any) {
+  return 'client';
 }
 
 export function describeObjectForErrorMessage(
@@ -210,6 +224,8 @@ export function describeObjectForErrorMessage(
   } else {
     if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE) {
       str = '<' + describeElementType(objectOrArray.type) + '/>';
+    } else if (objectOrArray.$$typeof === CLIENT_REFERENCE_TAG) {
+      return describeClientReference(objectOrArray);
     } else if (__DEV__ && jsxPropsParents.has(objectOrArray)) {
       // Print JSX
       const type = jsxPropsParents.get(objectOrArray);

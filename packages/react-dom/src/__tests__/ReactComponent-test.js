@@ -38,6 +38,7 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
+  // @gate !disableStringRefs || !__DEV__
   it('should throw when supplying a string ref outside of render method', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -125,6 +126,7 @@ describe('ReactComponent', () => {
     }
   });
 
+  // @gate !disableStringRefs
   it('should support string refs on owned components', async () => {
     const innerObj = {};
     const outerObj = {};

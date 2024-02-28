@@ -635,6 +635,17 @@ function bind(this: Function): Function {
   const newFn = FunctionBind.apply(this, arguments);
   const reference = knownServerReferences.get(this);
   if (reference) {
+    if (__DEV__) {
+      const thisBind = arguments[0];
+      if (thisBind != null) {
+        // This doesn't warn in browser environments since it's not instrumented outside
+        // usedWithSSR. This makes this an SSR only warning which we don't generally do.
+        // TODO: Consider a DEV only instrumentation in the browser.
+        console.error(
+          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        );
+      }
+    }
     const args = ArraySlice.call(arguments, 1);
     let boundPromise = null;
     if (reference.bound !== null) {

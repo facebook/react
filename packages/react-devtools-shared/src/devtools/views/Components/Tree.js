@@ -538,7 +538,7 @@ function updateIndentationSizeVar(
 }
 
 // $FlowFixMe[missing-local-annot]
-function InnerElementType({children, style, ...rest}) {
+function InnerElementType({children, style}) {
   const {ownerID} = useContext(TreeStateContext);
 
   const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
@@ -586,11 +586,7 @@ function InnerElementType({children, style, ...rest}) {
   // A lot of options were considered; this seemed the one that requires the least code.
   // See https://github.com/bvaughn/react-devtools-experimental/issues/9
   return (
-    <div
-      className={styles.InnerElementType}
-      ref={divRef}
-      style={style}
-      {...rest}>
+    <div className={styles.InnerElementType} ref={divRef} style={style}>
       <SelectedTreeHighlight />
       {children}
     </div>

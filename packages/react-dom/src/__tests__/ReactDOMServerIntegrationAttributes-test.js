@@ -16,7 +16,6 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let ReactDOMServer;
 
 function initModules() {
@@ -26,13 +25,11 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 

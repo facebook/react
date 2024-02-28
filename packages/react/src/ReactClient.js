@@ -30,7 +30,7 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
-} from './ReactElement';
+} from './jsx/ReactJSXElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';

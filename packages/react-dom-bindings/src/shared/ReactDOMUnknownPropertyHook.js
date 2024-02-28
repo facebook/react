@@ -186,7 +186,8 @@ function validateProperty(tagName, name, value, eventRegistry) {
       case 'suppressHydrationWarning':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
-      case 'innerHTML': {
+      case 'innerHTML':
+      case 'ref': {
         return true;
       }
       case 'innerText': // Properties

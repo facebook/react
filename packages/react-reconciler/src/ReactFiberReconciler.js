@@ -368,7 +368,7 @@ export function updateContainer(
     if (__DEV__) {
       if (typeof callback !== 'function') {
         console.error(
-          'render(...): Expected the last optional `callback` argument to be a ' +
+          'Expected the last optional `callback` argument to be a ' +
             'function. Instead received: %s.',
           callback,
         );

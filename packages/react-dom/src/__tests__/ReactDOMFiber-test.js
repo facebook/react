@@ -60,6 +60,17 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
+  // @gate enableBigIntSupport
+  it('should render bigints as children', async () => {
+    const Box = ({value}) => <div>{value}</div>;
+
+    await act(async () => {
+      root.render(<Box value={10n} />);
+    });
+
+    expect(container.textContent).toEqual('10');
+  });
+
   it('should call an effect after mount/update (replacing render callback pattern)', async () => {
     function Component() {
       React.useEffect(() => {

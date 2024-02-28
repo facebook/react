@@ -17,7 +17,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let useState;
 let useReducer;
 let useEffect;
@@ -41,7 +40,6 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -69,7 +67,6 @@ function initModules() {
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 

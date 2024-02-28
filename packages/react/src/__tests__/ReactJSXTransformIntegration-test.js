@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOMClient;
-let ReactTestUtils;
 let act;
 
 // TODO: Historically this module was used to confirm that the JSX transform
@@ -30,7 +29,6 @@ describe('ReactJSXTransformIntegration', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
 
     Component = class extends React.Component {
@@ -57,7 +55,11 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <Component />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -67,7 +69,11 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <div />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -78,7 +84,11 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <TagName />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -101,22 +111,44 @@ describe('ReactJSXTransformIntegration', () => {
     expect(element.props.foo).toBe(1);
   });
 
-  it('extracts key and ref from the rest of the props', () => {
-    const ref = React.createRef();
-    const element = <Component key="12" ref={ref} foo="56" />;
+  it('extracts key from the rest of the props', () => {
+    const element = <Component key="12" foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe(ref);
     const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
+  });
+
+  it('does not extract ref from the rest of the props', () => {
+    const ref = React.createRef();
+    const element = <Component ref={ref} foo="56" />;
+    expect(element.type).toBe(Component);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(() => expect(element.ref).toBe(ref)).toErrorDev(
+        'Accessing element.ref is no longer supported',
+        {withoutStack: true},
+      );
+      const expectation = {foo: '56', ref};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+    } else {
+      const expectation = {foo: '56'};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+      expect(element.ref).toBe(ref);
+    }
   });
 
   it('coerces the key to a string', () => {
     const element = <Component key={12} foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -213,7 +245,7 @@ describe('ReactJSXTransformIntegration', () => {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should normalize props with default values', () => {
+  it('should normalize props with default values', async () => {
     class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
@@ -221,14 +253,26 @@ describe('ReactJSXTransformIntegration', () => {
     }
     NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    const instance = ReactTestUtils.renderIntoDocument(
-      <NormalizingComponent />,
-    );
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(
+        <NormalizingComponent ref={current => (instance = current)} />,
+      );
+    });
+
     expect(instance.props.prop).toBe('testKey');
 
-    const inst2 = ReactTestUtils.renderIntoDocument(
-      <NormalizingComponent prop={null} />,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    let inst2;
+    await act(() => {
+      root.render(
+        <NormalizingComponent prop={null} ref={current => (inst2 = current)} />,
+      );
+    });
+
     expect(inst2.props.prop).toBe(null);
   });
 });

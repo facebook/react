@@ -66,6 +66,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
+  enableBigIntSupport,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
@@ -326,7 +327,7 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
 
 export function checkForUnmatchedText(
   serverText: string,
-  clientText: string | number,
+  clientText: string | number | bigint,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
@@ -397,12 +398,17 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (typeof value === 'number') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
         if (__DEV__) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
       }
@@ -640,7 +646,9 @@ function setProp(
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
+      // TODO: `ref` is pretty common, should we move it up?
       // Noop
       break;
     }
@@ -953,7 +961,11 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (typeof value === 'number') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
       break;
@@ -988,7 +1000,8 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
       // Noop
       break;
     }
@@ -2194,6 +2207,7 @@ function diffHydratedCustomComponent(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2269,7 +2283,7 @@ function diffHydratedCustomComponent(
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 function diffHydratedGenericElement(
   domElement: Element,
@@ -2307,6 +2321,7 @@ function diffHydratedGenericElement(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2812,7 +2827,12 @@ export function diffHydratedProperties(
   // even listeners these nodes might be wired up to.
   // TODO: Warn if there is more than a single textNode as a child.
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
-  if (typeof children === 'string' || typeof children === 'number') {
+  if (
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    (enableBigIntSupport && typeof children === 'bigint')
+  ) {
+    // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
     if (domElement.textContent !== '' + children) {
       if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(

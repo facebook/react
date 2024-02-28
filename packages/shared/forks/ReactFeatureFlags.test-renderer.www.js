@@ -28,7 +28,7 @@ export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
@@ -87,7 +87,15 @@ export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
+
+export const enableRefAsProp = false;
+export const disableStringRefs = false;
+
+export const enableReactTestRendererWarning = false;
+
+export const enableBigIntSupport = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

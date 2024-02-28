@@ -40,18 +40,18 @@ if (__DEV__) {
   didWarnOnInvalidCallback = new Set<string>();
 }
 
-function warnOnInvalidCallback(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed) {
   if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = callerName + '_' + (callback: any);
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const key = String(callback);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
+        'Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
-        callerName,
         callback,
       );
     }
@@ -88,10 +88,9 @@ function warnNoop(
     }
 
     console.error(
-      '%s(...): Can only update a mounting component. ' +
+      'Can only update a mounting component. ' +
         'This usually means you called %s() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the %s component.',
-      callerName,
       callerName,
       componentName,
     );
@@ -117,7 +116,7 @@ const classComponentUpdater = {
       internals.queue.push(payload);
       if (__DEV__) {
         if (callback !== undefined && callback !== null) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback);
         }
       }
     }
@@ -128,7 +127,7 @@ const classComponentUpdater = {
     internals.queue = [payload];
     if (__DEV__) {
       if (callback !== undefined && callback !== null) {
-        warnOnInvalidCallback(callback, 'setState');
+        warnOnInvalidCallback(callback);
       }
     }
   },
@@ -140,7 +139,7 @@ const classComponentUpdater = {
     } else {
       if (__DEV__) {
         if (callback !== undefined && callback !== null) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback);
         }
       }
     }
@@ -318,13 +317,13 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     if (!renderPresent) {
       if (ctor.prototype && typeof ctor.prototype.render === 'function') {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: you may have forgotten to define `render`.',
           name,
         );
@@ -463,9 +462,8 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     const hasMutatedProps = instance.props !== newProps;
     if (instance.props !== undefined && hasMutatedProps) {
       console.error(
-        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
-        name,
         name,
       );
     }

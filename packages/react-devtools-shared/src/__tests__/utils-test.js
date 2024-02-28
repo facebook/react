@@ -23,7 +23,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
 } from 'shared/ReactSymbols';
-import {createElement} from 'react/src/ReactElement';
+import {createElement} from 'react';
 
 describe('utils', () => {
   describe('getDisplayName', () => {

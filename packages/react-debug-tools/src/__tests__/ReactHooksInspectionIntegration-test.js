@@ -772,8 +772,11 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should inspect the value of the current provider in useContext', () => {
     const MyContext = React.createContext('default');
+    const ThemeContext = React.createContext('default');
+    ThemeContext.displayName = 'Theme';
     function Foo(props) {
       const value = React.useContext(MyContext);
+      React.useContext(ThemeContext);
       return <div>{value}</div>;
     }
     const renderer = ReactTestRenderer.create(
@@ -798,6 +801,20 @@ describe('ReactHooksInspectionIntegration', () => {
           "name": "Context",
           "subHooks": [],
           "value": "contextual",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Theme",
+          "subHooks": [],
+          "value": "default",
         },
       ]
     `);
@@ -928,7 +945,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
@@ -986,7 +1003,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
@@ -1969,7 +1986,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
