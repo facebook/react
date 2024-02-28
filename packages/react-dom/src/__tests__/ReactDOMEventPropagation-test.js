@@ -124,6 +124,23 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onBeforeMatch', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onBeforeMatch',
+        reactEventType: 'beforematch',
+        nativeEvent: 'beforematch',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('beforematch', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
     it('onBlur', async () => {
       await testNativeBubblingEvent({
         type: 'input',

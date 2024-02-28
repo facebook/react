@@ -53,6 +53,7 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
+import {enableNewDOMProps} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -386,6 +387,11 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
           return DefaultEventPriority;
       }
     }
+    case 'beforematch':
+      if (enableNewDOMProps) {
+        return DiscreteEventPriority;
+      }
+    // fall through without enableNewDOMProps
     default:
       return DefaultEventPriority;
   }
