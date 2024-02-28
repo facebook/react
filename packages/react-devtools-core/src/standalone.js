@@ -33,7 +33,7 @@ import {
 import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 installHook(window);
 
@@ -127,36 +127,55 @@ function reload() {
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
+        fetchFileWithCaching,
       }),
     );
   }, 100);
 }
 
+const resourceCache: Map<string, string> = new Map();
+
+// As a potential improvement, this should be done from the backend of RDT.
+// Browser extension is doing this via exchanging messages
+// between devtools_page and dedicated content script for it, see `fetchFileWithCaching.js`.
+async function fetchFileWithCaching(url: string) {
+  if (resourceCache.has(url)) {
+    return Promise.resolve(resourceCache.get(url));
+  }
+
+  return fetch(url)
+    .then(data => data.text())
+    .then(content => {
+      resourceCache.set(url, content);
+
+      return content;
+    });
+}
+
 function canViewElementSourceFunction(
-  inspectedElement: InspectedElement,
+  _source: Source,
+  symbolicatedSource: Source | null,
 ): boolean {
-  if (
-    inspectedElement.canViewSource === false ||
-    inspectedElement.source === null
-  ) {
+  if (symbolicatedSource == null) {
     return false;
   }
 
-  const {source} = inspectedElement;
-
-  return doesFilePathExist(source.sourceURL, projectRoots);
+  return doesFilePathExist(symbolicatedSource.sourceURL, projectRoots);
 }
 
 function viewElementSourceFunction(
-  id: number,
-  inspectedElement: InspectedElement,
+  _source: Source,
+  symbolicatedSource: Source | null,
 ): void {
-  const {source} = inspectedElement;
-  if (source !== null) {
-    launchEditor(source.sourceURL, source.line, projectRoots);
-  } else {
-    log.error('Cannot inspect element', id);
+  if (symbolicatedSource == null) {
+    return;
   }
+
+  launchEditor(
+    symbolicatedSource.sourceURL,
+    symbolicatedSource.line,
+    projectRoots,
+  );
 }
 
 function onDisconnected() {

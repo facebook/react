@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext} from './TreeContext';
@@ -15,7 +14,6 @@ import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
 import ContextMenu from '../../ContextMenu/ContextMenu';
 import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
 import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
 import InspectedElementBadges from './InspectedElementBadges';
 import InspectedElementContextTree from './InspectedElementContextTree';
@@ -34,6 +32,7 @@ import {
 } from 'react-devtools-shared/src/backendAPI';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import InspectedElementSourcePanel from './InspectedElementSourcePanel';
 
 import styles from './InspectedElementView.css';
 
@@ -44,9 +43,7 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
-
-export type CopyPath = (path: Array<string | number>) => void;
-export type InspectPath = (path: Array<string | number>) => void;
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 type Props = {
   element: Element,
@@ -54,6 +51,7 @@ type Props = {
   inspectedElement: InspectedElement,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
+  symbolicatedSourcePromise: Promise<Source | null>,
 };
 
 export default function InspectedElementView({
@@ -62,6 +60,7 @@ export default function InspectedElementView({
   inspectedElement,
   parseHookNames,
   toggleParseHookNames,
+  symbolicatedSourcePromise,
 }: Props): React.Node {
   const {id} = element;
   const {owners, rendererPackageName, rendererVersion, rootType, source} =
@@ -171,8 +170,11 @@ export default function InspectedElementView({
           </div>
         )}
 
-        {source !== null && (
-          <Source sourceURL={source.sourceURL} line={source.line} />
+        {source != null && (
+          <InspectedElementSourcePanel
+            source={source}
+            symbolicatedSourcePromise={symbolicatedSourcePromise}
+          />
         )}
       </div>
 
@@ -235,52 +237,6 @@ export default function InspectedElementView({
         </ContextMenu>
       )}
     </Fragment>
-  );
-}
-
-// This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
-function formatSourceForDisplay(sourceURL: string, line: number) {
-  // Note: this RegExp doesn't work well with URLs from Metro,
-  // which provides bundle URL with query parameters prefixed with /&
-  const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-
-  let nameOnly = sourceURL.replace(BEFORE_SLASH_RE, '');
-
-  // In DEV, include code for a common special case:
-  // prefer "folder/index.js" instead of just "index.js".
-  if (/^index\./.test(nameOnly)) {
-    const match = sourceURL.match(BEFORE_SLASH_RE);
-    if (match) {
-      const pathBeforeSlash = match[1];
-      if (pathBeforeSlash) {
-        const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-        nameOnly = folderName + '/' + nameOnly;
-      }
-    }
-  }
-
-  return `${nameOnly}:${sourceURL}`;
-}
-
-type SourceProps = {
-  sourceURL: string,
-  line: number,
-};
-
-function Source({sourceURL, line}: SourceProps) {
-  const handleCopy = () => copy(`${sourceURL}:${line}`);
-  return (
-    <div className={styles.Source} data-testname="InspectedElementView-Source">
-      <div className={styles.SourceHeaderRow}>
-        <div className={styles.SourceHeader}>source</div>
-        <Button onClick={handleCopy} title="Copy to clipboard">
-          <ButtonIcon type="copy" />
-        </Button>
-      </div>
-      <div className={styles.SourceOneLiner}>
-        {formatSourceForDisplay(sourceURL, line)}
-      </div>
-    </div>
   );
 }
 

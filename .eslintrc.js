@@ -455,6 +455,13 @@ module.exports = {
         __IS_CHROME__: 'readonly',
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
+        __IS_INTERNAL_VERSION__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-devtools-shared/**/*.js'],
+      globals: {
+        __IS_INTERNAL_VERSION__: 'readonly',
       },
     },
   ],
