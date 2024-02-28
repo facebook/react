@@ -195,6 +195,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ansi-styles@npm:^3.1.0":
+  version: 3.2.0
+  resolution: "ansi-styles@npm:3.2.0"
+  dependencies:
+    color-convert: "npm:^1.9.0"
+  checksum: 10c0/d9bba9502d1dea5a4d2b4e919c99fd429d75f41f7a5b987ef88e62f55fb2259f58168a902a95b6f174d8f70d55313b3331f738fb230721d7881b815a7bb6d505
+  languageName: node
+  linkType: hard
+
 "ansi-styles@npm:^3.2.1":
   version: 3.2.1
   resolution: "ansi-styles@npm:3.2.1"
@@ -436,7 +445,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^2.0.0, chalk@npm:^2.0.1, chalk@npm:^2.1.0":
+"chalk@npm:^2.0.0":
   version: 2.4.1
   resolution: "chalk@npm:2.4.1"
   dependencies:
@@ -444,6 +453,17 @@ __metadata:
     escape-string-regexp: "npm:^1.0.5"
     supports-color: "npm:^5.3.0"
   checksum: 10c0/f21b77e6e791d7c2c3e44bc2bf034f11ce0806f0e2f75d5b18cda6822a8496864a9627854b540595822c33db6c6ca5aa81081889bd595d60a871e2759c0041e1
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^2.0.1, chalk@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "chalk@npm:2.1.0"
+  dependencies:
+    ansi-styles: "npm:^3.1.0"
+    escape-string-regexp: "npm:^1.0.5"
+    supports-color: "npm:^4.0.0"
+  checksum: 10c0/53d5290971fa6868c90c79f747d97420395544fff6ee06e41bd853c76bb96ad4f2a61ed01adbe81adc4f3880fc38f1f76e4e3bc051682406a5a30aebfd6ec5ac
   languageName: node
   linkType: hard
 
@@ -580,7 +600,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color-name@npm:^1.1.1, color-name@npm:~1.1.4":
+"color-name@npm:^1.1.1":
+  version: 1.1.3
+  resolution: "color-name@npm:1.1.3"
+  checksum: 10c0/566a3d42cca25b9b3cd5528cd7754b8e89c0eb646b7f214e8e2eaddb69994ac5f0557d9c175eb5d8f0ad73531140d9c47525085ee752a91a2ab15ab459caf6d6
+  languageName: node
+  linkType: hard
+
+"color-name@npm:~1.1.4":
   version: 1.1.4
   resolution: "color-name@npm:1.1.4"
   checksum: 10c0/a1a3f914156960902f46f7f56bc62effc6c94e84b2cae157a526b1c1f74b677a47ec602bf68a61abfa2b42d15b7c5651c6dbe72a43af720bc588dff885b10f95
@@ -610,7 +637,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"configstore@npm:^3.0.0, configstore@npm:^3.1.1":
+"configstore@npm:^3.0.0":
+  version: 3.1.1
+  resolution: "configstore@npm:3.1.1"
+  dependencies:
+    dot-prop: "npm:^4.1.0"
+    graceful-fs: "npm:^4.1.2"
+    make-dir: "npm:^1.0.0"
+    unique-string: "npm:^1.0.0"
+    write-file-atomic: "npm:^2.0.0"
+    xdg-basedir: "npm:^3.0.0"
+  checksum: 10c0/3d0e4432afbd2513366cc82fc51b0527e6c665ab837f1d633e5790dd1586590a9f624f024ee2d6e7282f8537043d2ae94bb8756bd91097e0c0e3051dadaa988d
+  languageName: node
+  linkType: hard
+
+"configstore@npm:^3.1.1":
   version: 3.1.2
   resolution: "configstore@npm:3.1.2"
   dependencies:
@@ -743,7 +784,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^2.2.0, debug@npm:^2.6.8":
+"debug@npm:^2.2.0":
+  version: 2.6.8
+  resolution: "debug@npm:2.6.8"
+  dependencies:
+    ms: "npm:2.0.0"
+  checksum: 10c0/f13340892ee005992acf7a23cac3a224c3a26f4c98beaa528f17561696206775b95ce25110ddf3b13a24cc794b4701f521bfb9f9192bc8de18b61744fef1f67d
+  languageName: node
+  linkType: hard
+
+"debug@npm:^2.6.8":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
   dependencies:
@@ -1122,7 +1172,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.11, graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.1.9, graceful-fs@npm:^4.2.6":
+"graceful-fs@npm:^4.1.11, graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.1.9":
+  version: 4.1.11
+  resolution: "graceful-fs@npm:4.1.11"
+  checksum: 10c0/269e09e44d18b222e423ceefe9104403dd44bf3c63bf2174dd2b3c81f6a9aa318cd6921670fab40631e102269b9b15a87d88ee44fb5f32303d94cb45921bd3c9
+  languageName: node
+  linkType: hard
+
+"graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10c0/386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
@@ -1152,6 +1209,13 @@ __metadata:
   dependencies:
     ansi-regex: "npm:^2.0.0"
   checksum: 10c0/f54e4887b9f8f3c4bfefd649c48825b3c093987c92c27880ee9898539e6f01aed261e82e73153c3f920fde0db5bf6ebd58deb498ed1debabcb4bc40113ccdf05
+  languageName: node
+  linkType: hard
+
+"has-flag@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "has-flag@npm:2.0.0"
+  checksum: 10c0/5e1f136c7f801c2719048bedfabcf834a1ed46276cd4c98c6fcddb89a482f5d6a16df0771a38805cfc2d9010b4de157909e1a71b708e1d339b6e311041bde9b4
   languageName: node
   linkType: hard
 
@@ -1706,7 +1770,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.13.1, lodash@npm:^4.3.0":
+"lodash@npm:^4.13.1":
+  version: 4.17.4
+  resolution: "lodash@npm:4.17.4"
+  checksum: 10c0/843eae40f83597bde5837d069392b9ef568143b8d2efc57abde1d51c5932de71aabe4840cb4786ad256ae3a0b90641fc0f6dbfff797246cb18440fcbe8d220a6
+  languageName: node
+  linkType: hard
+
+"lodash@npm:^4.3.0":
   version: 4.17.11
   resolution: "lodash@npm:4.17.11"
   checksum: 10c0/38d4510a3b9ebacd640480a2775ee4b9894ec82c20dd903930aa6613b8d888c245e996458d3cf917a8ef3928fb98c9159a4a003dba5d64a0185c96db1db74750
@@ -2776,12 +2847,12 @@ __metadata:
   linkType: hard
 
 "socks@npm:^2.7.1":
-  version: 2.8.0
-  resolution: "socks@npm:2.8.0"
+  version: 2.8.1
+  resolution: "socks@npm:2.8.1"
   dependencies:
     ip-address: "npm:^9.0.5"
     smart-buffer: "npm:^4.2.0"
-  checksum: 10c0/208fa5d5ae47857653c4fc039d47e4c1e76313b24052151a949aa98f027f9aaba8fc6c5dc0f7f2d9ceeb94e9940217581f2d9798436563c1494b67a6cb68611f
+  checksum: 10c0/ac77b515c260473cc7c4452f09b20939e22510ce3ae48385c516d1d5784374d5cc75be3cb18ff66cc985a7f4f2ef8fef84e984c5ec70aad58355ed59241f40a8
   languageName: node
   linkType: hard
 
@@ -2968,6 +3039,15 @@ __metadata:
   version: 2.0.0
   resolution: "supports-color@npm:2.0.0"
   checksum: 10c0/570e0b63be36cccdd25186350a6cb2eaad332a95ff162fa06d9499982315f2fe4217e69dd98e862fbcd9c81eaff300a825a1fe7bf5cc752e5b84dfed042b0dda
+  languageName: node
+  linkType: hard
+
+"supports-color@npm:^4.0.0":
+  version: 4.2.1
+  resolution: "supports-color@npm:4.2.1"
+  dependencies:
+    has-flag: "npm:^2.0.0"
+  checksum: 10c0/fbca1d777291b5c821686760f39d1ce59f727de16d1e9fcee5cfc7c9049c682f5d8286c610ad33700dba76dfccb110bd92231b7f008b491fac756bd5650be096
   languageName: node
   linkType: hard
 
@@ -3174,12 +3254,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:3.3.2, uuid@npm:^3.0.0":
+"uuid@npm:3.3.2":
   version: 3.3.2
   resolution: "uuid@npm:3.3.2"
   bin:
     uuid: ./bin/uuid
   checksum: 10c0/847bd7b389f44d05cf5341134d52803116b616c7344f12c74040effd75280b58273ea3a2bee6ba6e5405688c5edbb0696f4adcbc89e1206dc1d8650bdaece7a6
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^3.0.0":
+  version: 3.1.0
+  resolution: "uuid@npm:3.1.0"
+  bin:
+    uuid: ./bin/uuid
+  checksum: 10c0/2304c9d1e66e32ec16abb4c7875796c5ede6404cace9226edb9ecd54310ff55a1171c97b8be4e6927f2b72fb6c4412141e94578eeff913318bc59fe9e477471c
   languageName: node
   linkType: hard
 
