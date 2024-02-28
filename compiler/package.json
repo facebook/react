@@ -25,9 +25,7 @@
     "dev": "concurrently --kill-others -n forget,playground \"yarn workspace babel-plugin-react-forget run tsc --watch\" \"yarn workspace playground run dev\"",
     "test": "yarn workspaces run test",
     "snap": "yarn workspace babel-plugin-react-forget run snap",
-    "snap:build": "yarn workspace snap run build",
-    "sprout": "yarn workspace babel-plugin-react-forget run sprout",
-    "sprout:build": "yarn workspace sprout run build"
+    "snap:build": "yarn workspace snap run build"
   },
   "dependencies": {},
   "devDependencies": {
