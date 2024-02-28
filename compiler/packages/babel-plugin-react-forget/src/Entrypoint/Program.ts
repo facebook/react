@@ -252,9 +252,17 @@ export function compileProgram(
        * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
        * is validated
        */
+      if (environment.isErr()) {
+        CompilerError.throwInvalidConfig({
+          reason: "Error in validating environment config",
+          description: environment.unwrapErr().toString(),
+          suggestions: null,
+          loc: null,
+        });
+      }
       const config = environment.unwrap();
 
-      compiledFn = compileFn(fn, config);
+      compiledFn = compileFn(fn, config, pass.filename);
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
         fnLoc: fn.node.loc ?? null,
@@ -319,7 +327,6 @@ export function compileProgram(
   }
 
   const externalFunctions: ExternalFunction[] = [];
-  let instrumentForget: null | ExternalFunction = null;
   let gating: null | ExternalFunction = null;
   try {
     // TODO: check for duplicate import specifiers
@@ -328,11 +335,17 @@ export function compileProgram(
       externalFunctions.push(gating);
     }
 
-    if (options.environment?.enableEmitInstrumentForget != null) {
-      instrumentForget = tryParseExternalFunction(
-        options.environment.enableEmitInstrumentForget
+    const enableEmitInstrumentForget =
+      options.environment?.enableEmitInstrumentForget;
+    if (enableEmitInstrumentForget != null) {
+      externalFunctions.push(
+        tryParseExternalFunction(enableEmitInstrumentForget.fn)
       );
-      externalFunctions.push(instrumentForget);
+      if (enableEmitInstrumentForget.gating != null) {
+        externalFunctions.push(
+          tryParseExternalFunction(enableEmitInstrumentForget.gating)
+        );
+      }
     }
 
     if (options.environment?.enableEmitFreeze != null) {

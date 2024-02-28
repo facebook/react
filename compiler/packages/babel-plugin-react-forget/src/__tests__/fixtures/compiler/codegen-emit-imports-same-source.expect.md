@@ -13,11 +13,16 @@ function useFoo(props) {
 ## Code
 
 ```javascript
-import { useRenderCounter, makeReadOnly } from "react-forget-runtime";
+import {
+  useRenderCounter,
+  shouldInstrument,
+  makeReadOnly,
+} from "react-forget-runtime";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEmitFreeze @instrumentForget
 
 function useFoo(props) {
-  if (__DEV__) useRenderCounter("useFoo");
+  if (__DEV__ && shouldInstrument)
+    useRenderCounter("useFoo", "/codegen-emit-imports-same-source.ts");
   const $ = useMemoCache(2);
   let t0;
   if ($[0] !== props.x) {

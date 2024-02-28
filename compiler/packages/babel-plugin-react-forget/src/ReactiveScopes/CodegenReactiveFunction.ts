@@ -72,7 +72,8 @@ export type CodegenFunction = {
 };
 
 export function codegenFunction(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
+  filename: string | null
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]", null);
   const compileResult = codegenReactiveFunction(cx, fn);
@@ -112,14 +113,24 @@ export function codegenFunction(
   if (emitInstrumentForget != null && fn.id != null) {
     /*
      * Technically, this is a conditional hook call. However, we expect
-     * __DEV__ and gatingIdentifier to be runtime constants
+     * __DEV__ and gating identifier to be runtime constants
      */
+    let gating: t.Expression;
+    if (emitInstrumentForget.gating != null) {
+      gating = t.logicalExpression(
+        "&&",
+        t.identifier("__DEV__"),
+        t.identifier(emitInstrumentForget.gating.importSpecifierName)
+      );
+    } else {
+      gating = t.identifier("__DEV__");
+    }
     const test: t.IfStatement = t.ifStatement(
-      t.identifier("__DEV__"),
+      gating,
       t.expressionStatement(
         t.callExpression(
-          t.identifier(emitInstrumentForget.importSpecifierName),
-          [t.stringLiteral(fn.id)]
+          t.identifier(emitInstrumentForget.fn.importSpecifierName),
+          [t.stringLiteral(fn.id), t.stringLiteral(filename ?? "")]
         )
       )
     );

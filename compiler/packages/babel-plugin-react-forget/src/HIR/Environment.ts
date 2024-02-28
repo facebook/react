@@ -45,6 +45,12 @@ export const ExternalFunctionSchema = z.object({
   // Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
   importSpecifierName: z.string(),
 });
+
+export const InstrumentationSchema = z.object({
+  fn: ExternalFunctionSchema,
+  gating: ExternalFunctionSchema.nullish(),
+});
+
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 
 const HookSchema = z.object({
@@ -254,22 +260,24 @@ const EnvironmentConfigSchema = z.object({
    * instrumentation function, for components and hooks that Forget compiles.
    * For example:
    *   instrumentForget: {
-   *     source: 'react-forget-runtime',
-   *     importSpecifierName: 'useRenderCounter',
+   *     import: {
+   *       source: 'react-forget-runtime',
+   *       importSpecifierName: 'useRenderCounter',
+   *      }
    *   }
    *
    * produces:
-   *   import {useRenderCounter} from 'react-forget-runtime-pokes';
+   *   import {useRenderCounter} from 'react-forget-runtime';
    *
    *   function Component(props) {
    *     if (__DEV__) {
-   *        useRenderCounter();
+   *        useRenderCounter("Component", "/filepath/filename.js");
    *     }
    *     // ...
    *   }
    *
    */
-  enableEmitInstrumentForget: ExternalFunctionSchema.nullish(),
+  enableEmitInstrumentForget: InstrumentationSchema.nullish(),
 
   /**
    * Enable support for reactive scopes that contain an early return.

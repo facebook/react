@@ -176,7 +176,7 @@ function compile(source: string): CompilerOutput {
       for (const result of run(fn, {
         ...config,
         customHooks: new Map([...COMMON_HOOKS]),
-      })) {
+      }, null)) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
           case "ast": {

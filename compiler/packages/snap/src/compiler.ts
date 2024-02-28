@@ -65,8 +65,14 @@ function makePluginOptions(
   }
   if (firstLine.includes("@instrumentForget")) {
     enableEmitInstrumentForget = {
-      source: "react-forget-runtime",
-      importSpecifierName: "useRenderCounter",
+      fn: {
+        source: "react-forget-runtime",
+        importSpecifierName: "useRenderCounter",
+      },
+      gating: {
+        source: "react-forget-runtime",
+        importSpecifierName: "shouldInstrument",
+      },
     };
   }
   if (firstLine.includes("@enableEmitFreeze")) {
@@ -282,6 +288,9 @@ export function transformFixtureInput(
   const filename =
     path.basename(fixturePath) + (language === "typescript" ? ".ts" : "");
   const inputAst = parseInput(input, filename, language);
+  // Give babel transforms an absolute path as relative paths get prefixed
+  // with `cwd`, which is different across machines
+  const virtualFilepath = "/" + filename;
 
   const presets =
     language === "typescript"
@@ -292,7 +301,7 @@ export function transformFixtureInput(
    * Get Forget compiled code
    */
   const forgetResult = transformFromAstSync(inputAst, input, {
-    filename,
+    filename: virtualFilepath,
     highlightCode: false,
     retainLines: true,
     plugins: [
@@ -324,7 +333,7 @@ export function transformFixtureInput(
       );
       const result = transformFromAstSync(forgetResult.ast, forgetOutput, {
         presets,
-        filename,
+        filename: virtualFilepath,
       });
       if (result?.code == null) {
         return {
@@ -348,7 +357,7 @@ export function transformFixtureInput(
     try {
       const result = transformFromAstSync(inputAst, input, {
         presets,
-        filename,
+        filename: virtualFilepath,
       });
 
       if (result?.code == null) {

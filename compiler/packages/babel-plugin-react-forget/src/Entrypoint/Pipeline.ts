@@ -89,7 +89,8 @@ export function* run(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  config: EnvironmentConfig
+  config: EnvironmentConfig,
+  filename: string | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(config, contextIdentifiers);
@@ -98,7 +99,7 @@ export function* run(
     name: "EnvironmentConfig",
     value: prettyFormat(env.config),
   };
-  const ast = yield* runWithEnvironment(func, env);
+  const ast = yield* runWithEnvironment(func, env, filename);
   return ast;
 }
 
@@ -110,7 +111,8 @@ function* runWithEnvironment(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  env: Environment
+  env: Environment,
+  filename: string | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
@@ -358,7 +360,7 @@ function* runWithEnvironment(
     validatePreservedManualMemoization(reactiveFunction);
   }
 
-  const ast = codegenFunction(reactiveFunction).unwrap();
+  const ast = codegenFunction(reactiveFunction, filename).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
 
   /**
@@ -377,9 +379,10 @@ export function compileFn(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  config: EnvironmentConfig
+  config: EnvironmentConfig,
+  filename: string | null
 ): CodegenFunction {
-  let generator = run(func, config);
+  let generator = run(func, config, filename);
   while (true) {
     const next = generator.next();
     if (next.done) {
