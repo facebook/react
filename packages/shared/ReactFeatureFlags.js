@@ -195,6 +195,12 @@ export const disableStringRefs = __NEXT_MAJOR__;
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = false;
 
+/**
+ * Catch-all for all changes to how we treat new HTML attributes.
+ * When attributes are newly recognized by React, or change their type, the rendered output changes.
+ */
+export const enableNewDOMProps = __NEXT_MAJOR__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

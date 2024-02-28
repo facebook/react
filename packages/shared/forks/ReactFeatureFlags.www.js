@@ -122,6 +122,8 @@ export const enableReactTestRendererWarning = false;
 
 export const enableBigIntSupport = false;
 
+export const enableNewDOMProps = false;
+
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;

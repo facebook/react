@@ -33,8 +33,14 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders, clientCleanRender} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  clientCleanRender,
+  clientRenderOnServerString,
+  serverRender,
+  streamRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -227,6 +233,77 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no download prop with symbol value', async render => {
         const e = await render(<div download={Symbol('foo')} />, 1);
         expect(e.hasAttribute('download')).toBe(false);
+      });
+    });
+
+    describe('hidden property (combined boolean/string attribute)', function () {
+      itRenders('hidden prop with true value', async render => {
+        const e = await render(<div hidden={true} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      itRenders('hidden prop with false value', async render => {
+        const e = await render(<div hidden={false} />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+
+      itRenders('hidden prop with string value', async render => {
+        const e = await render(<div hidden="until-found" />);
+        expect(e.getAttribute('hidden')).toBe(
+          ReactFeatureFlags.enableNewDOMProps ? 'until-found' : '',
+        );
+      });
+
+      itRenders('hidden prop with string "false" value', async render => {
+        const e = await render(
+          <div hidden="false" />,
+          ReactFeatureFlags.enableNewDOMProps ? 0 : 1,
+        );
+        expect(e.getAttribute('hidden')).toBe(
+          ReactFeatureFlags.enableNewDOMProps ? 'false' : '',
+        );
+      });
+
+      itRenders('hidden prop with string "true" value', async render => {
+        const e = await render(
+          <div hidden={'true'} />,
+          ReactFeatureFlags.enableNewDOMProps ? 0 : 1,
+        );
+        expect(e.getAttribute('hidden')).toBe(
+          ReactFeatureFlags.enableNewDOMProps ? 'true' : '',
+        );
+      });
+
+      itRenders('hidden prop with number 0 value', async render => {
+        const e = await render(<div hidden={0} />);
+        expect(e.getAttribute('hidden')).toBe(
+          ReactFeatureFlags.enableNewDOMProps ||
+            render === clientRenderOnServerString ||
+            render === serverRender ||
+            render === streamRender
+            ? '0'
+            : null,
+        );
+      });
+
+      itRenders('no hidden prop with null value', async render => {
+        const e = await render(<div hidden={null} />);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no hidden prop with undefined value', async render => {
+        const e = await render(<div hidden={undefined} />);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no hidden prop with function value', async render => {
+        const e = await render(<div hidden={function () {}} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no hidden prop with symbol value', async render => {
+        const e = await render(<div hidden={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
       });
     });
 

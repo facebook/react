@@ -34,6 +34,7 @@ import {
   enableFloat,
   enableFormActions,
   enableFizzExternalRuntime,
+  enableNewDOMProps,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -1311,8 +1312,19 @@ function pushAttribute(
       }
       return;
     }
-    case 'capture':
     case 'hidden':
+      if (!enableNewDOMProps) {
+        // Boolean
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          target.push(
+            attributeSeparator,
+            stringToChunk(name),
+            attributeEmptyString,
+          );
+        }
+      }
+    // fallthrough to overloaded boolean with enableNewDOMProps
+    case 'capture':
     case 'download': {
       // Overloaded Boolean
       if (value === true) {
@@ -4994,7 +5006,16 @@ function writeStyleResourceAttributeInJS(
       if (value === false) {
         return;
       }
-      attributeValue = '';
+      if (enableNewDOMProps) {
+        // overloaded Boolean
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+        attributeValue = '' + (value: any);
+      } else {
+        // just Boolean
+        attributeValue = '';
+      }
       break;
     }
     // Santized URLs
@@ -5189,10 +5210,16 @@ function writeStyleResourceAttributeInAttr(
       if (value === false) {
         return;
       }
-      if (__DEV__) {
-        checkAttributeStringCoercion(value, attributeName);
+      if (enableNewDOMProps) {
+        // overloaded Boolean
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+        attributeValue = '' + (value: any);
+      } else {
+        // just Boolean
+        attributeValue = '';
       }
-      attributeValue = '' + (value: any);
       break;
     }
 

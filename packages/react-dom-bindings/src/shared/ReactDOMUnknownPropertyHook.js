@@ -12,6 +12,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {
   enableCustomElementPropertySupport,
   enableFormActions,
+  enableNewDOMProps,
 } from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
@@ -223,6 +224,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disablePictureInPicture':
           case 'disableRemotePlayback':
           case 'formNoValidate':
+          case 'hidden':
           case 'loop':
           case 'noModule':
           case 'noValidate':
@@ -235,7 +237,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'seamless':
           case 'itemScope':
           case 'capture':
-          case 'hidden':
           case 'download': {
             // Boolean properties can accept boolean values
             return true;
@@ -313,6 +314,12 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'itemScope': {
               break;
             }
+            case 'hidden': {
+              if (!enableNewDOMProps) {
+                break;
+              }
+            }
+            // fallthrough to overloaded boolean with enableNewDOMProps
             default: {
               return true;
             }

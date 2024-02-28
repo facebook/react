@@ -78,6 +78,7 @@ import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
+import {enableNewDOMProps} from '../../../shared/ReactFeatureFlags';
 
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
@@ -741,8 +742,17 @@ function setProp(
       break;
     }
     // Overloaded Boolean
-    case 'capture':
     case 'hidden':
+      if (!enableNewDOMProps) {
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          domElement.setAttribute(key, '');
+        } else {
+          domElement.removeAttribute(key);
+        }
+        break;
+      }
+    // fallthrough to overloaded boolean with enableNewDOMProps
+    case 'capture':
     case 'download': {
       // An attribute that can be used as a flag as well as with a value.
       // When true, it should be present (set either to an empty string or its name).
@@ -2528,8 +2538,20 @@ function diffHydratedGenericElement(
         );
         continue;
       }
-      case 'capture':
       case 'hidden':
+        if (!enableNewDOMProps) {
+          // Some of these need to be lower case to remove them from the extraAttributes list.
+          hydrateBooleanAttribute(
+            domElement,
+            propKey,
+            propKey.toLowerCase(),
+            value,
+            extraAttributes,
+          );
+          continue;
+        }
+      // fallthrough to overloaded boolean with enableNewDOMProps
+      case 'capture':
       case 'download': {
         hydrateOverloadedBooleanAttribute(
           domElement,
