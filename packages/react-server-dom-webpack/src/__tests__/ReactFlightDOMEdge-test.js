@@ -19,6 +19,7 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setTimeout = cb => cb();
 
+let serverExports;
 let clientExports;
 let webpackMap;
 let webpackModules;
@@ -41,6 +42,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const WebpackMock = require('./utils/WebpackMock');
 
+    serverExports = WebpackMock.serverExports;
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
@@ -322,5 +324,32 @@ describe('ReactFlightDOMEdge', () => {
       },
     });
     expect(result).toEqual(buffers);
+  });
+
+  it('warns if passing a this argument to bind() of a server reference', async () => {
+    const ServerModule = serverExports({
+      greet: function () {},
+    });
+
+    const ServerModuleImportedOnClient = {
+      greet: ReactServerDOMClient.createServerReference(
+        ServerModule.greet.$$id,
+        async function (ref, args) {},
+      ),
+    };
+
+    expect(() => {
+      ServerModule.greet.bind({}, 'hi');
+    }).toErrorDev(
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      {withoutStack: true},
+    );
+
+    expect(() => {
+      ServerModuleImportedOnClient.greet.bind({}, 'hi');
+    }).toErrorDev(
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      {withoutStack: true},
+    );
   });
 });

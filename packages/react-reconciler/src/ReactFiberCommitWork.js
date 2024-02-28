@@ -54,6 +54,7 @@ import {
   enableFloat,
   enableLegacyHidden,
   alwaysThrottleRetries,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1624,7 +1625,11 @@ function commitAttachRef(finishedWork: Fiber) {
       }
     } else {
       if (__DEV__) {
-        if (!ref.hasOwnProperty('current')) {
+        // TODO: We should move these warnings to happen during the render
+        // phase (markRef).
+        if (disableStringRefs && typeof ref === 'string') {
+          console.error('String refs are no longer supported.');
+        } else if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().',

@@ -43,6 +43,7 @@ import {
 } from './constants';
 import {
   ComponentFilterElementType,
+  ComponentFilterLocation,
   ElementTypeHostComponent,
 } from './frontend/types';
 import {
@@ -339,7 +340,8 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
       LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
     );
     if (raw != null) {
-      return JSON.parse(raw);
+      const parsedFilters: Array<ComponentFilter> = JSON.parse(raw);
+      return filterOutLocationComponentFilters(parsedFilters);
     }
   } catch (error) {}
   return getDefaultComponentFilters();
@@ -350,8 +352,25 @@ export function setSavedComponentFilters(
 ): void {
   localStorageSetItem(
     LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
-    JSON.stringify(componentFilters),
+    JSON.stringify(filterOutLocationComponentFilters(componentFilters)),
   );
+}
+
+// Following __debugSource removal from Fiber, the new approach for finding the source location
+// of a component, represented by the Fiber, is based on lazily generating and parsing component stack frames
+// To find the original location, React DevTools will perform symbolication, source maps are required for that.
+// In order to start filtering Fibers, we need to find location for all of them, which can't be done lazily.
+// Eager symbolication can become quite expensive for large applications.
+export function filterOutLocationComponentFilters(
+  componentFilters: Array<ComponentFilter>,
+): Array<ComponentFilter> {
+  // This is just an additional check to preserve the previous state
+  // Filters can be stored on the backend side or in user land (in a window object)
+  if (!Array.isArray(componentFilters)) {
+    return componentFilters;
+  }
+
+  return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
 function parseBool(s: ?string): ?boolean {

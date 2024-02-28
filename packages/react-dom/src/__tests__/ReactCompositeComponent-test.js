@@ -278,26 +278,48 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
+    function refFn1(ref) {
+      instance1 = ref;
+    }
+
+    function refFn2(ref) {
+      instance2 = ref;
+    }
+
+    function refFn3(ref) {
+      instance3 = ref;
+    }
+
     let instance1;
     let instance2;
     let instance3;
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      root.render(<Component ref={ref => (instance1 = ref)} />);
+      root.render(<Component ref={refFn1} />);
     });
-    expect(instance1.props).toEqual({prop: 'testKey'});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance1.props).toEqual({prop: 'testKey', ref: refFn1});
+    } else {
+      expect(instance1.props).toEqual({prop: 'testKey'});
+    }
 
     await act(() => {
-      root.render(
-        <Component ref={ref => (instance2 = ref)} prop={undefined} />,
-      );
+      root.render(<Component ref={refFn2} prop={undefined} />);
     });
-    expect(instance2.props).toEqual({prop: 'testKey'});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance2.props).toEqual({prop: 'testKey', ref: refFn2});
+    } else {
+      expect(instance2.props).toEqual({prop: 'testKey'});
+    }
 
     await act(() => {
-      root.render(<Component ref={ref => (instance3 = ref)} prop={null} />);
+      root.render(<Component ref={refFn3} prop={null} />);
     });
-    expect(instance3.props).toEqual({prop: null});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance3.props).toEqual({prop: null, ref: refFn3});
+    } else {
+      expect(instance3.props).toEqual({prop: null});
+    }
   });
 
   it('should not mutate passed-in props object', async () => {
@@ -857,7 +879,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<Foo idx="qwe" />);
       });
     }).toErrorDev(
-      'Foo(...): When calling super() in `Foo`, make sure to pass ' +
+      'When calling super() in `Foo`, make sure to pass ' +
         "up the same props that your component's constructor was passed.",
     );
   });
@@ -1211,14 +1233,14 @@ describe('ReactCompositeComponent', () => {
     }).toErrorDev([
       // Expect two errors because invokeGuardedCallback will dispatch an error event,
       // Causing the warning to be logged again.
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
       // And then two more because we retry errors.
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
-      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
     ]);
   });
@@ -1258,16 +1280,16 @@ describe('ReactCompositeComponent', () => {
     }).toErrorDev([
       // Expect two errors because invokeGuardedCallback will dispatch an error event,
       // Causing the warning to be logged again.
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+        'you may have forgotten to define `render`.',
 
       // And then two more because we retry errors.
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+        'you may have forgotten to define `render`.',
+      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+        'you may have forgotten to define `render`.',
     ]);
   });
 

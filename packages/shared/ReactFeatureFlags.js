@@ -123,6 +123,8 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 export const enableRenderableContext = false;
 
+export const enableServerComponentLogs = __EXPERIMENTAL__;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
@@ -143,7 +145,7 @@ export const disableLegacyContext = false;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
@@ -172,11 +174,26 @@ export const disableClientCache = false;
 // Changes Server Components Reconciliation when they have keys
 export const enableServerComponentKeys = __NEXT_MAJOR__;
 
+export const enableBigIntSupport = __NEXT_MAJOR__;
+
 /**
  * Enables a new error detection for infinite render loops from updates caused
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = true;
+
+// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
+// as a normal prop instead of stripping it from the props object.
+
+// Passes `ref` as a normal prop instead of stripping it from the props object
+// during element creation.
+export const enableRefAsProp = __NEXT_MAJOR__;
+export const disableStringRefs = __NEXT_MAJOR__;
+
+// Not ready to break experimental yet.
+// Needs more internal cleanup
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = false;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

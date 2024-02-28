@@ -41,9 +41,7 @@ describe('ReactMount', () => {
       const nodeArray = document.getElementsByTagName('div');
       expect(() => {
         ReactDOM.unmountComponentAtNode(nodeArray);
-      }).toThrowError(
-        'unmountComponentAtNode(...): Target container is not a DOM element.',
-      );
+      }).toThrowError('Target container is not a DOM element.');
     });
 
     it('returns false on non-React containers', () => {
@@ -71,8 +69,9 @@ describe('ReactMount', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(Component)).toErrorDev(
       'Functions are not valid as a React child. ' +
-        'This may happen if you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+        'This may happen if you return Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '  root.render(Component)',
       {withoutStack: true},
     );
   });
@@ -200,7 +199,7 @@ describe('ReactMount', () => {
     const rootNode = container.firstChild;
 
     expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
-      'Warning: render(...): Replacing React-rendered children with a new ' +
+      'Warning: Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
         'render the new components instead of calling ReactDOM.render.',

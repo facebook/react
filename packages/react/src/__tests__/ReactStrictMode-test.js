@@ -968,6 +968,7 @@ describe('string refs', () => {
     act = require('internal-test-utils').act;
   });
 
+  // @gate !disableStringRefs
   it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
@@ -1006,6 +1007,7 @@ describe('string refs', () => {
     });
   });
 
+  // @gate !disableStringRefs
   it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 

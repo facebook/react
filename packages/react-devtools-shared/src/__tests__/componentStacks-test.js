@@ -86,4 +86,41 @@ describe('component stack', () => {
       '\n    in Example (at **)',
     );
   });
+
+  // @reactVersion >=18.3
+  it('should log the current component stack with debug info from promises', () => {
+    const Child = () => {
+      console.error('Test error.');
+      console.warn('Test warning.');
+      return null;
+    };
+    const ChildPromise = Promise.resolve(<Child />);
+    ChildPromise.status = 'fulfilled';
+    ChildPromise.value = <Child />;
+    ChildPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+      },
+    ];
+    const Parent = () => ChildPromise;
+    const Grandparent = () => <Parent />;
+
+    act(() => render(<Grandparent />));
+
+    expect(mockError).toHaveBeenCalledWith(
+      'Test error.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
+    );
+    expect(mockWarn).toHaveBeenCalledWith(
+      'Test warning.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
+    );
+  });
 });

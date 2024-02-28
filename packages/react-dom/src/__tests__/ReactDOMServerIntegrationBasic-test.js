@@ -17,7 +17,6 @@ const TEXT_NODE_TYPE = 3;
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -25,13 +24,11 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -73,6 +70,16 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(42);
       expect(e.nodeType).toBe(3);
       expect(e.nodeValue).toMatch('42');
+    });
+
+    itRenders('a bigint', async render => {
+      const e = await render(42n);
+      if (gate(flags => flags.enableBigIntSupport)) {
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('42');
+      } else {
+        expect(e).toBe(null);
+      }
     });
 
     itRenders('an array with one child', async render => {

@@ -25,6 +25,7 @@ import {
   Forked,
   PlacementDEV,
 } from './ReactFiberFlags';
+import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -33,9 +34,17 @@ import {
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
-import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
+import {
+  ClassComponent,
+  HostRoot,
+  HostText,
+  HostPortal,
+  Fragment,
+} from './ReactWorkTags';
 import isArray from 'shared/isArray';
+import assign from 'shared/assign';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
+import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -79,6 +88,7 @@ let didWarnAboutGenerators;
 let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
+let ownerHasSymbolTypeWarning;
 let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 
 if (__DEV__) {
@@ -93,6 +103,7 @@ if (__DEV__) {
    */
   ownerHasKeyUseWarning = ({}: {[string]: boolean});
   ownerHasFunctionTypeWarning = ({}: {[string]: boolean});
+  ownerHasSymbolTypeWarning = ({}: {[string]: boolean});
 
   warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
     if (child === null || typeof child !== 'object') {
@@ -140,116 +151,166 @@ function unwrapThenable<T>(thenable: Thenable<T>): T {
   return trackUsedThenable(thenableState, thenable, index);
 }
 
-function coerceRef(
+type CoercedStringRef = ((handle: mixed) => void) & {_stringRef: ?string, ...};
+
+function convertStringRefToCallbackRef(
   returnFiber: Fiber,
   current: Fiber | null,
   element: ReactElement,
-) {
-  const mixedRef = element.ref;
+  mixedRef: any,
+): CoercedStringRef {
+  const owner: ?Fiber = (element._owner: any);
+  if (!owner) {
+    if (typeof mixedRef !== 'string') {
+      throw new Error(
+        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      );
+    }
+    throw new Error(
+      `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
+        ' the following reasons:\n' +
+        '1. You may be adding a ref to a function component\n' +
+        "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+        '3. You have multiple copies of React loaded\n' +
+        'See https://reactjs.org/link/refs-must-have-owner for more information.',
+    );
+  }
+  if (owner.tag !== ClassComponent) {
+    throw new Error(
+      'Function components cannot have string refs. ' +
+        'We recommend using useRef() instead. ' +
+        'Learn more about using refs safely here: ' +
+        'https://reactjs.org/link/strict-mode-string-ref',
+    );
+  }
+
+  // At this point, we know the ref isn't an object or function but it could
+  // be a number. Coerce it to a string.
+  if (__DEV__) {
+    checkPropStringCoercion(mixedRef, 'ref');
+  }
+  const stringRef = '' + mixedRef;
+
+  if (__DEV__) {
+    if (
+      // Will already warn with "Function components cannot be given refs"
+      !(typeof element.type === 'function' && !isReactClass(element.type))
+    ) {
+      const componentName =
+        getComponentNameFromFiber(returnFiber) || 'Component';
+      if (!didWarnAboutStringRefs[componentName]) {
+        console.error(
+          'Component "%s" contains the string ref "%s". Support for string refs ' +
+            'will be removed in a future major release. We recommend using ' +
+            'useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://reactjs.org/link/strict-mode-string-ref',
+          componentName,
+          stringRef,
+        );
+        didWarnAboutStringRefs[componentName] = true;
+      }
+    }
+  }
+
+  const inst = owner.stateNode;
+  if (!inst) {
+    throw new Error(
+      `Missing owner for string ref ${stringRef}. This error is likely caused by a ` +
+        'bug in React. Please file an issue.',
+    );
+  }
+
+  // Check if previous string ref matches new string ref
   if (
+    current !== null &&
+    current.ref !== null &&
+    typeof current.ref === 'function' &&
+    current.ref._stringRef === stringRef
+  ) {
+    // Reuse the existing string ref
+    const currentRef: CoercedStringRef = ((current.ref: any): CoercedStringRef);
+    return currentRef;
+  }
+
+  // Create a new string ref
+  const ref = function (value: mixed) {
+    const refs = inst.refs;
+    if (value === null) {
+      delete refs[stringRef];
+    } else {
+      refs[stringRef] = value;
+    }
+  };
+  ref._stringRef = stringRef;
+  return ref;
+}
+
+function coerceRef(
+  returnFiber: Fiber,
+  current: Fiber | null,
+  workInProgress: Fiber,
+  element: ReactElement,
+): void {
+  let mixedRef;
+  if (enableRefAsProp) {
+    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+    // we should resolve the `ref` prop during the begin phase of the component
+    // it's attached to (HostComponent, ClassComponent, etc).
+    const refProp = element.props.ref;
+    mixedRef = refProp !== undefined ? refProp : null;
+  } else {
+    // Old behavior.
+    mixedRef = element.ref;
+  }
+
+  let coercedRef;
+  if (
+    !disableStringRefs &&
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&
     typeof mixedRef !== 'object'
   ) {
-    if (__DEV__) {
-      if (
-        // Will already throw with "Function components cannot have string refs"
-        !(
-          element._owner &&
-          ((element._owner: any): Fiber).tag !== ClassComponent
-        ) &&
-        // Will already warn with "Function components cannot be given refs"
-        !(typeof element.type === 'function' && !isReactClass(element.type)) &&
-        // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
-        element._owner
-      ) {
-        const componentName =
-          getComponentNameFromFiber(returnFiber) || 'Component';
-        if (!didWarnAboutStringRefs[componentName]) {
-          console.error(
-            'Component "%s" contains the string ref "%s". Support for string refs ' +
-              'will be removed in a future major release. We recommend using ' +
-              'useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
-            componentName,
-            mixedRef,
-          );
-          didWarnAboutStringRefs[componentName] = true;
-        }
-      }
+    // Assume this is a string ref. If it's not, then this will throw an error
+    // to the user.
+    coercedRef = convertStringRefToCallbackRef(
+      returnFiber,
+      current,
+      element,
+      mixedRef,
+    );
+
+    if (enableRefAsProp) {
+      // When enableRefAsProp is on, we should always use the props as the
+      // source of truth for refs. Not a field on the fiber.
+      //
+      // In the case of string refs, this presents a problem, because string
+      // refs are not passed around internally as strings; they are converted to
+      // callback refs. The ref used by the reconciler is not the same as the
+      // one the user provided.
+      //
+      // But since this is a deprecated feature anyway, what we can do is clone
+      // the props object and replace it with the internal callback ref. Then we
+      // can continue to use the props object as the source of truth.
+      //
+      // This means the internal callback ref will leak into userspace. The
+      // receiving component will receive a callback ref even though the parent
+      // passed a string. Which is weird, but again, this is a deprecated
+      // feature, and we're only leaving it around behind a flag so that Meta
+      // can keep using string refs temporarily while they finish migrating
+      // their codebase.
+      const userProvidedProps = workInProgress.pendingProps;
+      const propsWithInternalCallbackRef = assign({}, userProvidedProps);
+      propsWithInternalCallbackRef.ref = coercedRef;
+      workInProgress.pendingProps = propsWithInternalCallbackRef;
     }
-
-    if (element._owner) {
-      const owner: ?Fiber = (element._owner: any);
-      let inst;
-      if (owner) {
-        const ownerFiber = ((owner: any): Fiber);
-
-        if (ownerFiber.tag !== ClassComponent) {
-          throw new Error(
-            'Function components cannot have string refs. ' +
-              'We recommend using useRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
-          );
-        }
-
-        inst = ownerFiber.stateNode;
-      }
-
-      if (!inst) {
-        throw new Error(
-          `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
-            'bug in React. Please file an issue.',
-        );
-      }
-      // Assigning this to a const so Flow knows it won't change in the closure
-      const resolvedInst = inst;
-
-      if (__DEV__) {
-        checkPropStringCoercion(mixedRef, 'ref');
-      }
-      const stringRef = '' + mixedRef;
-      // Check if previous string ref matches new string ref
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === 'function' &&
-        current.ref._stringRef === stringRef
-      ) {
-        return current.ref;
-      }
-      const ref = function (value: mixed) {
-        const refs = resolvedInst.refs;
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-      ref._stringRef = stringRef;
-      return ref;
-    } else {
-      if (typeof mixedRef !== 'string') {
-        throw new Error(
-          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-        );
-      }
-
-      if (!element._owner) {
-        throw new Error(
-          `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
-            ' the following reasons:\n' +
-            '1. You may be adding a ref to a function component\n' +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            '3. You have multiple copies of React loaded\n' +
-            'See https://reactjs.org/link/refs-must-have-owner for more information.',
-        );
-      }
-    }
+  } else {
+    coercedRef = mixedRef;
   }
-  return mixedRef;
+
+  // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
+  // should always read the ref from the prop.
+  workInProgress.ref = coercedRef;
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
@@ -267,20 +328,68 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
-    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
-    if (ownerHasFunctionTypeWarning[componentName]) {
+    if (ownerHasFunctionTypeWarning[parentName]) {
       return;
     }
-    ownerHasFunctionTypeWarning[componentName] = true;
+    ownerHasFunctionTypeWarning[parentName] = true;
 
-    console.error(
-      'Functions are not valid as a React child. This may happen if ' +
-        'you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
-    );
+    const name = invalidChild.displayName || invalidChild.name || 'Component';
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  root.render(%s)',
+        name,
+        name,
+        name,
+      );
+    } else {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <%s>{%s}</%s>',
+        name,
+        name,
+        parentName,
+        name,
+        parentName,
+      );
+    }
+  }
+}
+
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  if (__DEV__) {
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
+
+    if (ownerHasSymbolTypeWarning[parentName]) {
+      return;
+    }
+    ownerHasSymbolTypeWarning[parentName] = true;
+
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const name = String(invalidChild);
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  root.render(%s)',
+        name,
+      );
+    } else {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  <%s>%s</%s>',
+        parentName,
+        name,
+        parentName,
+      );
+    }
   }
 }
 
@@ -468,7 +577,7 @@ function createChildReconciler(
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
-        existing.ref = coerceRef(returnFiber, current, element);
+        coerceRef(returnFiber, current, existing, element);
         existing.return = returnFiber;
         if (__DEV__) {
           existing._debugOwner = element._owner;
@@ -479,7 +588,7 @@ function createChildReconciler(
     }
     // Insert
     const created = createFiberFromElement(element, returnFiber.mode, lanes);
-    created.ref = coerceRef(returnFiber, current, element);
+    coerceRef(returnFiber, current, created, element);
     created.return = returnFiber;
     if (__DEV__) {
       created._debugInfo = debugInfo;
@@ -558,12 +667,14 @@ function createChildReconciler(
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
       const created = createFiberFromText(
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         returnFiber.mode,
         lanes,
@@ -583,7 +694,7 @@ function createChildReconciler(
             returnFiber.mode,
             lanes,
           );
-          created.ref = coerceRef(returnFiber, null, newChild);
+          coerceRef(returnFiber, null, created, newChild);
           created.return = returnFiber;
           if (__DEV__) {
             created._debugInfo = mergeDebugInfo(debugInfo, newChild._debugInfo);
@@ -656,7 +767,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -675,7 +789,8 @@ function createChildReconciler(
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -686,6 +801,7 @@ function createChildReconciler(
       return updateTextNode(
         returnFiber,
         oldFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         lanes,
         debugInfo,
@@ -778,7 +894,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -795,7 +914,8 @@ function createChildReconciler(
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
@@ -803,6 +923,7 @@ function createChildReconciler(
       return updateTextNode(
         returnFiber,
         matchedFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         lanes,
         debugInfo,
@@ -894,7 +1015,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -1403,7 +1527,7 @@ function createChildReconciler(
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
-            existing.ref = coerceRef(returnFiber, child, element);
+            coerceRef(returnFiber, child, existing, element);
             existing.return = returnFiber;
             if (__DEV__) {
               existing._debugOwner = element._owner;
@@ -1435,7 +1559,7 @@ function createChildReconciler(
       return created;
     } else {
       const created = createFiberFromElement(element, returnFiber.mode, lanes);
-      created.ref = coerceRef(returnFiber, currentFirstChild, element);
+      coerceRef(returnFiber, currentFirstChild, created, element);
       created.return = returnFiber;
       if (__DEV__) {
         created._debugInfo = debugInfo;
@@ -1607,12 +1731,14 @@ function createChildReconciler(
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       return placeSingleChild(
         reconcileSingleTextNode(
           returnFiber,
           currentFirstChild,
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           '' + newChild,
           lanes,
         ),
@@ -1621,7 +1747,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 

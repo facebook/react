@@ -12,7 +12,6 @@
 let React = require('react');
 let ReactDOMClient = require('react-dom/client');
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-let ReactTestUtils = require('react-dom/test-utils');
 let act = require('internal-test-utils').act;
 
 // This is testing if string refs are deleted from `instance.refs`
@@ -26,7 +25,6 @@ describe('reactiverefs', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
   });
 
@@ -73,10 +71,7 @@ describe('reactiverefs', () => {
   }
 
   const expectClickLogsLengthToBe = function (instance, length) {
-    const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
-      instance,
-      'clickLogDiv',
-    );
+    const clickLogs = instance.container.querySelectorAll('.clickLogDiv');
     expect(clickLogs.length).toBe(length);
     expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
   };
@@ -101,13 +96,14 @@ describe('reactiverefs', () => {
      * into a different parent.
      */
     class TestRefsComponent extends React.Component {
+      container = null;
       doReset = () => {
         this.refs.myCounter.triggerReset();
       };
 
       render() {
         return (
-          <div>
+          <div ref={current => (this.container = current)}>
             <div ref="resetDiv" onClick={this.doReset}>
               Reset Me By Clicking This.
             </div>
@@ -168,12 +164,11 @@ describe('reactiverefs', () => {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
+  // @gate !disableStringRefs
   it('Should increase refs with an increase in divs', async () => {
     const testRefsComponent = await renderTestRefsComponent();
-    const clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
-      testRefsComponent,
-      'clickIncrementer',
-    );
+    const clickIncrementer =
+      testRefsComponent.container.querySelector('.clickIncrementer');
 
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
@@ -202,7 +197,7 @@ describe('reactiverefs', () => {
 
 if (!ReactFeatureFlags.disableModulePatternComponents) {
   describe('factory components', () => {
-    it('Should correctly get the ref', () => {
+    it('Should correctly get the ref', async () => {
       function Comp() {
         return {
           elemRef: React.createRef(),
@@ -213,9 +208,14 @@ if (!ReactFeatureFlags.disableModulePatternComponents) {
       }
 
       let inst;
-      expect(
-        () => (inst = ReactTestUtils.renderIntoDocument(<Comp />)),
-      ).toErrorDev(
+      await expect(async () => {
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+
+        await act(() => {
+          root.render(<Comp ref={current => (inst = current)} />);
+        });
+      }).toErrorDev(
         'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
           'Change Comp to a class that extends React.Component instead. ' +
           "If you can't use a class try assigning the prototype on the function as a workaround. " +
@@ -237,10 +237,10 @@ describe('ref swapping', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
 
     RefHopsAround = class extends React.Component {
+      container = null;
       state = {count: 0};
       hopRef = React.createRef();
       divOneRef = React.createRef();
@@ -260,7 +260,7 @@ describe('ref swapping', () => {
          * points to the correct divs.
          */
         return (
-          <div>
+          <div ref={current => (this.container = current)}>
             <div
               className="first"
               ref={count % 3 === 0 ? this.hopRef : this.divOneRef}
@@ -279,32 +279,33 @@ describe('ref swapping', () => {
     };
   });
 
-  it('Allow refs to hop around children correctly', () => {
-    const refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
+  it('Allow refs to hop around children correctly', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-    const firstDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
-      refHopsAround,
-      'first',
-    );
-    const secondDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
-      refHopsAround,
-      'second',
-    );
-    const thirdDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
-      refHopsAround,
-      'third',
-    );
+    let refHopsAround;
+    await act(() => {
+      root.render(<RefHopsAround ref={current => (refHopsAround = current)} />);
+    });
+
+    const firstDiv = refHopsAround.container.querySelector('.first');
+    const secondDiv = refHopsAround.container.querySelector('.second');
+    const thirdDiv = refHopsAround.container.querySelector('.third');
 
     expect(refHopsAround.hopRef.current).toEqual(firstDiv);
     expect(refHopsAround.divTwoRef.current).toEqual(secondDiv);
     expect(refHopsAround.divThreeRef.current).toEqual(thirdDiv);
 
-    refHopsAround.moveRef();
+    await act(() => {
+      refHopsAround.moveRef();
+    });
     expect(refHopsAround.divOneRef.current).toEqual(firstDiv);
     expect(refHopsAround.hopRef.current).toEqual(secondDiv);
     expect(refHopsAround.divThreeRef.current).toEqual(thirdDiv);
 
-    refHopsAround.moveRef();
+    await act(() => {
+      refHopsAround.moveRef();
+    });
     expect(refHopsAround.divOneRef.current).toEqual(firstDiv);
     expect(refHopsAround.divTwoRef.current).toEqual(secondDiv);
     expect(refHopsAround.hopRef.current).toEqual(thirdDiv);
@@ -313,7 +314,9 @@ describe('ref swapping', () => {
      * Make sure that after the third, we're back to where we started and the
      * refs are completely restored.
      */
-    refHopsAround.moveRef();
+    await act(() => {
+      refHopsAround.moveRef();
+    });
     expect(refHopsAround.hopRef.current).toEqual(firstDiv);
     expect(refHopsAround.divTwoRef.current).toEqual(secondDiv);
     expect(refHopsAround.divThreeRef.current).toEqual(thirdDiv);
@@ -364,15 +367,21 @@ describe('ref swapping', () => {
     expect(refCalled).toBe(1);
   });
 
-  it('coerces numbers to strings', () => {
+  // @gate !disableStringRefs
+  it('coerces numbers to strings', async () => {
     class A extends React.Component {
       render() {
         return <div ref={1} />;
       }
     }
     let a;
-    expect(() => {
-      a = ReactTestUtils.renderIntoDocument(<A />);
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<A ref={current => (a = current)} />);
+      });
     }).toErrorDev([
       'Warning: Component "A" contains the string ref "1". ' +
         'Support for string refs will be removed in a future major release. ' +
@@ -383,6 +392,7 @@ describe('ref swapping', () => {
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
+  // @gate !disableStringRefs
   it('provides an error for invalid refs', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -407,30 +417,21 @@ describe('ref swapping', () => {
     }).rejects.toThrow(
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
+  });
 
-    await act(() => {
-      root.render(<div ref={undefined} />);
-    });
-
-    await act(() => {
-      root.render({
-        $$typeof: Symbol.for('react.element'),
-        type: 'div',
-        props: {},
-        key: null,
-        ref: null,
-      });
-    });
-
-    // But this doesn't
+  // @gate !enableRefAsProp
+  it('undefined ref on manually inlined React element triggers error', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
       await act(() => {
         root.render({
           $$typeof: Symbol.for('react.element'),
           type: 'div',
-          props: {},
+          props: {
+            ref: undefined,
+          },
           key: null,
-          ref: undefined,
         });
       });
     }).rejects.toThrow(
@@ -549,6 +550,7 @@ describe('creating element with string ref in constructor', () => {
     }
   }
 
+  // @gate !disableStringRefs
   it('throws an error', async () => {
     await expect(async function () {
       const container = document.createElement('div');
@@ -569,6 +571,7 @@ describe('creating element with string ref in constructor', () => {
 });
 
 describe('strings refs across renderers', () => {
+  // @gate !disableStringRefs
   it('does not break', async () => {
     class Parent extends React.Component {
       render() {

@@ -32,7 +32,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
+import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
   scheduleWork,
@@ -139,11 +139,14 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
   disableModulePatternComponents,
+  enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
   enableCache,
   enablePostpone,
+  enableRenderableContext,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -816,18 +819,19 @@ function encodeErrorForBoundary(
 ) {
   boundary.errorDigest = digest;
   if (__DEV__) {
+    let message;
     // In dev we additionally encode the error message and component stack on the boundary
-    let errorMessage;
-    if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error && typeof error.message === 'string') {
-      errorMessage = error.message;
+    if (error instanceof Error) {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+    } else if (typeof error === 'object' && error !== null) {
+      message = describeObjectForErrorMessage(error);
     } else {
       // eslint-disable-next-line react-internal/safe-string-coercion
-      errorMessage = String(error);
+      message = String(error);
     }
 
-    boundary.errorMessage = errorMessage;
+    boundary.errorMessage = message;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }
@@ -1588,7 +1592,8 @@ function validateFunctionComponentInDev(Component: any): void {
     if (Component) {
       if (Component.childContextTypes) {
         console.error(
-          '%s(...): childContextTypes cannot be defined on a function component.',
+          'childContextTypes cannot be defined on a function component.\n' +
+            '  %s.childContextTypes = ...',
           Component.displayName || Component.name || 'Component',
         );
       }
@@ -1661,12 +1666,31 @@ function renderForwardRef(
 ): void {
   const previousComponentStack = task.componentStack;
   task.componentStack = createFunctionComponentStack(task, type.render);
+
+  let propsWithoutRef;
+  if (enableRefAsProp && 'ref' in props) {
+    // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here.
+    propsWithoutRef = ({}: {[string]: any});
+    for (const key in props) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        propsWithoutRef[key] = props[key];
+      }
+    }
+  } else {
+    propsWithoutRef = props;
+  }
+
   const children = renderWithHooks(
     request,
     task,
     keyPath,
     type.render,
-    props,
+    propsWithoutRef,
     ref,
   );
   const hasId = checkDidRenderIdHook();
@@ -2135,6 +2159,27 @@ function validateIterable(iterable, iteratorFn: Function): void {
   }
 }
 
+function warnOnFunctionType(invalidChild: Function) {
+  if (__DEV__) {
+    const name = invalidChild.displayName || invalidChild.name || 'Component';
+    console.error(
+      'Functions are not valid as a React child. This may happen if ' +
+        'you return %s instead of <%s /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
+      name,
+      name,
+    );
+  }
+}
+
+function warnOnSymbolType(invalidChild: symbol) {
+  if (__DEV__) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const name = String(invalidChild);
+    console.error('Symbols are not valid as a React child.\n' + '  %s', name);
+  }
+}
+
 // This function by it self renders a node and consumes the task by mutating it
 // to update the current execution state.
 function renderNodeDestructive(
@@ -2166,7 +2211,18 @@ function renderNodeDestructive(
         const type = element.type;
         const key = element.key;
         const props = element.props;
-        const ref = element.ref;
+
+        let ref;
+        if (enableRefAsProp) {
+          // TODO: This is a temporary, intermediate step. Once the feature
+          // flag is removed, we should get the ref off the props object right
+          // before using it.
+          const refProp = props.ref;
+          ref = refProp !== undefined ? refProp : null;
+        } else {
+          ref = element.ref;
+        }
+
         const name = getComponentNameFromType(type);
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
@@ -2309,7 +2365,10 @@ function renderNodeDestructive(
     return;
   }
 
-  if (typeof node === 'number') {
+  if (
+    typeof node === 'number' ||
+    (enableBigIntSupport && typeof node === 'bigint')
+  ) {
     const segment = task.blockedSegment;
     if (segment === null) {
       // We assume a text node doesn't have a representation in the replay set,
@@ -2327,11 +2386,10 @@ function renderNodeDestructive(
 
   if (__DEV__) {
     if (typeof node === 'function') {
-      console.error(
-        'Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.',
-      );
+      warnOnFunctionType(node);
+    }
+    if (typeof node === 'symbol') {
+      warnOnSymbolType(node);
     }
   }
 }

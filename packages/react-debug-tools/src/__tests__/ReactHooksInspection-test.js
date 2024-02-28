@@ -13,6 +13,18 @@
 let React;
 let ReactDebugTools;
 
+function normalizeSourceLoc(tree) {
+  tree.forEach(node => {
+    if (node.hookSource) {
+      node.hookSource.fileName = '**';
+      node.hookSource.lineNumber = 0;
+      node.hookSource.columnNumber = 0;
+    }
+    normalizeSourceLoc(node.subHooks);
+  });
+  return tree;
+}
+
 describe('ReactHooksInspection', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -26,16 +38,24 @@ describe('ReactHooksInspection', () => {
       return <div>{state}</div>;
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'hello world',
-        debugInfo: null,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "hello world",
+        },
+      ]
+    `);
   });
 
   it('should inspect a simple custom hook', () => {
@@ -49,25 +69,75 @@ describe('ReactHooksInspection', () => {
       return <div>{value}</div>;
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Custom',
-        value: __DEV__ ? 'custom hook label' : undefined,
-        debugInfo: null,
-        subHooks: [
+    if (__DEV__) {
+      expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+              [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "Foo",
+                    "lineNumber": 0,
+                  },
+                  "id": null,
+                  "isStateEditable": false,
+                  "name": "Custom",
+                  "subHooks": [
+                    {
+                      "debugInfo": null,
+                      "hookSource": {
+                        "columnNumber": 0,
+                        "fileName": "**",
+                        "functionName": "useCustom",
+                        "lineNumber": 0,
+                      },
+                      "id": 0,
+                      "isStateEditable": true,
+                      "name": "State",
+                      "subHooks": [],
+                      "value": "hello world",
+                    },
+                  ],
+                  "value": "custom hook label",
+                },
+              ]
+          `);
+    } else {
+      expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+        [
           {
-            isStateEditable: true,
-            id: 0,
-            name: 'State',
-            value: 'hello world',
-            debugInfo: null,
-            subHooks: [],
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": 0,
+              "fileName": "**",
+              "functionName": "Foo",
+              "lineNumber": 0,
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "Custom",
+            "subHooks": [
+              {
+                "debugInfo": null,
+                "hookSource": {
+                  "columnNumber": 0,
+                  "fileName": "**",
+                  "functionName": "useCustom",
+                  "lineNumber": 0,
+                },
+                "id": 0,
+                "isStateEditable": true,
+                "name": "State",
+                "subHooks": [],
+                "value": "hello world",
+              },
+            ],
+            "value": undefined,
           },
-        ],
-      },
-    ]);
+        ]
+      `);
+    }
   });
 
   it('should inspect a tree of multiple hooks', () => {
@@ -87,58 +157,96 @@ describe('ReactHooksInspection', () => {
       );
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Custom',
-        value: undefined,
-        debugInfo: null,
-        subHooks: [
-          {
-            isStateEditable: true,
-            id: 0,
-            name: 'State',
-            debugInfo: null,
-            subHooks: [],
-            value: 'hello',
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-          {
-            isStateEditable: false,
-            id: 1,
-            name: 'Effect',
-            debugInfo: null,
-            subHooks: [],
-            value: effect,
+          "id": null,
+          "isStateEditable": false,
+          "name": "Custom",
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "hello",
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 1,
+              "isStateEditable": false,
+              "name": "Effect",
+              "subHooks": [],
+              "value": [Function],
+            },
+          ],
+          "value": undefined,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-        ],
-      },
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Custom',
-        value: undefined,
-        debugInfo: null,
-        subHooks: [
-          {
-            isStateEditable: true,
-            id: 2,
-            name: 'State',
-            value: 'world',
-            debugInfo: null,
-            subHooks: [],
-          },
-          {
-            isStateEditable: false,
-            id: 3,
-            name: 'Effect',
-            value: effect,
-            debugInfo: null,
-            subHooks: [],
-          },
-        ],
-      },
-    ]);
+          "id": null,
+          "isStateEditable": false,
+          "name": "Custom",
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 2,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "world",
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 3,
+              "isStateEditable": false,
+              "name": "Effect",
+              "subHooks": [],
+              "value": [Function],
+            },
+          ],
+          "value": undefined,
+        },
+      ]
+    `);
   });
 
   it('should inspect a tree of multiple levels of hooks', () => {
@@ -168,92 +276,154 @@ describe('ReactHooksInspection', () => {
       );
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Bar',
-        value: undefined,
-        debugInfo: null,
-        subHooks: [
-          {
-            isStateEditable: false,
-            id: null,
-            name: 'Custom',
-            value: undefined,
-            debugInfo: null,
-            subHooks: [
-              {
-                isStateEditable: true,
-                id: 0,
-                name: 'Reducer',
-                value: 'hello',
-                debugInfo: null,
-                subHooks: [],
-              },
-              {
-                isStateEditable: false,
-                id: 1,
-                name: 'Effect',
-                value: effect,
-                debugInfo: null,
-                subHooks: [],
-              },
-            ],
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-          {
-            isStateEditable: false,
-            id: 2,
-            name: 'LayoutEffect',
-            value: effect,
-            debugInfo: null,
-            subHooks: [],
-          },
-        ],
-      },
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Baz',
-        value: undefined,
-        debugInfo: null,
-        subHooks: [
-          {
-            isStateEditable: false,
-            id: 3,
-            name: 'LayoutEffect',
-            value: effect,
-            debugInfo: null,
-            subHooks: [],
-          },
-          {
-            isStateEditable: false,
-            id: null,
-            name: 'Custom',
-            debugInfo: null,
-            subHooks: [
-              {
-                isStateEditable: true,
-                id: 4,
-                name: 'Reducer',
-                debugInfo: null,
-                subHooks: [],
-                value: 'world',
+          "id": null,
+          "isStateEditable": false,
+          "name": "Bar",
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useBar",
+                "lineNumber": 0,
               },
-              {
-                isStateEditable: false,
-                id: 5,
-                name: 'Effect',
-                debugInfo: null,
-                subHooks: [],
-                value: effect,
+              "id": null,
+              "isStateEditable": false,
+              "name": "Custom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "Reducer",
+                  "subHooks": [],
+                  "value": "hello",
+                },
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 1,
+                  "isStateEditable": false,
+                  "name": "Effect",
+                  "subHooks": [],
+                  "value": [Function],
+                },
+              ],
+              "value": undefined,
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useBar",
+                "lineNumber": 0,
               },
-            ],
-            value: undefined,
+              "id": 2,
+              "isStateEditable": false,
+              "name": "LayoutEffect",
+              "subHooks": [],
+              "value": [Function],
+            },
+          ],
+          "value": undefined,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-        ],
-      },
-    ]);
+          "id": null,
+          "isStateEditable": false,
+          "name": "Baz",
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useBaz",
+                "lineNumber": 0,
+              },
+              "id": 3,
+              "isStateEditable": false,
+              "name": "LayoutEffect",
+              "subHooks": [],
+              "value": [Function],
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useBaz",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Custom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 4,
+                  "isStateEditable": true,
+                  "name": "Reducer",
+                  "subHooks": [],
+                  "value": "world",
+                },
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 5,
+                  "isStateEditable": false,
+                  "name": "Effect",
+                  "subHooks": [],
+                  "value": [Function],
+                },
+              ],
+              "value": undefined,
+            },
+          ],
+          "value": undefined,
+        },
+      ]
+    `);
   });
 
   it('should inspect the default value using the useContext hook', () => {
@@ -263,16 +433,24 @@ describe('ReactHooksInspection', () => {
       return <div>{value}</div>;
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Context',
-        value: 'default',
-        debugInfo: null,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": "default",
+        },
+      ]
+    `);
   });
 
   it('should support an injected dispatcher', () => {
@@ -331,41 +509,71 @@ describe('ReactHooksInspection', () => {
       );
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Context',
-        value: 'hi',
-        debugInfo: null,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Custom',
-        value: undefined,
-        debugInfo: null,
-        subHooks: [
-          {
-            isStateEditable: false,
-            id: null,
-            name: 'Promise',
-            value: 'world',
-            debugInfo: [{name: 'Hello'}],
-            subHooks: [],
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-          {
-            isStateEditable: true,
-            id: 0,
-            name: 'State',
-            value: 'world',
-            debugInfo: null,
-            subHooks: [],
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": "hi",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-        ],
-      },
-    ]);
+          "id": null,
+          "isStateEditable": false,
+          "name": "Custom",
+          "subHooks": [
+            {
+              "debugInfo": [
+                {
+                  "name": "Hello",
+                },
+              ],
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Promise",
+              "subHooks": [],
+              "value": "world",
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "world",
+            },
+          ],
+          "value": undefined,
+        },
+      ]
+    `);
   });
 
   it('should inspect use() calls for unresolved Promise', () => {
@@ -376,16 +584,24 @@ describe('ReactHooksInspection', () => {
       return <div>{value}</div>;
     }
     const tree = ReactDebugTools.inspectHooks(Foo, {});
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Unresolved',
-        value: promise,
-        debugInfo: null,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Unresolved",
+          "subHooks": [],
+          "value": Promise {},
+        },
+      ]
+    `);
   });
 
   describe('useDebugValue', () => {
@@ -408,25 +624,75 @@ describe('ReactHooksInspection', () => {
         return null;
       }
       const tree = ReactDebugTools.inspectHooks(Foo, {});
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'Custom',
-          value: __DEV__ ? 'bar:123' : undefined,
-          debugInfo: null,
-          subHooks: [
+      if (__DEV__) {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+                  [
+                    {
+                      "debugInfo": null,
+                      "hookSource": {
+                        "columnNumber": 0,
+                        "fileName": "**",
+                        "functionName": "Foo",
+                        "lineNumber": 0,
+                      },
+                      "id": null,
+                      "isStateEditable": false,
+                      "name": "Custom",
+                      "subHooks": [
+                        {
+                          "debugInfo": null,
+                          "hookSource": {
+                            "columnNumber": 0,
+                            "fileName": "**",
+                            "functionName": "useCustom",
+                            "lineNumber": 0,
+                          },
+                          "id": 0,
+                          "isStateEditable": true,
+                          "name": "State",
+                          "subHooks": [],
+                          "value": 0,
+                        },
+                      ],
+                      "value": "bar:123",
+                    },
+                  ]
+              `);
+      } else {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
             {
-              isStateEditable: true,
-              id: 0,
-              name: 'State',
-              debugInfo: null,
-              subHooks: [],
-              value: 0,
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Foo",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Custom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": undefined,
             },
-          ],
-        },
-      ]);
+          ]
+        `);
+      }
     });
   });
 });

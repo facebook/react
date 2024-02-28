@@ -58,6 +58,7 @@ const expectChildren = function (container, children) {
           continue;
         }
         textNode = outerNode.childNodes[mountIndex];
+        expect(textNode != null).toBe(true);
         expect(textNode.nodeType).toBe(3);
         expect(textNode.data).toBe(child);
         mountIndex++;
@@ -170,6 +171,15 @@ describe('ReactMultiChildText', () => {
     }).toErrorDev([
       'Warning: Each child in a list should have a unique "key" prop.',
       'Warning: Each child in a list should have a unique "key" prop.',
+    ]);
+  });
+
+  // @gate enableBigIntSupport
+  it('should correctly handle bigint children for render and update', async () => {
+    // prettier-ignore
+    await testAllPermutations([
+      10n, '10',
+      [10n], ['10']
     ]);
   });
 
