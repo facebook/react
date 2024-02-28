@@ -16,6 +16,7 @@ import type {
   ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {
+  ContextDependency,
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
@@ -26,7 +27,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   FunctionComponent,
   SimpleMemoComponent,
-  ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
 import {
@@ -61,6 +61,10 @@ type Hook = {
   next: Hook | null,
 };
 
+const GetPrimitiveStackCacheContext: ReactContext<mixed> = ({
+  $$typeof: REACT_CONTEXT_TYPE,
+  _currentValue: null,
+}: any);
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
   // most stack frames added by calling the primitive hook can be removed.
@@ -69,7 +73,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     let readHookLog;
     try {
       // Use all hooks here to add them to the hook log.
-      Dispatcher.useContext(({_currentValue: null}: any));
+      Dispatcher.useContext(GetPrimitiveStackCacheContext);
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -105,12 +109,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
-        Dispatcher.use(
-          ({
-            $$typeof: REACT_CONTEXT_TYPE,
-            _currentValue: null,
-          }: any),
-        );
+        Dispatcher.use(GetPrimitiveStackCacheContext);
         Dispatcher.use({
           then() {},
           status: 'fulfilled',
@@ -139,6 +138,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
+let currentContextDependency: null | ContextDependency<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -149,8 +149,19 @@ function nextHook(): null | Hook {
 }
 
 function readContext<T>(context: ReactContext<T>): T {
+  if (context === GetPrimitiveStackCacheContext) {
+    // This is a read for filling the primitive stack cache.
+    // There's no sensible value to return.
+    return (null: any);
+  }
+  if (currentContextDependency === null) {
+    return context._currentValue;
+  }
   // For now we don't expose readContext usage in the hooks debugging info.
-  return context._currentValue;
+  const value = ((currentContextDependency.memoizedValue: any): T);
+  currentContextDependency = currentContextDependency.next;
+
+  return value;
 }
 
 const SuspenseException: mixed = new Error(
@@ -218,14 +229,15 @@ function use<T>(usable: Usable<T>): T {
 }
 
 function useContext<T>(context: ReactContext<T>): T {
+  const value = readContext(context);
   hookLog.push({
     displayName: context.displayName || null,
     primitive: 'Context',
     stackError: new Error(),
-    value: context._currentValue,
+    value: value,
     debugInfo: null,
   });
-  return context._currentValue;
+  return value;
 }
 
 function useState<S>(
@@ -992,30 +1004,6 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog);
 }
 
-function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
-  let current: null | Fiber = fiber;
-  while (current) {
-    if (current.tag === ContextProvider) {
-      let context: ReactContext<any> = current.type;
-      if ((context: any)._context !== undefined) {
-        // Support inspection of pre-19+ providers.
-        context = (context: any)._context;
-      }
-      if (!contextMap.has(context)) {
-        // Store the current value that we're going to restore later.
-        contextMap.set(context, context._currentValue);
-        // Set the inner most provider value on the context.
-        context._currentValue = current.memoizedProps.value;
-      }
-    }
-    current = current.return;
-  }
-}
-
-function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
-  contextMap.forEach((value, context) => (context._currentValue = value));
-}
-
 function inspectHooksOfForwardRef<Props, Ref>(
   renderFunction: (Props, Ref) => React$Node,
   props: Props,
@@ -1082,6 +1070,9 @@ export function inspectHooksOfFiber(
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
+  const dependencies = currentFiber.dependencies;
+  currentContextDependency =
+    dependencies !== null ? dependencies.firstContext : null;
 
   const type = fiber.type;
   let props = fiber.memoizedProps;
@@ -1089,10 +1080,7 @@ export function inspectHooksOfFiber(
     props = resolveDefaultProps(type, props);
   }
 
-  const contextMap = new Map<ReactContext<any>, any>();
   try {
-    setupContexts(contextMap, fiber);
-
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
@@ -1106,7 +1094,6 @@ export function inspectHooksOfFiber(
   } finally {
     currentFiber = null;
     currentHook = null;
-
-    restoreContexts(contextMap);
+    currentContextDependency = null;
   }
 }
