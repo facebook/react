@@ -18,7 +18,11 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
-import { BuiltInArrayId, BuiltInObjectId } from "../HIR/ObjectShape";
+import {
+  BuiltInArrayId,
+  BuiltInObjectId,
+  BuiltInUseRefId,
+} from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -94,6 +98,16 @@ function equation(left: Type, right: Type): TypeEquation {
 function* generate(
   func: HIRFunction
 ): Generator<TypeEquation, void, undefined> {
+  if (func.env.fnType === "Component") {
+    const [_, ref] = func.params;
+    if (ref && ref.kind === "Identifier") {
+      yield equation(ref.identifier.type, {
+        kind: "Object",
+        shapeId: BuiltInUseRefId,
+      });
+    }
+  }
+
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       yield equation(phi.type, {

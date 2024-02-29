@@ -1,6 +1,6 @@
-// @validateRefAccessDuringRender: true
+// @validateRefAccessDuringRender:true
 function Foo(props, ref) {
-  ref.current = 2;
+  console.log(ref.current);
   return <div>{props.bar}</div>;
 }
 

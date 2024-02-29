@@ -25,32 +25,28 @@ export const FIXTURE_ENTRYPOINT = {
 import { useEffect, unstable_useMemoCache as useMemoCache } from "react";
 
 function Foo(props, ref) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(4);
   let t0;
-  if ($[0] !== ref.current) {
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       ref.current = 2;
     };
-    $[0] = ref.current;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
-    $[2] = t1;
+    $[0] = t0;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t0 = $[0];
+    t1 = $[1];
   }
   useEffect(t0, t1);
   let t2;
-  if ($[3] !== props.bar) {
+  if ($[2] !== props.bar) {
     t2 = <div>{props.bar}</div>;
-    $[3] = props.bar;
-    $[4] = t2;
+    $[2] = props.bar;
+    $[3] = t2;
   } else {
-    t2 = $[4];
+    t2 = $[3];
   }
   return t2;
 }
