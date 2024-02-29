@@ -61,9 +61,9 @@ export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = true;
-export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = true;
 export const enableNewBooleanProps = true;
+export const allowConcurrentByDefault = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 

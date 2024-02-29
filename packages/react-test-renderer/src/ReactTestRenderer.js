@@ -52,10 +52,7 @@ import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
-import {
-  allowConcurrentByDefault,
-  enableReactTestRendererWarning,
-} from 'shared/ReactFeatureFlags';
+import {enableReactTestRendererWarning} from 'shared/ReactFeatureFlags';
 
 const act = React.act;
 
@@ -66,8 +63,6 @@ type TestRendererOptions = {
   isConcurrent: boolean,
   unstable_isConcurrent: boolean,
   unstable_strictMode: boolean,
-  unstable_concurrentUpdatesByDefault: boolean,
-  ...
 };
 
 type ReactTestRendererJSON = {
@@ -485,7 +480,6 @@ function create(
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       // $FlowFixMe[incompatible-type] found when upgrading Flow
@@ -500,12 +494,6 @@ function create(
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
-    if (allowConcurrentByDefault) {
-      if (options.unstable_concurrentUpdatesByDefault !== undefined) {
-        concurrentUpdatesByDefault =
-          options.unstable_concurrentUpdatesByDefault;
-      }
-    }
   }
   let container = {
     children: ([]: Array<Instance | TextInstance>),
@@ -517,7 +505,7 @@ function create(
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     null,
     isStrictMode,
-    concurrentUpdatesByDefault,
+    false,
     '',
     onRecoverableError,
     null,
