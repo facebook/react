@@ -154,9 +154,16 @@ function readContext<T>(context: ReactContext<T>): T {
     // There's no sensible value to return.
     return (null: any);
   }
-  if (currentContextDependency === null) {
+  if (currentFiber === null) {
+    // Hook inspection without access to the Fiber tree.
     return context._currentValue;
   }
+  if (currentContextDependency === null) {
+    throw new Error(
+      'Context reads do not line up with context dependencies. This is a bug in React.',
+    );
+  }
+
   // For now we don't expose readContext usage in the hooks debugging info.
   const value = ((currentContextDependency.memoizedValue: any): T);
   currentContextDependency = currentContextDependency.next;
