@@ -25,6 +25,7 @@ export const {
   passChildrenWhenCloningPersistedNodes,
   useMicrotasksForSchedulingInFabric,
   enableUnifiedSyncLane,
+  enableInfiniteRenderLoopDetection,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -96,7 +97,6 @@ export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
-export const enableInfiniteRenderLoopDetection = false;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
