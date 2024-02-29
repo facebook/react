@@ -20,7 +20,6 @@
   "homepage": "https://react.dev/",
   "dependencies": {
     "react-is": "^18.2.0",
-    "react-shallow-renderer": "^16.15.0",
     "scheduler": "^0.23.0"
   },
   "peerDependencies": {
