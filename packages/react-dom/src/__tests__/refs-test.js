@@ -129,22 +129,22 @@ describe('reactiverefs', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "div" contains the string ref "resetDiv". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+      'Warning: Component "TestRefsComponent" contains the string ' +
+        'ref "resetDiv". Support for string refs will be removed in a ' +
+        'future major release. We recommend using useRef() or createRef() ' +
+        'instead. Learn more about using refs safely ' +
+        'here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in div (at **)\n' +
         '    in TestRefsComponent (at **)',
-      'Warning: Component "span" contains the string ref "clickLog0". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+      'Warning: Component "ClickCounter" contains the string ' +
+        'ref "clickLog0". Support for string refs will be removed in a ' +
+        'future major release. We recommend using useRef() or createRef() ' +
+        'instead. Learn more about using refs safely ' +
+        'here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in span (at **)\n' +
-        '    in ClickCounter (at **)\n' +
-        '    in div (at **)\n' +
-        '    in GeneralContainerComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in TestRefsComponent (at **)',
+        '    in ClickCounter (at **)',
     ]);
 
     expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
@@ -352,12 +352,12 @@ describe('ref swapping', () => {
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in A (at **)',
     ]);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
-  // @gate !disableStringRefs
   it('provides an error for invalid refs', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -365,16 +365,16 @@ describe('ref swapping', () => {
       await act(() => {
         root.render(<div ref={10} />);
       });
-    }).rejects.toThrow(
-      'Element ref was specified as a string (10) but no owner was set.',
-    );
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+    }).rejects.toThrow();
     await expect(async () => {
       await act(() => {
         root.render(<div ref={true} />);
       });
-    }).rejects.toThrow(
-      'Element ref was specified as a string (true) but no owner was set.',
-    );
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+    }).rejects.toThrow();
     await expect(async () => {
       await act(() => {
         root.render(<div ref={Symbol('foo')} />);
@@ -520,14 +520,10 @@ describe('creating element with string ref in constructor', () => {
       await act(() => {
         root.render(<RefTest />);
       });
-    }).rejects.toThrowError(
-      'Element ref was specified as a string (p) but no owner was set. This could happen for one of' +
-        ' the following reasons:\n' +
-        '1. You may be adding a ref to a function component\n' +
-        "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-        '3. You have multiple copies of React loaded\n' +
-        'See https://react.dev/link/refs-must-have-owner for more information.',
-    );
+    })
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+      .rejects.toThrowError();
   });
 });
 
@@ -581,10 +577,11 @@ describe('strings refs across renderers', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "Indirection" contains the string ref "child1". ' +
+      'Warning: Component "Parent" contains the string ref "child1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in Indirection (at **)\n' +
         '    in Parent (at **)',
     ]);
@@ -593,20 +590,10 @@ describe('strings refs across renderers', () => {
     expect(inst.refs.child1.tagName).toBe('DIV');
     expect(inst.refs.child1).toBe(div1.firstChild);
 
-    await expect(async () => {
-      // Now both refs should be rendered.
-      await act(() => {
-        root.render(<Parent />);
-      });
-    }).toErrorDev(
-      [
-        'Warning: Component "Root" contains the string ref "child2". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
-      ],
-      {withoutStack: true},
-    );
+    // Now both refs should be rendered.
+    await act(() => {
+      root.render(<Parent />);
+    });
     expect(inst.refs.child1.tagName).toBe('DIV');
     expect(inst.refs.child1).toBe(div1.firstChild);
     expect(inst.refs.child2.tagName).toBe('DIV');
