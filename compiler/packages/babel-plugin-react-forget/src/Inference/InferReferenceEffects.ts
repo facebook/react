@@ -135,8 +135,7 @@ export default function inferReferenceEffects(
         reason: new Set([ValueReason.ReactiveFunctionArgument]),
       };
 
-  const isComponent = isComponentName(fn.id);
-  if (isComponent) {
+  if (fn.env.fnType === "Component") {
     CompilerError.invariant(fn.params.length <= 2, {
       reason:
         "Expected React component to have not more than two parameters: one for props and for ref",
@@ -617,10 +616,6 @@ class InferenceState {
       this.#variables.set(phi.id.id, values);
     }
   }
-}
-
-function isComponentName(name: string | null): boolean {
-  return name !== null && /^[A-Z]/.test(name);
 }
 
 function inferParam(

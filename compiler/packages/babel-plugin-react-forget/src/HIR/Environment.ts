@@ -415,6 +415,8 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
+export type ReactFunctionType = "Component" | "Hook" | "Other";
+
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
@@ -422,14 +424,17 @@ export class Environment {
   #nextBlock: number = 0;
   #nextScope: number = 0;
   config: EnvironmentConfig;
+  fnType: ReactFunctionType;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
+    fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>
   ) {
+    this.fnType = fnType;
     this.config = config;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);

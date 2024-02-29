@@ -14,6 +14,7 @@ import {
 } from "../CompilerError";
 import {
   ExternalFunction,
+  ReactFunctionType,
   parseEnvironmentConfig,
   tryParseExternalFunction,
 } from "../HIR/Environment";
@@ -219,7 +220,8 @@ export function compileProgram(
   const compiledFns: CompileResult[] = [];
 
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
-    if (!shouldVisitNode(fn, pass) || ALREADY_COMPILED.has(fn.node)) {
+    const fnType = getReactFunctionType(fn, pass);
+    if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
       return;
     }
 
@@ -262,7 +264,7 @@ export function compileProgram(
       }
       const config = environment.unwrap();
 
-      compiledFn = compileFn(fn, config, pass.filename);
+      compiledFn = compileFn(fn, config, fnType, pass.filename);
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
         fnLoc: fn.node.loc ?? null,
@@ -387,10 +389,14 @@ export function compileProgram(
   }
 }
 
-function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
+function getReactFunctionType(
+  fn: BabelFn,
+  pass: CompilerPass
+): ReactFunctionType | null {
   if (hasUseMemoCacheCall(fn)) {
-    return false;
+    return null;
   }
+  const hookPattern = pass.opts.environment?.hookPattern ?? null;
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
     const useNoForget = findDirectiveDisablingMemoization(
@@ -407,30 +413,38 @@ function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
           suggestions: null,
         },
       });
-      return false;
+      return null;
     }
     // Otherwise opt-ins enable compilation regardless of mode
     if (findDirectiveEnablingMemoization(fn.node.body.directives) != null) {
-      return true;
+      return getComponentOrHookLike(fn, hookPattern) ?? "Other";
     }
   }
   switch (pass.opts.compilationMode) {
     case "annotation": {
       // opt-ins are checked above
-      return false;
+      return null;
     }
     case "infer": {
-      const hookPattern = pass.opts.environment?.hookPattern ?? null;
-      return (
-        // Component and hook declarations are known components/hooks
-        (fn.isFunctionDeclaration() &&
-          (isComponentDeclaration(fn.node) || isHookDeclaration(fn.node))) ||
-        // Otherwise check if this is a component or hook-like function
-        isComponentOrHookLike(fn, hookPattern)
-      );
+      // Component and hook declarations are known components/hooks
+      if (fn.isFunctionDeclaration()) {
+        if (isComponentDeclaration(fn.node)) {
+          return "Component";
+        } else if (isHookDeclaration(fn.node)) {
+          return "Hook";
+        }
+      }
+
+      // Otherwise check if this is a component or hook-like function
+      return getComponentOrHookLike(fn, hookPattern);
     }
     case "all": {
-      return fn.scope.getProgramParent() === fn.scope.parent;
+      // Compile only top level functions
+      if (fn.scope.getProgramParent() !== fn.scope.parent) {
+        return null;
+      }
+
+      return getComponentOrHookLike(fn, hookPattern) ?? "Other";
     }
     default: {
       assertExhaustive(
@@ -567,23 +581,22 @@ function isValidComponentParams(
  * Adapted from the ESLint rule at
  * https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
  */
-function isComponentOrHookLike(
+function getComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   hookPattern: string | null
-): boolean {
+): ReactFunctionType | null {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
   if (functionName !== null && isComponentName(functionName)) {
-    return (
-      // As an added check we also look for hook invocations or JSX
+    let isComponent =
       callsHooksOrCreatesJsx(node, hookPattern) &&
-      isValidComponentParams(node.get("params"))
-    );
+      isValidComponentParams(node.get("params"));
+    return isComponent ? "Component" : null;
   } else if (functionName !== null && isHook(functionName, hookPattern)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
-    return callsHooksOrCreatesJsx(node, hookPattern);
+    return callsHooksOrCreatesJsx(node, hookPattern) ? "Hook" : null;
   }
 
   /*
@@ -593,12 +606,10 @@ function isComponentOrHookLike(
   if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
     if (isForwardRefCallback(node) || isMemoCallback(node)) {
       // As an added check we also look for hook invocations or JSX
-      return callsHooksOrCreatesJsx(node, hookPattern);
-    } else {
-      return false;
+      return callsHooksOrCreatesJsx(node, hookPattern) ? "Component" : null;
     }
   }
-  return false;
+  return null;
 }
 
 function callsHooksOrCreatesJsx(

@@ -17,7 +17,11 @@ import {
   lower,
   mergeConsecutiveBlocks,
 } from "../HIR";
-import { Environment, EnvironmentConfig } from "../HIR/Environment";
+import {
+  Environment,
+  EnvironmentConfig,
+  ReactFunctionType,
+} from "../HIR/Environment";
 import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
@@ -90,10 +94,11 @@ export function* run(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   config: EnvironmentConfig,
+  fnType: ReactFunctionType,
   filename: string | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
-  const env = new Environment(config, contextIdentifiers);
+  const env = new Environment(fnType, config, contextIdentifiers);
   yield {
     kind: "debug",
     name: "EnvironmentConfig",
@@ -380,9 +385,10 @@ export function compileFn(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   config: EnvironmentConfig,
+  fnType: ReactFunctionType,
   filename: string | null
 ): CodegenFunction {
-  let generator = run(func, config, filename);
+  let generator = run(func, config, fnType, filename);
   while (true) {
     const next = generator.next();
     if (next.done) {

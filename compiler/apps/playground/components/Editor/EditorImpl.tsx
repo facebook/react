@@ -20,6 +20,7 @@ import {
   run,
   ValueKind,
 } from "babel-plugin-react-forget";
+import { ReactFunctionType } from "babel-plugin-react-forget/dist/HIR/Environment";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";
@@ -142,6 +143,26 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+function isHookName(s: string): boolean {
+  return /^use[A-Z0-9]/.test(s);
+}
+
+function getReactFunctionType(
+  id: NodePath<t.Identifier | null | undefined>,
+): ReactFunctionType {
+  if (id && id.node && id.isIdentifier()) {
+    if (isHookName(id.node.name)) {
+      return "Hook";
+    }
+
+    const isPascalCaseNameSpace = /^[A-Z].*/;
+    if (isPascalCaseNameSpace.test(id.node.name)) {
+      return "Component";
+    }
+  }
+  return "Other";
+}
+
 function compile(source: string): CompilerOutput {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
   const error = new CompilerError();
@@ -173,10 +194,16 @@ function compile(source: string): CompilerOutput {
         continue;
       }
 
-      for (const result of run(fn, {
-        ...config,
-        customHooks: new Map([...COMMON_HOOKS]),
-      }, null)) {
+      const id = fn.get("id");
+      for (const result of run(
+        fn,
+        {
+          ...config,
+          customHooks: new Map([...COMMON_HOOKS]),
+        },
+        getReactFunctionType(id),
+        null,
+      )) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
           case "ast": {
@@ -238,12 +265,14 @@ function compile(source: string): CompilerOutput {
       // Handle unexpected failures by logging (to get a stack trace)
       // and reporting
       console.error(err);
-      error.details.push(new CompilerErrorDetail({
-        severity: ErrorSeverity.Invariant,
-        reason: `Unexpected failure when transforming input! ${err}`,
-        loc: null,
-        suggestions: null
-      }));
+      error.details.push(
+        new CompilerErrorDetail({
+          severity: ErrorSeverity.Invariant,
+          reason: `Unexpected failure when transforming input! ${err}`,
+          loc: null,
+          suggestions: null,
+        }),
+      );
     }
   }
   if (error.hasErrors()) {
