@@ -995,11 +995,11 @@ describe('string refs', () => {
         root.render(<OuterComponent />);
       });
     }).toErrorDev(
-      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+        '    in InnerComponent (at **)',
     );
 
     await act(() => {
@@ -1034,11 +1034,11 @@ describe('string refs', () => {
         root.render(<OuterComponent />);
       });
     }).toErrorDev(
-      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+        '    in InnerComponent (at **)',
     );
 
     await act(() => {
