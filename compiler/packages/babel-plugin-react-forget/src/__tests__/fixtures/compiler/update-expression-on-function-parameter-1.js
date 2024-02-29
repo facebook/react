@@ -1,5 +1,4 @@
-// @debug
-function Component(a, [b], { c }) {
+function Component({ a: a, b: [b], c: { c } }) {
   let d = a++;
   let e = ++a;
   let f = b--;
@@ -11,6 +10,6 @@ function Component(a, [b], { c }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [2, [3], { c: 4 }],
+  params: [{ a: 2, b: [3], c: { c: 4 } }],
   isComponent: false,
 };

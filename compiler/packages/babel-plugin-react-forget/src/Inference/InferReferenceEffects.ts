@@ -21,6 +21,7 @@ import {
   MethodCall,
   Phi,
   Place,
+  SpreadPattern,
   Type,
   ValueKind,
   ValueReason,
@@ -133,26 +134,48 @@ export default function inferReferenceEffects(
         kind: ValueKind.Frozen,
         reason: new Set([ValueReason.ReactiveFunctionArgument]),
       };
-  for (const param of fn.params) {
+
+  const isComponent = isComponentName(fn.id);
+  if (isComponent) {
+    CompilerError.invariant(fn.params.length <= 2, {
+      reason:
+        "Expected React component to have not more than two parameters: one for props and for ref",
+      description: null,
+      loc: fn.loc,
+      suggestions: null,
+    });
+    const [props, ref] = fn.params;
     let value: InstructionValue;
     let place: Place;
-    if (param.kind === "Identifier") {
-      place = param;
-      value = {
-        kind: "Primitive",
-        loc: param.loc,
-        value: undefined,
-      };
-    } else {
-      place = param.place;
-      value = {
-        kind: "Primitive",
-        loc: param.place.loc,
-        value: undefined,
-      };
+    if (props) {
+      inferParam(props, initialState, paramKind);
     }
-    initialState.initialize(value, paramKind);
-    initialState.define(place, value);
+    if (ref) {
+      if (ref.kind === "Identifier") {
+        place = ref;
+        value = {
+          kind: "ObjectExpression",
+          properties: [],
+          loc: ref.loc,
+        };
+      } else {
+        place = ref.place;
+        value = {
+          kind: "ObjectExpression",
+          properties: [],
+          loc: ref.place.loc,
+        };
+      }
+      initialState.initialize(value, {
+        kind: ValueKind.Mutable,
+        reason: new Set([ValueReason.Other]),
+      });
+      initialState.define(place, value);
+    }
+  } else {
+    for (const param of fn.params) {
+      inferParam(param, initialState, paramKind);
+    }
   }
 
   // Map of blocks to the last (merged) incoming state that was processed
@@ -594,6 +617,36 @@ class InferenceState {
       this.#variables.set(phi.id.id, values);
     }
   }
+}
+
+function isComponentName(name: string | null): boolean {
+  return name !== null && /^[A-Z]/.test(name);
+}
+
+function inferParam(
+  param: Place | SpreadPattern,
+  initialState: InferenceState,
+  paramKind: AbstractValue
+): void {
+  let value: InstructionValue;
+  let place: Place;
+  if (param.kind === "Identifier") {
+    place = param;
+    value = {
+      kind: "Primitive",
+      loc: param.loc,
+      value: undefined,
+    };
+  } else {
+    place = param.place;
+    value = {
+      kind: "Primitive",
+      loc: param.place.loc,
+      value: undefined,
+    };
+  }
+  initialState.initialize(value, paramKind);
+  initialState.define(place, value);
 }
 
 /*

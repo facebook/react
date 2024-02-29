@@ -2,8 +2,7 @@
 ## Input
 
 ```javascript
-// @debug
-function Component(a, [b], { c }) {
+function Component({ a: a, b: [b], c: { c } }) {
   let d = a++;
   let e = ++a;
   let f = b--;
@@ -15,7 +14,7 @@ function Component(a, [b], { c }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [2, [3], { c: 4 }],
+  params: [{ a: 2, b: [3], c: { c: 4 } }],
   isComponent: false,
 };
 
@@ -24,11 +23,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @debug
-function Component(a, t37, t38) {
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(t38) {
   const $ = useMemoCache(10);
-  let [b] = t37;
-  let { c } = t38;
+  let { a, b: t40, c: t41 } = t38;
+  let [b] = t40;
+  let { c } = t41;
   const d = a++;
   const e = ++a;
   const f = b--;
@@ -66,7 +66,7 @@ function Component(a, t37, t38) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [2, [3], { c: 4 }],
+  params: [{ a: 2, b: [3], c: { c: 4 } }],
   isComponent: false,
 };
 
