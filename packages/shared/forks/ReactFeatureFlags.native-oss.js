@@ -82,7 +82,6 @@ export const enableAsyncActions = false;
 
 export const alwaysThrottleRetries = false;
 
-export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
