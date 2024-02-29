@@ -116,12 +116,17 @@ export function codegenFunction(
      * __DEV__ and gating identifier to be runtime constants
      */
     let gating: t.Expression;
-    if (emitInstrumentForget.gating != null) {
+    if (
+      emitInstrumentForget.gating != null &&
+      emitInstrumentForget.globalGating != null
+    ) {
       gating = t.logicalExpression(
         "&&",
-        t.identifier(emitInstrumentForget.globalGating ?? "__DEV__"),
+        t.identifier(emitInstrumentForget.globalGating),
         t.identifier(emitInstrumentForget.gating.importSpecifierName)
       );
+    } else if (emitInstrumentForget.gating != null) {
+      gating = t.identifier(emitInstrumentForget.gating.importSpecifierName);
     } else {
       CompilerError.invariant(emitInstrumentForget.globalGating != null, {
         reason:
