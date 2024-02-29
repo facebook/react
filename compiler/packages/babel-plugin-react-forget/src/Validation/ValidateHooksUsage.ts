@@ -233,7 +233,6 @@ export function validateHooksUsage(fn: HIRFunction): void {
           break;
         }
         case "PropertyLoad": {
-          visitPlace(instr.value.object);
           const objectKind = getKindForPlace(instr.value.object);
           const isHookProperty = isHookName(instr.value.property);
           let kind: Kind;
@@ -249,7 +248,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
                *   let x = useFoo.useBar; // useFoo is KnownHook, any property from it inherits KnownHook
                * }
                */
-              kind = Kind.KnownHook;
+              kind = isHookProperty ? Kind.KnownHook : Kind.Local;
               break;
             }
             case Kind.PotentialHook: {
