@@ -699,7 +699,7 @@ describe('ReactTypeScriptClass', function() {
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
           'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-          '    in ClassicRefs (at **)',
+          '    in Inner (at **)',
       ]);
       expect(ref.current.refs.inner.getName()).toBe('foo');
     });

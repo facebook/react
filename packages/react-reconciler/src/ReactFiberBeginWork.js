@@ -1026,16 +1026,23 @@ function updateProfiler(
 }
 
 function markRef(current: Fiber | null, workInProgress: Fiber) {
-  // TODO: This is also where we should check the type of the ref and error if
-  // an invalid one is passed, instead of during child reconcilation.
+  // TODO: Check props.ref instead of fiber.ref when enableRefAsProp is on.
   const ref = workInProgress.ref;
-  if (
-    (current === null && ref !== null) ||
-    (current !== null && current.ref !== ref)
-  ) {
-    // Schedule a Ref effect
-    workInProgress.flags |= Ref;
-    workInProgress.flags |= RefStatic;
+  if (ref === null) {
+    if (current !== null && current.ref !== null) {
+      // Schedule a Ref effect
+      workInProgress.flags |= Ref | RefStatic;
+    }
+  } else {
+    if (typeof ref !== 'function' && typeof ref !== 'object') {
+      throw new Error(
+        'Expected ref to be a function, an object returned by React.createRef(), or undefined/null.',
+      );
+    }
+    if (current === null || current.ref !== ref) {
+      // Schedule a Ref effect
+      workInProgress.flags |= Ref | RefStatic;
+    }
   }
 }
 
