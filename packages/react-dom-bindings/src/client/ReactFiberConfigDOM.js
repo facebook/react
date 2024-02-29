@@ -55,13 +55,10 @@ import {
   hydrateProperties,
   hydrateText,
   diffHydratedProperties,
+  getPropsFromElement,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
   checkForUnmatchedText,
-  warnForDeletedHydratableElement,
-  warnForDeletedHydratableText,
-  warnForInsertedHydratedElement,
-  warnForInsertedHydratedText,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -1344,6 +1341,26 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+export function describeHydratableInstanceForDevWarnings(
+  instance: HydratableInstance,
+): string | {type: string, props: Map<string, mixed>} {
+  // Reverse engineer a pseudo react-element from hydratable instnace
+  if (instance.nodeType === ELEMENT_NODE) {
+    // Reverse engineer a set of props that can print for dev warnings
+    return {
+      type: instance.nodeName.toLowerCase(),
+      props: getPropsFromElement((instance: any)),
+    };
+  } else if (instance.nodeType === COMMENT_NODE) {
+    return {
+      type: 'Suspense',
+      props: new Map(),
+    };
+  } else {
+    return instance.nodeValue;
+  }
+}
+
 export function validateHydratableInstance(
   type: string,
   props: Props,
@@ -1373,7 +1390,7 @@ export function hydrateInstance(
 }
 
 // Returns a Map of properties that were different on the server.
-export function diffHydratedPropertiesForDevWarnings(
+export function diffHydratedPropsForDevWarnings(
   instance: Instance,
   type: string,
   props: Props,
@@ -1527,161 +1544,6 @@ export function didNotMatchHydratedTextInstance(
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     checkForUnmatchedText(textInstance.nodeValue, text);
-  }
-}
-
-export function didNotHydrateInstanceWithinContainer(
-  parentContainer: Container,
-  instance: HydratableInstance,
-) {
-  if (__DEV__) {
-    if (instance.nodeType === ELEMENT_NODE) {
-      warnForDeletedHydratableElement(parentContainer, (instance: any));
-    } else if (instance.nodeType === COMMENT_NODE) {
-      // TODO: warnForDeletedHydratableSuspenseBoundary
-    } else {
-      warnForDeletedHydratableText(parentContainer, (instance: any));
-    }
-  }
-}
-
-export function didNotHydrateInstanceWithinSuspenseInstance(
-  parentInstance: SuspenseInstance,
-  instance: HydratableInstance,
-) {
-  if (__DEV__) {
-    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-    const parentNode: Element | Document | null = parentInstance.parentNode;
-    if (parentNode !== null) {
-      if (instance.nodeType === ELEMENT_NODE) {
-        warnForDeletedHydratableElement(parentNode, (instance: any));
-      } else if (instance.nodeType === COMMENT_NODE) {
-        // TODO: warnForDeletedHydratableSuspenseBoundary
-      } else {
-        warnForDeletedHydratableText(parentNode, (instance: any));
-      }
-    }
-  }
-}
-
-export function didNotHydrateInstance(
-  parentType: string,
-  parentProps: Props,
-  parentInstance: Instance,
-  instance: HydratableInstance,
-) {
-  if (__DEV__) {
-    if (instance.nodeType === ELEMENT_NODE) {
-      warnForDeletedHydratableElement(parentInstance, (instance: any));
-    } else if (instance.nodeType === COMMENT_NODE) {
-      // TODO: warnForDeletedHydratableSuspenseBoundary
-    } else {
-      warnForDeletedHydratableText(parentInstance, (instance: any));
-    }
-  }
-}
-
-export function didNotFindHydratableInstanceWithinContainer(
-  parentContainer: Container,
-  type: string,
-  props: Props,
-) {
-  if (__DEV__) {
-    warnForInsertedHydratedElement(parentContainer, type, props);
-  }
-}
-
-export function didNotFindHydratableTextInstanceWithinContainer(
-  parentContainer: Container,
-  text: string,
-) {
-  if (__DEV__) {
-    warnForInsertedHydratedText(parentContainer, text);
-  }
-}
-
-export function didNotFindHydratableSuspenseInstanceWithinContainer(
-  parentContainer: Container,
-) {
-  if (__DEV__) {
-    // TODO: warnForInsertedHydratedSuspense(parentContainer);
-  }
-}
-
-export function didNotFindHydratableInstanceWithinSuspenseInstance(
-  parentInstance: SuspenseInstance,
-  type: string,
-  props: Props,
-) {
-  if (__DEV__) {
-    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-    const parentNode: Element | Document | null = parentInstance.parentNode;
-    if (parentNode !== null)
-      warnForInsertedHydratedElement(parentNode, type, props);
-  }
-}
-
-export function didNotFindHydratableTextInstanceWithinSuspenseInstance(
-  parentInstance: SuspenseInstance,
-  text: string,
-) {
-  if (__DEV__) {
-    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-    const parentNode: Element | Document | null = parentInstance.parentNode;
-    if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
-  }
-}
-
-export function didNotFindHydratableSuspenseInstanceWithinSuspenseInstance(
-  parentInstance: SuspenseInstance,
-) {
-  if (__DEV__) {
-    // const parentNode: Element | Document | null = parentInstance.parentNode;
-    // TODO: warnForInsertedHydratedSuspense(parentNode);
-  }
-}
-
-export function didNotFindHydratableInstance(
-  parentType: string,
-  parentProps: Props,
-  parentInstance: Instance,
-  type: string,
-  props: Props,
-) {
-  if (__DEV__) {
-    warnForInsertedHydratedElement(parentInstance, type, props);
-  }
-}
-
-export function didNotFindHydratableTextInstance(
-  parentType: string,
-  parentProps: Props,
-  parentInstance: Instance,
-  text: string,
-) {
-  if (__DEV__) {
-    warnForInsertedHydratedText(parentInstance, text);
-  }
-}
-
-export function didNotFindHydratableSuspenseInstance(
-  parentType: string,
-  parentProps: Props,
-  parentInstance: Instance,
-) {
-  if (__DEV__) {
-    // TODO: warnForInsertedHydratedSuspense(parentInstance);
-  }
-}
-
-export function errorHydratingContainer(parentContainer: Container): void {
-  if (__DEV__) {
-    // TODO: This gets logged by onRecoverableError, too, so we should be
-    // able to remove it.
-    console.error(
-      'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
-      parentContainer.nodeName.toLowerCase(),
-    );
   }
 }
 

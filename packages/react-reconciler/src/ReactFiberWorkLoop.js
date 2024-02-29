@@ -70,15 +70,18 @@ import {
   noTimeout,
   afterActiveInstanceBlur,
   getCurrentEventPriority,
-  errorHydratingContainer,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
+  supportsHydration,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  getIsHydrating,
+  errorHydratingContainer,
+} from './ReactFiberHydrationContext';
 import {
   NoMode,
   ProfileMode,
@@ -1003,7 +1006,7 @@ function recoverFromConcurrentError(
   // Before rendering again, save the errors from the previous attempt.
   const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
 
-  const wasRootDehydrated = isRootDehydrated(root);
+  const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
   if (wasRootDehydrated) {
     // The shell failed to hydrate. Set a flag to force a client rendering
     // during the next attempt. To do this, we call prepareFreshStack now

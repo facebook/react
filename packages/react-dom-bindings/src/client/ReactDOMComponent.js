@@ -253,7 +253,9 @@ function warnForExtraAttributes(
     attributeNames.forEach(function (attributeName) {
       serverDifferences.set(
         attributeName,
-        domElement.getAttribute(attributeName),
+        attributeName === 'style'
+          ? getStylesObjectFromElement(domElement)
+          : domElement.getAttribute(attributeName),
       );
     });
   }
@@ -1832,6 +1834,36 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
+export function getPropsFromElement(domElement: Element): Map<string, mixed> {
+  const serverDifferences: Map<string, mixed> = new Map();
+  const attributes = domElement.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    const attr = attributes[i];
+    serverDifferences.set(
+      attr.name,
+      attr.name.toLowerCase() === 'style'
+        ? getStylesObjectFromElement(domElement)
+        : attr.value,
+    );
+  }
+  return serverDifferences;
+}
+
+function getStylesObjectFromElement(domElement: Element): {
+  [styleName: string]: string,
+} {
+  const serverValueInObjectForm: {[prop: string]: string} = {};
+  const style = ((domElement: any): HTMLElement).style;
+  for (let i = 0; i < style.length; i++) {
+    const styleName: string = style[i];
+    // TODO: We should use the original prop value here if it is equivalent.
+    // TODO: We could use the original client capitalization if the equivalent
+    // other capitalization exists in the DOM.
+    serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
+  }
+  return serverValueInObjectForm;
+}
+
 function diffHydratedStyles(
   domElement: Element,
   value: mixed,
@@ -1866,17 +1898,7 @@ function diffHydratedStyles(
     }
 
     // Otherwise, we create the object from the DOM for the diff view.
-    const serverValueInObjectForm: {[prop: string]: string} = {};
-    const style = ((domElement: any): HTMLElement).style;
-    for (let i = 0; i < style.length; i++) {
-      const styleName: string = style[i];
-      // TODO: We should use the original prop value here if it is equivalent.
-      // TODO: We could use the original client capitalization if the equivalent
-      // other capitalization exists in the DOM.
-      serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
-    }
-
-    serverDifferences.set('style', serverValueInObjectForm);
+    serverDifferences.set('style', getStylesObjectFromElement(domElement));
   }
 }
 
@@ -3033,59 +3055,6 @@ export function diffHydratedText(textNode: Text, text: string): null | string {
     return null;
   }
   return textNode.nodeValue;
-}
-
-export function warnForDeletedHydratableElement(
-  parentNode: Element | Document | DocumentFragment,
-  child: Element,
-) {
-  if (__DEV__) {
-    console.error(
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForDeletedHydratableText(
-  parentNode: Element | Document | DocumentFragment,
-  child: Text,
-) {
-  if (__DEV__) {
-    console.error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForInsertedHydratedElement(
-  parentNode: Element | Document | DocumentFragment,
-  tag: string,
-  props: Object,
-) {
-  if (__DEV__) {
-    console.error(
-      'Expected server HTML to contain a matching <%s> in <%s>.',
-      tag,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForInsertedHydratedText(
-  parentNode: Element | Document | DocumentFragment,
-  text: string,
-) {
-  if (__DEV__) {
-    console.error(
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-      text,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
 }
 
 export function restoreControlledState(

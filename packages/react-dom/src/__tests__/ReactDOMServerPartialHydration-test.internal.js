@@ -1298,7 +1298,9 @@ describe('ReactDOMServerPartialHydration', () => {
           },
         });
       });
-    }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
+    }).toErrorDev(
+      'Did not expect server HTML to contain a <span> in <Suspense>',
+    );
 
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
@@ -1376,7 +1378,7 @@ describe('ReactDOMServerPartialHydration', () => {
         expect(mockError).toHaveBeenCalledWith(
           'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
           'span',
-          'div',
+          'Suspense',
           '\n' +
             '    in Suspense (at **)\n' +
             '    in div (at **)\n' +
