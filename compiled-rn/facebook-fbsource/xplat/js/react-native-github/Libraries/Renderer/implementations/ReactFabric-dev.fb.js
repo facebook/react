@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cfbc1c43d4da5c44f22471790ecd61bf>>
+ * @generated SignedSource<<a30628fd998018c262d2437b0c9edc0e>>
  */
 
 "use strict";
@@ -3238,7 +3238,9 @@ to return true:wantsResponderID|                            |
         dynamicFlags.passChildrenWhenCloningPersistedNodes,
       useMicrotasksForSchedulingInFabric =
         dynamicFlags.useMicrotasksForSchedulingInFabric,
-      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane; // The rest of the flags are static for better dead code elimination.
+      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
+      enableInfiniteRenderLoopDetection =
+        dynamicFlags.enableInfiniteRenderLoopDetection; // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
@@ -23748,6 +23750,10 @@ to return true:wantsResponderID|                            |
     var workInProgressRootRecoverableErrors = null; // Tracks when an update occurs during the render phase.
 
     var workInProgressRootDidIncludeRecursiveRenderUpdate = false; // Thacks when an update occurs during the commit phase. It's a separate
+    // variable from the one for renders because the commit phase may run
+    // concurrently to a render phase.
+
+    var didIncludeCommitPhaseUpdate = false; // The most recent time we either committed a fallback, or when a fallback was
     // filled in with the resolved UI. This lets us throttle the appearance of new
     // content as it streams in, to minimize jank.
     // TODO: Think of a better name for this variable?
@@ -24439,10 +24445,36 @@ to return true:wantsResponderID|                            |
 
     function markRootUpdated(root, updatedLanes) {
       markRootUpdated$1(root, updatedLanes);
+
+      if (enableInfiniteRenderLoopDetection) {
+        // Check for recursive updates
+        if (executionContext & RenderContext) {
+          workInProgressRootDidIncludeRecursiveRenderUpdate = true;
+        } else if (executionContext & CommitContext) {
+          didIncludeCommitPhaseUpdate = true;
+        }
+
+        throwIfInfiniteUpdateLoopDetected();
+      }
     }
 
     function markRootPinged(root, pingedLanes) {
       markRootPinged$1(root, pingedLanes);
+
+      if (enableInfiniteRenderLoopDetection) {
+        // Check for recursive pings. Pings are conceptually different from updates in
+        // other contexts but we call it an "update" in this context because
+        // repeatedly pinging a suspended render can cause a recursive render loop.
+        // The relevant property is that it can result in a new render attempt
+        // being scheduled.
+        if (executionContext & RenderContext) {
+          workInProgressRootDidIncludeRecursiveRenderUpdate = true;
+        } else if (executionContext & CommitContext) {
+          didIncludeCommitPhaseUpdate = true;
+        }
+
+        throwIfInfiniteUpdateLoopDetected();
+      }
     }
 
     function markRootSuspended(root, suspendedLanes, spawnedLane) {
@@ -25796,6 +25828,8 @@ to return true:wantsResponderID|                            |
       remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
       markRootFinished(root, remainingLanes, spawnedLane); // Reset this before firing side effects so we can detect recursive updates.
 
+      didIncludeCommitPhaseUpdate = false;
+
       if (root === workInProgressRoot) {
         // We can reset these now that they are finished.
         workInProgressRoot = null;
@@ -25987,9 +26021,10 @@ to return true:wantsResponderID|                            |
         // Check if there was a recursive update spawned by this render, in either
         // the render phase or the commit phase. We track these explicitly because
         // we can't infer from the remaining lanes alone.
-        // Was the finished render the result of an update (not hydration)?
-        includesSomeLane(lanes, UpdateLanes) && // Did it schedule a sync update?
-        includesSomeLane(remainingLanes, SyncUpdateLanes)
+        (enableInfiniteRenderLoopDetection &&
+          (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) || // Was the finished render the result of an update (not hydration)?
+        (includesSomeLane(lanes, UpdateLanes) && // Did it schedule a sync update?
+          includesSomeLane(remainingLanes, SyncUpdateLanes))
       ) {
         {
           markNestedUpdateScheduled();
@@ -26421,6 +26456,19 @@ to return true:wantsResponderID|                            |
         nestedPassiveUpdateCount = 0;
         rootWithNestedUpdates = null;
         rootWithPassiveNestedUpdates = null;
+
+        if (enableInfiniteRenderLoopDetection) {
+          if (executionContext & RenderContext && workInProgressRoot !== null) {
+            // We're in the render phase. Disable the concurrent error recovery
+            // mechanism to ensure that the error we're about to throw gets handled.
+            // We need it to trigger the nearest error boundary so that the infinite
+            // update loop is broken.
+            workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
+              workInProgressRoot.errorRecoveryDisabledLanes,
+              workInProgressRootRenderLanes
+            );
+          }
+        }
 
         throw new Error(
           "Maximum update depth exceeded. This can happen when a component " +
@@ -28042,7 +28090,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-26c89f2f";
+    var ReactVersion = "18.3.0-canary-b1191c0d";
 
     function createPortal$1(
       children,

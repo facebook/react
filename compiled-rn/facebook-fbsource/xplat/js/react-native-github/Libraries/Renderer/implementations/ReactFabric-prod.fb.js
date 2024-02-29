@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ec9e7ba2653618e801ee89b48f39146d>>
+ * @generated SignedSource<<e493b8167ced7ca3ebf077729b6710c3>>
  */
 
 "use strict";
@@ -1319,6 +1319,8 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   useMicrotasksForSchedulingInFabric =
     dynamicFlags.useMicrotasksForSchedulingInFabric,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
+  enableInfiniteRenderLoopDetection =
+    dynamicFlags.enableInfiniteRenderLoopDetection,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -1498,11 +1500,6 @@ function claimNextRetryLane() {
 function createLaneMap(initial) {
   for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
   return laneMap;
-}
-function markRootUpdated$1(root, updateLane) {
-  root.pendingLanes |= updateLane;
-  268435456 !== updateLane &&
-    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
 }
 function markRootFinished(root, remainingLanes, spawnedLane) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
@@ -2117,14 +2114,7 @@ function markUpdateLaneFromFiberToRoot(sourceFiber, update, lane) {
     (update.lane = lane | 536870912));
 }
 function getRootForUpdatedFiber(sourceFiber) {
-  if (50 < nestedUpdateCount)
-    throw (
-      ((nestedUpdateCount = 0),
-      (rootWithNestedUpdates = null),
-      Error(
-        "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
-      ))
-    );
+  throwIfInfiniteUpdateLoopDetected();
   for (var parent = sourceFiber.return; null !== parent; )
     (sourceFiber = parent), (parent = sourceFiber.return);
   return 3 === sourceFiber.tag ? sourceFiber.stateNode : null;
@@ -7775,6 +7765,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
+  didIncludeCommitPhaseUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
@@ -7835,7 +7826,7 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
         workInProgressRootRenderLanes,
         workInProgressDeferredLane
       );
-  markRootUpdated$1(root, lane);
+  markRootUpdated(root, lane);
   if (0 === (executionContext & 2) || root !== workInProgressRoot)
     root === workInProgressRoot &&
       (0 === (executionContext & 2) &&
@@ -8060,6 +8051,16 @@ function isRenderConsistentWithExternalStores(finishedWork) {
     }
   }
   return !0;
+}
+function markRootUpdated(root, updatedLanes) {
+  root.pendingLanes |= updatedLanes;
+  268435456 !== updatedLanes &&
+    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+  enableInfiniteRenderLoopDetection &&
+    (executionContext & 2
+      ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+      : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
+    throwIfInfiniteUpdateLoopDetected());
 }
 function markRootSuspended(root, suspendedLanes, spawnedLane) {
   suspendedLanes &= ~workInProgressRootPingedLanes;
@@ -8517,35 +8518,35 @@ function commitRootImpl(
   while (null !== rootWithPendingPassiveEffects);
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
-  didIncludeRenderPhaseUpdate = root.finishedWork;
+  var finishedWork = root.finishedWork;
   transitions = root.finishedLanes;
-  if (null === didIncludeRenderPhaseUpdate) return null;
+  if (null === finishedWork) return null;
   root.finishedWork = null;
   root.finishedLanes = 0;
-  if (didIncludeRenderPhaseUpdate === root.current)
+  if (finishedWork === root.current)
     throw Error(
       "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
     );
   root.callbackNode = null;
   root.callbackPriority = 0;
   root.cancelPendingCommit = null;
-  var remainingLanes =
-    didIncludeRenderPhaseUpdate.lanes | didIncludeRenderPhaseUpdate.childLanes;
+  var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(root, remainingLanes, spawnedLane);
+  didIncludeCommitPhaseUpdate = !1;
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
-  (0 === (didIncludeRenderPhaseUpdate.subtreeFlags & 10256) &&
-    0 === (didIncludeRenderPhaseUpdate.flags & 10256)) ||
+  (0 === (finishedWork.subtreeFlags & 10256) &&
+    0 === (finishedWork.flags & 10256)) ||
     rootDoesHavePassiveEffects ||
     ((rootDoesHavePassiveEffects = !0),
     scheduleCallback(NormalPriority, function () {
       flushPassiveEffects();
       return null;
     }));
-  spawnedLane = 0 !== (didIncludeRenderPhaseUpdate.flags & 15990);
-  if (0 !== (didIncludeRenderPhaseUpdate.subtreeFlags & 15990) || spawnedLane) {
+  spawnedLane = 0 !== (finishedWork.flags & 15990);
+  if (0 !== (finishedWork.subtreeFlags & 15990) || spawnedLane) {
     spawnedLane = ReactCurrentBatchConfig.transition;
     ReactCurrentBatchConfig.transition = null;
     remainingLanes = currentUpdatePriority;
@@ -8553,35 +8554,30 @@ function commitRootImpl(
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     ReactCurrentOwner.current = null;
-    commitBeforeMutationEffects(root, didIncludeRenderPhaseUpdate);
-    commitMutationEffectsOnFiber(didIncludeRenderPhaseUpdate, root);
-    root.current = didIncludeRenderPhaseUpdate;
-    commitLayoutEffectOnFiber(
-      root,
-      didIncludeRenderPhaseUpdate.alternate,
-      didIncludeRenderPhaseUpdate
-    );
+    commitBeforeMutationEffects(root, finishedWork);
+    commitMutationEffectsOnFiber(finishedWork, root);
+    root.current = finishedWork;
+    commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
     requestPaint();
     executionContext = prevExecutionContext;
     currentUpdatePriority = remainingLanes;
     ReactCurrentBatchConfig.transition = spawnedLane;
-  } else root.current = didIncludeRenderPhaseUpdate;
+  } else root.current = finishedWork;
   rootDoesHavePassiveEffects &&
     ((rootDoesHavePassiveEffects = !1),
     (rootWithPendingPassiveEffects = root),
     (pendingPassiveEffectsLanes = transitions));
   remainingLanes = root.pendingLanes;
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
-  onCommitRoot(didIncludeRenderPhaseUpdate.stateNode, renderPriorityLevel);
+  onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
   ensureRootIsScheduled(root);
   if (null !== recoverableErrors)
     for (
-      renderPriorityLevel = root.onRecoverableError,
-        didIncludeRenderPhaseUpdate = 0;
-      didIncludeRenderPhaseUpdate < recoverableErrors.length;
-      didIncludeRenderPhaseUpdate++
+      renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
+      finishedWork < recoverableErrors.length;
+      finishedWork++
     )
-      (spawnedLane = recoverableErrors[didIncludeRenderPhaseUpdate]),
+      (spawnedLane = recoverableErrors[finishedWork]),
         (remainingLanes = {
           digest: spawnedLane.digest,
           componentStack: spawnedLane.stack
@@ -8598,7 +8594,9 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (transitions & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes)
+  (enableInfiniteRenderLoopDetection &&
+    (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
+  (0 !== (transitions & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -8650,7 +8648,7 @@ function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
   rootFiber = enqueueUpdate(rootFiber, sourceFiber, 2);
   null !== rootFiber &&
-    (markRootUpdated$1(rootFiber, 2), ensureRootIsScheduled(rootFiber));
+    (markRootUpdated(rootFiber, 2), ensureRootIsScheduled(rootFiber));
 }
 function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
@@ -8685,7 +8683,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
             2
           );
           null !== nearestMountedAncestor &&
-            (markRootUpdated$1(nearestMountedAncestor, 2),
+            (markRootUpdated(nearestMountedAncestor, 2),
             ensureRootIsScheduled(nearestMountedAncestor));
           break;
         }
@@ -8713,6 +8711,11 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
   var pingCache = root.pingCache;
   null !== pingCache && pingCache.delete(wakeable);
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
+  enableInfiniteRenderLoopDetection &&
+    (executionContext & 2
+      ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+      : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
+    throwIfInfiniteUpdateLoopDetected());
   workInProgressRoot === root &&
     (workInProgressRootRenderLanes & pingedLanes) === pingedLanes &&
     (4 === workInProgressRootExitStatus ||
@@ -8729,7 +8732,7 @@ function retryTimedOutBoundary(boundaryFiber, retryLane) {
     (retryLane = 0 === (boundaryFiber.mode & 1) ? 2 : claimNextRetryLane());
   boundaryFiber = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   null !== boundaryFiber &&
-    (markRootUpdated$1(boundaryFiber, retryLane),
+    (markRootUpdated(boundaryFiber, retryLane),
     ensureRootIsScheduled(boundaryFiber));
 }
 function retryDehydratedSuspenseBoundary(boundaryFiber) {
@@ -8759,6 +8762,21 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   }
   null !== retryCache && retryCache.delete(wakeable);
   retryTimedOutBoundary(boundaryFiber, retryLane);
+}
+function throwIfInfiniteUpdateLoopDetected() {
+  if (50 < nestedUpdateCount)
+    throw (
+      ((nestedUpdateCount = 0),
+      (rootWithNestedUpdates = null),
+      enableInfiniteRenderLoopDetection &&
+        executionContext & 2 &&
+        null !== workInProgressRoot &&
+        (workInProgressRoot.errorRecoveryDisabledLanes |=
+          workInProgressRootRenderLanes),
+      Error(
+        "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
+      ))
+    );
 }
 var beginWork;
 beginWork = function (current, workInProgress, renderLanes) {
@@ -9684,10 +9702,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1069 = {
+  devToolsConfig$jscomp$inline_1059 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-def5fb42",
+    version: "18.3.0-canary-2f67afac",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9703,11 +9721,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1294 = {
-  bundleType: devToolsConfig$jscomp$inline_1069.bundleType,
-  version: devToolsConfig$jscomp$inline_1069.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1069.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1069.rendererConfig,
+var internals$jscomp$inline_1284 = {
+  bundleType: devToolsConfig$jscomp$inline_1059.bundleType,
+  version: devToolsConfig$jscomp$inline_1059.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1059.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1059.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9723,26 +9741,26 @@ var internals$jscomp$inline_1294 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1069.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1059.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-def5fb42"
+  reconcilerVersion: "18.3.0-canary-2f67afac"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1295 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1285 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1295.isDisabled &&
-    hook$jscomp$inline_1295.supportsFiber
+    !hook$jscomp$inline_1285.isDisabled &&
+    hook$jscomp$inline_1285.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1295.inject(
-        internals$jscomp$inline_1294
+      (rendererID = hook$jscomp$inline_1285.inject(
+        internals$jscomp$inline_1284
       )),
-        (injectedHook = hook$jscomp$inline_1295);
+        (injectedHook = hook$jscomp$inline_1285);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
