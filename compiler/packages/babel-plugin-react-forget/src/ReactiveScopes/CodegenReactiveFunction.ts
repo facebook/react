@@ -119,11 +119,17 @@ export function codegenFunction(
     if (emitInstrumentForget.gating != null) {
       gating = t.logicalExpression(
         "&&",
-        t.identifier("__DEV__"),
+        t.identifier(emitInstrumentForget.globalGating ?? "__DEV__"),
         t.identifier(emitInstrumentForget.gating.importSpecifierName)
       );
     } else {
-      gating = t.identifier("__DEV__");
+      CompilerError.invariant(emitInstrumentForget.globalGating != null, {
+        reason:
+          "Bad config not caught! Expected at least one of gating or globalGating",
+        loc: null,
+        suggestions: null,
+      });
+      gating = t.identifier(emitInstrumentForget.globalGating);
     }
     const test: t.IfStatement = t.ifStatement(
       gating,

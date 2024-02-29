@@ -73,6 +73,7 @@ function makePluginOptions(
         source: "react-forget-runtime",
         importSpecifierName: "shouldInstrument",
       },
+      globalGating: "__DEV__",
     };
   }
   if (firstLine.includes("@enableEmitFreeze")) {

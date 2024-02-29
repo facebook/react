@@ -48,10 +48,16 @@ export const ExternalFunctionSchema = z.object({
   importSpecifierName: z.string(),
 });
 
-export const InstrumentationSchema = z.object({
-  fn: ExternalFunctionSchema,
-  gating: ExternalFunctionSchema.nullish(),
-});
+export const InstrumentationSchema = z
+  .object({
+    fn: ExternalFunctionSchema,
+    gating: ExternalFunctionSchema.nullish(),
+    globalGating: z.string().nullish(),
+  })
+  .refine(
+    (opts) => opts.gating != null || opts.globalGating != null,
+    "Expected at least one of gating or globalGating"
+  );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 
