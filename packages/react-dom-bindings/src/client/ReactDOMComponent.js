@@ -2404,12 +2404,11 @@ function diffHydratedGenericElement(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          warnForPropDifference(
-            propKey,
-            serverHTML,
-            expectedHTML,
-            serverDifferences,
-          );
+          if (serverHTML !== expectedHTML) {
+            serverDifferences.set(propKey, {
+              __html: serverHTML,
+            });
+          }
         }
         continue;
       case 'className':
