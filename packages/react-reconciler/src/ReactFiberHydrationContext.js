@@ -74,7 +74,6 @@ import {
   canHydrateSuspenseInstance,
   canHydrateFormStateMarker,
   isFormStateMarkerMatching,
-  isHydratableText,
   validateHydratableInstance,
   validateHydratableTextInstance,
 } from './ReactFiberConfig';
@@ -517,21 +516,15 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
     return;
   }
   const text = fiber.pendingProps;
-  const isHydratable = isHydratableText(text);
 
   let shouldKeepWarning = true;
-  if (isHydratable) {
-    // Validate that this is ok to render here before any mismatches.
-    const currentHostContext = getHostContext();
-    shouldKeepWarning = validateHydratableTextInstance(
-      text,
-      currentHostContext,
-    );
-  }
+  // Validate that this is ok to render here before any mismatches.
+  const currentHostContext = getHostContext();
+  shouldKeepWarning = validateHydratableTextInstance(text, currentHostContext);
 
   const initialInstance = nextHydratableInstance;
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !isHydratable) {
+  if (!nextInstance) {
     // We exclude non hydrabable text because we know there are no matching hydratables.
     // We either throw or insert depending on the render mode.
     if (shouldClientRenderOnMismatch(fiber)) {
