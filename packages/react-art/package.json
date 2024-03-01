@@ -20,7 +20,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "dependencies": {
     "art": "^0.10.1",
     "create-react-class": "^15.6.2",
