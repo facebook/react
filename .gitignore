@@ -23,6 +23,12 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
+**/.pnp.*
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/plugins
+!**/.yarn/sdks
+!**/.yarn/versions
 
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build

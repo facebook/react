@@ -183,7 +183,7 @@ async function buildAndTestInlinePackage() {
 
 async function downloadLatestReactBuild() {
   const releaseScriptPath = join(ROOT_PATH, 'scripts', 'release');
-  const installPromise = exec('yarn install', {cwd: releaseScriptPath});
+  const installPromise = exec('yarn', {cwd: releaseScriptPath});
 
   await logger(
     installPromise,

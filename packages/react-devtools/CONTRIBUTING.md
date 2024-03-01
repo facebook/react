@@ -9,7 +9,8 @@ git clone git@github.com:facebook/react.git
 Next install dependencies:
 ```sh
 cd <react-repo>
-yarn install
+corepack enable
+yarn
 ```
 
 # Build React and React DOM
@@ -21,7 +22,7 @@ To check out the latest version of React (built by CI from the `main` branch) ru
 cd <react-repo>
 
 cd scripts/release
-yarn install
+yarn
 
 ./download-experimental-build.js --commit=main
 ```

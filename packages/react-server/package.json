@@ -18,8 +18,8 @@
   ],
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/react-server"
   },
   "engines": {
