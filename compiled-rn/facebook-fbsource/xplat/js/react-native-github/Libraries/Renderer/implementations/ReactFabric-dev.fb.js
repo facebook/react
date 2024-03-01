@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a30628fd998018c262d2437b0c9edc0e>>
+ * @generated SignedSource<<409fcb610c96c788e5d00c80fb0cad50>>
  */
 
 "use strict";
@@ -8976,18 +8976,17 @@ to return true:wantsResponderID|                            |
       element,
       mixedRef
     ) {
+      {
+        checkPropStringCoercion(mixedRef, "ref");
+      }
+
+      var stringRef = "" + mixedRef;
       var owner = element._owner;
 
       if (!owner) {
-        if (typeof mixedRef !== "string") {
-          throw new Error(
-            "Expected ref to be a function, a string, an object returned by React.createRef(), or null."
-          );
-        }
-
         throw new Error(
           "Element ref was specified as a string (" +
-            mixedRef +
+            stringRef +
             ") but no owner was set. This could happen for one of" +
             " the following reasons:\n" +
             "1. You may be adding a ref to a function component\n" +
@@ -9004,14 +9003,7 @@ to return true:wantsResponderID|                            |
             "Learn more about using refs safely here: " +
             "https://reactjs.org/link/strict-mode-string-ref"
         );
-      } // At this point, we know the ref isn't an object or function but it could
-      // be a number. Coerce it to a string.
-
-      {
-        checkPropStringCoercion(mixedRef, "ref");
       }
-
-      var stringRef = "" + mixedRef;
 
       {
         if (
@@ -9084,12 +9076,10 @@ to return true:wantsResponderID|                            |
       var coercedRef;
 
       if (
-        mixedRef !== null &&
-        typeof mixedRef !== "function" &&
-        typeof mixedRef !== "object"
+        typeof mixedRef === "string" ||
+        typeof mixedRef === "number" ||
+        typeof mixedRef === "boolean"
       ) {
-        // Assume this is a string ref. If it's not, then this will throw an error
-        // to the user.
         coercedRef = convertStringRefToCallbackRef(
           returnFiber,
           current,
@@ -16418,17 +16408,25 @@ to return true:wantsResponderID|                            |
     }
 
     function markRef(current, workInProgress) {
-      // TODO: This is also where we should check the type of the ref and error if
-      // an invalid one is passed, instead of during child reconcilation.
+      // TODO: Check props.ref instead of fiber.ref when enableRefAsProp is on.
       var ref = workInProgress.ref;
 
-      if (
-        (current === null && ref !== null) ||
-        (current !== null && current.ref !== ref)
-      ) {
-        // Schedule a Ref effect
-        workInProgress.flags |= Ref;
-        workInProgress.flags |= RefStatic;
+      if (ref === null) {
+        if (current !== null && current.ref !== null) {
+          // Schedule a Ref effect
+          workInProgress.flags |= Ref | RefStatic;
+        }
+      } else {
+        if (typeof ref !== "function" && typeof ref !== "object") {
+          throw new Error(
+            "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
+          );
+        }
+
+        if (current === null || current.ref !== ref) {
+          // Schedule a Ref effect
+          workInProgress.flags |= Ref | RefStatic;
+        }
       }
     }
 
@@ -28090,7 +28088,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-b1191c0d";
+    var ReactVersion = "18.3.0-canary-79e0cf8d";
 
     function createPortal$1(
       children,

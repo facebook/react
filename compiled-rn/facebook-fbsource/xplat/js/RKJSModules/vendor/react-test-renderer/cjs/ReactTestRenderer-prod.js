@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<74c9b737997575eb03bf09dfe096e458>>
+ * @generated SignedSource<<c9fcc719668d07b3a623f14e395c32b8>>
  */
 
 "use strict";
@@ -1464,24 +1464,19 @@ function convertStringRefToCallbackRef(
     var refs = inst.refs;
     null === value ? delete refs[stringRef] : (refs[stringRef] = value);
   }
+  var stringRef = "" + mixedRef;
   returnFiber = element._owner;
-  if (!returnFiber) {
-    if ("string" !== typeof mixedRef)
-      throw Error(
-        "Expected ref to be a function, a string, an object returned by React.createRef(), or null."
-      );
+  if (!returnFiber)
     throw Error(
       "Element ref was specified as a string (" +
-        mixedRef +
+        stringRef +
         ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://reactjs.org/link/refs-must-have-owner for more information."
     );
-  }
   if (1 !== returnFiber.tag)
     throw Error(
       "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref"
     );
-  var stringRef = "" + mixedRef,
-    inst = returnFiber.stateNode;
+  var inst = returnFiber.stateNode;
   if (!inst)
     throw Error(
       "Missing owner for string ref " +
@@ -1501,9 +1496,9 @@ function convertStringRefToCallbackRef(
 function coerceRef(returnFiber, current, workInProgress, element) {
   var mixedRef = element.ref;
   returnFiber =
-    null !== mixedRef &&
-    "function" !== typeof mixedRef &&
-    "object" !== typeof mixedRef
+    "string" === typeof mixedRef ||
+    "number" === typeof mixedRef ||
+    "boolean" === typeof mixedRef
       ? convertStringRefToCallbackRef(returnFiber, current, element, mixedRef)
       : mixedRef;
   workInProgress.ref = returnFiber;
@@ -3986,11 +3981,18 @@ function deferHiddenOffscreenComponent(current, workInProgress, nextBaseLanes) {
 }
 function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
-  if (
-    (null === current && null !== ref) ||
-    (null !== current && current.ref !== ref)
-  )
-    (workInProgress.flags |= 512), (workInProgress.flags |= 2097152);
+  if (null === ref)
+    null !== current &&
+      null !== current.ref &&
+      (workInProgress.flags |= 2097664);
+  else {
+    if ("function" !== typeof ref && "object" !== typeof ref)
+      throw Error(
+        "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
+      );
+    if (null === current || current.ref !== ref)
+      workInProgress.flags |= 2097664;
+  }
 }
 function updateFunctionComponent(
   current,
@@ -9171,7 +9173,7 @@ var devToolsConfig$jscomp$inline_1014 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-bb4b147da-20240229",
+  version: "18.3.0-canary-2f8f77602-20240229",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1195 = {
@@ -9202,7 +9204,7 @@ var internals$jscomp$inline_1195 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-bb4b147da-20240229"
+  reconcilerVersion: "18.3.0-canary-2f8f77602-20240229"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1196 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
