@@ -470,7 +470,7 @@ describe('ReactDOM HostSingleton', () => {
     in div (at **)
     in body (at **)
     in html (at **)`,
-        `Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.`,
+        `Warning: An error occurred during hydration. The server HTML was replaced with client content.`,
       ],
       {withoutStack: 1},
     );

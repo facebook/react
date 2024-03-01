@@ -197,8 +197,8 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-          'Expected server HTML to contain a matching <div> in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Expected server HTML to contain a matching <div> in the root.',
         ],
         {withoutStack: 1},
       );
@@ -233,7 +233,7 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
           'Expected server HTML to contain a matching <div> in <div>.',
         ],
         {withoutStack: 1},
@@ -279,7 +279,7 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
           'Warning: Text content did not match.',
         ],
         {
@@ -325,7 +325,7 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
           'Expected server HTML to contain a matching text node for "Hello world" in <body>',
         ],
         {withoutStack: 1},

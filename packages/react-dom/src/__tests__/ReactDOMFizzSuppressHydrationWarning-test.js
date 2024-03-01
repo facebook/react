@@ -248,7 +248,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Expected server HTML to contain a matching <span> in <span>',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -337,7 +337,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Did not expect server HTML to contain the text node "Server" in <span>',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -385,7 +385,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Expected server HTML to contain a matching text node for "Client" in <span>.',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -436,7 +436,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Did not expect server HTML to contain the text node "Server" in <span>.',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -485,7 +485,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Expected server HTML to contain a matching text node for "Client" in <span>.',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -608,7 +608,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Expected server HTML to contain a matching <p> in <div>.',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
@@ -654,7 +654,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     }).toErrorDev(
       [
         'Did not expect server HTML to contain a <p> in <div>.',
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
     );
