@@ -295,6 +295,7 @@ describe('useSyncExternalStore', () => {
     },
   );
 
+  // @gate enableActivity
   test('detecting mutation in previously hidden activity subtree', async () => {
     const store = createExternalStore('revision:1');
 
@@ -313,7 +314,13 @@ describe('useSyncExternalStore', () => {
         store.set('revision:' + revision);
       }, [revision]);
 
-      return children;
+      return (
+        <>
+          wrapper:{revision}
+          {', '}
+          {children}
+        </>
+      );
     }
 
     function Subscriber() {
@@ -328,17 +335,20 @@ describe('useSyncExternalStore', () => {
       root.render(<App mode="visible" revision="1" />);
     });
     assertLog(['revision:1']);
+    expect(root).toMatchRenderedOutput('wrapper:1, revision:1');
 
     // Hide subtree
     await act(() => {
       root.render(<App mode="hidden" revision="1" />);
     });
     assertLog(['revision:1']);
+    expect(root).toMatchRenderedOutput('');
 
     // Show subtree (and update mutable store in a layout effect)
     await act(() => {
       root.render(<App mode="visible" revision="2" />);
     });
     assertLog(['revision:1', 'revision:2']);
+    expect(root).toMatchRenderedOutput('wrapper:2, revision:2');
   });
 });
