@@ -132,7 +132,7 @@ if (__DEV__) {
 
     console.error(
       'Each child in a list should have a unique ' +
-        '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+        '"key" prop. See https://react.dev/link/warning-keys for ' +
         'more information.',
     );
   };
@@ -172,7 +172,7 @@ function convertStringRefToCallbackRef(
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
         '3. You have multiple copies of React loaded\n' +
-        'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        'See https://react.dev/link/refs-must-have-owner for more information.',
     );
   }
   if (owner.tag !== ClassComponent) {
@@ -180,7 +180,7 @@ function convertStringRefToCallbackRef(
       'Function components cannot have string refs. ' +
         'We recommend using useRef() instead. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref',
+        'https://react.dev/link/strict-mode-string-ref',
     );
   }
 
@@ -197,7 +197,7 @@ function convertStringRefToCallbackRef(
             'will be removed in a future major release. We recommend using ' +
             'useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
+            'https://react.dev/link/strict-mode-string-ref',
           componentName,
           stringRef,
         );

@@ -994,7 +994,7 @@ describe('ReactFlight', () => {
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop.\n' +
         '\n' +
-        'Check the render method of `Component`. See https://reactjs.org/link/warning-keys for more information.\n' +
+        'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
         '    in Component (at **)\n' +
         '    in Indirection (at **)\n' +
@@ -1251,7 +1251,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
-        'See https://reactjs.org/link/warning-keys for more information.',
+        'See https://react.dev/link/warning-keys for more information.',
     );
   });
 

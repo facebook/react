@@ -609,7 +609,7 @@ describe('ReactFlightDOMBrowser', () => {
       await ReactServerDOMClient.createFromReadableStream(stream);
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
-        'See https://reactjs.org/link/warning-keys for more information.',
+        'See https://react.dev/link/warning-keys for more information.',
     );
   });
 

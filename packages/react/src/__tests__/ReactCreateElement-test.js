@@ -75,7 +75,7 @@ describe('ReactCreateElement', () => {
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 
@@ -85,7 +85,7 @@ describe('ReactCreateElement', () => {
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
       {withoutStack: true},
     );
   });
@@ -116,7 +116,7 @@ describe('ReactCreateElement', () => {
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 

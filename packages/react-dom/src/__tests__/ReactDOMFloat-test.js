@@ -2194,7 +2194,7 @@ body {
         ' parent component, remove it from the DOM element.',
       'Invalid values for props `shouldnotincludefunctions`, `norsymbols` on <link> tag. Either remove them from' +
         ' the element, or pass a string or number value to keep them in the DOM. For' +
-        ' details, see https://reactjs.org/link/attribute-behavior',
+        ' details, see https://react.dev/link/attribute-behavior',
     ]);
 
     // Now we flush the stylesheet with the boundary

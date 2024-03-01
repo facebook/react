@@ -2558,7 +2558,7 @@ describe('InspectedElement', () => {
         {
           "errors": [
             [
-              "Warning: Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.
+              "Warning: Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
             at Example",
               1,
             ],

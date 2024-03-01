@@ -216,7 +216,7 @@ describe('ReactJSXRuntime', () => {
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 
@@ -241,7 +241,7 @@ describe('ReactJSXRuntime', () => {
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
       {withoutStack: true},
     );
   });
@@ -270,7 +270,7 @@ describe('ReactJSXRuntime', () => {
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 
@@ -300,7 +300,7 @@ describe('ReactJSXRuntime', () => {
       });
     }).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
-        'Check the render method of `Parent`. See https://reactjs.org/link/warning-keys for more information.\n' +
+        'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Child (at **)\n' +
         '    in Parent (at **)',
     );
