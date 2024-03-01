@@ -15,9 +15,6 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://react.dev/",
-  "dependencies": {
-    "loose-envify": "^1.1.0"
-  },
   "files": [
     "LICENSE",
     "README.md",
@@ -27,10 +24,5 @@
     "unstable_post_task.js",
     "cjs/",
     "umd/"
-  ],
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
-  }
+  ]
 }
