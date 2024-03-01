@@ -2977,13 +2977,6 @@ export function warnForInsertedHydratedText(
   text: string,
 ) {
   if (__DEV__) {
-    if (text === '') {
-      // We expect to insert empty text nodes since they're not represented in
-      // the HTML.
-      // TODO: Remove this special case if we can just avoid inserting empty
-      // text nodes.
-      return;
-    }
     if (didWarnInvalidHydration) {
       return;
     }

@@ -1026,10 +1026,6 @@ export function bindInstance(
 
 export const supportsHydration = true;
 
-export function isHydratableText(text: string): boolean {
-  return text !== '';
-}
-
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
