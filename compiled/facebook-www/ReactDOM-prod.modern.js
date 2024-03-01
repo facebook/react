@@ -11576,9 +11576,7 @@ beginWork = function (current, workInProgress, renderLanes) {
       return (
         null === current &&
           isHydrating &&
-          (((Component = "" !== workInProgress.pendingProps),
-          (current = renderLanes = nextHydratableInstance),
-          current && Component)
+          (((current = renderLanes = nextHydratableInstance), current)
             ? tryHydrateText(workInProgress, current) ||
               (shouldClientRenderOnMismatch(workInProgress) &&
                 throwOnHydrationMismatch(),
@@ -16745,10 +16743,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7d36ed41",
+  version: "18.3.0-www-modern-2d6dd0ff",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2143 = {
+var internals$jscomp$inline_2142 = {
   bundleType: devToolsConfig$jscomp$inline_1778.bundleType,
   version: devToolsConfig$jscomp$inline_1778.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1778.rendererPackageName,
@@ -16776,19 +16774,19 @@ var internals$jscomp$inline_2143 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7d36ed41"
+  reconcilerVersion: "18.3.0-www-modern-2d6dd0ff"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2143 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2144.isDisabled &&
-    hook$jscomp$inline_2144.supportsFiber
+    !hook$jscomp$inline_2143.isDisabled &&
+    hook$jscomp$inline_2143.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2144.inject(
-        internals$jscomp$inline_2143
+      (rendererID = hook$jscomp$inline_2143.inject(
+        internals$jscomp$inline_2142
       )),
-        (injectedHook = hook$jscomp$inline_2144);
+        (injectedHook = hook$jscomp$inline_2143);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17047,4 +17045,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-7d36ed41";
+exports.version = "18.3.0-www-modern-2d6dd0ff";

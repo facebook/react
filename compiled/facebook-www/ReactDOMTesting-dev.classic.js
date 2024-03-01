@@ -8703,22 +8703,17 @@ if (__DEV__) {
       }
 
       var text = fiber.pendingProps;
-      var isHydratable = isHydratableText(text);
-      var shouldKeepWarning = true;
+      var shouldKeepWarning = true; // Validate that this is ok to render here before any mismatches.
 
-      if (isHydratable) {
-        // Validate that this is ok to render here before any mismatches.
-        var currentHostContext = getHostContext();
-        shouldKeepWarning = validateHydratableTextInstance(
-          text,
-          currentHostContext
-        );
-      }
-
+      var currentHostContext = getHostContext();
+      shouldKeepWarning = validateHydratableTextInstance(
+        text,
+        currentHostContext
+      );
       var initialInstance = nextHydratableInstance;
       var nextInstance = nextHydratableInstance;
 
-      if (!nextInstance || !isHydratable) {
+      if (!nextInstance) {
         // We exclude non hydrabable text because we know there are no matching hydratables.
         // We either throw or insert depending on the render mode.
         if (shouldClientRenderOnMismatch(fiber)) {
@@ -36677,7 +36672,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-d4b2bc87";
+    var ReactVersion = "18.3.0-www-classic-46c2f9a3";
 
     function createPortal$1(
       children,
@@ -44411,14 +44406,6 @@ if (__DEV__) {
     }
     function warnForInsertedHydratedText(parentNode, text) {
       {
-        if (text === "") {
-          // We expect to insert empty text nodes since they're not represented in
-          // the HTML.
-          // TODO: Remove this special case if we can just avoid inserting empty
-          // text nodes.
-          return;
-        }
-
         if (didWarnInvalidHydration) {
           return;
         }
@@ -45276,9 +45263,6 @@ if (__DEV__) {
 
       return;
     } // Making this so we can eventually move all of the instance caching to the commit phase.
-    function isHydratableText(text) {
-      return text !== "";
-    }
     function canHydrateInstance(instance, type, props, inRootOrSingleton) {
       while (instance.nodeType === ELEMENT_NODE) {
         var element = instance;

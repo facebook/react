@@ -12493,9 +12493,7 @@ beginWork = function (current, workInProgress, renderLanes) {
       return (
         null === current &&
           isHydrating &&
-          (((Component = "" !== workInProgress.pendingProps),
-          (current = renderLanes = nextHydratableInstance),
-          current && Component)
+          (((current = renderLanes = nextHydratableInstance), current)
             ? tryHydrateText(workInProgress, current) ||
               (shouldClientRenderOnMismatch(workInProgress) &&
                 throwOnHydrationMismatch(),
@@ -17998,7 +17996,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1904 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-316d7d0d",
+  version: "18.3.0-www-classic-124c1c92",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18042,7 +18040,7 @@ var devToolsConfig$jscomp$inline_1904 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-316d7d0d"
+  reconcilerVersion: "18.3.0-www-classic-124c1c92"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18372,7 +18370,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-316d7d0d";
+exports.version = "18.3.0-www-classic-124c1c92";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
