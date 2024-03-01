@@ -399,13 +399,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   );
 
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance) {
-    if (shouldKeepWarning) {
-      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
-    }
-    throwOnHydrationMismatch(fiber);
-  }
-  if (!tryHydrateInstance(fiber, nextInstance)) {
+  if (!nextInstance || !tryHydrateInstance(fiber, nextInstance)) {
     if (shouldKeepWarning) {
       warnNonHydratedInstance((hydrationParentFiber: any), fiber);
     }
@@ -425,15 +419,7 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   shouldKeepWarning = validateHydratableTextInstance(text, currentHostContext);
 
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance) {
-    // We exclude non hydrabable text because we know there are no matching hydratables.
-    // We either throw or insert depending on the render mode.
-    if (shouldKeepWarning) {
-      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
-    }
-    throwOnHydrationMismatch(fiber);
-  }
-  if (!tryHydrateText(fiber, nextInstance)) {
+  if (!nextInstance || !tryHydrateText(fiber, nextInstance)) {
     if (shouldKeepWarning) {
       warnNonHydratedInstance((hydrationParentFiber: any), fiber);
     }
@@ -446,11 +432,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
     return;
   }
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance) {
-    warnNonHydratedInstance((hydrationParentFiber: any), fiber);
-    throwOnHydrationMismatch(fiber);
-  }
-  if (!tryHydrateSuspense(fiber, nextInstance)) {
+  if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
     warnNonHydratedInstance((hydrationParentFiber: any), fiber);
     throwOnHydrationMismatch(fiber);
   }
