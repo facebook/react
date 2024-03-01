@@ -2603,14 +2603,11 @@ function convertStringRefToCallbackRef(
     var refs = inst.refs;
     null === value ? delete refs[stringRef] : (refs[stringRef] = value);
   }
+  var stringRef = "" + mixedRef;
   returnFiber = element._owner;
-  if (!returnFiber) {
-    if ("string" !== typeof mixedRef) throw Error(formatProdErrorMessage(284));
-    throw Error(formatProdErrorMessage(290, mixedRef));
-  }
+  if (!returnFiber) throw Error(formatProdErrorMessage(290, stringRef));
   if (1 !== returnFiber.tag) throw Error(formatProdErrorMessage(309));
-  var stringRef = "" + mixedRef,
-    inst = returnFiber.stateNode;
+  var inst = returnFiber.stateNode;
   if (!inst) throw Error(formatProdErrorMessage(147, stringRef));
   if (
     null !== current &&
@@ -2627,9 +2624,9 @@ function coerceRef(returnFiber, current, workInProgress, element) {
     var mixedRef = element.props.ref;
     mixedRef = void 0 !== mixedRef ? mixedRef : null;
   } else mixedRef = element.ref;
-  null !== mixedRef &&
-  "function" !== typeof mixedRef &&
-  "object" !== typeof mixedRef
+  "string" === typeof mixedRef ||
+  "number" === typeof mixedRef ||
+  "boolean" === typeof mixedRef
     ? ((returnFiber = convertStringRefToCallbackRef(
         returnFiber,
         current,
@@ -5596,11 +5593,16 @@ function deferHiddenOffscreenComponent(
 }
 function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
-  if (
-    (null === current && null !== ref) ||
-    (null !== current && current.ref !== ref)
-  )
-    (workInProgress.flags |= 512), (workInProgress.flags |= 2097152);
+  if (null === ref)
+    null !== current &&
+      null !== current.ref &&
+      (workInProgress.flags |= 2097664);
+  else {
+    if ("function" !== typeof ref && "object" !== typeof ref)
+      throw Error(formatProdErrorMessage(284));
+    if (null === current || current.ref !== ref)
+      workInProgress.flags |= 2097664;
+  }
 }
 function updateFunctionComponent(
   current,
@@ -17506,7 +17508,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1863 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-0bd008ad",
+  version: "18.3.0-www-modern-62d2932f",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17551,7 +17553,7 @@ var devToolsConfig$jscomp$inline_1863 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-0bd008ad"
+  reconcilerVersion: "18.3.0-www-modern-62d2932f"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17809,7 +17811,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-0bd008ad";
+exports.version = "18.3.0-www-modern-62d2932f";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
