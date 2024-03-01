@@ -115,9 +115,13 @@ describe('ReactFiberRefs', () => {
   });
 
   // @gate disableStringRefs
-  test('log an error in dev if a string ref is passed to a ref-receiving component', async () => {
+  test('throw if a string ref is passed to a ref-receiving component', async () => {
     let refProp;
     function Child({ref}) {
+      // This component renders successfully because the ref type check does not
+      // occur until you pass it to a component that accepts refs.
+      //
+      // So the div will throw, but not Child.
       refProp = ref;
       return <div ref={ref} />;
     }
@@ -129,9 +133,9 @@ describe('ReactFiberRefs', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await expect(async () => {
-      await expect(act(() => root.render(<Owner />))).rejects.toThrow();
-    }).toErrorDev('String refs are no longer supported');
+    await expect(act(() => root.render(<Owner />))).rejects.toThrow(
+      'Expected ref to be a function',
+    );
     expect(refProp).toBe('child');
   });
 });

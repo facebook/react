@@ -38,7 +38,7 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
-  // @gate !disableStringRefs || !__DEV__
+  // @gate !disableStringRefs
   it('should throw when supplying a string ref outside of render method', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -46,7 +46,10 @@ describe('ReactComponent', () => {
       act(() => {
         root.render(<div ref="badDiv" />);
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(
+      'Element ref was specified as a string (badDiv) but no owner ' +
+        'was set',
+    );
   });
 
   it('should throw (in dev) when children are mutated during render', async () => {
