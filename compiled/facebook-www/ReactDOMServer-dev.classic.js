@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-24ac93b7";
+    var ReactVersion = "18.3.0-www-classic-e23c55b6";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -1152,7 +1152,7 @@ if (__DEV__) {
         // These are reserved SVG and MathML elements.
         // We don't mind this list too much because we expect it to never grow.
         // The alternative is to track the namespace in a few places which is convoluted.
-        // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
         case "annotation-xml":
         case "color-profile":
         case "font-face":
@@ -5860,7 +5860,7 @@ if (__DEV__) {
           return pushSelfClosing(target, props, type);
         }
         // These are reserved SVG and MathML elements, that are never custom elements.
-        // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
 
         case "annotation-xml":
         case "color-profile":

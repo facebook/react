@@ -6121,7 +6121,7 @@ if (__DEV__) {
         // These are reserved SVG and MathML elements.
         // We don't mind this list too much because we expect it to never grow.
         // The alternative is to track the namespace in a few places which is convoluted.
-        // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+        // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
         case "annotation-xml":
         case "color-profile":
         case "font-face":
@@ -36046,7 +36046,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-cecf945d";
+    var ReactVersion = "18.3.0-www-classic-375d7b0a";
 
     function createPortal$1(
       children,
