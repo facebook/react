@@ -625,7 +625,7 @@ function pushInnerHTML(target, innerHTML, children) {
       );
     if ("object" !== typeof innerHTML || !("__html" in innerHTML))
       throw Error(
-        "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://reactjs.org/link/dangerously-set-inner-html for more information."
+        "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://react.dev/link/dangerously-set-inner-html for more information."
       );
     innerHTML = innerHTML.__html;
     null !== innerHTML && void 0 !== innerHTML && target.push("" + innerHTML);
@@ -1517,7 +1517,7 @@ function pushStartInstance(
           !("__html" in innerHTML$jscomp$6)
         )
           throw Error(
-            "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://reactjs.org/link/dangerously-set-inner-html for more information."
+            "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://react.dev/link/dangerously-set-inner-html for more information."
           );
         var html = innerHTML$jscomp$6.__html;
         null !== html &&
@@ -2856,7 +2856,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
 function resolveCurrentlyRenderingComponent() {
   if (null === currentlyRenderingComponent)
     throw Error(
-      "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+      "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
     );
   return currentlyRenderingComponent;
 }

@@ -883,7 +883,7 @@ var ExhaustiveDeps = {
       if (isEffect && node.async) {
         reportProblem({
           node: node,
-          message: "Effect callbacks are synchronous to prevent race conditions. " + "Put the async function inside:\n\n" + 'useEffect(() => {\n' + '  async function fetchData() {\n' + '    // You can await here\n' + '    const response = await MyAPI.getData(someId);\n' + '    // ...\n' + '  }\n' + '  fetchData();\n' + "}, [someId]); // Or [] if effect doesn't need props or state\n\n" + 'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching'
+          message: "Effect callbacks are synchronous to prevent race conditions. " + "Put the async function inside:\n\n" + 'useEffect(() => {\n' + '  async function fetchData() {\n' + '    // You can await here\n' + '    const response = await MyAPI.getData(someId);\n' + '    // ...\n' + '  }\n' + '  fetchData();\n' + "}, [someId]); // Or [] if effect doesn't need props or state\n\n" + 'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching'
         });
       } // Get the current scope.
 

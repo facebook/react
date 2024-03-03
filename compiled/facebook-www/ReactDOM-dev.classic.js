@@ -1041,7 +1041,7 @@ if (__DEV__) {
               "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
               "2. You might be breaking the Rules of Hooks\n" +
               "3. You might have more than one copy of React in the same app\n" +
-              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
           );
         }
       } // Will result in a null access error if accessed outside render phase. We
@@ -1386,7 +1386,7 @@ if (__DEV__) {
           error(
             "The installed version of React DevTools is too old and will not work " +
               "with the current version of React. Please update React DevTools. " +
-              "https://reactjs.org/link/react-devtools"
+              "https://react.dev/link/react-devtools"
           );
         } // DevTools exists, even though it doesn't support Fiber.
 
@@ -4060,7 +4060,7 @@ if (__DEV__) {
               "(specify either the checked prop, or the defaultChecked prop, but not " +
               "both). Decide between using a controlled or uncontrolled input " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components",
+              "https://react.dev/link/controlled-components",
             getCurrentFiberOwnerNameInDevOrNull() || "A component",
             props.type
           );
@@ -4079,7 +4079,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled input " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components",
+              "https://react.dev/link/controlled-components",
             getCurrentFiberOwnerNameInDevOrNull() || "A component",
             props.type
           );
@@ -4640,7 +4640,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled select " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components"
+              "https://react.dev/link/controlled-components"
           );
 
           didWarnValueDefaultValue = true;
@@ -4711,7 +4711,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled textarea " +
               "and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components",
+              "https://react.dev/link/controlled-components",
             getCurrentFiberOwnerNameInDevOrNull() || "A component"
           );
 
@@ -6871,14 +6871,14 @@ if (__DEV__) {
         if (invalidProps.length === 1) {
           error(
             "Invalid aria prop %s on <%s> tag. " +
-              "For details, see https://reactjs.org/link/invalid-aria-props",
+              "For details, see https://react.dev/link/invalid-aria-props",
             unknownPropString,
             type
           );
         } else if (invalidProps.length > 1) {
           error(
             "Invalid aria props %s on <%s> tag. " +
-              "For details, see https://reactjs.org/link/invalid-aria-props",
+              "For details, see https://react.dev/link/invalid-aria-props",
             unknownPropString,
             type
           );
@@ -7289,7 +7289,7 @@ if (__DEV__) {
           error(
             "Invalid value for prop %s on <%s> tag. Either remove it from the element, " +
               "or pass a string or number value to keep it in the DOM. " +
-              "For details, see https://reactjs.org/link/attribute-behavior ",
+              "For details, see https://react.dev/link/attribute-behavior ",
             unknownPropString,
             type
           );
@@ -7297,7 +7297,7 @@ if (__DEV__) {
           error(
             "Invalid values for props %s on <%s> tag. Either remove them from the element, " +
               "or pass a string or number value to keep them in the DOM. " +
-              "For details, see https://reactjs.org/link/attribute-behavior ",
+              "For details, see https://react.dev/link/attribute-behavior ",
             unknownPropString,
             type
           );
@@ -10568,7 +10568,7 @@ if (__DEV__) {
 
             error(
               "Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move code with side effects to componentDidMount, and set initial state in the constructor.\n" +
                 "\nPlease update the following components: %s",
               sortedNames
@@ -10583,11 +10583,11 @@ if (__DEV__) {
             error(
               "Using UNSAFE_componentWillReceiveProps in strict mode is not recommended " +
                 "and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* If you're updating state whenever props change, " +
                 "refactor your code to use memoization techniques or move it to " +
-                "static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state\n" +
+                "static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n" +
                 "\nPlease update the following components: %s",
               _sortedNames
             );
@@ -10601,7 +10601,7 @@ if (__DEV__) {
             error(
               "Using UNSAFE_componentWillUpdate in strict mode is not recommended " +
                 "and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "\nPlease update the following components: %s",
               _sortedNames2
@@ -10615,7 +10615,7 @@ if (__DEV__) {
 
             warn(
               "componentWillMount has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move code with side effects to componentDidMount, and set initial state in the constructor.\n" +
                 "* Rename componentWillMount to UNSAFE_componentWillMount to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
@@ -10633,11 +10633,11 @@ if (__DEV__) {
 
             warn(
               "componentWillReceiveProps has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* If you're updating state whenever props change, refactor your " +
                 "code to use memoization techniques or move it to " +
-                "static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state\n" +
+                "static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n" +
                 "* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
                 "To rename all deprecated lifecycles to their new names, you can run " +
@@ -10654,7 +10654,7 @@ if (__DEV__) {
 
             warn(
               "componentWillUpdate has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
@@ -10727,7 +10727,7 @@ if (__DEV__) {
                 "\n\nThe old API will be supported in all 16.x releases, but applications " +
                 "using it should migrate to the new version." +
                 "\n\nPlease update the following components: %s" +
-                "\n\nLearn more about this warning here: https://reactjs.org/link/legacy-context",
+                "\n\nLearn more about this warning here: https://react.dev/link/legacy-context",
               sortedNames
             );
           } finally {
@@ -11082,7 +11082,7 @@ if (__DEV__) {
 
         error(
           "Each child in a list should have a unique " +
-            '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+            '"key" prop. See https://react.dev/link/warning-keys for ' +
             "more information."
         );
       };
@@ -11125,7 +11125,7 @@ if (__DEV__) {
             "1. You may be adding a ref to a function component\n" +
             "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
             "3. You have multiple copies of React loaded\n" +
-            "See https://reactjs.org/link/refs-must-have-owner for more information."
+            "See https://react.dev/link/refs-must-have-owner for more information."
         );
       }
 
@@ -11134,7 +11134,7 @@ if (__DEV__) {
           "Function components cannot have string refs. " +
             "We recommend using useRef() instead. " +
             "Learn more about using refs safely here: " +
-            "https://reactjs.org/link/strict-mode-string-ref"
+            "https://react.dev/link/strict-mode-string-ref"
         );
       }
 
@@ -11152,7 +11152,7 @@ if (__DEV__) {
                 "will be removed in a future major release. We recommend using " +
                 "useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
+                "https://react.dev/link/strict-mode-string-ref",
               componentName,
               stringRef
             );
@@ -13246,7 +13246,7 @@ if (__DEV__) {
             error(
               "React has detected a change in the order of Hooks called by %s. " +
                 "This will lead to bugs and errors if not fixed. " +
-                "For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n" +
+                "For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n" +
                 "   Previous render            Next render\n" +
                 "   ------------------------------------------------------\n" +
                 "%s" +
@@ -13297,7 +13297,7 @@ if (__DEV__) {
           "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
           "2. You might be breaking the Rules of Hooks\n" +
           "3. You might have more than one copy of React in the same app\n" +
-          "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+          "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
       );
     }
 
@@ -16107,7 +16107,7 @@ if (__DEV__) {
           "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. " +
             "You can only call Hooks at the top level of your React function. " +
             "For more information, see " +
-            "https://reactjs.org/link/rules-of-hooks"
+            "https://react.dev/link/rules-of-hooks"
         );
       };
 
@@ -18178,7 +18178,7 @@ if (__DEV__) {
                 "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" +
                   "%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n" +
                   "The above lifecycles should be removed. Learn more about this warning here:\n" +
-                  "https://reactjs.org/link/unsafe-component-lifecycles",
+                  "https://react.dev/link/unsafe-component-lifecycles",
                 _componentName,
                 newApiName,
                 foundWillMountName !== null ? "\n  " + foundWillMountName : "",
@@ -18795,7 +18795,7 @@ if (__DEV__) {
           if (boundary.tag === HostRoot) {
             errorBoundaryMessage =
               "Consider adding an error boundary to your tree to customize error handling behavior.\n" +
-              "Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.";
+              "Visit https://react.dev/link/error-boundaries to learn more about error boundaries.";
           } else {
             var errorBoundaryName =
               getComponentNameFromFiber(boundary) || "Anonymous";
@@ -26799,7 +26799,7 @@ if (__DEV__) {
                     "  }\n" +
                     "  fetchData();\n" +
                     "}, [someId]); // Or [] if effect doesn't need props or state\n\n" +
-                    "Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching";
+                    "Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching";
                 } else {
                   addendum = " You returned: " + destroy;
                 }
@@ -34538,7 +34538,7 @@ if (__DEV__) {
                 error(
                   "Cannot update a component (`%s`) while rendering a " +
                     "different component (`%s`). To locate the bad setState() call inside `%s`, " +
-                    "follow the stack trace as described in https://reactjs.org/link/setstate-in-render",
+                    "follow the stack trace as described in https://react.dev/link/setstate-in-render",
                   setStateComponentName,
                   renderingComponentName,
                   renderingComponentName
@@ -34647,7 +34647,7 @@ if (__DEV__) {
                 "/* assert on the output */\n\n" +
                 "This ensures that you're testing the behavior the user would see " +
                 "in the browser." +
-                " Learn more at https://reactjs.org/link/wrap-tests-with-act",
+                " Learn more at https://react.dev/link/wrap-tests-with-act",
               getComponentNameFromFiber(fiber)
             );
           } finally {
@@ -34679,7 +34679,7 @@ if (__DEV__) {
               "/* assert on the output */\n\n" +
               "This ensures that you're testing the behavior the user would see " +
               "in the browser." +
-              " Learn more at https://reactjs.org/link/wrap-tests-with-act"
+              " Learn more at https://react.dev/link/wrap-tests-with-act"
           );
         }
       }
@@ -36046,7 +36046,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-c1990332";
+    var ReactVersion = "18.3.0-www-classic-cecf945d";
 
     function createPortal$1(
       children,
@@ -36138,7 +36138,7 @@ if (__DEV__) {
                     "%s was passed an instance of %s which is inside StrictMode. " +
                     "Instead, add a ref directly to the element you want to reference. " +
                     "Learn more about using refs safely here: " +
-                    "https://reactjs.org/link/strict-mode-find-node",
+                    "https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
                   componentName
@@ -36149,7 +36149,7 @@ if (__DEV__) {
                     "%s was passed an instance of %s which renders StrictMode children. " +
                     "Instead, add a ref directly to the element you want to reference. " +
                     "Learn more about using refs safely here: " +
-                    "https://reactjs.org/link/strict-mode-find-node",
+                    "https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
                   componentName
@@ -41089,7 +41089,7 @@ if (__DEV__) {
             if (typeof value !== "object" || !("__html" in value)) {
               throw new Error(
                 "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                  "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+                  "Please visit https://react.dev/link/dangerously-set-inner-html " +
                   "for more information."
               );
             }
@@ -41463,7 +41463,7 @@ if (__DEV__) {
             if (typeof value !== "object" || !("__html" in value)) {
               throw new Error(
                 "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                  "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+                  "Please visit https://react.dev/link/dangerously-set-inner-html " +
                   "for more information."
               );
             }
@@ -42108,7 +42108,7 @@ if (__DEV__) {
                   "This is likely caused by the value changing from undefined to " +
                   "a defined value, which should not happen. " +
                   "Decide between using a controlled or uncontrolled input " +
-                  "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+                  "element for the lifetime of the component. More info: https://react.dev/link/controlled-components"
               );
 
               didWarnUncontrolledToControlled = true;
@@ -42124,7 +42124,7 @@ if (__DEV__) {
                   "This is likely caused by the value changing from a defined to " +
                   "undefined, which should not happen. " +
                   "Decide between using a controlled or uncontrolled input " +
-                  "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+                  "element for the lifetime of the component. More info: https://react.dev/link/controlled-components"
               );
 
               didWarnControlledToUncontrolled = true;
@@ -48616,7 +48616,7 @@ if (__DEV__) {
           "ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot " +
             "instead. Until you switch to the new API, your app will behave as " +
             "if it's running React 17. Learn " +
-            "more: https://reactjs.org/link/switch-to-createroot"
+            "more: https://react.dev/link/switch-to-createroot"
         );
       }
 
@@ -48652,7 +48652,7 @@ if (__DEV__) {
           "ReactDOM.render is no longer supported in React 18. Use createRoot " +
             "instead. Until you switch to the new API, your app will behave as " +
             "if it's running React 17. Learn " +
-            "more: https://reactjs.org/link/switch-to-createroot"
+            "more: https://react.dev/link/switch-to-createroot"
         );
       }
 
@@ -48693,7 +48693,7 @@ if (__DEV__) {
           "ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported " +
             "in React 18. Consider using a portal instead. Until you switch to " +
             "the createRoot API, your app will behave as if it's running React " +
-            "17. Learn more: https://reactjs.org/link/switch-to-createroot"
+            "17. Learn more: https://react.dev/link/switch-to-createroot"
         );
       }
 
@@ -49292,7 +49292,7 @@ if (__DEV__) {
       ) {
         error(
           "React depends on Map and Set built-in types. Make sure that you load a " +
-            "polyfill in older browsers. https://reactjs.org/link/react-polyfills"
+            "polyfill in older browsers. https://react.dev/link/react-polyfills"
         );
       }
     }
@@ -49399,10 +49399,10 @@ if (__DEV__) {
             console.info(
               "%cDownload the React DevTools " +
                 "for a better development experience: " +
-                "https://reactjs.org/link/react-devtools" +
+                "https://react.dev/link/react-devtools" +
                 (protocol === "file:"
                   ? "\nYou might need to use a local HTTP server (instead of file://): " +
-                    "https://reactjs.org/link/react-devtools-faq"
+                    "https://react.dev/link/react-devtools-faq"
                   : ""),
               "font-weight:bold"
             );

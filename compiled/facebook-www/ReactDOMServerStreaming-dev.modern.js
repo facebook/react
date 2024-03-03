@@ -1096,14 +1096,14 @@ if (__DEV__) {
         if (invalidProps.length === 1) {
           error(
             "Invalid aria prop %s on <%s> tag. " +
-              "For details, see https://reactjs.org/link/invalid-aria-props",
+              "For details, see https://react.dev/link/invalid-aria-props",
             unknownPropString,
             type
           );
         } else if (invalidProps.length > 1) {
           error(
             "Invalid aria props %s on <%s> tag. " +
-              "For details, see https://reactjs.org/link/invalid-aria-props",
+              "For details, see https://react.dev/link/invalid-aria-props",
             unknownPropString,
             type
           );
@@ -2035,7 +2035,7 @@ if (__DEV__) {
           error(
             "Invalid value for prop %s on <%s> tag. Either remove it from the element, " +
               "or pass a string or number value to keep it in the DOM. " +
-              "For details, see https://reactjs.org/link/attribute-behavior ",
+              "For details, see https://react.dev/link/attribute-behavior ",
             unknownPropString,
             type
           );
@@ -2043,7 +2043,7 @@ if (__DEV__) {
           error(
             "Invalid values for props %s on <%s> tag. Either remove them from the element, " +
               "or pass a string or number value to keep them in the DOM. " +
-              "For details, see https://reactjs.org/link/attribute-behavior ",
+              "For details, see https://react.dev/link/attribute-behavior ",
             unknownPropString,
             type
           );
@@ -3606,7 +3606,7 @@ if (__DEV__) {
         if (typeof innerHTML !== "object" || !("__html" in innerHTML)) {
           throw new Error(
             "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-              "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+              "Please visit https://react.dev/link/dangerously-set-inner-html " +
               "for more information."
           );
         }
@@ -3729,7 +3729,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled select " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components"
+              "https://react.dev/link/controlled-components"
           );
 
           didWarnDefaultSelectValue = true;
@@ -4212,7 +4212,7 @@ if (__DEV__) {
               "(specify either the checked prop, or the defaultChecked prop, but not " +
               "both). Decide between using a controlled or uncontrolled input " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components",
+              "https://react.dev/link/controlled-components",
             "A component",
             props.type
           );
@@ -4231,7 +4231,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled input " +
               "element and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components",
+              "https://react.dev/link/controlled-components",
             "A component",
             props.type
           );
@@ -4366,7 +4366,7 @@ if (__DEV__) {
               "(specify either the value prop, or the defaultValue prop, but not " +
               "both). Decide between using a controlled or uncontrolled textarea " +
               "and remove one of these props. More info: " +
-              "https://reactjs.org/link/controlled-components"
+              "https://react.dev/link/controlled-components"
           );
 
           didWarnDefaultTextareaValue = true;
@@ -5638,7 +5638,7 @@ if (__DEV__) {
         if (typeof innerHTML !== "object" || !("__html" in innerHTML)) {
           throw new Error(
             "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-              "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+              "Please visit https://react.dev/link/dangerously-set-inner-html " +
               "for more information."
           );
         }
@@ -9043,7 +9043,7 @@ if (__DEV__) {
                 "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" +
                   "%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n" +
                   "The above lifecycles should be removed. Learn more about this warning here:\n" +
-                  "https://reactjs.org/link/unsafe-component-lifecycles",
+                  "https://react.dev/link/unsafe-component-lifecycles",
                 _componentName,
                 newApiName,
                 foundWillMountName !== null ? "\n  " + foundWillMountName : "",
@@ -9289,7 +9289,7 @@ if (__DEV__) {
               warn(
                 // keep this warning in sync with ReactStrictModeWarning.js
                 "componentWillMount has been renamed, and is not recommended for use. " +
-                  "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                  "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                   "* Move code from componentWillMount to componentDidMount (preferred in most cases) " +
                   "or the constructor.\n" +
                   "\nPlease update the following components: %s",
@@ -9759,7 +9759,7 @@ if (__DEV__) {
             "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
             "2. You might be breaking the Rules of Hooks\n" +
             "3. You might have more than one copy of React in the same app\n" +
-            "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+            "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
         );
       }
 
@@ -9769,7 +9769,7 @@ if (__DEV__) {
             "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. " +
               "You can only call Hooks at the top level of your React function. " +
               "For more information, see " +
-              "https://reactjs.org/link/rules-of-hooks"
+              "https://react.dev/link/rules-of-hooks"
           );
         }
       }

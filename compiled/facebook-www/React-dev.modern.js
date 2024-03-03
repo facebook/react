@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-99dd25e6";
+    var ReactVersion = "18.3.0-www-modern-76412cae";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1237,7 +1237,7 @@ if (__DEV__) {
                 "This case cannot be automatically converted to an arrow function. " +
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
+                "https://react.dev/link/strict-mode-string-ref",
               getComponentNameFromType(ReactCurrentOwner.current.type),
               config.ref
             );
@@ -1258,7 +1258,7 @@ if (__DEV__) {
               "%s: `key` is not a prop. Trying to access it will result " +
                 "in `undefined` being returned. If you need to access the same " +
                 "value within the child component, you should pass it as a different " +
-                "prop. (https://reactjs.org/link/special-props)",
+                "prop. (https://react.dev/link/special-props)",
               displayName
             );
           }
@@ -1283,7 +1283,7 @@ if (__DEV__) {
                 "%s: `ref` is not a prop. Trying to access it will result " +
                   "in `undefined` being returned. If you need to access the same " +
                   "value within the child component, you should pass it as a different " +
-                  "prop. (https://reactjs.org/link/special-props)",
+                  "prop. (https://react.dev/link/special-props)",
                 displayName
               );
             }
@@ -2103,7 +2103,7 @@ if (__DEV__) {
 
         error(
           'Each child in a list should have a unique "key" prop.' +
-            "%s%s See https://reactjs.org/link/warning-keys for more information.",
+            "%s%s See https://react.dev/link/warning-keys for more information.",
           currentComponentErrorInfo,
           childOwner
         );
@@ -2969,7 +2969,7 @@ if (__DEV__) {
               "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
               "2. You might be breaking the Rules of Hooks\n" +
               "3. You might have more than one copy of React in the same app\n" +
-              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
           );
         }
       } // Will result in a null access error if accessed outside render phase. We
