@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<80a0567bc7edf5be863000f879120fd9>>
+ * @generated SignedSource<<1cc43318b38f34f167ca26ed50f6b1a6>>
  */
 
 "use strict";
@@ -878,7 +878,7 @@ if (__DEV__) {
                 "This case cannot be automatically converted to an arrow function. " +
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
+                "https://react.dev/link/strict-mode-string-ref",
               getComponentNameFromType(ReactCurrentOwner.current.type),
               config.ref
             );
@@ -899,7 +899,7 @@ if (__DEV__) {
               "%s: `key` is not a prop. Trying to access it will result " +
                 "in `undefined` being returned. If you need to access the same " +
                 "value within the child component, you should pass it as a different " +
-                "prop. (https://reactjs.org/link/special-props)",
+                "prop. (https://react.dev/link/special-props)",
               displayName
             );
           }
@@ -924,7 +924,7 @@ if (__DEV__) {
                 "%s: `ref` is not a prop. Trying to access it will result " +
                   "in `undefined` being returned. If you need to access the same " +
                   "value within the child component, you should pass it as a different " +
-                  "prop. (https://reactjs.org/link/special-props)",
+                  "prop. (https://react.dev/link/special-props)",
                 displayName
               );
             }
@@ -1389,7 +1389,7 @@ if (__DEV__) {
 
         error(
           'Each child in a list should have a unique "key" prop.' +
-            "%s%s See https://reactjs.org/link/warning-keys for more information.",
+            "%s%s See https://react.dev/link/warning-keys for more information.",
           currentComponentErrorInfo,
           childOwner
         );

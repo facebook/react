@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<409fcb610c96c788e5d00c80fb0cad50>>
+ * @generated SignedSource<<2e4e75c5e196c476c8f1dd730e8063be>>
  */
 
 "use strict";
@@ -252,7 +252,7 @@ if (__DEV__) {
               error = new Error(
                 "A cross-origin error was thrown. React doesn't have access to " +
                   "the actual error object in development. " +
-                  "See https://reactjs.org/link/crossorigin-error for more information."
+                  "See https://react.dev/link/crossorigin-error for more information."
               );
             }
 
@@ -840,7 +840,7 @@ if (__DEV__) {
             "This synthetic event is reused for performance reasons. If you're seeing this, " +
               "you're %s `%s` on a released/nullified synthetic event. %s. " +
               "If you must keep the original synthetic event around, use event.persist(). " +
-              "See https://reactjs.org/link/event-pooling for more information.",
+              "See https://react.dev/link/event-pooling for more information.",
             action,
             propName,
             result
@@ -3512,7 +3512,7 @@ to return true:wantsResponderID|                            |
           error(
             "The installed version of React DevTools is too old and will not work " +
               "with the current version of React. Please update React DevTools. " +
-              "https://reactjs.org/link/react-devtools"
+              "https://react.dev/link/react-devtools"
           );
         } // DevTools exists, even though it doesn't support Fiber.
 
@@ -8354,7 +8354,7 @@ to return true:wantsResponderID|                            |
 
             error(
               "Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move code with side effects to componentDidMount, and set initial state in the constructor.\n" +
                 "\nPlease update the following components: %s",
               sortedNames
@@ -8369,11 +8369,11 @@ to return true:wantsResponderID|                            |
             error(
               "Using UNSAFE_componentWillReceiveProps in strict mode is not recommended " +
                 "and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* If you're updating state whenever props change, " +
                 "refactor your code to use memoization techniques or move it to " +
-                "static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state\n" +
+                "static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n" +
                 "\nPlease update the following components: %s",
               _sortedNames
             );
@@ -8387,7 +8387,7 @@ to return true:wantsResponderID|                            |
             error(
               "Using UNSAFE_componentWillUpdate in strict mode is not recommended " +
                 "and may indicate bugs in your code. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "\nPlease update the following components: %s",
               _sortedNames2
@@ -8401,7 +8401,7 @@ to return true:wantsResponderID|                            |
 
             warn(
               "componentWillMount has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move code with side effects to componentDidMount, and set initial state in the constructor.\n" +
                 "* Rename componentWillMount to UNSAFE_componentWillMount to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
@@ -8419,11 +8419,11 @@ to return true:wantsResponderID|                            |
 
             warn(
               "componentWillReceiveProps has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* If you're updating state whenever props change, refactor your " +
                 "code to use memoization techniques or move it to " +
-                "static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state\n" +
+                "static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n" +
                 "* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
                 "To rename all deprecated lifecycles to their new names, you can run " +
@@ -8440,7 +8440,7 @@ to return true:wantsResponderID|                            |
 
             warn(
               "componentWillUpdate has been renamed, and is not recommended for use. " +
-                "See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n" +
+                "See https://react.dev/link/unsafe-component-lifecycles for details.\n\n" +
                 "* Move data fetching code or side effects to componentDidUpdate.\n" +
                 "* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress " +
                 "this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. " +
@@ -8513,7 +8513,7 @@ to return true:wantsResponderID|                            |
                 "\n\nThe old API will be supported in all 16.x releases, but applications " +
                 "using it should migrate to the new version." +
                 "\n\nPlease update the following components: %s" +
-                "\n\nLearn more about this warning here: https://reactjs.org/link/legacy-context",
+                "\n\nLearn more about this warning here: https://react.dev/link/legacy-context",
               sortedNames
             );
           } finally {
@@ -8949,7 +8949,7 @@ to return true:wantsResponderID|                            |
 
         error(
           "Each child in a list should have a unique " +
-            '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+            '"key" prop. See https://react.dev/link/warning-keys for ' +
             "more information."
         );
       };
@@ -8992,7 +8992,7 @@ to return true:wantsResponderID|                            |
             "1. You may be adding a ref to a function component\n" +
             "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
             "3. You have multiple copies of React loaded\n" +
-            "See https://reactjs.org/link/refs-must-have-owner for more information."
+            "See https://react.dev/link/refs-must-have-owner for more information."
         );
       }
 
@@ -9001,7 +9001,7 @@ to return true:wantsResponderID|                            |
           "Function components cannot have string refs. " +
             "We recommend using useRef() instead. " +
             "Learn more about using refs safely here: " +
-            "https://reactjs.org/link/strict-mode-string-ref"
+            "https://react.dev/link/strict-mode-string-ref"
         );
       }
 
@@ -9019,7 +9019,7 @@ to return true:wantsResponderID|                            |
                 "will be removed in a future major release. We recommend using " +
                 "useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
+                "https://react.dev/link/strict-mode-string-ref",
               componentName,
               stringRef
             );
@@ -11025,7 +11025,7 @@ to return true:wantsResponderID|                            |
             error(
               "React has detected a change in the order of Hooks called by %s. " +
                 "This will lead to bugs and errors if not fixed. " +
-                "For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n" +
+                "For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n" +
                 "   Previous render            Next render\n" +
                 "   ------------------------------------------------------\n" +
                 "%s" +
@@ -11076,7 +11076,7 @@ to return true:wantsResponderID|                            |
           "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
           "2. You might be breaking the Rules of Hooks\n" +
           "3. You might have more than one copy of React in the same app\n" +
-          "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+          "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
       );
     }
 
@@ -13069,7 +13069,7 @@ to return true:wantsResponderID|                            |
           "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. " +
             "You can only call Hooks at the top level of your React function. " +
             "For more information, see " +
-            "https://reactjs.org/link/rules-of-hooks"
+            "https://react.dev/link/rules-of-hooks"
         );
       };
 
@@ -14785,7 +14785,7 @@ to return true:wantsResponderID|                            |
                 "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n" +
                   "%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n" +
                   "The above lifecycles should be removed. Learn more about this warning here:\n" +
-                  "https://reactjs.org/link/unsafe-component-lifecycles",
+                  "https://react.dev/link/unsafe-component-lifecycles",
                 _componentName,
                 newApiName,
                 foundWillMountName !== null ? "\n  " + foundWillMountName : "",
@@ -15397,7 +15397,7 @@ to return true:wantsResponderID|                            |
           if (boundary.tag === HostRoot) {
             errorBoundaryMessage =
               "Consider adding an error boundary to your tree to customize error handling behavior.\n" +
-              "Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.";
+              "Visit https://react.dev/link/error-boundaries to learn more about error boundaries.";
           } else {
             var errorBoundaryName =
               getComponentNameFromFiber(boundary) || "Anonymous";
@@ -21241,7 +21241,7 @@ to return true:wantsResponderID|                            |
                     "  }\n" +
                     "  fetchData();\n" +
                     "}, [someId]); // Or [] if effect doesn't need props or state\n\n" +
-                    "Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching";
+                    "Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching";
                 } else {
                   addendum = " You returned: " + destroy;
                 }
@@ -26729,7 +26729,7 @@ to return true:wantsResponderID|                            |
                 error(
                   "Cannot update a component (`%s`) while rendering a " +
                     "different component (`%s`). To locate the bad setState() call inside `%s`, " +
-                    "follow the stack trace as described in https://reactjs.org/link/setstate-in-render",
+                    "follow the stack trace as described in https://react.dev/link/setstate-in-render",
                   setStateComponentName,
                   renderingComponentName,
                   renderingComponentName
@@ -26838,7 +26838,7 @@ to return true:wantsResponderID|                            |
                 "/* assert on the output */\n\n" +
                 "This ensures that you're testing the behavior the user would see " +
                 "in the browser." +
-                " Learn more at https://reactjs.org/link/wrap-tests-with-act",
+                " Learn more at https://react.dev/link/wrap-tests-with-act",
               getComponentNameFromFiber(fiber)
             );
           } finally {
@@ -26870,7 +26870,7 @@ to return true:wantsResponderID|                            |
               "/* assert on the output */\n\n" +
               "This ensures that you're testing the behavior the user would see " +
               "in the browser." +
-              " Learn more at https://reactjs.org/link/wrap-tests-with-act"
+              " Learn more at https://react.dev/link/wrap-tests-with-act"
           );
         }
       }
@@ -28088,7 +28088,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-79e0cf8d";
+    var ReactVersion = "18.3.0-canary-d0bc2995";
 
     function createPortal$1(
       children,
@@ -28180,7 +28180,7 @@ to return true:wantsResponderID|                            |
                     "%s was passed an instance of %s which is inside StrictMode. " +
                     "Instead, add a ref directly to the element you want to reference. " +
                     "Learn more about using refs safely here: " +
-                    "https://reactjs.org/link/strict-mode-find-node",
+                    "https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
                   componentName
@@ -28191,7 +28191,7 @@ to return true:wantsResponderID|                            |
                     "%s was passed an instance of %s which renders StrictMode children. " +
                     "Instead, add a ref directly to the element you want to reference. " +
                     "Learn more about using refs safely here: " +
-                    "https://reactjs.org/link/strict-mode-find-node",
+                    "https://react.dev/link/strict-mode-find-node",
                   methodName,
                   methodName,
                   componentName

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<867e292594b7b59489bd57d16c996264>>
+ * @generated SignedSource<<2577789535da46fdc5d6fda6be09ea30>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-30ae0baed-20240301";
+    var ReactVersion = "18.3.0-canary-1940cb27b-20240303";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1260,7 +1260,7 @@ if (__DEV__) {
                 "This case cannot be automatically converted to an arrow function. " +
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
-                "https://reactjs.org/link/strict-mode-string-ref",
+                "https://react.dev/link/strict-mode-string-ref",
               getComponentNameFromType(ReactCurrentOwner.current.type),
               config.ref
             );
@@ -1281,7 +1281,7 @@ if (__DEV__) {
               "%s: `key` is not a prop. Trying to access it will result " +
                 "in `undefined` being returned. If you need to access the same " +
                 "value within the child component, you should pass it as a different " +
-                "prop. (https://reactjs.org/link/special-props)",
+                "prop. (https://react.dev/link/special-props)",
               displayName
             );
           }
@@ -1306,7 +1306,7 @@ if (__DEV__) {
                 "%s: `ref` is not a prop. Trying to access it will result " +
                   "in `undefined` being returned. If you need to access the same " +
                   "value within the child component, you should pass it as a different " +
-                  "prop. (https://reactjs.org/link/special-props)",
+                  "prop. (https://react.dev/link/special-props)",
                 displayName
               );
             }
@@ -2099,7 +2099,7 @@ if (__DEV__) {
 
         error(
           'Each child in a list should have a unique "key" prop.' +
-            "%s%s See https://reactjs.org/link/warning-keys for more information.",
+            "%s%s See https://react.dev/link/warning-keys for more information.",
           currentComponentErrorInfo,
           childOwner
         );
@@ -2959,7 +2959,7 @@ if (__DEV__) {
               "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
               "2. You might be breaking the Rules of Hooks\n" +
               "3. You might have more than one copy of React in the same app\n" +
-              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
           );
         }
       } // Will result in a null access error if accessed outside render phase. We
