@@ -82,7 +82,7 @@ if (__DEV__) {
   ) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
-        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
+        'polyfill in older browsers. https://react.dev/link/react-polyfills',
     );
   }
 }
@@ -220,10 +220,10 @@ if (__DEV__) {
         console.info(
           '%cDownload the React DevTools ' +
             'for a better development experience: ' +
-            'https://reactjs.org/link/react-devtools' +
+            'https://react.dev/link/react-devtools' +
             (protocol === 'file:'
               ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                'https://reactjs.org/link/react-devtools-faq'
+                'https://react.dev/link/react-devtools-faq'
               : ''),
           'font-weight:bold',
         );

@@ -730,7 +730,7 @@ function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://reactjs.org/link/unsafe-component-lifecycles',
+              'https://react.dev/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',

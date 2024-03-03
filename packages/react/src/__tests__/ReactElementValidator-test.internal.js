@@ -89,7 +89,7 @@ describe('ReactElementValidator', () => {
       await act(() => root.render(<Anonymous>{divs}</Anonymous>));
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
-        '"key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)',
     );
   });
@@ -104,7 +104,7 @@ describe('ReactElementValidator', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
-        'https://reactjs.org/link/warning-keys for more information.\n' +
+        'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)',
     );
   });
@@ -128,7 +128,7 @@ describe('ReactElementValidator', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the render method of `Component`. See ' +
-        'https://reactjs.org/link/warning-keys for more information.\n' +
+        'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
@@ -231,7 +231,7 @@ describe('ReactElementValidator', () => {
       await act(() => root.render(React.createElement(ParentComp)));
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
-        'See https://reactjs.org/link/warning-keys for more information.\n' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
     );

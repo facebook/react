@@ -192,7 +192,7 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev(
         'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
+          'it in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -207,7 +207,7 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev(
         'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
+          'them in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -1817,7 +1817,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1838,7 +1838,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1847,7 +1847,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 

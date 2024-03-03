@@ -1830,7 +1830,7 @@ describe('ReactDOMFizzServer', () => {
       if (__DEV__) {
         expect(mockError).toHaveBeenCalledWith(
           'Warning: Each child in a list should have a unique "key" prop.%s%s' +
-            ' See https://reactjs.org/link/warning-keys for more information.%s',
+            ' See https://react.dev/link/warning-keys for more information.%s',
           '\n\nCheck the top-level render call using <div>.',
           '',
           '\n' +

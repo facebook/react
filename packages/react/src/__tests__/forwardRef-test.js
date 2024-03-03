@@ -192,7 +192,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in p (at **)',
     );
   });
@@ -209,7 +209,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );
@@ -229,7 +229,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );
@@ -248,7 +248,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Outer (at **)\n' +
         '    in p (at **)',
     );
@@ -269,7 +269,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );

@@ -99,7 +99,7 @@ describe('ReactDOMServerIntegration', () => {
         'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
           '    in RefsComponent (at **)',
       ]);
       expect(component.refs.myDiv).toBe(root.firstChild);

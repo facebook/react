@@ -195,7 +195,7 @@ describe('ReactJSXElementValidator', () => {
       });
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
-        'See https://reactjs.org/link/warning-keys for more information.\n' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
     );

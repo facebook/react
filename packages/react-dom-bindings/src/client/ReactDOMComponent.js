@@ -610,7 +610,7 @@ function setProp(
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -938,7 +938,7 @@ function setPropOnCustomElement(
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -1502,7 +1502,7 @@ export function updateProperties(
               'This is likely caused by the value changing from undefined to ' +
               'a defined value, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnUncontrolledToControlled = true;
         }
@@ -1516,7 +1516,7 @@ export function updateProperties(
               'This is likely caused by the value changing from a defined to ' +
               'undefined, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnControlledToUncontrolled = true;
         }

@@ -57,7 +57,7 @@ describe('ReactHooks', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     });
   }
@@ -838,7 +838,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // the next round, it does a fresh mount, so should render
     expect(() => root.update(<MemoApp />)).not.toThrow(
@@ -847,7 +847,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // and then again, fail
     expect(() => root.update(<MemoApp />)).toThrow(
@@ -856,7 +856,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -1046,7 +1046,7 @@ describe('ReactHooks', () => {
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Warning: React has detected a change in the order of Hooks called by App. ' +
         'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+        'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
         '   Previous render            Next render\n' +
         '   ------------------------------------------------------\n' +
         '1. useReducer                 useReducer\n' +
@@ -1504,7 +1504,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameB)}\n` +
@@ -1554,7 +1554,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameA)}\n` +
@@ -1633,7 +1633,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(
@@ -1675,7 +1675,7 @@ describe('ReactHooks', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useReducer                 useState\n' +

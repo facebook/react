@@ -269,7 +269,7 @@ export function hydrate(
       'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot ' +
         'instead. Until you switch to the new API, your app will behave as ' +
         "if it's running React 17. Learn " +
-        'more: https://reactjs.org/link/switch-to-createroot',
+        'more: https://react.dev/link/switch-to-createroot',
     );
   }
 
@@ -309,7 +309,7 @@ export function render(
       'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
         'instead. Until you switch to the new API, your app will behave as ' +
         "if it's running React 17. Learn " +
-        'more: https://reactjs.org/link/switch-to-createroot',
+        'more: https://react.dev/link/switch-to-createroot',
     );
   }
 
@@ -349,7 +349,7 @@ export function unstable_renderSubtreeIntoContainer(
       'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
         'in React 18. Consider using a portal instead. Until you switch to ' +
         "the createRoot API, your app will behave as if it's running React " +
-        '17. Learn more: https://reactjs.org/link/switch-to-createroot',
+        '17. Learn more: https://react.dev/link/switch-to-createroot',
     );
   }
 

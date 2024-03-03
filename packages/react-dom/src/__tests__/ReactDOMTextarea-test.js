@@ -742,7 +742,7 @@ describe('ReactDOMTextarea', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
-        'https://reactjs.org/link/controlled-components',
+        'https://react.dev/link/controlled-components',
     );
 
     container = document.createElement('div');

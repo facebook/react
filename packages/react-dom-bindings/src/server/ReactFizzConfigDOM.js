@@ -1454,7 +1454,7 @@ function pushInnerHTML(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
@@ -1573,7 +1573,7 @@ function pushStartSelect(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultSelectValue = true;
     }
@@ -2019,7 +2019,7 @@ function pushInput(
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -2032,7 +2032,7 @@ function pushInput(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -2167,7 +2167,7 @@ function pushStartTextArea(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultTextareaValue = true;
     }
@@ -3500,7 +3500,7 @@ function pushStartPreformattedElement(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
