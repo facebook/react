@@ -26,7 +26,7 @@ const padding = ' ';
  * @param {Array} args - The arguments to pass to the console method.
  * @param {string} badgeName - The name to display on the badge.
  */
-function printToConsole(methodName, args, badgeName) {
+function printToConsole(methodName: string, args: Array<any>, badgeName: string): void {
   const nonColorizableMethods = new Set(['dir', 'dirxml', 'groupEnd', 'table']);
 
   if (nonColorizableMethods.has(methodName)) {
