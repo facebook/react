@@ -266,9 +266,7 @@ export function describeNativeComponentFrame(
                 }
 
                 if (__DEV__) {
-                  if (typeof fn === 'function') {
-                    componentFrameCache.set(fn, frame);
-                  }
+                  componentFrameCache.set(fn, frame);
                 }
                 // Return the line we found.
                 return frame;
@@ -291,9 +289,7 @@ export function describeNativeComponentFrame(
   const name = fn ? fn.displayName || fn.name : '';
   const syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
   if (__DEV__) {
-    if (typeof fn === 'function') {
-      componentFrameCache.set(fn, syntheticFrame);
-    }
+    componentFrameCache.set(fn, syntheticFrame);
   }
   return syntheticFrame;
 }
