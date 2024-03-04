@@ -58,7 +58,6 @@ import {
   getPropsFromElement,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
-  checkForUnmatchedText,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -1417,10 +1416,11 @@ export function hydrateTextInstance(
   textInstance: TextInstance,
   text: string,
   internalInstanceHandle: Object,
-): boolean {
+  parentInstanceProps: null | Props,
+): void {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
-  return hydrateText(textInstance, text);
+  return hydrateText(textInstance, text, parentInstanceProps);
 }
 
 // Returns the server text if it differs from the client.
@@ -1525,26 +1525,6 @@ export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
   return parentType !== 'form' && parentType !== 'button';
-}
-
-export function didNotMatchHydratedContainerTextInstance(
-  parentContainer: Container,
-  textInstance: TextInstance,
-  text: string,
-) {
-  checkForUnmatchedText(textInstance.nodeValue, text);
-}
-
-export function didNotMatchHydratedTextInstance(
-  parentType: string,
-  parentProps: Props,
-  parentInstance: Instance,
-  textInstance: TextInstance,
-  text: string,
-) {
-  if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(textInstance.nodeValue, text);
-  }
 }
 
 // -------------------

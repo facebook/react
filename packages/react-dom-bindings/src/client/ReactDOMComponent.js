@@ -321,7 +321,7 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
 }
 
-export function checkForUnmatchedText(
+function checkForUnmatchedText(
   serverText: string,
   clientText: string | number | bigint,
 ) {
@@ -3040,9 +3040,18 @@ export function diffHydratedProperties(
   return serverDifferences;
 }
 
-export function hydrateText(textNode: Text, text: string): boolean {
+export function hydrateText(
+  textNode: Text,
+  text: string,
+  parentProps: null | Object,
+): void {
   const isDifferent = textNode.nodeValue !== text;
-  return isDifferent;
+  if (
+    isDifferent &&
+    (parentProps === null || parentProps.suppressHydrationWarning !== true)
+  ) {
+    checkForUnmatchedText(textNode.nodeValue, text);
+  }
 }
 
 export function diffHydratedText(textNode: Text, text: string): null | string {

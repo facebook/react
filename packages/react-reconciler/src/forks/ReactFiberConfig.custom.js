@@ -164,10 +164,6 @@ export const clearSuspenseBoundaryFromContainer =
   $$$config.clearSuspenseBoundaryFromContainer;
 export const shouldDeleteUnhydratedTailInstances =
   $$$config.shouldDeleteUnhydratedTailInstances;
-export const didNotMatchHydratedContainerTextInstance =
-  $$$config.didNotMatchHydratedContainerTextInstance;
-export const didNotMatchHydratedTextInstance =
-  $$$config.didNotMatchHydratedTextInstance;
 export const diffHydratedPropsForDevWarnings =
   $$$config.diffHydratedPropsForDevWarnings;
 export const diffHydratedTextForDevWarnings =

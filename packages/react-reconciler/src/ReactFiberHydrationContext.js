@@ -45,8 +45,6 @@ import {
   hydrateSuspenseInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   shouldDeleteUnhydratedTailInstances,
-  didNotMatchHydratedContainerTextInstance,
-  didNotMatchHydratedTextInstance,
   resolveSingletonInstance,
   canHydrateInstance,
   canHydrateTextInstance,
@@ -577,43 +575,15 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const textIsDifferent = hydrateTextInstance(textInstance, textContent, fiber);
-  if (textIsDifferent && shouldWarnIfMismatchDev) {
-    // We assume that prepareToHydrateHostTextInstance is called in a context where the
-    // hydration parent is the parent host component of this host text.
-    const returnFiber = hydrationParentFiber;
-    if (returnFiber !== null) {
-      switch (returnFiber.tag) {
-        case HostRoot: {
-          const parentContainer = returnFiber.stateNode.containerInfo;
-          if (__DEV__) {
-            const difference = diffHydratedTextForDevWarnings(
-              textInstance,
-              textContent,
-              null,
-            );
-            if (difference !== null && !didWarnInvalidHydration) {
-              didWarnInvalidHydration = true;
-              console.error(
-                'Text content did not match. Server: "%s" Client: "%s"',
-                difference,
-                textContent,
-              );
-            }
-          }
-          didNotMatchHydratedContainerTextInstance(
-            parentContainer,
-            textInstance,
-            textContent,
-          );
-          break;
-        }
-        case HostSingleton:
-        case HostComponent: {
-          const parentType = returnFiber.type;
-          const parentProps = returnFiber.memoizedProps;
-          const parentInstance = returnFiber.stateNode;
-          if (__DEV__) {
+  let parentProps = null;
+  // We assume that prepareToHydrateHostTextInstance is called in a context where the
+  // hydration parent is the parent host component of this host text.
+  const returnFiber = hydrationParentFiber;
+  if (returnFiber !== null) {
+    switch (returnFiber.tag) {
+      case HostRoot: {
+        if (__DEV__) {
+          if (shouldWarnIfMismatchDev) {
             const difference = diffHydratedTextForDevWarnings(
               textInstance,
               textContent,
@@ -628,19 +598,36 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
               );
             }
           }
-          didNotMatchHydratedTextInstance(
-            parentType,
-            parentProps,
-            parentInstance,
-            textInstance,
-            textContent,
-          );
-          break;
         }
+        break;
       }
-      // TODO: What if it's a SuspenseInstance?
+      case HostSingleton:
+      case HostComponent: {
+        parentProps = returnFiber.memoizedProps;
+        if (__DEV__) {
+          if (shouldWarnIfMismatchDev) {
+            const difference = diffHydratedTextForDevWarnings(
+              textInstance,
+              textContent,
+              parentProps,
+            );
+            if (difference !== null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              console.error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                difference,
+                textContent,
+              );
+            }
+          }
+        }
+        break;
+      }
     }
+    // TODO: What if it's a SuspenseInstance?
   }
+
+  hydrateTextInstance(textInstance, textContent, fiber, parentProps);
 }
 
 function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
