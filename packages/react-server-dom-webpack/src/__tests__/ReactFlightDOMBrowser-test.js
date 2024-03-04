@@ -36,19 +36,19 @@ describe('ReactFlightDOMBrowser', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
+
     jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactServerDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.browser'),
     );
-
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
-
-    ReactServer = require('react');
-    ReactServerDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
 
     __unmockReact();
@@ -1172,7 +1172,19 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link rel="preload" href="before" as="style">',
+      // Currently the react-dom entrypoint loads the fiber implementation
+      // even if you never pull in the the client APIs. this causes the fiber
+      // dispatcher to be present even for Flight ReactDOM calls. This is not what
+      // you would have in a real application but given we're runnign flight and
+      // fiber the in the same scope it's unavoidable until we make the entrypoint
+      // not automatically pull in the fiber implementation. This test currently
+      // asserts this be demonstrating that the preload call after the await point
+      // is written to the document before the call before it. We still demonstrate that
+      // flight handled the sync call because if the fiber implementation did it would appear
+      // before the after call. In the future we will change this assertion once the fiber
+      // implementation no long automatically gets pulled in
+      '<link rel="preload" href="after" as="style"><link rel="preload" href="before" as="style">',
+      // '<link rel="preload" href="before" as="style">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });

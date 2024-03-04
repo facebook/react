@@ -16,14 +16,9 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
-import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
-
-import {ReactDOMFlightServerDispatcher} from './ReactDOMFlightServerHostDispatcher';
-
-export function prepareHostDispatcher(): void {
-  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
-}
+// This module registers the host dispatcher so it needs to be imported
+// but it does not have any exports
+import './ReactDOMFlightServerHostDispatcher';
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.

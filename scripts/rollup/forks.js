@@ -93,7 +93,8 @@ const forks = Object.freeze({
     if (
       entry === 'react-dom' ||
       entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMServer.js'
+      entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-dom/unstable_testing'
     ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
