@@ -521,10 +521,10 @@ function prepareToHydrateHostInstance(
         fiber.memoizedProps,
         hostContext,
       );
-      if (differences.size > 0) {
-        if (differences.has('children') && !didWarnInvalidHydration) {
+      if (differences !== null) {
+        if (differences.children != null && !didWarnInvalidHydration) {
           didWarnInvalidHydration = true;
-          const serverValue = differences.get('children');
+          const serverValue = differences.children;
           const clientValue = fiber.memoizedProps.children;
           console.error(
             'Text content did not match. Server: "%s" Client: "%s"',
@@ -532,11 +532,15 @@ function prepareToHydrateHostInstance(
             clientValue,
           );
         }
-        differences.forEach((serverValue: mixed, propName: string) => {
+        for (const propName in differences) {
+          if (!differences.hasOwnProperty(propName)) {
+            continue;
+          }
           if (didWarnInvalidHydration) {
-            return;
+            break;
           }
           didWarnInvalidHydration = true;
+          const serverValue = differences[propName];
           const clientValue = fiber.memoizedProps[propName];
           if (propName === 'children') {
             // Already handled above
@@ -550,7 +554,7 @@ function prepareToHydrateHostInstance(
           } else {
             console.error('Extra attribute from the server: %s', propName);
           }
-        });
+        }
       }
     }
   }

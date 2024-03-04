@@ -226,7 +226,7 @@ function warnForPropDifference(
   propName: string,
   serverValue: mixed,
   clientValue: mixed,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   if (__DEV__) {
     if (serverValue === clientValue) {
@@ -240,23 +240,21 @@ function warnForPropDifference(
       return;
     }
 
-    serverDifferences.set(propName, serverValue);
+    serverDifferences[propName] = serverValue;
   }
 }
 
 function warnForExtraAttributes(
   domElement: Element,
   attributeNames: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ) {
   if (__DEV__) {
     attributeNames.forEach(function (attributeName) {
-      serverDifferences.set(
-        attributeName,
+      serverDifferences[attributeName] =
         attributeName === 'style'
           ? getStylesObjectFromElement(domElement)
-          : domElement.getAttribute(attributeName),
-      );
+          : domElement.getAttribute(attributeName);
     });
   }
 }
@@ -1834,17 +1832,15 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
-export function getPropsFromElement(domElement: Element): Map<string, mixed> {
-  const serverDifferences: Map<string, mixed> = new Map();
+export function getPropsFromElement(domElement: Element): Object {
+  const serverDifferences: {[propName: string]: mixed} = {};
   const attributes = domElement.attributes;
   for (let i = 0; i < attributes.length; i++) {
     const attr = attributes[i];
-    serverDifferences.set(
-      attr.name,
+    serverDifferences[attr.name] =
       attr.name.toLowerCase() === 'style'
         ? getStylesObjectFromElement(domElement)
-        : attr.value,
-    );
+        : attr.value;
   }
   return serverDifferences;
 }
@@ -1867,7 +1863,7 @@ function getStylesObjectFromElement(domElement: Element): {
 function diffHydratedStyles(
   domElement: Element,
   value: mixed,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   if (value != null && typeof value !== 'object') {
     if (__DEV__) {
@@ -1898,7 +1894,7 @@ function diffHydratedStyles(
     }
 
     // Otherwise, we create the object from the DOM for the diff view.
-    serverDifferences.set('style', getStylesObjectFromElement(domElement));
+    serverDifferences.style = getStylesObjectFromElement(domElement);
   }
 }
 
@@ -1908,7 +1904,7 @@ function hydrateAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -1950,7 +1946,7 @@ function hydrateBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -1987,7 +1983,7 @@ function hydrateOverloadedBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2036,7 +2032,7 @@ function hydrateBooleanishAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2076,7 +2072,7 @@ function hydrateNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2127,7 +2123,7 @@ function hydratePositiveNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2178,7 +2174,7 @@ function hydrateSanitizedAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2221,7 +2217,7 @@ function diffHydratedCustomComponent(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2354,7 +2350,7 @@ function diffHydratedGenericElement(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
-  serverDifferences: Map<string, mixed>,
+  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2405,9 +2401,9 @@ function diffHydratedGenericElement(
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (serverHTML !== expectedHTML) {
-            serverDifferences.set(propKey, {
+            serverDifferences[propKey] = {
               __html: serverHTML,
-            });
+            };
           }
         }
         continue;
@@ -2992,8 +2988,8 @@ export function diffHydratedProperties(
   tag: string,
   props: Object,
   hostContext: HostContext,
-): Map<string, mixed> {
-  const serverDifferences: Map<string, mixed> = new Map();
+): null | Object {
+  const serverDifferences: {[propName: string]: mixed} = {};
   if (__DEV__) {
     const extraAttributes: Set<string> = new Set();
     const attributes = domElement.attributes;
@@ -3037,6 +3033,9 @@ export function diffHydratedProperties(
       warnForExtraAttributes(domElement, extraAttributes, serverDifferences);
     }
   }
+  if (Object.keys(serverDifferences).length === 0) {
+    return null;
+  }
   return serverDifferences;
 }
 
@@ -3055,6 +3054,9 @@ export function hydrateText(
 }
 
 export function diffHydratedText(textNode: Text, text: string): null | string {
+  if (textNode.nodeValue === text) {
+    return null;
+  }
   const normalizedClientText = normalizeMarkupForTextOrAttribute(text);
   const normalizedServerText = normalizeMarkupForTextOrAttribute(
     textNode.nodeValue,

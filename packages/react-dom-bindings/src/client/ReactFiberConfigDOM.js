@@ -1342,7 +1342,7 @@ export function getFirstHydratableChildWithinSuspenseInstance(
 
 export function describeHydratableInstanceForDevWarnings(
   instance: HydratableInstance,
-): string | {type: string, props: Map<string, mixed>} {
+): string | {type: string, props: $ReadOnly<Props>} {
   // Reverse engineer a pseudo react-element from hydratable instnace
   if (instance.nodeType === ELEMENT_NODE) {
     // Reverse engineer a set of props that can print for dev warnings
@@ -1353,7 +1353,7 @@ export function describeHydratableInstanceForDevWarnings(
   } else if (instance.nodeType === COMMENT_NODE) {
     return {
       type: 'Suspense',
-      props: new Map(),
+      props: {},
     };
   } else {
     return instance.nodeValue;
@@ -1394,7 +1394,7 @@ export function diffHydratedPropsForDevWarnings(
   type: string,
   props: Props,
   hostContext: HostContext,
-): Map<string, mixed> {
+): null | $ReadOnly<Props> {
   return diffHydratedProperties(instance, type, props, hostContext);
 }
 
