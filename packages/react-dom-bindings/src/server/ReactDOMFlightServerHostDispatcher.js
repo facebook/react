@@ -8,7 +8,6 @@
  */
 
 import type {
-  HostDispatcher,
   CrossOriginEnum,
   PreloadImplOptions,
   PreloadModuleImplOptions,
@@ -25,7 +24,12 @@ import {
   resolveRequest,
 } from 'react-server/src/ReactFlightServer';
 
-export const ReactDOMFlightServerDispatcher: HostDispatcher = {
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+
+const previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS,
   preconnect,
   preload,
@@ -48,6 +52,8 @@ function prefetchDNS(href: string) {
         }
         hints.add(key);
         emitHint(request, 'D', href);
+      } else {
+        previousDispatcher.prefetchDNS(href);
       }
     }
   }
@@ -71,6 +77,8 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
         } else {
           emitHint(request, 'C', href);
         }
+      } else {
+        previousDispatcher.preconnect(href, crossOrigin);
       }
     }
   }
@@ -104,6 +112,8 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         } else {
           emitHint(request, 'L', [href, as]);
         }
+      } else {
+        previousDispatcher.preload(href, as, options);
       }
     }
   }
@@ -128,6 +138,8 @@ function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
         } else {
           return emitHint(request, 'm', href);
         }
+      } else {
+        previousDispatcher.preloadModule(href, options);
       }
     }
   }
@@ -162,18 +174,20 @@ function preinitStyle(
         } else {
           return emitHint(request, 'S', href);
         }
+      } else {
+        previousDispatcher.preinitStyle(href, precedence, options);
       }
     }
   }
 }
 
-function preinitScript(href: string, options?: ?PreinitScriptOptions) {
+function preinitScript(src: string, options?: ?PreinitScriptOptions) {
   if (enableFloat) {
-    if (typeof href === 'string') {
+    if (typeof src === 'string') {
       const request = resolveRequest();
       if (request) {
         const hints = getHints(request);
-        const key = 'X|' + href;
+        const key = 'X|' + src;
         if (hints.has(key)) {
           // duplicate hint
           return;
@@ -182,25 +196,27 @@ function preinitScript(href: string, options?: ?PreinitScriptOptions) {
 
         const trimmed = trimOptions(options);
         if (trimmed) {
-          return emitHint(request, 'X', [href, trimmed]);
+          return emitHint(request, 'X', [src, trimmed]);
         } else {
-          return emitHint(request, 'X', href);
+          return emitHint(request, 'X', src);
         }
+      } else {
+        previousDispatcher.preinitScript(src, options);
       }
     }
   }
 }
 
 function preinitModuleScript(
-  href: string,
+  src: string,
   options?: ?PreinitModuleScriptOptions,
 ) {
   if (enableFloat) {
-    if (typeof href === 'string') {
+    if (typeof src === 'string') {
       const request = resolveRequest();
       if (request) {
         const hints = getHints(request);
-        const key = 'M|' + href;
+        const key = 'M|' + src;
         if (hints.has(key)) {
           // duplicate hint
           return;
@@ -209,10 +225,12 @@ function preinitModuleScript(
 
         const trimmed = trimOptions(options);
         if (trimmed) {
-          return emitHint(request, 'M', [href, trimmed]);
+          return emitHint(request, 'M', [src, trimmed]);
         } else {
-          return emitHint(request, 'M', href);
+          return emitHint(request, 'M', src);
         }
+      } else {
+        previousDispatcher.preinitModuleScript(src, options);
       }
     }
   }

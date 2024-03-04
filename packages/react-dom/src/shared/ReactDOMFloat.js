@@ -15,7 +15,8 @@ import type {
 } from './ReactDOMTypes';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const Dispatcher = ReactDOMSharedInternals.Dispatcher;
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
 import {
   getCrossOriginString,
@@ -47,9 +48,8 @@ export function prefetchDNS(href: string) {
       }
     }
   }
-  const dispatcher = Dispatcher.current;
-  if (dispatcher && typeof href === 'string') {
-    dispatcher.prefetchDNS(href);
+  if (typeof href === 'string') {
+    ReactDOMCurrentDispatcher.current.prefetchDNS(href);
   }
   // We don't error because preconnect needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -75,12 +75,11 @@ export function preconnect(href: string, options?: ?PreconnectOptions) {
       );
     }
   }
-  const dispatcher = Dispatcher.current;
-  if (dispatcher && typeof href === 'string') {
+  if (typeof href === 'string') {
     const crossOrigin = options
       ? getCrossOriginString(options.crossOrigin)
       : null;
-    dispatcher.preconnect(href, crossOrigin);
+    ReactDOMCurrentDispatcher.current.preconnect(href, crossOrigin);
   }
   // We don't error because preconnect needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -111,9 +110,7 @@ export function preload(href: string, options: PreloadOptions) {
       );
     }
   }
-  const dispatcher = Dispatcher.current;
   if (
-    dispatcher &&
     typeof href === 'string' &&
     // We check existence because we cannot enforce this function is actually called with the stated type
     typeof options === 'object' &&
@@ -122,7 +119,7 @@ export function preload(href: string, options: PreloadOptions) {
   ) {
     const as = options.as;
     const crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    dispatcher.preload(href, as, {
+    ReactDOMCurrentDispatcher.current.preload(href, as, {
       crossOrigin,
       integrity:
         typeof options.integrity === 'string' ? options.integrity : undefined,
@@ -173,14 +170,13 @@ export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
       );
     }
   }
-  const dispatcher = Dispatcher.current;
-  if (dispatcher && typeof href === 'string') {
+  if (typeof href === 'string') {
     if (options) {
       const crossOrigin = getCrossOriginStringAs(
         options.as,
         options.crossOrigin,
       );
-      dispatcher.preloadModule(href, {
+      ReactDOMCurrentDispatcher.current.preloadModule(href, {
         as:
           typeof options.as === 'string' && options.as !== 'script'
             ? options.as
@@ -190,7 +186,7 @@ export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
           typeof options.integrity === 'string' ? options.integrity : undefined,
       });
     } else {
-      dispatcher.preloadModule(href);
+      ReactDOMCurrentDispatcher.current.preloadModule(href);
     }
   }
   // We don't error because preload needs to be resilient to being called in a variety of scopes
@@ -217,13 +213,7 @@ export function preinit(href: string, options: PreinitOptions) {
       );
     }
   }
-  const dispatcher = Dispatcher.current;
-  if (
-    dispatcher &&
-    typeof href === 'string' &&
-    options &&
-    typeof options.as === 'string'
-  ) {
+  if (typeof href === 'string' && options && typeof options.as === 'string') {
     const as = options.as;
     const crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     const integrity =
@@ -233,7 +223,7 @@ export function preinit(href: string, options: PreinitOptions) {
         ? options.fetchPriority
         : undefined;
     if (as === 'style') {
-      dispatcher.preinitStyle(
+      ReactDOMCurrentDispatcher.current.preinitStyle(
         href,
         typeof options.precedence === 'string' ? options.precedence : undefined,
         {
@@ -243,7 +233,7 @@ export function preinit(href: string, options: PreinitOptions) {
         },
       );
     } else if (as === 'script') {
-      dispatcher.preinitScript(href, {
+      ReactDOMCurrentDispatcher.current.preinitScript(href, {
         crossOrigin,
         integrity,
         fetchPriority,
@@ -301,15 +291,14 @@ export function preinitModule(href: string, options?: ?PreinitModuleOptions) {
       }
     }
   }
-  const dispatcher = Dispatcher.current;
-  if (dispatcher && typeof href === 'string') {
+  if (typeof href === 'string') {
     if (typeof options === 'object' && options !== null) {
       if (options.as == null || options.as === 'script') {
         const crossOrigin = getCrossOriginStringAs(
           options.as,
           options.crossOrigin,
         );
-        dispatcher.preinitModuleScript(href, {
+        ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
           crossOrigin,
           integrity:
             typeof options.integrity === 'string'
@@ -319,7 +308,7 @@ export function preinitModule(href: string, options?: ?PreinitModuleOptions) {
         });
       }
     } else if (options == null) {
-      dispatcher.preinitModuleScript(href);
+      ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
     }
   }
   // We don't error because preinit needs to be resilient to being called in a variety of scopes

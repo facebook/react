@@ -47,19 +47,19 @@ describe('ReactFlightDOM', () => {
     JSDOM = require('jsdom').JSDOM;
 
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.react-server'));
+    FlightReact = require('react');
+    FlightReactDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    jest.mock('react', () => require('react/react.react-server'));
-
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    FlightReact = require('react');
-    FlightReactDOM = require('react-dom');
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.unmock('react-server-dom-webpack/server');

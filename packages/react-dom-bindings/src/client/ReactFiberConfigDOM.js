@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -106,6 +105,10 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
 export type Type = string;
 export type Props = {
@@ -2108,10 +2111,8 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
 
-// We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher: HostDispatcher = {
+const previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS,
   preconnect,
   preload,
@@ -2127,8 +2128,9 @@ export const ReactDOMClientDispatcher: HostDispatcher = {
 // and so we have to fall back to something universal. Currently we just refer to the global document.
 // This is notable because nowhere else in ReactDOM do we actually reference the global document or window
 // because we may be rendering inside an iframe.
-function getDocumentForImperativeFloatMethods(): Document {
-  return document;
+const globalDocument = typeof document === 'undefined' ? null : document;
+function getGlobalDocument(): ?Document {
+  return globalDocument;
 }
 
 function preconnectAs(
@@ -2136,8 +2138,8 @@ function preconnectAs(
   href: string,
   crossOrigin: ?CrossOriginEnum,
 ) {
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (typeof href === 'string' && href) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && typeof href === 'string' && href) {
     const limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
     let key = `link[rel="${rel}"][href="${limitedEscapedHref}"]`;
@@ -2162,6 +2164,7 @@ function prefetchDNS(href: string) {
   if (!enableFloat) {
     return;
   }
+  previousDispatcher.prefetchDNS(href);
   preconnectAs('dns-prefetch', href, null);
 }
 
@@ -2169,6 +2172,7 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
   if (!enableFloat) {
     return;
   }
+  previousDispatcher.preconnect(href, crossOrigin);
   preconnectAs('preconnect', href, crossOrigin);
 }
 
@@ -2176,8 +2180,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (href && as && ownerDocument) {
+  previousDispatcher.preload(href, as, options);
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href && as) {
     let preloadSelector = `link[rel="preload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
       as,
     )}"]`;
@@ -2256,8 +2261,9 @@ function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (href) {
+  previousDispatcher.preloadModule(href, options);
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href) {
     const as =
       options && typeof options.as === 'string' ? options.as : 'script';
     const preloadSelector = `link[rel="modulepreload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
@@ -2319,9 +2325,10 @@ function preinitStyle(
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitStyle(href, precedence, options);
 
-  if (href) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href) {
     const styles = getResourcesFromRoot(ownerDocument).hoistableStyles;
 
     const key = getStyleKey(href);
@@ -2395,9 +2402,10 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitScript(src, options);
 
-  if (src) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && src) {
     const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
 
     const key = getScriptKey(src);
@@ -2453,9 +2461,10 @@ function preinitModuleScript(
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitModuleScript(src, options);
 
-  if (src) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && src) {
     const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
 
     const key = getScriptKey(src);
