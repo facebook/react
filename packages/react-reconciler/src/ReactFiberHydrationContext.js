@@ -61,6 +61,7 @@ import {
 } from './ReactFiberTreeContext';
 import {queueRecoverableErrors} from './ReactFiberWorkLoop';
 import {getRootHostContainer, getHostContext} from './ReactFiberHostContext';
+import {describeDiff} from './ReactFiberHydrationDiffs';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -264,9 +265,29 @@ function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
 }
 
 function throwOnHydrationMismatch(fiber: Fiber) {
+  let diff = '';
+  if (__DEV__) {
+    // Consume the diff root for this mismatch.
+    // Any other errors will get their own diffs.
+    const diffRoot = hydrationDiffRootDEV;
+    if (diffRoot !== null) {
+      hydrationDiffRootDEV = null;
+      diff = describeDiff(diffRoot);
+    }
+  }
   throw new Error(
-    'Hydration failed because the initial UI does not match what was ' +
-      'rendered on the server.',
+    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR:ed Client Component used:\n" +
+      '\n' +
+      "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+      "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+      "- Date formatting in a user's locale which doesn't match the server.\n" +
+      '- External changing data without sending a snapshot of it along with the HTML.\n' +
+      '- Invalid HTML tag nesting.\n' +
+      '\n' +
+      'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n' +
+      '\n' +
+      'https://react.dev/link/hydration-mismatch' +
+      diff,
   );
 }
 
@@ -407,7 +428,7 @@ function prepareToHydrateHostInstance(
     fiber,
   );
   if (!didHydrate) {
-    throw new Error('Text content does not match server-rendered HTML.');
+    throwOnHydrationMismatch(fiber);
   }
 }
 
@@ -473,7 +494,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     parentProps,
   );
   if (!didHydrate) {
-    throw new Error('Text content does not match server-rendered HTML.');
+    throwOnHydrationMismatch(fiber);
   }
 }
 
@@ -648,6 +669,34 @@ export function queueHydrationError(error: CapturedValue<mixed>): void {
     hydrationErrors = [error];
   } else {
     hydrationErrors.push(error);
+  }
+}
+
+export function emitPendingHydrationWarnings() {
+  if (__DEV__) {
+    // If we haven't yet thrown any hydration errors by the time we reach the end we've successfully
+    // hydrated, however, we might still have DEV-only mismatches that we log now.
+    const diffRoot = hydrationDiffRootDEV;
+    if (diffRoot !== null) {
+      hydrationDiffRootDEV = null;
+      const diff = describeDiff(diffRoot);
+      console.error(
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. " +
+          'This can happen if a SSR:ed Client Component used:\n' +
+          '\n' +
+          "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+          "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+          "- Date formatting in a user's locale which doesn't match the server.\n" +
+          '- External changing data without sending a snapshot of it along with the HTML.\n' +
+          '- Invalid HTML tag nesting.\n' +
+          '\n' +
+          'It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n' +
+          '\n' +
+          '%s%s',
+        'https://react.dev/link/hydration-mismatch',
+        diff,
+      );
+    }
   }
 }
 

@@ -144,6 +144,7 @@ import {
   resetHydrationState,
   getIsHydrating,
   upgradeHydrationErrorsToRecoverable,
+  emitPendingHydrationWarnings,
 } from './ReactFiberHydrationContext';
 import {
   renderHasNotSuspendedYet,
@@ -893,6 +894,7 @@ function completeDehydratedSuspenseBoundary(
       }
       return false;
     } else {
+      emitPendingHydrationWarnings();
       // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
       // state since we're now exiting out of it. popHydrationState doesn't do that for us.
       resetHydrationState();
@@ -1009,6 +1011,7 @@ function completeWork(
         // that weren't hydrated.
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
+          emitPendingHydrationWarnings();
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);

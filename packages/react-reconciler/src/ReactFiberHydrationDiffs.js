@@ -18,3 +18,7 @@ export type HydrationDiffNode = {
     | string,
   >,
 };
+
+export function describeDiff(rootNode: HydrationDiffNode): string {
+  return '\n';
+}
