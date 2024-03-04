@@ -8,6 +8,9 @@
  */
 
 import type {HostDispatcher} from './shared/ReactDOMTypes';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
+import {NoEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 type InternalsType = {
   usingClientEntryPoint: boolean,
@@ -15,11 +18,15 @@ type InternalsType = {
   ReactDOMCurrentDispatcher: {
     current: HostDispatcher,
   },
+  ReactDOMCurrentEventConfig: {
+    eventPriority: EventPriority,
+  },
 };
 
 function noop() {}
 
 const DefaultDispatcher: HostDispatcher = {
+  flushSyncWork: noop,
   prefetchDNS: noop,
   preconnect: noop,
   preload: noop,
@@ -34,6 +41,9 @@ const Internals: InternalsType = ({
   Events: null,
   ReactDOMCurrentDispatcher: {
     current: DefaultDispatcher,
+  },
+  ReactDOMCurrentEventConfig: {
+    eventPriority: NoEventPriority,
   },
 }: any);
 

@@ -20,7 +20,9 @@ import {
   disableCommentsAsDOMContainers,
   enableAsyncActions,
   enableFormActions,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
+import {flushSync} from '../shared/ReactDOMFlushSync';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -66,7 +68,7 @@ import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  flushSync,
+  flushSyncFromReconciler,
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
@@ -143,9 +145,15 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
           );
         }
       }
-      flushSync(() => {
-        updateContainer(null, root, null, null);
-      });
+      if (disableLegacyMode) {
+        flushSync(() => {
+          updateContainer(null, root, null, null);
+        });
+      } else {
+        flushSyncFromReconciler(() => {
+          updateContainer(null, root, null, null);
+        });
+      }
       unmarkContainerAsRoot(container);
     }
   };

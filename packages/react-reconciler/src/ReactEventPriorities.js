@@ -21,6 +21,7 @@ import {
 
 export opaque type EventPriority = Lane;
 
+export const NoEventPriority: EventPriority = NoLane;
 export const DiscreteEventPriority: EventPriority = SyncLane;
 export const ContinuousEventPriority: EventPriority = InputContinuousLane;
 export const DefaultEventPriority: EventPriority = DefaultLane;

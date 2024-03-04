@@ -34,7 +34,7 @@ import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHand
 
 import {
   batchedUpdates,
-  flushSync as flushSyncWithoutWarningIfAlreadyRendering,
+  flushSyncFromReconciler as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   injectIntoDevTools,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -148,11 +148,11 @@ function hydrateRoot(
 
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
-declare function flushSync<R>(fn: () => R): R;
+declare function flushSyncFromReconciler<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSync(): void;
+declare function flushSyncFromReconciler(): void;
 // eslint-disable-next-line no-redeclare
-function flushSync<R>(fn: (() => R) | void): R | void {
+function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   if (__DEV__) {
     if (isAlreadyRendering()) {
       console.error(
@@ -168,7 +168,7 @@ function flushSync<R>(fn: (() => R) | void): R | void {
 export {
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
-  flushSync,
+  flushSyncFromReconciler as flushSync,
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs
   findDOMNode,

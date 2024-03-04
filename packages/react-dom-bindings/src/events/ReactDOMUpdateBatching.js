@@ -13,7 +13,7 @@ import {
 import {
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates as discreteUpdatesImpl,
-  flushSync as flushSyncImpl,
+  flushSyncWork,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
@@ -36,7 +36,7 @@ function finishEventHandler() {
     // bails out of the update without touching the DOM.
     // TODO: Restore state in the microtask, after the discrete updates flush,
     // instead of early flushing them here.
-    flushSyncImpl();
+    flushSyncWork();
     restoreStateIfNeeded();
   }
 }
