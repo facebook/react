@@ -45,3 +45,5 @@ function printToConsole(methodName, args, badgeName) {
   console[methodName](...formattedArgs);
   return;
 }
+
+export { printToConsole }
