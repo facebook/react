@@ -16,8 +16,8 @@ if (__DEV__) {
   (function () {
     "use strict";
 
-    var React = require("react");
     var ReactDOM = require("react-dom");
+    var React = require("react");
 
     // eslint-disable-next-line no-unused-vars
     // eslint-disable-next-line no-unused-vars
@@ -160,7 +160,10 @@ if (__DEV__) {
     var ReactDOMSharedInternals =
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactDOMFlightServerDispatcher = {
+    var ReactDOMCurrentDispatcher =
+      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+    var previousDispatcher = ReactDOMCurrentDispatcher.current;
+    ReactDOMCurrentDispatcher.current = {
       prefetchDNS: prefetchDNS,
       preconnect: preconnect,
       preload: preload,
@@ -186,6 +189,8 @@ if (__DEV__) {
 
             hints.add(key);
             emitHint(request, "D", href);
+          } else {
+            previousDispatcher.prefetchDNS(href);
           }
         }
       }
@@ -213,6 +218,8 @@ if (__DEV__) {
             } else {
               emitHint(request, "C", href);
             }
+          } else {
+            previousDispatcher.preconnect(href, crossOrigin);
           }
         }
       }
@@ -250,6 +257,8 @@ if (__DEV__) {
             } else {
               emitHint(request, "L", [href, as]);
             }
+          } else {
+            previousDispatcher.preload(href, as, options);
           }
         }
       }
@@ -277,6 +286,8 @@ if (__DEV__) {
             } else {
               return emitHint(request, "m", href);
             }
+          } else {
+            previousDispatcher.preloadModule(href, options);
           }
         }
       }
@@ -310,19 +321,21 @@ if (__DEV__) {
             } else {
               return emitHint(request, "S", href);
             }
+          } else {
+            previousDispatcher.preinitStyle(href, precedence, options);
           }
         }
       }
     }
 
-    function preinitScript(href, options) {
+    function preinitScript(src, options) {
       {
-        if (typeof href === "string") {
+        if (typeof src === "string") {
           var request = resolveRequest();
 
           if (request) {
             var hints = getHints(request);
-            var key = "X|" + href;
+            var key = "X|" + src;
 
             if (hints.has(key)) {
               // duplicate hint
@@ -333,23 +346,25 @@ if (__DEV__) {
             var trimmed = trimOptions(options);
 
             if (trimmed) {
-              return emitHint(request, "X", [href, trimmed]);
+              return emitHint(request, "X", [src, trimmed]);
             } else {
-              return emitHint(request, "X", href);
+              return emitHint(request, "X", src);
             }
+          } else {
+            previousDispatcher.preinitScript(src, options);
           }
         }
       }
     }
 
-    function preinitModuleScript(href, options) {
+    function preinitModuleScript(src, options) {
       {
-        if (typeof href === "string") {
+        if (typeof src === "string") {
           var request = resolveRequest();
 
           if (request) {
             var hints = getHints(request);
-            var key = "M|" + href;
+            var key = "M|" + src;
 
             if (hints.has(key)) {
               // duplicate hint
@@ -360,10 +375,12 @@ if (__DEV__) {
             var trimmed = trimOptions(options);
 
             if (trimmed) {
-              return emitHint(request, "M", [href, trimmed]);
+              return emitHint(request, "M", [src, trimmed]);
             } else {
-              return emitHint(request, "M", href);
+              return emitHint(request, "M", src);
             }
+          } else {
+            previousDispatcher.preinitModuleScript(src, options);
           }
         }
       }
@@ -404,10 +421,7 @@ if (__DEV__) {
       return "[image]" + uniquePart;
     }
 
-    var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
-    function prepareHostDispatcher() {
-      ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
-    } // Used to distinguish these contexts from ones used in other renderers.
+    // This module registers the host dispatcher so it needs to be imported
     // small, smaller than how we encode undefined, and is unambiguous. We could use
     // a different tuple structure to encode this instead but this makes the runtime
     // cost cheaper by eliminating a type checks in more positions.
@@ -1220,7 +1234,6 @@ if (__DEV__) {
         );
       }
 
-      prepareHostDispatcher();
       ReactCurrentCache.current = DefaultCacheDispatcher;
       var abortSet = new Set();
       var pingedTasks = [];

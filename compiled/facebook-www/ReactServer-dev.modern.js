@@ -2809,7 +2809,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-bab94e1d";
+    var ReactVersion = "18.3.0-www-modern-1e9c6c79";
 
     // Patch fetch
     var Children = {

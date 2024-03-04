@@ -27,11 +27,22 @@ if (__DEV__) {
     var React = require("react");
     var Scheduler = require("scheduler");
 
+    function noop$3() {}
+
+    var DefaultDispatcher = {
+      prefetchDNS: noop$3,
+      preconnect: noop$3,
+      preload: noop$3,
+      preloadModule: noop$3,
+      preinitScript: noop$3,
+      preinitStyle: noop$3,
+      preinitModuleScript: noop$3
+    };
     var Internals = {
       usingClientEntryPoint: false,
       Events: null,
-      Dispatcher: {
-        current: null
+      ReactDOMCurrentDispatcher: {
+        current: DefaultDispatcher
       }
     };
 
@@ -35882,7 +35893,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-0ae1c4c8";
+    var ReactVersion = "18.3.0-www-modern-06a38f42";
 
     function createPortal$1(
       children,
@@ -44505,6 +44516,8 @@ if (__DEV__) {
       }
     }
 
+    var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher; // Unused
+
     var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
     var SUSPENSE_START_DATA = "$";
     var SUSPENSE_END_DATA = "/$";
@@ -46066,11 +46079,10 @@ if (__DEV__) {
 
     function getDocumentFromRoot(root) {
       return root.ownerDocument || root;
-    } // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-    // internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-    // from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
+    }
 
-    var ReactDOMClientDispatcher = {
+    var previousDispatcher = ReactDOMCurrentDispatcher$1.current;
+    ReactDOMCurrentDispatcher$1.current = {
       prefetchDNS: prefetchDNS$1,
       preconnect: preconnect$1,
       preload: preload$1,
@@ -46085,14 +46097,16 @@ if (__DEV__) {
     // This is notable because nowhere else in ReactDOM do we actually reference the global document or window
     // because we may be rendering inside an iframe.
 
-    function getDocumentForImperativeFloatMethods() {
-      return document;
+    var globalDocument = typeof document === "undefined" ? null : document;
+
+    function getGlobalDocument() {
+      return globalDocument;
     }
 
     function preconnectAs(rel, href, crossOrigin) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      var ownerDocument = getGlobalDocument();
 
-      if (typeof href === "string" && href) {
+      if (ownerDocument && typeof href === "string" && href) {
         var limitedEscapedHref =
           escapeSelectorAttributeValueInsideDoubleQuotes(href);
         var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
@@ -46120,17 +46134,20 @@ if (__DEV__) {
     }
 
     function prefetchDNS$1(href) {
+      previousDispatcher.prefetchDNS(href);
       preconnectAs("dns-prefetch", href, null);
     }
 
     function preconnect$1(href, crossOrigin) {
+      previousDispatcher.preconnect(href, crossOrigin);
       preconnectAs("preconnect", href, crossOrigin);
     }
 
     function preload$1(href, as, options) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      previousDispatcher.preload(href, as, options);
+      var ownerDocument = getGlobalDocument();
 
-      if (href && as && ownerDocument) {
+      if (ownerDocument && href && as) {
         var preloadSelector =
           'link[rel="preload"][as="' +
           escapeSelectorAttributeValueInsideDoubleQuotes(as) +
@@ -46224,9 +46241,10 @@ if (__DEV__) {
     }
 
     function preloadModule$1(href, options) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      previousDispatcher.preloadModule(href, options);
+      var ownerDocument = getGlobalDocument();
 
-      if (href) {
+      if (ownerDocument && href) {
         var as =
           options && typeof options.as === "string" ? options.as : "script";
         var preloadSelector =
@@ -46289,9 +46307,10 @@ if (__DEV__) {
     }
 
     function preinitStyle(href, precedence, options) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      previousDispatcher.preinitStyle(href, precedence, options);
+      var ownerDocument = getGlobalDocument();
 
-      if (href) {
+      if (ownerDocument && href) {
         var styles = getResourcesFromRoot(ownerDocument).hoistableStyles;
         var key = getStyleKey(href);
         precedence = precedence || "default"; // Check if this resource already exists
@@ -46361,9 +46380,10 @@ if (__DEV__) {
     }
 
     function preinitScript(src, options) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      previousDispatcher.preinitScript(src, options);
+      var ownerDocument = getGlobalDocument();
 
-      if (src) {
+      if (ownerDocument && src) {
         var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
         var key = getScriptKey(src); // Check if this resource already exists
 
@@ -46413,9 +46433,10 @@ if (__DEV__) {
     }
 
     function preinitModuleScript(src, options) {
-      var ownerDocument = getDocumentForImperativeFloatMethods();
+      previousDispatcher.preinitModuleScript(src, options);
+      var ownerDocument = getGlobalDocument();
 
-      if (src) {
+      if (ownerDocument && src) {
         var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
         var key = getScriptKey(src); // Check if this resource already exists
 
@@ -47577,12 +47598,6 @@ if (__DEV__) {
 
     var NotPendingTransition = NotPending;
 
-    var Dispatcher$1 = Internals.Dispatcher;
-
-    if (typeof document !== "undefined") {
-      // Set the default dispatcher to the client dispatcher
-      Dispatcher$1.current = ReactDOMClientDispatcher;
-    }
     /* global reportError */
 
     var defaultOnRecoverableError =
@@ -47730,7 +47745,6 @@ if (__DEV__) {
         transitionCallbacks
       );
       markContainerAsRoot(root.current, container);
-      Dispatcher$1.current = ReactDOMClientDispatcher;
       var rootContainerElement =
         container.nodeType === COMMENT_NODE ? container.parentNode : container;
       listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
@@ -47816,8 +47830,7 @@ if (__DEV__) {
         transitionCallbacks,
         formState
       );
-      markContainerAsRoot(root.current, container);
-      Dispatcher$1.current = ReactDOMClientDispatcher; // This can't be a comment node since hydration doesn't work on comment nodes anyway.
+      markContainerAsRoot(root.current, container); // This can't be a comment node since hydration doesn't work on comment nodes anyway.
 
       listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
@@ -47977,7 +47990,7 @@ if (__DEV__) {
       return undefined;
     }
 
-    var Dispatcher = Internals.Dispatcher;
+    var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
     function prefetchDNS(href) {
       {
         if (typeof href !== "string" || !href) {
@@ -48005,10 +48018,8 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
-      if (dispatcher && typeof href === "string") {
-        dispatcher.prefetchDNS(href);
+      if (typeof href === "string") {
+        ReactDOMCurrentDispatcher.current.prefetchDNS(href);
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -48033,13 +48044,11 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
-      if (dispatcher && typeof href === "string") {
+      if (typeof href === "string") {
         var crossOrigin = options
           ? getCrossOriginString(options.crossOrigin)
           : null;
-        dispatcher.preconnect(href, crossOrigin);
+        ReactDOMCurrentDispatcher.current.preconnect(href, crossOrigin);
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -48075,10 +48084,7 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
       if (
-        dispatcher &&
         typeof href === "string" && // We check existence because we cannot enforce this function is actually called with the stated type
         typeof options === "object" &&
         options !== null &&
@@ -48086,7 +48092,7 @@ if (__DEV__) {
       ) {
         var as = options.as;
         var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-        dispatcher.preload(href, as, {
+        ReactDOMCurrentDispatcher.current.preload(href, as, {
           crossOrigin: crossOrigin,
           integrity:
             typeof options.integrity === "string"
@@ -48150,15 +48156,13 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
-      if (dispatcher && typeof href === "string") {
+      if (typeof href === "string") {
         if (options) {
           var crossOrigin = getCrossOriginStringAs(
             options.as,
             options.crossOrigin
           );
-          dispatcher.preloadModule(href, {
+          ReactDOMCurrentDispatcher.current.preloadModule(href, {
             as:
               typeof options.as === "string" && options.as !== "script"
                 ? options.as
@@ -48170,7 +48174,7 @@ if (__DEV__) {
                 : undefined
           });
         } else {
-          dispatcher.preloadModule(href);
+          ReactDOMCurrentDispatcher.current.preloadModule(href);
         }
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -48196,10 +48200,7 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
       if (
-        dispatcher &&
         typeof href === "string" &&
         options &&
         typeof options.as === "string"
@@ -48214,7 +48215,7 @@ if (__DEV__) {
             : undefined;
 
         if (as === "style") {
-          dispatcher.preinitStyle(
+          ReactDOMCurrentDispatcher.current.preinitStyle(
             href,
             typeof options.precedence === "string"
               ? options.precedence
@@ -48226,7 +48227,7 @@ if (__DEV__) {
             }
           );
         } else if (as === "script") {
-          dispatcher.preinitScript(href, {
+          ReactDOMCurrentDispatcher.current.preinitScript(href, {
             crossOrigin: crossOrigin,
             integrity: integrity,
             fetchPriority: fetchPriority,
@@ -48291,16 +48292,14 @@ if (__DEV__) {
         }
       }
 
-      var dispatcher = Dispatcher.current;
-
-      if (dispatcher && typeof href === "string") {
+      if (typeof href === "string") {
         if (typeof options === "object" && options !== null) {
           if (options.as == null || options.as === "script") {
             var crossOrigin = getCrossOriginStringAs(
               options.as,
               options.crossOrigin
             );
-            dispatcher.preinitModuleScript(href, {
+            ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
               crossOrigin: crossOrigin,
               integrity:
                 typeof options.integrity === "string"
@@ -48311,7 +48310,7 @@ if (__DEV__) {
             });
           }
         } else if (options == null) {
-          dispatcher.preinitModuleScript(href);
+          ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
         }
       } // We don't error because preinit needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical

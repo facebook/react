@@ -15,7 +15,8 @@ var ReactDOM = require("react-dom");
 require("ReactFeatureFlags");
 var decoderOptions = { stream: !0 },
   ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher;
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher;
 function resolveClientReference(moduleMap, metadata) {
   if ("function" === typeof moduleMap.resolveClientReference)
     return moduleMap.resolveClientReference(metadata);
@@ -444,47 +445,47 @@ function startReadingFromStream(response, stream) {
               rowID = rowTag[0];
               rowTag = rowTag.slice(1);
               rowLength = JSON.parse(rowTag, rowLength._fromJSON);
-              if ((rowTag = ReactDOMCurrentDispatcher.current))
-                switch (rowID) {
-                  case "D":
-                    rowTag.prefetchDNS(rowLength);
-                    break;
-                  case "C":
-                    "string" === typeof rowLength
-                      ? rowTag.preconnect(rowLength)
-                      : rowTag.preconnect(rowLength[0], rowLength[1]);
-                    break;
-                  case "L":
-                    rowID = rowLength[0];
-                    i = rowLength[1];
-                    3 === rowLength.length
-                      ? rowTag.preload(rowID, i, rowLength[2])
-                      : rowTag.preload(rowID, i);
-                    break;
-                  case "m":
-                    "string" === typeof rowLength
-                      ? rowTag.preloadModule(rowLength)
-                      : rowTag.preloadModule(rowLength[0], rowLength[1]);
-                    break;
-                  case "S":
-                    "string" === typeof rowLength
-                      ? rowTag.preinitStyle(rowLength)
-                      : rowTag.preinitStyle(
-                          rowLength[0],
-                          0 === rowLength[1] ? void 0 : rowLength[1],
-                          3 === rowLength.length ? rowLength[2] : void 0
-                        );
-                    break;
-                  case "X":
-                    "string" === typeof rowLength
-                      ? rowTag.preinitScript(rowLength)
-                      : rowTag.preinitScript(rowLength[0], rowLength[1]);
-                    break;
-                  case "M":
-                    "string" === typeof rowLength
-                      ? rowTag.preinitModuleScript(rowLength)
-                      : rowTag.preinitModuleScript(rowLength[0], rowLength[1]);
-                }
+              rowTag = ReactDOMCurrentDispatcher.current;
+              switch (rowID) {
+                case "D":
+                  rowTag.prefetchDNS(rowLength);
+                  break;
+                case "C":
+                  "string" === typeof rowLength
+                    ? rowTag.preconnect(rowLength)
+                    : rowTag.preconnect(rowLength[0], rowLength[1]);
+                  break;
+                case "L":
+                  rowID = rowLength[0];
+                  i = rowLength[1];
+                  3 === rowLength.length
+                    ? rowTag.preload(rowID, i, rowLength[2])
+                    : rowTag.preload(rowID, i);
+                  break;
+                case "m":
+                  "string" === typeof rowLength
+                    ? rowTag.preloadModule(rowLength)
+                    : rowTag.preloadModule(rowLength[0], rowLength[1]);
+                  break;
+                case "S":
+                  "string" === typeof rowLength
+                    ? rowTag.preinitStyle(rowLength)
+                    : rowTag.preinitStyle(
+                        rowLength[0],
+                        0 === rowLength[1] ? void 0 : rowLength[1],
+                        3 === rowLength.length ? rowLength[2] : void 0
+                      );
+                  break;
+                case "X":
+                  "string" === typeof rowLength
+                    ? rowTag.preinitScript(rowLength)
+                    : rowTag.preinitScript(rowLength[0], rowLength[1]);
+                  break;
+                case "M":
+                  "string" === typeof rowLength
+                    ? rowTag.preinitModuleScript(rowLength)
+                    : rowTag.preinitModuleScript(rowLength[0], rowLength[1]);
+              }
               break;
             case 69:
               rowTag = JSON.parse(rowTag);

@@ -11,8 +11,8 @@
  */
 
 "use strict";
-var React = require("react"),
-  ReactDOM = require("react-dom"),
+var ReactDOM = require("react-dom"),
+  React = require("react"),
   requestedClientReferencesKeys = new Set(),
   checkIsClientReference;
 function isClientReference(reference) {
@@ -26,7 +26,11 @@ function writeChunkAndReturn(destination, chunk) {
   destination.write(chunk);
   return !0;
 }
-var ReactDOMFlightServerDispatcher = {
+var ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher,
+  previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS: prefetchDNS,
   preconnect: preconnect,
   preload: preload,
@@ -42,7 +46,7 @@ function prefetchDNS(href) {
       var hints = request.hints,
         key = "D|" + href;
       hints.has(key) || (hints.add(key), emitHint(request, "D", href));
-    }
+    } else previousDispatcher.prefetchDNS(href);
   }
 }
 function preconnect(href, crossOrigin) {
@@ -56,7 +60,7 @@ function preconnect(href, crossOrigin) {
         "string" === typeof crossOrigin
           ? emitHint(request, "C", [href, crossOrigin])
           : emitHint(request, "C", href));
-    }
+    } else previousDispatcher.preconnect(href, crossOrigin);
   }
 }
 function preload(href, as, options) {
@@ -81,7 +85,7 @@ function preload(href, as, options) {
         (options = trimOptions(options))
           ? emitHint(request, "L", [href, as, options])
           : emitHint(request, "L", [href, as]));
-    }
+    } else previousDispatcher.preload(href, as, options);
   }
 }
 function preloadModule(href, options) {
@@ -90,14 +94,13 @@ function preloadModule(href, options) {
     if (request) {
       var hints = request.hints,
         key = "m|" + href;
-      if (!hints.has(key))
-        return (
-          hints.add(key),
-          (options = trimOptions(options))
-            ? emitHint(request, "m", [href, options])
-            : emitHint(request, "m", href)
-        );
+      if (hints.has(key)) return;
+      hints.add(key);
+      return (options = trimOptions(options))
+        ? emitHint(request, "m", [href, options])
+        : emitHint(request, "m", href);
     }
+    previousDispatcher.preloadModule(href, options);
   }
 }
 function preinitStyle(href, precedence, options) {
@@ -106,52 +109,49 @@ function preinitStyle(href, precedence, options) {
     if (request) {
       var hints = request.hints,
         key = "S|" + href;
-      if (!hints.has(key))
-        return (
-          hints.add(key),
-          (options = trimOptions(options))
-            ? emitHint(request, "S", [
-                href,
-                "string" === typeof precedence ? precedence : 0,
-                options
-              ])
-            : "string" === typeof precedence
-            ? emitHint(request, "S", [href, precedence])
-            : emitHint(request, "S", href)
-        );
+      if (hints.has(key)) return;
+      hints.add(key);
+      return (options = trimOptions(options))
+        ? emitHint(request, "S", [
+            href,
+            "string" === typeof precedence ? precedence : 0,
+            options
+          ])
+        : "string" === typeof precedence
+        ? emitHint(request, "S", [href, precedence])
+        : emitHint(request, "S", href);
     }
+    previousDispatcher.preinitStyle(href, precedence, options);
   }
 }
-function preinitScript(href, options) {
-  if ("string" === typeof href) {
+function preinitScript(src, options) {
+  if ("string" === typeof src) {
     var request = currentRequest ? currentRequest : null;
     if (request) {
       var hints = request.hints,
-        key = "X|" + href;
-      if (!hints.has(key))
-        return (
-          hints.add(key),
-          (options = trimOptions(options))
-            ? emitHint(request, "X", [href, options])
-            : emitHint(request, "X", href)
-        );
+        key = "X|" + src;
+      if (hints.has(key)) return;
+      hints.add(key);
+      return (options = trimOptions(options))
+        ? emitHint(request, "X", [src, options])
+        : emitHint(request, "X", src);
     }
+    previousDispatcher.preinitScript(src, options);
   }
 }
-function preinitModuleScript(href, options) {
-  if ("string" === typeof href) {
+function preinitModuleScript(src, options) {
+  if ("string" === typeof src) {
     var request = currentRequest ? currentRequest : null;
     if (request) {
       var hints = request.hints,
-        key = "M|" + href;
-      if (!hints.has(key))
-        return (
-          hints.add(key),
-          (options = trimOptions(options))
-            ? emitHint(request, "M", [href, options])
-            : emitHint(request, "M", href)
-        );
+        key = "M|" + src;
+      if (hints.has(key)) return;
+      hints.add(key);
+      return (options = trimOptions(options))
+        ? emitHint(request, "M", [src, options])
+        : emitHint(request, "M", src);
     }
+    previousDispatcher.preinitModuleScript(src, options);
   }
 }
 function trimOptions(options) {
@@ -164,9 +164,7 @@ function trimOptions(options) {
       ((hasProperties = !0), (trimmed[key] = options[key]));
   return hasProperties ? trimmed : null;
 }
-var ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -1098,7 +1096,6 @@ exports.renderToDestination = function (destination, model, options) {
     ReactCurrentCache.current !== DefaultCacheDispatcher
   )
     throw Error("Currently React only supports one RSC renderer at a time.");
-  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
   ReactCurrentCache.current = DefaultCacheDispatcher;
   var abortSet = new Set();
   options = [];

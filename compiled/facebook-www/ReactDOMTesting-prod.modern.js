@@ -15,12 +15,23 @@
 */
 "use strict";
 var React = require("react"),
-  Scheduler = require("scheduler"),
-  Internals = {
-    usingClientEntryPoint: !1,
-    Events: null,
-    Dispatcher: { current: null }
-  };
+  Scheduler = require("scheduler");
+function noop$3() {}
+var Internals = {
+  usingClientEntryPoint: !1,
+  Events: null,
+  ReactDOMCurrentDispatcher: {
+    current: {
+      prefetchDNS: noop$3,
+      preconnect: noop$3,
+      preload: noop$3,
+      preloadModule: noop$3,
+      preinitScript: noop$3,
+      preinitStyle: noop$3,
+      preinitModuleScript: noop$3
+    }
+  }
+};
 function formatProdErrorMessage(code) {
   var url = "https://react.dev/errors/" + code;
   if (1 < arguments.length) {
@@ -15925,7 +15936,8 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         (null == propKey$227 && null == propKey) ||
         setProp(domElement, tag, lastProp, propKey$227, nextProps, propKey);
 }
-var eventsEnabled = null,
+var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
+  eventsEnabled = null,
   selectionInformation = null;
 function getOwnerDocumentFromRootContainer(rootContainerElement) {
   return 9 === rootContainerElement.nodeType
@@ -16351,7 +16363,8 @@ function getHoistableRoot(container) {
     ? container.getRootNode()
     : container.ownerDocument;
 }
-var ReactDOMClientDispatcher = {
+var previousDispatcher = ReactDOMCurrentDispatcher$1.current;
+ReactDOMCurrentDispatcher$1.current = {
   prefetchDNS: prefetchDNS$1,
   preconnect: preconnect$1,
   preload: preload$1,
@@ -16360,9 +16373,10 @@ var ReactDOMClientDispatcher = {
   preinitScript: preinitScript,
   preinitModuleScript: preinitModuleScript
 };
+var globalDocument = "undefined" === typeof document ? null : document;
 function preconnectAs(rel, href, crossOrigin) {
-  var ownerDocument = document;
-  if ("string" === typeof href && href) {
+  var ownerDocument = globalDocument;
+  if (ownerDocument && "string" === typeof href && href) {
     var limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
     limitedEscapedHref =
@@ -16380,14 +16394,17 @@ function preconnectAs(rel, href, crossOrigin) {
   }
 }
 function prefetchDNS$1(href) {
+  previousDispatcher.prefetchDNS(href);
   preconnectAs("dns-prefetch", href, null);
 }
 function preconnect$1(href, crossOrigin) {
+  previousDispatcher.preconnect(href, crossOrigin);
   preconnectAs("preconnect", href, crossOrigin);
 }
 function preload$1(href, as, options) {
-  var ownerDocument = document;
-  if (href && as && ownerDocument) {
+  previousDispatcher.preload(href, as, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href && as) {
     var preloadSelector =
       'link[rel="preload"][as="' +
       escapeSelectorAttributeValueInsideDoubleQuotes(as) +
@@ -16446,8 +16463,9 @@ function preload$1(href, as, options) {
   }
 }
 function preloadModule$1(href, options) {
-  var ownerDocument = document;
-  if (href) {
+  previousDispatcher.preloadModule(href, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href) {
     var as = options && "string" === typeof options.as ? options.as : "script",
       preloadSelector =
         'link[rel="modulepreload"][as="' +
@@ -16489,8 +16507,9 @@ function preloadModule$1(href, options) {
   }
 }
 function preinitStyle(href, precedence, options) {
-  var ownerDocument = document;
-  if (href) {
+  previousDispatcher.preinitStyle(href, precedence, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href) {
     var styles = getResourcesFromRoot(ownerDocument).hoistableStyles,
       key = getStyleKey(href);
     precedence = precedence || "default";
@@ -16537,8 +16556,9 @@ function preinitStyle(href, precedence, options) {
   }
 }
 function preinitScript(src, options) {
-  var ownerDocument = document;
-  if (src) {
+  previousDispatcher.preinitScript(src, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
       key = getScriptKey(src),
       resource = scripts.get(key);
@@ -16562,8 +16582,9 @@ function preinitScript(src, options) {
   }
 }
 function preinitModuleScript(src, options) {
-  var ownerDocument = document;
-  if (src) {
+  previousDispatcher.preinitModuleScript(src, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
       key = getScriptKey(src),
       resource = scripts.get(key);
@@ -17039,9 +17060,6 @@ function insertStylesheetIntoRoot(root, resource) {
     resource.state.loading |= 4;
   }
 }
-var Dispatcher$1 = Internals.Dispatcher;
-"undefined" !== typeof document &&
-  (Dispatcher$1.current = ReactDOMClientDispatcher);
 var defaultOnRecoverableError =
   "function" === typeof reportError
     ? reportError
@@ -17123,7 +17141,7 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var Dispatcher = Internals.Dispatcher;
+var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
 Internals.Events = [
   getInstanceFromNode$1,
   getNodeFromInstance,
@@ -17135,7 +17153,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1783 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-86032fe1",
+  version: "18.3.0-www-modern-7e0344a2",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2153 = {
@@ -17166,7 +17184,7 @@ var internals$jscomp$inline_2153 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-86032fe1"
+  reconcilerVersion: "18.3.0-www-modern-7e0344a2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2154 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17229,7 +17247,6 @@ exports.createRoot = function (container, options) {
     null
   );
   container[internalContainerInstanceKey] = options.current;
-  Dispatcher$1.current = ReactDOMClientDispatcher;
   listenToAllSupportedEvents(
     8 === container.nodeType ? container.parentNode : container
   );
@@ -17405,7 +17422,6 @@ exports.hydrateRoot = function (container, children, options) {
   markRootUpdated(children, isStrictMode);
   ensureRootIsScheduled(children);
   container[internalContainerInstanceKey] = children.current;
-  Dispatcher$1.current = ReactDOMClientDispatcher;
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(children);
 };
@@ -17428,9 +17444,7 @@ exports.observeVisibleRects = function (
   };
 };
 exports.preconnect = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  dispatcher &&
-    "string" === typeof href &&
+  "string" === typeof href &&
     (options
       ? ((options = options.crossOrigin),
         (options =
@@ -17440,20 +17454,14 @@ exports.preconnect = function (href, options) {
               : ""
             : void 0))
       : (options = null),
-    dispatcher.preconnect(href, options));
+    ReactDOMCurrentDispatcher.current.preconnect(href, options));
 };
 exports.prefetchDNS = function (href) {
-  var dispatcher = Dispatcher.current;
-  dispatcher && "string" === typeof href && dispatcher.prefetchDNS(href);
+  "string" === typeof href &&
+    ReactDOMCurrentDispatcher.current.prefetchDNS(href);
 };
 exports.preinit = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (
-    dispatcher &&
-    "string" === typeof href &&
-    options &&
-    "string" === typeof options.as
-  ) {
+  if ("string" === typeof href && options && "string" === typeof options.as) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin),
       integrity =
@@ -17463,7 +17471,7 @@ exports.preinit = function (href, options) {
           ? options.fetchPriority
           : void 0;
     "style" === as
-      ? dispatcher.preinitStyle(
+      ? ReactDOMCurrentDispatcher.current.preinitStyle(
           href,
           "string" === typeof options.precedence ? options.precedence : void 0,
           {
@@ -17473,7 +17481,7 @@ exports.preinit = function (href, options) {
           }
         )
       : "script" === as &&
-        dispatcher.preinitScript(href, {
+        ReactDOMCurrentDispatcher.current.preinitScript(href, {
           crossOrigin: crossOrigin,
           integrity: integrity,
           fetchPriority: fetchPriority,
@@ -17482,27 +17490,26 @@ exports.preinit = function (href, options) {
   }
 };
 exports.preinitModule = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (dispatcher && "string" === typeof href)
+  if ("string" === typeof href)
     if ("object" === typeof options && null !== options) {
       if (null == options.as || "script" === options.as) {
         var crossOrigin = getCrossOriginStringAs(
           options.as,
           options.crossOrigin
         );
-        dispatcher.preinitModuleScript(href, {
+        ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
           crossOrigin: crossOrigin,
           integrity:
             "string" === typeof options.integrity ? options.integrity : void 0,
           nonce: "string" === typeof options.nonce ? options.nonce : void 0
         });
       }
-    } else null == options && dispatcher.preinitModuleScript(href);
+    } else
+      null == options &&
+        ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
 };
 exports.preload = function (href, options) {
-  var dispatcher = Dispatcher.current;
   if (
-    dispatcher &&
     "string" === typeof href &&
     "object" === typeof options &&
     null !== options &&
@@ -17510,7 +17517,7 @@ exports.preload = function (href, options) {
   ) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    dispatcher.preload(href, as, {
+    ReactDOMCurrentDispatcher.current.preload(href, as, {
       crossOrigin: crossOrigin,
       integrity:
         "string" === typeof options.integrity ? options.integrity : void 0,
@@ -17532,11 +17539,10 @@ exports.preload = function (href, options) {
   }
 };
 exports.preloadModule = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (dispatcher && "string" === typeof href)
+  if ("string" === typeof href)
     if (options) {
       var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-      dispatcher.preloadModule(href, {
+      ReactDOMCurrentDispatcher.current.preloadModule(href, {
         as:
           "string" === typeof options.as && "script" !== options.as
             ? options.as
@@ -17545,7 +17551,7 @@ exports.preloadModule = function (href, options) {
         integrity:
           "string" === typeof options.integrity ? options.integrity : void 0
       });
-    } else dispatcher.preloadModule(href);
+    } else ReactDOMCurrentDispatcher.current.preloadModule(href);
 };
 exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = function (type, options) {
@@ -17587,4 +17593,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-86032fe1";
+exports.version = "18.3.0-www-modern-7e0344a2";

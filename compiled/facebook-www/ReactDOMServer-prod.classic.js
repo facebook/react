@@ -289,17 +289,19 @@ var ReactSharedInternals =
     action: null
   },
   ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
-  ReactDOMServerDispatcher = {
-    prefetchDNS: prefetchDNS,
-    preconnect: preconnect,
-    preload: preload,
-    preloadModule: preloadModule,
-    preinitStyle: preinitStyle,
-    preinitScript: preinitScript,
-    preinitModuleScript: preinitModuleScript
-  },
-  PRELOAD_NO_CREDS = [],
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher,
+  previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preloadModule: preloadModule,
+  preinitScript: preinitScript,
+  preinitStyle: preinitStyle,
+  preinitModuleScript: preinitModuleScript
+};
+var PRELOAD_NO_CREDS = [],
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
@@ -2211,7 +2213,7 @@ function prefetchDNS(href) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.prefetchDNS(href);
 }
 function preconnect(href, crossOrigin) {
   var request = currentRequest ? currentRequest : null;
@@ -2265,7 +2267,7 @@ function preconnect(href, crossOrigin) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preconnect(href, crossOrigin);
 }
 function preload(href, as, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2379,7 +2381,7 @@ function preload(href, as, options) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preload(href, as, options);
 }
 function preloadModule(href, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2415,7 +2417,7 @@ function preloadModule(href, options) {
       renderState.bulkPreloads.add(as);
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preloadModule(href, options);
 }
 function preinitStyle(href, precedence, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2455,7 +2457,7 @@ function preinitStyle(href, precedence, options) {
         styleQueue.sheets.set(href, precedence),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitStyle(href, precedence, options);
 }
 function preinitScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2479,7 +2481,7 @@ function preinitScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitScript(src, options);
 }
 function preinitModuleScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2505,7 +2507,7 @@ function preinitModuleScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitModuleScript(src, options);
 }
 function adoptPreloadCredentials(target, preloadState) {
   null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
@@ -2593,16 +2595,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1596 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1595 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1610 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1611 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1612 = new Set(),
-    JSCompiler_object_inline_styles_1613 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1614 = new Set(),
-    JSCompiler_object_inline_scripts_1615 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1616 = new Set(),
-    JSCompiler_object_inline_preloads_1617 = {
+  var JSCompiler_object_inline_preconnects_1609 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1610 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1611 = new Set(),
+    JSCompiler_object_inline_styles_1612 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1613 = new Set(),
+    JSCompiler_object_inline_scripts_1614 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1615 = new Set(),
+    JSCompiler_object_inline_preloads_1616 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2639,7 +2641,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1614.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1613.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2680,7 +2682,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1614.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1613.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2695,7 +2697,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1596,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1595,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2715,14 +2717,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1610,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1611,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1612,
-    styles: JSCompiler_object_inline_styles_1613,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1614,
-    scripts: JSCompiler_object_inline_scripts_1615,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1616,
-    preloads: JSCompiler_object_inline_preloads_1617,
+    preconnects: JSCompiler_object_inline_preconnects_1609,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1610,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1611,
+    styles: JSCompiler_object_inline_styles_1612,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1613,
+    scripts: JSCompiler_object_inline_scripts_1614,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1615,
+    preloads: JSCompiler_object_inline_preloads_1616,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -3451,7 +3453,6 @@ function createRequest(
   onPostpone,
   formState
 ) {
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   var pingedTasks = [],
     abortSet = new Set();
   resumableState = {
@@ -5703,4 +5704,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-5ac0969c";
+exports.version = "18.3.0-www-classic-70ff46d1";

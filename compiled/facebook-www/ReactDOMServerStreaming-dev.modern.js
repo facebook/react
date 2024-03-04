@@ -2372,19 +2372,18 @@ if (__DEV__) {
     var ReactDOMSharedInternals =
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
-    var ReactDOMServerDispatcher = {
+    var ReactDOMCurrentDispatcher =
+      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+    var previousDispatcher = ReactDOMCurrentDispatcher.current;
+    ReactDOMCurrentDispatcher.current = {
       prefetchDNS: prefetchDNS,
       preconnect: preconnect,
       preload: preload,
       preloadModule: preloadModule,
-      preinitStyle: preinitStyle,
       preinitScript: preinitScript,
+      preinitStyle: preinitStyle,
       preinitModuleScript: preinitModuleScript
-    };
-    function prepareHostDispatcher() {
-      ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
-    } // We make every property of the descriptor optional because it is not a contract that
+    }; // We make every property of the descriptor optional because it is not a contract that
     var ScriptStreamingFormat = 0;
     var DataStreamingFormat = 1;
     var NothingSent =
@@ -7401,6 +7400,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.prefetchDNS(href);
         return;
       }
 
@@ -7459,6 +7459,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preconnect(href, crossOrigin);
         return;
       }
 
@@ -7523,6 +7524,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preload(href, as, options);
         return;
       }
 
@@ -7757,6 +7759,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preloadModule(href, options);
         return;
       }
 
@@ -7834,6 +7837,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preinitStyle(href, precedence, options);
         return;
       }
 
@@ -7915,6 +7919,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preinitScript(src, options);
         return;
       }
 
@@ -7980,6 +7985,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
+        previousDispatcher.preinitModuleScript(src, options);
         return;
       }
 
@@ -10955,7 +10961,6 @@ if (__DEV__) {
       onPostpone,
       formState
     ) {
-      prepareHostDispatcher();
       var pingedTasks = [];
       var abortSet = new Set();
       var request = {

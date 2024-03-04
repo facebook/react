@@ -281,17 +281,19 @@ var ReactSharedInternals =
     action: null
   },
   ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
-  ReactDOMServerDispatcher = {
-    prefetchDNS: prefetchDNS,
-    preconnect: preconnect,
-    preload: preload,
-    preloadModule: preloadModule,
-    preinitStyle: preinitStyle,
-    preinitScript: preinitScript,
-    preinitModuleScript: preinitModuleScript
-  },
-  PRELOAD_NO_CREDS = [],
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher,
+  previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preloadModule: preloadModule,
+  preinitScript: preinitScript,
+  preinitStyle: preinitStyle,
+  preinitModuleScript: preinitModuleScript
+};
+var PRELOAD_NO_CREDS = [],
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
@@ -2228,7 +2230,7 @@ function prefetchDNS(href) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.prefetchDNS(href);
 }
 function preconnect(href, crossOrigin) {
   var request = currentRequest ? currentRequest : null;
@@ -2282,7 +2284,7 @@ function preconnect(href, crossOrigin) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preconnect(href, crossOrigin);
 }
 function preload(href, as, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2396,7 +2398,7 @@ function preload(href, as, options) {
       }
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preload(href, as, options);
 }
 function preloadModule(href, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2432,7 +2434,7 @@ function preloadModule(href, options) {
       renderState.bulkPreloads.add(as);
       enqueueFlush(request);
     }
-  }
+  } else previousDispatcher.preloadModule(href, options);
 }
 function preinitStyle(href, precedence, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2472,7 +2474,7 @@ function preinitStyle(href, precedence, options) {
         styleQueue.sheets.set(href, precedence),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitStyle(href, precedence, options);
 }
 function preinitScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2496,7 +2498,7 @@ function preinitScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitScript(src, options);
 }
 function preinitModuleScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2522,7 +2524,7 @@ function preinitModuleScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  }
+  } else previousDispatcher.preinitModuleScript(src, options);
 }
 function adoptPreloadCredentials(target, preloadState) {
   null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
@@ -5614,7 +5616,6 @@ exports.renderToStream = function (children, options) {
   bootstrapChunks = createFormatContext(0, null, 0);
   bootstrapScripts = options ? options.progressiveChunkSize : void 0;
   idPrefix = options.onError;
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   options = [];
   bootstrapModules = new Set();
   JSCompiler_inline_result = {

@@ -2589,12 +2589,12 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$2() {}
+function noop$3() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
+    : index !== thenable && (thenable.then(noop$3, noop$3), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2604,7 +2604,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         throw Error(formatProdErrorMessage(483));
       throw thenableState;
     default:
-      if ("string" === typeof thenable.status) thenable.then(noop$2, noop$2);
+      if ("string" === typeof thenable.status) thenable.then(noop$3, noop$3);
       else {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
@@ -8636,7 +8636,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
           (parent = parent._reactRootContainer),
           (null !== parent && void 0 !== parent) ||
             null !== before.onclick ||
-            (before.onclick = noop$1));
+            (before.onclick = noop$2));
   else if (4 !== tag && 27 !== tag && ((node = node.child), null !== node))
     for (
       insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -14652,7 +14652,7 @@ function checkForUnmatchedText(serverText, clientText, isConcurrentMode) {
   )
     throw Error(formatProdErrorMessage(425));
 }
-function noop$1() {}
+function noop$2() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children":
@@ -14750,7 +14750,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       domElement.setAttribute(key, value);
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$1);
+      null != value && (domElement.onclick = noop$2);
       break;
     case "onScroll":
       null != value && listenToNonDelegatedEvent("scroll", domElement);
@@ -14996,7 +14996,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scrollend", domElement);
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$1);
+      null != value && (domElement.onclick = noop$2);
       break;
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
@@ -15572,7 +15572,24 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         (null == propKey$221 && null == propKey) ||
         setProp(domElement, tag, lastProp, propKey$221, nextProps, propKey);
 }
-var eventsEnabled = null,
+function noop$1() {}
+var Internals = {
+    usingClientEntryPoint: !1,
+    Events: null,
+    ReactDOMCurrentDispatcher: {
+      current: {
+        prefetchDNS: noop$1,
+        preconnect: noop$1,
+        preload: noop$1,
+        preloadModule: noop$1,
+        preinitScript: noop$1,
+        preinitStyle: noop$1,
+        preinitModuleScript: noop$1
+      }
+    }
+  },
+  ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
+  eventsEnabled = null,
   selectionInformation = null;
 function getOwnerDocumentFromRootContainer(rootContainerElement) {
   return 9 === rootContainerElement.nodeType
@@ -15906,7 +15923,7 @@ function hydrateInstance(
       (instance.textContent = internalInstanceHandle));
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
   null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
-  null != props.onClick && (instance.onclick = noop$1);
+  null != props.onClick && (instance.onclick = noop$2);
 }
 function getParentSuspenseInstance(targetInstance) {
   targetInstance = targetInstance.previousSibling;
@@ -16012,7 +16029,8 @@ function getHoistableRoot(container) {
     ? container.getRootNode()
     : container.ownerDocument;
 }
-var ReactDOMClientDispatcher = {
+var previousDispatcher = ReactDOMCurrentDispatcher$1.current;
+ReactDOMCurrentDispatcher$1.current = {
   prefetchDNS: prefetchDNS$1,
   preconnect: preconnect$1,
   preload: preload$1,
@@ -16021,9 +16039,10 @@ var ReactDOMClientDispatcher = {
   preinitScript: preinitScript,
   preinitModuleScript: preinitModuleScript
 };
+var globalDocument = "undefined" === typeof document ? null : document;
 function preconnectAs(rel, href, crossOrigin) {
-  var ownerDocument = document;
-  if ("string" === typeof href && href) {
+  var ownerDocument = globalDocument;
+  if (ownerDocument && "string" === typeof href && href) {
     var limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
     limitedEscapedHref =
@@ -16041,14 +16060,17 @@ function preconnectAs(rel, href, crossOrigin) {
   }
 }
 function prefetchDNS$1(href) {
+  previousDispatcher.prefetchDNS(href);
   preconnectAs("dns-prefetch", href, null);
 }
 function preconnect$1(href, crossOrigin) {
+  previousDispatcher.preconnect(href, crossOrigin);
   preconnectAs("preconnect", href, crossOrigin);
 }
 function preload$1(href, as, options) {
-  var ownerDocument = document;
-  if (href && as && ownerDocument) {
+  previousDispatcher.preload(href, as, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href && as) {
     var preloadSelector =
       'link[rel="preload"][as="' +
       escapeSelectorAttributeValueInsideDoubleQuotes(as) +
@@ -16107,8 +16129,9 @@ function preload$1(href, as, options) {
   }
 }
 function preloadModule$1(href, options) {
-  var ownerDocument = document;
-  if (href) {
+  previousDispatcher.preloadModule(href, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href) {
     var as = options && "string" === typeof options.as ? options.as : "script",
       preloadSelector =
         'link[rel="modulepreload"][as="' +
@@ -16150,8 +16173,9 @@ function preloadModule$1(href, options) {
   }
 }
 function preinitStyle(href, precedence, options) {
-  var ownerDocument = document;
-  if (href) {
+  previousDispatcher.preinitStyle(href, precedence, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && href) {
     var styles = getResourcesFromRoot(ownerDocument).hoistableStyles,
       key = getStyleKey(href);
     precedence = precedence || "default";
@@ -16198,8 +16222,9 @@ function preinitStyle(href, precedence, options) {
   }
 }
 function preinitScript(src, options) {
-  var ownerDocument = document;
-  if (src) {
+  previousDispatcher.preinitScript(src, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
       key = getScriptKey(src),
       resource = scripts.get(key);
@@ -16223,8 +16248,9 @@ function preinitScript(src, options) {
   }
 }
 function preinitModuleScript(src, options) {
-  var ownerDocument = document;
-  if (src) {
+  previousDispatcher.preinitModuleScript(src, options);
+  var ownerDocument = globalDocument;
+  if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
       key = getScriptKey(src),
       resource = scripts.get(key);
@@ -17351,14 +17377,6 @@ function getEventPriority(domEventName) {
       return 32;
   }
 }
-var Internals = {
-    usingClientEntryPoint: !1,
-    Events: null,
-    Dispatcher: { current: null }
-  },
-  Dispatcher$1 = Internals.Dispatcher;
-"undefined" !== typeof document &&
-  (Dispatcher$1.current = ReactDOMClientDispatcher);
 var defaultOnRecoverableError =
   "function" === typeof reportError
     ? reportError
@@ -17546,7 +17564,7 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var Dispatcher = Internals.Dispatcher;
+var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
 Internals.Events = [
   getInstanceFromNode,
   getNodeFromInstance,
@@ -17558,7 +17576,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1824 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-cf792bcf",
+  version: "18.3.0-www-classic-c1c1744a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2190 = {
@@ -17588,7 +17606,7 @@ var internals$jscomp$inline_2190 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-cf792bcf"
+  reconcilerVersion: "18.3.0-www-classic-c1c1744a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2191 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17658,7 +17676,6 @@ exports.createRoot = function (container, options) {
     null
   );
   container[internalContainerInstanceKey] = options.current;
-  Dispatcher$1.current = ReactDOMClientDispatcher;
   listenToAllSupportedEvents(
     8 === container.nodeType ? container.parentNode : container
   );
@@ -17851,7 +17868,6 @@ exports.hydrateRoot = function (container, children, options) {
     formState
   );
   container[internalContainerInstanceKey] = children.current;
-  Dispatcher$1.current = ReactDOMClientDispatcher;
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(children);
 };
@@ -17874,9 +17890,7 @@ exports.observeVisibleRects = function (
   };
 };
 exports.preconnect = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  dispatcher &&
-    "string" === typeof href &&
+  "string" === typeof href &&
     (options
       ? ((options = options.crossOrigin),
         (options =
@@ -17886,20 +17900,14 @@ exports.preconnect = function (href, options) {
               : ""
             : void 0))
       : (options = null),
-    dispatcher.preconnect(href, options));
+    ReactDOMCurrentDispatcher.current.preconnect(href, options));
 };
 exports.prefetchDNS = function (href) {
-  var dispatcher = Dispatcher.current;
-  dispatcher && "string" === typeof href && dispatcher.prefetchDNS(href);
+  "string" === typeof href &&
+    ReactDOMCurrentDispatcher.current.prefetchDNS(href);
 };
 exports.preinit = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (
-    dispatcher &&
-    "string" === typeof href &&
-    options &&
-    "string" === typeof options.as
-  ) {
+  if ("string" === typeof href && options && "string" === typeof options.as) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin),
       integrity =
@@ -17909,7 +17917,7 @@ exports.preinit = function (href, options) {
           ? options.fetchPriority
           : void 0;
     "style" === as
-      ? dispatcher.preinitStyle(
+      ? ReactDOMCurrentDispatcher.current.preinitStyle(
           href,
           "string" === typeof options.precedence ? options.precedence : void 0,
           {
@@ -17919,7 +17927,7 @@ exports.preinit = function (href, options) {
           }
         )
       : "script" === as &&
-        dispatcher.preinitScript(href, {
+        ReactDOMCurrentDispatcher.current.preinitScript(href, {
           crossOrigin: crossOrigin,
           integrity: integrity,
           fetchPriority: fetchPriority,
@@ -17928,27 +17936,26 @@ exports.preinit = function (href, options) {
   }
 };
 exports.preinitModule = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (dispatcher && "string" === typeof href)
+  if ("string" === typeof href)
     if ("object" === typeof options && null !== options) {
       if (null == options.as || "script" === options.as) {
         var crossOrigin = getCrossOriginStringAs(
           options.as,
           options.crossOrigin
         );
-        dispatcher.preinitModuleScript(href, {
+        ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
           crossOrigin: crossOrigin,
           integrity:
             "string" === typeof options.integrity ? options.integrity : void 0,
           nonce: "string" === typeof options.nonce ? options.nonce : void 0
         });
       }
-    } else null == options && dispatcher.preinitModuleScript(href);
+    } else
+      null == options &&
+        ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
 };
 exports.preload = function (href, options) {
-  var dispatcher = Dispatcher.current;
   if (
-    dispatcher &&
     "string" === typeof href &&
     "object" === typeof options &&
     null !== options &&
@@ -17956,7 +17963,7 @@ exports.preload = function (href, options) {
   ) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    dispatcher.preload(href, as, {
+    ReactDOMCurrentDispatcher.current.preload(href, as, {
       crossOrigin: crossOrigin,
       integrity:
         "string" === typeof options.integrity ? options.integrity : void 0,
@@ -17978,11 +17985,10 @@ exports.preload = function (href, options) {
   }
 };
 exports.preloadModule = function (href, options) {
-  var dispatcher = Dispatcher.current;
-  if (dispatcher && "string" === typeof href)
+  if ("string" === typeof href)
     if (options) {
       var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-      dispatcher.preloadModule(href, {
+      ReactDOMCurrentDispatcher.current.preloadModule(href, {
         as:
           "string" === typeof options.as && "script" !== options.as
             ? options.as
@@ -17991,7 +17997,7 @@ exports.preloadModule = function (href, options) {
         integrity:
           "string" === typeof options.integrity ? options.integrity : void 0
       });
-    } else dispatcher.preloadModule(href);
+    } else ReactDOMCurrentDispatcher.current.preloadModule(href);
 };
 exports.render = function (element, container, callback) {
   if (!isValidContainerLegacy(container))
@@ -18082,4 +18088,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-cf792bcf";
+exports.version = "18.3.0-www-classic-c1c1744a";

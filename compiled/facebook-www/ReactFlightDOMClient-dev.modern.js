@@ -81,112 +81,111 @@ if (__DEV__) {
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     // This client file is in the shared folder because it applies to both SSR and browser contexts.
-    var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+    var ReactDOMCurrentDispatcher =
+      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
     function dispatchHint(code, model) {
       var dispatcher = ReactDOMCurrentDispatcher.current;
 
-      if (dispatcher) {
-        switch (code) {
-          case "D": {
-            var refined = refineModel(code, model);
-            var href = refined;
-            dispatcher.prefetchDNS(href);
-            return;
+      switch (code) {
+        case "D": {
+          var refined = refineModel(code, model);
+          var href = refined;
+          dispatcher.prefetchDNS(href);
+          return;
+        }
+
+        case "C": {
+          var _refined = refineModel(code, model);
+
+          if (typeof _refined === "string") {
+            var _href = _refined;
+            dispatcher.preconnect(_href);
+          } else {
+            var _href2 = _refined[0];
+            var crossOrigin = _refined[1];
+            dispatcher.preconnect(_href2, crossOrigin);
           }
 
-          case "C": {
-            var _refined = refineModel(code, model);
+          return;
+        }
 
-            if (typeof _refined === "string") {
-              var _href = _refined;
-              dispatcher.preconnect(_href);
-            } else {
-              var _href2 = _refined[0];
-              var crossOrigin = _refined[1];
-              dispatcher.preconnect(_href2, crossOrigin);
-            }
+        case "L": {
+          var _refined2 = refineModel(code, model);
 
-            return;
+          var _href3 = _refined2[0];
+          var as = _refined2[1];
+
+          if (_refined2.length === 3) {
+            var options = _refined2[2];
+            dispatcher.preload(_href3, as, options);
+          } else {
+            dispatcher.preload(_href3, as);
           }
 
-          case "L": {
-            var _refined2 = refineModel(code, model);
+          return;
+        }
 
-            var _href3 = _refined2[0];
-            var as = _refined2[1];
+        case "m": {
+          var _refined3 = refineModel(code, model);
 
-            if (_refined2.length === 3) {
-              var options = _refined2[2];
-              dispatcher.preload(_href3, as, options);
-            } else {
-              dispatcher.preload(_href3, as);
-            }
-
-            return;
+          if (typeof _refined3 === "string") {
+            var _href4 = _refined3;
+            dispatcher.preloadModule(_href4);
+          } else {
+            var _href5 = _refined3[0];
+            var _options = _refined3[1];
+            dispatcher.preloadModule(_href5, _options);
           }
 
-          case "m": {
-            var _refined3 = refineModel(code, model);
+          return;
+        }
 
-            if (typeof _refined3 === "string") {
-              var _href4 = _refined3;
-              dispatcher.preloadModule(_href4);
-            } else {
-              var _href5 = _refined3[0];
-              var _options = _refined3[1];
-              dispatcher.preloadModule(_href5, _options);
-            }
+        case "S": {
+          var _refined4 = refineModel(code, model);
 
-            return;
+          if (typeof _refined4 === "string") {
+            var _href6 = _refined4;
+            dispatcher.preinitStyle(_href6);
+          } else {
+            var _href7 = _refined4[0];
+            var precedence = _refined4[1] === 0 ? undefined : _refined4[1];
+
+            var _options2 = _refined4.length === 3 ? _refined4[2] : undefined;
+
+            dispatcher.preinitStyle(_href7, precedence, _options2);
           }
 
-          case "S": {
-            var _refined4 = refineModel(code, model);
+          return;
+        }
 
-            if (typeof _refined4 === "string") {
-              var _href6 = _refined4;
-              dispatcher.preinitStyle(_href6);
-            } else {
-              var _href7 = _refined4[0];
-              var precedence = _refined4[1] === 0 ? undefined : _refined4[1];
+        case "X": {
+          var _refined5 = refineModel(code, model);
 
-              var _options2 = _refined4.length === 3 ? _refined4[2] : undefined;
-
-              dispatcher.preinitStyle(_href7, precedence, _options2);
-            }
-
-            return;
+          if (typeof _refined5 === "string") {
+            var _href8 = _refined5;
+            dispatcher.preinitScript(_href8);
+          } else {
+            var _href9 = _refined5[0];
+            var _options3 = _refined5[1];
+            dispatcher.preinitScript(_href9, _options3);
           }
 
-          case "X": {
-            var _refined5 = refineModel(code, model);
+          return;
+        }
 
-            if (typeof _refined5 === "string") {
-              var _href8 = _refined5;
-              dispatcher.preinitScript(_href8);
-            } else {
-              var _href9 = _refined5[0];
-              var _options3 = _refined5[1];
-              dispatcher.preinitScript(_href9, _options3);
-            }
+        case "M": {
+          var _refined6 = refineModel(code, model);
 
-            return;
+          if (typeof _refined6 === "string") {
+            var _href10 = _refined6;
+            dispatcher.preinitModuleScript(_href10);
+          } else {
+            var _href11 = _refined6[0];
+            var _options4 = _refined6[1];
+            dispatcher.preinitModuleScript(_href11, _options4);
           }
 
-          case "M": {
-            var _refined6 = refineModel(code, model);
-
-            if (typeof _refined6 === "string") {
-              var _href10 = _refined6;
-              dispatcher.preinitModuleScript(_href10);
-            } else {
-              var _href11 = _refined6[0];
-              var _options4 = _refined6[1];
-              dispatcher.preinitModuleScript(_href11, _options4);
-            }
-
-            return;
-          }
+          return;
         }
       }
     } // Flow is having trouble refining the HintModels so we help it a bit.
