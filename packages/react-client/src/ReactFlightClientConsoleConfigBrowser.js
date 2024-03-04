@@ -6,6 +6,7 @@
  *
  * @flow
  */
+
 const badgeFormat = '%c%s%c ';
 const badgeStyle = `
   background: #e6e6e6;
