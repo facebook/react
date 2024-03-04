@@ -103,8 +103,6 @@ if (__DEV__) {
       }
     }
 
-    var assign = Object.assign;
-
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
@@ -154,6 +152,8 @@ if (__DEV__) {
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
     var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
+
+    var assign = Object.assign;
 
     var ReactSharedInternals =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -35882,7 +35882,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-ea38075a";
+    var ReactVersion = "18.3.0-www-modern-0ae1c4c8";
 
     function createPortal$1(
       children,

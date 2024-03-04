@@ -36,8 +36,7 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
-var assign = Object.assign,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableInputAttributeSyncing =
     dynamicFeatureFlags.disableInputAttributeSyncing,
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
@@ -69,6 +68,7 @@ var assign = Object.assign,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch =
     dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
+  assign = Object.assign,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher,
@@ -17135,7 +17135,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1783 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-e6aaf239",
+  version: "18.3.0-www-modern-86032fe1",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2153 = {
@@ -17166,7 +17166,7 @@ var internals$jscomp$inline_2153 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-e6aaf239"
+  reconcilerVersion: "18.3.0-www-modern-86032fe1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2154 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17587,4 +17587,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-e6aaf239";
+exports.version = "18.3.0-www-modern-86032fe1";
