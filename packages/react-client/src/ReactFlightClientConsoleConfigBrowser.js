@@ -6,64 +6,41 @@
  *
  * @flow
  */
-
 const badgeFormat = '%c%s%c ';
-// Same badge styling as DevTools.
-const badgeStyle =
-  // We use a fixed background if light-dark is not supported, otherwise
-  // we use a transparent background.
-  'background: #e6e6e6;' +
-  'background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));' +
-  'color: #000000;' +
-  'color: light-dark(#000000, #ffffff);' +
-  'border-radius: 2px';
+const badgeStyle = `
+  background: #e6e6e6;
+  background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));
+  color: #000;
+  color: light-dark(#000, #fff);
+  border-radius: 2px;
+`.trim();
+
 const resetStyle = '';
-const pad = ' ';
+const padding = ' ';
 
-export function printToConsole(
-  methodName: string,
-  args: Array<any>,
-  badgeName: string,
-): void {
-  let offset = 0;
-  switch (methodName) {
-    case 'dir':
-    case 'dirxml':
-    case 'groupEnd':
-    case 'table': {
-      // These methods cannot be colorized because they don't take a formatting string.
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
-      return;
-    }
-    case 'assert': {
-      // assert takes formatting options as the second argument.
-      offset = 1;
-    }
+/**
+ * Prints a message to the console with a styled badge.
+ * 
+ * @param {string} methodName - The console method to use.
+ * @param {Array} args - The arguments to pass to the console method.
+ * @param {string} badgeName - The name to display on the badge.
+ */
+function printToConsole(methodName, args, badgeName) {
+  const nonColorizableMethods = new Set(['dir', 'dirxml', 'groupEnd', 'table']);
+
+  if (nonColorizableMethods.has(methodName)) {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName](...args);
+    return;
   }
 
-  const newArgs = args.slice(0);
-  if (typeof newArgs[offset] === 'string') {
-    newArgs.splice(
-      offset,
-      1,
-      badgeFormat + newArgs[offset],
-      badgeStyle,
-      pad + badgeName + pad,
-      resetStyle,
-    );
-  } else {
-    newArgs.splice(
-      offset,
-      0,
-      badgeFormat,
-      badgeStyle,
-      pad + badgeName + pad,
-      resetStyle,
-    );
-  }
+  const offset = methodName === 'assert' ? 1 : 0;
+  const formattedArgs = args.slice(0);
+  const badgeContent = badgeFormat + (offset ? formattedArgs[offset] : '');
+  const badgeArgs = [badgeContent, badgeStyle, `${padding}${badgeName}${padding}`, resetStyle];
 
+  formattedArgs.splice(offset, offset ? 1 : 0, ...badgeArgs);
   // eslint-disable-next-line react-internal/no-production-logging
-  console[methodName].apply(console, newArgs);
+  console[methodName](...formattedArgs);
   return;
 }
