@@ -37,6 +37,7 @@ describe('ReactMount', () => {
   });
 
   describe('unmountComponentAtNode', () => {
+    // @gate !disableLegacyMode
     it('throws when given a non-node', () => {
       const nodeArray = document.getElementsByTagName('div');
       expect(() => {
@@ -44,6 +45,7 @@ describe('ReactMount', () => {
       }).toThrowError('Target container is not a DOM element.');
     });
 
+    // @gate !disableLegacyMode
     it('returns false on non-React containers', () => {
       const d = document.createElement('div');
       d.innerHTML = '<b>hellooo</b>';
@@ -51,6 +53,7 @@ describe('ReactMount', () => {
       expect(d.textContent).toBe('hellooo');
     });
 
+    // @gate !disableLegacyMode
     it('returns true on React containers', () => {
       const d = document.createElement('div');
       ReactDOM.render(<b>hellooo</b>, d);
@@ -60,6 +63,7 @@ describe('ReactMount', () => {
     });
   });
 
+  // @gate !disableLegacyMode
   it('warns when given a factory', () => {
     class Component extends React.Component {
       render() {
@@ -76,6 +80,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should render different components in same root', () => {
     const container = document.createElement('container');
     document.body.appendChild(container);
@@ -87,6 +92,7 @@ describe('ReactMount', () => {
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
+  // @gate !disableLegacyMode
   it('should unmount and remount if the key changes', () => {
     const container = document.createElement('container');
 
@@ -122,6 +128,7 @@ describe('ReactMount', () => {
     expect(mockUnmount).toHaveBeenCalledTimes(1);
   });
 
+  // @gate !disableLegacyMode
   it('should reuse markup if rendering to the same target twice', () => {
     const container = document.createElement('container');
     const instance1 = ReactDOM.render(<div />, container);
@@ -130,6 +137,7 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
+  // @gate !disableLegacyMode
   it('does not warn if mounting into left padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
@@ -138,6 +146,7 @@ describe('ReactMount', () => {
     ReactDOM.hydrate(<div />, container);
   });
 
+  // @gate !disableLegacyMode
   it('should warn if mounting into right padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
@@ -147,6 +156,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should not warn if mounting into non-empty node', () => {
     const container = document.createElement('container');
     container.innerHTML = '<div></div>';
@@ -154,6 +164,7 @@ describe('ReactMount', () => {
     ReactDOM.render(<div />, container);
   });
 
+  // @gate !disableLegacyMode
   it('should warn when mounting into document.body', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
@@ -162,6 +173,7 @@ describe('ReactMount', () => {
     ReactDOM.render(<div />, iFrame.contentDocument.body);
   });
 
+  // @gate !disableLegacyMode
   it('should account for escaping on a checksum mismatch', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -180,6 +192,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should warn if render removes React-rendered children', () => {
     const container = document.createElement('container');
 
@@ -207,6 +220,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should warn if the unmounted node was rendered by another copy of React', () => {
     jest.resetModules();
     const ReactDOMOther = require('react-dom');
@@ -236,6 +250,7 @@ describe('ReactMount', () => {
     ReactDOM.unmountComponentAtNode(container);
   });
 
+  // @gate !disableLegacyMode
   it('passes the correct callback context', () => {
     const container = document.createElement('div');
     let calls = 0;
@@ -276,6 +291,7 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
+  // @gate !disableLegacyMode
   it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
@@ -322,6 +338,7 @@ describe('ReactMount', () => {
       expect(mountPoint.nodeType).toBe(COMMENT_NODE);
     });
 
+    // @gate !disableLegacyMode
     it('renders at a comment node', () => {
       function Char(props) {
         return props.children;
@@ -347,6 +364,7 @@ describe('ReactMount', () => {
     });
   });
 
+  // @gate !disableLegacyMode
   it('clears existing children with legacy API', async () => {
     const container = document.createElement('div');
     container.innerHTML = '<div>a</div><div>b</div>';
@@ -369,6 +387,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('dc');
   });
 
+  // @gate !disableLegacyMode
   it('warns when rendering with legacy API into createRoot() container', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -393,6 +412,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('Bye');
   });
 
+  // @gate !disableLegacyMode
   it('callback passed to legacy hydrate() API', () => {
     const container = document.createElement('div');
     container.innerHTML = '<div>Hi</div>';
@@ -403,6 +423,7 @@ describe('ReactMount', () => {
     assertLog(['callback']);
   });
 
+  // @gate !disableLegacyMode
   it('warns when unmounting with legacy API (no previous content)', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -430,6 +451,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('');
   });
 
+  // @gate !disableLegacyMode
   it('warns when unmounting with legacy API (has previous content)', async () => {
     const container = document.createElement('div');
     // Currently createRoot().render() doesn't clear this.
@@ -458,6 +480,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('');
   });
 
+  // @gate !disableLegacyMode
   it('warns when passing legacy container to createRoot()', () => {
     const container = document.createElement('div');
     ReactDOM.render(<div>Hi</div>, container);

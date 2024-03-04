@@ -19,6 +19,7 @@ describe('findDOMNode', () => {
     expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should find dom element', () => {
     class MyNode extends React.Component {
       render() {
@@ -37,6 +38,7 @@ describe('findDOMNode', () => {
     expect(mySameDiv).toBe(myDiv);
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should find dom element after an update from null', () => {
     function Bar({flag}) {
       if (flag) {
@@ -69,6 +71,7 @@ describe('findDOMNode', () => {
     }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should reject unmounted objects with render func', () => {
     class Foo extends React.Component {
       render() {
@@ -85,6 +88,7 @@ describe('findDOMNode', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should not throw an error when called within a component that is not mounted', () => {
     class Bar extends React.Component {
       UNSAFE_componentWillMount() {
@@ -98,6 +102,7 @@ describe('findDOMNode', () => {
     expect(() => ReactTestUtils.renderIntoDocument(<Bar />)).not.toThrow();
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should warn if used to find a host component inside StrictMode', () => {
     let parent = undefined;
     let child = undefined;
@@ -129,6 +134,7 @@ describe('findDOMNode', () => {
     expect(match).toBe(child);
   });
 
+  // @gate !disableLegacyMode
   it('findDOMNode should warn if passed a component that is inside StrictMode', () => {
     let parent = undefined;
     let child = undefined;

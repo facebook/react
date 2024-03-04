@@ -505,6 +505,7 @@ describe('ReactDOMServerHydration', () => {
     await act(() => root.render(<div />));
   });
 
+  // @gate !disableLegacyMode
   it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div><div>Hello World</div></div>';
@@ -530,6 +531,7 @@ describe('ReactDOMServerHydration', () => {
     expect(element.innerHTML).toBe('<div><div>Hello World</div></div>');
   });
 
+  // @gate !disableLegacyMode
   it('Suspense + hydration in legacy mode (at root)', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';
@@ -550,6 +552,7 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('Suspense + hydration in legacy mode with no fallback', () => {
     const element = document.createElement('div');
     element.innerHTML = '<div>Hello World</div>';

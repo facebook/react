@@ -493,5 +493,6 @@
   "505": "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain.",
   "506": "Functions are not valid as a child of Client Components. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.%s",
   "507": "Expected the last optional `callback` argument to be a function. Instead received: %s.",
-  "508": "The first argument must be a React class instance. Instead received: %s."
+  "508": "The first argument must be a React class instance. Instead received: %s.",
+  "509": "ReactDOM: Unsupported Legacy Mode API."
 }

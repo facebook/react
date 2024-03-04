@@ -100,6 +100,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     return text;
   }
 
+  // @gate !disableLegacyMode
   it('hides and unhides timed out DOM elements in legacy roots', async () => {
     const divs = [
       React.createRef(null),
@@ -160,6 +161,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(container.textContent).toEqual('ABC');
   });
 
+  // @gate !disableLegacyMode
   it(
     'in legacy roots, re-hides children if their display is updated ' +
       'but the boundary is still showing the fallback',
@@ -213,6 +215,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
   );
 
   // Regression test for https://github.com/facebook/react/issues/14188
+  // @gate !disableLegacyMode
   it('can call findDOMNode() in a suspended component commit phase in legacy roots', async () => {
     const log = [];
     const Lazy = React.lazy(

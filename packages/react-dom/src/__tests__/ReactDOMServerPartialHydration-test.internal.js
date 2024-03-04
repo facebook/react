@@ -718,6 +718,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate !disableLegacyMode
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;

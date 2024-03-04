@@ -164,6 +164,7 @@ describe('ReactDOM', () => {
     expect(dog.className).toBe('bigdog');
   });
 
+  // @gate !disableLegacyMode
   it('throws in render() if the mount callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;
@@ -216,6 +217,7 @@ describe('ReactDOM', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('throws in render() if the update callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;

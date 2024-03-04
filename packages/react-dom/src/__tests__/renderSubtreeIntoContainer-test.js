@@ -20,6 +20,7 @@ const renderSubtreeIntoContainer =
 
 describe('renderSubtreeIntoContainer', () => {
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
 
@@ -63,46 +64,8 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('bar');
   });
 
-  it('should throw if parentComponent is invalid', () => {
-    const portal = document.createElement('div');
-
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo}</div>;
-      }
-    }
-
-    // ESLint is confused here and thinks Parent is unused, presumably because
-    // it is only used inside of the class body?
-    // eslint-disable-next-line no-unused-vars
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: 'bar',
-        };
-      }
-
-      render() {
-        return null;
-      }
-
-      componentDidMount() {
-        expect(function () {
-          renderSubtreeIntoContainer(<Parent />, <Component />, portal);
-        }).toThrowError('parentComponentmust be a valid React Component');
-      }
-    }
-  });
-
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should update context if it changes due to setState', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -171,6 +134,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should update context if it changes due to re-render', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -232,6 +196,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
+  // @gate !disableLegacyMode
   it('should render portal with non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -259,6 +224,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should get context through non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -306,6 +272,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should get context through middle non-context-provider layer', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -360,6 +327,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal2.textContent).toBe('foo');
   });
 
+  // @gate !disableLegacyMode
   it('legacy test: fails gracefully when mixing React 15 and 16', () => {
     class C extends React.Component {
       render() {

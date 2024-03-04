@@ -101,6 +101,7 @@ export const enableRefAsProp = __NEXT_MAJOR__;
 export const disableStringRefs = __NEXT_MAJOR__;
 export const enableReactTestRendererWarning = false;
 export const enableBigIntSupport = __NEXT_MAJOR__;
+export const disableLegacyMode = __NEXT_MAJOR__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

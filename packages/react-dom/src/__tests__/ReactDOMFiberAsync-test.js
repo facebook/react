@@ -50,6 +50,7 @@ describe('ReactDOMFiberAsync', () => {
     document.body.removeChild(container);
   });
 
+  // @gate !disableLegacyMode
   it('renders synchronously by default in legacy mode', () => {
     const ops = [];
     ReactDOM.render(<div>Hi</div>, container, () => {

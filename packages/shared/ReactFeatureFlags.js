@@ -195,6 +195,11 @@ export const disableStringRefs = __NEXT_MAJOR__;
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = false;
 
+// Disables legacy mode
+// This allows us to land breaking changes to remove legacy mode APIs in experimental builds
+// before removing them in stable in the next Major
+export const disableLegacyMode = __NEXT_MAJOR__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
