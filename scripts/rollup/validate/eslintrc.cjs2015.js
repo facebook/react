@@ -54,6 +54,10 @@ module.exports = {
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',
 
+    // Flight Vite
+    __vite_preload__: 'readonly',
+    __vite_require__: 'readonly',
+
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
     __webpack_require__: 'readonly',

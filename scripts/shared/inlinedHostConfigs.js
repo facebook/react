@@ -163,6 +163,79 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-vite',
+    entryPoints: [
+      'react-server-dom-vite/server.node.unbundled',
+      'react-server-dom-vite/client.node.unbundled',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-vite',
+      'react-server-dom-vite/client.node.unbundled',
+      'react-server-dom-vite/server',
+      'react-server-dom-vite/server.node.unbundled',
+      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-vite/server.node.unbundled
+      'react-server-dom-vite/src/ReactFlightDOMClientNode.js', // react-server-dom-vite/client.node.unbundled
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerNode.js',
+      'react-server-dom-vite/node-register',
+      'react-server-dom-vite/src/ReactFlightViteNodeRegister.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-node-vite-bundled',
+    entryPoints: [
+      'react-server-dom-vite/server.node',
+      'react-server-dom-vite/client.node',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-vite',
+      'react-server-dom-vite/client.node',
+      'react-server-dom-vite/server',
+      'react-server-dom-vite/server.node',
+      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/server.node
+      'react-server-dom-vite/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerVite.js',
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerViteServer.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-bun',
     entryPoints: ['react-dom', 'react-dom/src/server/react-dom-server.bun.js'],
     paths: [
@@ -271,6 +344,36 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-browser-vite',
+    entryPoints: [
+      'react-server-dom-vite/client.browser',
+      'react-server-dom-vite/server.browser',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom-bindings',
+      'react-server-dom-vite',
+      'react-server-dom-vite/client',
+      'react-server-dom-vite/client.browser',
+      'react-server-dom-vite/server.browser',
+      'react-server-dom-vite/src/ReactFlightDOMClientBrowser.js', // react-server-dom-vite/client.browser
+      'react-server-dom-vite/src/ReactFlightDOMServerBrowser.js', // react-server-dom-vite/server.browser
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerVite.js',
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerViteBrowser.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-edge-webpack',
     entryPoints: [
       'react-dom/src/server/react-dom-server.edge.js',
@@ -330,6 +433,40 @@ module.exports = [
       'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-edge-vite',
+    entryPoints: [
+      'react-server-dom-vite/server.edge',
+      'react-server-dom-vite/client.edge',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server.edge',
+      'react-dom/static.edge',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/react-dom-server.edge',
+      'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
+      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-server-dom-vite',
+      'react-server-dom-vite/client.edge',
+      'react-server-dom-vite/server.edge',
+      'react-server-dom-vite/src/ReactFlightDOMClientEdge.js', // react-server-dom-vite/client.edge
+      'react-server-dom-vite/src/ReactFlightDOMServerEdge.js', // react-server-dom-vite/server.edge
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerVite.js',
+      'react-server-dom-vite/src/ReactFlightClientConfigBundlerViteServer.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
