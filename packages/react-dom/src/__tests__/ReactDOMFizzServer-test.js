@@ -2416,9 +2416,6 @@ describe('ReactDOMFizzServer', () => {
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
       ],
       {withoutStack: 1},
     );
@@ -2499,9 +2496,6 @@ describe('ReactDOMFizzServer', () => {
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
       ],
       {withoutStack: 1},
     );
@@ -4498,14 +4492,10 @@ describe('ReactDOMFizzServer', () => {
     // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
     // client-side rendering.
     await clientResolve();
-    await expect(async () => {
-      await waitForAll([
-        "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
-      ]);
-    }).toErrorDev(
-      'Warning: Text content did not match. Server: "initial" Client: "replaced',
-    );
+    await waitForAll([
+      "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>A</p>
@@ -4570,21 +4560,7 @@ describe('ReactDOMFizzServer', () => {
       );
 
       await waitForAll([]);
-      if (__DEV__) {
-        expect(mockError.mock.calls.length).toBe(1);
-        expect(mockError.mock.calls[0]).toEqual([
-          'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
-          'initial',
-          'replaced',
-          '\n' +
-            '    in h2 (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in App (at **)',
-        ]);
-      } else {
-        expect(mockError.mock.calls.length).toBe(0);
-      }
+      expect(mockError.mock.calls.length).toBe(0);
     } finally {
       console.error = originalConsoleError;
     }

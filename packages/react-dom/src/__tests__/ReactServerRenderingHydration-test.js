@@ -141,7 +141,6 @@ describe('ReactDOMServerHydration', () => {
       }).toErrorDev(
         [
           'An error occurred during hydration. The server HTML was replaced with client content.',
-          'Text content did not match. Server: "x" Client: "y"',
         ],
         {withoutStack: 1},
       );
@@ -226,7 +225,6 @@ describe('ReactDOMServerHydration', () => {
     }).toErrorDev(
       [
         'An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Text content did not match. Server: "server" Client: "client"',
       ],
       {withoutStack: 1},
     );
@@ -535,7 +533,6 @@ describe('ReactDOMServerHydration', () => {
     }).toErrorDev(
       [
         'An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Text content did not match. Server: "server" Client: "client"',
       ],
       {withoutStack: 1},
     );
@@ -561,7 +558,6 @@ describe('ReactDOMServerHydration', () => {
     }).toErrorDev(
       [
         'An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Did not expect server HTML to contain a <p> in <div>.',
       ],
       {withoutStack: 1},
     );

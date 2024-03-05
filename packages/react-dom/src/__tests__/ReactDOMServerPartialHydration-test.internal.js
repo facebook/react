@@ -1416,15 +1416,13 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<span>B</span>');
     expect(ref.current).toBe(null);
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
-          onRecoverableError(error) {
-            Scheduler.log(normalizeError(error.message));
-          },
-        });
+    await act(() => {
+      ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
+        onRecoverableError(error) {
+          Scheduler.log(normalizeError(error.message));
+        },
       });
-    }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
+    });
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating this Suspense boundary.',
@@ -4016,9 +4014,6 @@ describe('ReactDOMServerPartialHydration', () => {
       [
         'Warning: An error occurred during hydration. ' +
           'The server HTML was replaced with client content.',
-        'Warning: Expected server HTML to contain a matching <span> in the root.\n' +
-          '    in span (at **)\n' +
-          '    in App (at **)',
       ],
       {withoutStack: 1},
     );
@@ -4060,7 +4055,6 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     }).toErrorDev(
       [
-        'Text content did not match. Server: "good" Client: "bad"',
         'An error occurred during hydration. The server HTML was replaced with ' +
           'client content.',
       ],
@@ -4103,7 +4097,6 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     }).toErrorDev(
       [
-        'Text content did not match. Server: "good" Client: "bad"',
         'An error occurred during hydration. The server HTML was replaced with ' +
           'client content.',
       ],
