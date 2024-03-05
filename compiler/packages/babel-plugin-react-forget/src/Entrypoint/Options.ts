@@ -104,6 +104,10 @@ export type PluginOptions = {
   eslintSuppressionRules?: Array<string> | null | undefined;
 
   flowSuppressions: boolean;
+  /*
+   * Ignore 'use no forget' annotations. Helpful during testing but should not be used in production.
+   */
+  ignoreUseNoForget: boolean;
 };
 
 const CompilationModeSchema = z.enum([
@@ -172,6 +176,7 @@ export const defaultOptions: PluginOptions = {
   enableUseMemoCachePolyfill: false,
   eslintSuppressionRules: null,
   flowSuppressions: false,
+  ignoreUseNoForget: false,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

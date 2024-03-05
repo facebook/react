@@ -51,13 +51,15 @@ function findDirectiveEnablingMemoization(
 }
 
 function findDirectiveDisablingMemoization(
-  directives: t.Directive[]
+  directives: t.Directive[],
+  options: PluginOptions
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
     if (
-      directiveValue === "use no forget" ||
-      directiveValue === "use no memo"
+      (directiveValue === "use no forget" ||
+        directiveValue === "use no memo") &&
+      !options.ignoreUseNoForget
     ) {
       return directive;
     }
@@ -197,12 +199,15 @@ export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
 ): void {
+  const options = parsePluginOptions(pass.opts);
+
   // Top level "use no forget", skip this file entirely
-  if (findDirectiveDisablingMemoization(program.node.directives) != null) {
+  if (
+    findDirectiveDisablingMemoization(program.node.directives, options) != null
+  ) {
     return;
   }
 
-  const options = parsePluginOptions(pass.opts);
   const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
 
   /*
@@ -400,7 +405,8 @@ function getReactFunctionType(
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
     const useNoForget = findDirectiveDisablingMemoization(
-      fn.node.body.directives
+      fn.node.body.directives,
+      pass.opts
     );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {

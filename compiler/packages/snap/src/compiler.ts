@@ -108,6 +108,11 @@ function makePluginOptions(
     flowSuppressions = true;
   }
 
+  let ignoreUseNoForget: boolean = false;
+  if (firstLine.includes("@ignoreUseNoForget")) {
+    ignoreUseNoForget = true;
+  }
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -168,6 +173,7 @@ function makePluginOptions(
     enableUseMemoCachePolyfill,
     eslintSuppressionRules,
     flowSuppressions,
+    ignoreUseNoForget
   };
 }
 
@@ -205,18 +211,18 @@ function getEvaluatorPresets(
   presets.push(
     language === "typescript"
       ? [
-          "@babel/preset-typescript",
-          {
-            /**
-             * onlyRemoveTypeImports needs to be set as fbt imports
-             * would otherwise be removed by this pass.
-             * https://github.com/facebook/fbt/issues/49
-             * https://github.com/facebook/sfbt/issues/72
-             * https://dev.to/retyui/how-to-add-support-typescript-for-fbt-an-internationalization-framework-3lo0
-             */
-            onlyRemoveTypeImports: true,
-          },
-        ]
+        "@babel/preset-typescript",
+        {
+          /**
+           * onlyRemoveTypeImports needs to be set as fbt imports
+           * would otherwise be removed by this pass.
+           * https://github.com/facebook/fbt/issues/49
+           * https://github.com/facebook/sfbt/issues/72
+           * https://dev.to/retyui/how-to-add-support-typescript-for-fbt-an-internationalization-framework-3lo0
+           */
+          onlyRemoveTypeImports: true,
+        },
+      ]
       : "@babel/preset-flow"
   );
 
