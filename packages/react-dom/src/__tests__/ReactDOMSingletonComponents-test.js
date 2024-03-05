@@ -476,7 +476,7 @@ describe('ReactDOM HostSingleton', () => {
     );
     expect(hydrationErrors).toEqual([
       [
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
         'at div',
       ],
       [

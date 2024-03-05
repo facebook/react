@@ -87,7 +87,7 @@ describe('ReactDOMServerHydration', () => {
             in div (at **)
             in Mismatch (at **)",
           "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-          "Caught [Text content does not match server-rendered HTML.]",
+          "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
       `);
@@ -113,7 +113,7 @@ describe('ReactDOMServerHydration', () => {
             in div (at **)
             in Mismatch (at **)",
           "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-          "Caught [Text content does not match server-rendered HTML.]",
+          "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
       `);
@@ -282,7 +282,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -306,7 +306,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -330,7 +330,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -354,7 +354,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -373,7 +373,7 @@ describe('ReactDOMServerHydration', () => {
               in div (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Text content does not match server-rendered HTML.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
@@ -396,7 +396,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -419,7 +419,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -442,7 +442,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -467,7 +467,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -491,7 +491,7 @@ describe('ReactDOMServerHydration', () => {
               in div (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
@@ -515,7 +515,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -538,7 +538,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -557,7 +557,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -581,7 +581,7 @@ describe('ReactDOMServerHydration', () => {
               in div (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
@@ -605,7 +605,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -628,7 +628,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -662,7 +662,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -687,7 +687,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -715,7 +715,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -746,7 +746,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -772,7 +772,7 @@ describe('ReactDOMServerHydration', () => {
                 in Suspense (at **)
                 in div (at **)
                 in Mismatch (at **)",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
             ]
           `);
@@ -798,7 +798,7 @@ describe('ReactDOMServerHydration', () => {
                 in Suspense (at **)
                 in div (at **)
                 in Mismatch (at **)",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
             ]
           `);
@@ -880,7 +880,7 @@ describe('ReactDOMServerHydration', () => {
               in div (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
@@ -907,7 +907,7 @@ describe('ReactDOMServerHydration', () => {
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
@@ -959,7 +959,7 @@ describe('ReactDOMServerHydration', () => {
               in ProfileSettings (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
@@ -1006,7 +1006,7 @@ describe('ReactDOMServerHydration', () => {
               in ProfileSettings (at **)
               in Mismatch (at **)",
             "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+            "Caught [Hydration failed because the server rendered HTML didn\'t match the client.]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);

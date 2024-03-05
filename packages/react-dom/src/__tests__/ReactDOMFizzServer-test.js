@@ -4488,7 +4488,7 @@ describe('ReactDOMFizzServer', () => {
     await clientResolve();
     await expect(async () => {
       await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
     }).toErrorDev(
@@ -4543,7 +4543,7 @@ describe('ReactDOMFizzServer', () => {
         },
       });
       await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
 

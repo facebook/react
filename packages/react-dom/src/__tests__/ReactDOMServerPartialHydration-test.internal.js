@@ -339,7 +339,7 @@ describe('ReactDOMServerPartialHydration', () => {
         'Component',
 
         // Hydration mismatch is logged
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
         'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
 
@@ -1427,7 +1427,7 @@ describe('ReactDOMServerPartialHydration', () => {
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
     assertLog([
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
     ]);
 
@@ -4042,7 +4042,7 @@ describe('ReactDOMServerPartialHydration', () => {
       {withoutStack: 1},
     );
     assertLog([
-      'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+      "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
       'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
 
@@ -4086,7 +4086,7 @@ describe('ReactDOMServerPartialHydration', () => {
       {withoutStack: 1},
     );
     assertLog([
-      'Text content does not match server-rendered HTML.',
+      "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating. Because the error happened outside ' +
         'of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
@@ -4130,7 +4130,7 @@ describe('ReactDOMServerPartialHydration', () => {
       {withoutStack: 1},
     );
     assertLog([
-      'Text content does not match server-rendered HTML.',
+      "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating. Because the error happened outside ' +
         'of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
