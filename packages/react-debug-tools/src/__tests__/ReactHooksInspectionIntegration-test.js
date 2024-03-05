@@ -952,7 +952,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "isStateEditable": false,
           "name": "Transition",
           "subHooks": [],
-          "value": undefined,
+          "value": false,
         },
         {
           "debugInfo": null,
@@ -1045,7 +1045,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "isStateEditable": false,
           "name": "Transition",
           "subHooks": [],
-          "value": undefined,
+          "value": false,
         },
         {
           "debugInfo": null,
@@ -1114,7 +1114,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "isStateEditable": false,
           "name": "Transition",
           "subHooks": [],
-          "value": undefined,
+          "value": true,
         },
         {
           "debugInfo": null,
