@@ -27,13 +27,13 @@ let waitFor;
 let waitForPaint;
 let assertLog;
 
-function normalizeCodeLocInfo(strOrErr) {
-  if (strOrErr && strOrErr.replace) {
-    return strOrErr.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
-      return '\n    in ' + name + ' (at **)';
-    });
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
   }
-  return strOrErr;
+  return msg;
 }
 
 function dispatchMouseEvent(to, from) {
@@ -234,7 +234,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -309,7 +309,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
       await waitForAll(['Suspend']);
@@ -340,7 +340,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
         // Hydration mismatch is logged
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'There was an error while hydrating this Suspense boundary.',
       ]);
 
       // Client rendered - suspense comment nodes removed
@@ -1195,7 +1195,7 @@ describe('ReactDOMServerPartialHydration', () => {
         deleted.push(node);
       },
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -1294,7 +1294,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
-            Scheduler.log(error.message);
+            Scheduler.log(normalizeError(error.message));
           },
         });
       });
@@ -1309,8 +1309,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Server rendered',
       'Client rendered',
       'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating this Suspense boundary. ' +
-        'Switched to client rendering.',
+      'There was an error while hydrating this Suspense boundary.',
     ]);
     expect(ref.current).not.toBe(span);
   });
@@ -1421,14 +1420,14 @@ describe('ReactDOMServerPartialHydration', () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
-            Scheduler.log(error.message);
+            Scheduler.log(normalizeError(error.message));
           },
         });
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      'There was an error while hydrating this Suspense boundary.',
     ]);
 
     expect(container.innerHTML).toContain('<span>A</span>');
@@ -1787,7 +1786,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       },
     );
@@ -1865,7 +1864,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       },
     );
@@ -1941,7 +1940,7 @@ describe('ReactDOMServerPartialHydration', () => {
       <App text="Hello" className="hello" />,
       {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       },
     );
@@ -2249,7 +2248,7 @@ describe('ReactDOMServerPartialHydration', () => {
       </Context.Provider>,
       {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       },
     );
@@ -2324,22 +2323,18 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     if (__DEV__) {
       await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
-          ' "renderToString" which does not support Suspense. If you intended' +
-          ' for this Suspense boundary to render the fallback content on the' +
-          ' server consider throwing an Error somewhere within the Suspense boundary.' +
-          ' If you intended to have the server wait for the suspended component' +
-          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+          ' "renderToString" which does not support Suspense.',
       ]);
     } else {
       await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
+          'an error during server rendering.',
       ]);
     }
     jest.runAllTimers();
@@ -2397,22 +2392,18 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     if (__DEV__) {
       await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
-          ' "renderToString" which does not support Suspense. If you intended' +
-          ' for this Suspense boundary to render the fallback content on the' +
-          ' server consider throwing an Error somewhere within the Suspense boundary.' +
-          ' If you intended to have the server wait for the suspended component' +
-          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+          ' "renderToString" which does not support Suspense.',
       ]);
     } else {
       await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
+          'an error during server rendering.',
       ]);
     }
     // This will have exceeded the suspended time so we should timeout.
@@ -2475,22 +2466,18 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     if (__DEV__) {
       await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
-          ' "renderToString" which does not support Suspense. If you intended' +
-          ' for this Suspense boundary to render the fallback content on the' +
-          ' server consider throwing an Error somewhere within the Suspense boundary.' +
-          ' If you intended to have the server wait for the suspended component' +
-          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+          ' "renderToString" which does not support Suspense.',
       ]);
     } else {
       await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
+          'an error during server rendering.',
       ]);
     }
     // This will have exceeded the suspended time so we should timeout.
@@ -2797,7 +2784,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
 
@@ -2805,16 +2792,12 @@ describe('ReactDOMServerPartialHydration', () => {
     if (__DEV__) {
       await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
-          ' "renderToString" which does not support Suspense. If you intended' +
-          ' for this Suspense boundary to render the fallback content on the' +
-          ' server consider throwing an Error somewhere within the Suspense boundary.' +
-          ' If you intended to have the server wait for the suspended component' +
-          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+          ' "renderToString" which does not support Suspense.',
       ]);
     } else {
       await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
+          'an error during server rendering.',
       ]);
     }
 
@@ -2873,22 +2856,18 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     if (__DEV__) {
       await waitForAll([
         'The server did not finish this Suspense boundary: The server used' +
-          ' "renderToString" which does not support Suspense. If you intended' +
-          ' for this Suspense boundary to render the fallback content on the' +
-          ' server consider throwing an Error somewhere within the Suspense boundary.' +
-          ' If you intended to have the server wait for the suspended component' +
-          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+          ' "renderToString" which does not support Suspense.',
       ]);
     } else {
       await waitForAll([
         'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
+          'an error during server rendering.',
       ]);
     }
     jest.runAllTimers();
@@ -2989,7 +2968,7 @@ describe('ReactDOMServerPartialHydration', () => {
       </ClassName.Provider>,
       {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       },
     );
@@ -4027,7 +4006,9 @@ describe('ReactDOMServerPartialHydration', () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
           onRecoverableError(error) {
-            Scheduler.log('Log recoverable error: ' + error.message);
+            Scheduler.log(
+              'Log recoverable error: ' + normalizeError(error.message),
+            );
           },
         });
       });
@@ -4043,7 +4024,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
     assertLog([
       "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-      'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      'Log recoverable error: There was an error while hydrating.',
     ]);
 
     // We show fallback state when mismatch happens at root
@@ -4073,7 +4054,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
           onRecoverableError(error) {
-            Scheduler.log(error.message);
+            Scheduler.log(normalizeError(error.message));
           },
         });
       });
@@ -4087,8 +4068,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating. Because the error happened outside ' +
-        'of a Suspense boundary, the entire root will switch to client rendering.',
+      'There was an error while hydrating.',
     ]);
   });
 
@@ -4116,7 +4096,7 @@ describe('ReactDOMServerPartialHydration', () => {
           <TextChildWithSibling text="bad" />,
           {
             onRecoverableError(error) {
-              Scheduler.log(error.message);
+              Scheduler.log(normalizeError(error.message));
             },
           },
         );
@@ -4131,8 +4111,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating. Because the error happened outside ' +
-        'of a Suspense boundary, the entire root will switch to client rendering.',
+      'There was an error while hydrating.',
     ]);
   });
 });

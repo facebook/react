@@ -24,6 +24,15 @@ let hasErrored = false;
 let fatalError = undefined;
 let waitForAll;
 
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
+
 describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -156,7 +165,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         // Don't miss a hydration error. There should be none.
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -196,7 +205,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -237,13 +246,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -282,7 +291,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     const root = ReactDOMClient.hydrateRoot(container, <App text="Client" />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -326,13 +335,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -374,13 +383,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -425,13 +434,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -474,13 +483,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -527,7 +536,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -564,7 +573,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -597,13 +606,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
@@ -643,13 +652,13 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [

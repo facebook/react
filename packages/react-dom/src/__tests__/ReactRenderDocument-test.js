@@ -28,6 +28,15 @@ function getTestDocument(markup) {
   return doc;
 }
 
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
+
 describe('rendering React components at document', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -191,7 +200,9 @@ describe('rendering React components at document', () => {
         ReactDOM.flushSync(() => {
           ReactDOMClient.hydrateRoot(container, <div>parsnip</div>, {
             onRecoverableError: error => {
-              Scheduler.log('Log recoverable error: ' + error.message);
+              Scheduler.log(
+                'Log recoverable error: ' + normalizeError(error.message),
+              );
             },
           });
         });
@@ -226,7 +237,9 @@ describe('rendering React components at document', () => {
             </div>,
             {
               onRecoverableError: error => {
-                Scheduler.log('Log recoverable error: ' + error.message);
+                Scheduler.log(
+                  'Log recoverable error: ' + normalizeError(error.message),
+                );
               },
             },
           );
@@ -272,7 +285,9 @@ describe('rendering React components at document', () => {
             <Component text="Hello world" />,
             {
               onRecoverableError: error => {
-                Scheduler.log('Log recoverable error: ' + error.message);
+                Scheduler.log(
+                  'Log recoverable error: ' + normalizeError(error.message),
+                );
               },
             },
           );
@@ -328,12 +343,13 @@ describe('rendering React components at document', () => {
       }).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Expected server HTML to contain a matching text node for "Hello world" in <body>',
         ],
         {withoutStack: 1},
       );
       assertLog([
         "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
+        'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ]);
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
