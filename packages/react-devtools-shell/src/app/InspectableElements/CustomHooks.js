@@ -121,7 +121,7 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
 const Suspendender = React.lazy(() => {
-  return new Promise(resolve => {
+  return new Promise<any>(resolve => {
     setTimeout(() => {
       resolve({
         default: () => 'Finished!',
