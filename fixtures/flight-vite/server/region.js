@@ -81,7 +81,7 @@ async function createApp() {
 
     globalThis.__vite_module_cache__ = new Map();
     globalThis.__vite_preload__ = metadata => {
-      let id = typeof metadata == 'string' ? metadata : metadata.specifier;
+      let id = metadata;
       const existingPromise = __vite_module_cache__.get(id);
       if (existingPromise) {
         if (existingPromise.status === 'fulfilled') {
@@ -109,7 +109,7 @@ async function createApp() {
 
     globalThis.__vite_require__ = metadata => {
       let moduleExports;
-      let id = typeof metadata === 'string' ? metadata : metadata.specifier;
+      let id = metadata;
       // We assume that preloadModule has been called before, which
       // should have added something to the module cache.
       const promise = __vite_module_cache__.get(id);
@@ -119,9 +119,7 @@ async function createApp() {
         } else {
           throw promise.reason;
         }
-        return typeof metadata === 'string'
-          ? moduleExports
-          : moduleExports.name;
+        return moduleExports;
       } else {
         throw new Error('Module not found in cache: ' + id);
       }
