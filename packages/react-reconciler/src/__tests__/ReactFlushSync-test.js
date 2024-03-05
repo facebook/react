@@ -1,5 +1,6 @@
 let React;
-let ReactNoop;
+let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let act;
 let useState;
@@ -15,7 +16,8 @@ describe('ReactFlushSync', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactNoop = require('react-noop-renderer');
+    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     useState = React.useState;
@@ -32,7 +34,49 @@ describe('ReactFlushSync', () => {
     return text;
   }
 
-  test('changes priority of updates in useEffect', async () => {
+  function getVisibleChildren(element: Element): React$Node {
+    const children = [];
+    let node: any = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          ((node.tagName !== 'SCRIPT' && node.tagName !== 'script') ||
+            node.hasAttribute('data-meaningful')) &&
+          node.tagName !== 'TEMPLATE' &&
+          node.tagName !== 'template' &&
+          !node.hasAttribute('hidden') &&
+          !node.hasAttribute('aria-hidden')
+        ) {
+          const props: any = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getVisibleChildren(node);
+          children.push(
+            require('react').createElement(node.tagName.toLowerCase(), props),
+          );
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+      ? children[0]
+      : children;
+  }
+
+  it('changes priority of updates in useEffect', async () => {
     spyOnDev(console, 'error').mockImplementation(() => {});
 
     function App() {
@@ -41,13 +85,14 @@ describe('ReactFlushSync', () => {
       useEffect(() => {
         if (syncState !== 1) {
           setState(1);
-          ReactNoop.flushSync(() => setSyncState(1));
+          ReactDOM.flushSync(() => setSyncState(1));
         }
       }, [syncState, state]);
       return <Text text={`${syncState}, ${state}`} />;
     }
 
-    const root = ReactNoop.createRoot();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       React.startTransition(() => {
         root.render(<App />);
@@ -62,7 +107,7 @@ describe('ReactFlushSync', () => {
       );
 
       // The remaining update is not sync
-      ReactNoop.flushSync();
+      ReactDOM.flushSync();
       assertLog([]);
 
       if (gate(flags => flags.enableUnifiedSyncLane)) {
@@ -72,7 +117,7 @@ describe('ReactFlushSync', () => {
         await waitForPaint(['1, 1']);
       }
     });
-    expect(root).toMatchRenderedOutput('1, 1');
+    expect(getVisibleChildren(container)).toEqual('1, 1');
 
     if (__DEV__) {
       expect(console.error.mock.calls[0][0]).toContain(
@@ -83,7 +128,7 @@ describe('ReactFlushSync', () => {
     }
   });
 
-  test('nested with startTransition', async () => {
+  it('supports nested flushSync with startTransition', async () => {
     let setSyncState;
     let setState;
     function App() {
@@ -94,20 +139,21 @@ describe('ReactFlushSync', () => {
       return <Text text={`${syncState}, ${state}`} />;
     }
 
-    const root = ReactNoop.createRoot();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<App />);
     });
     assertLog(['0, 0']);
-    expect(root).toMatchRenderedOutput('0, 0');
+    expect(getVisibleChildren(container)).toEqual('0, 0');
 
     await act(() => {
-      ReactNoop.flushSync(() => {
+      ReactDOM.flushSync(() => {
         startTransition(() => {
           // This should be async even though flushSync is on the stack, because
           // startTransition is closer.
           setState(1);
-          ReactNoop.flushSync(() => {
+          ReactDOM.flushSync(() => {
             // This should be async even though startTransition is on the stack,
             // because flushSync is closer.
             setSyncState(1);
@@ -116,14 +162,14 @@ describe('ReactFlushSync', () => {
       });
       // Only the sync update should have flushed
       assertLog(['1, 0']);
-      expect(root).toMatchRenderedOutput('1, 0');
+      expect(getVisibleChildren(container)).toEqual('1, 0');
     });
     // Now the async update has flushed, too.
     assertLog(['1, 1']);
-    expect(root).toMatchRenderedOutput('1, 1');
+    expect(getVisibleChildren(container)).toEqual('1, 1');
   });
 
-  test('flushes passive effects synchronously when they are the result of a sync render', async () => {
+  it('flushes passive effects synchronously when they are the result of a sync render', async () => {
     function App() {
       useEffect(() => {
         Scheduler.log('Effect');
@@ -131,9 +177,10 @@ describe('ReactFlushSync', () => {
       return <Text text="Child" />;
     }
 
-    const root = ReactNoop.createRoot();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      ReactNoop.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<App />);
       });
       assertLog([
@@ -142,11 +189,12 @@ describe('ReactFlushSync', () => {
         // flushSync should flush it.
         'Effect',
       ]);
-      expect(root).toMatchRenderedOutput('Child');
+      expect(getVisibleChildren(container)).toEqual('Child');
     });
   });
 
-  test('do not flush passive effects synchronously after render in legacy mode', async () => {
+  // @gate !disableLegacyMode
+  it('does not flush passive effects synchronously after render in legacy mode', async () => {
     function App() {
       useEffect(() => {
         Scheduler.log('Effect');
@@ -154,23 +202,24 @@ describe('ReactFlushSync', () => {
       return <Text text="Child" />;
     }
 
-    const root = ReactNoop.createLegacyRoot();
+    const container = document.createElement('div');
     await act(() => {
-      ReactNoop.flushSync(() => {
-        root.render(<App />);
+      ReactDOM.flushSync(() => {
+        ReactDOM.render(<App />, container);
       });
       assertLog([
         'Child',
         // Because we're in legacy mode, we shouldn't have flushed the passive
         // effects yet.
       ]);
-      expect(root).toMatchRenderedOutput('Child');
+      expect(getVisibleChildren(container)).toEqual('Child');
     });
     // Effect flushes after paint.
     assertLog(['Effect']);
   });
 
-  test('flush pending passive effects before scope is called in legacy mode', async () => {
+  // @gate !disableLegacyMode
+  it('flushes pending passive effects before scope is called in legacy mode', async () => {
     let currentStep = 0;
 
     function App({step}) {
@@ -181,30 +230,30 @@ describe('ReactFlushSync', () => {
       return <Text text={step} />;
     }
 
-    const root = ReactNoop.createLegacyRoot();
+    const container = document.createElement('div');
     await act(() => {
-      ReactNoop.flushSync(() => {
-        root.render(<App step={1} />);
+      ReactDOM.flushSync(() => {
+        ReactDOM.render(<App step={1} />, container);
       });
       assertLog([
         1,
         // Because we're in legacy mode, we shouldn't have flushed the passive
         // effects yet.
       ]);
-      expect(root).toMatchRenderedOutput('1');
+      expect(getVisibleChildren(container)).toEqual('1');
 
-      ReactNoop.flushSync(() => {
+      ReactDOM.flushSync(() => {
         // This should render step 2 because the passive effect has already
         // fired, before the scope function is called.
-        root.render(<App step={currentStep + 1} />);
+        ReactDOM.render(<App step={currentStep + 1} />, container);
       });
       assertLog(['Effect: 1', 2]);
-      expect(root).toMatchRenderedOutput('2');
+      expect(getVisibleChildren(container)).toEqual('2');
     });
     assertLog(['Effect: 2']);
   });
 
-  test("do not flush passive effects synchronously when they aren't the result of a sync render", async () => {
+  it("does not flush passive effects synchronously when they aren't the result of a sync render", async () => {
     function App() {
       useEffect(() => {
         Scheduler.log('Effect');
@@ -212,7 +261,8 @@ describe('ReactFlushSync', () => {
       return <Text text="Child" />;
     }
 
-    const root = ReactNoop.createRoot();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App />);
       await waitForPaint([
@@ -220,13 +270,13 @@ describe('ReactFlushSync', () => {
         // Because the passive effect was not the result of a sync update, it
         // should not flush before paint.
       ]);
-      expect(root).toMatchRenderedOutput('Child');
+      expect(getVisibleChildren(container)).toEqual('Child');
     });
     // Effect flushes after paint.
     assertLog(['Effect']);
   });
 
-  test('does not flush pending passive effects', async () => {
+  it('does not flush pending passive effects', async () => {
     function App() {
       useEffect(() => {
         Scheduler.log('Effect');
@@ -234,14 +284,15 @@ describe('ReactFlushSync', () => {
       return <Text text="Child" />;
     }
 
-    const root = ReactNoop.createRoot();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App />);
       await waitForPaint(['Child']);
-      expect(root).toMatchRenderedOutput('Child');
+      expect(getVisibleChildren(container)).toEqual('Child');
 
       // Passive effects are pending. Calling flushSync should not affect them.
-      ReactNoop.flushSync();
+      ReactDOM.flushSync();
       // Effects still haven't fired.
       assertLog([]);
     });
@@ -249,14 +300,19 @@ describe('ReactFlushSync', () => {
     assertLog(['Effect']);
   });
 
-  test('completely exhausts synchronous work queue even if something throws', async () => {
+  it('completely exhausts synchronous work queue even if something throws', async () => {
     function Throws({error}) {
       throw error;
     }
 
-    const root1 = ReactNoop.createRoot();
-    const root2 = ReactNoop.createRoot();
-    const root3 = ReactNoop.createRoot();
+    const container1 = document.createElement('div');
+    const root1 = ReactDOMClient.createRoot(container1);
+
+    const container2 = document.createElement('div');
+    const root2 = ReactDOMClient.createRoot(container2);
+
+    const container3 = document.createElement('div');
+    const root3 = ReactDOMClient.createRoot(container3);
 
     await act(async () => {
       root1.render(<Text text="Hi" />);
@@ -270,7 +326,7 @@ describe('ReactFlushSync', () => {
 
     let error;
     try {
-      ReactNoop.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root1.render(<Throws error={aahh} />);
         root2.render(<Throws error={nooo} />);
         root3.render(<Text text="aww" />);
@@ -283,9 +339,9 @@ describe('ReactFlushSync', () => {
     // earlier updates errored.
     assertLog(['aww']);
     // Roots 1 and 2 were unmounted.
-    expect(root1).toMatchRenderedOutput(null);
-    expect(root2).toMatchRenderedOutput(null);
-    expect(root3).toMatchRenderedOutput('aww');
+    expect(getVisibleChildren(container1)).toEqual(undefined);
+    expect(getVisibleChildren(container2)).toEqual(undefined);
+    expect(getVisibleChildren(container3)).toEqual('aww');
 
     // Because there were multiple errors, React threw an AggregateError.
     // eslint-disable-next-line no-undef
