@@ -261,7 +261,9 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    source,
+    // Previous backend implementations (<= 5.0.1) have a different interface for Source, with fileName.
+    // This gates the source features for only compatible backends: >= 5.0.2
+    source: source && source.sourceURL ? source : null,
     type,
     owners:
       owners === null

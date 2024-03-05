@@ -955,3 +955,8 @@ export function backendToFrontendSerializedElementMapper(
     compiledWithForget,
   };
 }
+
+// This is a hacky one to just support this exact case.
+export function normalizeUrl(url: string): string {
+  return url.replace('/./', '/');
+}

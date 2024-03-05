@@ -28,6 +28,6 @@
     "react": "^17.0.0"
   },
   "dependencies": {
-    "error-stack-parser": "^2.0.2"
+    "error-stack-parser": "^2.1.4"
   }
 }
