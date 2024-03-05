@@ -559,13 +559,16 @@ function prepareToHydrateHostInstance(
     }
   }
 
-  hydrateInstance(
+  const didHydrate = hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
     hostContext,
     fiber,
   );
+  if (!didHydrate) {
+    throw new Error('Text content does not match server-rendered HTML.');
+  }
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): void {
@@ -631,7 +634,15 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
     // TODO: What if it's a SuspenseInstance?
   }
 
-  hydrateTextInstance(textInstance, textContent, fiber, parentProps);
+  const didHydrate = hydrateTextInstance(
+    textInstance,
+    textContent,
+    fiber,
+    parentProps,
+  );
+  if (!didHydrate) {
+    throw new Error('Text content does not match server-rendered HTML.');
+  }
 }
 
 function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {

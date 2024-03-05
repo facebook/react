@@ -1379,13 +1379,13 @@ export function hydrateInstance(
   props: Props,
   hostContext: HostContext,
   internalInstanceHandle: Object,
-): void {
+): boolean {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
   // get attached.
   updateFiberProps(instance, props);
 
-  hydrateProperties(instance, type, props, hostContext);
+  return hydrateProperties(instance, type, props, hostContext);
 }
 
 // Returns a Map of properties that were different on the server.
@@ -1417,7 +1417,7 @@ export function hydrateTextInstance(
   text: string,
   internalInstanceHandle: Object,
   parentInstanceProps: null | Props,
-): void {
+): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
   return hydrateText(textInstance, text, parentInstanceProps);

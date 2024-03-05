@@ -326,12 +326,9 @@ function checkForUnmatchedText(
   const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
   const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
   if (normalizedServerText === normalizedClientText) {
-    return;
+    return true;
   }
-
-  // In concurrent roots, we throw when there's a text mismatch and revert to
-  // client rendering, up to the nearest Suspense boundary.
-  throw new Error('Text content does not match server-rendered HTML.');
+  return false;
 }
 
 function noop() {}
@@ -2848,7 +2845,7 @@ export function hydrateProperties(
   tag: string,
   props: Object,
   hostContext: HostContext,
-): void {
+): boolean {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
@@ -2961,11 +2958,13 @@ export function hydrateProperties(
     typeof children === 'number' ||
     (enableBigIntSupport && typeof children === 'bigint')
   ) {
-    // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-    if (domElement.textContent !== '' + children) {
-      if (props.suppressHydrationWarning !== true) {
-        checkForUnmatchedText(domElement.textContent, children);
-      }
+    if (
+      // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+      domElement.textContent !== '' + children &&
+      props.suppressHydrationWarning !== true &&
+      !checkForUnmatchedText(domElement.textContent, children)
+    ) {
+      return false;
     }
   }
 
@@ -2981,6 +2980,8 @@ export function hydrateProperties(
     // TODO: This cast may not be sound for SVG, MathML or custom elements.
     trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
   }
+
+  return true;
 }
 
 export function diffHydratedProperties(
@@ -3043,14 +3044,16 @@ export function hydrateText(
   textNode: Text,
   text: string,
   parentProps: null | Object,
-): void {
+): boolean {
   const isDifferent = textNode.nodeValue !== text;
   if (
     isDifferent &&
-    (parentProps === null || parentProps.suppressHydrationWarning !== true)
+    (parentProps === null || parentProps.suppressHydrationWarning !== true) &&
+    !checkForUnmatchedText(textNode.nodeValue, text)
   ) {
-    checkForUnmatchedText(textNode.nodeValue, text);
+    return false;
   }
+  return true;
 }
 
 export function diffHydratedText(textNode: Text, text: string): null | string {
