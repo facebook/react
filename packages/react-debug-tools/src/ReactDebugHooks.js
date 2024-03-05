@@ -61,10 +61,6 @@ type Hook = {
   next: Hook | null,
 };
 
-const GetPrimitiveStackCacheContext: ReactContext<mixed> = ({
-  $$typeof: REACT_CONTEXT_TYPE,
-  _currentValue: null,
-}: any);
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
   // most stack frames added by calling the primitive hook can be removed.
@@ -73,7 +69,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     let readHookLog;
     try {
       // Use all hooks here to add them to the hook log.
-      Dispatcher.useContext(GetPrimitiveStackCacheContext);
+      Dispatcher.useContext(({_currentValue: null}: any));
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -109,7 +105,12 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
-        Dispatcher.use(GetPrimitiveStackCacheContext);
+        Dispatcher.use(
+          ({
+            $$typeof: REACT_CONTEXT_TYPE,
+            _currentValue: null,
+          }: any),
+        );
         Dispatcher.use({
           then() {},
           status: 'fulfilled',
@@ -149,13 +150,9 @@ function nextHook(): null | Hook {
 }
 
 function readContext<T>(context: ReactContext<T>): T {
-  if (context === GetPrimitiveStackCacheContext) {
-    // This is a read for filling the primitive stack cache.
-    // There's no sensible value to return.
-    return (null: any);
-  }
   if (currentFiber === null) {
-    // Hook inspection without access to the Fiber tree.
+    // Hook inspection without access to the Fiber tree
+    // e.g. when filling the primitive stack cache or during `ReactDebugTools.inspectHooks()`.
     return context._currentValue;
   }
   if (currentContextDependency === null) {
