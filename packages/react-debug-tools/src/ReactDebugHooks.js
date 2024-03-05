@@ -21,6 +21,7 @@ import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
+import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 import ErrorStackParser from 'error-stack-parser';
 import assign from 'shared/assign';
@@ -48,6 +49,11 @@ type HookLogEntry = {
   value: mixed,
   debugInfo: ReactDebugInfo | null,
   dispatcherHookName: string,
+  /**
+   * A list of hook function names that may call this dispatcher method.
+   * If `null`, we assume that the wrapper name is equal to the dispatcher mthod name.
+   */
+  wrapperNames: Array<string> | null,
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -134,6 +140,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useHostTransitionStatus === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useHostTransitionStatus();
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -211,6 +222,7 @@ function use<T>(usable: Usable<T>): T {
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
             dispatcherHookName: 'Use',
+            wrapperNames: null,
           });
           return fulfilledValue;
         }
@@ -229,6 +241,7 @@ function use<T>(usable: Usable<T>): T {
         debugInfo:
           thenable._debugInfo === undefined ? null : thenable._debugInfo,
         dispatcherHookName: 'Use',
+        wrapperNames: null,
       });
       throw SuspenseException;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -242,6 +255,7 @@ function use<T>(usable: Usable<T>): T {
         value,
         debugInfo: null,
         dispatcherHookName: 'Use',
+        wrapperNames: null,
       });
 
       return value;
@@ -261,6 +275,7 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherHookName: 'Context',
+    wrapperNames: null,
   });
   return value;
 }
@@ -283,6 +298,7 @@ function useState<S>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'State',
+    wrapperNames: null,
   });
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -306,6 +322,7 @@ function useReducer<S, I, A>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'Reducer',
+    wrapperNames: null,
   });
   return [state, (action: A) => {}];
 }
@@ -320,6 +337,7 @@ function useRef<T>(initialValue: T): {current: T} {
     value: ref.current,
     debugInfo: null,
     dispatcherHookName: 'Ref',
+    wrapperNames: null,
   });
   return ref;
 }
@@ -333,6 +351,7 @@ function useCacheRefresh(): () => void {
     value: hook !== null ? hook.memoizedState : function refresh() {},
     debugInfo: null,
     dispatcherHookName: 'CacheRefresh',
+    wrapperNames: null,
   });
   return () => {};
 }
@@ -349,6 +368,7 @@ function useLayoutEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'LayoutEffect',
+    wrapperNames: null,
   });
 }
 
@@ -364,6 +384,7 @@ function useInsertionEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'InsertionEffect',
+    wrapperNames: null,
   });
 }
 
@@ -379,6 +400,7 @@ function useEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'Effect',
+    wrapperNames: null,
   });
 }
 
@@ -403,6 +425,7 @@ function useImperativeHandle<T>(
     value: instance,
     debugInfo: null,
     dispatcherHookName: 'ImperativeHandle',
+    wrapperNames: null,
   });
 }
 
@@ -414,6 +437,7 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     value: typeof formatterFn === 'function' ? formatterFn(value) : value,
     debugInfo: null,
     dispatcherHookName: 'DebugValue',
+    wrapperNames: null,
   });
 }
 
@@ -426,6 +450,7 @@ function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
     value: hook !== null ? hook.memoizedState[0] : callback,
     debugInfo: null,
     dispatcherHookName: 'Callback',
+    wrapperNames: null,
   });
   return callback;
 }
@@ -443,6 +468,7 @@ function useMemo<T>(
     value,
     debugInfo: null,
     dispatcherHookName: 'Memo',
+    wrapperNames: null,
   });
   return value;
 }
@@ -465,6 +491,7 @@ function useSyncExternalStore<T>(
     value,
     debugInfo: null,
     dispatcherHookName: 'SyncExternalStore',
+    wrapperNames: null,
   });
   return value;
 }
@@ -488,6 +515,7 @@ function useTransition(): [
     value: isPending,
     debugInfo: null,
     dispatcherHookName: 'Transition',
+    wrapperNames: null,
   });
   return [isPending, () => {}];
 }
@@ -502,6 +530,7 @@ function useDeferredValue<T>(value: T, initialValue?: T): T {
     value: prevValue,
     debugInfo: null,
     dispatcherHookName: 'DeferredValue',
+    wrapperNames: null,
   });
   return prevValue;
 }
@@ -516,6 +545,7 @@ function useId(): string {
     value: id,
     debugInfo: null,
     dispatcherHookName: 'Id',
+    wrapperNames: null,
   });
   return id;
 }
@@ -567,6 +597,7 @@ function useOptimistic<S, A>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'Optimistic',
+    wrapperNames: null,
   });
   return [state, (action: A) => {}];
 }
@@ -627,6 +658,7 @@ function useFormState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherHookName: 'FormState',
+    wrapperNames: null,
   });
 
   if (error !== null) {
@@ -697,6 +729,7 @@ function useActionState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherHookName: 'ActionState',
+    wrapperNames: null,
   });
 
   if (error !== null) {
@@ -709,6 +742,31 @@ function useActionState<S, P>(
 
   // TODO: support displaying pending value
   return [state, (payload: P) => {}, false];
+}
+
+function useHostTransitionStatus(): TransitionStatus {
+  const status = readContext<TransitionStatus>(
+    // $FlowFixMe[prop-missing] `readContext` only needs _currentValue
+    ({
+      // $FlowFixMe[incompatible-cast] TODO: Incorrect bottom value without access to Fiber config.
+      _currentValue: null,
+    }: ReactContext<TransitionStatus>),
+  );
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'HostTransitionStatus',
+    stackError: new Error(),
+    value: status,
+    debugInfo: null,
+    dispatcherHookName: 'HostTransitionStatus',
+    wrapperNames: [
+      // react-dom
+      'FormStatus',
+    ],
+  });
+
+  return status;
 }
 
 const Dispatcher: DispatcherType = {
@@ -734,6 +792,7 @@ const Dispatcher: DispatcherType = {
   useId,
   useFormState,
   useActionState,
+  useHostTransitionStatus,
 };
 
 // create a proxy to throw a custom error
@@ -855,11 +914,24 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
       ) {
         i++;
       }
-      if (
-        i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
-      ) {
-        i++;
+      if (hook.wrapperNames !== null) {
+        for (let j = 0; j < hook.wrapperNames.length; j++) {
+          const wrapperName = hook.wrapperNames[j];
+          if (
+            i < hookStack.length - 1 &&
+            isReactWrapper(hookStack[i].functionName, wrapperName)
+          ) {
+            i++;
+          }
+        }
+      } else {
+        const wrapperName = hook.dispatcherHookName;
+        if (
+          i < hookStack.length - 1 &&
+          isReactWrapper(hookStack[i].functionName, wrapperName)
+        ) {
+          i++;
+        }
       }
       return i;
     }
@@ -997,7 +1069,8 @@ function buildTree(
       primitive === 'Context (use)' ||
       primitive === 'DebugValue' ||
       primitive === 'Promise' ||
-      primitive === 'Unresolved'
+      primitive === 'Unresolved' ||
+      primitive === 'HostTransitionStatus'
         ? null
         : nativeHookID++;
 
