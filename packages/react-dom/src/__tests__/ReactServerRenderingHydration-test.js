@@ -251,10 +251,8 @@ describe('ReactDOMServerHydration', () => {
         );
       });
     }).toErrorDev(
-      'Warning: Prop `style` did not match. Server: ' +
-        '{"text-decoration":"none","color":"black","height":"10px"}' +
-        ' Client: ' +
-        '{"textDecoration":"none","color":"white","height":"10px"}',
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 
@@ -301,10 +299,8 @@ describe('ReactDOMServerHydration', () => {
         );
       });
     }).toErrorDev(
-      'Warning: Prop `style` did not match. Server: ' +
-        '{"text-decoration":"none","color":"black","height":"10px"}' +
-        ' Client: ' +
-        '{"textDecoration":"none","color":"black","height":"10px"}', // note that this is no difference
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 

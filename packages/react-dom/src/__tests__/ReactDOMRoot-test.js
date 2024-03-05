@@ -171,7 +171,8 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Extra attribute',
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 
