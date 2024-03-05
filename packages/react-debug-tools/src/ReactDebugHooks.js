@@ -152,20 +152,21 @@ function nextHook(): null | Hook {
 function readContext<T>(context: ReactContext<T>): T {
   if (currentFiber === null) {
     // Hook inspection without access to the Fiber tree
-    // e.g. when filling the primitive stack cache or during `ReactDebugTools.inspectHooks()`.
+    // e.g. when warming up the primitive stack cache or during `ReactDebugTools.inspectHooks()`.
     return context._currentValue;
-  }
-  if (currentContextDependency === null) {
-    throw new Error(
-      'Context reads do not line up with context dependencies. This is a bug in React.',
-    );
-  }
+  } else {
+    if (currentContextDependency === null) {
+      throw new Error(
+        'Context reads do not line up with context dependencies. This is a bug in React.',
+      );
+    }
 
-  // For now we don't expose readContext usage in the hooks debugging info.
-  const value = ((currentContextDependency.memoizedValue: any): T);
-  currentContextDependency = currentContextDependency.next;
+    // For now we don't expose readContext usage in the hooks debugging info.
+    const value = ((currentContextDependency.memoizedValue: any): T);
+    currentContextDependency = currentContextDependency.next;
 
-  return value;
+    return value;
+  }
 }
 
 const SuspenseException: mixed = new Error(
