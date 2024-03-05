@@ -165,6 +165,12 @@ export class CompilerError extends Error {
     throw errors;
   }
 
+  static throw(options: CompilerErrorDetailOptions): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(new CompilerErrorDetail(options));
+    throw errors;
+  }
+
   constructor(...args: any[]) {
     super(...args);
     this.name = "ReactForgetCompilerError";

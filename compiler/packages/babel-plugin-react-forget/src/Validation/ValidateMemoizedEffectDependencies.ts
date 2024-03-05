@@ -119,7 +119,7 @@ function isUnmemoized(operand: Identifier, scopes: Set<ScopeId>): boolean {
   return operand.scope != null && !scopes.has(operand.scope.id);
 }
 
-function isEffectHook(identifier: Identifier): boolean {
+export function isEffectHook(identifier: Identifier): boolean {
   return (
     isUseEffectHookType(identifier) ||
     isUseLayoutEffectHookType(identifier) ||

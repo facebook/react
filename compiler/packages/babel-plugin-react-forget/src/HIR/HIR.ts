@@ -6,7 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import { CompilerError } from "../CompilerError";
+import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
 import { HookKind } from "./ObjectShape";
@@ -244,9 +244,15 @@ export type HIRFunction = {
   params: Array<Place | SpreadPattern>;
   returnType: t.FlowType | t.TSType | null;
   context: Array<Place>;
+  effects: Array<FunctionEffect> | null;
   body: HIR;
   generator: boolean;
   async: boolean;
+};
+
+export type FunctionEffect = {
+  kind: "GlobalMutation";
+  error: CompilerErrorDetailOptions;
 };
 
 /*

@@ -216,6 +216,7 @@ export function lower(
     async: func.node.async === true,
     loc: func.node.loc ?? GeneratedSource,
     env,
+    effects: null,
   });
 }
 
