@@ -424,7 +424,9 @@ describe('InspectedElement', () => {
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "a": 1,
@@ -485,7 +487,9 @@ describe('InspectedElement', () => {
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "a": 1,
@@ -555,7 +559,9 @@ describe('InspectedElement', () => {
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement).not.toBe(null);
-    expect(targetRenderCount).toBe(2);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(3);
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.log).toHaveBeenCalledTimes(1);

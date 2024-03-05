@@ -228,6 +228,7 @@ export function convertInspectedElementBackendToFrontend(
     id,
     type,
     owners,
+    source,
     context,
     hooks,
     plugins,
@@ -260,7 +261,7 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    source: null, // TODO: Load source location lazily.
+    source,
     type,
     owners:
       owners === null

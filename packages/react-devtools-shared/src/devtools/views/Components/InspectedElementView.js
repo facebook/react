@@ -172,7 +172,7 @@ export default function InspectedElementView({
         )}
 
         {source !== null && (
-          <Source fileName={source.fileName} lineNumber={source.lineNumber} />
+          <Source sourceURL={source.sourceURL} line={source.line} />
         )}
       </div>
 
@@ -239,15 +239,17 @@ export default function InspectedElementView({
 }
 
 // This function is based on describeComponentFrame() in packages/shared/ReactComponentStackFrame
-function formatSourceForDisplay(fileName: string, lineNumber: string) {
+function formatSourceForDisplay(sourceURL: string, line: number) {
+  // Note: this RegExp doesn't work well with URLs from Metro,
+  // which provides bundle URL with query parameters prefixed with /&
   const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
-  let nameOnly = fileName.replace(BEFORE_SLASH_RE, '');
+  let nameOnly = sourceURL.replace(BEFORE_SLASH_RE, '');
 
   // In DEV, include code for a common special case:
   // prefer "folder/index.js" instead of just "index.js".
   if (/^index\./.test(nameOnly)) {
-    const match = fileName.match(BEFORE_SLASH_RE);
+    const match = sourceURL.match(BEFORE_SLASH_RE);
     if (match) {
       const pathBeforeSlash = match[1];
       if (pathBeforeSlash) {
@@ -257,16 +259,16 @@ function formatSourceForDisplay(fileName: string, lineNumber: string) {
     }
   }
 
-  return `${nameOnly}:${lineNumber}`;
+  return `${nameOnly}:${sourceURL}`;
 }
 
 type SourceProps = {
-  fileName: string,
-  lineNumber: string,
+  sourceURL: string,
+  line: number,
 };
 
-function Source({fileName, lineNumber}: SourceProps) {
-  const handleCopy = () => copy(`${fileName}:${lineNumber}`);
+function Source({sourceURL, line}: SourceProps) {
+  const handleCopy = () => copy(`${sourceURL}:${line}`);
   return (
     <div className={styles.Source} data-testname="InspectedElementView-Source">
       <div className={styles.SourceHeaderRow}>
@@ -276,7 +278,7 @@ function Source({fileName, lineNumber}: SourceProps) {
         </Button>
       </div>
       <div className={styles.SourceOneLiner}>
-        {formatSourceForDisplay(fileName, lineNumber)}
+        {formatSourceForDisplay(sourceURL, line)}
       </div>
     </div>
   );
