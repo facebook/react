@@ -893,10 +893,6 @@ function popHydrationState(fiber: Fiber): boolean {
   return true;
 }
 
-function hasUnhydratedTailNodes(): boolean {
-  return isHydrating && nextHydratableInstance !== null;
-}
-
 function warnIfUnhydratedTailNodes(fiber: Fiber) {
   let nextInstance = nextHydratableInstance;
   while (nextInstance) {
@@ -952,6 +948,4 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
-  hasUnhydratedTailNodes,
-  warnIfUnhydratedTailNodes,
 };
