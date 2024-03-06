@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<468afdc5511d0a33f94018471424df06>>
+ * @generated SignedSource<<7593cf403d3fbcc1c9b517d40ffc9701>>
  */
 
 "use strict";
@@ -1553,13 +1553,13 @@ function createChildReconciler(shouldTrackSideEffects) {
         (currentFirstChild = currentFirstChild.sibling);
     return null;
   }
-  function mapRemainingChildren(returnFiber, currentFirstChild) {
-    for (returnFiber = new Map(); null !== currentFirstChild; )
+  function mapRemainingChildren(currentFirstChild) {
+    for (var existingChildren = new Map(); null !== currentFirstChild; )
       null !== currentFirstChild.key
-        ? returnFiber.set(currentFirstChild.key, currentFirstChild)
-        : returnFiber.set(currentFirstChild.index, currentFirstChild),
+        ? existingChildren.set(currentFirstChild.key, currentFirstChild)
+        : existingChildren.set(currentFirstChild.index, currentFirstChild),
         (currentFirstChild = currentFirstChild.sibling);
-    return returnFiber;
+    return existingChildren;
   }
   function useFiber(fiber, pendingProps) {
     fiber = createWorkInProgress(fiber, pendingProps);
@@ -1908,7 +1908,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return resultingFirstChild;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       newIdx < newChildren.length;
       newIdx++
     )
@@ -1996,7 +1996,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return iteratorFn;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
       newIdx++, step = newChildrenIterable.next()
     )
@@ -9606,7 +9606,7 @@ var devToolsConfig$jscomp$inline_1056 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-0066e0b68-20240306",
+  version: "18.3.0-canary-64f354cf2-20240306",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1236 = {
@@ -9637,7 +9637,7 @@ var internals$jscomp$inline_1236 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0066e0b68-20240306"
+  reconcilerVersion: "18.3.0-canary-64f354cf2-20240306"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1237 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

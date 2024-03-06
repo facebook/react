@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc3ffb1cb29e8a4af3d060e1e199ebfc>>
+ * @generated SignedSource<<85c861db7cfef261bb2c4cf3c4163b32>>
  */
 
 "use strict";
@@ -5307,7 +5307,7 @@ if (__DEV__) {
         return null;
       }
 
-      function mapRemainingChildren(returnFiber, currentFirstChild) {
+      function mapRemainingChildren(currentFirstChild) {
         // Add the remaining children to a temporary map so that we can find them by
         // keys quickly. Implicit (null) keys get added to this set with their index
         // instead.
@@ -6087,7 +6087,7 @@ if (__DEV__) {
           return resultingFirstChild;
         } // Add all children to a key map for quick lookups.
 
-        var existingChildren = mapRemainingChildren(returnFiber, oldFiber); // Keep scanning and use the map to restore deleted items as moves.
+        var existingChildren = mapRemainingChildren(oldFiber); // Keep scanning and use the map to restore deleted items as moves.
 
         for (; newIdx < newChildren.length; newIdx++) {
           var _newFiber2 = updateFromMap(
@@ -6307,7 +6307,7 @@ if (__DEV__) {
           return resultingFirstChild;
         } // Add all children to a key map for quick lookups.
 
-        var existingChildren = mapRemainingChildren(returnFiber, oldFiber); // Keep scanning and use the map to restore deleted items as moves.
+        var existingChildren = mapRemainingChildren(oldFiber); // Keep scanning and use the map to restore deleted items as moves.
 
         for (; !step.done; newIdx++, step = newChildren.next()) {
           var _newFiber4 = updateFromMap(
@@ -25736,7 +25736,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-0066e0b68-20240306";
+    var ReactVersion = "18.3.0-canary-64f354cf2-20240306";
 
     // Might add PROFILE later.
 

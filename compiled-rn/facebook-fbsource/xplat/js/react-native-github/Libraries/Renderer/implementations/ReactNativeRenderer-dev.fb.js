@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7dcdb6d21ac8dfc7ffa1771b9a940965>>
+ * @generated SignedSource<<e8f2e3b836c2642986b0ba4ea4ab2451>>
  */
 
 "use strict";
@@ -9487,7 +9487,7 @@ to return true:wantsResponderID|                            |
         return null;
       }
 
-      function mapRemainingChildren(returnFiber, currentFirstChild) {
+      function mapRemainingChildren(currentFirstChild) {
         // Add the remaining children to a temporary map so that we can find them by
         // keys quickly. Implicit (null) keys get added to this set with their index
         // instead.
@@ -10267,7 +10267,7 @@ to return true:wantsResponderID|                            |
           return resultingFirstChild;
         } // Add all children to a key map for quick lookups.
 
-        var existingChildren = mapRemainingChildren(returnFiber, oldFiber); // Keep scanning and use the map to restore deleted items as moves.
+        var existingChildren = mapRemainingChildren(oldFiber); // Keep scanning and use the map to restore deleted items as moves.
 
         for (; newIdx < newChildren.length; newIdx++) {
           var _newFiber2 = updateFromMap(
@@ -10487,7 +10487,7 @@ to return true:wantsResponderID|                            |
           return resultingFirstChild;
         } // Add all children to a key map for quick lookups.
 
-        var existingChildren = mapRemainingChildren(returnFiber, oldFiber); // Keep scanning and use the map to restore deleted items as moves.
+        var existingChildren = mapRemainingChildren(oldFiber); // Keep scanning and use the map to restore deleted items as moves.
 
         for (; !step.done; newIdx++, step = newChildren.next()) {
           var _newFiber4 = updateFromMap(
@@ -28531,7 +28531,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-469281c1";
+    var ReactVersion = "18.3.0-canary-11f0eefb";
 
     function createPortal$1(
       children,

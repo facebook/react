@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a98cc36e03612994552fc55d27a1612c>>
+ * @generated SignedSource<<920120ae37951de138ff69088505fe60>>
  */
 
 "use strict";
@@ -3025,13 +3025,13 @@ function createChildReconciler(shouldTrackSideEffects) {
         (currentFirstChild = currentFirstChild.sibling);
     return null;
   }
-  function mapRemainingChildren(returnFiber, currentFirstChild) {
-    for (returnFiber = new Map(); null !== currentFirstChild; )
+  function mapRemainingChildren(currentFirstChild) {
+    for (var existingChildren = new Map(); null !== currentFirstChild; )
       null !== currentFirstChild.key
-        ? returnFiber.set(currentFirstChild.key, currentFirstChild)
-        : returnFiber.set(currentFirstChild.index, currentFirstChild),
+        ? existingChildren.set(currentFirstChild.key, currentFirstChild)
+        : existingChildren.set(currentFirstChild.index, currentFirstChild),
         (currentFirstChild = currentFirstChild.sibling);
-    return returnFiber;
+    return existingChildren;
   }
   function useFiber(fiber, pendingProps) {
     fiber = createWorkInProgress(fiber, pendingProps);
@@ -3380,7 +3380,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return resultingFirstChild;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       newIdx < newChildren.length;
       newIdx++
     )
@@ -3468,7 +3468,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return iteratorFn;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
       newIdx++, step = newChildrenIterable.next()
     )
@@ -9930,7 +9930,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1128 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-eb197e5a",
+    version: "18.3.0-canary-8fa62451",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9973,7 +9973,7 @@ var internals$jscomp$inline_1367 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-eb197e5a"
+  reconcilerVersion: "18.3.0-canary-8fa62451"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
