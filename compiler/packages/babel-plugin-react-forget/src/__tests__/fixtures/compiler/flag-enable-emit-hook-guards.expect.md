@@ -53,49 +53,49 @@ import {
 } from "shared-runtime";
 
 const MyContext = createContext("my context value");
-function Component(t47) {
+function Component(t0) {
   const $ = useMemoCache(4);
   try {
     $dispatcherGuard(0);
-    const { value } = t47;
+    const { value } = t0;
     print(identity(CONST_STRING0));
-    let t0;
+    let t1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = getNumber();
-      $[0] = t0;
+      t1 = getNumber();
+      $[0] = t1;
     } else {
-      t0 = $[0];
+      t1 = $[0];
     }
     const [state, setState] = (function () {
       try {
         $dispatcherGuard(2);
-        return useState(t0);
+        return useState(t1);
       } finally {
         $dispatcherGuard(3);
       }
     })();
     print(value, state);
-    let t1;
     let t2;
+    let t3;
     if ($[1] !== state) {
-      t1 = () => {
+      t2 = () => {
         if (state === 4) {
           setState(5);
         }
       };
 
-      t2 = [state];
+      t3 = [state];
       $[1] = state;
-      $[2] = t1;
-      $[3] = t2;
+      $[2] = t2;
+      $[3] = t3;
     } else {
-      t1 = $[2];
-      t2 = $[3];
+      t2 = $[2];
+      t3 = $[3];
     }
     (function () {
       try {
         $dispatcherGuard(2);
-        return useEffect(t1, t2);
+        return useEffect(t2, t3);
       } finally {
         $dispatcherGuard(3);
       }

@@ -98,8 +98,8 @@ function Component(props) {
   return t1;
 }
 
-function Foo(t21) {
-  const { cond, setX, setY, setState } = t21;
+function Foo(t0) {
+  const { cond, setX, setY, setState } = t0;
   if (cond) {
     invariant(setState === setX, "Expected the correct setState function");
   } else {

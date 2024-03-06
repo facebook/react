@@ -28,12 +28,12 @@ function Component({ name, data, icon }) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
-function Component(t33) {
+function Component(t0) {
   const $ = useMemoCache(4);
-  const { name, data, icon } = t33;
-  let t0;
+  const { name, data, icon } = t0;
+  let t1;
   if ($[0] !== name || $[1] !== icon || $[2] !== data) {
-    t0 = (
+    t1 = (
       <Text type="body4">
         {fbt._(
           "{item author}{icon}{=m2}",
@@ -64,11 +64,11 @@ function Component(t33) {
     $[0] = name;
     $[1] = icon;
     $[2] = data;
-    $[3] = t0;
+    $[3] = t1;
   } else {
-    t0 = $[3];
+    t1 = $[3];
   }
-  return t0;
+  return t1;
 }
 
 ```

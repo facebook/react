@@ -20,17 +20,17 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
 
-function Foo(t6, ref) {
+function Foo(t0, ref) {
   const $ = useMemoCache(2);
-  let t0;
+  let t1;
   if ($[0] !== ref) {
-    t0 = <div ref={ref} />;
+    t1 = <div ref={ref} />;
     $[0] = ref;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

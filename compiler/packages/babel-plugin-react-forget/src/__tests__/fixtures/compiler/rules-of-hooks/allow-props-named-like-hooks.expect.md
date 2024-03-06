@@ -33,29 +33,29 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
-function Component(t29) {
+function Component(t0) {
   const $ = useMemoCache(8);
-  const { useFeature } = t29;
+  const { useFeature } = t0;
   let x;
   if (useFeature) {
-    const t0 = useFeature + useFeature;
-    let t1;
-    if ($[0] !== t0 || $[1] !== useFeature) {
-      t1 = [t0].push(-useFeature);
-      $[0] = t0;
+    const t1 = useFeature + useFeature;
+    let t2;
+    if ($[0] !== t1 || $[1] !== useFeature) {
+      t2 = [t1].push(-useFeature);
+      $[0] = t1;
       $[1] = useFeature;
-      $[2] = t1;
+      $[2] = t2;
     } else {
-      t1 = $[2];
+      t2 = $[2];
     }
-    x = t1;
+    x = t2;
   }
 
   const y = useFeature;
   const z = useFeature.useProperty;
-  let t0;
+  let t1;
   if ($[3] !== useFeature || $[4] !== x || $[5] !== y || $[6] !== z) {
-    t0 = (
+    t1 = (
       <Stringify val={useFeature}>
         {x}
         {y}
@@ -66,11 +66,11 @@ function Component(t29) {
     $[4] = x;
     $[5] = y;
     $[6] = z;
-    $[7] = t0;
+    $[7] = t1;
   } else {
-    t0 = $[7];
+    t1 = $[7];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

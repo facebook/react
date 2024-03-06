@@ -43,12 +43,12 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Component(t27) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { items } = t27;
-  let t0;
+  const { items } = t0;
+  let t1;
   if ($[0] !== items) {
-    t0 =
+    t1 =
       items.length > 0 ? (
         <Foo
           value={
@@ -61,44 +61,44 @@ function Component(t27) {
         />
       ) : null;
     $[0] = items;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
-function Foo(t5) {
-  const { value } = t5;
+function Foo(t0) {
+  const { value } = t0;
   return value;
 }
 
-function Bar(t6) {
+function Bar(t0) {
   const $ = useMemoCache(2);
-  const { children } = t6;
-  let t0;
+  const { children } = t0;
+  let t1;
   if ($[0] !== children) {
-    t0 = <div>{children}</div>;
+    t1 = <div>{children}</div>;
     $[0] = children;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
-function Item(t7) {
+function Item(t0) {
   const $ = useMemoCache(2);
-  const { item } = t7;
-  let t0;
+  const { item } = t0;
+  let t1;
   if ($[0] !== item.name) {
-    t0 = <div>{item.name}</div>;
+    t1 = <div>{item.name}</div>;
     $[0] = item.name;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

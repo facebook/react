@@ -62,8 +62,8 @@ function Component(props) {
   return t2;
 }
 
-function Foo(t5) {
-  const { children } = t5;
+function Foo(t0) {
+  const { children } = t0;
   return children;
 }
 

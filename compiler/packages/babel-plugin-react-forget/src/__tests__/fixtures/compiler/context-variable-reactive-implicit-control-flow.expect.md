@@ -33,9 +33,9 @@ import { conditionalInvoke } from "shared-runtime";
 // same as context-variable-reactive-explicit-control-flow.js, but make
 // the control flow implicit
 
-function Component(t20) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { shouldReassign } = t20;
+  const { shouldReassign } = t0;
   let x;
   if ($[0] !== shouldReassign) {
     x = null;

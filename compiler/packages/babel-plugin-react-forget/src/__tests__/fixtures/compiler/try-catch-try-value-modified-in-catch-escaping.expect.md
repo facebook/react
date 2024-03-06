@@ -38,8 +38,8 @@ function Component(props) {
       const y = [];
       y.push(props.y);
       throwInput(y);
-    } catch (t30) {
-      const e = t30;
+    } catch (t0) {
+      const e = t0;
       e.push(props.e);
       x = e;
     }

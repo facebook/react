@@ -63,21 +63,21 @@ function foo(a, b, c) {
     g = $[6];
   }
   const { f } = t2;
-  const { l: t51, p } = b;
-  const { m: t3 } = t51;
-  let t4;
+  const { l: t3, p } = b;
+  const { m: t4 } = t3;
+  let t5;
   let o;
-  if ($[7] !== t3) {
-    [t4, ...o] = t3;
-    $[7] = t3;
-    $[8] = t4;
+  if ($[7] !== t4) {
+    [t5, ...o] = t4;
+    $[7] = t4;
+    $[8] = t5;
     $[9] = o;
   } else {
-    t4 = $[8];
+    t5 = $[8];
     o = $[9];
   }
-  const [n] = t4;
-  let t5;
+  const [n] = t5;
+  let t6;
   if (
     $[10] !== d ||
     $[11] !== f ||
@@ -87,7 +87,7 @@ function foo(a, b, c) {
     $[15] !== o ||
     $[16] !== p
   ) {
-    t5 = [d, f, g, h, n, o, p];
+    t6 = [d, f, g, h, n, o, p];
     $[10] = d;
     $[11] = f;
     $[12] = g;
@@ -95,11 +95,11 @@ function foo(a, b, c) {
     $[14] = n;
     $[15] = o;
     $[16] = p;
-    $[17] = t5;
+    $[17] = t6;
   } else {
-    t5 = $[17];
+    t6 = $[17];
   }
-  return t5;
+  return t6;
 }
 
 export const FIXTURE_ENTRYPOINT = {

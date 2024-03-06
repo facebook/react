@@ -37,9 +37,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { setProperty } from "shared-runtime";
 
-function useFoo(t27) {
+function useFoo(t0) {
   const $ = useMemoCache(3);
-  const { o, branchCheck } = t27;
+  const { o, branchCheck } = t0;
   let x;
   if ($[0] !== branchCheck || $[1] !== o.value) {
     x = {};

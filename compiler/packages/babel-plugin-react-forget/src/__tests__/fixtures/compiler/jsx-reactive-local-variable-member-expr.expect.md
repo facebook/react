@@ -26,20 +26,20 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import * as sharedRuntime from "shared-runtime";
 
-function Component(t13) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { something } = t13;
+  const { something } = t0;
 
   const Foo = something.StaticText1;
-  let t0;
+  let t1;
   if ($[0] !== Foo) {
-    t0 = () => <Foo />;
+    t1 = () => <Foo />;
     $[0] = Foo;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

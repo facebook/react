@@ -28,8 +28,8 @@ function Foo() {
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = function a(t28) {
-      const x_0 = t28 === undefined ? () => {} : t28;
+    t1 = function a(t0) {
+      const x_0 = t0 === undefined ? () => {} : t0;
       return x_0;
     };
     $[0] = t1;

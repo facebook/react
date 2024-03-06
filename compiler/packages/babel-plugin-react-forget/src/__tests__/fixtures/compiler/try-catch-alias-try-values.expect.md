@@ -39,8 +39,8 @@ function Component(props) {
     x = [];
     try {
       throwInput(x);
-    } catch (t27) {
-      const e = t27;
+    } catch (t0) {
+      const e = t0;
 
       y = e;
     }

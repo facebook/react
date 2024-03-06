@@ -34,24 +34,24 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { identity } from "shared-runtime";
 
-function Component(t25) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { data } = t25;
+  const { data } = t0;
   let x = 0;
   for (const item of data) {
     const { current, other } = item;
     x = x + current;
     identity(other);
   }
-  let t0;
+  let t1;
   if ($[0] !== x) {
-    t0 = [x];
+    t1 = [x];
     $[0] = x;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

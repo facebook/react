@@ -27,12 +27,12 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { identity, createHookWrapper } from "shared-runtime";
 
-function useHook(t17) {
+function useHook(t0) {
   const $ = useMemoCache(3);
-  const { isCond, value } = t17;
-  let t0;
+  const { isCond, value } = t0;
+  let t1;
   if ($[0] !== isCond || $[1] !== value) {
-    t0 = isCond
+    t1 = isCond
       ? identity({
           getValue() {
             return value;
@@ -41,11 +41,11 @@ function useHook(t17) {
       : 42;
     $[0] = isCond;
     $[1] = value;
-    $[2] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[2];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

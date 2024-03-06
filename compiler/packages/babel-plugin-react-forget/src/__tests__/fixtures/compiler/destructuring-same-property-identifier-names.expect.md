@@ -29,27 +29,27 @@ import { identity } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(5);
-  const { x: t18, sameName: renamed } = props;
-  const { destructured } = t18;
-  let t0;
-  if ($[0] !== destructured) {
-    t0 = identity(destructured);
-    $[0] = destructured;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const sameName = t0;
+  const { x: t0, sameName: renamed } = props;
+  const { destructured } = t0;
   let t1;
+  if ($[0] !== destructured) {
+    t1 = identity(destructured);
+    $[0] = destructured;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const sameName = t1;
+  let t2;
   if ($[2] !== sameName || $[3] !== renamed) {
-    t1 = [sameName, renamed];
+    t2 = [sameName, renamed];
     $[2] = sameName;
     $[3] = renamed;
-    $[4] = t1;
+    $[4] = t2;
   } else {
-    t1 = $[4];
+    t2 = $[4];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -18,8 +18,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  const [t23] = props.y;
-  const x = t23 === undefined ? (true ? 1 : 0) : t23;
+  const [t0] = props.y;
+  const x = t0 === undefined ? (true ? 1 : 0) : t0;
   return x;
 }
 

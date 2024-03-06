@@ -35,9 +35,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { conditionalInvoke } from "shared-runtime";
 
-function Component(t32) {
+function Component(t0) {
   const $ = useMemoCache(3);
-  const { doReassign1, doReassign2 } = t32;
+  const { doReassign1, doReassign2 } = t0;
   let x;
   if ($[0] !== doReassign1 || $[1] !== doReassign2) {
     x = {};

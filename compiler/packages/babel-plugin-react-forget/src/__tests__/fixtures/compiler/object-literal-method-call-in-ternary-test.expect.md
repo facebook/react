@@ -36,8 +36,8 @@ import {
   CONST_STRING1,
 } from "shared-runtime";
 
-function useHook(t18) {
-  const { value } = t18;
+function useHook(t0) {
+  const { value } = t0;
   return {
     getValue() {
       return identity(value);

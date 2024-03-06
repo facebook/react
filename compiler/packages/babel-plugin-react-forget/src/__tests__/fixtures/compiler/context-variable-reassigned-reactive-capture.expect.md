@@ -27,9 +27,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { invoke } from "shared-runtime";
 
-function Component(t20) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { value } = t20;
+  const { value } = t0;
   let x;
   if ($[0] !== value) {
     x = null;

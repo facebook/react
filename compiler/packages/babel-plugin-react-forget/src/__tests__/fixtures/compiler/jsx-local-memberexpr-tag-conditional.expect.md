@@ -24,19 +24,19 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 import * as SharedRuntime from "shared-runtime";
-function useFoo(t12) {
+function useFoo(t0) {
   const $ = useMemoCache(1);
-  const { cond } = t12;
+  const { cond } = t0;
   const MyLocal = SharedRuntime;
   if (cond) {
-    let t0;
+    let t1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = <MyLocal.Text value={4} />;
-      $[0] = t0;
+      t1 = <MyLocal.Text value={4} />;
+      $[0] = t1;
     } else {
-      t0 = $[0];
+      t1 = $[0];
     }
-    return t0;
+    return t1;
   } else {
     return null;
   }

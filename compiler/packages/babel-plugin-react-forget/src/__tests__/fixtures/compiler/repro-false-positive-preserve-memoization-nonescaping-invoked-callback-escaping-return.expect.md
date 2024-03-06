@@ -39,58 +39,58 @@ export const FIXTURE_ENTRYPOINT = {
 // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { useCallback, unstable_useMemoCache as useMemoCache } from "react";
 
-function Component(t26) {
+function Component(t0) {
   const $ = useMemoCache(11);
-  const { entity, children } = t26;
-  let t0;
-  if ($[0] !== entity) {
-    t0 = () => entity != null;
-    $[0] = entity;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const showMessage = t0;
+  const { entity, children } = t0;
   let t1;
-  if ($[2] !== showMessage) {
-    t1 = showMessage();
-    $[2] = showMessage;
-    $[3] = t1;
+  if ($[0] !== entity) {
+    t1 = () => entity != null;
+    $[0] = entity;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
-  const shouldShowMessage = t1;
+  const showMessage = t1;
   let t2;
-  if ($[4] !== shouldShowMessage) {
-    t2 = <div>{shouldShowMessage}</div>;
-    $[4] = shouldShowMessage;
-    $[5] = t2;
+  if ($[2] !== showMessage) {
+    t2 = showMessage();
+    $[2] = showMessage;
+    $[3] = t2;
   } else {
-    t2 = $[5];
+    t2 = $[3];
   }
+  const shouldShowMessage = t2;
   let t3;
-  if ($[6] !== children) {
-    t3 = <div>{children}</div>;
-    $[6] = children;
-    $[7] = t3;
+  if ($[4] !== shouldShowMessage) {
+    t3 = <div>{shouldShowMessage}</div>;
+    $[4] = shouldShowMessage;
+    $[5] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[5];
   }
   let t4;
-  if ($[8] !== t2 || $[9] !== t3) {
-    t4 = (
+  if ($[6] !== children) {
+    t4 = <div>{children}</div>;
+    $[6] = children;
+    $[7] = t4;
+  } else {
+    t4 = $[7];
+  }
+  let t5;
+  if ($[8] !== t3 || $[9] !== t4) {
+    t5 = (
       <div>
-        {t2}
         {t3}
+        {t4}
       </div>
     );
-    $[8] = t2;
-    $[9] = t3;
-    $[10] = t4;
+    $[8] = t3;
+    $[9] = t4;
+    $[10] = t5;
   } else {
-    t4 = $[10];
+    t5 = $[10];
   }
-  return t4;
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -36,23 +36,23 @@ export const FIXTURE_ENTRYPOINT = {
 // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { useCallback, unstable_useMemoCache as useMemoCache } from "react";
 
-function Component(t23) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { entity, children } = t23;
+  const { entity, children } = t0;
 
   const showMessage = () => entity != null;
   if (!showMessage()) {
     return children;
   }
-  let t0;
+  let t1;
   if ($[0] !== children) {
-    t0 = <div>{children}</div>;
+    t1 = <div>{children}</div>;
     $[0] = children;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

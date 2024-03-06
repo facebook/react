@@ -39,28 +39,28 @@ function foo(a, b, c) {
   let g;
   let n;
   let o;
-  const [t49, t50] = a;
-  d = t49;
-  const [t54] = t50;
-  const { e: t56 } = t54;
-  ({ f: g } = t56);
-  const { l: t61, o: t62 } = b;
-  const { m: t64 } = t61;
-  const [t66] = t64;
-  [n] = t66;
-  o = t62;
-  let t0;
+  const [t0, t1] = a;
+  d = t0;
+  const [t2] = t1;
+  const { e: t3 } = t2;
+  ({ f: g } = t3);
+  const { l: t4, o: t5 } = b;
+  const { m: t6 } = t4;
+  const [t7] = t6;
+  [n] = t7;
+  o = t5;
+  let t8;
   if ($[0] !== d || $[1] !== g || $[2] !== n || $[3] !== o) {
-    t0 = { d, g, n, o };
+    t8 = { d, g, n, o };
     $[0] = d;
     $[1] = g;
     $[2] = n;
     $[3] = o;
-    $[4] = t0;
+    $[4] = t8;
   } else {
-    t0 = $[4];
+    t8 = $[4];
   }
-  return t0;
+  return t8;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -36,35 +36,35 @@ import {
 
 // Identical to useCallback-set-ref-nested-property-preserve-memoization,
 // but with a different set of compiler flags
-function Component(t27) {
+function Component(t0) {
   const $ = useMemoCache(4);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { inner: null };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const ref = useRef(t0);
   let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = { inner: null };
+    $[0] = t1;
+  } else {
+    t1 = $[0];
+  }
+  const ref = useRef(t1);
+  let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (event) => {
+    t2 = (event) => {
       ref.current.inner = event.target.value;
     };
-    $[1] = t1;
+    $[1] = t2;
   } else {
-    t1 = $[1];
+    t2 = $[1];
   }
-  const onChange = t1;
-  let t2;
+  const onChange = t2;
+  let t3;
   if ($[2] !== onChange) {
-    t2 = <input onChange={onChange} />;
+    t3 = <input onChange={onChange} />;
     $[2] = onChange;
-    $[3] = t2;
+    $[3] = t3;
   } else {
-    t2 = $[3];
+    t3 = $[3];
   }
-  return t2;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

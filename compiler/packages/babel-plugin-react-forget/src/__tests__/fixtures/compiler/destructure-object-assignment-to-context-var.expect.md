@@ -31,8 +31,8 @@ function Component(props) {
   const $ = useMemoCache(4);
   let x;
   if ($[0] !== props) {
-    const { x: t27 } = props;
-    x = t27;
+    const { x: t0 } = props;
+    x = t0;
     const foo = () => {
       x = identity(props.x);
     };

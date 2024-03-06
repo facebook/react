@@ -27,42 +27,42 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper } from "shared-runtime";
 
-function useHook(t16) {
+function useHook(t0) {
   const $ = useMemoCache(8);
-  const { a, b, c } = t16;
-  let t0;
-  if ($[0] !== a) {
-    t0 = [a];
-    $[0] = a;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
+  const { a, b, c } = t0;
   let t1;
-  if ($[2] !== b || $[3] !== c || $[4] !== t0) {
-    let t2;
+  if ($[0] !== a) {
+    t1 = [a];
+    $[0] = a;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== b || $[3] !== c || $[4] !== t1) {
+    let t3;
     if ($[6] !== c) {
-      t2 = { c };
+      t3 = { c };
       $[6] = c;
-      $[7] = t2;
+      $[7] = t3;
     } else {
-      t2 = $[7];
+      t3 = $[7];
     }
-    t1 = {
-      x: t0,
+    t2 = {
+      x: t1,
       y() {
         return [b];
       },
-      z: t2,
+      z: t3,
     };
     $[2] = b;
     $[3] = c;
-    $[4] = t0;
-    $[5] = t1;
+    $[4] = t1;
+    $[5] = t2;
   } else {
-    t1 = $[5];
+    t2 = $[5];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

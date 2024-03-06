@@ -25,10 +25,10 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Foo(t25) {
+function Foo(t0) {
   const $ = useMemoCache(2);
-  const { value } = t25;
-  let t0;
+  const { value } = t0;
+  let t1;
   if ($[0] !== value) {
     const factorial = (x) => {
       if (x <= 1) {
@@ -38,13 +38,13 @@ function Foo(t25) {
       }
     };
 
-    t0 = factorial(value);
+    t1 = factorial(value);
     $[0] = value;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

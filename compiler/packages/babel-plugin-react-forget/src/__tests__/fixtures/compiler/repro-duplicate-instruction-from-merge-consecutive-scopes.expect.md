@@ -28,31 +28,31 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
-function Component(t23) {
+function Component(t0) {
   const $ = useMemoCache(3);
-  const { id } = t23;
-  let t0;
+  const { id } = t0;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Stringify title={undefined} />;
-    $[0] = t0;
+    t1 = <Stringify title={undefined} />;
+    $[0] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[0];
   }
-  const t1 = id ? true : false;
-  let t2;
-  if ($[1] !== t1) {
-    t2 = (
+  const t2 = id ? true : false;
+  let t3;
+  if ($[1] !== t2) {
+    t3 = (
       <>
-        {t0}
-        <Stringify title={t1} />
+        {t1}
+        <Stringify title={t2} />
       </>
     );
-    $[1] = t1;
-    $[2] = t2;
+    $[1] = t2;
+    $[2] = t3;
   } else {
-    t2 = $[2];
+    t3 = $[2];
   }
-  return t2;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

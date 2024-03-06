@@ -17,9 +17,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-function Component(t13) {
-  const { a: t14 } = t13;
-  const a = t14 === undefined ? 2 : t14;
+function Component(t0) {
+  const { a: t1 } = t0;
+  const a = t1 === undefined ? 2 : t1;
   return a;
 }
 

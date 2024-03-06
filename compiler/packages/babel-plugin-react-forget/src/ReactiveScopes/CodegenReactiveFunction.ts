@@ -2013,5 +2013,10 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
   if (identifier.name !== null) {
     return t.identifier(identifier.name.value);
   }
-  return t.identifier(`t${identifier.id}`);
+  CompilerError.invariant(false, {
+    reason: `Expected temporaries to be promoted to named identifiers in an earlier pass`,
+    loc: GeneratedSource,
+    description: `identifier ${identifier.id} is unnamed`,
+    suggestions: null,
+  });
 }

@@ -27,22 +27,22 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
 const _ = fbt;
-function Component(t12) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { value } = t12;
-  let t0;
+  const { value } = t0;
+  let t1;
   if ($[0] !== value) {
-    t0 = fbt._(
+    t1 = fbt._(
       "Before text {paramName} after text",
       [fbt._param("paramName", value)],
       { hk: "26pxNm" }
     );
     $[0] = value;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

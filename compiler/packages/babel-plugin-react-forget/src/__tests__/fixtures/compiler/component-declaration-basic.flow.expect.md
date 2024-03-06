@@ -14,18 +14,18 @@ function shouldNotCompile() {}
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-export default function Foo(t7) {
+export default function Foo(t0) {
   const $ = useMemoCache(2);
-  const { bar } = t7;
-  let t0;
+  const { bar } = t0;
+  let t1;
   if ($[0] !== bar) {
-    t0 = <Bar bar={bar} />;
+    t1 = <Bar bar={bar} />;
     $[0] = bar;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 function shouldNotCompile() {}

@@ -44,9 +44,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 const GLOBAL = 42;
 
-function Component(t14) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { value } = t14;
+  const { value } = t0;
   let x;
   bb1: switch (GLOBAL) {
     case value: {
@@ -57,15 +57,15 @@ function Component(t14) {
       x = 2;
     }
   }
-  let t0;
+  let t1;
   if ($[0] !== x) {
-    t0 = [x];
+    t1 = [x];
     $[0] = x;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -17,8 +17,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-function foo(t5) {
-  const { data: dataTestID } = t5;
+function foo(t0) {
+  const { data: dataTestID } = t0;
   return dataTestID;
 }
 

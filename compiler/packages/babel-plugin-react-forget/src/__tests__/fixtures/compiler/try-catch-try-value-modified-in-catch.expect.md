@@ -39,8 +39,8 @@ function Component(props) {
         const y = [];
         y.push(props.y);
         throwInput(y);
-      } catch (t25) {
-        const e = t25;
+      } catch (t1) {
+        const e = t1;
         e.push(props.e);
         t0 = e;
         break bb18;

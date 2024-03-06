@@ -11,8 +11,8 @@ import {
   Identifier,
   IdentifierId,
   InstructionId,
+  Place,
   ReactiveFunction,
-  ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveValue,
   promoteTemporaryJsxTagToNamedIdentifier,
@@ -45,11 +45,36 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
     }
   }
-  override visitInstruction(
-    instruction: ReactiveInstruction,
+
+  override visitValue(
+    id: InstructionId,
+    value: ReactiveValue,
     state: VisitorState
   ): void {
-    this.traverseInstruction(instruction, state);
+    this.traverseValue(id, value, state);
+    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+      for (const operand of value.loweredFunc.func.params) {
+        const place = operand.kind === "Identifier" ? operand : operand.place;
+        if (place.identifier.name === null) {
+          promoteTemporary(place.identifier, state);
+        }
+      }
+    }
+  }
+
+  override visitReactiveFunctionValue(
+    _id: InstructionId,
+    _dependencies: Place[],
+    fn: ReactiveFunction,
+    state: VisitorState
+  ): void {
+    for (const operand of fn.params) {
+      const place = operand.kind === "Identifier" ? operand : operand.place;
+      if (place.identifier.name === null) {
+        promoteTemporary(place.identifier, state);
+      }
+    }
+    visitReactiveFunction(fn, this, state);
   }
 }
 
@@ -73,6 +98,12 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const state: VisitorState = {
     tags,
   };
+  for (const operand of fn.params) {
+    const place = operand.kind === "Identifier" ? operand : operand.place;
+    if (place.identifier.name === null) {
+      promoteTemporary(place.identifier, state);
+    }
+  }
   visitReactiveFunction(fn, new Visitor(), state);
 }
 

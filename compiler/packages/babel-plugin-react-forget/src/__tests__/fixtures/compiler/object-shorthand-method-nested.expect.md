@@ -34,13 +34,13 @@ export const FIXTURE_ENTRYPOINT = {
 import { useState, unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper } from "shared-runtime";
 
-function useHook(t21) {
+function useHook(t0) {
   const $ = useMemoCache(3);
-  const { value } = t21;
+  const { value } = t0;
   const [state] = useState(false);
-  let t0;
+  let t1;
   if ($[0] !== value || $[1] !== state) {
-    t0 = {
+    t1 = {
       getX() {
         return {
           a: [],
@@ -53,11 +53,11 @@ function useHook(t21) {
     };
     $[0] = value;
     $[1] = state;
-    $[2] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[2];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

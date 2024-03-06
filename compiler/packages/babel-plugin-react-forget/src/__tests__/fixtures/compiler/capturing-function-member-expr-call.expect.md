@@ -20,41 +20,41 @@ function component({ mutator }) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function component(t26) {
+function component(t0) {
   const $ = useMemoCache(7);
-  const { mutator } = t26;
-  let t0;
+  const { mutator } = t0;
+  let t1;
   if ($[0] !== mutator) {
-    t0 = () => {
+    t1 = () => {
       mutator.poke();
     };
     $[0] = mutator;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  const poke = t0;
-  let t1;
+  const poke = t1;
+  let t2;
   if ($[2] !== mutator.user) {
-    t1 = () => {
+    t2 = () => {
       mutator.user.hide();
     };
     $[2] = mutator.user;
-    $[3] = t1;
+    $[3] = t2;
   } else {
-    t1 = $[3];
+    t2 = $[3];
   }
-  const hide = t1;
-  let t2;
+  const hide = t2;
+  let t3;
   if ($[4] !== poke || $[5] !== hide) {
-    t2 = <Foo poke={poke} hide={hide} />;
+    t3 = <Foo poke={poke} hide={hide} />;
     $[4] = poke;
     $[5] = hide;
-    $[6] = t2;
+    $[6] = t3;
   } else {
-    t2 = $[6];
+    t3 = $[6];
   }
-  return t2;
+  return t3;
 }
 
 ```

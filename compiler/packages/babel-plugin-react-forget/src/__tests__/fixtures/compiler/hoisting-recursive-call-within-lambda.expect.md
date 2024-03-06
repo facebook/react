@@ -26,11 +26,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Foo(t32) {
+function Foo(t0) {
   const $ = useMemoCache(2);
-  let t0;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (val) => {
+    t1 = (val) => {
       const fact = (x) => {
         if (x <= 0) {
           return 1;
@@ -39,19 +39,19 @@ function Foo(t32) {
       };
       return fact(val);
     };
-    $[0] = t0;
+    $[0] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[0];
   }
-  const outer = t0;
-  let t1;
+  const outer = t1;
+  let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = outer(3);
-    $[1] = t1;
+    t2 = outer(3);
+    $[1] = t2;
   } else {
-    t1 = $[1];
+    t2 = $[1];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

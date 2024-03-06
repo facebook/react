@@ -34,12 +34,12 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
-function Component(t26) {
+function Component(t0) {
   const $ = useMemoCache(2);
-  const { items } = t26;
-  let t0;
+  const { items } = t0;
+  let t1;
   if ($[0] !== items) {
-    t0 =
+    t1 =
       items.length > 0 ? (
         <Foo
           value={
@@ -52,25 +52,25 @@ function Component(t26) {
         />
       ) : null;
     $[0] = items;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
-function Foo(t6) {
+function Foo(t0) {
   const $ = useMemoCache(2);
-  const { value } = t6;
-  let t0;
+  const { value } = t0;
+  let t1;
   if ($[0] !== value) {
-    t0 = <div>{value}</div>;
+    t1 = <div>{value}</div>;
     $[0] = value;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
