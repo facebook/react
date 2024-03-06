@@ -438,7 +438,6 @@ function createChildReconciler(
   }
 
   function mapRemainingChildren(
-    returnFiber: Fiber,
     currentFirstChild: Fiber,
   ): Map<string | number, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
@@ -1194,7 +1193,7 @@ function createChildReconciler(
     }
 
     // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+    const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
     for (; newIdx < newChildren.length; newIdx++) {
@@ -1404,7 +1403,7 @@ function createChildReconciler(
     }
 
     // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+    const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
     for (; !step.done; newIdx++, step = newChildren.next()) {
