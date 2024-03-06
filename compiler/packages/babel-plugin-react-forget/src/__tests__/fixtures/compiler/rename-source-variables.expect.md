@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";
@@ -25,23 +26,24 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";
 const t0 = "module_t0";
 const c_0 = "module_c_0";
 function useFoo(props) {
-  const $ = useMemoCache(2);
-  let t0;
-  if ($[0] !== props.value) {
-    t0 = identity(props.value);
-    $[0] = props.value;
-    $[1] = t0;
+  const $0 = useMemoCache(2);
+  const c_00 = $0[0] !== props.value;
+  let t1;
+  if (c_00) {
+    t1 = identity(props.value);
+    $0[0] = props.value;
+    $0[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $0[1];
   }
-  const results = t0;
+  const results = t1;
   console.log($);
   console.log(t0);
   console.log(c_0);
@@ -55,3 +57,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) 0
+logs: ['module_$','module_t0','module_c_0']

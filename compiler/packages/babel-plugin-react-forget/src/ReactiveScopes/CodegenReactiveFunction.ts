@@ -70,7 +70,7 @@ export type CodegenFunction = {
 
 export function codegenFunction(
   fn: ReactiveFunction,
-  uniqueIdentifiers: Set<ValidIdentifierName>,
+  uniqueIdentifiers: Set<string>,
   filename: string | null
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(
@@ -223,13 +223,13 @@ class Context {
   temp: Temporaries;
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
-  uniqueIdentifiers: Set<ValidIdentifierName>;
+  uniqueIdentifiers: Set<string>;
   synthesizedNames: Map<string, ValidIdentifierName> = new Map();
 
   constructor(
     env: Environment,
     fnName: string,
-    uniqueIdentifiers: Set<ValidIdentifierName>,
+    uniqueIdentifiers: Set<string>,
     temporaries: Temporaries | null = null
   ) {
     this.env = env;

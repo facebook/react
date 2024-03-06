@@ -21,6 +21,7 @@ import {
   isPromotedTemporary,
   makeIdentifierName,
 } from "../HIR/HIR";
+import { collectReferencedGlobals } from "./CollectReferencedGlobals";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
@@ -43,12 +44,11 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  *
  * Returns a Set of all the unique variable names in the function after renaming.
  */
-export function renameVariables(
-  fn: ReactiveFunction
-): Set<ValidIdentifierName> {
-  const scopes = new Scopes();
+export function renameVariables(fn: ReactiveFunction): Set<string> {
+  const globals = collectReferencedGlobals(fn);
+  const scopes = new Scopes(globals);
   renameVariablesImpl(fn, new Visitor(), scopes);
-  return scopes.names;
+  return new Set([...scopes.names, ...globals]);
 }
 
 function renameVariablesImpl(
@@ -115,7 +115,12 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 class Scopes {
   #seen: Map<IdentifierId, IdentifierName> = new Map();
   #stack: Array<Map<string, IdentifierId>> = [new Map()];
+  #globals: Set<string>;
   names: Set<ValidIdentifierName> = new Set();
+
+  constructor(globals: Set<string>) {
+    this.#globals = globals;
+  }
 
   visit(identifier: Identifier): void {
     const originalName = identifier.name;
@@ -134,8 +139,7 @@ class Scopes {
     } else if (isPromotedJsxTemporary(originalName.value)) {
       name = `T${id++}`;
     }
-    let previous = this.#lookup(name);
-    while (previous !== null) {
+    while (this.#lookup(name) !== null || this.#globals.has(name)) {
       if (isPromotedTemporary(originalName.value)) {
         name = `t${id++}`;
       } else if (isPromotedJsxTemporary(originalName.value)) {
@@ -143,7 +147,6 @@ class Scopes {
       } else {
         name = `${originalName.value}$${id++}`;
       }
-      previous = this.#lookup(name);
     }
     const identifierName = makeIdentifierName(name);
     identifier.name = identifierName;

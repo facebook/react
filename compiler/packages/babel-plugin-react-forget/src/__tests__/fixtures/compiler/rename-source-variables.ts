@@ -1,3 +1,4 @@
+// @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";
