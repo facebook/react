@@ -63,6 +63,7 @@ import {
   pruneUnusedScopes,
   renameVariables,
 } from "../ReactiveScopes";
+import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import {
@@ -316,6 +317,13 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "MergeReactiveScopesThatInvalidateTogether",
+    value: reactiveFunction,
+  });
+
+  pruneAlwaysInvalidatingScopes(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneAlwaysInvalidatingScopes",
     value: reactiveFunction,
   });
 
