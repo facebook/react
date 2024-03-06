@@ -2646,13 +2646,13 @@ function createChildReconciler(shouldTrackSideEffects) {
         (currentFirstChild = currentFirstChild.sibling);
     return null;
   }
-  function mapRemainingChildren(returnFiber, currentFirstChild) {
-    for (returnFiber = new Map(); null !== currentFirstChild; )
+  function mapRemainingChildren(currentFirstChild) {
+    for (var existingChildren = new Map(); null !== currentFirstChild; )
       null !== currentFirstChild.key
-        ? returnFiber.set(currentFirstChild.key, currentFirstChild)
-        : returnFiber.set(currentFirstChild.index, currentFirstChild),
+        ? existingChildren.set(currentFirstChild.key, currentFirstChild)
+        : existingChildren.set(currentFirstChild.index, currentFirstChild),
         (currentFirstChild = currentFirstChild.sibling);
-    return returnFiber;
+    return existingChildren;
   }
   function useFiber(fiber, pendingProps) {
     fiber = createWorkInProgress(fiber, pendingProps);
@@ -3004,7 +3004,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return resultingFirstChild;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       newIdx < newChildren.length;
       newIdx++
     )
@@ -3095,7 +3095,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       return iteratorFn;
     }
     for (
-      oldFiber = mapRemainingChildren(returnFiber, oldFiber);
+      oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
       newIdx++, step = newChildrenIterable.next()
     )
@@ -17237,7 +17237,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1822 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-513335d7",
+  version: "18.3.0-www-classic-caa15134",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2181 = {
@@ -17267,7 +17267,7 @@ var internals$jscomp$inline_2181 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-513335d7"
+  reconcilerVersion: "18.3.0-www-classic-caa15134"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2182 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17598,4 +17598,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-513335d7";
+exports.version = "18.3.0-www-classic-caa15134";
