@@ -62,33 +62,33 @@ function Component(props) {
       return t1;
     }
     case 1: {
-      let t2;
+      let t1;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t2 = { foo: "joe" };
-        $[3] = t2;
+        t1 = { foo: "joe" };
+        $[3] = t1;
       } else {
-        t2 = $[3];
+        t1 = $[3];
       }
-      let t3;
+      let t2;
       if ($[4] !== onSubmit) {
-        t3 = <OtherComponent data={t2} onSubmit={onSubmit} />;
+        t2 = <OtherComponent data={t1} onSubmit={onSubmit} />;
         $[4] = onSubmit;
-        $[5] = t3;
+        $[5] = t2;
       } else {
-        t3 = $[5];
+        t2 = $[5];
       }
-      return t3;
+      return t2;
     }
     default: {
       logEvent("Invalid step");
-      let t4;
+      let t1;
       if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
-        t4 = <OtherComponent data={null} />;
-        $[6] = t4;
+        t1 = <OtherComponent data={null} />;
+        $[6] = t1;
       } else {
-        t4 = $[6];
+        t1 = $[6];
       }
-      return t4;
+      return t1;
     }
   }
 }

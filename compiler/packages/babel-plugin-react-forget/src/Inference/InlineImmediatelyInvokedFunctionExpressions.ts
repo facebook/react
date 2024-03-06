@@ -295,5 +295,5 @@ function declareTemporary(
 }
 
 function promoteTemporary(temp: Identifier): void {
-  temp.name = `t${temp.id}`;
+  temp.name = `#t${temp.id}`;
 }

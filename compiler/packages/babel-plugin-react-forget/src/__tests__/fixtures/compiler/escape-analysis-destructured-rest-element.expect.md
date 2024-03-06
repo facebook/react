@@ -26,8 +26,8 @@ function Component(props) {
   const $ = useMemoCache(7);
   let b;
   if ($[0] !== props.a) {
-    const { a, ...t29 } = props.a;
-    b = t29;
+    const { a, ...t0 } = props.a;
+    b = t0;
     $[0] = props.a;
     $[1] = b;
   } else {
@@ -35,8 +35,8 @@ function Component(props) {
   }
   let d;
   if ($[2] !== props.c) {
-    const [c, ...t30] = props.c;
-    d = t30;
+    const [c, ...t0] = props.c;
+    d = t0;
     $[2] = props.c;
     $[3] = d;
   } else {

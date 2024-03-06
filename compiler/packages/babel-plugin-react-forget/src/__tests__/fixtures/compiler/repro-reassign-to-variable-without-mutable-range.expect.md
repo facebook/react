@@ -60,16 +60,16 @@ function Component(a, b) {
     x = $[4];
     y = $[5];
   }
-  let t3;
+  let t2;
   if ($[8] !== x || $[9] !== y) {
-    t3 = [x, y];
+    t2 = [x, y];
     $[8] = x;
     $[9] = y;
-    $[10] = t3;
+    $[10] = t2;
   } else {
-    t3 = $[10];
+    t2 = $[10];
   }
-  return t3;
+  return t2;
 }
 
 ```

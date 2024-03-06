@@ -29,13 +29,13 @@ function Component(props) {
   const $ = useMemoCache(2);
   let items;
   if ($[0] !== props) {
-    let t9;
+    let t0;
     if (props.cond) {
-      t9 = [];
+      t0 = [];
     } else {
-      t9 = null;
+      t0 = null;
     }
-    items = t9;
+    items = t0;
 
     items?.push(props.a);
     $[0] = props;

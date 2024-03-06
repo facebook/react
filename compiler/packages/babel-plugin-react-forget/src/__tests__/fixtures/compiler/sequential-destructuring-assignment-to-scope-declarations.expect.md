@@ -47,8 +47,8 @@ function Component(statusName) {
   let t0;
   let t1;
   if ($[0] !== statusName) {
-    const { status, text: t47 } = foo(statusName);
-    text = t47;
+    const { status, text: t2 } = foo(statusName);
+    text = t2;
     const { bg, color } = getStyles(status);
 
     t1 = identity(bg);

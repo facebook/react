@@ -73,14 +73,14 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function ComponentA(props) {
   const $ = useMemoCache(5);
   let a_DEBUG;
-  let t37;
+  let t0;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
-    t37 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a_DEBUG = [];
       a_DEBUG.push(props.a);
       if (props.b) {
-        t37 = null;
+        t0 = null;
         break bb7;
       }
 
@@ -90,13 +90,13 @@ function ComponentA(props) {
     $[1] = props.b;
     $[2] = props.d;
     $[3] = a_DEBUG;
-    $[4] = t37;
+    $[4] = t0;
   } else {
     a_DEBUG = $[3];
-    t37 = $[4];
+    t0 = $[4];
   }
-  if (t37 !== Symbol.for("react.early_return_sentinel")) {
-    return t37;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
   return a_DEBUG;
 }
@@ -129,15 +129,15 @@ function ComponentB(props) {
 function ComponentC(props) {
   const $ = useMemoCache(3);
   let a;
-  let t47;
+  let t0;
   if ($[0] !== props) {
-    t47 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
-        t47 = null;
+        t0 = null;
         break bb7;
       }
 
@@ -145,13 +145,13 @@ function ComponentC(props) {
     }
     $[0] = props;
     $[1] = a;
-    $[2] = t47;
+    $[2] = t0;
   } else {
     a = $[1];
-    t47 = $[2];
+    t0 = $[2];
   }
-  if (t47 !== Symbol.for("react.early_return_sentinel")) {
-    return t47;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
   return a;
 }
@@ -162,15 +162,15 @@ function ComponentC(props) {
 function ComponentD(props) {
   const $ = useMemoCache(3);
   let a;
-  let t47;
+  let t0;
   if ($[0] !== props) {
-    t47 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
-        t47 = a;
+        t0 = a;
         break bb7;
       }
 
@@ -178,13 +178,13 @@ function ComponentD(props) {
     }
     $[0] = props;
     $[1] = a;
-    $[2] = t47;
+    $[2] = t0;
   } else {
     a = $[1];
-    t47 = $[2];
+    t0 = $[2];
   }
-  if (t47 !== Symbol.for("react.early_return_sentinel")) {
-    return t47;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
   return a;
 }

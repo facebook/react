@@ -46,15 +46,15 @@ function Component(props) {
   }
   const count = posts.length;
   foo(count);
-  let t1;
+  let t0;
   if ($[3] !== posts) {
-    t1 = <>{posts}</>;
+    t0 = <>{posts}</>;
     $[3] = posts;
-    $[4] = t1;
+    $[4] = t0;
   } else {
-    t1 = $[4];
+    t0 = $[4];
   }
-  return t1;
+  return t0;
 }
 
 ```

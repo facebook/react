@@ -50,35 +50,35 @@ function Component() {
   const [state] = React$useState(0);
   const object = Internal$Reassigned$useHook();
   const json = JSON.stringify(object);
-  let t25;
   let t0;
-  if ($[0] !== state) {
-    t25 = makeArray(state);
-    const doubledArray = t25;
-
-    t0 = doubledArray.join("");
-    $[0] = state;
-    $[1] = t0;
-    $[2] = t25;
-  } else {
-    t0 = $[1];
-    t25 = $[2];
-  }
   let t1;
-  if ($[3] !== t0 || $[4] !== json) {
-    t1 = (
+  if ($[0] !== state) {
+    t0 = makeArray(state);
+    const doubledArray = t0;
+
+    t1 = doubledArray.join("");
+    $[0] = state;
+    $[1] = t1;
+    $[2] = t0;
+  } else {
+    t1 = $[1];
+    t0 = $[2];
+  }
+  let t2;
+  if ($[3] !== t1 || $[4] !== json) {
+    t2 = (
       <div>
-        {t0}
+        {t1}
         {json}
       </div>
     );
-    $[3] = t0;
+    $[3] = t1;
     $[4] = json;
-    $[5] = t1;
+    $[5] = t2;
   } else {
-    t1 = $[5];
+    t2 = $[5];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

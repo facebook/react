@@ -32,39 +32,39 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
   let y;
-  let t46;
+  let t0;
   if ($[0] !== props) {
-    t46 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb11: {
       const x = [];
       if (props.cond) {
         x.push(props.a);
-        t46 = x;
+        t0 = x;
         break bb11;
       } else {
-        let t0;
+        let t1;
         if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-          t0 = foo();
-          $[3] = t0;
+          t1 = foo();
+          $[3] = t1;
         } else {
-          t0 = $[3];
+          t1 = $[3];
         }
-        y = t0;
+        y = t1;
         if (props.b) {
-          t46 = undefined;
+          t0 = undefined;
           break bb11;
         }
       }
     }
     $[0] = props;
     $[1] = y;
-    $[2] = t46;
+    $[2] = t0;
   } else {
     y = $[1];
-    t46 = $[2];
+    t0 = $[2];
   }
-  if (t46 !== Symbol.for("react.early_return_sentinel")) {
-    return t46;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
   return y;
 }

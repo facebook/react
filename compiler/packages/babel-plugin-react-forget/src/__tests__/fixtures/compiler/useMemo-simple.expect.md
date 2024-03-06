@@ -15,26 +15,26 @@ function component(a) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
   const $ = useMemoCache(4);
-  let t9;
   let t0;
-  if ($[0] !== a) {
-    t0 = [a];
-    $[0] = a;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  t9 = t0;
-  const x = t9;
   let t1;
-  if ($[2] !== x) {
-    t1 = <Foo x={x} />;
-    $[2] = x;
-    $[3] = t1;
+  if ($[0] !== a) {
+    t1 = [a];
+    $[0] = a;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
-  return t1;
+  t0 = t1;
+  const x = t0;
+  let t2;
+  if ($[2] !== x) {
+    t2 = <Foo x={x} />;
+    $[2] = x;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  return t2;
 }
 
 ```

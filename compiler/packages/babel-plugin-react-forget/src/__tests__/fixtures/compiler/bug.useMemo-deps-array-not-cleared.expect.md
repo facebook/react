@@ -29,17 +29,17 @@ function App(t25) {
   const { text, hasDeps } = t25;
 
   hasDeps ? null : [text];
-  let t18;
   let t0;
+  let t1;
   if ($[0] !== text) {
-    t0 = text.toUpperCase();
+    t1 = text.toUpperCase();
     $[0] = text;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  t18 = t0;
-  const resolvedText = t18;
+  t0 = t1;
+  const resolvedText = t0;
   return resolvedText;
 }
 

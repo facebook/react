@@ -51,16 +51,16 @@ function PrimitiveAsDepNested(props) {
     x = $[2];
     y = $[3];
   }
-  let t2;
+  let t0;
   if ($[6] !== x || $[7] !== y) {
-    t2 = [x, y];
+    t0 = [x, y];
     $[6] = x;
     $[7] = y;
-    $[8] = t2;
+    $[8] = t0;
   } else {
-    t2 = $[8];
+    t0 = $[8];
   }
-  return t2;
+  return t0;
 }
 
 ```

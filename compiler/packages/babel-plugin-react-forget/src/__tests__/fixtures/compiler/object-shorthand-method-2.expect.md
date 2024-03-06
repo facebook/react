@@ -38,31 +38,31 @@ function useHook(t16) {
   } else {
     t0 = $[1];
   }
-  let t2;
+  let t1;
   if ($[2] !== b || $[3] !== c || $[4] !== t0) {
-    let t1;
+    let t2;
     if ($[6] !== c) {
-      t1 = { c };
+      t2 = { c };
       $[6] = c;
-      $[7] = t1;
+      $[7] = t2;
     } else {
-      t1 = $[7];
+      t2 = $[7];
     }
-    t2 = {
+    t1 = {
       x: t0,
       y() {
         return [b];
       },
-      z: t1,
+      z: t2,
     };
     $[2] = b;
     $[3] = c;
     $[4] = t0;
-    $[5] = t2;
+    $[5] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[5];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

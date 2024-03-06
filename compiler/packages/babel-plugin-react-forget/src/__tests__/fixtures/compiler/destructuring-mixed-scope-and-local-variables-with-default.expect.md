@@ -64,29 +64,29 @@ function Component(props) {
   if ($[0] !== post) {
     allUrls = [];
 
-    const { media: t0, comments: t2, urls: t4 } = post;
-    let t1;
-    if ($[4] !== t0) {
-      t1 = t0 === undefined ? null : t0;
-      $[4] = t0;
-      $[5] = t1;
-    } else {
-      t1 = $[5];
-    }
-    media = t1;
+    const { media: t0, comments: t1, urls: t2 } = post;
     let t3;
-    if ($[6] !== t2) {
-      t3 = t2 === undefined ? [] : t2;
-      $[6] = t2;
-      $[7] = t3;
+    if ($[4] !== t0) {
+      t3 = t0 === undefined ? null : t0;
+      $[4] = t0;
+      $[5] = t3;
     } else {
-      t3 = $[7];
+      t3 = $[5];
     }
-    const comments = t3;
+    media = t3;
+    let t4;
+    if ($[6] !== t1) {
+      t4 = t1 === undefined ? [] : t1;
+      $[6] = t1;
+      $[7] = t4;
+    } else {
+      t4 = $[7];
+    }
+    const comments = t4;
     let t5;
-    if ($[8] !== t4) {
-      t5 = t4 === undefined ? [] : t4;
-      $[8] = t4;
+    if ($[8] !== t2) {
+      t5 = t2 === undefined ? [] : t2;
+      $[8] = t2;
       $[9] = t5;
     } else {
       t5 = $[9];
@@ -118,17 +118,17 @@ function Component(props) {
     allUrls = $[2];
     onClick = $[3];
   }
-  let t7;
+  let t0;
   if ($[12] !== media || $[13] !== allUrls || $[14] !== onClick) {
-    t7 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
+    t0 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
     $[12] = media;
     $[13] = allUrls;
     $[14] = onClick;
-    $[15] = t7;
+    $[15] = t0;
   } else {
-    t7 = $[15];
+    t0 = $[15];
   }
-  return t7;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

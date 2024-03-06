@@ -13,26 +13,38 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
-  ReactiveInstruction,
   ReactiveScopeBlock,
 } from "../HIR/HIR";
-import { eachInstructionLValue } from "../HIR/visitors";
-import {
-  ReactiveFunctionVisitor,
-  eachReactiveValueOperand,
-  visitReactiveFunction,
-} from "./visitors";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/*
+/**
  * Ensures that each named variable in the given function has a unique name
  * that does not conflict with any other variables in the same block scope.
  * Note that the scoping is based on the final inferred blocks, not the
  * block scopes that were present in the original source. Thus variables
  * that shadowed in the original source may end up with unique names in the
  * output, if Forget would merge those two blocks into a single scope.
+ *
+ * Variables are renamed using their original name followed by a number,
+ * starting with 0 and incrementing until a unique name is found. Eg if the
+ * compiler collapses three scopes that each had their own `foo` declaration,
+ * they will be renamed to `foo`, `foo0`, and `foo1`, assuming that no conflicts'
+ * exist for `foo0` and `foo1`.
+ *
+ * For temporary values that are promoted to named variables, the starting name
+ * is "T0" for values that appear in JSX tag position and "t0" otherwise. If this
+ * name conflicts, the number portion increments until the name is unique (t1, t2, etc).
  */
 export function renameVariables(fn: ReactiveFunction): void {
   const scopes = new Scopes();
+  renameVariablesImpl(fn, new Visitor(), scopes);
+}
+
+function renameVariablesImpl(
+  fn: ReactiveFunction,
+  visitor: Visitor,
+  scopes: Scopes
+): void {
   scopes.enter(() => {
     for (const param of fn.params) {
       if (param.kind === "Identifier") {
@@ -41,11 +53,14 @@ export function renameVariables(fn: ReactiveFunction): void {
         scopes.visit(param.place.identifier);
       }
     }
-    visitReactiveFunction(fn, new Visitor(), scopes);
+    visitReactiveFunction(fn, visitor, scopes);
   });
 }
 
 class Visitor extends ReactiveFunctionVisitor<Scopes> {
+  override visitLValue(_id: InstructionId, lvalue: Place, state: Scopes): void {
+    state.visit(lvalue.identifier);
+  }
   override visitPlace(id: InstructionId, place: Place, state: Scopes): void {
     state.visit(place.identifier);
   }
@@ -54,40 +69,58 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
       this.traverseBlock(block, state);
     });
   }
-  override visitInstruction(instr: ReactiveInstruction, state: Scopes): void {
-    for (const operand of eachReactiveValueOperand(instr.value)) {
-      state.visit(operand.identifier);
-    }
-    for (const operand of eachInstructionLValue(instr)) {
-      this.visitPlace(instr.id, operand, state);
-    }
-  }
+
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {
-    /*
-     * Intentionally bypass visitBlock() since scopes do not introduce a new
-     * block scope
-     */
-    this.traverseBlock(scope.instructions, state);
+    for (const [_, declaration] of scope.scope.declarations) {
+      state.visit(declaration.identifier);
+    }
+    this.traverseScope(scope, state);
+  }
+
+  override visitReactiveFunctionValue(
+    _id: InstructionId,
+    _dependencies: Place[],
+    _fn: ReactiveFunction,
+    _state: Scopes
+  ): void {
+    renameVariablesImpl(_fn, this, _state);
   }
 }
 
 class Scopes {
-  #nextId: number = 0;
-  #seen: Set<IdentifierId> = new Set();
+  #seen: Map<IdentifierId, string> = new Map();
   #stack: Array<Map<string, IdentifierId>> = [new Map()];
 
   visit(identifier: Identifier): void {
-    if (identifier.name === null || this.#seen.has(identifier.id)) {
+    const originalName = identifier.name;
+    if (originalName === null) {
       return;
     }
-    this.#seen.add(identifier.id);
-    let name = identifier.name;
+    const mappedName = this.#seen.get(identifier.id);
+    if (mappedName !== undefined) {
+      identifier.name = mappedName;
+      return;
+    }
+    let name = originalName;
+    let id = 0;
+    if (name.startsWith("#t")) {
+      name = `t${id++}`;
+    } else if (name.startsWith("#T")) {
+      name = `T${id++}`;
+    }
     let previous = this.#lookup(name);
     while (previous !== null) {
-      name = `${identifier.name}$${this.#nextId++}`;
+      if (originalName.startsWith("#t")) {
+        name = `t${id++}`;
+      } else if (originalName.startsWith("#T")) {
+        name = `T${id++}`;
+      } else {
+        name = `${identifier.name}$${id++}`;
+      }
       previous = this.#lookup(name);
     }
     identifier.name = name;
+    this.#seen.set(identifier.id, name);
     this.#stack.at(-1)!.set(name, identifier.id);
   }
 

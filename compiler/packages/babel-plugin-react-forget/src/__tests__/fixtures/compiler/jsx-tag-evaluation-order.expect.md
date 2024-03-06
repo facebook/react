@@ -31,23 +31,23 @@ import { StaticText1, StaticText2 } from "shared-runtime";
 function Component(props) {
   const $ = useMemoCache(3);
 
-  const t1 = props.value;
-  let t0;
+  const t0 = props.value;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <StaticText2 />;
-    $[0] = t0;
+    t1 = <StaticText2 />;
+    $[0] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[0];
   }
   let t2;
-  if ($[1] !== t1) {
+  if ($[1] !== t0) {
     t2 = (
       <StaticText1>
-        {t1}
         {t0}
+        {t1}
       </StaticText1>
     );
-    $[1] = t1;
+    $[1] = t0;
     $[2] = t2;
   } else {
     t2 = $[2];

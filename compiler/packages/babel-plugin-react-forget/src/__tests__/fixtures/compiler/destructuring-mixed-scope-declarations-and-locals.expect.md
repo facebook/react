@@ -37,11 +37,11 @@ function Component(props) {
   if ($[0] !== post) {
     const allUrls = [];
 
-    const { media: t83, comments, urls } = post;
-    media = t83;
-    let t0;
+    const { media: t0, comments, urls } = post;
+    media = t0;
+    let t1;
     if ($[3] !== comments.length) {
-      t0 = (e) => {
+      t1 = (e) => {
         if (!comments.length) {
           return;
         }
@@ -49,11 +49,11 @@ function Component(props) {
         console.log(comments.length);
       };
       $[3] = comments.length;
-      $[4] = t0;
+      $[4] = t1;
     } else {
-      t0 = $[4];
+      t1 = $[4];
     }
-    onClick = t0;
+    onClick = t1;
 
     allUrls.push(...urls);
     $[0] = post;
@@ -63,16 +63,16 @@ function Component(props) {
     media = $[1];
     onClick = $[2];
   }
-  let t1;
+  let t0;
   if ($[5] !== media || $[6] !== onClick) {
-    t1 = <Media media={media} onClick={onClick} />;
+    t0 = <Media media={media} onClick={onClick} />;
     $[5] = media;
     $[6] = onClick;
-    $[7] = t1;
+    $[7] = t0;
   } else {
-    t1 = $[7];
+    t0 = $[7];
   }
-  return t1;
+  return t0;
 }
 
 ```

@@ -43,14 +43,14 @@ function Component(props) {
       }
       x.push(t0);
     } catch {
-      let t1;
+      let t0;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = shallowCopy({});
-        $[3] = t1;
+        t0 = shallowCopy({});
+        $[3] = t0;
       } else {
-        t1 = $[3];
+        t0 = $[3];
       }
-      x.push(t1);
+      x.push(t0);
     }
 
     x.push(props.value);

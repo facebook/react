@@ -85,8 +85,8 @@ function promoteTemporary(identifier: Identifier, state: VisitorState): void {
     suggestions: null,
   });
   if (state.tags.has(identifier.id)) {
-    identifier.name = `T${state.nextId++}`;
+    identifier.name = `#T${state.nextId++}`;
   } else {
-    identifier.name = `t${state.nextId++}`;
+    identifier.name = `#t${state.nextId++}`;
   }
 }

@@ -152,7 +152,7 @@ function transformDestructuring(
     const tempId = state.env.nextIdentifierId;
     const temporary = {
       ...place,
-      identifier: { ...place.identifier, id: tempId, name: `t${tempId}` },
+      identifier: { ...place.identifier, id: tempId, name: `#t${tempId}` },
     };
     renamed.set(place, temporary);
     return temporary;

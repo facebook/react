@@ -32,29 +32,29 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(5);
-  let t53;
+  let t0;
   if ($[0] !== props) {
-    t53 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb11: {
       const x = [];
       if (props.cond) {
         x.push(props.a);
         if (props.b) {
-          let t0;
+          let t1;
           if ($[2] !== props.b) {
-            t0 = [props.b];
+            t1 = [props.b];
             $[2] = props.b;
-            $[3] = t0;
+            $[3] = t1;
           } else {
-            t0 = $[3];
+            t1 = $[3];
           }
-          const y = t0;
+          const y = t1;
           x.push(y);
-          t53 = x;
+          t0 = x;
           break bb11;
         }
 
-        t53 = x;
+        t0 = x;
         break bb11;
       } else {
         let t1;
@@ -64,17 +64,17 @@ function Component(props) {
         } else {
           t1 = $[4];
         }
-        t53 = t1;
+        t0 = t1;
         break bb11;
       }
     }
     $[0] = props;
-    $[1] = t53;
+    $[1] = t0;
   } else {
-    t53 = $[1];
+    t0 = $[1];
   }
-  if (t53 !== Symbol.for("react.early_return_sentinel")) {
-    return t53;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
 }
 

@@ -274,7 +274,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         earlyReturnValue = state.earlyReturnValue;
       } else {
         const identifier = createTemporaryPlace(this.env).identifier;
-        identifier.name = `t${identifier.id}`;
+        identifier.name = `#t${identifier.id}`;
         earlyReturnValue = {
           label: this.env.nextBlockId,
           loc,

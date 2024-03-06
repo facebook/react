@@ -28,11 +28,11 @@ function Component(props) {
   };
 
   const object = { x, onChange };
-  let t43;
+  let t0;
 
   const { x: x_0, onChange: onChange_0 } = object;
-  t43 = <input value={x_0} onChange={onChange_0} />;
-  return t43;
+  t0 = <input value={x_0} onChange={onChange_0} />;
+  return t0;
 }
 
 ```

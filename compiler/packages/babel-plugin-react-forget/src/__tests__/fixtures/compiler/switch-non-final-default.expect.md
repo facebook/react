@@ -67,26 +67,26 @@ function Component(props) {
     x = $[1];
     y = $[2];
   }
-  let t1;
+  let t0;
   if ($[4] !== x) {
-    t1 = <Component data={x} />;
+    t0 = <Component data={x} />;
     $[4] = x;
-    $[5] = t1;
+    $[5] = t0;
   } else {
-    t1 = $[5];
+    t0 = $[5];
   }
-  const child = t1;
+  const child = t0;
   y.push(props.p4);
-  let t2;
+  let t1;
   if ($[6] !== y || $[7] !== child) {
-    t2 = <Component data={y}>{child}</Component>;
+    t1 = <Component data={y}>{child}</Component>;
     $[6] = y;
     $[7] = child;
-    $[8] = t2;
+    $[8] = t1;
   } else {
-    t2 = $[8];
+    t1 = $[8];
   }
-  return t2;
+  return t1;
 }
 
 ```

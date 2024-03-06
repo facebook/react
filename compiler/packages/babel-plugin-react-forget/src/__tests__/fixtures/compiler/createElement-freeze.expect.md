@@ -37,22 +37,22 @@ function Component(props) {
     t0 = $[1];
   }
   const childProps = t0;
-  let t2;
+  let t1;
   if ($[2] !== childProps) {
-    let t1;
+    let t2;
     if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = ["hello world"];
-      $[4] = t1;
+      t2 = ["hello world"];
+      $[4] = t2;
     } else {
-      t1 = $[4];
+      t2 = $[4];
     }
-    t2 = React.createElement("div", childProps, t1);
+    t1 = React.createElement("div", childProps, t2);
     $[2] = childProps;
-    $[3] = t2;
+    $[3] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[3];
   }
-  const element = t2;
+  const element = t1;
   shallowCopy(childProps);
   return element;
 }

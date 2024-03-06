@@ -27,19 +27,19 @@ import { getNull } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(3);
-  let t10;
+  let t0;
   let items;
   if ($[0] !== props.a) {
-    t10 = getNull() ?? [];
-    items = t10;
+    t0 = getNull() ?? [];
+    items = t0;
 
     items.push(props.a);
     $[0] = props.a;
     $[1] = items;
-    $[2] = t10;
+    $[2] = t0;
   } else {
     items = $[1];
-    t10 = $[2];
+    t0 = $[2];
   }
   return items;
 }

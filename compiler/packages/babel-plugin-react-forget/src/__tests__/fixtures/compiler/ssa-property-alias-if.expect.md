@@ -42,14 +42,14 @@ function foo(a) {
       const y = t0;
       x.y = y;
     } else {
-      let t1;
+      let t0;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = {};
-        $[3] = t1;
+        t0 = {};
+        $[3] = t0;
       } else {
-        t1 = $[3];
+        t0 = $[3];
       }
-      const z = t1;
+      const z = t0;
       x.z = z;
     }
     $[0] = a;

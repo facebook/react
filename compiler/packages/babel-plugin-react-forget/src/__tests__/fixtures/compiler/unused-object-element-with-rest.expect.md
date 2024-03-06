@@ -24,8 +24,8 @@ function Foo(props) {
   const $ = useMemoCache(2);
   let rest;
   if ($[0] !== props.a) {
-    const { unused, ...t15 } = props.a;
-    rest = t15;
+    const { unused, ...t0 } = props.a;
+    rest = t0;
     $[0] = props.a;
     $[1] = rest;
   } else {

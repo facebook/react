@@ -29,16 +29,16 @@ export default function foo(x, y) {
     return t0;
   }
 
-  const t1 = y * 10;
-  let t2;
-  if ($[2] !== t1) {
-    t2 = [t1];
-    $[2] = t1;
-    $[3] = t2;
+  const t0 = y * 10;
+  let t1;
+  if ($[2] !== t0) {
+    t1 = [t0];
+    $[2] = t0;
+    $[3] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[3];
   }
-  return t2;
+  return t1;
 }
 
 ```

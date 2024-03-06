@@ -40,24 +40,24 @@ function ArrayAtTest(props) {
     t1 = $[3];
   }
   const arr = t1;
-  let t3;
+  let t2;
   if ($[4] !== props.y || $[5] !== arr) {
-    let t2;
+    let t3;
     if ($[7] !== props.y) {
-      t2 = bar(props.y);
+      t3 = bar(props.y);
       $[7] = props.y;
-      $[8] = t2;
+      $[8] = t3;
     } else {
-      t2 = $[8];
+      t3 = $[8];
     }
-    t3 = arr.at(t2);
+    t2 = arr.at(t3);
     $[4] = props.y;
     $[5] = arr;
-    $[6] = t3;
+    $[6] = t2;
   } else {
-    t3 = $[6];
+    t2 = $[6];
   }
-  const result = t3;
+  const result = t2;
   return result;
 }
 

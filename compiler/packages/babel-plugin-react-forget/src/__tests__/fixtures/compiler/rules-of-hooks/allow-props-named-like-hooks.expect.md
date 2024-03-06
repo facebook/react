@@ -53,9 +53,9 @@ function Component(t29) {
 
   const y = useFeature;
   const z = useFeature.useProperty;
-  let t2;
+  let t0;
   if ($[3] !== useFeature || $[4] !== x || $[5] !== y || $[6] !== z) {
-    t2 = (
+    t0 = (
       <Stringify val={useFeature}>
         {x}
         {y}
@@ -66,11 +66,11 @@ function Component(t29) {
     $[4] = x;
     $[5] = y;
     $[6] = z;
-    $[7] = t2;
+    $[7] = t0;
   } else {
-    t2 = $[7];
+    t0 = $[7];
   }
-  return t2;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -34,16 +34,16 @@ import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
 
 function Component(props) {
   const $ = useMemoCache(2);
-  let t22;
   let t0;
+  let t1;
   if ($[0] !== props.value) {
-    t0 = { value: props.value };
+    t1 = { value: props.value };
     $[0] = props.value;
-    $[1] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[1];
   }
-  const handlers = t0;
+  const handlers = t1;
   bb2: switch (props.test) {
     case true: {
       console.log(handlers.value);
@@ -53,8 +53,8 @@ function Component(props) {
     }
   }
 
-  t22 = handlers;
-  const outerHandlers = t22;
+  t0 = handlers;
+  const outerHandlers = t0;
   return outerHandlers;
 }
 

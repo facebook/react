@@ -50,11 +50,11 @@ function Component(statusName) {
   let text;
   let font;
   if ($[0] !== statusName) {
-    const { status, text: t49 } = foo(statusName);
-    text = t49;
+    const { status, text: t1 } = foo(statusName);
+    text = t1;
 
-    const { color, font: t50 } = getStyles(status);
-    font = t50;
+    const { color, font: t2 } = getStyles(status);
+    font = t2;
 
     t0 = identity(color);
     $[0] = statusName;

@@ -46,35 +46,35 @@ import { makeArray } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(4);
-  let t33;
+  let t0;
   if ($[0] !== props) {
-    t33 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb8: {
       const x = [];
       if (props.cond) {
         x.push(props.a);
-        t33 = x;
+        t0 = x;
         break bb8;
       } else {
-        let t0;
+        let t1;
         if ($[2] !== props.b) {
-          t0 = makeArray(props.b);
+          t1 = makeArray(props.b);
           $[2] = props.b;
-          $[3] = t0;
+          $[3] = t1;
         } else {
-          t0 = $[3];
+          t1 = $[3];
         }
-        t33 = t0;
+        t0 = t1;
         break bb8;
       }
     }
     $[0] = props;
-    $[1] = t33;
+    $[1] = t0;
   } else {
-    t33 = $[1];
+    t0 = $[1];
   }
-  if (t33 !== Symbol.for("react.early_return_sentinel")) {
-    return t33;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
 }
 

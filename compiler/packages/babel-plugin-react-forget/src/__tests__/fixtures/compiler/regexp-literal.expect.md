@@ -44,14 +44,14 @@ function Component(props) {
     }
     return t1;
   }
-  let t2;
+  let t1;
   if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = <div>Default</div>;
-    $[3] = t2;
+    t1 = <div>Default</div>;
+    $[3] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[3];
   }
-  return t2;
+  return t1;
 }
 
 ```

@@ -33,15 +33,15 @@ function foo(a, b, c, d) {
     }
     x = t0;
   } else {
-    let t1;
+    let t0;
     if ($[2] !== c) {
-      t1 = { c };
+      t0 = { c };
       $[2] = c;
-      $[3] = t1;
+      $[3] = t0;
     } else {
-      t1 = $[3];
+      t0 = $[3];
     }
-    x = t1;
+    x = t0;
   }
   return x;
 }

@@ -31,9 +31,9 @@ const { throwInput } = require("shared-runtime");
 
 function Component(props) {
   const $ = useMemoCache(3);
-  let t49;
+  let t0;
   if ($[0] !== props.y || $[1] !== props.e) {
-    t49 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb18: {
       try {
         const y = [];
@@ -42,21 +42,21 @@ function Component(props) {
       } catch (t25) {
         const e = t25;
         e.push(props.e);
-        t49 = e;
+        t0 = e;
         break bb18;
       }
 
-      t49 = null;
+      t0 = null;
       break bb18;
     }
     $[0] = props.y;
     $[1] = props.e;
-    $[2] = t49;
+    $[2] = t0;
   } else {
-    t49 = $[2];
+    t0 = $[2];
   }
-  if (t49 !== Symbol.for("react.early_return_sentinel")) {
-    return t49;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
 }
 

@@ -23,22 +23,22 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableUseTypeAnnotations
 function useArray(items) {
   const $ = useMemoCache(3);
-  let t1;
+  let t0;
   if ($[0] !== items) {
-    let t0;
+    let t1;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = (x) => x !== 0;
-      $[2] = t0;
+      t1 = (x) => x !== 0;
+      $[2] = t1;
     } else {
-      t0 = $[2];
+      t1 = $[2];
     }
-    t1 = items.filter(t0);
+    t0 = items.filter(t1);
     $[0] = items;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

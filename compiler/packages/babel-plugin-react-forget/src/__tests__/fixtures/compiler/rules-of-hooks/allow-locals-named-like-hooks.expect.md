@@ -51,20 +51,20 @@ function Component(props) {
 
   const y = useFeature;
   const z = useFeature.useProperty;
-  let t1;
+  let t0;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (
+    t0 = (
       <Stringify val={useFeature}>
         {x}
         {y}
         {z}
       </Stringify>
     );
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

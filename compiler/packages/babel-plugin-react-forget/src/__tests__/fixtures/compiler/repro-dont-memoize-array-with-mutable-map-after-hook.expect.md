@@ -62,27 +62,27 @@ function Component(props) {
 
   let y;
 
-  const t3 = x.map((item) => {
+  const t2 = x.map((item) => {
     item.flag = true;
     return <span key={item.id}>{item.text}</span>;
   });
-  let t2;
+  let t3;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = mutate(y);
-    $[2] = t2;
+    t3 = mutate(y);
+    $[2] = t3;
   } else {
-    t2 = $[2];
+    t3 = $[2];
   }
   let t4;
-  if ($[3] !== onClick || $[4] !== t3) {
+  if ($[3] !== onClick || $[4] !== t2) {
     t4 = (
       <div onClick={onClick}>
-        {t3}
         {t2}
+        {t3}
       </div>
     );
     $[3] = onClick;
-    $[4] = t3;
+    $[4] = t2;
     $[5] = t4;
   } else {
     t4 = $[5];

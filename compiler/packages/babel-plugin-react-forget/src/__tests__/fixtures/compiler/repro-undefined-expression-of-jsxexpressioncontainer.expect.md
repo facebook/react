@@ -52,18 +52,18 @@ function Component(props) {
   const { buttons } = props;
   let nonPrimaryButtons;
   if ($[0] !== buttons) {
-    const [primaryButton, ...t79] = buttons;
-    nonPrimaryButtons = t79;
+    const [primaryButton, ...t0] = buttons;
+    nonPrimaryButtons = t0;
     $[0] = buttons;
     $[1] = nonPrimaryButtons;
   } else {
     nonPrimaryButtons = $[1];
   }
-  let t1;
+  let t0;
   if ($[2] !== nonPrimaryButtons) {
-    let t0;
+    let t1;
     if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = (buttonProps, i) => (
+      t1 = (buttonProps, i) => (
         <Stringify
           {...buttonProps}
           key={`button-${i}`}
@@ -74,26 +74,26 @@ function Component(props) {
           }
         />
       );
-      $[4] = t0;
+      $[4] = t1;
     } else {
-      t0 = $[4];
+      t1 = $[4];
     }
-    t1 = nonPrimaryButtons.map(t0);
+    t0 = nonPrimaryButtons.map(t1);
     $[2] = nonPrimaryButtons;
-    $[3] = t1;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
-  const renderedNonPrimaryButtons = t1;
-  let t2;
+  const renderedNonPrimaryButtons = t0;
+  let t1;
   if ($[5] !== renderedNonPrimaryButtons) {
-    t2 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
+    t1 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
     $[5] = renderedNonPrimaryButtons;
-    $[6] = t2;
+    $[6] = t1;
   } else {
-    t2 = $[6];
+    t1 = $[6];
   }
-  return t2;
+  return t1;
 }
 
 const styles = {

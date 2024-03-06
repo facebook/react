@@ -56,13 +56,13 @@ function Component(props) {
   const part = free2.part;
 
   useHook();
-  let t39;
+  let t0;
 
   const x = makeObject_Primitives();
   x.value = props.value;
   mutate(x, free, part);
-  t39 = x;
-  const object = t39;
+  t0 = x;
+  const object = t0;
 
   identity(free);
   identity(part);

@@ -70,35 +70,35 @@ let ENABLE_FEATURE = false;
 
 function Component(props) {
   const $ = useMemoCache(3);
-  let t37;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t37 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb8: {
       const x = [];
       if (ENABLE_FEATURE) {
         x.push(42);
-        t37 = x;
+        t0 = x;
         break bb8;
       } else {
         console.log("fallthrough");
       }
     }
-    $[0] = t37;
+    $[0] = t0;
   } else {
-    t37 = $[0];
+    t0 = $[0];
   }
-  if (t37 !== Symbol.for("react.early_return_sentinel")) {
-    return t37;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
-  let t0;
+  let t1;
   if ($[1] !== props.a) {
-    t0 = makeArray(props.a);
+    t1 = makeArray(props.a);
     $[1] = props.a;
-    $[2] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[2];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

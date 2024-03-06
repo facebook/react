@@ -72,22 +72,22 @@ function Component(props) {
     t2 = $[6];
   }
   useEffect(t1, t2);
-  let t4;
+  let t3;
   if ($[7] !== data) {
-    let t3;
+    let t4;
     if ($[9] === Symbol.for("react.memo_cache_sentinel")) {
-      t3 = (x) => x;
-      $[9] = t3;
+      t4 = (x) => x;
+      $[9] = t4;
     } else {
-      t3 = $[9];
+      t4 = $[9];
     }
-    t4 = data.map(t3);
+    t3 = data.map(t4);
     $[7] = data;
-    $[8] = t4;
+    $[8] = t3;
   } else {
-    t4 = $[8];
+    t3 = $[8];
   }
-  const items = t4;
+  const items = t3;
   return items;
 }
 

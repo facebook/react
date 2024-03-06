@@ -50,16 +50,16 @@ function foo(a, b, c) {
     x = $[3];
     z = $[4];
   }
-  let t1;
+  let t0;
   if ($[7] !== x || $[8] !== z) {
-    t1 = [x, z];
+    t0 = [x, z];
     $[7] = x;
     $[8] = z;
-    $[9] = t1;
+    $[9] = t0;
   } else {
-    t1 = $[9];
+    t0 = $[9];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

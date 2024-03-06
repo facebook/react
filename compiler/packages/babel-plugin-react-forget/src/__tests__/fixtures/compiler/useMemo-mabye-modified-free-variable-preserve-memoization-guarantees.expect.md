@@ -76,7 +76,7 @@ function Component(props) {
   const part = free2.part;
 
   useHook();
-  let t39;
+  let t2;
   let x;
   if ($[2] !== props.value) {
     x = makeObject_Primitives();
@@ -87,8 +87,8 @@ function Component(props) {
   } else {
     x = $[3];
   }
-  t39 = x;
-  const object = t39;
+  t2 = x;
+  const object = t2;
 
   identity(free);
   identity(part);

@@ -51,16 +51,16 @@ function Component(props) {
     x = $[3];
     y = $[4];
   }
-  let t1;
+  let t0;
   if ($[6] !== x || $[7] !== y) {
-    t1 = <Component x={x} y={y} />;
+    t0 = <Component x={x} y={y} />;
     $[6] = x;
     $[7] = y;
-    $[8] = t1;
+    $[8] = t0;
   } else {
-    t1 = $[8];
+    t0 = $[8];
   }
-  return t1;
+  return t0;
 }
 
 ```

@@ -55,47 +55,47 @@ function Component(props) {
   const $ = useMemoCache(11);
   let Tag;
   let T0;
-  let t1;
+  let t0;
   if ($[0] !== props.component || $[1] !== props.alternateComponent) {
     const maybeMutable = new MaybeMutable();
     Tag = props.component;
 
     T0 = Tag;
-    t1 = ((Tag = props.alternateComponent), maybeMutate(maybeMutable));
+    t0 = ((Tag = props.alternateComponent), maybeMutate(maybeMutable));
     $[0] = props.component;
     $[1] = props.alternateComponent;
     $[2] = Tag;
     $[3] = T0;
-    $[4] = t1;
+    $[4] = t0;
   } else {
     Tag = $[2];
     T0 = $[3];
-    t1 = $[4];
+    t0 = $[4];
+  }
+  let t1;
+  if ($[5] !== Tag) {
+    t1 = <Tag />;
+    $[5] = Tag;
+    $[6] = t1;
+  } else {
+    t1 = $[6];
   }
   let t2;
-  if ($[5] !== Tag) {
-    t2 = <Tag />;
-    $[5] = Tag;
-    $[6] = t2;
-  } else {
-    t2 = $[6];
-  }
-  let t3;
-  if ($[7] !== T0 || $[8] !== t1 || $[9] !== t2) {
-    t3 = (
+  if ($[7] !== T0 || $[8] !== t0 || $[9] !== t1) {
+    t2 = (
       <T0>
+        {t0}
         {t1}
-        {t2}
       </T0>
     );
     $[7] = T0;
-    $[8] = t1;
-    $[9] = t2;
-    $[10] = t3;
+    $[8] = t0;
+    $[9] = t1;
+    $[10] = t2;
   } else {
-    t3 = $[10];
+    t2 = $[10];
   }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
