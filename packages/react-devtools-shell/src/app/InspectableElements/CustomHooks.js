@@ -120,6 +120,34 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
+const Suspendender = React.lazy(() => {
+  return new Promise<any>(resolve => {
+    setTimeout(() => {
+      resolve({
+        default: () => 'Finished!',
+      });
+    }, 3000);
+  });
+});
+function Transition() {
+  const [show, setShow] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
+
+  return (
+    <div>
+      <React.Suspense fallback="Loading">
+        {isPending ? 'Pending' : null}
+        {show ? <Suspendender /> : null}
+      </React.Suspense>
+      {!show && (
+        <button onClick={() => startTransition(() => setShow(true))}>
+          Transition
+        </button>
+      )}
+    </div>
+  );
+}
+
 function incrementWithDelay(previousState: number, formData: FormData) {
   const incrementDelay = +formData.get('incrementDelay');
   const shouldReject = formData.get('shouldReject');
@@ -183,6 +211,7 @@ export default function CustomHooks(): React.Node {
       <MemoWithHooks />
       <ForwardRefWithHooks />
       <HocWithHooks />
+      <Transition />
       <ErrorBoundary>
         <Forms />
       </ErrorBoundary>
