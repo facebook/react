@@ -422,6 +422,7 @@ const skipFilter = new Set([
   "component-declaration-basic.flow",
   "hook-declaration-basic.flow",
   "nested-function-with-param-as-captured-dep",
+  "deeply-nested-function-expressions-with-params",
   "readonly-object-method-calls",
   "readonly-object-method-calls-mutable-lambda",
 

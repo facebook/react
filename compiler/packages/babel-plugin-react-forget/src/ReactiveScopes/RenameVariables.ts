@@ -15,6 +15,7 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
+  ReactiveValue,
   isPromotedJsxTemporary,
   isPromotedTemporary,
   makeIdentifierName,
@@ -62,6 +63,9 @@ function renameVariablesImpl(
 }
 
 class Visitor extends ReactiveFunctionVisitor<Scopes> {
+  override visitParam(place: Place, state: Scopes): void {
+    state.visit(place.identifier);
+  }
   override visitLValue(_id: InstructionId, lvalue: Place, state: Scopes): void {
     state.visit(lvalue.identifier);
   }
@@ -79,6 +83,17 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
       state.visit(declaration.identifier);
     }
     this.traverseScope(scope, state);
+  }
+
+  override visitValue(
+    id: InstructionId,
+    value: ReactiveValue,
+    state: Scopes
+  ): void {
+    this.traverseValue(id, value, state);
+    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+      this.visitHirFunction(value.loweredFunc.func, state);
+    }
   }
 
   override visitReactiveFunctionValue(

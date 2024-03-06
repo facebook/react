@@ -6,6 +6,7 @@
  */
 
 import {
+  HIRFunction,
   InstructionId,
   Place,
   ReactiveBlock,
@@ -20,6 +21,7 @@ import {
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
+  eachTerminalOperand,
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -33,6 +35,7 @@ export function visitReactiveFunction<TState>(
 
 export class ReactiveFunctionVisitor<TState = void> {
   visitID(_id: InstructionId, _state: TState): void {}
+  visitParam(_place: Place, _state: TState): void {}
   visitLValue(_id: InstructionId, _lvalue: Place, _state: TState): void {}
   visitPlace(_id: InstructionId, _place: Place, _state: TState): void {}
   visitReactiveFunctionValue(
@@ -216,6 +219,27 @@ export class ReactiveFunctionVisitor<TState = void> {
             `Unexpected instruction kind '${(instr as any).kind}'`
           );
         }
+      }
+    }
+  }
+
+  visitHirFunction(fn: HIRFunction, state: TState): void {
+    for (const param of fn.params) {
+      const place = param.kind === "Identifier" ? param : param.place;
+      this.visitParam(place, state);
+    }
+    for (const [, block] of fn.body.blocks) {
+      for (const instr of block.instructions) {
+        this.visitInstruction(instr, state);
+        if (
+          instr.value.kind === "FunctionExpression" ||
+          instr.value.kind === "ObjectMethod"
+        ) {
+          this.visitHirFunction(instr.value.loweredFunc.func, state);
+        }
+      }
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        this.visitPlace(block.terminal.id, operand, state);
       }
     }
   }

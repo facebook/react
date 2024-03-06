@@ -5,8 +5,11 @@
 function Foo() {
   return (function t() {
     let x = {};
+    let y = {};
     return function a(x = () => {}) {
-      return x;
+      return (function b(y = []) {
+        return [x, y];
+      })();
     };
   })();
 }
@@ -14,7 +17,6 @@ function Foo() {
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [],
-  isComponent: false,
 };
 
 ```
@@ -30,7 +32,10 @@ function Foo() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = function a(t2) {
       const x_0 = t2 === undefined ? () => {} : t2;
-      return x_0;
+      return (function b(t3) {
+        const y_0 = t3 === undefined ? [] : t3;
+        return [x_0, y_0];
+      })();
     };
     $[0] = t1;
   } else {
@@ -43,7 +48,6 @@ function Foo() {
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [],
-  isComponent: false,
 };
 
 ```

@@ -46,6 +46,12 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     }
   }
 
+  override visitParam(place: Place, state: VisitorState): void {
+    if (place.identifier.name === null) {
+      promoteTemporary(place.identifier, state);
+    }
+  }
+
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
@@ -53,12 +59,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
-      for (const operand of value.loweredFunc.func.params) {
-        const place = operand.kind === "Identifier" ? operand : operand.place;
-        if (place.identifier.name === null) {
-          promoteTemporary(place.identifier, state);
-        }
-      }
+      this.visitHirFunction(value.loweredFunc.func, state);
     }
   }
 

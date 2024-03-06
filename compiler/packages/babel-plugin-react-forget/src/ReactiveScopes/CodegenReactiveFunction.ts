@@ -6,12 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import {
-  pruneHoistedContexts,
-  pruneUnusedLValues,
-  pruneUnusedLabels,
-  renameVariables,
-} from ".";
+import { pruneHoistedContexts, pruneUnusedLValues, pruneUnusedLabels } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
 import {
@@ -1342,7 +1337,6 @@ function codegenInstructionValue(
               const reactiveFunction = buildReactiveFunction(loweredFunc.func);
               pruneUnusedLabels(reactiveFunction);
               pruneUnusedLValues(reactiveFunction);
-              renameVariables(reactiveFunction);
               const fn = codegenReactiveFunction(
                 new Context(
                   cx.env,
@@ -1547,7 +1541,6 @@ function codegenInstructionValue(
       const reactiveFunction = buildReactiveFunction(loweredFunc);
       pruneUnusedLabels(reactiveFunction);
       pruneUnusedLValues(reactiveFunction);
-      renameVariables(reactiveFunction);
       pruneHoistedContexts(reactiveFunction);
       const fn = codegenReactiveFunction(
         new Context(cx.env, reactiveFunction.id ?? "[[ anonymous ]]", cx.temp),
