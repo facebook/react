@@ -166,6 +166,7 @@ import {
   claimNextTransitionLane,
 } from './ReactFiberLane';
 import {
+  NoEventPriority,
   DiscreteEventPriority,
   DefaultEventPriority,
   getCurrentUpdatePriority,
@@ -664,13 +665,20 @@ export function requestUpdateLane(fiber: Fiber): Lane {
         requestTransitionLane(transition);
   }
 
+  // If there is an eventPriority scoped to React's internals we use it.
+  // The opaque type used for EventPriority matches the Lane so we cast it
+  let updateLane: Lane = (ReactCurrentBatchConfig.eventPriority: any);
+  if (updateLane !== NoLane) {
+    return updateLane;
+  }
+
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
   //
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
+  updateLane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
     return updateLane;
   }
@@ -3250,15 +3258,18 @@ export function flushPassiveEffects(): boolean {
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
+    const prevEventPriority = ReactCurrentBatchConfig.eventPriority;
     const previousPriority = getCurrentUpdatePriority();
 
     try {
       ReactCurrentBatchConfig.transition = null;
+      ReactCurrentBatchConfig.eventPriority = NoEventPriority;
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactCurrentBatchConfig.transition = prevTransition;
+      ReactCurrentBatchConfig.eventPriority = prevEventPriority;
 
       // Once passive effects have run for the tree - giving components a
       // chance to retain cache instances they use - release the pooled

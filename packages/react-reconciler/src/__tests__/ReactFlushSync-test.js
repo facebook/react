@@ -100,18 +100,22 @@ describe('ReactFlushSync', () => {
       // This will yield right before the passive effect fires
       await waitForPaint(['0, 0']);
 
-      // The updates inside useEffect have default priority so there is a yield before
-      // they flush.
-      await waitForPaint([]);
-
       // The passive effect will schedule a sync update and a normal update.
-      await waitForPaint(['1, 1']);
+      // They should commit in two separate batches. First the sync one.
+      await waitForPaint(
+        gate(flags => flags.enableUnifiedSyncLane) ? ['1, 1'] : ['1, 0'],
+      );
 
       // The remaining update is not sync
       ReactDOM.flushSync();
       assertLog([]);
 
-      await waitForPaint([]);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        await waitForPaint([]);
+      } else {
+        // Now flush it.
+        await waitForPaint(['1, 1']);
+      }
     });
     expect(getVisibleChildren(container)).toEqual('1, 1');
 

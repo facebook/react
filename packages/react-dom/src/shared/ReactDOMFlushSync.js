@@ -16,18 +16,16 @@ const ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher =
   ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
-const ReactDOMCurrentEventConfig =
-  ReactDOMSharedInternals.ReactDOMCurrentEventConfig;
 
 declare function flushSyncImpl<R>(fn: () => R): R;
 declare function flushSyncImpl(void): void;
 function flushSyncImpl<R>(fn: (() => R) | void): R | void {
   const previousTransition = ReactCurrentBatchConfig.transition;
-  const preivousEventPriority = ReactDOMCurrentEventConfig.eventPriority;
+  const preivousEventPriority = ReactCurrentBatchConfig.eventPriority;
 
   try {
     ReactCurrentBatchConfig.transition = null;
-    ReactDOMCurrentEventConfig.eventPriority = DiscreteEventPriority;
+    ReactCurrentBatchConfig.eventPriority = DiscreteEventPriority;
     if (fn) {
       return fn();
     } else {
@@ -35,8 +33,17 @@ function flushSyncImpl<R>(fn: (() => R) | void): R | void {
     }
   } finally {
     ReactCurrentBatchConfig.transition = previousTransition;
-    ReactDOMCurrentEventConfig.eventPriority = preivousEventPriority;
-    ReactDOMCurrentDispatcher.current.flushSyncWork();
+    ReactCurrentBatchConfig.eventPriority = preivousEventPriority;
+    const wasInRender = ReactDOMCurrentDispatcher.current.flushSyncWork();
+    if (__DEV__) {
+      if (wasInRender) {
+        console.error(
+          'flushSync was called from inside a lifecycle method. React cannot ' +
+            'flush when React is already rendering. Consider moving this call to ' +
+            'a scheduler task or micro task.',
+        );
+      }
+    }
   }
 }
 

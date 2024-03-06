@@ -587,11 +587,6 @@ export function createTextInstance(
 }
 
 export function getCurrentEventPriority(): EventPriority {
-  if (disableLegacyMode) {
-    if (ReactDOMCurrentEventConfig.eventPriority !== NoEventPriority) {
-      return ReactDOMCurrentEventConfig.eventPriority;
-    }
-  }
   const currentEvent = window.event;
   if (currentEvent === undefined) {
     return DefaultEventPriority;
