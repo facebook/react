@@ -11,7 +11,7 @@ import {
   visitReactiveFunction,
 } from ".";
 import {
-  IdentifierId,
+  Identifier,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
@@ -33,8 +33,8 @@ export function pruneAlwaysInvalidatingScopes(fn: ReactiveFunction): void {
 }
 
 class Transform extends ReactiveFunctionTransform<boolean> {
-  alwaysInvalidatingValues: Set<IdentifierId> = new Set();
-  unmemoizedValues: Set<IdentifierId> = new Set();
+  alwaysInvalidatingValues: Set<Identifier> = new Set();
+  unmemoizedValues: Set<Identifier> = new Set();
 
   override transformInstruction(
     instruction: ReactiveInstruction,
@@ -50,34 +50,34 @@ class Transform extends ReactiveFunctionTransform<boolean> {
       case "JsxFragment":
       case "NewExpression": {
         if (lvalue !== null) {
-          this.alwaysInvalidatingValues.add(lvalue.identifier.id);
+          this.alwaysInvalidatingValues.add(lvalue.identifier);
           if (!withinScope) {
-            this.unmemoizedValues.add(lvalue.identifier.id);
+            this.unmemoizedValues.add(lvalue.identifier);
           }
         }
         break;
       }
       case "StoreLocal": {
-        if (this.alwaysInvalidatingValues.has(value.value.identifier.id)) {
-          this.alwaysInvalidatingValues.add(value.lvalue.place.identifier.id);
+        if (this.alwaysInvalidatingValues.has(value.value.identifier)) {
+          this.alwaysInvalidatingValues.add(value.lvalue.place.identifier);
         }
-        if (this.unmemoizedValues.has(value.value.identifier.id)) {
-          this.unmemoizedValues.add(value.lvalue.place.identifier.id);
+        if (this.unmemoizedValues.has(value.value.identifier)) {
+          this.unmemoizedValues.add(value.lvalue.place.identifier);
         }
         break;
       }
       case "LoadLocal": {
         if (
           lvalue !== null &&
-          this.alwaysInvalidatingValues.has(value.place.identifier.id)
+          this.alwaysInvalidatingValues.has(value.place.identifier)
         ) {
-          this.alwaysInvalidatingValues.add(lvalue.identifier.id);
+          this.alwaysInvalidatingValues.add(lvalue.identifier);
         }
         if (
           lvalue !== null &&
-          this.unmemoizedValues.has(value.place.identifier.id)
+          this.unmemoizedValues.has(value.place.identifier)
         ) {
-          this.unmemoizedValues.add(lvalue.identifier.id);
+          this.unmemoizedValues.add(lvalue.identifier);
         }
         break;
       }
@@ -92,19 +92,19 @@ class Transform extends ReactiveFunctionTransform<boolean> {
     this.visitScope(scopeBlock, true);
 
     for (const dep of scopeBlock.scope.dependencies) {
-      if (this.unmemoizedValues.has(dep.identifier.id)) {
+      if (this.unmemoizedValues.has(dep.identifier)) {
         /*
          * This scope depends on an always-invalidating value so the scope will always invalidate:
          * prune it to avoid wasted comparisons
          */
-        for (const [id, _decl] of scopeBlock.scope.declarations) {
-          if (this.alwaysInvalidatingValues.has(id)) {
-            this.unmemoizedValues.add(id);
+        for (const [_, decl] of scopeBlock.scope.declarations) {
+          if (this.alwaysInvalidatingValues.has(decl.identifier)) {
+            this.unmemoizedValues.add(decl.identifier);
           }
         }
         for (const identifier of scopeBlock.scope.reassignments) {
-          if (this.alwaysInvalidatingValues.has(identifier.id)) {
-            this.unmemoizedValues.add(identifier.id);
+          if (this.alwaysInvalidatingValues.has(identifier)) {
+            this.unmemoizedValues.add(identifier);
           }
         }
         return { kind: "replace-many", value: scopeBlock.instructions };
