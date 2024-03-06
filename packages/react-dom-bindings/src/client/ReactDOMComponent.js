@@ -251,7 +251,7 @@ function warnForExtraAttributes(
 ) {
   if (__DEV__) {
     attributeNames.forEach(function (attributeName) {
-      serverDifferences[attributeName] =
+      serverDifferences[getPropNameFromAttributeName(attributeName)] =
         attributeName === 'style'
           ? getStylesObjectFromElement(domElement)
           : domElement.getAttribute(attributeName);
@@ -1829,12 +1829,24 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
+function getPropNameFromAttributeName(attrName: string): string {
+  switch (attrName) {
+    case 'class':
+      return 'className';
+    case 'for':
+      return 'htmlFor';
+    // TODO: The rest of the aliases.
+    default:
+      return attrName;
+  }
+}
+
 export function getPropsFromElement(domElement: Element): Object {
   const serverDifferences: {[propName: string]: mixed} = {};
   const attributes = domElement.attributes;
   for (let i = 0; i < attributes.length; i++) {
     const attr = attributes[i];
-    serverDifferences[attr.name] =
+    serverDifferences[getPropNameFromAttributeName(attr.name)] =
       attr.name.toLowerCase() === 'style'
         ? getStylesObjectFromElement(domElement)
         : attr.value;
