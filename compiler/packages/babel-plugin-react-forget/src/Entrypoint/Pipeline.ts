@@ -348,7 +348,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  renameVariables(reactiveFunction);
+  const uniqueIdentifiers = renameVariables(reactiveFunction);
   yield log({
     kind: "reactive",
     name: "RenameVariables",
@@ -373,7 +373,11 @@ function* runWithEnvironment(
     validatePreservedManualMemoization(reactiveFunction);
   }
 
-  const ast = codegenFunction(reactiveFunction, filename).unwrap();
+  const ast = codegenFunction(
+    reactiveFunction,
+    uniqueIdentifiers,
+    filename
+  ).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
 
   /**

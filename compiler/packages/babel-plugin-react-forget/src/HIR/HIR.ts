@@ -970,9 +970,9 @@ export type Identifier = {
   type: Type;
 };
 
-export type IdentifierName =
-  | { kind: "named"; value: ValidIdentifierName }
-  | { kind: "promoted"; value: string };
+export type IdentifierName = ValidatedIdentifier | PromotedIdentifier;
+export type ValidatedIdentifier = { kind: "named"; value: ValidIdentifierName };
+export type PromotedIdentifier = { kind: "promoted"; value: string };
 
 /**
  * Simulated opaque type for identifier names to ensure values can only be created
@@ -988,7 +988,7 @@ export type ValidIdentifierName = string & {
  * identifier names: only call this method for identifier names that appear in the
  * original source code.
  */
-export function makeIdentifierName(name: string): IdentifierName {
+export function makeIdentifierName(name: string): ValidatedIdentifier {
   CompilerError.invariant(t.isValidIdentifier(name), {
     reason: `Expected a valid identifier name`,
     loc: GeneratedSource,

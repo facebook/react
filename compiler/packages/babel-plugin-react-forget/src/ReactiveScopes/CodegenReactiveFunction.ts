@@ -31,7 +31,9 @@ import {
   ReactiveValue,
   SourceLocation,
   SpreadPattern,
+  ValidIdentifierName,
   getHookKind,
+  makeIdentifierName,
 } from "../HIR/HIR";
 import { printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
@@ -68,9 +70,15 @@ export type CodegenFunction = {
 
 export function codegenFunction(
   fn: ReactiveFunction,
+  uniqueIdentifiers: Set<ValidIdentifierName>,
   filename: string | null
 ): Result<CodegenFunction, CompilerError> {
-  const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]", null);
+  const cx = new Context(
+    fn.env,
+    fn.id ?? "[[ anonymous ]]",
+    uniqueIdentifiers,
+    null
+  );
   const compileResult = codegenReactiveFunction(cx, fn);
   if (compileResult.isErr()) {
     return compileResult;
@@ -95,7 +103,7 @@ export function codegenFunction(
     compiled.body.body.unshift(
       t.variableDeclaration("const", [
         t.variableDeclarator(
-          t.identifier("$"),
+          t.identifier(cx.synthesizeName("$")),
           t.callExpression(t.identifier("useMemoCache"), [
             t.numericLiteral(cacheCount),
           ])
@@ -215,14 +223,18 @@ class Context {
   temp: Temporaries;
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
+  uniqueIdentifiers: Set<ValidIdentifierName>;
+  synthesizedNames: Map<string, ValidIdentifierName> = new Map();
 
   constructor(
     env: Environment,
     fnName: string,
+    uniqueIdentifiers: Set<ValidIdentifierName>,
     temporaries: Temporaries | null = null
   ) {
     this.env = env;
     this.fnName = fnName;
+    this.uniqueIdentifiers = uniqueIdentifiers;
     this.temp = temporaries !== null ? new Map(temporaries) : new Map();
   }
   get nextCacheIndex(): number {
@@ -235,6 +247,21 @@ class Context {
 
   hasDeclared(identifier: Identifier): boolean {
     return this.#declarations.has(identifier.id);
+  }
+
+  synthesizeName(name: string): ValidIdentifierName {
+    const previous = this.synthesizedNames.get(name);
+    if (previous !== undefined) {
+      return previous;
+    }
+    let validated = makeIdentifierName(name).value;
+    let index = 0;
+    while (this.uniqueIdentifiers.has(validated)) {
+      validated = makeIdentifierName(`${name}${index++}`).value;
+    }
+    this.uniqueIdentifiers.add(validated);
+    this.synthesizedNames.set(name, validated);
+    return validated;
   }
 }
 
@@ -348,12 +375,16 @@ function codegenReactiveScope(
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
       "!==",
-      t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+      t.memberExpression(
+        t.identifier(cx.synthesizeName("$")),
+        t.numericLiteral(index),
+        true
+      ),
       depValue
     );
 
     if (cx.env.config.enableChangeVariableCodegen) {
-      const changeIdentifier = t.identifier(`c_${index}`);
+      const changeIdentifier = t.identifier(cx.synthesizeName(`c_${index}`));
       statements.push(
         t.variableDeclaration("const", [
           t.variableDeclarator(changeIdentifier, comparison),
@@ -367,7 +398,11 @@ function codegenReactiveScope(
       t.expressionStatement(
         t.assignmentExpression(
           "=",
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          t.memberExpression(
+            t.identifier(cx.synthesizeName("$")),
+            t.numericLiteral(index),
+            true
+          ),
           depValue
         )
       )
@@ -398,7 +433,11 @@ function codegenReactiveScope(
       t.expressionStatement(
         t.assignmentExpression(
           "=",
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          t.memberExpression(
+            t.identifier(cx.synthesizeName("$")),
+            t.numericLiteral(index),
+            true
+          ),
           wrapCacheDep(cx, name)
         )
       )
@@ -408,7 +447,11 @@ function codegenReactiveScope(
         t.assignmentExpression(
           "=",
           name,
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true)
+          t.memberExpression(
+            t.identifier(cx.synthesizeName("$")),
+            t.numericLiteral(index),
+            true
+          )
         )
       )
     );
@@ -426,7 +469,11 @@ function codegenReactiveScope(
       t.expressionStatement(
         t.assignmentExpression(
           "=",
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+          t.memberExpression(
+            t.identifier(cx.synthesizeName("$")),
+            t.numericLiteral(index),
+            true
+          ),
           wrapCacheDep(cx, name)
         )
       )
@@ -436,7 +483,11 @@ function codegenReactiveScope(
         t.assignmentExpression(
           "=",
           name,
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true)
+          t.memberExpression(
+            t.identifier(cx.synthesizeName("$")),
+            t.numericLiteral(index),
+            true
+          )
         )
       )
     );
@@ -460,7 +511,7 @@ function codegenReactiveScope(
     testCondition = t.binaryExpression(
       "===",
       t.memberExpression(
-        t.identifier("$"),
+        t.identifier(cx.synthesizeName("$")),
         t.numericLiteral(firstOutputIndex),
         true
       ),
@@ -1341,6 +1392,7 @@ function codegenInstructionValue(
                 new Context(
                   cx.env,
                   reactiveFunction.id ?? "[[ anonymous ]]",
+                  cx.uniqueIdentifiers,
                   cx.temp
                 ),
                 reactiveFunction
@@ -1543,7 +1595,12 @@ function codegenInstructionValue(
       pruneUnusedLValues(reactiveFunction);
       pruneHoistedContexts(reactiveFunction);
       const fn = codegenReactiveFunction(
-        new Context(cx.env, reactiveFunction.id ?? "[[ anonymous ]]", cx.temp),
+        new Context(
+          cx.env,
+          reactiveFunction.id ?? "[[ anonymous ]]",
+          cx.uniqueIdentifiers,
+          cx.temp
+        ),
         reactiveFunction
       ).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {

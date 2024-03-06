@@ -16,6 +16,7 @@ import {
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveValue,
+  ValidIdentifierName,
   isPromotedJsxTemporary,
   isPromotedTemporary,
   makeIdentifierName,
@@ -39,10 +40,15 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * For temporary values that are promoted to named variables, the starting name
  * is "T0" for values that appear in JSX tag position and "t0" otherwise. If this
  * name conflicts, the number portion increments until the name is unique (t1, t2, etc).
+ *
+ * Returns a Set of all the unique variable names in the function after renaming.
  */
-export function renameVariables(fn: ReactiveFunction): void {
+export function renameVariables(
+  fn: ReactiveFunction
+): Set<ValidIdentifierName> {
   const scopes = new Scopes();
   renameVariablesImpl(fn, new Visitor(), scopes);
+  return scopes.names;
 }
 
 function renameVariablesImpl(
@@ -109,6 +115,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 class Scopes {
   #seen: Map<IdentifierId, IdentifierName> = new Map();
   #stack: Array<Map<string, IdentifierId>> = [new Map()];
+  names: Set<ValidIdentifierName> = new Set();
 
   visit(identifier: Identifier): void {
     const originalName = identifier.name;
@@ -134,7 +141,7 @@ class Scopes {
       } else if (isPromotedJsxTemporary(originalName.value)) {
         name = `T${id++}`;
       } else {
-        name = `${identifier.name}$${id++}`;
+        name = `${originalName.value}$${id++}`;
       }
       previous = this.#lookup(name);
     }
@@ -142,6 +149,7 @@ class Scopes {
     identifier.name = identifierName;
     this.#seen.set(identifier.id, identifierName);
     this.#stack.at(-1)!.set(identifierName.value, identifier.id);
+    this.names.add(identifierName.value);
   }
 
   #lookup(name: string): IdentifierId | null {
