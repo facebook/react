@@ -444,14 +444,15 @@ function useTransition(): [
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = nextHook();
+  const prevValue = hook !== null ? hook.memoizedState : value;
   hookLog.push({
     displayName: null,
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value: hook !== null ? hook.memoizedState : value,
+    value: prevValue,
     debugInfo: null,
   });
-  return value;
+  return prevValue;
 }
 
 function useId(): string {
