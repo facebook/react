@@ -521,19 +521,62 @@ function useFormState<S, P>(
 ): [Awaited<S>, (P) => void] {
   const hook = nextHook(); // FormState
   nextHook(); // ActionQueue
-  let state;
+  const stackError = new Error();
+  let value;
+  let debugInfo = null;
+  let error = null;
+
   if (hook !== null) {
-    state = hook.memoizedState;
+    const actionResult = hook.memoizedState;
+    if (
+      typeof actionResult === 'object' &&
+      actionResult !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof actionResult.then === 'function'
+    ) {
+      const thenable: Thenable<Awaited<S>> = (actionResult: any);
+      switch (thenable.status) {
+        case 'fulfilled': {
+          value = thenable.value;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          break;
+        }
+        case 'rejected': {
+          const rejectedError = thenable.reason;
+          error = rejectedError;
+          break;
+        }
+        default:
+          // If this was an uncached Promise we have to abandon this attempt
+          // but we can still emit anything up until this point.
+          error = SuspenseException;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          value = thenable;
+      }
+    } else {
+      value = (actionResult: any);
+    }
   } else {
-    state = initialState;
+    value = initialState;
   }
+
   hookLog.push({
     displayName: null,
     primitive: 'FormState',
-    stackError: new Error(),
-    value: state,
-    debugInfo: null,
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
   });
+
+  if (error !== null) {
+    throw error;
+  }
+
+  // value being a Thenable is equivalent to error being not null
+  // i.e. we only reach this point with Awaited<S>
+  const state = ((value: any): Awaited<S>);
   return [state, (payload: P) => {}];
 }
 

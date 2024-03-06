@@ -20,11 +20,10 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "dependencies": {
     "art": "^0.10.1",
     "create-react-class": "^15.6.2",
-    "loose-envify": "^1.1.0",
     "scheduler": "^0.23.0"
   },
   "peerDependencies": {
@@ -39,10 +38,5 @@
     "Circle.js",
     "Rectangle.js",
     "Wedge.js"
-  ],
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
-  }
+  ]
 }

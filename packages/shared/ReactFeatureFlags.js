@@ -145,7 +145,7 @@ export const disableLegacyContext = false;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
@@ -174,6 +174,8 @@ export const disableClientCache = false;
 // Changes Server Components Reconciliation when they have keys
 export const enableServerComponentKeys = __NEXT_MAJOR__;
 
+export const enableBigIntSupport = __NEXT_MAJOR__;
+
 /**
  * Enables a new error detection for infinite render loops from updates caused
  * by setState or similar outside of the component owning the state.
@@ -186,11 +188,17 @@ export const enableInfiniteRenderLoopDetection = true;
 // Passes `ref` as a normal prop instead of stripping it from the props object
 // during element creation.
 export const enableRefAsProp = __NEXT_MAJOR__;
+export const disableStringRefs = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Needs more internal cleanup
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = false;
+
+// Disables legacy mode
+// This allows us to land breaking changes to remove legacy mode APIs in experimental builds
+// before removing them in stable in the next Major
+export const disableLegacyMode = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

@@ -906,7 +906,7 @@ describe('ReactComponentLifeCycle', () => {
           '  UNSAFE_componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -936,7 +936,7 @@ describe('ReactComponentLifeCycle', () => {
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://reactjs.org/link/unsafe-component-lifecycles',
+        'https://react.dev/link/unsafe-component-lifecycles',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -963,7 +963,7 @@ describe('ReactComponentLifeCycle', () => {
           '  componentWillMount\n' +
           '  UNSAFE_componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
@@ -990,7 +990,7 @@ describe('ReactComponentLifeCycle', () => {
           'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
@@ -1023,7 +1023,7 @@ describe('ReactComponentLifeCycle', () => {
           '  UNSAFE_componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -1052,7 +1052,7 @@ describe('ReactComponentLifeCycle', () => {
         'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://reactjs.org/link/unsafe-component-lifecycles',
+        'https://react.dev/link/unsafe-component-lifecycles',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -1077,7 +1077,7 @@ describe('ReactComponentLifeCycle', () => {
           '  componentWillMount\n' +
           '  UNSAFE_componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
@@ -1104,7 +1104,7 @@ describe('ReactComponentLifeCycle', () => {
           'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
@@ -1570,20 +1570,20 @@ describe('ReactComponentLifeCycle', () => {
     }).toWarnDev(
       [
         /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.

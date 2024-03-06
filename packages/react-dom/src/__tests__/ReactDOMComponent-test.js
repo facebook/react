@@ -192,7 +192,7 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev(
         'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
+          'it in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -207,7 +207,7 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev(
         'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
+          'them in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -332,7 +332,7 @@ describe('ReactDOMComponent', () => {
       });
     });
 
-    it('throws with Temporal-like objects as style values', () => {
+    it('throws with Temporal-like objects as style values', async () => {
       class TemporalLike {
         valueOf() {
           // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -344,14 +344,17 @@ describe('ReactDOMComponent', () => {
         }
       }
       const style = {fontSize: new TemporalLike()};
-      const div = document.createElement('div');
-      const test = () => ReactDOM.render(<span style={style} />, div);
-      expect(() =>
-        expect(test).toThrowError(new TypeError('prod message')),
-      ).toErrorDev(
-        'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
-      );
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await expect(async () => {
+        await expect(async () => {
+          await act(() => {
+            root.render(<span style={style} />);
+          });
+        }).toErrorDev(
+          'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
+            ' This value must be coerced to a string before using it here.',
+        );
+      }).rejects.toThrowError(new TypeError('prod message'));
     });
 
     it('should update styles if initially null', async () => {
@@ -1817,7 +1820,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1838,7 +1841,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1847,7 +1850,7 @@ describe('ReactDOMComponent', () => {
         await mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
+          'Please visit https://react.dev/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -3688,6 +3691,7 @@ describe('ReactDOMComponent', () => {
       expect(typeof portalContainer.onclick).toBe('function');
     });
 
+    // @gate !disableLegacyMode
     it('does not add onclick handler to the React root in legacy mode', () => {
       const container = document.createElement('div');
 

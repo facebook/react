@@ -71,7 +71,6 @@ import {
   writePostamble,
   hoistHoistables,
   createHoistableState,
-  prepareHostDispatcher,
   supportsRequestStorage,
   requestStorage,
   pushFormStateMarkerIsMatching,
@@ -139,6 +138,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
   disableModulePatternComponents,
+  enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
@@ -376,7 +376,6 @@ export function createRequest(
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ): Request {
-  prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const request: Request = {
@@ -489,7 +488,6 @@ export function resumeRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
-  prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const request: Request = {
@@ -2364,7 +2362,10 @@ function renderNodeDestructive(
     return;
   }
 
-  if (typeof node === 'number') {
+  if (
+    typeof node === 'number' ||
+    (enableBigIntSupport && typeof node === 'bigint')
+  ) {
     const segment = task.blockedSegment;
     if (segment === null) {
       // We assume a text node doesn't have a representation in the replay set,

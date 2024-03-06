@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "dependencies": {
     "react-is": "^18.2.0",
     "react-shallow-renderer": "^16.15.0",

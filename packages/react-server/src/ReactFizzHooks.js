@@ -106,7 +106,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   }
 
@@ -116,7 +116,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
           'You can only call Hooks at the top level of your React function. ' +
           'For more information, see ' +
-          'https://reactjs.org/link/rules-of-hooks',
+          'https://react.dev/link/rules-of-hooks',
       );
     }
   }

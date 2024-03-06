@@ -27,6 +27,7 @@ describe('ReactDOMComponentTree', () => {
     container = null;
   });
 
+  // @gate !disableLegacyMode
   it('finds instance of node that is attempted to be unmounted', () => {
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
@@ -39,6 +40,7 @@ describe('ReactDOMComponentTree', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('finds instance from node to stop rendering over other react rendered components', () => {
     const component = (
       <div>

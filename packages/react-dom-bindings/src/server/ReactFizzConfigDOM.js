@@ -28,6 +28,7 @@ import {
 import {Children} from 'react';
 
 import {
+  enableBigIntSupport,
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
   enableFloat,
@@ -87,21 +88,19 @@ import {getValueDescriptorExpectingObjectForWarning} from '../shared/ReactDOMRes
 import {NotPending} from '../shared/ReactDOMFormActions';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
-const ReactDOMServerDispatcher = {
+const previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS,
   preconnect,
   preload,
   preloadModule,
-  preinitStyle,
   preinitScript,
+  preinitStyle,
   preinitModuleScript,
 };
-
-export function prepareHostDispatcher() {
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
-}
 
 // We make every property of the descriptor optional because it is not a contract that
 // the headers provided by onHeaders has any particular header types.
@@ -1453,7 +1452,7 @@ function pushInnerHTML(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
@@ -1572,7 +1571,7 @@ function pushStartSelect(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultSelectValue = true;
     }
@@ -1626,7 +1625,9 @@ function flattenOptionChildren(children: mixed): string {
       if (
         !didWarnInvalidOptionChildren &&
         typeof child !== 'string' &&
-        typeof child !== 'number'
+        typeof child !== 'number' &&
+        ((enableBigIntSupport && typeof child !== 'bigint') ||
+          !enableBigIntSupport)
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
@@ -2016,7 +2017,7 @@ function pushInput(
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -2029,7 +2030,7 @@ function pushInput(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -2164,7 +2165,7 @@ function pushStartTextArea(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultTextareaValue = true;
     }
@@ -2960,36 +2961,40 @@ function pushTitle(
 
       if (Array.isArray(children) && children.length > 1) {
         console.error(
-          'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an Array with length %s instead.' +
+          'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
             ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
             ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
             ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
+          enableBigIntSupport ? ', bigint' : '',
           children.length,
         );
       } else if (typeof child === 'function' || typeof child === 'symbol') {
         const childType =
           typeof child === 'function' ? 'a Function' : 'a Sybmol';
         console.error(
-          'React expect children of <title> tags to be a string, number, or object with a novel `toString` method but found %s instead.' +
+          'React expect children of <title> tags to be a string, number%s, or object with a novel `toString` method but found %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>' +
             ' tags to a single string value.',
+          enableBigIntSupport ? ', bigint' : '',
           childType,
         );
       } else if (child && child.toString === {}.toString) {
         if (child.$$typeof != null) {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that appears to be' +
+            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that appears to be' +
               ' a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to' +
               ' be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is' +
               ' a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+            enableBigIntSupport ? ', bigint' : '',
           );
         } else {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that does not implement' +
+            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that does not implement' +
               ' a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags' +
               ' to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>' +
               ' is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+            enableBigIntSupport ? ', bigint' : '',
           );
         }
       }
@@ -3123,14 +3128,17 @@ function pushStartTitle(
     } else if (
       childForValidation != null &&
       typeof childForValidation !== 'string' &&
-      typeof childForValidation !== 'number'
+      typeof childForValidation !== 'number' &&
+      ((enableBigIntSupport && typeof childForValidation !== 'bigint') ||
+        !enableBigIntSupport)
     ) {
       console.error(
-        'A title element received a value that was not a string or number for children. ' +
+        'A title element received a value that was not a string or number%s for children. ' +
           'In the browser title Elements can only have Text Nodes as children. If ' +
           'the children being rendered output more than a single text node in aggregate the browser ' +
           'will display markup and comments as text in the title and hydration will likely fail and ' +
           'fall back to client rendering',
+        enableBigIntSupport ? ' or bigint' : '',
       );
     }
   }
@@ -3490,7 +3498,7 @@ function pushStartPreformattedElement(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
@@ -3700,7 +3708,7 @@ export function pushStartInstance(
       return pushSelfClosing(target, props, type);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
     case 'annotation-xml':
     case 'color-profile':
     case 'font-face':
@@ -5332,6 +5340,7 @@ function prefetchDNS(href: string) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.prefetchDNS(href);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5387,6 +5396,7 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preconnect(href, crossOrigin);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5450,6 +5460,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preload(href, as, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5653,6 +5664,7 @@ function preloadModule(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preloadModule(href, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5729,6 +5741,7 @@ function preinitStyle(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitStyle(href, precedence, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5816,6 +5829,7 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitScript(src, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5881,6 +5895,7 @@ function preinitModuleScript(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitModuleScript(src, options);
     return;
   }
   const resumableState = getResumableState(request);

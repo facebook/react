@@ -39,6 +39,7 @@ const LOGGING_URL = process.env.LOGGING_URL || null;
 const IS_CHROME = process.env.IS_CHROME === 'true';
 const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
 const IS_EDGE = process.env.IS_EDGE === 'true';
+const IS_INTERNAL_VERSION = process.env.FEATURE_FLAG_TARGET === 'extension-fb';
 
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
@@ -119,6 +120,7 @@ module.exports = {
       __IS_CHROME__: IS_CHROME,
       __IS_FIREFOX__: IS_FIREFOX,
       __IS_EDGE__: IS_EDGE,
+      __IS_INTERNAL_VERSION__: IS_INTERNAL_VERSION,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,

@@ -12,16 +12,28 @@ import type {HostDispatcher} from './shared/ReactDOMTypes';
 type InternalsType = {
   usingClientEntryPoint: boolean,
   Events: [any, any, any, any, any, any],
-  Dispatcher: {
-    current: null | HostDispatcher,
+  ReactDOMCurrentDispatcher: {
+    current: HostDispatcher,
   },
+};
+
+function noop() {}
+
+const DefaultDispatcher: HostDispatcher = {
+  prefetchDNS: noop,
+  preconnect: noop,
+  preload: noop,
+  preloadModule: noop,
+  preinitScript: noop,
+  preinitStyle: noop,
+  preinitModuleScript: noop,
 };
 
 const Internals: InternalsType = ({
   usingClientEntryPoint: false,
   Events: null,
-  Dispatcher: {
-    current: null,
+  ReactDOMCurrentDispatcher: {
+    current: DefaultDispatcher,
   },
 }: any);
 

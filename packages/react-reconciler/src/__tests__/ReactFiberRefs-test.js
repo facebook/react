@@ -86,6 +86,7 @@ describe('ReactFiberRefs', () => {
   });
 
   // @gate enableRefAsProp
+  // @gate !disableStringRefs
   test('string ref props are converted to function refs', async () => {
     let refProp;
     function Child({ref}) {
@@ -111,5 +112,30 @@ describe('ReactFiberRefs', () => {
     // migrating their codebase.
     expect(typeof refProp === 'function').toBe(true);
     expect(owner.refs.child.type).toBe('div');
+  });
+
+  // @gate disableStringRefs
+  test('throw if a string ref is passed to a ref-receiving component', async () => {
+    let refProp;
+    function Child({ref}) {
+      // This component renders successfully because the ref type check does not
+      // occur until you pass it to a component that accepts refs.
+      //
+      // So the div will throw, but not Child.
+      refProp = ref;
+      return <div ref={ref} />;
+    }
+
+    class Owner extends React.Component {
+      render() {
+        return <Child ref="child" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await expect(act(() => root.render(<Owner />))).rejects.toThrow(
+      'Expected ref to be a function',
+    );
+    expect(refProp).toBe('child');
   });
 });

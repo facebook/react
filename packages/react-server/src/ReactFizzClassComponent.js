@@ -292,7 +292,7 @@ export function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://reactjs.org/link/unsafe-component-lifecycles',
+              'https://react.dev/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
@@ -539,7 +539,7 @@ function callComponentWillMount(type: any, instance: any) {
           console.warn(
             // keep this warning in sync with ReactStrictModeWarning.js
             'componentWillMount has been renamed, and is not recommended for use. ' +
-              'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+              'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
               '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
               'or the constructor.\n' +
               '\nPlease update the following components: %s',

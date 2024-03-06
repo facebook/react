@@ -13,7 +13,7 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactFeatureFlags;
 let ReactDOMServer;
 
@@ -21,7 +21,7 @@ function initModules() {
   // Reset warning cache.
   jest.resetModules();
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -29,12 +29,13 @@ function initModules() {
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, clientRenderOnBadMarkup} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 function formatValue(val) {
   if (val === null) {
@@ -104,7 +105,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
           <RegularFn />
         </span>
       </LegacyProvider>,
-      3,
+      render === clientRenderOnBadMarkup ? 6 : 3,
     );
     expect(e.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);

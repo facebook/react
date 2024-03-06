@@ -26,6 +26,7 @@ describe('ReactComponent', () => {
     act = require('internal-test-utils').act;
   });
 
+  // @gate !disableLegacyMode
   it('should throw on invalid render targets in legacy roots', () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
@@ -38,6 +39,7 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
+  // @gate !disableStringRefs
   it('should throw when supplying a string ref outside of render method', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -45,7 +47,10 @@ describe('ReactComponent', () => {
       act(() => {
         root.render(<div ref="badDiv" />);
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(
+      'Element ref was specified as a string (badDiv) but no owner ' +
+        'was set',
+    );
   });
 
   it('should throw (in dev) when children are mutated during render', async () => {
@@ -125,6 +130,7 @@ describe('ReactComponent', () => {
     }
   });
 
+  // @gate !disableStringRefs
   it('should support string refs on owned components', async () => {
     const innerObj = {};
     const outerObj = {};
@@ -166,14 +172,14 @@ describe('ReactComponent', () => {
       'Warning: Component "div" contains the string ref "inner". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in div (at **)\n' +
         '    in Wrapper (at **)\n' +
         '    in Component (at **)',
       'Warning: Component "Component" contains the string ref "outer". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in Component (at **)',
     ]);
   });
@@ -450,6 +456,7 @@ describe('ReactComponent', () => {
     /* eslint-enable indent */
   });
 
+  // @gate !disableLegacyMode
   it('fires the callback after a component is rendered in legacy roots', () => {
     const callback = jest.fn();
     const container = document.createElement('div');

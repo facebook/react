@@ -20,8 +20,6 @@ export type HintModel<T: any> = any;
 
 export const isPrimaryRenderer = false;
 
-export const prepareHostDispatcher = () => {};
-
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 

@@ -630,6 +630,7 @@ describe('ReactCompositeComponent-state', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('Legacy mode should support setState in componentWillUnmount (#18851)', () => {
     let subscription;
     class A extends React.Component {

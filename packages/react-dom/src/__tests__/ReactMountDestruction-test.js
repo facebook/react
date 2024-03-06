@@ -49,6 +49,7 @@ describe('ReactMount', () => {
     });
   });
 
+  // @gate !disableLegacyMode
   it('should warn when unmounting a non-container root node', () => {
     const mainContainerDiv = document.createElement('div');
 
@@ -71,6 +72,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should warn when unmounting a non-container, non-root node', () => {
     const mainContainerDiv = document.createElement('div');
 

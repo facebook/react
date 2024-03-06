@@ -18,6 +18,7 @@ import {
   formatWithStyles,
   gt,
   gte,
+  parseSourceFromComponentStack,
 } from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
@@ -295,6 +296,95 @@ describe('utils', () => {
 
     it('should return true for objects with no prototype', () => {
       expect(isPlainObject(Object.create(null))).toBe(true);
+    });
+  });
+
+  describe('parseSourceFromComponentStack', () => {
+    it('should return null if passed empty string', () => {
+      expect(parseSourceFromComponentStack('')).toEqual(null);
+    });
+
+    it('should construct the source from the first frame if available', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'at l (https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js:1:10389)\n' +
+            'at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)\n' +
+            'at r (https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:498)\n',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
+        line: 1,
+        column: 10389,
+      });
+    });
+
+    it('should construct the source from highest available frame', () => {
+      expect(
+        parseSourceFromComponentStack(
+          '    at Q\n' +
+            '    at a\n' +
+            '    at m (https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236)\n' +
+            '    at div\n' +
+            '    at div\n' +
+            '    at div\n' +
+            '    at nav\n' +
+            '    at div\n' +
+            '    at te (https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:158857)\n' +
+            '    at tt (https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165520)\n' +
+            '    at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        line: 5,
+        column: 9236,
+      });
+    });
+
+    it('should construct the source from frame, which has only url specified', () => {
+      expect(
+        parseSourceFromComponentStack(
+          '    at Q\n' +
+            '    at a\n' +
+            '    at https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236\n',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        line: 5,
+        column: 9236,
+      });
+    });
+
+    it('should parse sourceURL correctly if it includes parentheses', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:307:11)\n' +
+            '    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:181:11)\n' +
+            '    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)',
+        ),
+      ).toEqual({
+        sourceURL:
+          'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
+        line: 307,
+        column: 11,
+      });
+    });
+
+    it('should support Firefox stack', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'tt@https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165558\n' +
+            'f@https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8535\n' +
+            'r@https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:513',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
+        line: 1,
+        column: 165558,
+      });
     });
   });
 });

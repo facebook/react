@@ -134,13 +134,13 @@ describe('reactiverefs', () => {
       'Warning: Component "div" contains the string ref "resetDiv". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in div (at **)\n' +
         '    in TestRefsComponent (at **)',
       'Warning: Component "span" contains the string ref "clickLog0". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in span (at **)\n' +
         '    in ClickCounter (at **)\n' +
         '    in div (at **)\n' +
@@ -164,6 +164,7 @@ describe('reactiverefs', () => {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
+  // @gate !disableStringRefs
   it('Should increase refs with an increase in divs', async () => {
     const testRefsComponent = await renderTestRefsComponent();
     const clickIncrementer =
@@ -366,6 +367,7 @@ describe('ref swapping', () => {
     expect(refCalled).toBe(1);
   });
 
+  // @gate !disableStringRefs
   it('coerces numbers to strings', async () => {
     class A extends React.Component {
       render() {
@@ -384,12 +386,13 @@ describe('ref swapping', () => {
       'Warning: Component "A" contains the string ref "1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in A (at **)',
     ]);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
+  // @gate !disableStringRefs
   it('provides an error for invalid refs', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -398,22 +401,20 @@ describe('ref swapping', () => {
         root.render(<div ref={10} />);
       });
     }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Element ref was specified as a string (10) but no owner was set.',
     );
     await expect(async () => {
       await act(() => {
         root.render(<div ref={true} />);
       });
     }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Element ref was specified as a string (true) but no owner was set.',
     );
     await expect(async () => {
       await act(() => {
         root.render(<div ref={Symbol('foo')} />);
       });
-    }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-    );
+    }).rejects.toThrow('Expected ref to be a function');
   });
 
   // @gate !enableRefAsProp
@@ -431,9 +432,7 @@ describe('ref swapping', () => {
           key: null,
         });
       });
-    }).rejects.toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-    );
+    }).rejects.toThrow('Expected ref to be a function');
   });
 });
 
@@ -547,6 +546,7 @@ describe('creating element with string ref in constructor', () => {
     }
   }
 
+  // @gate !disableStringRefs
   it('throws an error', async () => {
     await expect(async function () {
       const container = document.createElement('div');
@@ -561,12 +561,13 @@ describe('creating element with string ref in constructor', () => {
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
         '3. You have multiple copies of React loaded\n' +
-        'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        'See https://react.dev/link/refs-must-have-owner for more information.',
     );
   });
 });
 
 describe('strings refs across renderers', () => {
+  // @gate !disableStringRefs
   it('does not break', async () => {
     class Parent extends React.Component {
       render() {
@@ -618,7 +619,7 @@ describe('strings refs across renderers', () => {
       'Warning: Component "Indirection" contains the string ref "child1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in Indirection (at **)\n' +
         '    in Parent (at **)',
     ]);
@@ -637,7 +638,7 @@ describe('strings refs across renderers', () => {
         'Warning: Component "Root" contains the string ref "child2". ' +
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
       ],
       {withoutStack: true},
     );

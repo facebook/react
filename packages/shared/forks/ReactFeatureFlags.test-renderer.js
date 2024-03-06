@@ -28,7 +28,7 @@ export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const disableJavaScriptURLs = false;
+export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
@@ -98,7 +98,10 @@ export const enableInfiniteRenderLoopDetection = false;
 // flags should be handled by the Fiber config.
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = __NEXT_MAJOR__;
+export const disableStringRefs = __NEXT_MAJOR__;
 export const enableReactTestRendererWarning = false;
+export const enableBigIntSupport = __NEXT_MAJOR__;
+export const disableLegacyMode = __NEXT_MAJOR__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

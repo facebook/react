@@ -32,7 +32,8 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, serverRender, streamRender} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 // TODO: Run this in React Fire mode after we figure out the SSR behavior.
 const desc = disableInputAttributeSyncing ? xdescribe : describe;
@@ -44,6 +45,18 @@ desc('ReactDOMServerIntegrationInput', () => {
   itRenders('an input with a value and an onChange', async render => {
     const e = await render(<input value="foo" onChange={() => {}} />);
     expect(e.value).toBe('foo');
+  });
+
+  itRenders('an input with a bigint value and an onChange', async render => {
+    console.log(gate(flags => flags.enableBigIntSupport));
+    const e = await render(<input value={5n} onChange={() => {}} />);
+    expect(e.value).toBe(
+      gate(flags => flags.enableBigIntSupport) ||
+        render === serverRender ||
+        render === streamRender
+        ? '5'
+        : '',
+    );
   });
 
   itRenders('an input with a value and readOnly', async render => {

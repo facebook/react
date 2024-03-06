@@ -538,6 +538,7 @@ describe('ReactDOMServerPartialHydration', () => {
     assertLog([
       'Server rendered',
       'Client rendered',
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
       'There was an error while hydrating this Suspense boundary. ' +
         'Switched to client rendering.',
     ]);
@@ -718,6 +719,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate !disableLegacyMode
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;

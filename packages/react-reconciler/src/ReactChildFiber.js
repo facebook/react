@@ -25,6 +25,7 @@ import {
   Forked,
   PlacementDEV,
 } from './ReactFiberFlags';
+import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -43,7 +44,7 @@ import {
 import isArray from 'shared/isArray';
 import assign from 'shared/assign';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -131,7 +132,7 @@ if (__DEV__) {
 
     console.error(
       'Each child in a list should have a unique ' +
-        '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+        '"key" prop. See https://react.dev/link/warning-keys for ' +
         'more information.',
     );
   };
@@ -156,22 +157,22 @@ function convertStringRefToCallbackRef(
   returnFiber: Fiber,
   current: Fiber | null,
   element: ReactElement,
-  mixedRef: any,
+  mixedRef: string | number | boolean,
 ): CoercedStringRef {
+  if (__DEV__) {
+    checkPropStringCoercion(mixedRef, 'ref');
+  }
+  const stringRef = '' + (mixedRef: any);
+
   const owner: ?Fiber = (element._owner: any);
   if (!owner) {
-    if (typeof mixedRef !== 'string') {
-      throw new Error(
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-      );
-    }
     throw new Error(
-      `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
+      `Element ref was specified as a string (${stringRef}) but no owner was set. This could happen for one of` +
         ' the following reasons:\n' +
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
         '3. You have multiple copies of React loaded\n' +
-        'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        'See https://react.dev/link/refs-must-have-owner for more information.',
     );
   }
   if (owner.tag !== ClassComponent) {
@@ -179,16 +180,9 @@ function convertStringRefToCallbackRef(
       'Function components cannot have string refs. ' +
         'We recommend using useRef() instead. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref',
+        'https://react.dev/link/strict-mode-string-ref',
     );
   }
-
-  // At this point, we know the ref isn't an object or function but it could
-  // be a number. Coerce it to a string.
-  if (__DEV__) {
-    checkPropStringCoercion(mixedRef, 'ref');
-  }
-  const stringRef = '' + mixedRef;
 
   if (__DEV__) {
     if (
@@ -203,7 +197,7 @@ function convertStringRefToCallbackRef(
             'will be removed in a future major release. We recommend using ' +
             'useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
+            'https://react.dev/link/strict-mode-string-ref',
           componentName,
           stringRef,
         );
@@ -265,12 +259,11 @@ function coerceRef(
 
   let coercedRef;
   if (
-    mixedRef !== null &&
-    typeof mixedRef !== 'function' &&
-    typeof mixedRef !== 'object'
+    !disableStringRefs &&
+    (typeof mixedRef === 'string' ||
+      typeof mixedRef === 'number' ||
+      typeof mixedRef === 'boolean')
   ) {
-    // Assume this is a string ref. If it's not, then this will throw an error
-    // to the user.
     coercedRef = convertStringRefToCallbackRef(
       returnFiber,
       current,
@@ -665,12 +658,14 @@ function createChildReconciler(
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
       const created = createFiberFromText(
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         returnFiber.mode,
         lanes,
@@ -785,7 +780,8 @@ function createChildReconciler(
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -796,6 +792,7 @@ function createChildReconciler(
       return updateTextNode(
         returnFiber,
         oldFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         lanes,
         debugInfo,
@@ -908,7 +905,8 @@ function createChildReconciler(
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
@@ -916,6 +914,7 @@ function createChildReconciler(
       return updateTextNode(
         returnFiber,
         matchedFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         lanes,
         debugInfo,
@@ -1723,12 +1722,14 @@ function createChildReconciler(
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      (enableBigIntSupport && typeof newChild === 'bigint')
     ) {
       return placeSingleChild(
         reconcileSingleTextNode(
           returnFiber,
           currentFirstChild,
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           '' + newChild,
           lanes,
         ),

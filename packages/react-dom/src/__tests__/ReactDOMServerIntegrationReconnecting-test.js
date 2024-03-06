@@ -477,6 +477,7 @@ describe('ReactDOMServerIntegration (legacy)', () => {
     resetModules();
   });
 
+  // @gate !disableLegacyMode
   it('legacy mode can explicitly ignore errors reconnecting different element types of children', () =>
     expectMarkupMatch(
       <div>
@@ -487,6 +488,7 @@ describe('ReactDOMServerIntegration (legacy)', () => {
       </div>,
     ));
 
+  // @gate !disableLegacyMode
   it('legacy mode can explicitly ignore reconnecting more children', () =>
     expectMarkupMatch(
       <div>
@@ -498,6 +500,7 @@ describe('ReactDOMServerIntegration (legacy)', () => {
       </div>,
     ));
 
+  // @gate !disableLegacyMode
   it('legacy mode can explicitly ignore reconnecting fewer children', () =>
     expectMarkupMatch(
       <div>
@@ -509,6 +512,7 @@ describe('ReactDOMServerIntegration (legacy)', () => {
       </div>,
     ));
 
+  // @gate !disableLegacyMode
   it('legacy mode can explicitly ignore reconnecting reordered children', () =>
     expectMarkupMatch(
       <div suppressHydrationWarning={true}>

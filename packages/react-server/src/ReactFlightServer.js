@@ -69,7 +69,6 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
-  prepareHostDispatcher,
   createHints,
   initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
@@ -345,7 +344,6 @@ export function createRequest(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
-  prepareHostDispatcher();
   ReactCurrentCache.current = DefaultCacheDispatcher;
 
   const abortSet: Set<Task> = new Set();

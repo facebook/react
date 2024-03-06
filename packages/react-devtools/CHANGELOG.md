@@ -4,6 +4,17 @@
 
 ---
 
+### 5.0.2
+March 5, 2024
+
+* feat[devtools]: symbolicate source for inspected element ([hoxyq](https://github.com/hoxyq) in [#28471](https://github.com/facebook/react/pull/28471))
+* refactor[devtools]: lazily define source for fiber based on component stacks ([hoxyq](https://github.com/hoxyq) in [#28351](https://github.com/facebook/react/pull/28351))
+* fix[devtools/tree/element]: onClick -> onMouseDown to handle first click correctly ([hoxyq](https://github.com/hoxyq) in [#28486](https://github.com/facebook/react/pull/28486))
+* Devtools: Unwrap Promise in useFormState ([eps1lon](https://github.com/eps1lon) in [#28319](https://github.com/facebook/react/pull/28319))
+* Include server component names in the componentStack in DEV ([sebmarkbage](https://github.com/sebmarkbage) in [#28415](https://github.com/facebook/react/pull/28415))
+
+---
+
 ### 5.0.1
 February 22, 2024
 

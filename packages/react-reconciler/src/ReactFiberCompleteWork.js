@@ -141,11 +141,9 @@ import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
-  warnIfUnhydratedTailNodes,
   popHydrationState,
   resetHydrationState,
   getIsHydrating,
-  hasUnhydratedTailNodes,
   upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext';
 import {
@@ -866,18 +864,6 @@ function completeDehydratedSuspenseBoundary(
   workInProgress: Fiber,
   nextState: SuspenseState | null,
 ): boolean {
-  if (
-    hasUnhydratedTailNodes() &&
-    (workInProgress.mode & ConcurrentMode) !== NoMode &&
-    (workInProgress.flags & DidCapture) === NoFlags
-  ) {
-    warnIfUnhydratedTailNodes(workInProgress);
-    resetHydrationState();
-    workInProgress.flags |= ForceClientRender | DidCapture;
-
-    return false;
-  }
-
   const wasHydrated = popHydrationState(workInProgress);
 
   if (nextState !== null && nextState.dehydrated !== null) {
@@ -1337,7 +1323,6 @@ function completeWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseHandler(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       // Special path for dehydrated boundaries. We may eventually move this
@@ -1358,10 +1343,12 @@ function completeWork(
           );
         if (!fallthroughToNormalSuspensePath) {
           if (workInProgress.flags & ForceClientRender) {
+            popSuspenseHandler(workInProgress);
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
           } else {
+            popSuspenseHandler(workInProgress);
             // Did not finish hydrating, either because this is the initial
             // render or because something suspended.
             return null;
@@ -1370,6 +1357,8 @@ function completeWork(
 
         // Continue with the normal Suspense path.
       }
+
+      popSuspenseHandler(workInProgress);
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.

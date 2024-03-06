@@ -173,6 +173,7 @@ describe('ReactFunctionComponent', () => {
     ).resolves.not.toThrowError();
   });
 
+  // @gate !disableStringRefs
   it('should throw on string refs in pure functions', async () => {
     function Child() {
       return <div ref="me" />;
@@ -194,7 +195,7 @@ describe('ReactFunctionComponent', () => {
             '1. You may be adding a ref to a function component\n' +
             "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
             '3. You have multiple copies of React loaded\n' +
-            'See https://reactjs.org/link/refs-must-have-owner for more information.',
+            'See https://react.dev/link/refs-must-have-owner for more information.',
     );
   });
 

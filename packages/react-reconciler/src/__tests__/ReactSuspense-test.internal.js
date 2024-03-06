@@ -399,6 +399,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate !disableLegacyMode
   it('mounts a lazy class component in non-concurrent mode (legacy)', async () => {
     class Class extends React.Component {
       componentDidMount() {
@@ -685,6 +686,7 @@ describe('ReactSuspense', () => {
   });
 
   describe('outside concurrent mode (legacy)', () => {
+    // @gate !disableLegacyMode
     it('a mounted class component can suspend without losing state', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
@@ -763,6 +765,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('AB:2C');
     });
 
+    // @gate !disableLegacyMode
     it('bails out on timed-out primary children even if they receive an update', async () => {
       let instance;
       class Stateful extends React.Component {
@@ -803,6 +806,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('Stateful: 2B');
     });
 
+    // @gate !disableLegacyMode
     it('when updating a timed-out tree, always retries the suspended component', async () => {
       let instance;
       class Stateful extends React.Component {
@@ -858,6 +862,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('Stateful: 2B');
     });
 
+    // @gate !disableLegacyMode
     it('suspends in a class that has componentWillUnmount and is then deleted', async () => {
       class AsyncTextWithUnmount extends React.Component {
         componentWillUnmount() {
@@ -884,6 +889,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('B');
     });
 
+    // @gate !disableLegacyMode
     it('suspends in a component that also contains useEffect', async () => {
       const {useLayoutEffect} = React;
 
@@ -911,6 +917,7 @@ describe('ReactSuspense', () => {
       assertLog(['A', 'Did commit: A']);
     });
 
+    // @gate !disableLegacyMode
     it('retries when an update is scheduled on a timed out tree', async () => {
       let instance;
       class Stateful extends React.Component {
@@ -958,6 +965,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('Step: 3');
     });
 
+    // @gate !disableLegacyMode
     it('does not remount the fallback while suspended children resolve in legacy mode', async () => {
       let mounts = 0;
       class ShouldMountOnce extends React.Component {
@@ -1004,6 +1012,7 @@ describe('ReactSuspense', () => {
       expect(mounts).toBe(1);
     });
 
+    // @gate !disableLegacyMode
     it('reuses effects, including deletions, from the suspended tree', async () => {
       const {useState} = React;
 
@@ -1045,6 +1054,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('Tab: 2 + sibling');
     });
 
+    // @gate !disableLegacyMode
     it('does not warn if a mounted component is pinged', async () => {
       const {useState} = React;
 
@@ -1076,6 +1086,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('Loading...');
     });
 
+    // @gate !disableLegacyMode
     it('memoizes promise listeners per thread ID to prevent redundant renders', async () => {
       function App() {
         return (
@@ -1118,6 +1129,7 @@ describe('ReactSuspense', () => {
       ]);
     });
 
+    // @gate !disableLegacyMode
     it('#14162', async () => {
       const {lazy} = React;
 
@@ -1155,6 +1167,7 @@ describe('ReactSuspense', () => {
       ReactDOM.render(<App name="world" />, container);
     });
 
+    // @gate !disableLegacyMode
     it('updates memoized child of suspense component when context updates (simple memo)', async () => {
       const {useContext, createContext, useState, memo} = React;
 
@@ -1194,6 +1207,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('new value');
     });
 
+    // @gate !disableLegacyMode
     it('updates memoized child of suspense component when context updates (manual memo)', async () => {
       const {useContext, createContext, useState, memo} = React;
 
@@ -1238,6 +1252,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('new value');
     });
 
+    // @gate !disableLegacyMode
     it('updates memoized child of suspense component when context updates (function)', async () => {
       const {useContext, createContext, useState} = React;
 
@@ -1282,6 +1297,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('new value');
     });
 
+    // @gate !disableLegacyMode
     it('updates memoized child of suspense component when context updates (forwardRef)', async () => {
       const {forwardRef, useContext, createContext, useState} = React;
 
@@ -1321,6 +1337,7 @@ describe('ReactSuspense', () => {
       expect(container.textContent).toEqual('new value');
     });
 
+    // @gate !disableLegacyMode
     it('updates context consumer within child of suspended suspense component when context updates', async () => {
       const {createContext, useState} = React;
 

@@ -22,6 +22,7 @@ class TextWithStringRef extends React.Component {
 }
 
 describe('when different React version is used with string ref', () => {
+  // @gate !disableStringRefs
   it('throws the "Refs must have owner" warning', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -35,7 +36,7 @@ describe('when different React version is used with string ref', () => {
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
         '3. You have multiple copies of React loaded\n' +
-        'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        'See https://react.dev/link/refs-must-have-owner for more information.',
     );
   });
 });

@@ -1346,6 +1346,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
+  // @gate !disableStringRefs
   it('supports string refs', async () => {
     let fooInstance = null;
 
@@ -1372,7 +1373,7 @@ describe('ReactIncrementalSideEffects', () => {
       'Warning: Component "Foo" contains the string ref "bar". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in Foo (at **)',
     ]);
     expect(fooInstance.refs.bar.test).toEqual('test');
