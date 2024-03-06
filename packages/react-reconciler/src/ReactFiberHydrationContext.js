@@ -182,7 +182,10 @@ export function errorHydratingContainer(parentContainer: Container): void {
   }
 }
 
-function warnNonHydratedInstance(fiber: Fiber) {
+function warnNonHydratedInstance(
+  fiber: Fiber,
+  rejectedCandidate: null | HydratableInstance,
+) {
   if (__DEV__) {
     if (didSuspendOrErrorDEV) {
       // Inside a boundary that already suspended. We're currently rendering the
@@ -195,6 +198,11 @@ function warnNonHydratedInstance(fiber: Fiber) {
     const diffNode = buildHydrationDiffNode(fiber);
     // We use null as a signal that there was no node to match.
     diffNode.serverProps = null;
+    if (rejectedCandidate !== null) {
+      const description =
+        describeHydratableInstanceForDevWarnings(rejectedCandidate);
+      diffNode.serverTail.push(description);
+    }
   }
 }
 
@@ -327,7 +335,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !tryHydrateInstance(fiber, nextInstance)) {
     if (shouldKeepWarning) {
-      warnNonHydratedInstance(fiber);
+      warnNonHydratedInstance(fiber, nextInstance);
     }
     throwOnHydrationMismatch(fiber);
   }
@@ -347,7 +355,7 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !tryHydrateText(fiber, nextInstance)) {
     if (shouldKeepWarning) {
-      warnNonHydratedInstance(fiber);
+      warnNonHydratedInstance(fiber, nextInstance);
     }
     throwOnHydrationMismatch(fiber);
   }
@@ -359,7 +367,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   }
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
-    warnNonHydratedInstance(fiber);
+    warnNonHydratedInstance(fiber, nextInstance);
     throwOnHydrationMismatch(fiber);
   }
 }
