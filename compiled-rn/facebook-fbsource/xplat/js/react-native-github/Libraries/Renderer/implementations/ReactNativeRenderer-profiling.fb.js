@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb4cc7e328550caaa965580e745484df>>
+ * @generated SignedSource<<b3547dac3415d96b0386ac7ad4229bbe>>
  */
 
 "use strict";
@@ -6610,7 +6610,6 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 13:
-      popSuspenseHandler(workInProgress);
       newProps = workInProgress.memoizedState;
       if (
         null === current ||
@@ -6640,8 +6639,14 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (type = !0);
-        if (!type) return workInProgress.flags & 256 ? workInProgress : null;
+        if (!type) {
+          if (workInProgress.flags & 256)
+            return popSuspenseHandler(workInProgress), workInProgress;
+          popSuspenseHandler(workInProgress);
+          return null;
+        }
       }
+      popSuspenseHandler(workInProgress);
       if (0 !== (workInProgress.flags & 128))
         return (
           (workInProgress.lanes = renderLanes),
@@ -10627,7 +10632,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1206 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-29fad0f1",
+    version: "18.3.0-canary-1d823c9d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10683,7 +10688,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-29fad0f1"
+  reconcilerVersion: "18.3.0-canary-1d823c9d"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b20c26683aec6ca4ced107db94e0a031>>
+ * @generated SignedSource<<468afdc5511d0a33f94018471424df06>>
  */
 
 "use strict";
@@ -5398,7 +5398,6 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 13:
-      popSuspenseHandler(workInProgress);
       newProps = workInProgress.memoizedState;
       if (
         null === current ||
@@ -5428,8 +5427,14 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (index = !0);
-        if (!index) return workInProgress.flags & 256 ? workInProgress : null;
+        if (!index) {
+          if (workInProgress.flags & 256)
+            return popSuspenseHandler(workInProgress), workInProgress;
+          popSuspenseHandler(workInProgress);
+          return null;
+        }
       }
+      popSuspenseHandler(workInProgress);
       if (0 !== (workInProgress.flags & 128))
         return (
           (workInProgress.lanes = renderLanes),
@@ -9601,7 +9606,7 @@ var devToolsConfig$jscomp$inline_1056 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-966d17483-20240305",
+  version: "18.3.0-canary-c11b196ae-20240305",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1236 = {
@@ -9632,7 +9637,7 @@ var internals$jscomp$inline_1236 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-966d17483-20240305"
+  reconcilerVersion: "18.3.0-canary-c11b196ae-20240305"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1237 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

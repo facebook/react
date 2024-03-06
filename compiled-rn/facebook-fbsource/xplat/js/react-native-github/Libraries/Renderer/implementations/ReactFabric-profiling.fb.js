@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<37fac78cbc4e9cc6b75520ec55ba05c1>>
+ * @generated SignedSource<<bc533ae907b7c59bbe5b77cba5df8f95>>
  */
 
 "use strict";
@@ -6698,7 +6698,6 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 13:
-      popSuspenseHandler(workInProgress);
       newProps = workInProgress.memoizedState;
       if (
         null === current ||
@@ -6728,9 +6727,14 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (oldProps = !0);
-        if (!oldProps)
-          return workInProgress.flags & 256 ? workInProgress : null;
+        if (!oldProps) {
+          if (workInProgress.flags & 256)
+            return popSuspenseHandler(workInProgress), workInProgress;
+          popSuspenseHandler(workInProgress);
+          return null;
+        }
       }
+      popSuspenseHandler(workInProgress);
       if (0 !== (workInProgress.flags & 128))
         return (
           (workInProgress.lanes = renderLanes),
@@ -10409,7 +10413,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1137 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-f48f6d2a",
+    version: "18.3.0-canary-3a92e945",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10465,7 +10469,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-f48f6d2a"
+  reconcilerVersion: "18.3.0-canary-3a92e945"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

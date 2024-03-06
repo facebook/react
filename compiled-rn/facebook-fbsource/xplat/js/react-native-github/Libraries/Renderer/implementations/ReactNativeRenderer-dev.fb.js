@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1731e3e66fdf4187797147464b0aa167>>
+ * @generated SignedSource<<7dcdb6d21ac8dfc7ffa1771b9a940965>>
  */
 
 "use strict";
@@ -20250,7 +20250,6 @@ to return true:wantsResponderID|                            |
         }
 
         case SuspenseComponent: {
-          popSuspenseHandler(workInProgress);
           var nextState = workInProgress.memoizedState; // Special path for dehydrated boundaries. We may eventually move this
           // to its own fiber type so that we can add other kinds of hydration
           // boundaries that aren't associated with a Suspense tree. In anticipation
@@ -20271,16 +20270,20 @@ to return true:wantsResponderID|                            |
 
             if (!fallthroughToNormalSuspensePath) {
               if (workInProgress.flags & ForceClientRender) {
-                // Special case. There were remaining unhydrated nodes. We treat
+                popSuspenseHandler(workInProgress); // Special case. There were remaining unhydrated nodes. We treat
                 // this as a mismatch. Revert to client rendering.
+
                 return workInProgress;
               } else {
-                // Did not finish hydrating, either because this is the initial
+                popSuspenseHandler(workInProgress); // Did not finish hydrating, either because this is the initial
                 // render or because something suspended.
+
                 return null;
               }
             } // Continue with the normal Suspense path.
           }
+
+          popSuspenseHandler(workInProgress);
 
           if ((workInProgress.flags & DidCapture) !== NoFlags$1) {
             // Something suspended. Re-render with the fallback children.
@@ -28528,7 +28531,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-aba998f4";
+    var ReactVersion = "18.3.0-canary-469281c1";
 
     function createPortal$1(
       children,
