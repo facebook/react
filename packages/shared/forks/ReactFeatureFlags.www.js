@@ -48,8 +48,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook: boolean =
-  __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback = true;

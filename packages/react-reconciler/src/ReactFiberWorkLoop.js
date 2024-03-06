@@ -30,7 +30,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
-  enableProfilerNestedUpdateScheduledHook,
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
@@ -107,7 +106,6 @@ import {
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
-  Profiler,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -581,10 +579,6 @@ let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-// Only used when enableProfilerNestedUpdateScheduledHook is true;
-// to track which root is currently committing layout effects.
-let rootCommittingMutationOrLayoutEffects: FiberRoot | null = null;
-
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
@@ -806,26 +800,6 @@ export function scheduleUpdateOnFiber(
     }
 
     warnIfUpdatesNotWrappedWithActDEV(fiber);
-
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      if (
-        (executionContext & CommitContext) !== NoContext &&
-        root === rootCommittingMutationOrLayoutEffects
-      ) {
-        if (fiber.mode & ProfileMode) {
-          let current: null | Fiber = fiber;
-          while (current !== null) {
-            if (current.tag === Profiler) {
-              const {id, onNestedUpdateScheduled} = current.memoizedProps;
-              if (typeof onNestedUpdateScheduled === 'function') {
-                onNestedUpdateScheduled(id);
-              }
-            }
-            current = current.return;
-          }
-        }
-      }
-    }
 
     if (enableTransitionTracing) {
       const transition = ReactCurrentBatchConfig.transition;
@@ -2938,12 +2912,6 @@ function commitRootImpl(
       recordCommitTime();
     }
 
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      // Track the root here, rather than in commitLayoutEffects(), because of ref setters.
-      // Updates scheduled during ref detachment should also be flagged.
-      rootCommittingMutationOrLayoutEffects = root;
-    }
-
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
 
@@ -2980,10 +2948,6 @@ function commitRootImpl(
 
     if (enableSchedulingProfiler) {
       markLayoutEffectsStopped();
-    }
-
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      rootCommittingMutationOrLayoutEffects = null;
     }
 
     // Tell Scheduler to yield at the end of the frame, so the browser has an

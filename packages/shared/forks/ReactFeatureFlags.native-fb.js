@@ -36,7 +36,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableCache = false;
 export const enableLegacyCache = false;
