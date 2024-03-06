@@ -358,14 +358,16 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch] = useFormState(action, initialState);
+      const [state, dispatch, isPending] = useFormState(action, initialState);
       return (
         <form action={dispatch}>
+          <span>{isPending ? 'Pending...' : ''}</span>
           <span>Count: {state.count}</span>
           <input type="text" name="incrementAmount" defaultValue="5" />
         </form>
       );
     }
+
     const ClientRef = await clientExports(Client);
 
     const rscStream = ReactServerDOMServer.renderToReadableStream(
@@ -382,8 +384,10 @@ describe('ReactFlightDOMForm', () => {
     await readIntoContainer(ssrStream);
 
     const form = container.getElementsByTagName('form')[0];
-    const span = container.getElementsByTagName('span')[0];
-    expect(span.textContent).toBe('Count: 1');
+    const pendingSpan = container.getElementsByTagName('span')[0];
+    const stateSpan = container.getElementsByTagName('span')[1];
+    expect(pendingSpan.textContent).toBe('');
+    expect(stateSpan.textContent).toBe('Count: 1');
 
     const {returnValue} = await submit(form);
     expect(await returnValue).toEqual({count: 6});
@@ -399,8 +403,13 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch] = useFormState(action, 1);
-      return <form action={dispatch}>{count}</form>;
+      const [count, dispatch, isPending] = useFormState(action, 1);
+      return (
+        <form action={dispatch}>
+          {isPending ? 'Pending...' : ''}
+          {count}
+        </form>
+      );
     }
 
     function Client({action}) {
@@ -487,8 +496,13 @@ describe('ReactFlightDOMForm', () => {
       );
 
       function Form({action}) {
-        const [count, dispatch] = useFormState(action, 1);
-        return <form action={dispatch}>{count}</form>;
+        const [count, dispatch, isPending] = useFormState(action, 1);
+        return (
+          <form action={dispatch}>
+            {isPending ? 'Pending...' : ''}
+            {count}
+          </form>
+        );
       }
 
       function Client({action}) {
@@ -607,8 +621,13 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch] = useFormState(action, 1);
-      return <form action={dispatch}>{count}</form>;
+      const [count, dispatch, isPending] = useFormState(action, 1);
+      return (
+        <form action={dispatch}>
+          {isPending ? 'Pending...' : ''}
+          {count}
+        </form>
+      );
     }
 
     function Client({action}) {
@@ -682,8 +701,13 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action, permalink}) {
-      const [count, dispatch] = useFormState(action, 1, permalink);
-      return <form action={dispatch}>{count}</form>;
+      const [count, dispatch, isPending] = useFormState(action, 1, permalink);
+      return (
+        <form action={dispatch}>
+          {isPending ? 'Pending...' : ''}
+          {count}
+        </form>
+      );
     }
 
     function Page1({action, permalink}) {
@@ -783,17 +807,19 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch] = useFormState(
+      const [state, dispatch, isPending] = useFormState(
         action,
         initialState,
         '/permalink',
       );
       return (
         <form action={dispatch}>
+          <span>{isPending ? 'Pending...' : ''}</span>
           <span>Count: {state.count}</span>
         </form>
       );
     }
+
     const ClientRef = await clientExports(Client);
 
     const rscStream = ReactServerDOMServer.renderToReadableStream(
@@ -810,8 +836,10 @@ describe('ReactFlightDOMForm', () => {
     await readIntoContainer(ssrStream);
 
     const form = container.getElementsByTagName('form')[0];
-    const span = container.getElementsByTagName('span')[0];
-    expect(span.textContent).toBe('Count: 1');
+    const pendingSpan = container.getElementsByTagName('span')[0];
+    const stateSpan = container.getElementsByTagName('span')[1];
+    expect(pendingSpan.textContent).toBe('');
+    expect(stateSpan.textContent).toBe('Count: 1');
 
     expect(form.action).toBe('http://localhost/permalink');
   });
@@ -833,13 +861,19 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch] = useFormState(action, initialState, permalink);
+      const [state, dispatch, isPending] = useFormState(
+        action,
+        initialState,
+        permalink,
+      );
       return (
         <form action={dispatch}>
+          <span>{isPending ? 'Pending...' : ''}</span>
           <span>Count: {state.count}</span>
         </form>
       );
     }
+
     const ClientRef = await clientExports(Client);
 
     const rscStream = ReactServerDOMServer.renderToReadableStream(
@@ -856,8 +890,10 @@ describe('ReactFlightDOMForm', () => {
     await readIntoContainer(ssrStream);
 
     const form = container.getElementsByTagName('form')[0];
-    const span = container.getElementsByTagName('span')[0];
-    expect(span.textContent).toBe('Count: 1');
+    const pendingSpan = container.getElementsByTagName('span')[0];
+    const stateSpan = container.getElementsByTagName('span')[1];
+    expect(pendingSpan.textContent).toBe('');
+    expect(stateSpan.textContent).toBe('Count: 1');
 
     expect(form.action).toBe('http://localhost/permalink');
   });
