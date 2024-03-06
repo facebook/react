@@ -44,7 +44,7 @@ import {
   Type,
   makeInstructionId,
   makeType,
-  promoteTemporaryToNamedIdentifier,
+  promoteTemporary,
 } from "./HIR";
 import HIRBuilder, { Bindings } from "./HIRBuilder";
 import { BuiltInArrayId } from "./ObjectShape";
@@ -1216,7 +1216,7 @@ function lowerStatement(
           reactive: false,
           loc: handlerBindingPath.node.loc ?? GeneratedSource,
         };
-        promoteTemporaryToNamedIdentifier(place.identifier);
+        promoteTemporary(place.identifier);
         lowerValueToTemporary(builder, {
           kind: "DeclareLocal",
           lvalue: {
@@ -3422,7 +3422,7 @@ function lowerAssignment(
               builder,
               element.node.loc ?? GeneratedSource
             );
-            promoteTemporaryToNamedIdentifier(temp.identifier);
+            promoteTemporary(temp.identifier);
             items.push({
               kind: "Spread",
               place: { ...temp },
@@ -3450,7 +3450,7 @@ function lowerAssignment(
             builder,
             element.node.loc ?? GeneratedSource
           );
-          promoteTemporaryToNamedIdentifier(temp.identifier);
+          promoteTemporary(temp.identifier);
           items.push({ ...temp });
           followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
         }
@@ -3521,7 +3521,7 @@ function lowerAssignment(
               builder,
               property.node.loc ?? GeneratedSource
             );
-            promoteTemporaryToNamedIdentifier(temp.identifier);
+            promoteTemporary(temp.identifier);
             properties.push({
               kind: "Spread",
               place: { ...temp },
@@ -3602,7 +3602,7 @@ function lowerAssignment(
               builder,
               element.node.loc ?? GeneratedSource
             );
-            promoteTemporaryToNamedIdentifier(temp.identifier);
+            promoteTemporary(temp.identifier);
             properties.push({
               kind: "ObjectProperty",
               type: "property",

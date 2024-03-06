@@ -15,7 +15,7 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveStatement,
-  promoteTemporaryToNamedIdentifier,
+  promoteTemporary,
 } from "../HIR";
 import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
 import {
@@ -159,7 +159,7 @@ function transformDestructuring(
         name: null, // overwritten below
       },
     };
-    promoteTemporaryToNamedIdentifier(temporary.identifier);
+    promoteTemporary(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
   });

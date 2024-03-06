@@ -20,7 +20,7 @@ import {
   Place,
   makeInstructionId,
   makeType,
-  promoteTemporaryToNamedIdentifier,
+  promoteTemporary,
   reversePostorderBlocks,
 } from "../HIR";
 import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
@@ -159,7 +159,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
           declareTemporary(fn.env, block, result);
 
           // Promote the temporary with a name as we require this to persist
-          promoteTemporaryToNamedIdentifier(result.identifier);
+          promoteTemporary(result.identifier);
 
           /*
            * Rewrite blocks from the lambda to replace any `return` with a

@@ -1004,9 +1004,7 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
 /**
  * Given an unnamed identifier, promote it to a named identifier.
  */
-export function promoteTemporaryToNamedIdentifier(
-  identifier: Identifier
-): void {
+export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     loc: GeneratedSource,
@@ -1027,9 +1025,7 @@ export function isPromotedTemporary(name: string): boolean {
  * Given an unnamed identifier, promote it to a named identifier, distinguishing
  * it as a value that needs to be capitalized since it appears in JSX element tag position
  */
-export function promoteTemporaryJsxTagToNamedIdentifier(
-  identifier: Identifier
-): void {
+export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     loc: GeneratedSource,

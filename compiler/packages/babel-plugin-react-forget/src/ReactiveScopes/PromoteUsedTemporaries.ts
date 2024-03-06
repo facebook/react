@@ -15,8 +15,8 @@ import {
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveValue,
-  promoteTemporaryJsxTagToNamedIdentifier,
-  promoteTemporaryToNamedIdentifier,
+  promoteTemporary,
+  promoteTemporaryJsxTag,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -29,7 +29,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     for (const dep of block.scope.dependencies) {
       const { identifier } = dep;
       if (identifier.name == null) {
-        promoteTemporary(identifier, state);
+        promoteIdentifier(identifier, state);
       }
     }
     /*
@@ -41,14 +41,14 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      */
     for (const [, declaration] of block.scope.declarations) {
       if (declaration.identifier.name == null) {
-        promoteTemporary(declaration.identifier, state);
+        promoteIdentifier(declaration.identifier, state);
       }
     }
   }
 
   override visitParam(place: Place, state: VisitorState): void {
     if (place.identifier.name === null) {
-      promoteTemporary(place.identifier, state);
+      promoteIdentifier(place.identifier, state);
     }
   }
 
@@ -72,7 +72,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     for (const operand of fn.params) {
       const place = operand.kind === "Identifier" ? operand : operand.place;
       if (place.identifier.name === null) {
-        promoteTemporary(place.identifier, state);
+        promoteIdentifier(place.identifier, state);
       }
     }
     visitReactiveFunction(fn, this, state);
@@ -102,13 +102,13 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   for (const operand of fn.params) {
     const place = operand.kind === "Identifier" ? operand : operand.place;
     if (place.identifier.name === null) {
-      promoteTemporary(place.identifier, state);
+      promoteIdentifier(place.identifier, state);
     }
   }
   visitReactiveFunction(fn, new Visitor(), state);
 }
 
-function promoteTemporary(identifier: Identifier, state: VisitorState): void {
+function promoteIdentifier(identifier: Identifier, state: VisitorState): void {
   CompilerError.invariant(identifier.name === null, {
     reason:
       "promoteTemporary: Expected to be called only for temporary variables",
@@ -117,8 +117,8 @@ function promoteTemporary(identifier: Identifier, state: VisitorState): void {
     suggestions: null,
   });
   if (state.tags.has(identifier.id)) {
-    promoteTemporaryJsxTagToNamedIdentifier(identifier);
+    promoteTemporaryJsxTag(identifier);
   } else {
-    promoteTemporaryToNamedIdentifier(identifier);
+    promoteTemporary(identifier);
   }
 }
