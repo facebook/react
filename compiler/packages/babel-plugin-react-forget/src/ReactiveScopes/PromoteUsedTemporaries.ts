@@ -15,11 +15,12 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveValue,
+  promoteTemporaryJsxTagToNamedIdentifier,
+  promoteTemporaryToNamedIdentifier,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 type VisitorState = {
-  nextId: number;
   tags: JsxExpressionTags;
 };
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
@@ -70,7 +71,6 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const tags: JsxExpressionTags = new Set();
   visitReactiveFunction(fn, new CollectJsxTagsVisitor(), tags);
   const state: VisitorState = {
-    nextId: 0,
     tags,
   };
   visitReactiveFunction(fn, new Visitor(), state);
@@ -85,8 +85,8 @@ function promoteTemporary(identifier: Identifier, state: VisitorState): void {
     suggestions: null,
   });
   if (state.tags.has(identifier.id)) {
-    identifier.name = `#T${state.nextId++}`;
+    promoteTemporaryJsxTagToNamedIdentifier(identifier);
   } else {
-    identifier.name = `#t${state.nextId++}`;
+    promoteTemporaryToNamedIdentifier(identifier);
   }
 }

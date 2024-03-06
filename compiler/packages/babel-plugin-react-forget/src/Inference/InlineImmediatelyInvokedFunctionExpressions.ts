@@ -14,13 +14,13 @@ import {
   GeneratedSource,
   GotoVariant,
   HIRFunction,
-  Identifier,
   IdentifierId,
   InstructionKind,
   LabelTerminal,
   Place,
   makeInstructionId,
   makeType,
+  promoteTemporaryToNamedIdentifier,
   reversePostorderBlocks,
 } from "../HIR";
 import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
@@ -159,7 +159,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
           declareTemporary(fn.env, block, result);
 
           // Promote the temporary with a name as we require this to persist
-          promoteTemporary(result.identifier);
+          promoteTemporaryToNamedIdentifier(result.identifier);
 
           /*
            * Rewrite blocks from the lambda to replace any `return` with a
@@ -292,8 +292,4 @@ function declareTemporary(
       loc: result.loc,
     },
   });
-}
-
-function promoteTemporary(temp: Identifier): void {
-  temp.name = `#t${temp.id}`;
 }

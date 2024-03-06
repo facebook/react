@@ -25,6 +25,7 @@ import {
   Place,
   Terminal,
   makeBlockId,
+  makeIdentifierName,
   makeInstructionId,
   makeType,
 } from "./HIR";
@@ -260,8 +261,8 @@ export default class HIRBuilder {
       return null;
     }
     const resolvedBinding = this.resolveBinding(babelBinding.identifier);
-    if (resolvedBinding.name && resolvedBinding.name !== originalName) {
-      babelBinding.scope.rename(originalName, resolvedBinding.name);
+    if (resolvedBinding.name && resolvedBinding.name.value !== originalName) {
+      babelBinding.scope.rename(originalName, resolvedBinding.name.value);
     }
     return resolvedBinding;
   }
@@ -285,7 +286,7 @@ export default class HIRBuilder {
         const id = this.nextIdentifierId;
         const identifier: Identifier = {
           id,
-          name,
+          name: makeIdentifierName(name),
           mutableRange: {
             start: makeInstructionId(0),
             end: makeInstructionId(0),

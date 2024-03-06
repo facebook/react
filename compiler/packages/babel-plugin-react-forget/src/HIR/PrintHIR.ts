@@ -15,6 +15,7 @@ import type {
   HIR,
   HIRFunction,
   Identifier,
+  IdentifierName,
   Instruction,
   InstructionValue,
   LValue,
@@ -724,8 +725,11 @@ export function printIdentifier(id: Identifier): string {
   return `${printName(id.name)}\$${id.id}${printScope(id.scope)}`;
 }
 
-function printName(name: string | null): string {
-  return name ?? "";
+function printName(name: IdentifierName | null): string {
+  if (name === null) {
+    return "";
+  }
+  return name.value;
 }
 
 function printScope(scope: ReactiveScope | null): string {

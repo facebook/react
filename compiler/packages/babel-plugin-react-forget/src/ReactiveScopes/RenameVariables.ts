@@ -9,11 +9,15 @@ import { CompilerError } from "../CompilerError";
 import {
   Identifier,
   IdentifierId,
+  IdentifierName,
   InstructionId,
   Place,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
+  isPromotedJsxTemporary,
+  isPromotedTemporary,
+  makeIdentifierName,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -88,7 +92,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 }
 
 class Scopes {
-  #seen: Map<IdentifierId, string> = new Map();
+  #seen: Map<IdentifierId, IdentifierName> = new Map();
   #stack: Array<Map<string, IdentifierId>> = [new Map()];
 
   visit(identifier: Identifier): void {
@@ -101,27 +105,28 @@ class Scopes {
       identifier.name = mappedName;
       return;
     }
-    let name = originalName;
+    let name: string = originalName.value;
     let id = 0;
-    if (name.startsWith("#t")) {
+    if (isPromotedTemporary(originalName.value)) {
       name = `t${id++}`;
-    } else if (name.startsWith("#T")) {
+    } else if (isPromotedJsxTemporary(originalName.value)) {
       name = `T${id++}`;
     }
     let previous = this.#lookup(name);
     while (previous !== null) {
-      if (originalName.startsWith("#t")) {
+      if (isPromotedTemporary(originalName.value)) {
         name = `t${id++}`;
-      } else if (originalName.startsWith("#T")) {
+      } else if (isPromotedJsxTemporary(originalName.value)) {
         name = `T${id++}`;
       } else {
         name = `${identifier.name}$${id++}`;
       }
       previous = this.#lookup(name);
     }
-    identifier.name = name;
-    this.#seen.set(identifier.id, name);
-    this.#stack.at(-1)!.set(name, identifier.id);
+    const identifierName = makeIdentifierName(name);
+    identifier.name = identifierName;
+    this.#seen.set(identifier.id, identifierName);
+    this.#stack.at(-1)!.set(identifierName.value, identifier.id);
   }
 
   #lookup(name: string): IdentifierId | null {

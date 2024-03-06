@@ -152,7 +152,10 @@ export function validateHooksUsage(fn: HIRFunction): void {
   const valueKinds = new Map<IdentifierId, Kind>();
   function getKindForPlace(place: Place): Kind {
     const knownKind = valueKinds.get(place.identifier.id);
-    if (place.identifier.name !== null && isHookName(place.identifier.name)) {
+    if (
+      place.identifier.name !== null &&
+      isHookName(place.identifier.name.value)
+    ) {
       return joinKinds(knownKind ?? Kind.Local, Kind.PotentialHook);
     } else {
       return knownKind ?? Kind.Local;
@@ -179,7 +182,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       let kind: Kind =
-        phi.id.name !== null && isHookName(phi.id.name)
+        phi.id.name !== null && isHookName(phi.id.name.value)
           ? Kind.PotentialHook
           : Kind.Local;
       for (const [, operand] of phi.operands) {
@@ -333,7 +336,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           for (const lvalue of eachInstructionLValue(instr)) {
             const isHookProperty =
               lvalue.identifier.name !== null &&
-              isHookName(lvalue.identifier.name);
+              isHookName(lvalue.identifier.name.value);
             let kind: Kind;
             switch (objectKind) {
               case Kind.Error: {

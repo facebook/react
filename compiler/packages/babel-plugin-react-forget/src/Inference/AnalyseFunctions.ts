@@ -10,6 +10,7 @@ import {
   Effect,
   HIRFunction,
   Identifier,
+  IdentifierName,
   LoweredFunction,
   Place,
   ReactiveScopeDependency,
@@ -123,13 +124,13 @@ function infer(
       isMutatedOrReassigned(operand.identifier) &&
       operand.identifier.name !== null
     ) {
-      mutations.set(operand.identifier.name, operand.effect);
+      mutations.set(operand.identifier.name.value, operand.effect);
     }
     operand.identifier.mutableRange.end = operand.identifier.mutableRange.start;
   }
 
   for (const dep of loweredFunc.dependencies) {
-    let name: string | null = null;
+    let name: IdentifierName | null = null;
 
     if (state.properties.has(dep.identifier)) {
       const receiver = state.properties.get(dep.identifier)!;
@@ -148,7 +149,7 @@ function infer(
        */
       dep.effect = Effect.Capture;
     } else if (name !== null) {
-      const effect = mutations.get(name);
+      const effect = mutations.get(name.value);
       if (effect !== undefined) {
         dep.effect = effect === Effect.Unknown ? Effect.Capture : effect;
       }
@@ -171,7 +172,7 @@ function infer(
       suggestions: null,
     });
 
-    const effect = mutations.get(place.identifier.name);
+    const effect = mutations.get(place.identifier.name.value);
     if (effect !== undefined) {
       place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
       loweredFunc.dependencies.push(place);

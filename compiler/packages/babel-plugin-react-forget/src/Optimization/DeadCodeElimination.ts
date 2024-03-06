@@ -68,7 +68,7 @@ class State {
   reference(identifier: Identifier): void {
     this.identifiers.add(identifier.id);
     if (identifier.name !== null) {
-      this.named.add(identifier.name);
+      this.named.add(identifier.name.value);
     }
   }
 
@@ -80,7 +80,7 @@ class State {
   isIdOrNameUsed(identifier: Identifier): boolean {
     return (
       this.identifiers.has(identifier.id) ||
-      (identifier.name !== null && this.named.has(identifier.name))
+      (identifier.name !== null && this.named.has(identifier.name.value))
     );
   }
 

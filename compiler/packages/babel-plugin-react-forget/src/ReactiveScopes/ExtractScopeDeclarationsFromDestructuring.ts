@@ -15,6 +15,7 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveStatement,
+  promoteTemporaryToNamedIdentifier,
 } from "../HIR";
 import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
 import {
@@ -152,8 +153,13 @@ function transformDestructuring(
     const tempId = state.env.nextIdentifierId;
     const temporary = {
       ...place,
-      identifier: { ...place.identifier, id: tempId, name: `#t${tempId}` },
+      identifier: {
+        ...place.identifier,
+        id: tempId,
+        name: null, // overwritten below
+      },
     };
+    promoteTemporaryToNamedIdentifier(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
   });

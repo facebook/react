@@ -16,6 +16,7 @@ import {
   ReactiveStatement,
   ReactiveTerminalStatement,
   makeInstructionId,
+  promoteTemporaryToNamedIdentifier,
 } from "../HIR";
 import { createTemporaryPlace } from "../HIR/HIRBuilder";
 import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
@@ -274,7 +275,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         earlyReturnValue = state.earlyReturnValue;
       } else {
         const identifier = createTemporaryPlace(this.env).identifier;
-        identifier.name = `#t${identifier.id}`;
+        promoteTemporaryToNamedIdentifier(identifier);
         earlyReturnValue = {
           label: this.env.nextBlockId,
           loc,

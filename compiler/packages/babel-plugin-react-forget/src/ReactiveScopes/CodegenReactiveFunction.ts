@@ -541,14 +541,16 @@ function codegenReactiveScope(
       t.ifStatement(
         t.binaryExpression(
           "!==",
-          t.identifier(scope.earlyReturnValue.value.name!),
+          t.identifier(scope.earlyReturnValue.value.name!.value),
           t.callExpression(
             t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
             [t.stringLiteral(EARLY_RETURN_SENTINEL)]
           )
         ),
         t.blockStatement([
-          t.returnStatement(t.identifier(scope.earlyReturnValue.value.name!)),
+          t.returnStatement(
+            t.identifier(scope.earlyReturnValue.value.name!.value)
+          ),
         ])
       )
     );
@@ -2009,7 +2011,7 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
 
 function convertIdentifier(identifier: Identifier): t.Identifier {
   if (identifier.name !== null) {
-    return t.identifier(`${identifier.name}`);
+    return t.identifier(identifier.name.value);
   }
   return t.identifier(`t${identifier.id}`);
 }

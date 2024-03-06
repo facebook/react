@@ -959,7 +959,7 @@ export type Identifier = {
    */
   id: IdentifierId;
   // null for temporaries. name is primarily used for debugging.
-  name: string | null;
+  name: IdentifierName | null;
   // The range for which this variable is mutable
   mutableRange: MutableRange;
   /*
@@ -969,6 +969,82 @@ export type Identifier = {
   scope: ReactiveScope | null;
   type: Type;
 };
+
+export type IdentifierName =
+  | { kind: "named"; value: ValidIdentifierName }
+  | { kind: "promoted"; value: string };
+
+/**
+ * Simulated opaque type for identifier names to ensure values can only be created
+ * through the below helpers.
+ */
+const opaqueValidIdentifierName = Symbol();
+export type ValidIdentifierName = string & {
+  [opaqueValidIdentifierName]: "ValidIdentifierName";
+};
+
+/**
+ * Creates a valid identifier name. This should *not* be used for synthesizing
+ * identifier names: only call this method for identifier names that appear in the
+ * original source code.
+ */
+export function makeIdentifierName(name: string): IdentifierName {
+  CompilerError.invariant(t.isValidIdentifier(name), {
+    reason: `Expected a valid identifier name`,
+    loc: GeneratedSource,
+    description: `'${name}' is not a valid JavaScript identifier`,
+    suggestions: null,
+  });
+  return {
+    kind: "named",
+    value: name as ValidIdentifierName,
+  };
+}
+
+/**
+ * Given an unnamed identifier, promote it to a named identifier.
+ */
+export function promoteTemporaryToNamedIdentifier(
+  identifier: Identifier
+): void {
+  CompilerError.invariant(identifier.name === null, {
+    reason: `Expected a temporary (unnamed) identifier`,
+    loc: GeneratedSource,
+    description: `Identifier already has a name, '${identifier.name}'`,
+    suggestions: null,
+  });
+  identifier.name = {
+    kind: "promoted",
+    value: `#t${identifier.id}`,
+  };
+}
+
+export function isPromotedTemporary(name: string): boolean {
+  return name.startsWith("#t");
+}
+
+/**
+ * Given an unnamed identifier, promote it to a named identifier, distinguishing
+ * it as a value that needs to be capitalized since it appears in JSX element tag position
+ */
+export function promoteTemporaryJsxTagToNamedIdentifier(
+  identifier: Identifier
+): void {
+  CompilerError.invariant(identifier.name === null, {
+    reason: `Expected a temporary (unnamed) identifier`,
+    loc: GeneratedSource,
+    description: `Identifier already has a name, '${identifier.name}'`,
+    suggestions: null,
+  });
+  identifier.name = {
+    kind: "promoted",
+    value: `#T${identifier.id}`,
+  };
+}
+
+export function isPromotedJsxTemporary(name: string): boolean {
+  return name.startsWith("#T");
+}
 
 export type AbstractValue = {
   kind: ValueKind;

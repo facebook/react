@@ -99,7 +99,7 @@ export function leaveSSA(fn: HIRFunction): void {
   for (const param of fn.params) {
     let place: Place = param.kind === "Identifier" ? param : param.place;
     if (place.identifier.name !== null) {
-      declarations.set(place.identifier.name, {
+      declarations.set(place.identifier.name.value, {
         lvalue: {
           kind: InstructionKind.Let,
           place,
@@ -145,13 +145,13 @@ export function leaveSSA(fn: HIRFunction): void {
       if (value.kind === "DeclareLocal") {
         const name = value.lvalue.place.identifier.name;
         if (name !== null) {
-          CompilerError.invariant(!declarations.has(name), {
+          CompilerError.invariant(!declarations.has(name.value), {
             reason: `Unexpected duplicate declaration`,
-            description: `Found duplicate declaration for '${name}'`,
+            description: `Found duplicate declaration for '${name.value}'`,
             loc: value.lvalue.place.loc,
             suggestions: null,
           });
-          declarations.set(name, {
+          declarations.set(name.value, {
             lvalue: value.lvalue,
             place: value.lvalue.place,
           });
@@ -166,7 +166,9 @@ export function leaveSSA(fn: HIRFunction): void {
           loc: value.lvalue.loc,
           suggestions: null,
         });
-        const originalLVal = declarations.get(value.lvalue.identifier.name);
+        const originalLVal = declarations.get(
+          value.lvalue.identifier.name.value
+        );
         CompilerError.invariant(originalLVal !== undefined, {
           reason: `Expected update expression to be applied to a previously defined variable`,
           description: null,
@@ -177,7 +179,7 @@ export function leaveSSA(fn: HIRFunction): void {
       } else if (value.kind === "StoreLocal") {
         if (value.lvalue.place.identifier.name != null) {
           const originalLVal = declarations.get(
-            value.lvalue.place.identifier.name
+            value.lvalue.place.identifier.name.value
           );
           if (
             originalLVal === undefined ||
@@ -194,7 +196,7 @@ export function leaveSSA(fn: HIRFunction): void {
                 suggestions: null,
               }
             );
-            declarations.set(value.lvalue.place.identifier.name, {
+            declarations.set(value.lvalue.place.identifier.name.value, {
               lvalue: value.lvalue,
               place: value.lvalue.place,
             });
@@ -227,7 +229,7 @@ export function leaveSSA(fn: HIRFunction): void {
             );
             kind = InstructionKind.Const;
           } else {
-            const originalLVal = declarations.get(place.identifier.name);
+            const originalLVal = declarations.get(place.identifier.name.value);
             if (
               originalLVal === undefined ||
               originalLVal.lvalue === value.lvalue
@@ -241,7 +243,7 @@ export function leaveSSA(fn: HIRFunction): void {
                   suggestions: null,
                 }
               );
-              declarations.set(place.identifier.name, {
+              declarations.set(place.identifier.name.value, {
                 lvalue: value.lvalue,
                 place,
               });
@@ -388,10 +390,10 @@ export function leaveSSA(fn: HIRFunction): void {
         const value = initIdentifier.value;
         if (value.lvalue.place.identifier.name !== null) {
           const originalLVal = declarations.get(
-            value.lvalue.place.identifier.name
+            value.lvalue.place.identifier.name.value
           );
           if (originalLVal === undefined) {
-            declarations.set(value.lvalue.place.identifier.name, {
+            declarations.set(value.lvalue.place.identifier.name.value, {
               lvalue: value.lvalue,
               place: value.lvalue.place,
             });
@@ -440,7 +442,7 @@ export function leaveSSA(fn: HIRFunction): void {
         loc: null,
         suggestions: null,
       });
-      const declaration = declarations.get(phi.id.name);
+      const declaration = declarations.get(phi.id.name.value);
       CompilerError.invariant(declaration != null, {
         loc: null,
         reason: "Expected a declaration for all variables",
@@ -480,7 +482,7 @@ export function leaveSSA(fn: HIRFunction): void {
         rewrites.set(phi.id, canonicalId);
 
         if (canonicalId.name !== null) {
-          const declaration = declarations.get(canonicalId.name);
+          const declaration = declarations.get(canonicalId.name.value);
           if (declaration !== undefined) {
             declaration.lvalue.kind = InstructionKind.Let;
           }
@@ -512,7 +514,7 @@ function rewritePlace(
     if (nextIdentifier === prevIdentifier) return;
     place.identifier = nextIdentifier;
   } else if (prevIdentifier.name != null) {
-    const declaration = declarations.get(prevIdentifier.name);
+    const declaration = declarations.get(prevIdentifier.name.value);
     // Only rewrite identifiers that were declared within the function
     if (declaration === undefined) return;
     const originalIdentifier = declaration.place.identifier;
