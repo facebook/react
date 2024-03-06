@@ -211,6 +211,13 @@ function* runWithEnvironment(
     value: hir,
   });
 
+  memoizeFbtOperandsInSameScope(hir);
+  yield log({
+    kind: "hir",
+    name: "MemoizeFbtOperandsInSameScope",
+    value: hir,
+  });
+
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
     kind: "reactive",
@@ -222,13 +229,6 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "PruneUnusedLabels",
-    value: reactiveFunction,
-  });
-
-  memoizeFbtOperandsInSameScope(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "MemoizeFbtOperandsInSameScope",
     value: reactiveFunction,
   });
 
