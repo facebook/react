@@ -1857,9 +1857,11 @@ function popHydrationState(fiber) {
   }
   JSCompiler_temp && (shouldClear = !0);
   if (shouldClear && (shouldClear = nextHydratableInstance))
-    if (shouldClientRenderOnMismatch(fiber))
-      warnIfUnhydratedTailNodes(), throwOnHydrationMismatch();
-    else
+    if (shouldClientRenderOnMismatch(fiber)) {
+      for (shouldClear = nextHydratableInstance; shouldClear; )
+        shouldClear = getNextHydratableSibling(shouldClear);
+      throwOnHydrationMismatch();
+    } else
       for (; shouldClear; )
         deleteHydratableInstance(fiber, shouldClear),
           (shouldClear = getNextHydratableSibling(shouldClear));
@@ -1892,10 +1894,6 @@ function popHydrationState(fiber) {
       ? getNextHydratableSibling(fiber.stateNode)
       : null;
   return !0;
-}
-function warnIfUnhydratedTailNodes() {
-  for (var nextInstance = nextHydratableInstance; nextInstance; )
-    nextInstance = getNextHydratableSibling(nextInstance);
 }
 function resetHydrationState() {
   nextHydratableInstance = hydrationParentFiber = null;
@@ -7426,27 +7424,14 @@ function completeWork(current, workInProgress, renderLanes) {
       bubbleProperties(workInProgress);
       return null;
     case 13:
-      popSuspenseHandler(workInProgress);
       newProps = workInProgress.memoizedState;
       if (
         null === current ||
         (null !== current.memoizedState &&
           null !== current.memoizedState.dehydrated)
       ) {
-        if (
-          isHydrating &&
-          null !== nextHydratableInstance &&
-          0 !== (workInProgress.mode & 1) &&
-          0 === (workInProgress.flags & 128)
-        )
-          warnIfUnhydratedTailNodes(),
-            resetHydrationState(),
-            (workInProgress.flags |= 384),
-            (currentResource = !1);
-        else if (
-          ((currentResource = popHydrationState(workInProgress)),
-          null !== newProps && null !== newProps.dehydrated)
-        ) {
+        currentResource = popHydrationState(workInProgress);
+        if (null !== newProps && null !== newProps.dehydrated) {
           if (null === current) {
             if (!currentResource) throw Error(formatProdErrorMessage(318));
             currentResource = workInProgress.memoizedState;
@@ -7465,9 +7450,14 @@ function completeWork(current, workInProgress, renderLanes) {
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
             (currentResource = !0);
-        if (!currentResource)
-          return workInProgress.flags & 256 ? workInProgress : null;
+        if (!currentResource) {
+          if (workInProgress.flags & 256)
+            return popSuspenseHandler(workInProgress), workInProgress;
+          popSuspenseHandler(workInProgress);
+          return null;
+        }
       }
+      popSuspenseHandler(workInProgress);
       if (0 !== (workInProgress.flags & 128))
         return (workInProgress.lanes = renderLanes), workInProgress;
       renderLanes = null !== newProps;
@@ -13835,14 +13825,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$352;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1578 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1578) {
-      var element$jscomp$inline_1579 = document.createElement("div");
-      element$jscomp$inline_1579.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1578 =
-        "function" === typeof element$jscomp$inline_1579.oninput;
+    var isSupported$jscomp$inline_1581 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1581) {
+      var element$jscomp$inline_1582 = document.createElement("div");
+      element$jscomp$inline_1582.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1581 =
+        "function" === typeof element$jscomp$inline_1582.oninput;
     }
-    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1578;
+    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1581;
   } else JSCompiler_inline_result$jscomp$352 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$352 &&
@@ -14154,20 +14144,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1619 = 0;
-  i$jscomp$inline_1619 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1619++
+  var i$jscomp$inline_1622 = 0;
+  i$jscomp$inline_1622 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1622++
 ) {
-  var eventName$jscomp$inline_1620 =
-      simpleEventPluginEvents[i$jscomp$inline_1619],
-    domEventName$jscomp$inline_1621 =
-      eventName$jscomp$inline_1620.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1622 =
-      eventName$jscomp$inline_1620[0].toUpperCase() +
-      eventName$jscomp$inline_1620.slice(1);
+  var eventName$jscomp$inline_1623 =
+      simpleEventPluginEvents[i$jscomp$inline_1622],
+    domEventName$jscomp$inline_1624 =
+      eventName$jscomp$inline_1623.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1625 =
+      eventName$jscomp$inline_1623[0].toUpperCase() +
+      eventName$jscomp$inline_1623.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1621,
-    "on" + capitalizedEvent$jscomp$inline_1622
+    domEventName$jscomp$inline_1624,
+    "on" + capitalizedEvent$jscomp$inline_1625
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17150,17 +17140,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1783 = {
+var devToolsConfig$jscomp$inline_1786 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7e0344a2",
+  version: "18.3.0-www-modern-05c693f4",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2153 = {
-  bundleType: devToolsConfig$jscomp$inline_1783.bundleType,
-  version: devToolsConfig$jscomp$inline_1783.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1783.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1783.rendererConfig,
+var internals$jscomp$inline_2156 = {
+  bundleType: devToolsConfig$jscomp$inline_1786.bundleType,
+  version: devToolsConfig$jscomp$inline_1786.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1786.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1786.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17177,26 +17167,26 @@ var internals$jscomp$inline_2153 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1783.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1786.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7e0344a2"
+  reconcilerVersion: "18.3.0-www-modern-05c693f4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2154 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2157 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2154.isDisabled &&
-    hook$jscomp$inline_2154.supportsFiber
+    !hook$jscomp$inline_2157.isDisabled &&
+    hook$jscomp$inline_2157.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2154.inject(
-        internals$jscomp$inline_2153
+      (rendererID = hook$jscomp$inline_2157.inject(
+        internals$jscomp$inline_2156
       )),
-        (injectedHook = hook$jscomp$inline_2154);
+        (injectedHook = hook$jscomp$inline_2157);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17593,4 +17583,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-7e0344a2";
+exports.version = "18.3.0-www-modern-05c693f4";

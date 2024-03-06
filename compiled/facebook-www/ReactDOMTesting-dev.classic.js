@@ -9078,10 +9078,6 @@ if (__DEV__) {
       return true;
     }
 
-    function hasUnhydratedTailNodes() {
-      return isHydrating && nextHydratableInstance !== null;
-    }
-
     function warnIfUnhydratedTailNodes(fiber) {
       var nextInstance = nextHydratableInstance;
 
@@ -25095,17 +25091,6 @@ if (__DEV__) {
       workInProgress,
       nextState
     ) {
-      if (
-        hasUnhydratedTailNodes() &&
-        (workInProgress.mode & ConcurrentMode) !== NoMode &&
-        (workInProgress.flags & DidCapture) === NoFlags$1
-      ) {
-        warnIfUnhydratedTailNodes(workInProgress);
-        resetHydrationState();
-        workInProgress.flags |= ForceClientRender | DidCapture;
-        return false;
-      }
-
       var wasHydrated = popHydrationState(workInProgress);
 
       if (nextState !== null && nextState.dehydrated !== null) {
@@ -25542,7 +25527,6 @@ if (__DEV__) {
         }
 
         case SuspenseComponent: {
-          popSuspenseHandler(workInProgress);
           var nextState = workInProgress.memoizedState; // Special path for dehydrated boundaries. We may eventually move this
           // to its own fiber type so that we can add other kinds of hydration
           // boundaries that aren't associated with a Suspense tree. In anticipation
@@ -25563,16 +25547,20 @@ if (__DEV__) {
 
             if (!fallthroughToNormalSuspensePath) {
               if (workInProgress.flags & ForceClientRender) {
-                // Special case. There were remaining unhydrated nodes. We treat
+                popSuspenseHandler(workInProgress); // Special case. There were remaining unhydrated nodes. We treat
                 // this as a mismatch. Revert to client rendering.
+
                 return workInProgress;
               } else {
-                // Did not finish hydrating, either because this is the initial
+                popSuspenseHandler(workInProgress); // Did not finish hydrating, either because this is the initial
                 // render or because something suspended.
+
                 return null;
               }
             } // Continue with the normal Suspense path.
           }
+
+          popSuspenseHandler(workInProgress);
 
           if ((workInProgress.flags & DidCapture) !== NoFlags$1) {
             // Something suspended. Re-render with the fallback children.
@@ -36670,7 +36658,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-f938cefa";
+    var ReactVersion = "18.3.0-www-classic-5741f0db";
 
     function createPortal$1(
       children,

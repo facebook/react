@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-20a604bc";
+    var ReactVersion = "18.3.0-www-classic-14143ab0";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -19974,7 +19974,6 @@ if (__DEV__) {
         }
 
         case SuspenseComponent: {
-          popSuspenseHandler(workInProgress);
           var nextState = workInProgress.memoizedState; // Special path for dehydrated boundaries. We may eventually move this
           // to its own fiber type so that we can add other kinds of hydration
           // boundaries that aren't associated with a Suspense tree. In anticipation
@@ -19995,16 +19994,20 @@ if (__DEV__) {
 
             if (!fallthroughToNormalSuspensePath) {
               if (workInProgress.flags & ForceClientRender) {
-                // Special case. There were remaining unhydrated nodes. We treat
+                popSuspenseHandler(workInProgress); // Special case. There were remaining unhydrated nodes. We treat
                 // this as a mismatch. Revert to client rendering.
+
                 return workInProgress;
               } else {
-                // Did not finish hydrating, either because this is the initial
+                popSuspenseHandler(workInProgress); // Did not finish hydrating, either because this is the initial
                 // render or because something suspended.
+
                 return null;
               }
             } // Continue with the normal Suspense path.
           }
+
+          popSuspenseHandler(workInProgress);
 
           if ((workInProgress.flags & DidCapture) !== NoFlags$1) {
             // Something suspended. Re-render with the fallback children.
