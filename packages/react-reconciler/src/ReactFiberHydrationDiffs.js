@@ -38,12 +38,28 @@ export type HydrationDiffNode = {
     | $ReadOnly<{type: string, props: $ReadOnly<{[propName: string]: mixed}>}>
     | string,
   >,
+  distanceFromLeaf: number,
 };
 
 const maxRowLength = 120;
+const idealDepth = 15;
 
-function shouldCollapse(node: HydrationDiffNode): null | HydrationDiffNode {
-  return null;
+function findNotableNode(
+  node: HydrationDiffNode,
+  indent: number,
+): HydrationDiffNode {
+  if (
+    node.serverProps === undefined &&
+    node.serverTail.length === 0 &&
+    node.children.length === 1 &&
+    node.distanceFromLeaf > 3 &&
+    node.distanceFromLeaf > idealDepth - indent
+  ) {
+    // This is not an interesting node for contextual purposes so we can skip it.
+    const child = node.children[0];
+    return findNotableNode(child, indent);
+  }
+  return node;
 }
 
 function indentation(indent: number): string {
@@ -509,8 +525,11 @@ function describeSiblingFiber(fiber: Fiber, indent: number): string {
 }
 
 function describeNode(node: HydrationDiffNode, indent: number): string {
-  const skipToNode = shouldCollapse(node);
-  if (skipToNode !== null) {
+  const skipToNode = findNotableNode(node, indent);
+  if (
+    skipToNode !== node &&
+    (node.children.length !== 1 || node.children[0] !== skipToNode)
+  ) {
     return indentation(indent) + '...\n' + describeNode(skipToNode, indent + 1);
   }
 

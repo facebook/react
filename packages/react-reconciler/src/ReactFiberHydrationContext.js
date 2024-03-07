@@ -82,7 +82,10 @@ let hydrationErrors: Array<CapturedValue<mixed>> | null = null;
 let rootOrSingletonContext = false;
 
 // Builds a common ancestor tree from the root down for collecting diffs.
-function buildHydrationDiffNode(fiber: Fiber): HydrationDiffNode {
+function buildHydrationDiffNode(
+  fiber: Fiber,
+  distanceFromLeaf: number,
+): HydrationDiffNode {
   if (fiber.return === null) {
     // We're at the root.
     if (hydrationDiffRootDEV === null) {
@@ -91,27 +94,38 @@ function buildHydrationDiffNode(fiber: Fiber): HydrationDiffNode {
         children: [],
         serverProps: undefined,
         serverTail: [],
+        distanceFromLeaf: distanceFromLeaf,
       };
     } else if (hydrationDiffRootDEV.fiber !== fiber) {
       throw new Error(
         'Saw multiple hydration diff roots in a pass. This is a bug in React.',
       );
+    } else if (hydrationDiffRootDEV.distanceFromLeaf > distanceFromLeaf) {
+      hydrationDiffRootDEV.distanceFromLeaf = distanceFromLeaf;
     }
     return hydrationDiffRootDEV;
   }
-  const siblings = buildHydrationDiffNode(fiber.return).children;
+  const siblings = buildHydrationDiffNode(
+    fiber.return,
+    distanceFromLeaf + 1,
+  ).children;
   // The same node may already exist in the parent. Since we currently always render depth first
   // and rerender if we suspend or terminate early, if a shared ancestor was added we should still
   // be inside of that shared ancestor which means it was the last one to be added. If this changes
   // we may have to scan the whole set.
   if (siblings.length > 0 && siblings[siblings.length - 1].fiber === fiber) {
-    return siblings[siblings.length - 1];
+    const existing = siblings[siblings.length - 1];
+    if (existing.distanceFromLeaf > distanceFromLeaf) {
+      existing.distanceFromLeaf = distanceFromLeaf;
+    }
+    return existing;
   }
   const newNode: HydrationDiffNode = {
     fiber: fiber,
     children: [],
     serverProps: undefined,
     serverTail: [],
+    distanceFromLeaf: distanceFromLeaf,
   };
   siblings.push(newNode);
   return newNode;
@@ -195,7 +209,7 @@ function warnNonHydratedInstance(
     }
 
     // Add this fiber to the diff tree.
-    const diffNode = buildHydrationDiffNode(fiber);
+    const diffNode = buildHydrationDiffNode(fiber, 0);
     // We use null as a signal that there was no node to match.
     diffNode.serverProps = null;
     if (rejectedCandidate !== null) {
@@ -422,7 +436,7 @@ function prepareToHydrateHostInstance(
         hostContext,
       );
       if (differences !== null) {
-        const diffNode = buildHydrationDiffNode(fiber);
+        const diffNode = buildHydrationDiffNode(fiber, 0);
         diffNode.serverProps = differences;
       }
     }
@@ -466,7 +480,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
               parentProps,
             );
             if (difference !== null) {
-              const diffNode = buildHydrationDiffNode(fiber);
+              const diffNode = buildHydrationDiffNode(fiber, 0);
               diffNode.serverProps = difference;
             }
           }
@@ -484,7 +498,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
               parentProps,
             );
             if (difference !== null) {
-              const diffNode = buildHydrationDiffNode(fiber);
+              const diffNode = buildHydrationDiffNode(fiber, 0);
               diffNode.serverProps = difference;
             }
           }
@@ -638,13 +652,14 @@ function warnIfUnhydratedTailNodes(fiber: Fiber) {
   if (__DEV__) {
     let nextInstance = nextHydratableInstance;
     while (nextInstance) {
-      const diffNode = buildHydrationDiffNode(fiber);
+      const diffNode = buildHydrationDiffNode(fiber, 0);
       const description =
         describeHydratableInstanceForDevWarnings(nextInstance);
       diffNode.serverTail.push(description);
       if (description.type === 'Suspense') {
+        const suspenseInstance: SuspenseInstance = (nextInstance: any);
         nextInstance =
-          getNextHydratableInstanceAfterSuspenseInstance(nextInstance);
+          getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance);
       } else {
         nextInstance = getNextHydratableSibling(nextInstance);
       }
