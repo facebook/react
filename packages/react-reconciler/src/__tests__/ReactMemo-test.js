@@ -444,7 +444,9 @@ describe('memo', () => {
           });
           assertLog(['Loading...', 15]);
         }).toErrorDev([
-          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+          `Counter: Support for defaultProps will be removed from ${gate(
+            flags => (flags.enableUserlandMemo ? 'function' : 'memo'),
+          )} components in a future major release. Use JavaScript default parameters instead.`,
         ]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
 
@@ -503,7 +505,9 @@ describe('memo', () => {
             );
           });
         }).toErrorDev([
-          'Support for defaultProps will be removed from memo component',
+          `Support for defaultProps will be removed from ${gate(flags =>
+            flags.enableUserlandMemo ? 'function' : 'memo',
+          )} component`,
         ]);
         expect(root).toMatchRenderedOutput(<div>111</div>);
 
@@ -599,6 +603,9 @@ describe('memo', () => {
         await waitForAll([]);
       }).toErrorDev(
         'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+          gate(flags =>
+            flags.enableUserlandMemo ? '    in elementType (at **)\n' : '',
+          ) +
           '    in p (at **)',
       );
     });
@@ -617,6 +624,9 @@ describe('memo', () => {
       }).toErrorDev(
         'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
           '    in Inner (at **)\n' +
+          gate(flags =>
+            flags.enableUserlandMemo ? '    in elementType (at **)\n' : '',
+          ) +
           '    in p (at **)',
       );
     });
@@ -637,6 +647,9 @@ describe('memo', () => {
       }).toErrorDev(
         'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
           '    in Inner (at **)\n' +
+          gate(flags =>
+            flags.enableUserlandMemo ? '    in elementType (at **)\n' : '',
+          ) +
           '    in p (at **)',
       );
     });
@@ -656,6 +669,9 @@ describe('memo', () => {
       }).toErrorDev(
         'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
           '    in Outer (at **)\n' +
+          gate(flags =>
+            flags.enableUserlandMemo ? '    in elementType (at **)\n' : '',
+          ) +
           '    in p (at **)',
       );
     });
@@ -677,6 +693,9 @@ describe('memo', () => {
       }).toErrorDev(
         'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
           '    in Inner (at **)\n' +
+          gate(flags =>
+            flags.enableUserlandMemo ? '    in elementType (at **)\n' : '',
+          ) +
           '    in p (at **)',
       );
     });

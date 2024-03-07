@@ -33,6 +33,7 @@ import {
   enableDebugTracing,
   enableLegacyHidden,
   enableRenderableContext,
+  enableUserlandMemo,
 } from './ReactFeatureFlags';
 
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
@@ -62,7 +63,7 @@ export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'object' && type !== null) {
     if (
       type.$$typeof === REACT_LAZY_TYPE ||
-      type.$$typeof === REACT_MEMO_TYPE ||
+      (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) ||
       type.$$typeof === REACT_CONTEXT_TYPE ||
       (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
       (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||

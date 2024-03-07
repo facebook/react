@@ -9,11 +9,17 @@
 
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
+import {enableUserlandMemo} from 'shared/ReactFeatureFlags';
+
 export function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
 ) {
   if (__DEV__) {
-    if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
+    if (
+      !enableUserlandMemo &&
+      render != null &&
+      render.$$typeof === REACT_MEMO_TYPE
+    ) {
       console.error(
         'forwardRef requires a render function but received a `memo` ' +
           'component. Instead of forwardRef(memo(...)), use ' +

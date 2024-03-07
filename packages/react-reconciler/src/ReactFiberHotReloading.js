@@ -14,7 +14,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {enableFloat} from 'shared/ReactFeatureFlags';
+import {enableFloat, enableUserlandMemo} from 'shared/ReactFeatureFlags';
 import {
   flushSync,
   scheduleUpdateOnFiber,
@@ -181,18 +181,20 @@ export function isCompatibleFamilyForHotReloading(
         }
         break;
       }
-      case MemoComponent:
-      case SimpleMemoComponent: {
-        if ($$typeofNextType === REACT_MEMO_TYPE) {
-          // TODO: if it was but can no longer be simple,
-          // we shouldn't set this.
-          needsCompareFamilies = true;
-        } else if ($$typeofNextType === REACT_LAZY_TYPE) {
-          needsCompareFamilies = true;
-        }
-        break;
-      }
       default:
+        if (
+          (!enableUserlandMemo && fiber.tag === MemoComponent) ||
+          fiber.tag === SimpleMemoComponent
+        ) {
+          if ($$typeofNextType === REACT_MEMO_TYPE) {
+            // TODO: if it was but can no longer be simple,
+            // we shouldn't set this.
+            needsCompareFamilies = true;
+          } else if ($$typeofNextType === REACT_LAZY_TYPE) {
+            needsCompareFamilies = true;
+          }
+          break;
+        }
         return false;
     }
 

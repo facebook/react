@@ -39,6 +39,7 @@ import {
   enableFloat,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
+  enableUserlandMemo,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -257,7 +258,7 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
       return ForwardRef;
     }
-    if ($$typeof === REACT_MEMO_TYPE) {
+    if (!enableUserlandMemo && $$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
   }
@@ -607,13 +608,15 @@ export function createFiberFromTypeAndProps(
                 resolvedType = resolveForwardRefForHotReloading(resolvedType);
               }
               break getTag;
-            case REACT_MEMO_TYPE:
-              fiberTag = MemoComponent;
-              break getTag;
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
+          }
+
+          if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+            fiberTag = MemoComponent;
+            break getTag;
           }
         }
         let info = '';

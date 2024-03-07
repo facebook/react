@@ -160,8 +160,14 @@ describe('ReactIs', () => {
     const Component = () => React.createElement('div');
     const Memoized = React.memo(Component);
     expect(ReactIs.isValidElementType(Memoized)).toBe(true);
-    expect(ReactIs.typeOf(<Memoized />)).toBe(ReactIs.Memo);
-    expect(ReactIs.isMemo(<Memoized />)).toBe(true);
+    expect(ReactIs.typeOf(<Memoized />)).toBe(
+      gate(flags =>
+        flags.enableUserlandMemo ? ReactIs.Element : ReactIs.Memo,
+      ),
+    );
+    expect(ReactIs.isMemo(<Memoized />)).toBe(
+      gate(flags => !flags.enableUserlandMemo),
+    );
     expect(ReactIs.isMemo(<Component />)).toBe(false);
   });
 

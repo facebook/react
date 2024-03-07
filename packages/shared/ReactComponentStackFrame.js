@@ -9,7 +9,10 @@
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
+import {
+  enableComponentStackLocations,
+  enableUserlandMemo,
+} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
@@ -368,12 +371,13 @@ export function describeUnknownElementTypeFrameInDEV(
       return describeBuiltInComponentFrame('SuspenseList', ownerFn);
   }
   if (typeof type === 'object') {
+    if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+      // Memo may contain any component type so we recursively resolve it.
+      return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
+    }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
         return describeFunctionComponentFrame(type.render, ownerFn);
-      case REACT_MEMO_TYPE:
-        // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

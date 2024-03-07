@@ -59,7 +59,9 @@ describe('ReactDeprecationWarnings', () => {
     );
     await expect(async () => await waitForAll([])).toErrorDev(
       'Warning: FunctionalComponent: Support for defaultProps ' +
-        'will be removed from memo components in a future major ' +
+        `will be removed from ${gate(flags =>
+          flags.enableUserlandMemo ? 'function' : 'memo',
+        )} components in a future major ` +
         'release. Use JavaScript default parameters instead.',
     );
   });

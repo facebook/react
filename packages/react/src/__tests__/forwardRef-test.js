@@ -402,6 +402,7 @@ describe('forwardRef', () => {
     expect(differentRef.current.type).toBe('div');
   });
 
+  // @gate !enableUserlandMemo
   it('warns on forwardRef(memo(...))', () => {
     expect(() => {
       React.forwardRef(

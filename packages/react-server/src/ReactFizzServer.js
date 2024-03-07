@@ -146,6 +146,7 @@ import {
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  enableUserlandMemo,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -1895,13 +1896,13 @@ function renderElement(
   }
 
   if (typeof type === 'object' && type !== null) {
+    if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+      renderMemo(request, task, keyPath, type, props, ref);
+      return;
+    }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
         renderForwardRef(request, task, keyPath, type, props, ref);
-        return;
-      }
-      case REACT_MEMO_TYPE: {
-        renderMemo(request, task, keyPath, type, props, ref);
         return;
       }
       case REACT_PROVIDER_TYPE: {

@@ -175,6 +175,7 @@ describe('ReactDOMServerIntegration', () => {
         return readContext(Context);
       }
       const Memo = React.memo(() => {
+        const [a,b] = React.useState();
         return readContext(Context);
       });
       const FwdRef = React.forwardRef((props, ref) => {

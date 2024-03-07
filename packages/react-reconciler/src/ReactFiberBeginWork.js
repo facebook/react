@@ -111,6 +111,7 @@ import {
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  enableUserlandMemo,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -479,6 +480,10 @@ function updateMemoComponent(
   nextProps: any,
   renderLanes: Lanes,
 ): null | Fiber {
+  if (enableUserlandMemo) {
+    return null;
+  }
+
   if (current === null) {
     const type = Component.type;
     if (
@@ -565,6 +570,10 @@ function updateSimpleMemoComponent(
   nextProps: any,
   renderLanes: Lanes,
 ): null | Fiber {
+  if (enableUserlandMemo) {
+    return null;
+  }
+  
   // TODO: current can be non-null here even if the component
   // hasn't yet mounted. This happens when the inner render suspends.
   // We'll need to figure out if this is fine or can cause issues.
@@ -1694,6 +1703,17 @@ function mountLazyComponent(
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
   const resolvedProps = resolveDefaultProps(Component, props);
   let child;
+
+  if (!enableUserlandMemo && resolvedTag === MemoComponent) {
+    return updateMemoComponent(
+      null,
+      workInProgress,
+      Component,
+      resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
+      renderLanes,
+    );
+  }
+
   switch (resolvedTag) {
     case FunctionComponent: {
       if (__DEV__) {
@@ -1734,16 +1754,6 @@ function mountLazyComponent(
         workInProgress,
         Component,
         resolvedProps,
-        renderLanes,
-      );
-      return child;
-    }
-    case MemoComponent: {
-      child = updateMemoComponent(
-        null,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
         renderLanes,
       );
       return child;
@@ -4038,6 +4048,31 @@ function beginWork(
   // move this assignment out of the common path and into each branch.
   workInProgress.lanes = NoLanes;
 
+  if (!enableUserlandMemo) {
+    if (workInProgress.tag === MemoComponent) {
+      const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      // Resolve outer props first, then resolve inner props.
+      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
+      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
+      return updateMemoComponent(
+        current,
+        workInProgress,
+        type,
+        resolvedProps,
+        renderLanes,
+      );
+    } else if (workInProgress.tag === SimpleMemoComponent) {
+      return updateSimpleMemoComponent(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
+        renderLanes,
+      );
+    }
+  }
+
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
       return mountIndeterminateComponent(
@@ -4131,29 +4166,6 @@ function beginWork(
       return updateContextProvider(current, workInProgress, renderLanes);
     case ContextConsumer:
       return updateContextConsumer(current, workInProgress, renderLanes);
-    case MemoComponent: {
-      const type = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      // Resolve outer props first, then resolve inner props.
-      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
-      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
-      return updateMemoComponent(
-        current,
-        workInProgress,
-        type,
-        resolvedProps,
-        renderLanes,
-      );
-    }
-    case SimpleMemoComponent: {
-      return updateSimpleMemoComponent(
-        current,
-        workInProgress,
-        workInProgress.type,
-        workInProgress.pendingProps,
-        renderLanes,
-      );
-    }
     case IncompleteClassComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;

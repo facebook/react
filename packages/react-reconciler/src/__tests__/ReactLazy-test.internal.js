@@ -809,7 +809,9 @@ describe('ReactLazy', () => {
           ]
         : shouldWarnAboutMemoDefaultProps
         ? [
-            'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            `Add: Support for defaultProps will be removed from ${gate(flags =>
+              flags.enableUserlandMemo ? 'function' : 'memo',
+            )} components in a future major release. Use JavaScript default parameters instead.`,
           ]
         : [],
     );
@@ -1063,7 +1065,11 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Add));
     }).toErrorDev(
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+      `${gate(flags =>
+        flags.enableUserlandMemo ? 'Memo' : 'Unknown',
+      )}: Support for defaultProps will be removed from ${gate(flags =>
+        flags.enableUserlandMemo ? 'function' : 'memo',
+      )} components in a future major release. Use JavaScript default parameters instead.`,
     );
     expect(root).toMatchRenderedOutput('4');
 
@@ -1149,10 +1155,18 @@ describe('ReactLazy', () => {
     // Mount
     await expect(async () => {
       await act(() => resolveFakeImport(Add));
-    }).toErrorDev([
-      'Memo: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-    ]);
+    }).toErrorDev(
+      gate(flags =>
+        flags.enableUserlandMemo
+          ? [
+              'Memo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+            ]
+          : [
+              'Memo: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+              'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            ],
+      ),
+    );
     expect(root).toMatchRenderedOutput('4');
 
     // Update

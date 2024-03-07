@@ -20,6 +20,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
+import {enableUserlandMemo} from './ReactFeatureFlags';
 
 // Used for DEV messages to keep track of which parent rendered some props,
 // in case they error.
@@ -131,11 +132,12 @@ function describeElementType(type: any): string {
       return 'SuspenseList';
   }
   if (typeof type === 'object') {
+    if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+      return describeElementType(type.type);
+    }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
         return describeElementType(type.render);
-      case REACT_MEMO_TYPE:
-        return describeElementType(type.type);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

@@ -18,6 +18,7 @@ import {
   enableServerComponentKeys,
   enableRefAsProp,
   enableServerComponentLogs,
+  enableUserlandMemo,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -823,6 +824,9 @@ function renderElement(
       // This is a reference to a Client Component.
       return renderClientElement(task, type, key, props);
     }
+    if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+      return renderElement(request, task, type.type, key, ref, props);
+    }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         const payload = type._payload;
@@ -832,9 +836,6 @@ function renderElement(
       }
       case REACT_FORWARD_REF_TYPE: {
         return renderFunctionComponent(request, task, key, type.render, props);
-      }
-      case REACT_MEMO_TYPE: {
-        return renderElement(request, task, type.type, key, ref, props);
       }
     }
   }

@@ -19,6 +19,8 @@ import type {
 } from 'react-reconciler/src/ReactFiberHotReloading';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {enableUserlandMemo} from 'shared/ReactFeatureFlags';
+
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 type Signature = {
@@ -330,13 +332,11 @@ export function register(type: any, id: string): void {
 
     // Visit inner types because we might not have registered them.
     if (typeof type === 'object' && type !== null) {
-      switch (getProperty(type, '$$typeof')) {
-        case REACT_FORWARD_REF_TYPE:
-          register(type.render, id + '$render');
-          break;
-        case REACT_MEMO_TYPE:
-          register(type.type, id + '$type');
-          break;
+      const property = getProperty(type, '$$typeof');
+      if (property === REACT_FORWARD_REF_TYPE) {
+        register(type.render, id + '$render');
+      } else if (!enableUserlandMemo && property === REACT_MEMO_TYPE) {
+        register(type.type, id + '$type');
       }
     }
   } else {
@@ -363,13 +363,11 @@ export function setSignature(
     }
     // Visit inner types because we might not have signed them.
     if (typeof type === 'object' && type !== null) {
-      switch (getProperty(type, '$$typeof')) {
-        case REACT_FORWARD_REF_TYPE:
-          setSignature(type.render, key, forceReset, getCustomHooks);
-          break;
-        case REACT_MEMO_TYPE:
-          setSignature(type.type, key, forceReset, getCustomHooks);
-          break;
+      const property = getProperty(type, '$$typeof');
+      if (property === REACT_FORWARD_REF_TYPE) {
+        setSignature(type.render, key, forceReset, getCustomHooks);
+      } else if (!enableUserlandMemo && property === REACT_MEMO_TYPE) {
+        setSignature(type.type, key, forceReset, getCustomHooks);
       }
     }
   } else {
@@ -716,14 +714,11 @@ export function isLikelyComponentType(type: any): boolean {
       }
       case 'object': {
         if (type != null) {
-          switch (getProperty(type, '$$typeof')) {
-            case REACT_FORWARD_REF_TYPE:
-            case REACT_MEMO_TYPE:
-              // Definitely React components.
-              return true;
-            default:
-              return false;
-          }
+          const property = getProperty(type, '$$typeof');
+          return (
+            property === REACT_FORWARD_REF_TYPE ||
+            (!enableUserlandMemo && property === REACT_MEMO_TYPE)
+          );
         }
         return false;
       }

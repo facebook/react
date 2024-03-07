@@ -31,6 +31,7 @@ import {
   enableTransitionTracing,
   enableCache,
   enableRenderableContext,
+  enableUserlandMemo,
 } from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
@@ -102,6 +103,15 @@ export default function getComponentNameFromType(type: mixed): string | null {
         );
       }
     }
+
+    if (!enableUserlandMemo && type.$$typeof === REACT_MEMO_TYPE) {
+      const outerName = (type: any).displayName || null;
+      if (outerName !== null) {
+        return outerName;
+      }
+      return getComponentNameFromType(type.type) || 'Memo';
+    }
+
     switch (type.$$typeof) {
       case REACT_PROVIDER_TYPE:
         if (enableRenderableContext) {
@@ -126,12 +136,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
         }
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
-      case REACT_MEMO_TYPE:
-        const outerName = (type: any).displayName || null;
-        if (outerName !== null) {
-          return outerName;
-        }
-        return getComponentNameFromType(type.type) || 'Memo';
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

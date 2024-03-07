@@ -98,5 +98,7 @@ export const disableLegacyMode = false;
 
 export const enableBigIntSupport = false;
 
+export const enableUserlandMemo = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
