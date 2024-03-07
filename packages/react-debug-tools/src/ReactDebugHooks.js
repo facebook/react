@@ -427,16 +427,19 @@ function useTransition(): [
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
-  nextHook(); // State
+  const stateHook = nextHook();
   nextHook(); // Callback
+
+  const isPending = stateHook !== null ? stateHook.memoizedState : false;
+
   hookLog.push({
     displayName: null,
     primitive: 'Transition',
     stackError: new Error(),
-    value: undefined,
+    value: isPending,
     debugInfo: null,
   });
-  return [false, callback => {}];
+  return [isPending, () => {}];
 }
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
