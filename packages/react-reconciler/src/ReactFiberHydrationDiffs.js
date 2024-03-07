@@ -279,7 +279,6 @@ function describeCollapsedElement(
     content += ' ' + propName + '=' + propValue;
   }
 
-  // No properties
   return indentation(indent) + '<' + type + content + '>\n';
 }
 

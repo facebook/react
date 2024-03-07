@@ -220,7 +220,11 @@ function warnNonHydratedInstance(
   }
 }
 
-function tryHydrateInstance(fiber: Fiber, nextInstance: any) {
+function tryHydrateInstance(
+  fiber: Fiber,
+  nextInstance: any,
+  hostContext: HostContext,
+) {
   // fiber is a HostComponent Fiber
   const instance = canHydrateInstance(
     nextInstance,
@@ -230,6 +234,22 @@ function tryHydrateInstance(fiber: Fiber, nextInstance: any) {
   );
   if (instance !== null) {
     fiber.stateNode = (instance: Instance);
+
+    if (__DEV__) {
+      if (!didSuspendOrErrorDEV) {
+        const differences = diffHydratedPropsForDevWarnings(
+          instance,
+          fiber.type,
+          fiber.pendingProps,
+          hostContext,
+        );
+        if (differences !== null) {
+          const diffNode = buildHydrationDiffNode(fiber, 0);
+          diffNode.serverProps = differences;
+        }
+      }
+    }
+
     hydrationParentFiber = fiber;
     nextHydratableInstance = getFirstHydratableChild(instance);
     rootOrSingletonContext = false;
@@ -327,6 +347,22 @@ function claimHydratableSingleton(fiber: Fiber): void {
       currentHostContext,
       false,
     ));
+
+    if (__DEV__) {
+      if (!didSuspendOrErrorDEV) {
+        const differences = diffHydratedPropsForDevWarnings(
+          instance,
+          fiber.type,
+          fiber.pendingProps,
+          currentHostContext,
+        );
+        if (differences !== null) {
+          const diffNode = buildHydrationDiffNode(fiber, 0);
+          diffNode.serverProps = differences;
+        }
+      }
+    }
+
     hydrationParentFiber = fiber;
     rootOrSingletonContext = true;
     nextHydratableInstance = getFirstHydratableChild(instance);
@@ -347,7 +383,10 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   );
 
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !tryHydrateInstance(fiber, nextInstance)) {
+  if (
+    !nextInstance ||
+    !tryHydrateInstance(fiber, nextInstance, currentHostContext)
+  ) {
     if (shouldKeepWarning) {
       warnNonHydratedInstance(fiber, nextInstance);
     }
@@ -426,22 +465,6 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
-  if (__DEV__) {
-    const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-    if (shouldWarnIfMismatchDev) {
-      const differences = diffHydratedPropsForDevWarnings(
-        instance,
-        fiber.type,
-        fiber.memoizedProps,
-        hostContext,
-      );
-      if (differences !== null) {
-        const diffNode = buildHydrationDiffNode(fiber, 0);
-        diffNode.serverProps = differences;
-      }
-    }
-  }
-
   const didHydrate = hydrateInstance(
     instance,
     fiber.type,
