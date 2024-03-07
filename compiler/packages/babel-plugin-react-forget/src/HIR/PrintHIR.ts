@@ -266,8 +266,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "try": {
-      value = `Try block=bb${terminal.block} catch=bb${
-        terminal.handler
+      value = `Try block=bb${terminal.block} handler=bb${terminal.handler}${
+        terminal.handlerBinding !== null
+          ? ` handlerBinding=(${printPlace(terminal.handlerBinding)})`
+          : ""
       } fallthrough=${
         terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ""
       }`;

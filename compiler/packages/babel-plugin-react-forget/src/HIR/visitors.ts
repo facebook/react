@@ -1126,7 +1126,12 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       yield terminal.value;
       break;
     }
-    case "try":
+    case "try": {
+      if (terminal.handlerBinding !== null) {
+        yield terminal.handlerBinding;
+      }
+      break;
+    }
     case "maybe-throw":
     case "sequence":
     case "label":

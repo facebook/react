@@ -545,6 +545,9 @@ export class ReactiveFunctionTransform<
       }
       case "try": {
         this.visitBlock(terminal.block, state);
+        if (terminal.handlerBinding !== null) {
+          this.visitPlace(terminal.id, terminal.handlerBinding, state);
+        }
         this.visitBlock(terminal.handler, state);
         break;
       }

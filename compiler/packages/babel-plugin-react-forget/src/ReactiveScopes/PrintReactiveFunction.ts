@@ -354,7 +354,12 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     case "try": {
       writer.writeLine(`[${terminal.id}] try {`);
       writeReactiveInstructions(writer, terminal.block);
-      writer.writeLine(`} catch {`);
+      writer.write(`} catch `);
+      if (terminal.handlerBinding !== null) {
+        writer.writeLine(`(${printPlace(terminal.handlerBinding)}) {`);
+      } else {
+        writer.writeLine(`{`);
+      }
       writeReactiveInstructions(writer, terminal.handler);
       writer.writeLine("}");
       break;

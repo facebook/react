@@ -8,3 +8,8 @@ function Component(props) {
   };
   return callback();
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
