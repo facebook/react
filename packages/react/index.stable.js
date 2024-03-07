@@ -46,5 +46,6 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';

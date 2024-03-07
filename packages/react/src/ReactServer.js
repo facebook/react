@@ -27,7 +27,14 @@ import {
   isValidElement,
 } from './jsx/ReactJSXElement';
 import {createRef} from './ReactCreateRef';
-import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
+import {
+  use,
+  useId,
+  useCallback,
+  useDebugValue,
+  useMemo,
+  useActionState,
+} from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
@@ -63,5 +70,6 @@ export {
   useCallback,
   useDebugValue,
   useMemo,
+  useActionState,
   version,
 };

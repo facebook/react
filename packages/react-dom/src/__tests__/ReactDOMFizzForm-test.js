@@ -23,7 +23,7 @@ let ReactDOMServer;
 let ReactDOMClient;
 let useFormStatus;
 let useOptimistic;
-let useFormState;
+let useActionState;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -32,11 +32,16 @@ describe('ReactDOMFizzForm', () => {
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useFormStatus = require('react-dom').useFormStatus;
-    useFormState = require('react-dom').useFormState;
     useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
+    if (__VARIANT__) {
+      // Remove after API is deleted.
+      useActionState = require('react-dom').useFormState;
+    } else {
+      useActionState = require('react').useActionState;
+    }
   });
 
   afterEach(() => {
@@ -474,13 +479,13 @@ describe('ReactDOMFizzForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState returns initial state', async () => {
+  it('useActionState returns initial state', async () => {
     async function action(state) {
       return state;
     }
 
     function App() {
-      const [state] = useFormState(action, 0);
+      const [state] = useActionState(action, 0);
       return state;
     }
 

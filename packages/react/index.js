@@ -78,5 +78,6 @@ export {
   useRef,
   useState,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';

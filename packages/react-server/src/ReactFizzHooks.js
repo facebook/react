@@ -820,6 +820,7 @@ if (enableFormActions && enableAsyncActions) {
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
   HooksDispatcher.useFormState = useFormState;
+  HooksDispatcher.useActionState = useFormState;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
