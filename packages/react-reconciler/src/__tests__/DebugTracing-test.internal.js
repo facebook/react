@@ -64,7 +64,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && enableDebugTracing
   it('should not log anything for concurrent render without suspends or state updates', async () => {
     await act(() =>
       ReactNoop.render(
@@ -387,7 +387,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && enableDebugTracing
   it('should not log anything outside of a unstable_DebugTracingMode subtree', async () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);
