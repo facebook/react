@@ -94,6 +94,12 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main className="child">
+        +       client
+        -       server
         ]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
@@ -128,6 +134,11 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div>
+        +     This markup contains an nbsp entity:   client text
+        -     This markup contains an nbsp entity:   server text
         ]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
@@ -164,6 +175,16 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+                className="child"
+                dangerouslySetInnerHTML={{
+        +         __html: "<span>client</span>"
+        -         __html: "<span>server</span>"
+                }}
+              >
         ",
         ]
       `);
@@ -196,6 +217,15 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+        +       className="child client"
+        -       className="child server"
+        +       dir="ltr"
+        -       dir="rtl"
+              >
         ",
         ]
       `);
@@ -227,6 +257,16 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+                className="child"
+        +       tabIndex={1}
+        -       tabIndex={null}
+        +       dir="ltr"
+        -       dir={null}
+              >
         ",
         ]
       `);
@@ -258,6 +298,16 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+                className="child"
+        +       tabIndex={null}
+        -       tabIndex="1"
+        +       dir={null}
+        -       dir="rtl"
+              >
         ",
         ]
       `);
@@ -289,6 +339,16 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+                className="child"
+        +       tabIndex={1}
+        -       tabIndex={null}
+        +       dir={null}
+        -       dir="rtl"
+              >
         ",
         ]
       `);
@@ -321,6 +381,14 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <div className="parent">
+              <main
+                className="child"
+        +       style={{opacity:1}}
+        -       style={{opacity:"0"}}
+              >
         ",
         ]
       `);
@@ -352,6 +420,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <main className="only">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -383,6 +455,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <header className="1">
+          -     <main className="2">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -414,6 +492,13 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+          +     <main className="2">
+          -     <footer className="3">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -445,6 +530,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+                <main>
+          +     <footer className="3">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -472,6 +563,11 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     only
+          -     
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -503,6 +599,13 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+          +     second
+          -     <footer className="3">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -534,6 +637,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     first
+          -     <main className="2">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -565,6 +674,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+                <main>
+          +     third
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -598,6 +713,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     <main className="only">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -629,6 +748,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <main className="2">
+          -     <header className="1">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -660,6 +785,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+          +     <footer className="3">
+          -     <main className="2">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -691,6 +822,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     <footer className="3">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -718,6 +853,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     only
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -749,6 +888,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <main className="2">
+          -     first
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -780,6 +925,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <header>
+          +     <footer className="3">
+          -     second
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -811,6 +962,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     third
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -852,6 +1007,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <Suspense fallback={<p>}>
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -885,6 +1044,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     <Suspense>
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -920,6 +1083,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <Suspense fallback={<p>}>
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -959,6 +1126,10 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     <Suspense>
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -991,6 +1162,14 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <Suspense fallback={<p>}>
+                  <header>
+          +       <main className="second">
+          -       <footer className="3">
+                  ...
           ]",
             "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
           ]
@@ -1023,6 +1202,13 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <Suspense fallback={<p>}>
+                  <header>
+          +       <footer className="3">
+          -       <main className="second">
           ]",
             "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
           ]
@@ -1112,6 +1298,11 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          +     <header className="1">
+                ...
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -1147,6 +1338,12 @@ describe('ReactDOMServerHydration', () => {
           It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
           https://react.dev/link/hydration-mismatch
+
+            <Mismatch isClient={true}>
+              <div className="parent">
+          -     <header className="1">
+          -     <main className="2">
+          -     <footer className="3">
           ]",
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
@@ -1204,6 +1401,15 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <ProfileSettings>
+              <div className="parent">
+                <input>
+                <Panel type="profile">
+                  <header>
+                  <main>
+        +         <footer className="3">
         ]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
@@ -1258,6 +1464,11 @@ describe('ReactDOMServerHydration', () => {
         It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
         https://react.dev/link/hydration-mismatch
+
+          <Mismatch isClient={true}>
+            <ProfileSettings>
+              <div className="parent">
+        -       <footer className="3">
         ]",
           "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
