@@ -77,4 +77,4 @@ To help you get your feet wet and get you familiar with our contribution process
 
 React is [MIT licensed](./LICENSE).
 
-free me for git
+free me for git, I dont like it
