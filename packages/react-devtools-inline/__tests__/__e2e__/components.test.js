@@ -59,7 +59,7 @@ test.describe('Components', () => {
     const isEditableValue = semver.gte(config.use.react_version, '16.8.0');
 
     // Then read the inspected values.
-    const [propName, propValue, sourceText] = await page.evaluate(
+    const [propName, propValue] = await page.evaluate(
       isEditable => {
         const {createTestNameSelector, findAllNodes} =
           window.REACT_DOM_DEVTOOLS;
@@ -85,21 +85,41 @@ test.describe('Components', () => {
           createTestNameSelector('InspectedElementPropsTree'),
           createTestNameSelector(selectorValue),
         ])[0];
-        const source = findAllNodes(container, [
-          createTestNameSelector('InspectedElementView-Source'),
-        ])[0];
         const value = isEditable.value
           ? valueElement.value
           : valueElement.innerText;
 
-        return [name, value, source.innerText];
+        return [name, value];
       },
       {name: isEditableName, value: isEditableValue}
     );
 
     expect(propName).toBe('label');
     expect(propValue).toBe('"one"');
-    expect(sourceText).toMatch(/e2e-app[a-zA-Z]*\.js/);
+  });
+
+  test('Should allow inspecting source of the element', async () => {
+    // Source inspection is available only in modern renderer.
+    runOnlyForReactRange('>=16.8');
+
+    // Select the first list item in DevTools.
+    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+
+    // Then read the inspected values.
+    const sourceText = await page.evaluate(() => {
+      const {createTestNameSelector, findAllNodes} = window.REACT_DOM_DEVTOOLS;
+      const container = document.getElementById('devtools');
+
+      const source = findAllNodes(container, [
+        createTestNameSelector('InspectedElementView-Source'),
+      ])[0];
+
+      return source.innerText;
+    });
+
+    // If React version is specified, the e2e-regression.html page will be used
+    // If not, then e2e.html, see playwright.config.js, how url is constructed
+    expect(sourceText).toMatch(/e2e-app[\-a-zA-Z]*\.js/);
   });
 
   test('should allow props to be edited', async () => {
