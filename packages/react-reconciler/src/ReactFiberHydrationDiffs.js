@@ -25,6 +25,7 @@ import {
 } from './ReactWorkTags';
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 import isArray from 'shared/isArray';
@@ -158,53 +159,79 @@ function objectName(object: mixed): string {
   });
 }
 
-function describePropValue(value: mixed, maxLength: number): string {
+function describeValue(value: mixed, maxLength: number): string {
   switch (typeof value) {
     case 'string': {
-      if (needsEscaping.test(value)) {
-        const encoded = JSON.stringify(value);
-        if (encoded.length > maxLength - 2) {
-          if (maxLength < 8) {
-            return '{"..."}';
-          }
-          return '{' + encoded.slice(0, maxLength - 7) + '..."}';
+      const encoded = JSON.stringify(value);
+      if (encoded.length > maxLength) {
+        if (maxLength < 5) {
+          return '"..."';
         }
-        return '{' + encoded + '}';
-      } else {
-        if (value.length > maxLength - 2) {
-          if (maxLength < 5) {
-            return '"..."';
-          }
-          return '"' + value.slice(0, maxLength - 3) + '..."';
-        }
-        return '"' + value + '"';
+        return encoded.slice(0, maxLength - 4) + '..."';
       }
+      return encoded;
     }
     case 'object': {
       if (value === null) {
-        return '{null}';
+        return 'null';
       }
       if (isArray(value)) {
-        return '{[...]}';
+        return '[...]';
       }
       if ((value: any).$$typeof === REACT_ELEMENT_TYPE) {
         const type = getComponentNameFromType((value: any).type);
-        return type ? '{<' + type + '>}' : '{<...>}';
+        return type ? '<' + type + '>' : '<...>';
       }
       const name = objectName(value);
       if (name === 'Object') {
-        return '{{...}}';
+        let properties = '';
+        maxLength -= 2;
+        for (let propName in value) {
+          if (!value.hasOwnProperty(propName)) {
+            continue;
+          }
+          const jsonPropName = JSON.stringify(propName);
+          if (jsonPropName !== '"' + propName + '"') {
+            propName = jsonPropName;
+          }
+          maxLength -= propName.length - 2;
+          const propValue = describeValue(
+            value[propName],
+            maxLength < 15 ? maxLength : 15,
+          );
+          maxLength -= propValue.length;
+          if (maxLength < 0) {
+            properties += properties === '' ? '...' : ', ...';
+            break;
+          }
+          properties +=
+            (properties === '' ? '' : ',') + propName + ':' + propValue;
+        }
+        return '{' + properties + '}';
       }
-      return '{' + name + '}';
+      return name;
     }
     case 'function': {
       const name = (value: any).displayName || value.name;
-      return name ? '{function ' + name + '}' : '{function}';
+      return name ? 'function ' + name : 'function';
     }
     default:
       // eslint-disable-next-line react-internal/safe-string-coercion
-      return '{' + String(value) + '}';
+      return String(value);
   }
+}
+
+function describePropValue(value: mixed, maxLength: number): string {
+  if (typeof value === 'string' && !needsEscaping.test(value)) {
+    if (value.length > maxLength - 2) {
+      if (maxLength < 5) {
+        return '"..."';
+      }
+      return '"' + value.slice(0, maxLength - 5) + '..."';
+    }
+    return '"' + value + '"';
+  }
+  return '{' + describeValue(value, maxLength - 2) + '}';
 }
 
 function describeCollapsedElement(
@@ -291,6 +318,42 @@ function describeExpandedElement(
   }
 }
 
+function describePropertiesDiff(
+  clientObject: {+[propName: string]: mixed},
+  serverObject: {+[propName: string]: mixed},
+  indent: number,
+): string {
+  let properties = '';
+  const remainingServerProperties = assign({}, serverObject);
+  for (const propName in clientObject) {
+    if (!clientObject.hasOwnProperty(propName)) {
+      continue;
+    }
+    delete remainingServerProperties[propName];
+    const maxLength = maxRowLength - indent * 2 - propName.length - 2;
+    const clientValue = clientObject[propName];
+    const clientPropValue = describeValue(clientValue, maxLength);
+    if (serverObject.hasOwnProperty(propName)) {
+      const serverValue = serverObject[propName];
+      const serverPropValue = describeValue(serverValue, maxLength);
+      properties += added(indent) + propName + ': ' + clientPropValue + '\n';
+      properties += removed(indent) + propName + ': ' + serverPropValue + '\n';
+    } else {
+      properties += added(indent) + propName + ': ' + clientPropValue + '\n';
+    }
+  }
+  for (const propName in remainingServerProperties) {
+    if (!remainingServerProperties.hasOwnProperty(propName)) {
+      continue;
+    }
+    const maxLength = maxRowLength - indent * 2 - propName.length - 2;
+    const serverValue = remainingServerProperties[propName];
+    const serverPropValue = describeValue(serverValue, maxLength);
+    properties += removed(indent) + propName + ': ' + serverPropValue + '\n';
+  }
+  return properties;
+}
+
 function describeElementDiff(
   type: string,
   clientProps: {+[propName: string]: mixed},
@@ -325,18 +388,37 @@ function describeElementDiff(
       if (serverPropName !== undefined) {
         serverPropNames.delete(propName.toLowerCase());
         // There's a diff here.
-        // TODO: Handle nested diffs.
-        const clientPropValue = describePropValue(
-          clientProps[propName],
-          maxLength,
-        );
-        content += added(indent + 1) + propName + '=' + clientPropValue + '\n';
-        const serverPropValue = describePropValue(
-          serverProps[serverPropName],
-          maxLength,
-        );
-        content +=
-          removed(indent + 1) + propName + '=' + serverPropValue + '\n';
+        const clientValue = clientProps[propName];
+        const serverValue = serverProps[serverPropName];
+        const clientPropValue = describePropValue(clientValue, maxLength);
+        const serverPropValue = describePropValue(serverValue, maxLength);
+        if (
+          typeof clientValue === 'object' &&
+          clientValue !== null &&
+          typeof serverValue === 'object' &&
+          serverValue !== null &&
+          objectName(clientValue) === 'Object' &&
+          objectName(serverValue) === 'Object' &&
+          // Only do the diff if the object has a lot of keys or was shortened.
+          (Object.keys(clientValue).length > 2 ||
+            Object.keys(serverValue).length > 2 ||
+            clientPropValue.indexOf('...') > -1 ||
+            serverPropValue.indexOf('...') > -1)
+        ) {
+          // We're comparing two plain objects. We can diff the nested objects instead.
+          content +=
+            indentation(indent + 1) +
+            propName +
+            '={{\n' +
+            describePropertiesDiff(clientValue, serverValue, indent + 2) +
+            indentation(indent + 1) +
+            '}}\n';
+        } else {
+          content +=
+            added(indent + 1) + propName + '=' + clientPropValue + '\n';
+          content +=
+            removed(indent + 1) + propName + '=' + serverPropValue + '\n';
+        }
       } else {
         // Considered equal.
         content +=
