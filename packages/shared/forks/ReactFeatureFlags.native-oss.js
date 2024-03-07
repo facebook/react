@@ -20,7 +20,7 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableCache = false;
+export const enableCache = true;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
@@ -35,7 +35,7 @@ export const disableIEWorkarounds = true;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
-export const disableLegacyContext = false;
+export const disableLegacyContext = true;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
@@ -64,7 +64,7 @@ export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = false;
-export const enableCustomElementPropertySupport = false;
+export const enableCustomElementPropertySupport = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
