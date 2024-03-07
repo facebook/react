@@ -642,7 +642,12 @@ function warnIfUnhydratedTailNodes(fiber: Fiber) {
       const description =
         describeHydratableInstanceForDevWarnings(nextInstance);
       diffNode.serverTail.push(description);
-      nextInstance = getNextHydratableSibling(nextInstance);
+      if (description.type === 'Suspense') {
+        nextInstance =
+          getNextHydratableInstanceAfterSuspenseInstance(nextInstance);
+      } else {
+        nextInstance = getNextHydratableSibling(nextInstance);
+      }
     }
   }
 }
