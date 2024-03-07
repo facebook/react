@@ -173,7 +173,16 @@ describe(`onRender`, () => {
         'read current time',
       ]);
     } else {
-      assertLog(['read current time']);
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+      ]);
     }
   });
 
