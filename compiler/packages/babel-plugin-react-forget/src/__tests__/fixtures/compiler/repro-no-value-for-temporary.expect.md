@@ -1,0 +1,60 @@
+
+## Input
+
+```javascript
+// @flow @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+function Component(listItem, thread) {
+  const isFoo = isFooThread(thread.threadType);
+  const body = useBar(listItem, [getBadgeText(listItem, isFoo)]);
+
+  return body;
+}
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(listItem, thread) {
+  const $ = useMemoCache(7);
+  let t0;
+  let t1;
+  let t2;
+  if ($[0] !== thread.threadType || $[1] !== listItem) {
+    const isFoo = isFooThread(thread.threadType);
+    t1 = useBar;
+    t2 = listItem;
+    t0 = getBadgeText(listItem, isFoo);
+    $[0] = thread.threadType;
+    $[1] = listItem;
+    $[2] = t0;
+    $[3] = t1;
+    $[4] = t2;
+  } else {
+    t0 = $[2];
+    t1 = $[3];
+    t2 = $[4];
+  }
+  let t3;
+  if ($[5] !== t0) {
+    t3 = [t0];
+    $[5] = t0;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  const body = t1(t2, t3);
+  return body;
+}
+
+```
+      
+### Eval output
+(kind: exception) Fixture not implemented!
+logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
+  '\n' +
+  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
+  '\n' +
+  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']

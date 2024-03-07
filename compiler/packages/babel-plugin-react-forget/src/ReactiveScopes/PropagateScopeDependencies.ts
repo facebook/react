@@ -23,6 +23,7 @@ import {
   ReactiveScopeDependency,
   ReactiveTerminalStatement,
   ReactiveValue,
+  ScopeId,
 } from "../HIR/HIR";
 import {
   eachInstructionValueOperand,
@@ -75,18 +76,18 @@ type TemporariesUsedOutsideDefiningScope = {
    * tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
    * and the scope where they are defined
    */
-  declarations: Map<IdentifierId, ReactiveScope>;
+  declarations: Map<IdentifierId, ScopeId>;
   // temporaries used outside of their defining scope
   usedOutsideDeclaringScope: Set<IdentifierId>;
 };
 class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOutsideDefiningScope> {
-  scopes: Array<ReactiveScope> = [];
+  scopes: Array<ScopeId> = [];
 
   override visitScope(
     scope: ReactiveScopeBlock,
     state: TemporariesUsedOutsideDefiningScope
   ): void {
-    this.scopes.push(scope.scope);
+    this.scopes.push(scope.scope.id);
     this.traverseScope(scope, state);
     this.scopes.pop();
   }
@@ -95,6 +96,9 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
     instruction: ReactiveInstruction,
     state: TemporariesUsedOutsideDefiningScope
   ): void {
+    // Visit all places first, then record temporaries which may need to be promoted
+    this.traverseInstruction(instruction, state);
+
     const scope = this.scopes.at(-1);
     if (instruction.lvalue === null || scope === undefined) {
       return;
@@ -110,7 +114,6 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
         break;
       }
     }
-    this.traverseInstruction(instruction, state);
   }
 
   override visitPlace(
@@ -119,7 +122,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
     state: TemporariesUsedOutsideDefiningScope
   ): void {
     const declaringScope = state.declarations.get(place.identifier.id);
-    if (this.scopes.length === 0 || declaringScope === undefined) {
+    if (declaringScope === undefined) {
       return;
     }
     if (this.scopes.indexOf(declaringScope) === -1) {
