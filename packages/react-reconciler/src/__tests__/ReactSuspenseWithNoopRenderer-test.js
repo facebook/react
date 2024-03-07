@@ -398,8 +398,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // Second condition is redundant but guarantees that the test runs in prod.
-  // TODO: Delete this feature flag.
-  // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
   // @gate enableLegacyCache
   it('retries on error', async () => {
     class ErrorBoundary extends React.Component {
@@ -458,8 +456,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // Second condition is redundant but guarantees that the test runs in prod.
-  // TODO: Delete this feature flag.
-  // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
   // @gate enableLegacyCache
   it('retries on error after falling back to a placeholder', async () => {
     class ErrorBoundary extends React.Component {

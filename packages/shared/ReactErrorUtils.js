@@ -7,8 +7,6 @@
  * @flow
  */
 
-import invokeGuardedCallbackImpl from './invokeGuardedCallbackImpl';
-
 // Used by Fiber to simulate a try-catch.
 let hasError: boolean = false;
 let caughtError: mixed = null;
@@ -16,13 +14,6 @@ let caughtError: mixed = null;
 // Used by event system to capture/rethrow the first error.
 let hasRethrowError: boolean = false;
 let rethrowError: mixed = null;
-
-const reporter = {
-  onError(error: mixed) {
-    hasError = true;
-    caughtError = error;
-  },
-};
 
 /**
  * Call a function while guarding against errors that happens within it.
@@ -50,7 +41,14 @@ export function invokeGuardedCallback<A, B, C, D, E, F, Context>(
 ): void {
   hasError = false;
   caughtError = null;
-  invokeGuardedCallbackImpl.apply(reporter, arguments);
+  try {
+    // $FlowFixMe[method-unbinding]
+    const funcArgs = Array.prototype.slice.call(arguments, 3);
+    func.apply(context, funcArgs);
+  } catch (error) {
+    hasError = true;
+    caughtError = error;
+  }
 }
 
 /**
@@ -83,7 +81,14 @@ export function invokeGuardedCallbackAndCatchFirstError<
   e: E,
   f: F,
 ): void {
-  invokeGuardedCallback.apply(this, arguments);
+  try {
+    // $FlowFixMe[method-unbinding]
+    const funcArgs = Array.prototype.slice.call(arguments, 3);
+    func.apply(context, funcArgs);
+  } catch (error) {
+    hasError = true;
+    caughtError = error;
+  }
   if (hasError) {
     const error = clearCaughtError();
     if (!hasRethrowError) {

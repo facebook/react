@@ -14,7 +14,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let act;
-let ReactFeatureFlags;
 let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
@@ -42,8 +41,6 @@ describe('ReactErrorBoundaries', () => {
     jest.useFakeTimers();
     jest.resetModules();
     PropTypes = require('prop-types');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     React = require('react');

@@ -36,6 +36,7 @@ export function logCapturedError(
       // Browsers support silencing uncaught errors by calling
       // `preventDefault()` in window `error` handler.
       // We record this information as an expando on the error.
+      // TODO: We no longer track this.
       if (error != null && error._suppressLogging) {
         if (boundary.tag === ClassComponent) {
           // The error is recoverable and was silenced.
@@ -73,6 +74,7 @@ export function logCapturedError(
         `${componentNameMessage}\n${componentStack}\n\n` +
         `${errorBoundaryMessage}`;
 
+      // TODO: The error is no longer printed by the browser.
       // In development, we provide our own message with just the component stack.
       // We don't include the original error message and JS stack because the browser
       // has already printed it. Even if the application swallows the error, it is still

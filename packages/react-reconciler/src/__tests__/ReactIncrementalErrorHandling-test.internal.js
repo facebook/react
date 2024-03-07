@@ -10,7 +10,6 @@
 
 'use strict';
 
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let PropTypes;
 let React;
 let ReactNoop;
@@ -24,8 +23,6 @@ let waitForThrow;
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');

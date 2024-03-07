@@ -190,7 +190,6 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {doesFiberContain} from './ReactFiberTreeReflection';
-import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
   markComponentPassiveEffectMountStarted,
@@ -251,10 +250,11 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   // (https://github.com/facebook/react/issues/21712).
   // As a compromise, rethrow only caught errors in a guard.
   if (__DEV__) {
-    invokeGuardedCallback(null, () => {
-      throw error;
-    });
-    clearCaughtError();
+    // TODO: This trick no longer works. Should probably use reportError maybe.
+    // invokeGuardedCallback(null, () => {
+    //   throw error;
+    // });
+    // clearCaughtError();
   }
 }
 

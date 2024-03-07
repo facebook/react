@@ -44,10 +44,6 @@ export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 
-// These are already tested in both modes using the build type dimension,
-// so we don't need to use __VARIANT__ to get extra coverage.
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
