@@ -276,7 +276,7 @@ function throwOnHydrationMismatch(fiber: Fiber) {
     }
   }
   throw new Error(
-    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR:ed Client Component used:\n" +
+    "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
       '\n' +
       "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
       "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
@@ -682,7 +682,7 @@ export function emitPendingHydrationWarnings() {
       const diff = describeDiff(diffRoot);
       console.error(
         "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. " +
-          'This can happen if a SSR:ed Client Component used:\n' +
+          'This can happen if a SSR-ed Client Component used:\n' +
           '\n' +
           "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
           "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
