@@ -2060,11 +2060,14 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
 }
 
 function convertIdentifier(identifier: Identifier): t.Identifier {
-  CompilerError.invariant(identifier.name !== null, {
-    reason: `Expected temporaries to be promoted to named identifiers in an earlier pass`,
-    loc: GeneratedSource,
-    description: `identifier ${identifier.id} is unnamed`,
-    suggestions: null,
-  });
+  CompilerError.invariant(
+    identifier.name !== null && identifier.name.kind === "named",
+    {
+      reason: `Expected temporaries to be promoted to named identifiers in an earlier pass`,
+      loc: GeneratedSource,
+      description: `identifier ${identifier.id} is unnamed`,
+      suggestions: null,
+    }
+  );
   return t.identifier(identifier.name.value);
 }
