@@ -19,13 +19,17 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  consoleManagedByDevToolsDuringStrictMode,
+  enableAsyncActions,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
+  enableInfiniteRenderLoopDetection,
+  enableRenderableContext,
+  enableUnifiedSyncLane,
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
   useMicrotasksForSchedulingInFabric,
-  enableUnifiedSyncLane,
-  enableInfiniteRenderLoopDetection,
+  useModernStrictMode,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -67,7 +71,6 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
-export const enableRenderableContext = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -81,17 +84,13 @@ export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = true;
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
-
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 
-export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 
-export const enableAsyncActions = false;
 export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;
 
