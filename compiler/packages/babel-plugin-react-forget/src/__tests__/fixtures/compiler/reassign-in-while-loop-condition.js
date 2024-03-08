@@ -8,7 +8,7 @@ function Component() {
   while ((item = items.pop())) {
     sum += item;
   }
-  return [sum];
+  return [items, sum];
 }
 
 export const FIXTURE_ENTRYPOINT = {

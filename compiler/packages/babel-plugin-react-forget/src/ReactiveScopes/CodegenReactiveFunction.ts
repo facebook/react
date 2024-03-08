@@ -1752,13 +1752,29 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "StoreLocal": {
+      CompilerError.invariant(
+        instrValue.lvalue.kind === InstructionKind.Reassign,
+        {
+          reason: `Unexpected StoreLocal in codegenInstructionValue`,
+          description: null,
+          loc: instrValue.loc,
+          suggestions: null,
+        }
+      );
+      value = t.assignmentExpression(
+        "=",
+        codegenLValue(cx, instrValue.lvalue.place),
+        codegenPlaceToExpression(cx, instrValue.value)
+      );
+      break;
+    }
     case "ReactiveFunctionValue":
     case "Memoize":
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":
     case "Destructure":
-    case "StoreLocal":
     case "ObjectMethod":
     case "StoreContext": {
       CompilerError.invariant(false, {
