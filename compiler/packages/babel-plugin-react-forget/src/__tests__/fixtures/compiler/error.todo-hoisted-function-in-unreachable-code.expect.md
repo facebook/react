@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @compilationMode(infer)
 function Component() {
   return <Foo />;
 
@@ -15,12 +16,12 @@ function Component() {
 ## Error
 
 ```
-  1 | function Component() {
-> 2 |   return <Foo />;
-    |           ^^^ [ReactForget] Invariant: [hoisting] Expected value for identifier to be initialized. Foo$0 (2:2)
-  3 |
-  4 |   // This is unreachable from a control-flow perspective, but it gets hoisted
-  5 |   function Foo() {}
+  4 |
+  5 |   // This is unreachable from a control-flow perspective, but it gets hoisted
+> 6 |   function Foo() {}
+    |   ^^^^^^^^^^^^^^^^^ [ReactForget] Todo: Support functions with unreachable code that may contain hoisted declarations (6:6)
+  7 | }
+  8 |
 ```
           
       

@@ -310,7 +310,24 @@ export default class HIRBuilder {
       blocks: this.#completed,
       entry: this.#entry,
     };
-    reversePostorderBlocks(ir);
+    const rpoBlocks = getReversePostorderedBlocks(ir);
+    for (const [id, block] of ir.blocks) {
+      if (
+        !rpoBlocks.has(id) &&
+        block.instructions.some(
+          (instr) => instr.value.kind === "FunctionExpression"
+        )
+      ) {
+        CompilerError.throwTodo({
+          reason: `Support functions with unreachable code that may contain hoisted declarations`,
+          loc: block.instructions[0]?.loc ?? block.terminal.loc,
+          description: null,
+          suggestions: null,
+        });
+      }
+    }
+    ir.blocks = rpoBlocks;
+
     removeUnreachableForUpdates(ir);
     removeUnreachableFallthroughs(ir);
     removeDeadDoWhileStatements(ir);
@@ -654,9 +671,21 @@ export function removeDeadDoWhileStatements(func: HIR): void {
 
 /*
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
- * before successors except in the case of back links (ie loops).
+ * before successors except in the case of back edges (ie loops).
  */
 export function reversePostorderBlocks(func: HIR): void {
+  const rpoBlocks = getReversePostorderedBlocks(func);
+  func.blocks = rpoBlocks;
+}
+
+/**
+ * Returns a mapping of BlockId => BasicBlock where the insertion order of the map
+ * has blocks in reverse-postorder, with predecessor blocks appearing before successors
+ * except in the case of back edges (ie loops). Note that not all blocks in the input
+ * may be in the output: blocks will be removed in the case of unreachable code in
+ * the input.
+ */
+function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
   const visited: Set<BlockId> = new Set();
   const postorder: Array<BlockId> = [];
   function visit(blockId: BlockId): void {
@@ -781,8 +810,7 @@ export function reversePostorderBlocks(func: HIR): void {
   for (const blockId of postorder.reverse()) {
     blocks.set(blockId, func.blocks.get(blockId)!);
   }
-
-  func.blocks = blocks;
+  return blocks;
 }
 
 export function markInstructionIds(func: HIR): void {

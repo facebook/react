@@ -1,3 +1,4 @@
+// @compilationMode(infer)
 function Component() {
   return <Foo />;
 
