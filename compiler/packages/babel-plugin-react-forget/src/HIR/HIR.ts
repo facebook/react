@@ -8,7 +8,7 @@
 import * as t from "@babel/types";
 import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
 import { assertExhaustive } from "../Utils/utils";
-import { Environment } from "./Environment";
+import { Environment, ReactFunctionType } from "./Environment";
 import { HookKind } from "./ObjectShape";
 import { Type } from "./Types";
 
@@ -240,6 +240,7 @@ export type ReactiveTryTerminal = {
 export type HIRFunction = {
   loc: SourceLocation;
   id: string | null;
+  fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
   returnType: t.FlowType | t.TSType | null;

@@ -137,7 +137,7 @@ export default function inferReferenceEffects(
         reason: new Set([ValueReason.ReactiveFunctionArgument]),
       };
 
-  if (fn.env.fnType === "Component") {
+  if (fn.fnType === "Component") {
     CompilerError.invariant(fn.params.length <= 2, {
       reason:
         "Expected React component to have not more than two parameters: one for props and for ref",
