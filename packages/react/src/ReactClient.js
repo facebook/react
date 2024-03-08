@@ -131,3 +131,17 @@ export {
   useId,
   act,
 };
+
+if (__DEV__) {
+  try {
+    // $FlowIgnore[cannot-resolve-module]
+    require('its-fine');
+    throw new Error(
+      'Module its-fine is not allowed. Please locate and uninstall the package(s) that depend on it.',
+    );
+  } catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') {
+      throw error;
+    }
+  }
+}
