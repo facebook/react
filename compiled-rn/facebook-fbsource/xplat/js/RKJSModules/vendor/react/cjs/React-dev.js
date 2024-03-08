@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-4e2fe10fa-20240308";
+    var ReactVersion = "18.3.0-canary-71c4699de-20240308";
 
     // ATTENTION
     // When adding new symbols to this file,
