@@ -535,6 +535,12 @@ if (typeof localSetImmediate === 'function') {
   const channel = new MessageChannel();
   const port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
+  // Allow the thread to exit if this is the only active handle in the event system
+  // $FlowFixMe[prop-missing]
+  if (channel.port1.unref) {
+    // $FlowFixMe[not-a-function]
+    channel.port1.unref();
+  }
   schedulePerformWorkUntilDeadline = () => {
     port.postMessage(null);
   };
