@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2577789535da46fdc5d6fda6be09ea30>>
+ * @generated SignedSource<<1c514e22a878fca97d39b6e7b2cc1c0d>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-338dddc08-20240307";
+    var ReactVersion = "18.3.0-canary-4e2fe10fa-20240308";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -635,6 +635,10 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+
+        case REACT_CACHE_TYPE: {
+          return "Cache";
+        }
       }
 
       if (typeof type === "object") {

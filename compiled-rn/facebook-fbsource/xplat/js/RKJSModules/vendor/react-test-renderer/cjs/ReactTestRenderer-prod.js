@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0b3d2b1f18482dd826567f1832971cb5>>
+ * @generated SignedSource<<0327ee67e8b4e0b45068a1c519910784>>
  */
 
 "use strict";
@@ -8070,7 +8070,7 @@ beginWork = function (current, workInProgress, renderLanes) {
         contextStackCursor$1.current
       );
       prepareToReadContext(workInProgress, renderLanes);
-      context = renderWithHooks(
+      current = renderWithHooks(
         null,
         workInProgress,
         Component,
@@ -8079,40 +8079,9 @@ beginWork = function (current, workInProgress, renderLanes) {
         renderLanes
       );
       workInProgress.flags |= 1;
-      if (
-        "object" === typeof context &&
-        null !== context &&
-        "function" === typeof context.render &&
-        void 0 === context.$$typeof
-      ) {
-        workInProgress.tag = 1;
-        workInProgress.memoizedState = null;
-        workInProgress.updateQueue = null;
-        if (isContextProvider(Component)) {
-          var hasContext = !0;
-          pushContextProvider(workInProgress);
-        } else hasContext = !1;
-        workInProgress.memoizedState =
-          null !== context.state && void 0 !== context.state
-            ? context.state
-            : null;
-        initializeUpdateQueue(workInProgress);
-        context.updater = classComponentUpdater;
-        workInProgress.stateNode = context;
-        context._reactInternals = workInProgress;
-        mountClassInstance(workInProgress, Component, current, renderLanes);
-        workInProgress = finishClassComponent(
-          null,
-          workInProgress,
-          Component,
-          !0,
-          hasContext,
-          renderLanes
-        );
-      } else
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
+      workInProgress.tag = 0;
+      reconcileChildren(null, workInProgress, current, renderLanes);
+      workInProgress = workInProgress.child;
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -8205,18 +8174,18 @@ beginWork = function (current, workInProgress, renderLanes) {
       pushHostRootContext(workInProgress);
       if (null === current)
         throw Error("Should have a current fiber. This is a bug in React.");
-      hasContext = workInProgress.pendingProps;
+      var nextProps = workInProgress.pendingProps;
       context = workInProgress.memoizedState;
       Component = context.element;
       cloneUpdateQueue(current, workInProgress);
-      processUpdateQueue(workInProgress, hasContext, null, renderLanes);
-      hasContext = workInProgress.memoizedState;
-      var nextCache = hasContext.cache;
+      processUpdateQueue(workInProgress, nextProps, null, renderLanes);
+      nextProps = workInProgress.memoizedState;
+      var nextCache = nextProps.cache;
       pushProvider(workInProgress, CacheContext, nextCache);
       nextCache !== context.cache &&
         propagateContextChange(workInProgress, CacheContext, renderLanes);
       suspendIfUpdateReadFromEntangledAsyncAction();
-      context = hasContext.element;
+      context = nextProps.element;
       context === Component
         ? (workInProgress = bailoutOnAlreadyFinishedWork(
             current,
@@ -8325,13 +8294,13 @@ beginWork = function (current, workInProgress, renderLanes) {
       a: {
         Component = workInProgress.type._context;
         context = workInProgress.pendingProps;
-        hasContext = workInProgress.memoizedProps;
+        nextProps = workInProgress.memoizedProps;
         nextCache = context.value;
         pushProvider(workInProgress, Component, nextCache);
-        if (null !== hasContext)
-          if (objectIs(hasContext.value, nextCache)) {
+        if (null !== nextProps)
+          if (objectIs(nextProps.value, nextCache)) {
             if (
-              hasContext.children === context.children &&
+              nextProps.children === context.children &&
               !didPerformWorkStackCursor.current
             ) {
               workInProgress = bailoutOnAlreadyFinishedWork(
@@ -8420,11 +8389,11 @@ beginWork = function (current, workInProgress, renderLanes) {
           ? ((context = peekCacheFromPool()),
             null === context &&
               ((context = workInProgressRoot),
-              (hasContext = createCache()),
-              (context.pooledCache = hasContext),
-              hasContext.refCount++,
-              null !== hasContext && (context.pooledCacheLanes |= renderLanes),
-              (context = hasContext)),
+              (nextProps = createCache()),
+              (context.pooledCache = nextProps),
+              nextProps.refCount++,
+              null !== nextProps && (context.pooledCacheLanes |= renderLanes),
+              (context = nextProps)),
             (workInProgress.memoizedState = {
               parent: Component,
               cache: context
@@ -8436,7 +8405,7 @@ beginWork = function (current, workInProgress, renderLanes) {
               processUpdateQueue(workInProgress, null, null, renderLanes),
               suspendIfUpdateReadFromEntangledAsyncAction()),
             (context = current.memoizedState),
-            (hasContext = workInProgress.memoizedState),
+            (nextProps = workInProgress.memoizedState),
             context.parent !== Component
               ? ((context = { parent: Component, cache: Component }),
                 (workInProgress.memoizedState = context),
@@ -8445,7 +8414,7 @@ beginWork = function (current, workInProgress, renderLanes) {
                     workInProgress.updateQueue.baseState =
                       context),
                 pushProvider(workInProgress, CacheContext, Component))
-              : ((Component = hasContext.cache),
+              : ((Component = nextProps.cache),
                 pushProvider(workInProgress, CacheContext, Component),
                 Component !== context.cache &&
                   propagateContextChange(
@@ -9173,19 +9142,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1014 = {
+var devToolsConfig$jscomp$inline_1016 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-338dddc08-20240307",
+  version: "18.3.0-canary-4e2fe10fa-20240308",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1195 = {
-  bundleType: devToolsConfig$jscomp$inline_1014.bundleType,
-  version: devToolsConfig$jscomp$inline_1014.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1014.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1014.rendererConfig,
+var internals$jscomp$inline_1194 = {
+  bundleType: devToolsConfig$jscomp$inline_1016.bundleType,
+  version: devToolsConfig$jscomp$inline_1016.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1016.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1016.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9202,26 +9171,26 @@ var internals$jscomp$inline_1195 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1014.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1016.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-338dddc08-20240307"
+  reconcilerVersion: "18.3.0-canary-4e2fe10fa-20240308"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1196 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1195 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1196.isDisabled &&
-    hook$jscomp$inline_1196.supportsFiber
+    !hook$jscomp$inline_1195.isDisabled &&
+    hook$jscomp$inline_1195.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1196.inject(
-        internals$jscomp$inline_1195
+      (rendererID = hook$jscomp$inline_1195.inject(
+        internals$jscomp$inline_1194
       )),
-        (injectedHook = hook$jscomp$inline_1196);
+        (injectedHook = hook$jscomp$inline_1195);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

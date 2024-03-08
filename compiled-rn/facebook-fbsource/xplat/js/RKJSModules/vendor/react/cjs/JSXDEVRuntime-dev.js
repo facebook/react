@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f101eab45d40b492af573667b3e25fe4>>
+ * @generated SignedSource<<0d68343aed9ab27512ef97b5ce8c038e>>
  */
 
 "use strict";
@@ -171,6 +171,10 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+
+        case REACT_CACHE_TYPE: {
+          return "Cache";
+        }
       }
 
       if (typeof type === "object") {

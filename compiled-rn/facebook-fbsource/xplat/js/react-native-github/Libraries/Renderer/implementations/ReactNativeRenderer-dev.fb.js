@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e8f2e3b836c2642986b0ba4ea4ab2451>>
+ * @generated SignedSource<<1ea7fc22c471105831f871779387cf21>>
  */
 
 "use strict";
@@ -3058,6 +3058,10 @@ to return true:wantsResponderID|                            |
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
+
+        case REACT_CACHE_TYPE: {
+          return "Cache";
+        }
       }
 
       if (typeof type === "object") {
@@ -4269,14 +4273,14 @@ to return true:wantsResponderID|                            |
     })();
 
     // This module only exists as an ESM wrapper around the external CommonJS
-    var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
+    var scheduleCallback$3 = Scheduler.unstable_scheduleCallback;
     var cancelCallback$1 = Scheduler.unstable_cancelCallback;
     var shouldYield = Scheduler.unstable_shouldYield;
     var requestPaint = Scheduler.unstable_requestPaint;
     var now$1 = Scheduler.unstable_now;
     var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
     var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
-    var NormalPriority = Scheduler.unstable_NormalPriority;
+    var NormalPriority$1 = Scheduler.unstable_NormalPriority;
     var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 
     // Helpers to patch console.logs to avoid logging during side-effect free
@@ -4477,7 +4481,7 @@ to return true:wantsResponderID|                            |
                 break;
 
               case DefaultEventPriority:
-                schedulerPriority = NormalPriority;
+                schedulerPriority = NormalPriority$1;
                 break;
 
               case IdleEventPriority:
@@ -4485,7 +4489,7 @@ to return true:wantsResponderID|                            |
                 break;
 
               default:
-                schedulerPriority = NormalPriority;
+                schedulerPriority = NormalPriority$1;
                 break;
             }
 
@@ -7200,7 +7204,7 @@ to return true:wantsResponderID|                            |
             break;
 
           case DefaultEventPriority:
-            schedulerPriorityLevel = NormalPriority;
+            schedulerPriorityLevel = NormalPriority$1;
             break;
 
           case IdleEventPriority:
@@ -7208,11 +7212,11 @@ to return true:wantsResponderID|                            |
             break;
 
           default:
-            schedulerPriorityLevel = NormalPriority;
+            schedulerPriorityLevel = NormalPriority$1;
             break;
         }
 
-        var newCallbackNode = scheduleCallback$1(
+        var newCallbackNode = scheduleCallback$2(
           schedulerPriorityLevel,
           performConcurrentWorkOnRoot.bind(null, root)
         );
@@ -7243,7 +7247,7 @@ to return true:wantsResponderID|                            |
     }
     var fakeActCallbackNode$1 = {};
 
-    function scheduleCallback$1(priorityLevel, callback) {
+    function scheduleCallback$2(priorityLevel, callback) {
       if (ReactCurrentActQueue$3.current !== null) {
         // Special case: We're inside an `act` scope (a testing utility).
         // Instead of scheduling work in the host environment, add it to a
@@ -7251,7 +7255,7 @@ to return true:wantsResponderID|                            |
         ReactCurrentActQueue$3.current.push(callback);
         return fakeActCallbackNode$1;
       } else {
-        return scheduleCallback$2(priorityLevel, callback);
+        return scheduleCallback$3(priorityLevel, callback);
       }
     }
 
@@ -7278,7 +7282,7 @@ to return true:wantsResponderID|                            |
 
       {
         // If microtasks are not supported, use Scheduler.
-        scheduleCallback$2(ImmediatePriority, cb);
+        scheduleCallback$3(ImmediatePriority, cb);
       }
     }
 
@@ -13118,6 +13122,66 @@ to return true:wantsResponderID|                            |
       return id;
     }
 
+    function mountRefresh() {
+      var hook = mountWorkInProgressHook();
+      var refresh = (hook.memoizedState = refreshCache.bind(
+        null,
+        currentlyRenderingFiber$1
+      ));
+      return refresh;
+    }
+
+    function updateRefresh() {
+      var hook = updateWorkInProgressHook();
+      return hook.memoizedState;
+    }
+
+    function refreshCache(fiber, seedKey, seedValue) {
+      // TODO: Consider warning if the refresh is at discrete priority, or if we
+      // otherwise suspect that it wasn't batched properly.
+
+      var provider = fiber.return;
+
+      while (provider !== null) {
+        switch (provider.tag) {
+          case CacheComponent:
+          case HostRoot: {
+            // Schedule an update on the cache boundary to trigger a refresh.
+            var lane = requestUpdateLane(provider);
+            var refreshUpdate = createUpdate(lane);
+            var root = enqueueUpdate(provider, refreshUpdate, lane);
+
+            if (root !== null) {
+              scheduleUpdateOnFiber(root, provider, lane);
+              entangleTransitions(root, provider, lane);
+            } // TODO: If a refresh never commits, the new cache created here must be
+            // released. A simple case is start refreshing a cache boundary, but then
+            // unmount that boundary before the refresh completes.
+
+            var seededCache = createCache();
+
+            if (seedKey !== null && seedKey !== undefined && root !== null) {
+              {
+                {
+                  error(
+                    "The seed argument is not enabled outside experimental channels."
+                  );
+                }
+              }
+            }
+
+            var payload = {
+              cache: seededCache
+            };
+            refreshUpdate.payload = payload;
+            return;
+          }
+        }
+
+        provider = provider.return;
+      } // TODO: Warn if unmounted?
+    }
+
     function dispatchReducerAction(fiber, queue, action) {
       {
         if (typeof arguments[3] === "function") {
@@ -13314,6 +13378,10 @@ to return true:wantsResponderID|                            |
     };
 
     {
+      ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
+    }
+
+    {
       ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
     }
 
@@ -13461,6 +13529,15 @@ to return true:wantsResponderID|                            |
       };
 
       {
+        HooksDispatcherOnMountInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            mountHookTypesDev();
+            return mountRefresh();
+          };
+      }
+
+      {
         HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
       }
 
@@ -13573,6 +13650,15 @@ to return true:wantsResponderID|                            |
           return mountId();
         }
       };
+
+      {
+        HooksDispatcherOnMountWithHookTypesInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            updateHookTypesDev();
+            return mountRefresh();
+          };
+      }
 
       {
         HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
@@ -13689,6 +13775,15 @@ to return true:wantsResponderID|                            |
       };
 
       {
+        HooksDispatcherOnUpdateInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            updateHookTypesDev();
+            return updateRefresh();
+          };
+      }
+
+      {
         HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
       }
 
@@ -13801,6 +13896,15 @@ to return true:wantsResponderID|                            |
           return updateId();
         }
       };
+
+      {
+        HooksDispatcherOnRerenderInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            updateHookTypesDev();
+            return updateRefresh();
+          };
+      }
 
       {
         HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
@@ -13934,6 +14038,15 @@ to return true:wantsResponderID|                            |
           return mountId();
         }
       };
+
+      {
+        InvalidNestedHooksDispatcherOnMountInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            mountHookTypesDev();
+            return mountRefresh();
+          };
+      }
 
       {
         InvalidNestedHooksDispatcherOnMountInDEV.useMemoCache = function (
@@ -14074,6 +14187,15 @@ to return true:wantsResponderID|                            |
       };
 
       {
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            updateHookTypesDev();
+            return updateRefresh();
+          };
+      }
+
+      {
         InvalidNestedHooksDispatcherOnUpdateInDEV.useMemoCache = function (
           size
         ) {
@@ -14210,6 +14332,15 @@ to return true:wantsResponderID|                            |
           return updateId();
         }
       };
+
+      {
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useCacheRefresh =
+          function useCacheRefresh() {
+            currentHookNameInDev = "useCacheRefresh";
+            updateHookTypesDev();
+            return updateRefresh();
+          };
+      }
 
       {
         InvalidNestedHooksDispatcherOnRerenderInDEV.useMemoCache = function (
@@ -16571,6 +16702,14 @@ to return true:wantsResponderID|                            |
           };
           workInProgress.memoizedState = nextState;
 
+          {
+            // push the cache pool even though we're going to bail out
+            // because otherwise there'd be a context mismatch
+            if (current !== null) {
+              pushTransition(workInProgress, null);
+            }
+          }
+
           reuseHiddenContextOnStack(workInProgress);
           pushOffscreenSuspenseHandler(workInProgress);
         } else if (!includesSomeLane(renderLanes, OffscreenLane)) {
@@ -16600,6 +16739,16 @@ to return true:wantsResponderID|                            |
           };
           workInProgress.memoizedState = _nextState;
 
+          if (current !== null) {
+            // If the render that spawned this one accessed the cache pool, resume
+            // using the same cache. Unless the parent changed, since that means
+            // there was a refresh.
+            var prevCachePool = prevState !== null ? prevState.cachePool : null; // TODO: Consider if and how Offscreen pre-rendering should
+            // be attributed to the transition that spawned it
+
+            pushTransition(workInProgress, prevCachePool);
+          } // Push the lanes that were skipped when we bailed out.
+
           if (prevState !== null) {
             pushHiddenContext(workInProgress, prevState);
           } else {
@@ -16611,11 +16760,34 @@ to return true:wantsResponderID|                            |
       } else {
         // Rendering a visible tree.
         if (prevState !== null) {
+          // We're going from hidden -> visible.
+          var _prevCachePool = null;
+
+          {
+            // If the render that spawned this one accessed the cache pool, resume
+            // using the same cache. Unless the parent changed, since that means
+            // there was a refresh.
+            _prevCachePool = prevState.cachePool;
+          }
+
+          pushTransition(workInProgress, _prevCachePool); // Push the lanes that were skipped when we bailed out.
+
           pushHiddenContext(workInProgress, prevState);
           reuseSuspenseHandlerOnStack(workInProgress); // Since we're not hidden anymore, reset the state
 
           workInProgress.memoizedState = null;
         } else {
+          // We weren't previously hidden, and we still aren't, so there's nothing
+          // special to do. Need to push to the stack regardless, though, to avoid
+          // a push/pop misalignment.
+          {
+            // If the render that spawned this one accessed the cache pool, resume
+            // using the same cache. Unless the parent changed, since that means
+            // there was a refresh.
+            if (current !== null) {
+              pushTransition(workInProgress, null);
+            }
+          } // We're about to bail out, but we need to push this to the stack anyway
           // to avoid a push/pop misalignment.
 
           reuseHiddenContextOnStack(workInProgress);
@@ -16636,9 +16808,17 @@ to return true:wantsResponderID|                            |
       var nextState = {
         baseLanes: nextBaseLanes,
         // Save the cache pool so we can resume later.
-        cachePool: null
+        cachePool: getOffscreenDeferredCache()
       };
       workInProgress.memoizedState = nextState;
+
+      {
+        // push the cache pool even though we're going to bail out
+        // because otherwise there'd be a context mismatch
+        if (current !== null) {
+          pushTransition(workInProgress, null);
+        }
+      } // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
 
       reuseHiddenContextOnStack(workInProgress);
@@ -16646,6 +16826,66 @@ to return true:wantsResponderID|                            |
 
       return null;
     } // Note: These happen to have identical begin phases, for now. We shouldn't hold
+
+    function updateCacheComponent(current, workInProgress, renderLanes) {
+      prepareToReadContext(workInProgress, renderLanes);
+      var parentCache = readContext(CacheContext);
+
+      if (current === null) {
+        // Initial mount. Request a fresh cache from the pool.
+        var freshCache = requestCacheFromPool(renderLanes);
+        var initialState = {
+          parent: parentCache,
+          cache: freshCache
+        };
+        workInProgress.memoizedState = initialState;
+        initializeUpdateQueue(workInProgress);
+        pushCacheProvider(workInProgress, freshCache);
+      } else {
+        // Check for updates
+        if (includesSomeLane(current.lanes, renderLanes)) {
+          cloneUpdateQueue(current, workInProgress);
+          processUpdateQueue(workInProgress, null, null, renderLanes);
+          suspendIfUpdateReadFromEntangledAsyncAction();
+        }
+
+        var prevState = current.memoizedState;
+        var nextState = workInProgress.memoizedState; // Compare the new parent cache to the previous to see detect there was
+        // a refresh.
+
+        if (prevState.parent !== parentCache) {
+          // Refresh in parent. Update the parent.
+          var derivedState = {
+            parent: parentCache,
+            cache: parentCache
+          }; // Copied from getDerivedStateFromProps implementation. Once the update
+          // queue is empty, persist the derived state onto the base state.
+
+          workInProgress.memoizedState = derivedState;
+
+          if (workInProgress.lanes === NoLanes) {
+            var updateQueue = workInProgress.updateQueue;
+            workInProgress.memoizedState = updateQueue.baseState = derivedState;
+          }
+
+          pushCacheProvider(workInProgress, parentCache); // No need to propagate a context change because the refreshed parent
+          // already did.
+        } else {
+          // The parent didn't refresh. Now check if this cache did.
+          var nextCache = nextState.cache;
+          pushCacheProvider(workInProgress, nextCache);
+
+          if (nextCache !== prevState.cache) {
+            // This cache refreshed. Propagate a context change.
+            propagateContextChange(workInProgress, CacheContext, renderLanes);
+          }
+        }
+      }
+
+      var nextChildren = workInProgress.pendingProps.children;
+      reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+      return workInProgress.child;
+    } // This should only be called if the name changes
 
     function updateFragment(current, workInProgress, renderLanes) {
       var nextChildren = workInProgress.pendingProps;
@@ -17041,6 +17281,16 @@ to return true:wantsResponderID|                            |
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, nextProps, null, renderLanes);
       var nextState = workInProgress.memoizedState;
+
+      {
+        var nextCache = nextState.cache;
+        pushCacheProvider(workInProgress, nextCache);
+
+        if (nextCache !== prevState.cache) {
+          // The root cache refreshed.
+          propagateContextChange(workInProgress, CacheContext, renderLanes);
+        }
+      } // This would ideally go inside processUpdateQueue, but because it suspends,
       // it needs to happen after the `pushCacheProvider` call above to avoid a
       // context stack mismatch. A bit unfortunate.
 
@@ -17440,6 +17690,30 @@ to return true:wantsResponderID|                            |
 
     function updateSuspenseOffscreenState(prevOffscreenState, renderLanes) {
       var cachePool = null;
+
+      {
+        var prevCachePool = prevOffscreenState.cachePool;
+
+        if (prevCachePool !== null) {
+          var parentCache = CacheContext._currentValue;
+
+          if (prevCachePool.parent !== parentCache) {
+            // Detected a refresh in the parent. This overrides any previously
+            // suspended cache.
+            cachePool = {
+              parent: parentCache,
+              pool: parentCache
+            };
+          } else {
+            // We can reuse the cache from last time. The only thing that would have
+            // overridden it is a parent refresh, which we checked for above.
+            cachePool = prevCachePool;
+          }
+        } else {
+          // If there's no previous cache pool, grab the current one.
+          cachePool = getSuspendedCache();
+        }
+      }
 
       return {
         baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
@@ -18850,6 +19124,11 @@ to return true:wantsResponderID|                            |
       switch (workInProgress.tag) {
         case HostRoot:
           pushHostRootContext(workInProgress);
+
+          {
+            var cache = current.memoizedState.cache;
+            pushCacheProvider(workInProgress, cache);
+          }
           break;
 
         case HostSingleton:
@@ -19033,6 +19312,15 @@ to return true:wantsResponderID|                            |
           // but I won't :)
           workInProgress.lanes = NoLanes;
           return updateOffscreenComponent(current, workInProgress, renderLanes);
+        }
+
+        case CacheComponent: {
+          {
+            var _cache = current.memoizedState.cache;
+            pushCacheProvider(workInProgress, _cache);
+          }
+
+          break;
         }
       }
 
@@ -19282,6 +19570,16 @@ to return true:wantsResponderID|                            |
 
         case OffscreenComponent: {
           return updateOffscreenComponent(current, workInProgress, renderLanes);
+        }
+
+        case LegacyHiddenComponent: {
+          break;
+        }
+
+        case CacheComponent: {
+          {
+            return updateCacheComponent(current, workInProgress, renderLanes);
+          }
         }
       }
 
@@ -19640,6 +19938,96 @@ to return true:wantsResponderID|                            |
       return value;
     }
 
+    // replace it with a lightweight shim that only has the features we use.
+
+    var AbortControllerLocal =
+      typeof AbortController !== "undefined"
+        ? AbortController // $FlowFixMe[missing-this-annot]
+        : // $FlowFixMe[prop-missing]
+          function AbortControllerShim() {
+            var listeners = [];
+            var signal = (this.signal = {
+              aborted: false,
+              addEventListener: function (type, listener) {
+                listeners.push(listener);
+              }
+            });
+
+            this.abort = function () {
+              signal.aborted = true;
+              listeners.forEach(function (listener) {
+                return listener();
+              });
+            };
+          }; // Intentionally not named imports because Rollup would
+    // use dynamic dispatch for CommonJS interop named imports.
+
+    var scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
+      NormalPriority = Scheduler.unstable_NormalPriority;
+    var CacheContext = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      // We don't use Consumer/Provider for Cache components. So we'll cheat.
+      Consumer: null,
+      Provider: null,
+      // We'll initialize these at the root.
+      _currentValue: null,
+      _currentValue2: null,
+      _threadCount: 0
+    };
+
+    {
+      CacheContext._currentRenderer = null;
+      CacheContext._currentRenderer2 = null;
+    } // Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
+    // for retaining the cache once it is in use (retainCache), and releasing the cache
+    // once it is no longer needed (releaseCache).
+
+    function createCache() {
+      var cache = {
+        controller: new AbortControllerLocal(),
+        data: new Map(),
+        refCount: 0
+      };
+      return cache;
+    }
+    function retainCache(cache) {
+      {
+        if (cache.controller.signal.aborted) {
+          warn(
+            "A cache instance was retained after it was already freed. " +
+              "This likely indicates a bug in React."
+          );
+        }
+      }
+
+      cache.refCount++;
+    } // Cleanup a cache instance, potentially freeing it if there are no more references
+
+    function releaseCache(cache) {
+      cache.refCount--;
+
+      {
+        if (cache.refCount < 0) {
+          warn(
+            "A cache instance was released after it was already freed. " +
+              "This likely indicates a bug in React."
+          );
+        }
+      }
+
+      if (cache.refCount === 0) {
+        scheduleCallback$1(NormalPriority, function () {
+          cache.controller.abort();
+        });
+      }
+    }
+    function pushCacheProvider(workInProgress, cache) {
+      pushProvider(workInProgress, CacheContext, cache);
+    }
+    function popCacheProvider(workInProgress, cache) {
+      popProvider(CacheContext, workInProgress);
+    }
+
     var ReactCurrentBatchConfig$1 =
       ReactSharedInternals.ReactCurrentBatchConfig;
     function requestCurrentTransition() {
@@ -19662,10 +20050,105 @@ to return true:wantsResponderID|                            |
         return callback(transition, returnValue);
       });
     } // When retrying a Suspense/Offscreen boundary, we restore the cache that was
-    function getSuspendedCache() {
+    // used during the previous render by placing it here, on the stack.
+
+    var resumedCache = createCursor(null); // During the render/synchronous commit phase, we don't actually process the
+
+    function peekCacheFromPool() {
+      // If we're rendering inside a Suspense boundary that is currently hidden,
+      // we should use the same cache that we used during the previous render, if
+      // one exists.
+
+      var cacheResumedFromPreviousRender = resumedCache.current;
+
+      if (cacheResumedFromPreviousRender !== null) {
+        return cacheResumedFromPreviousRender;
+      } // Otherwise, check the root's cache pool.
+
+      var root = getWorkInProgressRoot();
+      var cacheFromRootCachePool = root.pooledCache;
+      return cacheFromRootCachePool;
+    }
+
+    function requestCacheFromPool(renderLanes) {
+      // Similar to previous function, except if there's not already a cache in the
+      // pool, we allocate a new one.
+      var cacheFromPool = peekCacheFromPool();
+
+      if (cacheFromPool !== null) {
+        return cacheFromPool;
+      } // Create a fresh cache and add it to the root cache pool. A cache can have
+      // multiple owners:
+      // - A cache pool that lives on the FiberRoot. This is where all fresh caches
+      //   are originally created (TODO: except during refreshes, until we implement
+      //   this correctly). The root takes ownership immediately when the cache is
+      //   created. Conceptually, root.pooledCache is an Option<Arc<Cache>> (owned),
+      //   and the return value of this function is a &Arc<Cache> (borrowed).
+      // - One of several fiber types: host root, cache boundary, suspense
+      //   component. These retain and release in the commit phase.
+
+      var root = getWorkInProgressRoot();
+      var freshCache = createCache();
+      root.pooledCache = freshCache;
+      retainCache(freshCache);
+
+      if (freshCache !== null) {
+        root.pooledCacheLanes |= renderLanes;
+      }
+
+      return freshCache;
+    }
+    function pushTransition(
+      offscreenWorkInProgress,
+      prevCachePool,
+      newTransitions
+    ) {
       {
+        if (prevCachePool === null) {
+          push(resumedCache, resumedCache.current, offscreenWorkInProgress);
+        } else {
+          push(resumedCache, prevCachePool.pool, offscreenWorkInProgress);
+        }
+      }
+    }
+    function popTransition(workInProgress, current) {
+      if (current !== null) {
+        {
+          pop(resumedCache, workInProgress);
+        }
+      }
+    }
+    function getSuspendedCache() {
+      // cache that would have been used to render fresh data during this render,
+      // if there was any, so that we can resume rendering with the same cache when
+      // we receive more data.
+
+      var cacheFromPool = peekCacheFromPool();
+
+      if (cacheFromPool === null) {
         return null;
-      } // This function is called when a Suspense boundary suspends. It returns the
+      }
+
+      return {
+        // We must also save the parent, so that when we resume we can detect
+        // a refresh.
+        parent: CacheContext._currentValue,
+        pool: cacheFromPool
+      };
+    }
+    function getOffscreenDeferredCache() {
+      var cacheFromPool = peekCacheFromPool();
+
+      if (cacheFromPool === null) {
+        return null;
+      }
+
+      return {
+        // We must also store the parent, so that when we resume we can detect
+        // a refresh.
+        parent: CacheContext._currentValue,
+        pool: cacheFromPool
+      };
     }
 
     /**
@@ -20095,6 +20578,23 @@ to return true:wantsResponderID|                            |
 
         case HostRoot: {
           var fiberRoot = workInProgress.stateNode;
+
+          {
+            var previousCache = null;
+
+            if (current !== null) {
+              previousCache = current.memoizedState.cache;
+            }
+
+            var cache = workInProgress.memoizedState.cache;
+
+            if (cache !== previousCache) {
+              // Run passive effects to retain/release the cache.
+              workInProgress.flags |= Passive$1;
+            }
+
+            popCacheProvider(workInProgress);
+          }
           popHostContainer(workInProgress);
           popTopLevelContextObject(workInProgress);
 
@@ -20299,6 +20799,34 @@ to return true:wantsResponderID|                            |
           var nextDidTimeout = nextState !== null;
           var prevDidTimeout =
             current !== null && current.memoizedState !== null;
+
+          if (nextDidTimeout) {
+            var offscreenFiber = workInProgress.child;
+            var _previousCache = null;
+
+            if (
+              offscreenFiber.alternate !== null &&
+              offscreenFiber.alternate.memoizedState !== null &&
+              offscreenFiber.alternate.memoizedState.cachePool !== null
+            ) {
+              _previousCache =
+                offscreenFiber.alternate.memoizedState.cachePool.pool;
+            }
+
+            var _cache = null;
+
+            if (
+              offscreenFiber.memoizedState !== null &&
+              offscreenFiber.memoizedState.cachePool !== null
+            ) {
+              _cache = offscreenFiber.memoizedState.cachePool.pool;
+            }
+
+            if (_cache !== _previousCache) {
+              // Run passive effects to retain/release the cache.
+              offscreenFiber.flags |= Passive$1;
+            }
+          } // If the suspended state of the boundary changes, we need to schedule
           // a passive effect, which is when we process the transitions
 
           if (nextDidTimeout !== prevDidTimeout) {
@@ -20637,10 +21165,56 @@ to return true:wantsResponderID|                            |
             var _retryQueue3 = offscreenQueue.retryQueue;
             scheduleRetryEffect(workInProgress, _retryQueue3);
           }
+
+          {
+            var _previousCache2 = null;
+
+            if (
+              current !== null &&
+              current.memoizedState !== null &&
+              current.memoizedState.cachePool !== null
+            ) {
+              _previousCache2 = current.memoizedState.cachePool.pool;
+            }
+
+            var _cache2 = null;
+
+            if (
+              workInProgress.memoizedState !== null &&
+              workInProgress.memoizedState.cachePool !== null
+            ) {
+              _cache2 = workInProgress.memoizedState.cachePool.pool;
+            }
+
+            if (_cache2 !== _previousCache2) {
+              // Run passive effects to retain/release the cache.
+              workInProgress.flags |= Passive$1;
+            }
+          }
+
+          popTransition(workInProgress, current);
           return null;
         }
 
         case CacheComponent: {
+          {
+            var _previousCache3 = null;
+
+            if (current !== null) {
+              _previousCache3 = current.memoizedState.cache;
+            }
+
+            var _cache3 = workInProgress.memoizedState.cache;
+
+            if (_cache3 !== _previousCache3) {
+              // Run passive effects to retain/release the cache.
+              workInProgress.flags |= Passive$1;
+            }
+
+            popCacheProvider(workInProgress);
+            bubbleProperties(workInProgress);
+          }
+
           return null;
         }
 
@@ -20682,6 +21256,9 @@ to return true:wantsResponderID|                            |
         }
 
         case HostRoot: {
+          {
+            popCacheProvider(workInProgress);
+          }
           popHostContainer(workInProgress);
           popTopLevelContextObject(workInProgress);
           var _flags = workInProgress.flags;
@@ -20760,6 +21337,7 @@ to return true:wantsResponderID|                            |
         case LegacyHiddenComponent: {
           popSuspenseHandler(workInProgress);
           popHiddenContext(workInProgress);
+          popTransition(workInProgress, current);
           var _flags3 = workInProgress.flags;
 
           if (_flags3 & ShouldCapture) {
@@ -20776,6 +21354,10 @@ to return true:wantsResponderID|                            |
         }
 
         case CacheComponent:
+          {
+            popCacheProvider(workInProgress);
+          }
+
           return null;
 
         case TracingMarkerComponent:
@@ -20799,6 +21381,9 @@ to return true:wantsResponderID|                            |
         }
 
         case HostRoot: {
+          {
+            popCacheProvider(interruptedWork);
+          }
           popHostContainer(interruptedWork);
           popTopLevelContextObject(interruptedWork);
           break;
@@ -20837,6 +21422,14 @@ to return true:wantsResponderID|                            |
         case LegacyHiddenComponent:
           popSuspenseHandler(interruptedWork);
           popHiddenContext(interruptedWork);
+          popTransition(interruptedWork, current);
+          break;
+
+        case CacheComponent:
+          {
+            popCacheProvider(interruptedWork);
+          }
+
           break;
       }
     }
@@ -23347,6 +23940,70 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    function commitOffscreenPassiveMountEffects(
+      current,
+      finishedWork,
+      instance
+    ) {
+      {
+        var previousCache = null;
+
+        if (
+          current !== null &&
+          current.memoizedState !== null &&
+          current.memoizedState.cachePool !== null
+        ) {
+          previousCache = current.memoizedState.cachePool.pool;
+        }
+
+        var nextCache = null;
+
+        if (
+          finishedWork.memoizedState !== null &&
+          finishedWork.memoizedState.cachePool !== null
+        ) {
+          nextCache = finishedWork.memoizedState.cachePool.pool;
+        } // Retain/release the cache used for pending (suspended) nodes.
+        // Note that this is only reached in the non-suspended/visible case:
+        // when the content is suspended/hidden, the retain/release occurs
+        // via the parent Suspense component (see case above).
+
+        if (nextCache !== previousCache) {
+          if (nextCache != null) {
+            retainCache(nextCache);
+          }
+
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+    }
+
+    function commitCachePassiveMountEffect(current, finishedWork) {
+      {
+        var previousCache = null;
+
+        if (finishedWork.alternate !== null) {
+          previousCache = finishedWork.alternate.memoizedState.cache;
+        }
+
+        var nextCache = finishedWork.memoizedState.cache; // Retain/release the cache. In theory the cache component
+        // could be "borrowing" a cache instance owned by some parent,
+        // in which case we could avoid retaining/releasing. But it
+        // is non-trivial to determine when that is the case, so we
+        // always retain/release.
+
+        if (nextCache !== previousCache) {
+          retainCache(nextCache);
+
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+    }
+
     function commitPassiveMountEffects(
       root,
       finishedWork,
@@ -23354,7 +24011,12 @@ to return true:wantsResponderID|                            |
       committedTransitions
     ) {
       setCurrentFiber(finishedWork);
-      commitPassiveMountOnFiber(root, finishedWork);
+      commitPassiveMountOnFiber(
+        root,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
       resetCurrentFiber();
     }
 
@@ -23371,7 +24033,12 @@ to return true:wantsResponderID|                            |
 
         while (child !== null) {
           setCurrentFiber(child);
-          commitPassiveMountOnFiber(root, child);
+          commitPassiveMountOnFiber(
+            root,
+            child,
+            committedLanes,
+            committedTransitions
+          );
           child = child.sibling;
         }
       }
@@ -23394,7 +24061,12 @@ to return true:wantsResponderID|                            |
         case FunctionComponent:
         case ForwardRef:
         case SimpleMemoComponent: {
-          recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
 
           if (flags & Passive$1) {
             commitHookPassiveMountEffects(finishedWork, Passive | HasEffect);
@@ -23404,7 +24076,37 @@ to return true:wantsResponderID|                            |
         }
 
         case HostRoot: {
-          recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+
+          if (flags & Passive$1) {
+            {
+              var previousCache = null;
+
+              if (finishedWork.alternate !== null) {
+                previousCache = finishedWork.alternate.memoizedState.cache;
+              }
+
+              var nextCache = finishedWork.memoizedState.cache; // Retain/release the root cache.
+              // Note that on initial mount, previousCache and nextCache will be the same
+              // and this retain won't occur. To counter this, we instead retain the HostRoot's
+              // initial cache when creating the root itself (see createFiberRoot() in
+              // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+              // here, such that previous/next caches are retained correctly.
+
+              if (nextCache !== previousCache) {
+                retainCache(nextCache);
+
+                if (previousCache != null) {
+                  releaseCache(previousCache);
+                }
+              }
+            }
+          }
 
           break;
         }
@@ -23424,16 +24126,31 @@ to return true:wantsResponderID|                            |
               // The effects are currently connected. Update them.
               recursivelyTraversePassiveMountEffects(
                 finishedRoot,
-                finishedWork
+                finishedWork,
+                committedLanes,
+                committedTransitions
               );
             } else {
-              if (finishedWork.mode & ConcurrentMode);
-              else {
+              if (finishedWork.mode & ConcurrentMode) {
+                // The effects are currently disconnected. Since the tree is hidden,
+                // don't connect them. This also applies to the initial render.
+                {
+                  // "Atomic" effects are ones that need to fire on every commit,
+                  // even during pre-rendering. An example is updating the reference
+                  // count on cache instances.
+                  recursivelyTraverseAtomicPassiveEffects(
+                    finishedRoot,
+                    finishedWork
+                  );
+                }
+              } else {
                 // Legacy Mode: Fire the effects even if the tree is hidden.
                 _instance3._visibility |= OffscreenPassiveEffectsConnected;
                 recursivelyTraversePassiveMountEffects(
                   finishedRoot,
-                  finishedWork
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions
                 );
               }
             }
@@ -23443,25 +24160,48 @@ to return true:wantsResponderID|                            |
               // The effects are currently connected. Update them.
               recursivelyTraversePassiveMountEffects(
                 finishedRoot,
-                finishedWork
+                finishedWork,
+                committedLanes,
+                committedTransitions
               );
             } else {
               // The effects are currently disconnected. Reconnect them, while also
               // firing effects inside newly mounted trees. This also applies to
               // the initial render.
               _instance3._visibility |= OffscreenPassiveEffectsConnected;
+              var includeWorkInProgressEffects =
+                (finishedWork.subtreeFlags & PassiveMask) !== NoFlags$1;
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
-                finishedWork
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+                includeWorkInProgressEffects
               );
             }
+          }
+
+          if (flags & Passive$1) {
+            var _current = finishedWork.alternate;
+            commitOffscreenPassiveMountEffects(_current, finishedWork);
           }
 
           break;
         }
 
         case CacheComponent: {
-          recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+
+          if (flags & Passive$1) {
+            // TODO: Pass `current` as argument to this function
+            var _current2 = finishedWork.alternate;
+            commitCachePassiveMountEffect(_current2, finishedWork);
+          }
 
           break;
         }
@@ -23469,7 +24209,12 @@ to return true:wantsResponderID|                            |
         case TracingMarkerComponent:
 
         default: {
-          recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
           break;
         }
       }
@@ -23482,11 +24227,24 @@ to return true:wantsResponderID|                            |
       committedTransitions,
       includeWorkInProgressEffects
     ) {
+      // This function visits both newly finished work and nodes that were re-used
+      // from a previously committed tree. We cannot check non-static flags if the
+      // node was reused.
+      var childShouldIncludeWorkInProgressEffects =
+        includeWorkInProgressEffects &&
+        (parentFiber.subtreeFlags & PassiveMask) !== NoFlags$1; // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+
       var prevDebugFiber = getCurrentFiber();
       var child = parentFiber.child;
 
       while (child !== null) {
-        reconnectPassiveEffects(finishedRoot, child);
+        reconnectPassiveEffects(
+          finishedRoot,
+          child,
+          committedLanes,
+          committedTransitions,
+          childShouldIncludeWorkInProgressEffects
+        );
         child = child.sibling;
       }
 
@@ -23502,13 +24260,18 @@ to return true:wantsResponderID|                            |
       // node was reused.
       includeWorkInProgressEffects
     ) {
+      var flags = finishedWork.flags;
+
       switch (finishedWork.tag) {
         case FunctionComponent:
         case ForwardRef:
         case SimpleMemoComponent: {
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
-            finishedWork
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+            includeWorkInProgressEffects
           ); // TODO: Check for PassiveStatic flag
 
           commitHookPassiveMountEffects(finishedWork, Passive);
@@ -23535,16 +24298,33 @@ to return true:wantsResponderID|                            |
               // The effects are currently connected. Update them.
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
-                finishedWork
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+                includeWorkInProgressEffects
               );
             } else {
-              if (finishedWork.mode & ConcurrentMode);
-              else {
+              if (finishedWork.mode & ConcurrentMode) {
+                // The effects are currently disconnected. Since the tree is hidden,
+                // don't connect them. This also applies to the initial render.
+                {
+                  // "Atomic" effects are ones that need to fire on every commit,
+                  // even during pre-rendering. An example is updating the reference
+                  // count on cache instances.
+                  recursivelyTraverseAtomicPassiveEffects(
+                    finishedRoot,
+                    finishedWork
+                  );
+                }
+              } else {
                 // Legacy Mode: Fire the effects even if the tree is hidden.
                 _instance4._visibility |= OffscreenPassiveEffectsConnected;
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
-                  finishedWork
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions,
+                  includeWorkInProgressEffects
                 );
               }
             }
@@ -23558,8 +24338,17 @@ to return true:wantsResponderID|                            |
             _instance4._visibility |= OffscreenPassiveEffectsConnected;
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
-              finishedWork
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              includeWorkInProgressEffects
             );
+          }
+
+          if (includeWorkInProgressEffects && flags & Passive$1) {
+            // TODO: Pass `current` as argument to this function
+            var _current3 = finishedWork.alternate;
+            commitOffscreenPassiveMountEffects(_current3, finishedWork);
           }
 
           break;
@@ -23568,8 +24357,17 @@ to return true:wantsResponderID|                            |
         case CacheComponent: {
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
-            finishedWork
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+            includeWorkInProgressEffects
           );
+
+          if (includeWorkInProgressEffects && flags & Passive$1) {
+            // TODO: Pass `current` as argument to this function
+            var _current4 = finishedWork.alternate;
+            commitCachePassiveMountEffect(_current4, finishedWork);
+          }
 
           break;
         }
@@ -23579,8 +24377,78 @@ to return true:wantsResponderID|                            |
         default: {
           recursivelyTraverseReconnectPassiveEffects(
             finishedRoot,
-            finishedWork
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+            includeWorkInProgressEffects
           );
+          break;
+        }
+      }
+    }
+
+    function recursivelyTraverseAtomicPassiveEffects(
+      finishedRoot,
+      parentFiber,
+      committedLanes,
+      committedTransitions
+    ) {
+      // "Atomic" effects are ones that need to fire on every commit, even during
+      // pre-rendering. We call this function when traversing a hidden tree whose
+      // regular effects are currently disconnected.
+      var prevDebugFiber = getCurrentFiber(); // TODO: Add special flag for atomic effects
+
+      if (parentFiber.subtreeFlags & PassiveMask) {
+        var child = parentFiber.child;
+
+        while (child !== null) {
+          setCurrentFiber(child);
+          commitAtomicPassiveEffects(finishedRoot, child);
+          child = child.sibling;
+        }
+      }
+
+      setCurrentFiber(prevDebugFiber);
+    }
+
+    function commitAtomicPassiveEffects(
+      finishedRoot,
+      finishedWork,
+      committedLanes,
+      committedTransitions
+    ) {
+      // "Atomic" effects are ones that need to fire on every commit, even during
+      // pre-rendering. We call this function when traversing a hidden tree whose
+      // regular effects are currently disconnected.
+      var flags = finishedWork.flags;
+
+      switch (finishedWork.tag) {
+        case OffscreenComponent: {
+          recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+
+          if (flags & Passive$1) {
+            // TODO: Pass `current` as argument to this function
+            var current = finishedWork.alternate;
+            commitOffscreenPassiveMountEffects(current, finishedWork);
+          }
+
+          break;
+        }
+
+        case CacheComponent: {
+          recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+
+          if (flags & Passive$1) {
+            // TODO: Pass `current` as argument to this function
+            var _current5 = finishedWork.alternate;
+            commitCachePassiveMountEffect(_current5, finishedWork);
+          }
+
+          break;
+        }
+
+        default: {
+          recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
           break;
         }
       }
@@ -23951,6 +24819,51 @@ to return true:wantsResponderID|                            |
           );
           break;
         }
+        // TODO: run passive unmount effects when unmounting a root.
+        // Because passive unmount effects are not currently run,
+        // the cache instance owned by the root will never be freed.
+        // When effects are run, the cache should be freed here:
+        // case HostRoot: {
+        //   if (enableCache) {
+        //     const cache = current.memoizedState.cache;
+        //     releaseCache(cache);
+        //   }
+        //   break;
+        // }
+
+        case LegacyHiddenComponent:
+        case OffscreenComponent: {
+          {
+            if (
+              current.memoizedState !== null &&
+              current.memoizedState.cachePool !== null
+            ) {
+              var cache = current.memoizedState.cachePool.pool; // Retain/release the cache used for pending (suspended) nodes.
+              // Note that this is only reached in the non-suspended/visible case:
+              // when the content is suspended/hidden, the retain/release occurs
+              // via the parent Suspense component (see case above).
+
+              if (cache != null) {
+                retainCache(cache);
+              }
+            }
+          }
+
+          break;
+        }
+
+        case SuspenseComponent: {
+          break;
+        }
+
+        case CacheComponent: {
+          {
+            var _cache = current.memoizedState.cache;
+            releaseCache(_cache);
+          }
+
+          break;
+        }
       }
     }
 
@@ -24064,6 +24977,28 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    function getCacheSignal() {
+      var cache = readContext(CacheContext);
+      return cache.controller.signal;
+    }
+
+    function getCacheForType(resourceType) {
+      var cache = readContext(CacheContext);
+      var cacheForType = cache.data.get(resourceType);
+
+      if (cacheForType === undefined) {
+        cacheForType = resourceType();
+        cache.data.set(resourceType, cacheForType);
+      }
+
+      return cacheForType;
+    }
+
+    var DefaultCacheDispatcher = {
+      getCacheSignal: getCacheSignal,
+      getCacheForType: getCacheForType
+    };
+
     if (typeof Symbol === "function" && Symbol.for) {
       var symbolFor = Symbol.for;
       symbolFor("selector.component");
@@ -24113,6 +25048,7 @@ to return true:wantsResponderID|                            |
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
+      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
       ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
       ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
       ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
@@ -24223,6 +25159,8 @@ to return true:wantsResponderID|                            |
     var rootWithPendingPassiveEffects = null;
     var pendingPassiveEffectsLanes = NoLanes;
     var pendingPassiveProfilerEffects = [];
+    var pendingPassiveEffectsRemainingLanes = NoLanes;
+    var pendingPassiveTransitions = null; // Use these to prevent an infinite loop of nested updates
 
     var NESTED_UPDATE_LIMIT = 50;
     var nestedUpdateCount = 0;
@@ -25358,6 +26296,20 @@ to return true:wantsResponderID|                            |
       ReactCurrentDispatcher.current = prevDispatcher;
     }
 
+    function pushCacheDispatcher() {
+      {
+        var prevCacheDispatcher = ReactCurrentCache.current;
+        ReactCurrentCache.current = DefaultCacheDispatcher;
+        return prevCacheDispatcher;
+      }
+    }
+
+    function popCacheDispatcher(prevCacheDispatcher) {
+      {
+        ReactCurrentCache.current = prevCacheDispatcher;
+      }
+    }
+
     function markCommitTimeOfFallback() {
       globalMostRecentFallbackTime = now$1();
     }
@@ -25422,6 +26374,7 @@ to return true:wantsResponderID|                            |
       var prevExecutionContext = executionContext;
       executionContext |= RenderContext;
       var prevDispatcher = pushDispatcher();
+      var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
       // and prepare a fresh one. Otherwise we'll continue where we left off.
 
       if (
@@ -25517,6 +26470,7 @@ to return true:wantsResponderID|                            |
       resetContextDependencies();
       executionContext = prevExecutionContext;
       popDispatcher(prevDispatcher);
+      popCacheDispatcher(prevCacheDispatcher);
 
       if (workInProgress !== null) {
         // This is a sync render, so we should have finished the whole tree.
@@ -25550,6 +26504,7 @@ to return true:wantsResponderID|                            |
       var prevExecutionContext = executionContext;
       executionContext |= RenderContext;
       var prevDispatcher = pushDispatcher();
+      var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
       // and prepare a fresh one. Otherwise we'll continue where we left off.
 
       if (
@@ -25778,6 +26733,7 @@ to return true:wantsResponderID|                            |
 
       resetContextDependencies();
       popDispatcher(prevDispatcher);
+      popCacheDispatcher(prevCacheDispatcher);
       executionContext = prevExecutionContext;
 
       if (workInProgress !== null) {
@@ -26288,7 +27244,15 @@ to return true:wantsResponderID|                            |
       ) {
         if (!rootDoesHavePassiveEffects) {
           rootDoesHavePassiveEffects = true;
-          scheduleCallback(NormalPriority, function () {
+          pendingPassiveEffectsRemainingLanes = remainingLanes; // workInProgressTransitions might be overwritten, so we want
+          // to store it in pendingPassiveTransitions until they get processed
+          // We need to pass this through as an argument to commitRoot
+          // because workInProgressTransitions might have changed between
+          // the previous render and commit if we throttle the commit
+          // with setTimeout
+
+          pendingPassiveTransitions = transitions;
+          scheduleCallback(NormalPriority$1, function () {
             flushPassiveEffects(); // This render triggered passive effects: release the root cache pool
             // *after* passive effects fire to avoid freeing a cache pool that may
             // be referenced by a node in the tree (HostRoot, Cache boundary etc)
@@ -26377,6 +27341,10 @@ to return true:wantsResponderID|                            |
         rootWithPendingPassiveEffects = root;
         pendingPassiveEffectsLanes = lanes;
       } else {
+        // There were no passive effects, so we can immediately release the cache
+        // pool for this render.
+        releaseRootPooledCache(root, remainingLanes);
+
         {
           nestedPassiveUpdateCount = 0;
           rootWithPassiveNestedUpdates = null;
@@ -26514,6 +27482,23 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    function releaseRootPooledCache(root, remainingLanes) {
+      {
+        var pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+
+        if (pooledCacheLanes === NoLanes) {
+          // None of the remaining work relies on the cache pool. Clear it so
+          // subsequent requests get a new cache
+          var pooledCache = root.pooledCache;
+
+          if (pooledCache != null) {
+            root.pooledCache = null;
+            releaseCache(pooledCache);
+          }
+        }
+      }
+    }
+
     function flushPassiveEffects() {
       // Returns whether passive effects were flushed.
       // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
@@ -26522,6 +27507,14 @@ to return true:wantsResponderID|                            |
       // `Scheduler.runWithPriority`, which accepts a function. But now we track the
       // priority within React itself, so we can mutate the variable directly.
       if (rootWithPendingPassiveEffects !== null) {
+        // Cache the root since rootWithPendingPassiveEffects is cleared in
+        // flushPassiveEffectsImpl
+        var root = rootWithPendingPassiveEffects; // Cache and clear the remaining lanes flag; it must be reset since this
+        // method can be called from various places, not always from commitRoot
+        // where the remaining lanes are known
+
+        var remainingLanes = pendingPassiveEffectsRemainingLanes;
+        pendingPassiveEffectsRemainingLanes = NoLanes;
         var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
         var priority = lowerEventPriority(DefaultEventPriority, renderPriority);
         var prevTransition = ReactCurrentBatchConfig.transition;
@@ -26534,6 +27527,10 @@ to return true:wantsResponderID|                            |
         } finally {
           setCurrentUpdatePriority(previousPriority);
           ReactCurrentBatchConfig.transition = prevTransition; // Once passive effects have run for the tree - giving components a
+          // chance to retain cache instances they use - release the pooled
+          // cache at the root (if there is one)
+
+          releaseRootPooledCache(root, remainingLanes);
         }
       }
 
@@ -26545,7 +27542,7 @@ to return true:wantsResponderID|                            |
 
         if (!rootDoesHavePassiveEffects) {
           rootDoesHavePassiveEffects = true;
-          scheduleCallback(NormalPriority, function () {
+          scheduleCallback(NormalPriority$1, function () {
             flushPassiveEffects();
             return null;
           });
@@ -26557,6 +27554,9 @@ to return true:wantsResponderID|                            |
       if (rootWithPendingPassiveEffects === null) {
         return false;
       } // Cache and clear the transitions flag
+
+      var transitions = pendingPassiveTransitions;
+      pendingPassiveTransitions = null;
       var root = rootWithPendingPassiveEffects;
       var lanes = pendingPassiveEffectsLanes;
       rootWithPendingPassiveEffects = null; // TODO: This is sometimes out of sync with rootWithPendingPassiveEffects.
@@ -26583,7 +27583,7 @@ to return true:wantsResponderID|                            |
       var prevExecutionContext = executionContext;
       executionContext |= CommitContext;
       commitPassiveUnmountEffects(root.current);
-      commitPassiveMountEffects(root, root.current); // TODO: Move to commitPassiveMountEffects
+      commitPassiveMountEffects(root, root.current, lanes, transitions); // TODO: Move to commitPassiveMountEffects
 
       {
         var profilerEffects = pendingPassiveProfilerEffects;
@@ -27224,7 +28224,7 @@ to return true:wantsResponderID|                            |
           actQueue.push(callback);
           return fakeActCallbackNode;
         } else {
-          return scheduleCallback$2(priorityLevel, callback);
+          return scheduleCallback$3(priorityLevel, callback);
         }
       }
     }
@@ -28173,7 +29173,9 @@ to return true:wantsResponderID|                            |
 
           // Fall through
 
-          case REACT_CACHE_TYPE:
+          case REACT_CACHE_TYPE: {
+            return createFiberFromCache(pendingProps, mode, lanes, key);
+          }
 
           // Fall through
 
@@ -28355,6 +29357,12 @@ to return true:wantsResponderID|                            |
       fiber.stateNode = primaryChildInstance;
       return fiber;
     }
+    function createFiberFromCache(pendingProps, mode, lanes, key) {
+      var fiber = createFiber(CacheComponent, pendingProps, key, mode);
+      fiber.elementType = REACT_CACHE_TYPE;
+      fiber.lanes = lanes;
+      return fiber;
+    }
     function createFiberFromText(content, mode, lanes) {
       var fiber = createFiber(HostText, content, null, mode);
       fiber.lanes = lanes;
@@ -28457,6 +29465,11 @@ to return true:wantsResponderID|                            |
       this.identifierPrefix = identifierPrefix;
       this.onRecoverableError = onRecoverableError;
 
+      {
+        this.pooledCache = null;
+        this.pooledCacheLanes = NoLanes;
+      }
+
       this.formState = formState;
       this.incompleteTransitions = new Map();
 
@@ -28519,19 +29532,30 @@ to return true:wantsResponderID|                            |
       uninitializedFiber.stateNode = root;
 
       {
-        var _initialState = {
+        var initialCache = createCache();
+        retainCache(initialCache); // The pooledCache is a fresh cache instance that is used temporarily
+        // for newly mounted boundaries during a render. In general, the
+        // pooledCache is always cleared from the root at the end of a render:
+        // it is either released when render commits, or moved to an Offscreen
+        // component if rendering suspends. Because the lifetime of the pooled
+        // cache is distinct from the main memoizedState.cache, it must be
+        // retained separately.
+
+        root.pooledCache = initialCache;
+        retainCache(initialCache);
+        var initialState = {
           element: initialChildren,
           isDehydrated: hydrate,
-          cache: null // not enabled yet
+          cache: initialCache
         };
-        uninitializedFiber.memoizedState = _initialState;
+        uninitializedFiber.memoizedState = initialState;
       }
 
       initializeUpdateQueue(uninitializedFiber);
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-11f0eefb";
+    var ReactVersion = "18.3.0-canary-3893fb04";
 
     function createPortal$1(
       children,
