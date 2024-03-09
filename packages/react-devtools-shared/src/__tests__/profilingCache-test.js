@@ -1237,12 +1237,14 @@ describe('ProfilingCache', () => {
       );
     }
 
-    const {Simulate} = require('react-dom/test-utils');
-
     utils.act(() => render(<App />));
     expect(getContainer().textContent).toBe('Home');
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => Simulate.click(linkRef.current));
+    utils.act(() =>
+      linkRef.current.dispatchEvent(
+        new MouseEvent('click', {bubbles: true, cancelable: true}),
+      ),
+    );
     utils.act(() => store.profilerStore.stopProfiling());
     expect(getContainer().textContent).toBe('About');
   });
