@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 let act;
 let Scheduler;
 let assertLog;
@@ -23,7 +22,6 @@ describe('ReactLegacyUpdates', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
@@ -47,7 +45,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
     expect(instance.state.x).toBe(0);
 
     ReactDOM.unstable_batchedUpdates(function () {
@@ -77,7 +76,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
     expect(instance.state.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
@@ -163,7 +163,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Parent />, container);
     const child = instance.childRef.current;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
@@ -218,7 +219,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Parent />, container);
     const child = instance.childRef.current;
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
@@ -256,7 +258,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
     expect(instance.state.x).toBe(0);
 
     let innerCallbackRun = false;
@@ -301,7 +304,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, container);
     expect(instance.state.x).toBe(0);
 
     let callbacksRun = 0;
@@ -351,8 +355,8 @@ describe('ReactLegacyUpdates', () => {
     expect(parentRenderCount).toBe(0);
     expect(childRenderCount).toBe(0);
 
-    let instance = <Parent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Parent />, container);
 
     expect(parentRenderCount).toBe(1);
     expect(childRenderCount).toBe(1);
@@ -405,7 +409,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Top />);
+    const container = document.createElement('div');
+    ReactDOM.render(<Top />, container);
     expect(numMiddleRenders).toBe(2);
     expect(numBottomRenders).toBe(1);
   });
@@ -478,8 +483,8 @@ describe('ReactLegacyUpdates', () => {
     }
     Object.assign(App.prototype, UpdateLoggingMixin);
 
-    let root = <App />;
-    root = ReactTestUtils.renderIntoDocument(root);
+    const container = document.createElement('div');
+    const root = ReactDOM.render(<App />, container);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
       let i;
@@ -581,7 +586,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const a = ReactTestUtils.renderIntoDocument(<A />);
+    const container = document.createElement('div');
+    const a = ReactDOM.render(<A />, container);
     ReactDOM.unstable_batchedUpdates(function () {
       a.setState({x: 1});
       b.setState({x: 1});
@@ -630,7 +636,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Outer />);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Outer />, container);
 
     updates.push('Outer-setState-1');
     instance.setState({x: 1}, function () {
@@ -698,7 +705,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<MockComponent depth={0} count={2} />);
+    const container = document.createElement('div');
+    ReactDOM.render(<MockComponent depth={0} count={2} />, container);
 
     expect(updates).toEqual([0, 1, 2]);
 
@@ -758,8 +766,10 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const x = ReactTestUtils.renderIntoDocument(<X />);
-    const y = ReactTestUtils.renderIntoDocument(<Y />);
+    let container = document.createElement('div');
+    const x = ReactDOM.render(<X />, container);
+    container = document.createElement('div');
+    const y = ReactDOM.render(<Y />, container);
     expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
@@ -794,11 +804,14 @@ describe('ReactLegacyUpdates', () => {
     }
 
     ReactDOM.unstable_batchedUpdates(function () {
-      ReactTestUtils.renderIntoDocument(
+      const container = document.createElement('div');
+
+      ReactDOM.render(
         <div>
           <A />
           <B />
         </div>,
+        container,
       );
     });
 
@@ -859,7 +872,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const component = ReactTestUtils.renderIntoDocument(<A />);
+    const container = document.createElement('div');
+    const component = ReactDOM.render(<A />, container);
 
     ReactDOM.unstable_batchedUpdates(function () {
       // B will have scheduled an update but the batching should ensure that its
@@ -886,7 +900,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    let component = ReactTestUtils.renderIntoDocument(<A />);
+    let container = document.createElement('div');
+    let component = ReactDOM.render(<A />, container);
 
     expect(() => {
       expect(() => component.setState({}, 'no')).toErrorDev(
@@ -897,7 +912,8 @@ describe('ReactLegacyUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    component = ReactTestUtils.renderIntoDocument(<A />);
+    container = document.createElement('div');
+    component = ReactDOM.render(<A />, container);
     expect(() => {
       expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
         'Expected the last optional `callback` argument to be ' +
@@ -908,7 +924,8 @@ describe('ReactLegacyUpdates', () => {
         'received: [object Object]',
     );
     // Make sure the warning is deduplicated and doesn't fire again
-    component = ReactTestUtils.renderIntoDocument(<A />);
+    container = document.createElement('div');
+    component = ReactDOM.render(<A />, container);
     expect(() => component.setState({}, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
@@ -930,7 +947,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    let component = ReactTestUtils.renderIntoDocument(<A />);
+    let container = document.createElement('div');
+    let component = ReactDOM.render(<A />, container);
 
     expect(() => {
       expect(() => component.forceUpdate('no')).toErrorDev(
@@ -941,7 +959,8 @@ describe('ReactLegacyUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    component = ReactTestUtils.renderIntoDocument(<A />);
+    container = document.createElement('div');
+    component = ReactDOM.render(<A />, container);
     expect(() => {
       expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
         'Expected the last optional `callback` argument to be ' +
@@ -952,7 +971,8 @@ describe('ReactLegacyUpdates', () => {
         'received: [object Object]',
     );
     // Make sure the warning is deduplicated and doesn't fire again
-    component = ReactTestUtils.renderIntoDocument(<A />);
+    container = document.createElement('div');
+    component = ReactDOM.render(<A />, container);
     expect(() => component.forceUpdate(new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
@@ -1004,7 +1024,8 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    const parent = ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const parent = ReactDOM.render(<Parent />, container);
     const child = parent.getChild();
     ReactDOM.unstable_batchedUpdates(function () {
       parent.forceUpdate();
