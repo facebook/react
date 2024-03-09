@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0c357b236599560d718ddaa394fc28e0>>
+ * @generated SignedSource<<9d38179074b2fce93bbd3958437928a4>>
  */
 
 "use strict";
@@ -15,12 +15,14 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -84,6 +86,8 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
+  enableAsyncActions = dynamicFlags.enableAsyncActions,
+  enableRenderableContext = dynamicFlags.enableRenderableContext,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
   ReactCurrentBatchConfig = { transition: null },
@@ -164,7 +168,7 @@ function getElementKey(element, index) {
     ? escape("" + element.key)
     : index.toString(36);
 }
-function noop() {}
+function noop$1() {}
 function resolveThenable(thenable) {
   switch (thenable.status) {
     case "fulfilled":
@@ -174,7 +178,7 @@ function resolveThenable(thenable) {
     default:
       switch (
         ("string" === typeof thenable.status
-          ? thenable.then(noop, noop)
+          ? thenable.then(noop$1, noop$1)
           : ((thenable.status = "pending"),
             thenable.then(
               function (fulfilledValue) {
@@ -332,11 +336,13 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-"function" === typeof reportError
-  ? reportError
-  : function (error) {
-      console.error(error);
-    };
+function noop() {}
+var onError =
+  "function" === typeof reportError
+    ? reportError
+    : function (error) {
+        console.error(error);
+      };
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -430,11 +436,18 @@ exports.createContext = function (defaultValue) {
     Provider: null,
     Consumer: null
   };
-  defaultValue.Provider = {
-    $$typeof: REACT_PROVIDER_TYPE,
-    _context: defaultValue
-  };
-  return (defaultValue.Consumer = defaultValue);
+  enableRenderableContext
+    ? ((defaultValue.Provider = defaultValue),
+      (defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      }))
+    : ((defaultValue.Provider = {
+        $$typeof: REACT_PROVIDER_TYPE,
+        _context: defaultValue
+      }),
+      (defaultValue.Consumer = defaultValue));
+  return defaultValue;
 };
 exports.createElement = function (type, config, children) {
   var propName,
@@ -501,13 +514,30 @@ exports.memo = function (type, compare) {
 };
 exports.startTransition = function (scope) {
   var prevTransition = ReactCurrentBatchConfig.transition,
-    transition = { _callbacks: new Set() };
-  ReactCurrentBatchConfig.transition = transition;
-  try {
-    scope();
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
-  }
+    callbacks = new Set();
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
+  if (enableAsyncActions)
+    try {
+      var returnValue = scope();
+      "object" === typeof returnValue &&
+        null !== returnValue &&
+        "function" === typeof returnValue.then &&
+        (callbacks.forEach(function (callback) {
+          return callback(currentTransition, returnValue);
+        }),
+        returnValue.then(noop, onError));
+    } catch (error) {
+      onError(error);
+    } finally {
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
+  else
+    try {
+      scope();
+    } finally {
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_Cache = REACT_CACHE_TYPE;
@@ -594,7 +624,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-71c4699de-20240308";
+exports.version = "18.3.0-canary-706d95f48-20240308";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

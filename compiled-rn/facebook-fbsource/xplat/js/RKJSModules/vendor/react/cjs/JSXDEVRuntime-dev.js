@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d68343aed9ab27512ef97b5ce8c038e>>
+ * @generated SignedSource<<e8fc1f0235d7e4a937828eef96c3d9d7>>
  */
 
 "use strict";
@@ -107,11 +107,11 @@ if (__DEV__) {
     // the exports object every time a flag is read.
 
     var enableComponentStackLocations =
-      dynamicFlags.enableComponentStackLocations;
+        dynamicFlags.enableComponentStackLocations,
+      enableRenderableContext = dynamicFlags.enableRenderableContext;
     // The rest of the flags are static for better dead code elimination.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
-    var enableRenderableContext = false;
     var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
@@ -188,21 +188,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE: {
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
-          }
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName(provider._context) + ".Provider";
+            }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            {
+            if (enableRenderableContext) {
+              return getContextName(context) + ".Provider";
+            } else {
               return getContextName(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE: {
-            return null;
-          }
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -339,8 +348,8 @@ if (__DEV__) {
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
-          enableRenderableContext ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used

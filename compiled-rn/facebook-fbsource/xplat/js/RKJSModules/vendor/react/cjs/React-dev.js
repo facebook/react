@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1c514e22a878fca97d39b6e7b2cc1c0d>>
+ * @generated SignedSource<<7d6e6eb20c84cbe47eca19d4810dcb60>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-71c4699de-20240308";
+    var ReactVersion = "18.3.0-canary-706d95f48-20240308";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -493,12 +493,13 @@ if (__DEV__) {
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     // the exports object every time a flag is read.
 
-    var enableComponentStackLocations =
-      dynamicFlags.enableComponentStackLocations;
+    var enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableComponentStackLocations =
+        dynamicFlags.enableComponentStackLocations,
+      enableRenderableContext = dynamicFlags.enableRenderableContext;
     // The rest of the flags are static for better dead code elimination.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
-    var enableRenderableContext = false;
     var enableLegacyHidden = false;
     var enableTransitionTracing = false;
     // because JSX is an extremely hot path.
@@ -652,21 +653,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE: {
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
-          }
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName(provider._context) + ".Provider";
+            }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
-            {
+            if (enableRenderableContext) {
+              return getContextName(context) + ".Provider";
+            } else {
               return getContextName(context) + ".Consumer";
             }
 
-          case REACT_CONSUMER_TYPE: {
-            return null;
-          }
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -727,8 +737,8 @@ if (__DEV__) {
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
-          enableRenderableContext ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -2238,7 +2248,7 @@ if (__DEV__) {
       return index.toString(36);
     }
 
-    function noop() {}
+    function noop$1() {}
 
     function resolveThenable(thenable) {
       switch (thenable.status) {
@@ -2259,7 +2269,7 @@ if (__DEV__) {
             // some custom userspace implementation. We treat it as "pending".
             // Attach a dummy listener, to ensure that any lazy initialization can
             // happen. Flight lazily parses JSON when the value is actually awaited.
-            thenable.then(noop, noop);
+            thenable.then(noop$1, noop$1);
           } else {
             // This is an uncached thenable that we haven't seen before.
             // TODO: Detect infinite ping loops caused by uncached promises.
@@ -2604,7 +2614,13 @@ if (__DEV__) {
         Consumer: null
       };
 
-      {
+      if (enableRenderableContext) {
+        context.Provider = context;
+        context.Consumer = {
+          $$typeof: REACT_CONSUMER_TYPE,
+          _context: context
+        };
+      } else {
         context.Provider = {
           $$typeof: REACT_PROVIDER_TYPE,
           _context: context
@@ -3120,7 +3136,27 @@ if (__DEV__) {
         ReactCurrentBatchConfig.transition._updatedFibers = new Set();
       }
 
-      {
+      if (enableAsyncActions) {
+        try {
+          var returnValue = scope();
+
+          if (
+            typeof returnValue === "object" &&
+            returnValue !== null &&
+            typeof returnValue.then === "function"
+          ) {
+            callbacks.forEach(function (callback) {
+              return callback(currentTransition, returnValue);
+            });
+            returnValue.then(noop, onError);
+          }
+        } catch (error) {
+          onError(error);
+        } finally {
+          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+          ReactCurrentBatchConfig.transition = prevTransition;
+        }
+      } else {
         // When async actions are not enabled, startTransition does not
         // capture errors.
         try {
@@ -3152,16 +3188,19 @@ if (__DEV__) {
         }
       }
     }
+
+    function noop() {} // Use reportError, if it exists. Otherwise console.error. This is the same as
     // the default for onRecoverableError.
 
-    typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
-      ? // emulating an uncaught JavaScript error.
-        reportError
-      : function (error) {
-          // In older browsers and test environments, fallback to console.error.
-          // eslint-disable-next-line react-internal/no-production-logging
-          console["error"](error);
-        };
+    var onError =
+      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+        ? // emulating an uncaught JavaScript error.
+          reportError
+        : function (error) {
+            // In older browsers and test environments, fallback to console.error.
+            // eslint-disable-next-line react-internal/no-production-logging
+            console["error"](error);
+          };
 
     var didWarnAboutMessageChannel = false;
     var enqueueTaskImpl = null;

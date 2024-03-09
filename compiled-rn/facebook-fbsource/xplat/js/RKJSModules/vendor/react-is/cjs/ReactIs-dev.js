@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50de4881bc1e7323607d21cae81406f7>>
+ * @generated SignedSource<<6d931d2de9a1892cd33381697c43409f>>
  */
 
 "use strict";
@@ -15,6 +15,8 @@
 if (__DEV__) {
   (function () {
     "use strict";
+
+    var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -38,9 +40,12 @@ if (__DEV__) {
     var REACT_CACHE_TYPE = Symbol.for("react.cache");
 
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // the exports object every time a flag is read.
+
+    var enableRenderableContext = dynamicFlags.enableRenderableContext;
+    // The rest of the flags are static for better dead code elimination.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
-    var enableRenderableContext = false;
     var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
@@ -71,8 +76,8 @@ if (__DEV__) {
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
-          enableRenderableContext ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -114,12 +119,16 @@ if (__DEV__) {
                     return $$typeofType;
 
                   case REACT_CONSUMER_TYPE:
+                    if (enableRenderableContext) {
+                      return $$typeofType;
+                    }
 
                   // Fall through
 
-                  case REACT_PROVIDER_TYPE: {
-                    return $$typeofType;
-                  }
+                  case REACT_PROVIDER_TYPE:
+                    if (!enableRenderableContext) {
+                      return $$typeofType;
+                    }
 
                   // Fall through
 
@@ -135,8 +144,12 @@ if (__DEV__) {
 
       return undefined;
     }
-    var ContextConsumer = REACT_CONTEXT_TYPE;
-    var ContextProvider = REACT_PROVIDER_TYPE;
+    var ContextConsumer = enableRenderableContext
+      ? REACT_CONSUMER_TYPE
+      : REACT_CONTEXT_TYPE;
+    var ContextProvider = enableRenderableContext
+      ? REACT_CONTEXT_TYPE
+      : REACT_PROVIDER_TYPE;
     var Element = REACT_ELEMENT_TYPE;
     var ForwardRef = REACT_FORWARD_REF_TYPE;
     var Fragment = REACT_FRAGMENT_TYPE;
@@ -148,12 +161,16 @@ if (__DEV__) {
     var Suspense = REACT_SUSPENSE_TYPE;
     var SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     function isContextConsumer(object) {
-      {
+      if (enableRenderableContext) {
+        return typeOf(object) === REACT_CONSUMER_TYPE;
+      } else {
         return typeOf(object) === REACT_CONTEXT_TYPE;
       }
     }
     function isContextProvider(object) {
-      {
+      if (enableRenderableContext) {
+        return typeOf(object) === REACT_CONTEXT_TYPE;
+      } else {
         return typeOf(object) === REACT_PROVIDER_TYPE;
       }
     }
