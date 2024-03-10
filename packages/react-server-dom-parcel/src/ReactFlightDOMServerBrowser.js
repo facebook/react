@@ -126,14 +126,15 @@ export function decodeFormState<S>(
   return decodeFormStateImpl(actionResult, body, serverManifest);
 }
 
-export async function loadServerAction<F: (...any[]) => any>(
-  id: string,
-): Promise<F> {
+export function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
   const reference = resolveServerReference<any>(serverManifest, id);
-  await preloadModule(reference);
-  const fn = requireModule(reference);
-  if (typeof fn !== 'function') {
-    throw new Error('Server actions must be functions');
-  }
-  return fn;
+  return Promise.resolve(reference)
+    .then(() => preloadModule(reference))
+    .then(() => {
+      const fn = requireModule(reference);
+      if (typeof fn !== 'function') {
+        throw new Error('Server actions must be functions');
+      }
+      return fn;
+    });
 }
