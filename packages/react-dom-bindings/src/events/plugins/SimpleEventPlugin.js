@@ -23,7 +23,6 @@ import {
   SyntheticTouchEvent,
   SyntheticAnimationEvent,
   SyntheticTransitionEvent,
-  SyntheticUIEvent,
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
