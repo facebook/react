@@ -20,8 +20,7 @@
     "server.browser.js",
     "server.edge.js",
     "server.node.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ],
   "exports": {
     ".": "./index.js",

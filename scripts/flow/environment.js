@@ -98,8 +98,6 @@ declare var __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
-declare function parcelRequire(id: string): any;
-
 declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;
   declare var lstat: (

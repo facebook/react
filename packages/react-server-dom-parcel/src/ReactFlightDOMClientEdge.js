@@ -33,7 +33,9 @@ function noServerCall() {
   );
 }
 
-export function createServerReference<A: Iterable<any>, T>(id: any): (...A) => Promise<T> {
+export function createServerReference<A: Iterable<any>, T>(
+  id: any,
+): (...A) => Promise<T> {
   return createServerReferenceImpl(id, noServerCall);
 }
 

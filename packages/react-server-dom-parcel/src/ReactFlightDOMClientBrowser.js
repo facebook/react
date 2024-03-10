@@ -77,7 +77,9 @@ function startReadingFromStream(
   reader.read().then(progress).catch(error);
 }
 
-export function createFromReadableStream<T>(stream: ReadableStream): Thenable<T> {
+export function createFromReadableStream<T>(
+  stream: ReadableStream,
+): Thenable<T> {
   const response: FlightResponse = createResponse(
     null,
     null,

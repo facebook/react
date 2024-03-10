@@ -8,8 +8,18 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ReactFormState, ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
-import {preloadModule, requireModule, resolveServerReference, type ServerManifest, type ServerReferenceId} from './ReactFlightClientConfigBundlerParcel';
+import type {
+  ReactFormState,
+  ServerContextJSONValue,
+  Thenable,
+} from 'shared/ReactTypes';
+import {
+  preloadModule,
+  requireModule,
+  resolveServerReference,
+  type ServerManifest,
+  type ServerReferenceId,
+} from './ReactFlightClientConfigBundlerParcel';
 
 import {
   createRequest,
@@ -116,7 +126,9 @@ export function decodeFormState<S>(
   return decodeFormStateImpl(actionResult, body, serverManifest);
 }
 
-export async function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+export async function loadServerAction<F: (...any[]) => any>(
+  id: string,
+): Promise<F> {
   const reference = resolveServerReference(serverManifest, id);
   await preloadModule(reference);
   const fn = requireModule(reference);

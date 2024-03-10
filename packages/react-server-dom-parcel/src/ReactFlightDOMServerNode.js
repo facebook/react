@@ -14,8 +14,15 @@ import type {
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ReactFormState, ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
-import type {ServerManifest, ServerReferenceId} from './ReactFlightClientConfigBundlerParcel';
+import type {
+  ReactFormState,
+  ServerContextJSONValue,
+  Thenable,
+} from 'shared/ReactTypes';
+import type {
+  ServerManifest,
+  ServerReferenceId,
+} from './ReactFlightClientConfigBundlerParcel';
 
 import {
   createRequest,
@@ -199,7 +206,9 @@ export function decodeFormState<S>(
   return decodeFormStateImpl(actionResult, body, serverManifest);
 }
 
-export async function loadServerAction<F: (...any[]) => any>(id: string): Promise<F> {
+export async function loadServerAction<F: (...any[]) => any>(
+  id: string,
+): Promise<F> {
   const reference = resolveServerReference<any>(serverManifest, id);
   await preloadModule(reference);
   const fn = requireModule(reference);

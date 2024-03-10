@@ -20,6 +20,7 @@ export type ClientReference<T> = {
   $$typeof: symbol,
   $$id: string,
   $$name: string,
+  $$bundles: Array<string>,
 };
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
@@ -36,11 +37,13 @@ export function isServerReference(reference: Object): boolean {
 export function createClientReference<T>(
   id: string,
   exportName: string,
+  bundles: Array<string>,
 ): ClientReference<T> {
   return {
     $$typeof: CLIENT_REFERENCE_TAG,
     $$id: id,
     $$name: exportName,
+    $$bundles: bundles,
   };
 }
 

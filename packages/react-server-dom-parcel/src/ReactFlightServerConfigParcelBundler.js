@@ -37,7 +37,11 @@ export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  return [clientReference.$$id, clientReference.$$name];
+  return [
+    clientReference.$$id,
+    clientReference.$$name,
+    clientReference.$$bundles,
+  ];
 }
 
 export function getServerReferenceId<T>(

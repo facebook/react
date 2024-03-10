@@ -9,7 +9,12 @@
 
 // This is the parsed shape of the wire format which is why it is
 // condensed to only the essentialy information
-export type ImportMetadata = [/* id */ string, /* name */ string];
+export type ImportMetadata = [
+  /* id */ string,
+  /* name */ string,
+  /* bundles */ Array<string>,
+];
 
 export const ID = 0;
 export const NAME = 1;
+export const BUNDLES = 2;

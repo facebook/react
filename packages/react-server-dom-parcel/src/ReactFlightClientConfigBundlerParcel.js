@@ -11,10 +11,12 @@ import type {Thenable} from 'shared/ReactTypes';
 
 import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
 
-import {ID, NAME} from './shared/ReactFlightImportMetadata';
+import {ID, NAME, BUNDLES} from './shared/ReactFlightImportMetadata';
+// $FlowIgnore
+import {requireModuleById, loadESMBundle} from '@parcel/intrinsics';
 
 export type ServerManifest = {
-  [string]: () => Promise<any>
+  [string]: Array<string>,
 };
 export type SSRModuleMap = null;
 export type ModuleLoading = null;
@@ -26,7 +28,7 @@ export opaque type ClientReferenceMetadata = ImportMetadata;
 export opaque type ClientReference<T> = {
   id: string,
   name: string,
-  preload?: () => Promise<any>,
+  bundles: Array<string>,
 };
 
 export function prepareDestinationForModule(
@@ -44,7 +46,8 @@ export function resolveClientReference<T>(
   // Reference is already resolved during the build.
   return {
     id: metadata[ID],
-    name: metadata[NAME]
+    name: metadata[NAME],
+    bundles: metadata[BUNDLES],
   };
 }
 
@@ -55,28 +58,26 @@ export function resolveServerReference<T>(
   const idx = ref.lastIndexOf('#');
   const id = ref.slice(0, idx);
   const name = ref.slice(idx + 1);
-  const preload = bundlerConfig[id];
-  if (!preload) {
-    throw new Error('Invalid server action: ' + id);
+  const bundles = bundlerConfig[id];
+  if (!bundles) {
+    throw new Error('Invalid server action: ' + ref);
   }
   return {
     id,
     name,
-    preload
+    bundles,
   };
 }
 
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  // On the client, the module should already be loaded due to <script> injected into RSC stream.
-  // On the server, we may need to load the module containing the action.
-  return metadata?.preload?.() || null;
+  return Promise.all(metadata.bundles.map(b => loadESMBundle(b)));
 }
 
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  const moduleExports = parcelRequire(metadata.id);
+  const moduleExports = requireModuleById(metadata.id);
   return moduleExports[metadata.name];
 }
