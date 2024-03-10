@@ -41,7 +41,7 @@ function callCurrentServerCallback<A, T>(
       'No server callback has been registered. Call setServerCallback to register one.',
     );
   }
-  callServer(id, args);
+  return callServer(id, args);
 }
 
 export function createServerReference<A: Iterable<any>, T>(
