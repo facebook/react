@@ -4643,7 +4643,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  it('does not invokeGuardedCallback for errors after the first hydration error', async () => {
+  it('does not log for errors after the first hydration error', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4740,7 +4740,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
+  it('does not log for errors after a preceding fiber suspends', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
     const mockError = jest.fn();

@@ -55,10 +55,6 @@ import {
   enableFloat,
   enableFormActions,
 } from 'shared/ReactFeatureFlags';
-import {
-  invokeGuardedCallbackAndCatchFirstError,
-  rethrowCaughtError,
-} from 'shared/ReactErrorUtils';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
   removeEventListener,
@@ -234,14 +230,25 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   ...mediaEventTypes,
 ]);
 
+let hasError: boolean = false;
+let caughtError: mixed = null;
+
 function executeDispatch(
   event: ReactSyntheticEvent,
   listener: Function,
   currentTarget: EventTarget,
 ): void {
-  const type = event.type || 'unknown-event';
   event.currentTarget = currentTarget;
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    if (!hasError) {
+      hasError = true;
+      caughtError = error;
+    } else {
+      // TODO: Make sure this error gets logged somehow.
+    }
+  }
   event.currentTarget = null;
 }
 
@@ -283,7 +290,12 @@ export function processDispatchQueue(
     //  event system doesn't use pooling.
   }
   // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
+  if (hasError) {
+    const error = caughtError;
+    hasError = false;
+    caughtError = null;
+    throw error;
+  }
 }
 
 function dispatchEventsForPlugins(
