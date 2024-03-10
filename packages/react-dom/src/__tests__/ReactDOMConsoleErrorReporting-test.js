@@ -130,10 +130,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -183,10 +190,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {
@@ -236,10 +250,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -292,10 +313,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {
@@ -345,10 +373,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -401,10 +436,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {

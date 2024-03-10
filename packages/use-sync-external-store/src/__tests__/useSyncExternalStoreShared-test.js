@@ -608,6 +608,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         ? [
             'Uncaught [',
             'The result of getSnapshot should be cached to avoid an infinite loop',
+            'The above error occurred in the',
           ]
         : [
             'The result of getSnapshot should be cached to avoid an infinite loop',

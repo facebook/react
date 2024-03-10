@@ -186,7 +186,6 @@ import {
   reconnectPassiveEffects,
   reappearLayoutEffects,
   disconnectPassiveEffect,
-  reportUncaughtErrorInDEV,
   invokeLayoutEffectMountInDEV,
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
@@ -3384,7 +3383,6 @@ export function captureCommitPhaseError(
   error: mixed,
 ) {
   if (__DEV__) {
-    reportUncaughtErrorInDEV(error);
     setIsRunningInsertionEffect(false);
   }
   if (sourceFiber.tag === HostRoot) {

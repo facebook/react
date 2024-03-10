@@ -686,7 +686,7 @@ describe('ReactLegacyErrorBoundaries', () => {
       expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.render is no longer supported',
       );
-      expect(console.error.mock.calls[1][0]).toContain(
+      expect(console.error.mock.calls[1][2]).toContain(
         'The above error occurred in the <BrokenRender> component:',
       );
     }

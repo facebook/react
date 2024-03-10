@@ -7,10 +7,13 @@ module.exports = function shouldIgnoreConsoleError(
 ) {
   if (__DEV__) {
     if (typeof format === 'string') {
-      if (format.indexOf('The above error occurred') === 0) {
-        // TODO: These errors should be removed.
-        // This looks like an error addendum from ReactFiberErrorLogger.
-        // Ignore it too.
+      if (
+        args[0] != null &&
+        typeof args[0].message === 'string' &&
+        typeof args[0].stack === 'string'
+      ) {
+        // This looks like an error with addendum from ReactFiberErrorLogger.
+        // They are noisy too so we'll try to ignore them.
         return true;
       }
       if (

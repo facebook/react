@@ -159,10 +159,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -215,12 +222,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // TODO: There is no log for this error now.
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {
@@ -271,12 +284,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // TODO: There should be an error reported here.
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -332,12 +351,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // TODO: There should be a log here.
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {
@@ -389,12 +414,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // TODO: We should have logged an error.
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
@@ -450,12 +481,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // TODO: There should be a log here.
           [
+            // Formatting
+            expect.stringContaining('%o'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
             // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
+            expect.stringContaining('Foo'),
+            expect.stringContaining('ErrorBoundary'),
           ],
         ]);
       } else {
