@@ -71,7 +71,7 @@ describe('ReactDOMRoot', () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
     expect(() => root.render(<div>Hi</div>, callback)).toErrorDev(
-      'render(...): does not support the second callback argument. ' +
+      'does not support the second callback argument. ' +
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
@@ -115,7 +115,7 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
     expect(() => root.unmount(callback)).toErrorDev(
-      'unmount(...): does not support a callback argument. ' +
+      'does not support a callback argument. ' +
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
@@ -199,7 +199,7 @@ describe('ReactDOMRoot', () => {
   it('throws a good message on invalid containers', () => {
     expect(() => {
       ReactDOMClient.createRoot(<div>Hi</div>);
-    }).toThrow('createRoot(...): Target container is not a DOM element.');
+    }).toThrow('Target container is not a DOM element.');
   });
 
   it('warns when creating two roots managing the same container', () => {
@@ -253,7 +253,7 @@ describe('ReactDOMRoot', () => {
       expect(() => {
         root.render(<div>Hi</div>);
       }).toErrorDev(
-        'render(...): It looks like the React-rendered content of the ' +
+        'It looks like the React-rendered content of the ' +
           'root container was removed without using React. This is not ' +
           'supported and will cause errors. Instead, call ' +
           "root.unmount() to empty a root's container.",
@@ -446,10 +446,10 @@ describe('ReactDOMRoot', () => {
     const commentNode = div.childNodes[0];
 
     expect(() => ReactDOMClient.createRoot(commentNode)).toThrow(
-      'createRoot(...): Target container is not a DOM element.',
+      'Target container is not a DOM element.',
     );
     expect(() => ReactDOMClient.hydrateRoot(commentNode)).toThrow(
-      'hydrateRoot(...): Target container is not a DOM element.',
+      'Target container is not a DOM element.',
     );
   });
 
@@ -487,8 +487,23 @@ describe('ReactDOMRoot', () => {
       });
     }).toErrorDev(
       'Functions are not valid as a React child. ' +
-        'This may happen if you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+        'This may happen if you return Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '  root.render(Component)',
+      {withoutStack: true},
+    );
+  });
+
+  it('warns when given a symbol', () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(Symbol('foo'));
+      });
+    }).toErrorDev(
+      'Symbols are not valid as a React child.\n' +
+        '  root.render(Symbol(foo))',
       {withoutStack: true},
     );
   });

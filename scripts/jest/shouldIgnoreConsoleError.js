@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = function shouldIgnoreConsoleError(format, args) {
+module.exports = function shouldIgnoreConsoleError(
+  format,
+  args,
+  {TODO_ignoreHydrationErrors} = {TODO_ignoreHydrationErrors: false}
+) {
   if (__DEV__) {
     if (typeof format === 'string') {
       if (format.indexOf('Error: Uncaught [') === 0) {
@@ -21,6 +25,15 @@ module.exports = function shouldIgnoreConsoleError(format, args) {
         ) !== -1
       ) {
         // We haven't finished migrating our tests to use createRoot.
+        return true;
+      }
+      if (
+        TODO_ignoreHydrationErrors &&
+        format.indexOf(
+          'An error occurred during hydration. The server HTML was replaced with client content in'
+        ) !== -1
+      ) {
+        // This also gets logged by onRecoverableError, so we can ignore it.
         return true;
       }
     } else if (

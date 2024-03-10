@@ -46,7 +46,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 
@@ -375,7 +374,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
         console.error(
           'React has detected a change in the order of Hooks called by %s. ' +
             'This will lead to bugs and errors if not fixed. ' +
-            'For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             '%s' +
@@ -388,10 +387,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
   }
 }
 
-function warnIfAsyncClientComponent(
-  Component: Function,
-  componentDoesIncludeHooks: boolean,
-) {
+function warnIfAsyncClientComponent(Component: Function) {
   if (__DEV__) {
     // This dev-only check only works for detecting native async functions,
     // not transpiled ones. There's also a prod check that we use to prevent
@@ -402,40 +398,16 @@ function warnIfAsyncClientComponent(
       // $FlowIgnore[method-unbinding]
       Object.prototype.toString.call(Component) === '[object AsyncFunction]';
     if (isAsyncFunction) {
-      // Encountered an async Client Component. This is not yet supported,
-      // except in certain constrained cases, like during a route navigation.
+      // Encountered an async Client Component. This is not yet supported.
       const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
       if (!didWarnAboutAsyncClientComponent.has(componentName)) {
         didWarnAboutAsyncClientComponent.add(componentName);
-
-        // Check if this is a sync update. We use the "root" render lanes here
-        // because the "subtree" render lanes may include additional entangled
-        // lanes related to revealing previously hidden content.
-        const root = getWorkInProgressRoot();
-        const rootRenderLanes = getWorkInProgressRootRenderLanes();
-        if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
-          console.error(
-            'async/await is not yet supported in Client Components, only ' +
-              'Server Components. This error is often caused by accidentally ' +
-              "adding `'use client'` to a module that was originally written " +
-              'for the server.',
-          );
-        } else {
-          // This is a concurrent (Transition, Retry, etc) render. We don't
-          // warn in these cases.
-          //
-          // However, Async Components are forbidden to include hooks, even
-          // during a transition, so let's check for that here.
-          //
-          // TODO: Add a corresponding warning to Server Components runtime.
-          if (componentDoesIncludeHooks) {
-            console.error(
-              'Hooks are not supported inside an async component. This ' +
-                "error is often caused by accidentally adding `'use client'` " +
-                'to a module that was originally written for the server.',
-            );
-          }
-        }
+        console.error(
+          'async/await is not yet supported in Client Components, only ' +
+            'Server Components. This error is often caused by accidentally ' +
+            "adding `'use client'` to a module that was originally written " +
+            'for the server.',
+        );
       }
     }
   }
@@ -448,7 +420,7 @@ function throwInvalidHookError() {
       '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
       '2. You might be breaking the Rules of Hooks\n' +
       '3. You might have more than one copy of React in the same app\n' +
-      'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
   );
 }
 
@@ -521,6 +493,8 @@ export function renderWithHooks<Props, SecondArg>(
     // Used for hot reloading:
     ignorePreviousDependencies =
       current !== null && current.type !== workInProgress.type;
+
+    warnIfAsyncClientComponent(Component);
   }
 
   workInProgress.memoizedState = null;
@@ -637,10 +611,6 @@ function finishRenderingHooks<Props, SecondArg>(
 ): void {
   if (__DEV__) {
     workInProgress._debugHookTypes = hookTypesDev;
-
-    const componentDoesIncludeHooks =
-      workInProgressHook !== null || thenableIndexCounter !== 0;
-    warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -1101,10 +1071,7 @@ function use<T>(usable: Usable<T>): T {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
       return useThenable(thenable);
-    } else if (
-      usable.$$typeof === REACT_CONTEXT_TYPE ||
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    ) {
+    } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);
     }
@@ -1187,6 +1154,11 @@ function mountReducer<S, I, A>(
   let initialState;
   if (init !== undefined) {
     initialState = init(initialArg);
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(true);
+      init(initialArg);
+      setIsStrictModeForDevtools(false);
+    }
   } else {
     initialState = ((initialArg: any): S);
   }
@@ -1778,8 +1750,15 @@ function forceStoreRerender(fiber: Fiber) {
 function mountStateImpl<S>(initialState: (() => S) | S): Hook {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
+    const initialStateInitializer = initialState;
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-    initialState = initialState();
+    initialState = initialStateInitializer();
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(true);
+      // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+      initialStateInitializer();
+      setIsStrictModeForDevtools(false);
+    }
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue: UpdateQueue<S, BasicStateAction<S>> = {
@@ -2669,10 +2648,12 @@ function mountMemo<T>(
 ): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  if (shouldDoubleInvokeUserFnsInHooksDEV) {
-    nextCreate();
-  }
   const nextValue = nextCreate();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(true);
+    nextCreate();
+    setIsStrictModeForDevtools(false);
+  }
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
@@ -2691,10 +2672,12 @@ function updateMemo<T>(
       return prevState[0];
     }
   }
-  if (shouldDoubleInvokeUserFnsInHooksDEV) {
-    nextCreate();
-  }
   const nextValue = nextCreate();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(true);
+    nextCreate();
+    setIsStrictModeForDevtools(false);
+  }
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
@@ -3621,7 +3604,7 @@ if (__DEV__) {
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
         'You can only call Hooks at the top level of your React function. ' +
         'For more information, see ' +
-        'https://reactjs.org/link/rules-of-hooks',
+        'https://react.dev/link/rules-of-hooks',
     );
   };
 

@@ -22,7 +22,10 @@ import {
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
 import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
-import {enableScopeAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableScopeAPI,
+  enableRenderableContext,
+} from 'shared/ReactFeatureFlags';
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
@@ -113,7 +116,10 @@ function collectNearestContextValues<T>(
   context: ReactContext<T>,
   childContextValues: Array<T>,
 ): void {
-  if (node.tag === ContextProvider && node.type._context === context) {
+  if (
+    node.tag === ContextProvider &&
+    (enableRenderableContext ? node.type : node.type._context) === context
+  ) {
     const contextValue = node.memoizedProps.value;
     childContextValues.push(contextValue);
   } else {

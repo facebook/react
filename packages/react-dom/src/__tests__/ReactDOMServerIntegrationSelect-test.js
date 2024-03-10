@@ -13,23 +13,20 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModules();
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -221,11 +218,15 @@ describe('ReactDOMServerIntegrationSelect', () => {
   itRenders('a select option with flattened children', async render => {
     const e = await render(
       <select value="bar" readOnly={true}>
-        <option value="bar">A {'B'}</option>
+        <option value="bar">
+          A {'B'} {5n}
+        </option>
       </select>,
     );
     const option = e.options[0];
-    expect(option.textContent).toBe('A B');
+    expect(option.textContent).toBe(
+      gate(flags => flags.enableBigIntSupport) ? 'A B 5' : 'A B ',
+    );
     expect(option.value).toBe('bar');
     expect(option.selected).toBe(true);
   });
@@ -253,7 +254,7 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="true">True</option>
         </select>,
-        1,
+        2,
       );
       expect(e.firstChild.selected).toBe(false);
       expect(e.lastChild.selected).toBe(true);
@@ -268,7 +269,7 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="undefined">Undefined</option>
         </select>,
-        1,
+        2,
       );
       expect(e.firstChild.selected).toBe(true);
       expect(e.lastChild.selected).toBe(false);

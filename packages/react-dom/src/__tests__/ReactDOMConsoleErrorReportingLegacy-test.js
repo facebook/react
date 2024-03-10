@@ -55,6 +55,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   });
 
   describe('ReactDOM.render', () => {
+    // @gate !disableLegacyMode
     it('logs errors during event handlers', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -156,6 +157,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs render errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -223,6 +225,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs render errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -295,6 +298,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs layout effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -365,6 +369,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs layout effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -440,6 +445,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs passive effect errors without an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -511,6 +517,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
+    // @gate !disableLegacyMode
     it('logs passive effect errors with an error boundary', async () => {
       spyOnDevAndProd(console, 'error');
 

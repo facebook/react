@@ -40,7 +40,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
@@ -107,7 +106,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   }
 
@@ -117,7 +116,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
           'You can only call Hooks at the top level of your React function. ' +
           'For more information, see ' +
-          'https://reactjs.org/link/rules-of-hooks',
+          'https://react.dev/link/rules-of-hooks',
       );
     }
   }
@@ -745,10 +744,7 @@ function use<T>(usable: Usable<T>): T {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
       return unwrapThenable(thenable);
-    } else if (
-      usable.$$typeof === REACT_CONTEXT_TYPE ||
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    ) {
+    } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);
     }

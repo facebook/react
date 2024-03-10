@@ -10,11 +10,12 @@
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('editing interface', () => {
   let PropTypes;
   let React;
   let bridge: FrontendBridge;
-  let legacyRender;
   let store: Store;
   let utils;
 
@@ -25,8 +26,6 @@ describe('editing interface', () => {
   beforeEach(() => {
     utils = require('./utils');
 
-    legacyRender = utils.legacyRender;
-
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -35,6 +34,8 @@ describe('editing interface', () => {
     PropTypes = require('prop-types');
     React = require('react');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   describe('props', () => {
     let committedClassProps;
@@ -66,9 +67,8 @@ describe('editing interface', () => {
 
       inputRef = React.createRef(null);
 
-      const container = document.createElement('div');
       await utils.actAsync(() =>
-        legacyRender(
+        render(
           <>
             <ClassComponent
               array={[1, 2, 3]}
@@ -84,7 +84,6 @@ describe('editing interface', () => {
             ,
             <input ref={inputRef} onChange={jest.fn()} value="initial" />
           </>,
-          container,
         ),
       );
 
@@ -440,11 +439,9 @@ describe('editing interface', () => {
         }
       }
 
-      const container = document.createElement('div');
       await utils.actAsync(() =>
-        legacyRender(
+        render(
           <ClassComponent object={{nested: 'initial'}} shallow="initial" />,
-          container,
         ),
       );
 
@@ -662,10 +659,7 @@ describe('editing interface', () => {
         return null;
       }
 
-      const container = document.createElement('div');
-      await utils.actAsync(() =>
-        legacyRender(<FunctionComponent />, container),
-      );
+      await utils.actAsync(() => render(<FunctionComponent />));
 
       hookID = 0; // index
       id = ((store.getElementIDAtIndex(0): any): number);
@@ -917,13 +911,11 @@ describe('editing interface', () => {
         }
       }
 
-      const container = document.createElement('div');
       await utils.actAsync(() =>
-        legacyRender(
+        render(
           <LegacyContextProvider>
             <ClassComponent />
           </LegacyContextProvider>,
-          container,
         ),
       );
 

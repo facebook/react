@@ -6747,7 +6747,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],
@@ -6771,7 +6771,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],
@@ -7744,6 +7744,33 @@ const testsTypescript = {
             const baz = bar as typeof foo;
             console.log(baz);
           }, []);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect(() => {
+            console.log(props.test);
+          }, [props.test] as const);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect(() => {
+            console.log(props.test);
+          }, [props.test] as any);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App(props) {
+          React.useEffect((() => {
+            console.log(props.test);
+          }) as any, [props.test]);
         }
       `,
     },

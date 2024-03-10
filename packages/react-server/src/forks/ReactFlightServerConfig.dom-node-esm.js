@@ -14,7 +14,7 @@ export * from 'react-server-dom-esm/src/ReactFlightServerConfigESMBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<Request> =
+export const requestStorage: AsyncLocalStorage<Request | void> =
   new AsyncLocalStorage();
 
 export {createHook as createAsyncHook, executionAsyncId} from 'async_hooks';

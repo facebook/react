@@ -52,7 +52,7 @@ type Destination = {
 };
 
 type RenderState = null;
-type BoundaryResources = null;
+type HoistableState = null;
 
 const POP = Buffer.from('/', 'utf8');
 
@@ -263,15 +263,12 @@ const ReactNoopServer = ReactFizzServer({
 
   writePreamble() {},
   writeHoistables() {},
+  writeHoistablesForBoundary() {},
   writePostamble() {},
-
-  createBoundaryResources(): BoundaryResources {
+  hoistHoistables(parent: HoistableState, child: HoistableState) {},
+  createHoistableState(): HoistableState {
     return null;
   },
-
-  setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
-
-  prepareHostDispatcher() {},
   emitEarlyPreloads() {},
 });
 

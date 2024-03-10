@@ -26,9 +26,7 @@ export const {
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
-  enableAsyncActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -36,6 +34,11 @@ export const {
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableInfiniteRenderLoopDetection,
+  enableRenderableContext,
+  useModernStrictMode,
+  enableRefAsProp,
+  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -49,16 +52,17 @@ export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
-export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
+export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableFormActions = true;
+export const enableAsyncActions = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -71,8 +75,6 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
-
-export const enableFormActions = false;
 
 export const enableBinaryFlight = false;
 export const enableTaint = false;
@@ -102,9 +104,7 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-export const enableServerContext = false;
 
-export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
@@ -113,6 +113,20 @@ export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableAsyncDebugInfo = false;
+export const disableClientCache = true;
+
+export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
+
+export const enableReactTestRendererWarning = false;
+
+export const enableBigIntSupport = false;
+
+// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
+// because JSX is an extremely hot path.
+export const disableStringRefs = false;
+
+export const disableLegacyMode = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

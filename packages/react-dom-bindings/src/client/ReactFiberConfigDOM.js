@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -89,6 +88,7 @@ import {
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
+  enableBigIntSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
@@ -105,6 +105,10 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
 export type Type = string;
 export type Props = {
@@ -548,6 +552,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
+    (enableBigIntSupport && typeof props.children === 'bigint') ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
       props.dangerouslySetInnerHTML !== null &&
       props.dangerouslySetInnerHTML.__html != null)
@@ -1024,10 +1029,6 @@ export function bindInstance(
 
 export const supportsHydration = true;
 
-export function isHydratableText(text: string): boolean {
-  return text !== '';
-}
-
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
@@ -1355,6 +1356,19 @@ export function getFirstHydratableChildWithinSuspenseInstance(
   return getNextHydratable(parentInstance.nextSibling);
 }
 
+export function validateHydratableInstance(
+  type: string,
+  props: Props,
+  hostContext: HostContext,
+): boolean {
+  if (__DEV__) {
+    // TODO: take namespace into account when validating.
+    const hostContextDev: HostContextDev = (hostContext: any);
+    return validateDOMNesting(type, hostContextDev.ancestorInfo);
+  }
+  return true;
+}
+
 export function hydrateInstance(
   instance: Instance,
   type: string,
@@ -1381,6 +1395,20 @@ export function hydrateInstance(
     shouldWarnDev,
     hostContext,
   );
+}
+
+export function validateHydratableTextInstance(
+  text: string,
+  hostContext: HostContext,
+): boolean {
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    const ancestor = hostContextDev.ancestorInfo.current;
+    if (ancestor != null) {
+      return validateTextNesting(text, ancestor.tag);
+    }
+  }
+  return true;
 }
 
 export function hydrateTextInstance(
@@ -2083,10 +2111,8 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
 
-// We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher: HostDispatcher = {
+const previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS,
   preconnect,
   preload,
@@ -2102,8 +2128,9 @@ export const ReactDOMClientDispatcher: HostDispatcher = {
 // and so we have to fall back to something universal. Currently we just refer to the global document.
 // This is notable because nowhere else in ReactDOM do we actually reference the global document or window
 // because we may be rendering inside an iframe.
-function getDocumentForImperativeFloatMethods(): Document {
-  return document;
+const globalDocument = typeof document === 'undefined' ? null : document;
+function getGlobalDocument(): ?Document {
+  return globalDocument;
 }
 
 function preconnectAs(
@@ -2111,8 +2138,8 @@ function preconnectAs(
   href: string,
   crossOrigin: ?CrossOriginEnum,
 ) {
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (typeof href === 'string' && href) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && typeof href === 'string' && href) {
     const limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
     let key = `link[rel="${rel}"][href="${limitedEscapedHref}"]`;
@@ -2137,6 +2164,7 @@ function prefetchDNS(href: string) {
   if (!enableFloat) {
     return;
   }
+  previousDispatcher.prefetchDNS(href);
   preconnectAs('dns-prefetch', href, null);
 }
 
@@ -2144,6 +2172,7 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
   if (!enableFloat) {
     return;
   }
+  previousDispatcher.preconnect(href, crossOrigin);
   preconnectAs('preconnect', href, crossOrigin);
 }
 
@@ -2151,8 +2180,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (href && as && ownerDocument) {
+  previousDispatcher.preload(href, as, options);
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href && as) {
     let preloadSelector = `link[rel="preload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
       as,
     )}"]`;
@@ -2231,8 +2261,9 @@ function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
-  if (href) {
+  previousDispatcher.preloadModule(href, options);
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href) {
     const as =
       options && typeof options.as === 'string' ? options.as : 'script';
     const preloadSelector = `link[rel="modulepreload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
@@ -2294,9 +2325,10 @@ function preinitStyle(
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitStyle(href, precedence, options);
 
-  if (href) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && href) {
     const styles = getResourcesFromRoot(ownerDocument).hoistableStyles;
 
     const key = getStyleKey(href);
@@ -2370,9 +2402,10 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions) {
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitScript(src, options);
 
-  if (src) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && src) {
     const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
 
     const key = getScriptKey(src);
@@ -2428,9 +2461,10 @@ function preinitModuleScript(
   if (!enableFloat) {
     return;
   }
-  const ownerDocument = getDocumentForImperativeFloatMethods();
+  previousDispatcher.preinitModuleScript(src, options);
 
-  if (src) {
+  const ownerDocument = getGlobalDocument();
+  if (ownerDocument && src) {
     const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
 
     const key = getScriptKey(src);
@@ -3481,10 +3515,20 @@ function onUnsuspend(this: SuspendedState) {
   }
 }
 
+// We use a value that is type distinct from precedence to track which one is last.
+// This ensures there is no collision with user defined precedences. Normally we would
+// just track this in module scope but since the precedences are tracked per HoistableRoot
+// we need to associate it to something other than a global scope hence why we try to
+// colocate it with the map of precedences in the first place
+const LAST_PRECEDENCE = null;
+
 // This is typecast to non-null because it will always be set before read.
 // it is important that this not be used except when the stack guarantees it exists.
 // Currentlyt his is only during insertSuspendedStylesheet.
-let precedencesByRoot: Map<HoistableRoot, Map<string, Instance>> = (null: any);
+let precedencesByRoot: Map<
+  HoistableRoot,
+  Map<string | typeof LAST_PRECEDENCE, Instance>,
+> = (null: any);
 
 function insertSuspendedStylesheets(
   state: SuspendedState,
@@ -3539,15 +3583,15 @@ function insertStylesheetIntoRoot(
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
       ) {
-        precedences.set('p' + node.dataset.precedence, node);
+        precedences.set(node.dataset.precedence, node);
         last = node;
       }
     }
     if (last) {
-      precedences.set('last', last);
+      precedences.set(LAST_PRECEDENCE, last);
     }
   } else {
-    last = precedences.get('last');
+    last = precedences.get(LAST_PRECEDENCE);
   }
 
   // We only call this after we have constructed an instance so we assume it here
@@ -3555,11 +3599,11 @@ function insertStylesheetIntoRoot(
   // We will always have a precedence for stylesheet instances
   const precedence: string = (instance.getAttribute('data-precedence'): any);
 
-  const prior = precedences.get('p' + precedence) || last;
+  const prior = precedences.get(precedence) || last;
   if (prior === last) {
-    precedences.set('last', instance);
+    precedences.set(LAST_PRECEDENCE, instance);
   }
-  precedences.set('p' + precedence, instance);
+  precedences.set(precedence, instance);
 
   this.count++;
   const onComplete = onUnsuspend.bind(this);

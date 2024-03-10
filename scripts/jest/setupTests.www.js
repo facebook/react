@@ -30,9 +30,6 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
 
   // These flags are not a dynamic on www, but we still want to run
   // tests in both versions.
-  actual.enableIsInputPending = __VARIANT__;
-  actual.enableIsInputPendingContinuous = __VARIANT__;
-  actual.enableProfiling = __VARIANT__;
   actual.enableSchedulerDebugging = __VARIANT__;
 
   return actual;

@@ -9,22 +9,22 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
-import type {
+import type {ClientManifest, ServerReference} from './ReactFlightReferencesFB';
+
+export type {
   ClientManifest,
   ClientReference,
-  ServerReference,
-} from './ReactFlightReferencesFB';
-
-export type {ClientManifest, ClientReference, ServerReference};
-
-export {
   ClientReferenceKey,
   ClientReferenceMetadata,
+  ServerReference,
+  ServerReferenceId,
+} from './ReactFlightReferencesFB';
+
+export {
   getClientReferenceKey,
   isClientReference,
   resolveClientReferenceMetadata,
   isServerReference,
-  ServerReferenceId,
   getServerReferenceId,
 } from './ReactFlightReferencesFB';
 

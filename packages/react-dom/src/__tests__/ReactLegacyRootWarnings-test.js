@@ -13,6 +13,7 @@ describe('ReactDOMRoot', () => {
     jest.restoreAllMocks();
   });
 
+  // @gate !disableLegacyMode
   test('deprecation warning for ReactDOM.render', () => {
     spyOnDev(console, 'error');
 
@@ -26,6 +27,7 @@ describe('ReactDOMRoot', () => {
     }
   });
 
+  // @gate !disableLegacyMode
   test('deprecation warning for ReactDOM.hydrate', () => {
     spyOnDev(console, 'error');
 

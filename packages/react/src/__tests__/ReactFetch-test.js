@@ -61,7 +61,7 @@ describe('ReactFetch', () => {
     cache = ReactServer.cache;
   });
 
-  async function render(Component) {
+  function render(Component) {
     const stream = ReactServerDOMServer.renderToReadableStream(<Component />);
     return ReactServerDOMClient.createFromReadableStream(stream);
   }
@@ -83,7 +83,11 @@ describe('ReactFetch', () => {
       const text = use(response.text());
       return text;
     }
-    expect(await render(Component)).toMatchInlineSnapshot(`"GET world []"`);
+    const promise = render(Component);
+    expect(await promise).toMatchInlineSnapshot(`"GET world []"`);
+    expect(promise._debugInfo).toEqual(
+      __DEV__ ? [{name: 'Component', env: 'Server'}] : undefined,
+    );
     expect(fetchCount).toBe(1);
   });
 

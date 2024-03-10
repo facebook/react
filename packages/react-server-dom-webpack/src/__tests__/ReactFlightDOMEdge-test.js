@@ -19,6 +19,7 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setTimeout = cb => cb();
 
+let serverExports;
 let clientExports;
 let webpackMap;
 let webpackModules;
@@ -41,6 +42,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const WebpackMock = require('./utils/WebpackMock');
 
+    serverExports = WebpackMock.serverExports;
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
@@ -226,20 +228,55 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
+
     expect(serializedContent.length).toBeLessThan(400);
     expect(timesRendered).toBeLessThan(5);
 
-    const result = await ReactServerDOMClient.createFromReadableStream(
-      stream2,
-      {
-        ssrManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
+    const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
       },
-    );
+    });
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await ReactDOMServer.renderToReadableStream(model);
     // Should still match the result when parsed
-    expect(result).toEqual(resolvedChildren);
+    const result = await readResult(ssrStream);
+    expect(result).toEqual(resolvedChildren.join('<!-- -->'));
+  });
+
+  it('should execute repeated host components only once', async () => {
+    const div = <div>this is a long return value</div>;
+    let timesRendered = 0;
+    function ServerComponent() {
+      timesRendered++;
+      return div;
+    }
+    const element = <ServerComponent />;
+    const children = new Array(30).fill(element);
+    const resolvedChildren = new Array(30).fill(
+      '<div>this is a long return value</div>',
+    );
+    const stream = ReactServerDOMServer.renderToReadableStream(children);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+    expect(timesRendered).toBeLessThan(5);
+
+    const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await ReactDOMServer.renderToReadableStream(model);
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    expect(result).toEqual(resolvedChildren.join(''));
   });
 
   it('should execute repeated server components in a compact form', async () => {
@@ -253,7 +290,8 @@ describe('ReactFlightDOMEdge', () => {
       <ServerComponent recurse={20} />,
     );
     const serializedContent = await readResult(stream);
-    expect(serializedContent.length).toBeLessThan(150);
+    const expectedDebugInfoSize = __DEV__ ? 42 * 20 : 0;
+    expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
   // @gate enableBinaryFlight
@@ -286,5 +324,32 @@ describe('ReactFlightDOMEdge', () => {
       },
     });
     expect(result).toEqual(buffers);
+  });
+
+  it('warns if passing a this argument to bind() of a server reference', async () => {
+    const ServerModule = serverExports({
+      greet: function () {},
+    });
+
+    const ServerModuleImportedOnClient = {
+      greet: ReactServerDOMClient.createServerReference(
+        ServerModule.greet.$$id,
+        async function (ref, args) {},
+      ),
+    };
+
+    expect(() => {
+      ServerModule.greet.bind({}, 'hi');
+    }).toErrorDev(
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      {withoutStack: true},
+    );
+
+    expect(() => {
+      ServerModuleImportedOnClient.greet.bind({}, 'hi');
+    }).toErrorDev(
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      {withoutStack: true},
+    );
   });
 });

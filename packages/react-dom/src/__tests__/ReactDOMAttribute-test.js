@@ -143,7 +143,7 @@ describe('ReactDOM unknown attribute', () => {
       await expect(() => testUnknownAttributeRemoval(Symbol('foo'))).toErrorDev(
         'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep it ' +
-          'in the DOM. For details, see https://reactjs.org/link/attribute-behavior \n' +
+          'in the DOM. For details, see https://react.dev/link/attribute-behavior \n' +
           '    in div (at **)',
       );
     });
@@ -155,7 +155,7 @@ describe('ReactDOM unknown attribute', () => {
         'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
           'it from the element, or pass a string or number value to ' +
           'keep it in the DOM. For details, see ' +
-          'https://reactjs.org/link/attribute-behavior \n' +
+          'https://react.dev/link/attribute-behavior \n' +
           '    in div (at **)',
       );
     });

@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
@@ -16,6 +15,7 @@ import type {
   Usable,
   ReactFormState,
   Awaited,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -157,15 +157,6 @@ export type Fiber = {
   subtreeFlags: Flags,
   deletions: Array<Fiber> | null,
 
-  // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: Fiber | null,
-
-  // The first and last fiber with side-effect within this subtree. This allows
-  // us to reuse a slice of the linked list when we reuse the work done within
-  // this fiber.
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-
   lanes: Lanes,
   childLanes: Lanes,
 
@@ -200,7 +191,7 @@ export type Fiber = {
   // to be the same as work in progress.
   // __DEV__ only
 
-  _debugSource?: Source | null,
+  _debugInfo?: ReactDebugInfo | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,

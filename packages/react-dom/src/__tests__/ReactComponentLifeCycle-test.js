@@ -14,7 +14,6 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let PropTypes;
 
 const clone = function (o) {
@@ -97,7 +96,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
   });
 
@@ -113,9 +111,21 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const element = <StatefulComponent />;
-    const firstInstance = ReactDOM.render(element, container);
-    ReactDOM.unmountComponentAtNode(container);
-    const secondInstance = ReactDOM.render(element, container);
+    let root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const firstInstance = container.firstChild;
+    await act(() => {
+      root.unmount();
+    });
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const secondInstance = container.firstChild;
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -123,7 +133,7 @@ describe('ReactComponentLifeCycle', () => {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', () => {
+  it('it should fire onDOMReady when already in onDOMReady', async () => {
     const _testJournal = [];
 
     class Child extends React.Component {
@@ -161,7 +171,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<SwitcherParent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<SwitcherParent />);
+    });
+
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
       'SwitcherParent:onDOMReady',
@@ -171,7 +187,7 @@ describe('ReactComponentLifeCycle', () => {
 
   // You could assign state here, but not access members of it, unless you
   // had provided a getInitialState method.
-  it('throws when accessing state in componentWillMount', () => {
+  it('throws when accessing state in componentWillMount', async () => {
     class StatefulComponent extends React.Component {
       UNSAFE_componentWillMount() {
         void this.state.yada;
@@ -182,10 +198,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = <StatefulComponent />;
-    expect(function () {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<StatefulComponent />);
+      }),
+    ).rejects.toThrow();
   });
 
   it('should allow update state inside of componentWillMount', () => {
@@ -199,13 +218,17 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = <StatefulComponent />;
-    expect(function () {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+    expect(async function () {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).not.toThrow();
   });
 
-  it("warns if setting 'this.state = props'", () => {
+  it("warns if setting 'this.state = props'", async () => {
     class StatefulComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -216,8 +239,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).toErrorDev(
       'StatefulComponent: It is not recommended to assign props directly to state ' +
         "because updates to props won't be reflected in state. " +
@@ -225,7 +252,7 @@ describe('ReactComponentLifeCycle', () => {
     );
   });
 
-  it('should not allow update state inside of getInitialState', () => {
+  it('should not allow update state inside of getInitialState', async () => {
     class StatefulComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -239,8 +266,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).toErrorDev(
       "Warning: Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
@@ -248,11 +279,14 @@ describe('ReactComponentLifeCycle', () => {
         'class property with the desired state in the StatefulComponent component.',
     );
 
-    // Check deduplication; (no extra warnings should be logged).
-    ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<StatefulComponent />);
+    });
   });
 
-  it('should correctly determine if a component is mounted', () => {
+  it('should correctly determine if a component is mounted', async () => {
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -271,15 +305,20 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const element = <Component />;
+    let instance;
+    const element = <Component ref={current => (instance = current)} />;
 
-    expect(() => {
-      const instance = ReactTestUtils.renderIntoDocument(element);
-      expect(instance._isMounted()).toBeTruthy();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(element);
+      });
     }).toErrorDev('Component is accessing isMounted inside its render()');
+    expect(instance._isMounted()).toBeTruthy();
   });
 
-  it('should correctly determine if a null component is mounted', () => {
+  it('should correctly determine if a null component is mounted', async () => {
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -298,12 +337,17 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const element = <Component />;
+    let instance;
+    const element = <Component ref={current => (instance = current)} />;
 
-    expect(() => {
-      const instance = ReactTestUtils.renderIntoDocument(element);
-      expect(instance._isMounted()).toBeTruthy();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(element);
+      });
     }).toErrorDev('Component is accessing isMounted inside its render()');
+    expect(instance._isMounted()).toBeTruthy();
   });
 
   it('isMounted should return false when unmounted', async () => {
@@ -331,7 +375,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
 
-  it('warns if findDOMNode is used inside render', () => {
+  it('warns if legacy findDOMNode is used inside render', async () => {
     class Component extends React.Component {
       state = {isMounted: false};
       componentDidMount() {
@@ -345,8 +389,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component />);
+      });
     }).toErrorDev('Component is accessing findDOMNode inside its render()');
   });
 
@@ -514,7 +562,7 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  it('should allow state updates in componentDidMount', () => {
+  it('should allow state updates in componentDidMount', async () => {
     /**
      * calls setState in an componentDidMount.
      */
@@ -532,13 +580,19 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    let instance = (
-      <SetStateInComponentDidMount
-        valueToUseInitially="hello"
-        valueToUseInOnDOMReady="goodbye"
-      />
-    );
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    let instance;
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <SetStateInComponentDidMount
+          ref={current => (instance = current)}
+          valueToUseInitially="hello"
+          valueToUseInOnDOMReady="goodbye"
+        />,
+      );
+    });
+
     expect(instance.state.stateField).toBe('goodbye');
   });
 
@@ -852,7 +906,7 @@ describe('ReactComponentLifeCycle', () => {
           '  UNSAFE_componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -882,7 +936,7 @@ describe('ReactComponentLifeCycle', () => {
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://reactjs.org/link/unsafe-component-lifecycles',
+        'https://react.dev/link/unsafe-component-lifecycles',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -909,7 +963,7 @@ describe('ReactComponentLifeCycle', () => {
           '  componentWillMount\n' +
           '  UNSAFE_componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
@@ -936,7 +990,7 @@ describe('ReactComponentLifeCycle', () => {
           'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
@@ -969,7 +1023,7 @@ describe('ReactComponentLifeCycle', () => {
           '  UNSAFE_componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -998,7 +1052,7 @@ describe('ReactComponentLifeCycle', () => {
         'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://reactjs.org/link/unsafe-component-lifecycles',
+        'https://react.dev/link/unsafe-component-lifecycles',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -1023,7 +1077,7 @@ describe('ReactComponentLifeCycle', () => {
           '  componentWillMount\n' +
           '  UNSAFE_componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
@@ -1050,7 +1104,7 @@ describe('ReactComponentLifeCycle', () => {
           'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
@@ -1516,20 +1570,20 @@ describe('ReactComponentLifeCycle', () => {
     }).toWarnDev(
       [
         /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.

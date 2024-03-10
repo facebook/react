@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable, Thenable} from 'shared/ReactTypes';
+import type {Wakeable, Thenable, ReactDebugInfo} from 'shared/ReactTypes';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
@@ -46,6 +46,7 @@ export type LazyComponent<T, P> = {
   $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
+  _debugInfo?: null | ReactDebugInfo,
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {
@@ -147,7 +148,7 @@ export function lazy<T>(
         // $FlowFixMe[missing-local-annot]
         set(newDefaultProps) {
           console.error(
-            'React.lazy(...): It is not supported to assign `defaultProps` to ' +
+            'It is not supported to assign `defaultProps` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',
           );
@@ -167,7 +168,7 @@ export function lazy<T>(
         // $FlowFixMe[missing-local-annot]
         set(newPropTypes) {
           console.error(
-            'React.lazy(...): It is not supported to assign `propTypes` to ' +
+            'It is not supported to assign `propTypes` to ' +
               'a lazy component import. Either specify them where the component ' +
               'is defined, or create a wrapping component around it.',
           );

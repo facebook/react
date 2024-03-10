@@ -14,11 +14,7 @@ export {
   hydrateRoot,
   findDOMNode,
   flushSync,
-  hydrate,
-  render,
-  unmountComponentAtNode,
   unstable_batchedUpdates,
-  unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus,
   useFormState,

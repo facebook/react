@@ -121,6 +121,10 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
+export const enableRenderableContext = false;
+
+export const enableServerComponentLogs = __EXPERIMENTAL__;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
@@ -130,22 +134,80 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
+// Ready for next major.
+//
+// Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
+// -----------------------------------------------------------------------------
+const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+
+// Not ready to break experimental yet.
+export const disableLegacyContext = false;
+
+// Not ready to break experimental yet.
+// Disable javascript: URL strings in href for XSS protection.
+export const disableJavaScriptURLs = __NEXT_MAJOR__;
+
+// Not ready to break experimental yet.
+// Modern <StrictMode /> behaviour aligns more with what components
+// components will encounter in production, especially when used With <Offscreen />.
+// TODO: clean up legacy <StrictMode /> once tests pass WWW.
+export const useModernStrictMode = __NEXT_MAJOR__;
+
+// Not ready to break experimental yet.
+// Remove IE and MsApp specific workarounds for innerHTML
+export const disableIEWorkarounds = __NEXT_MAJOR__;
+
+// Changes the behavior for rendering custom elements in both server rendering
+// and client rendering, mostly to allow JSX attributes to apply to the custom
+// element's object properties instead of only HTML attributes.
+// https://github.com/facebook/react/issues/11347
+export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
+
+// Filter certain DOM attributes (e.g. src, href) if their values are empty
+// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
+// request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
+
+// Disabled caching behavior of `react/cache` in client runtimes.
+export const disableClientCache = false;
+
+// Changes Server Components Reconciliation when they have keys
+export const enableServerComponentKeys = __NEXT_MAJOR__;
+
+export const enableBigIntSupport = __NEXT_MAJOR__;
+
+/**
+ * Enables a new error detection for infinite render loops from updates caused
+ * by setState or similar outside of the component owning the state.
+ */
+export const enableInfiniteRenderLoopDetection = true;
+
+// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
+// as a normal prop instead of stripping it from the props object.
+
+// Passes `ref` as a normal prop instead of stripping it from the props object
+// during element creation.
+export const enableRefAsProp = __NEXT_MAJOR__;
+export const disableStringRefs = __NEXT_MAJOR__;
+
+// Not ready to break experimental yet.
+// Needs more internal cleanup
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = false;
+
+// Disables legacy mode
+// This allows us to land breaking changes to remove legacy mode APIs in experimental builds
+// before removing them in stable in the next Major
+export const disableLegacyMode = __NEXT_MAJOR__;
+
+// -----------------------------------------------------------------------------
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-// This flag enables Strict Effects by default. We're not turning this on until
-// after 18 because it requires migration work. Recommendation is to use
-// <StrictMode /> to gradually upgrade components.
-// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
-// If FALSE, these trees will be StrictLegacyMode.
-export const createRootStrictEffectsByDefault = false;
-
 export const disableModulePatternComponents = false;
-
-export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
 
@@ -168,28 +230,11 @@ export const allowConcurrentByDefault = false;
 // in open source, but www codebase still relies on it. Need to remove.
 export const disableCommentsAsDOMContainers = true;
 
-// Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
-
 export const enableTrustedTypesIntegration = false;
 
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
 export const disableInputAttributeSyncing = false;
-
-// Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = __EXPERIMENTAL__;
-
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = __EXPERIMENTAL__;
-
-// Changes the behavior for rendering custom elements in both server rendering
-// and client rendering, mostly to allow JSX attributes to apply to the custom
-// element's object properties instead of only HTML attributes.
-// https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
@@ -229,8 +274,6 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = __EXPERIMENTAL__;
-
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
 
@@ -240,8 +283,4 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
