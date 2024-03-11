@@ -43,10 +43,9 @@ describe('React hooks DevTools integration', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
 
-    act = ReactTestRenderer.act;
+    act = require('internal-test-utils').act;
   });
 
-  // @gate __DEV__
   it('should support editing useState hooks', async () => {
     let setCountFn;
 
@@ -90,7 +89,6 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  // @gate __DEV__
   it('should support editable useReducer hooks', async () => {
     const initialData = {foo: 'abc', bar: 123};
 
@@ -150,7 +148,6 @@ describe('React hooks DevTools integration', () => {
 
   // This test case is based on an open source bug report:
   // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
-  // @gate __DEV__
   it('should handle interleaved stateful hooks (e.g. useState) and non-stateful hooks (e.g. useContext)', async () => {
     const MyContext = React.createContext(1);
 
@@ -201,7 +198,6 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  // @gate __DEV__
   it('should support overriding suspense in legacy mode', async () => {
     if (__DEV__) {
       // Lock the first render
@@ -258,7 +254,6 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  // @gate __DEV__
   it('should support overriding suspense in concurrent mode', async () => {
     if (__DEV__) {
       // Lock the first render
