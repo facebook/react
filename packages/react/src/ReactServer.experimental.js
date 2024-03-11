@@ -34,6 +34,7 @@ import {
   useCallback,
   useDebugValue,
   useMemo,
+  useMemoCache,
   getCacheSignal,
   getCacheForType,
 } from './ReactHooks';
@@ -84,5 +85,6 @@ export {
   useCallback,
   useDebugValue,
   useMemo,
+  useMemoCache as unstable_useMemoCache,
   version,
 };
