@@ -7,7 +7,6 @@
 
 "use no forget";
 
-import invariant from "invariant";
 import * as React from "react";
 
 const {
@@ -160,10 +159,11 @@ export function $dispatcherGuard(kind: GuardKind) {
     // Pop before checking invariant or errors
     const lastFrame = guardFrames.pop();
 
-    invariant(
-      lastFrame != null,
-      "React Forget internal error: unexpected null in guard stack"
-    );
+    if (lastFrame == null) {
+      throw new Error(
+        "React Forget internal error: unexpected null in guard stack"
+      );
+    }
     if (guardFrames.length === 0) {
       originalDispatcher = null;
     }
@@ -175,13 +175,14 @@ export function $dispatcherGuard(kind: GuardKind) {
     setCurrent(originalDispatcher);
   } else if (kind === GuardKind.PopExpectHook) {
     const lastFrame = guardFrames.pop();
-    invariant(
-      lastFrame != null,
-      "React Forget internal error: unexpected null in guard stack"
-    );
+    if (lastFrame == null) {
+      throw new Error(
+        "React Forget internal error: unexpected null in guard stack"
+      );
+    }
     setCurrent(lastFrame);
   } else {
-    invariant(false, "Forget internal error: unreachable block" + kind);
+    throw new Error("Forget internal error: unreachable block" + kind);
   }
 }
 
