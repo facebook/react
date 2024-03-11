@@ -37,6 +37,7 @@ import {
   printSourceLocation,
 } from "../HIR/PrintHIR";
 import {
+  eachCallArgument,
   eachInstructionOperand,
   eachInstructionValueOperand,
   eachPatternOperand,
@@ -850,15 +851,43 @@ function inferBlock(
         break;
       }
       case "NewExpression": {
+        /**
+         * For new expressions, we infer a `read` effect on the Class / Function type
+         * to avoid extending mutable ranges of locally created classes, e.g.
+         * ```js
+         * const MyClass = getClass();
+         * const value = new MyClass(val1, val2)
+         *                   ^ (read)   ^ (conditionally mutate)
+         * ```
+         *
+         * Risks:
+         * Classes / functions created during render could technically capture and
+         * mutate their enclosing scope, which we currently do not detect.
+         */
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
         };
-        effect = {
-          kind: Effect.ConditionallyMutate,
-          reason: ValueReason.Other,
-        };
-        break;
+        state.reference(
+          instrValue.callee,
+          functionEffects,
+          Effect.Read,
+          ValueReason.Other
+        );
+
+        for (const operand of eachCallArgument(instrValue.args)) {
+          state.reference(
+            operand,
+            functionEffects,
+            Effect.ConditionallyMutate,
+            ValueReason.Other
+          );
+        }
+
+        state.initialize(instrValue, valueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = lvalueEffect;
+        continue;
       }
       case "ObjectExpression": {
         valueKind = hasContextRefOperand(state, instrValue)
