@@ -68,7 +68,6 @@ describe('ReactART', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     container = document.createElement('div');
     document.body.appendChild(container);
 
