@@ -11,16 +11,30 @@
 'use strict';
 
 let React;
+let ReactDOM;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
 let useMemoCache;
+
+function normalizeSourceLoc(tree) {
+  tree.forEach(node => {
+    if (node.hookSource) {
+      node.hookSource.fileName = '**';
+      node.hookSource.lineNumber = 0;
+      node.hookSource.columnNumber = 0;
+    }
+    normalizeSourceLoc(node.subHooks);
+  });
+  return tree;
+}
 
 describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    ReactDOM = require('react-dom');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
     useMemoCache = React.unstable_useMemoCache;
@@ -41,22 +55,38 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'hello',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'State',
-        value: 'world',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "world",
+        },
+      ]
+    `);
 
     const {onMouseDown: setStateA, onMouseUp: setStateB} =
       renderer.root.findByType('div').props;
@@ -66,44 +96,76 @@ describe('ReactHooksInspectionIntegration', () => {
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'Hi',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'State',
-        value: 'world',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "Hi",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "world",
+        },
+      ]
+    `);
 
     await act(() => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'Hi',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'State',
-        value: 'world!',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "Hi",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "world!",
+        },
+      ]
+    `);
   });
 
   it('should inspect the current state of all stateful hooks', async () => {
@@ -150,58 +212,122 @@ describe('ReactHooksInspectionIntegration', () => {
     const {onClick: updateStates} = renderer.root.findByType('div').props;
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'a',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'Reducer',
-        value: 'b',
-        subHooks: [],
-      },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
-      {
-        isStateEditable: false,
-        id: 3,
-        name: 'LayoutEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 4,
-        name: 'Effect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 5,
-        name: 'ImperativeHandle',
-        value: outsideRef.current,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 6,
-        name: 'Memo',
-        value: 'ab',
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 7,
-        name: 'Callback',
-        value: updateStates,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "a",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "Reducer",
+          "subHooks": [],
+          "value": "b",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Ref",
+          "subHooks": [],
+          "value": "c",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "LayoutEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 4,
+          "isStateEditable": false,
+          "name": "Effect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 5,
+          "isStateEditable": false,
+          "name": "ImperativeHandle",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 6,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "ab",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 7,
+          "isStateEditable": false,
+          "name": "Callback",
+          "subHooks": [],
+          "value": [Function],
+        },
+      ]
+    `);
 
     await act(() => {
       updateStates();
@@ -210,58 +336,122 @@ describe('ReactHooksInspectionIntegration', () => {
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'A',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'Reducer',
-        value: 'B',
-        subHooks: [],
-      },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
-      {
-        isStateEditable: false,
-        id: 3,
-        name: 'LayoutEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 4,
-        name: 'Effect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 5,
-        name: 'ImperativeHandle',
-        value: outsideRef.current,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 6,
-        name: 'Memo',
-        value: 'Ab',
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 7,
-        name: 'Callback',
-        value: updateStates,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "A",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "Reducer",
+          "subHooks": [],
+          "value": "B",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Ref",
+          "subHooks": [],
+          "value": "C",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "LayoutEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 4,
+          "isStateEditable": false,
+          "name": "Effect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 5,
+          "isStateEditable": false,
+          "name": "ImperativeHandle",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 6,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "Ab",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 7,
+          "isStateEditable": false,
+          "name": "Callback",
+          "subHooks": [],
+          "value": [Function],
+        },
+      ]
+    `);
   });
 
   it('should inspect the current state of all stateful hooks, including useInsertionEffect', async () => {
@@ -310,65 +500,136 @@ describe('ReactHooksInspectionIntegration', () => {
     const {onClick: updateStates} = renderer.root.findByType('div').props;
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'a',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'Reducer',
-        value: 'b',
-        subHooks: [],
-      },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
-      {
-        isStateEditable: false,
-        id: 3,
-        name: 'InsertionEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 4,
-        name: 'LayoutEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 5,
-        name: 'Effect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 6,
-        name: 'ImperativeHandle',
-        value: outsideRef.current,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 7,
-        name: 'Memo',
-        value: 'ab',
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 8,
-        name: 'Callback',
-        value: updateStates,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "a",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "Reducer",
+          "subHooks": [],
+          "value": "b",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Ref",
+          "subHooks": [],
+          "value": "c",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "InsertionEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 4,
+          "isStateEditable": false,
+          "name": "LayoutEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 5,
+          "isStateEditable": false,
+          "name": "Effect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 6,
+          "isStateEditable": false,
+          "name": "ImperativeHandle",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 7,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "ab",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 8,
+          "isStateEditable": false,
+          "name": "Callback",
+          "subHooks": [],
+          "value": [Function],
+        },
+      ]
+    `);
 
     await act(() => {
       updateStates();
@@ -377,71 +638,145 @@ describe('ReactHooksInspectionIntegration', () => {
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'A',
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'Reducer',
-        value: 'B',
-        subHooks: [],
-      },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
-      {
-        isStateEditable: false,
-        id: 3,
-        name: 'InsertionEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 4,
-        name: 'LayoutEffect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 5,
-        name: 'Effect',
-        value: effect,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 6,
-        name: 'ImperativeHandle',
-        value: outsideRef.current,
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 7,
-        name: 'Memo',
-        value: 'Ab',
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 8,
-        name: 'Callback',
-        value: updateStates,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "A",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": true,
+          "name": "Reducer",
+          "subHooks": [],
+          "value": "B",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Ref",
+          "subHooks": [],
+          "value": "C",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "InsertionEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 4,
+          "isStateEditable": false,
+          "name": "LayoutEffect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 5,
+          "isStateEditable": false,
+          "name": "Effect",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 6,
+          "isStateEditable": false,
+          "name": "ImperativeHandle",
+          "subHooks": [],
+          "value": [Function],
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 7,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "Ab",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 8,
+          "isStateEditable": false,
+          "name": "Callback",
+          "subHooks": [],
+          "value": [Function],
+        },
+      ]
+    `);
   });
 
   it('should inspect the value of the current provider in useContext', () => {
     const MyContext = React.createContext('default');
+    const ThemeContext = React.createContext('default');
+    ThemeContext.displayName = 'Theme';
     function Foo(props) {
       const value = React.useContext(MyContext);
+      React.useContext(ThemeContext);
       return <div>{value}</div>;
     }
     const renderer = ReactTestRenderer.create(
@@ -451,15 +786,38 @@ describe('ReactHooksInspectionIntegration', () => {
     );
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Context',
-        value: 'contextual',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": "contextual",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Theme",
+          "subHooks": [],
+          "value": "default",
+        },
+      ]
+    `);
   });
 
   it('should inspect forwardRef', () => {
@@ -473,15 +831,24 @@ describe('ReactHooksInspectionIntegration', () => {
 
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: 0,
-        name: 'ImperativeHandle',
-        value: obj,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": undefined,
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "ImperativeHandle",
+          "subHooks": [],
+          "value": [Function],
+        },
+      ]
+    `);
   });
 
   it('should inspect memo', () => {
@@ -494,15 +861,24 @@ describe('ReactHooksInspectionIntegration', () => {
     // TODO: Test renderer findByType is broken for memo. Have to search for the inner.
     const childFiber = renderer.root.findByType(InnerFoo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'hello',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "InnerFoo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "hello",
+        },
+      ]
+    `);
   });
 
   it('should inspect custom hooks', () => {
@@ -517,23 +893,39 @@ describe('ReactHooksInspectionIntegration', () => {
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Custom',
-        value: undefined,
-        subHooks: [
-          {
-            isStateEditable: true,
-            id: 0,
-            name: 'State',
-            value: 'hello',
-            subHooks: [],
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
           },
-        ],
-      },
-    ]);
+          "id": null,
+          "isStateEditable": false,
+          "name": "Custom",
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "useCustom",
+                "lineNumber": 0,
+              },
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "hello",
+            },
+          ],
+          "value": undefined,
+        },
+      ]
+    `);
   });
 
   it('should support composite useTransition hook', () => {
@@ -546,29 +938,214 @@ describe('ReactHooksInspectionIntegration', () => {
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        id: 0,
-        isStateEditable: false,
-        name: 'Transition',
-        value: undefined,
-        subHooks: [],
-      },
-      {
-        id: 1,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'hello',
-        subHooks: [],
-      },
-      {
-        id: 2,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'not used',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "Transition",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+  });
+
+  it('should update isPending returned from useTransition', async () => {
+    const IndefiniteSuspender = React.lazy(() => new Promise(() => {}));
+    let startTransition;
+    function Foo(props) {
+      const [show, setShow] = React.useState(false);
+      const [isPending, _startTransition] = React.useTransition();
+      React.useMemo(() => 'hello', []);
+      React.useMemo(() => 'not used', []);
+
+      // Otherwise we capture the version from the react-debug-tools dispatcher.
+      if (startTransition === undefined) {
+        startTransition = () => {
+          _startTransition(() => {
+            setShow(true);
+          });
+        };
+      }
+
+      return (
+        <React.Suspense fallback="Loading">
+          {isPending ? 'Pending' : null}
+          {show ? <IndefiniteSuspender /> : null}
+        </React.Suspense>
+      );
+    }
+    const renderer = await act(() => {
+      return ReactTestRenderer.create(<Foo />, {isConcurrent: true});
+    });
+    expect(renderer).toMatchRenderedOutput(null);
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Transition",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+
+    await act(() => {
+      startTransition();
+    });
+
+    expect(renderer).toMatchRenderedOutput('Pending');
+
+    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Transition",
+          "subHooks": [],
+          "value": true,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
   });
 
   it('should support useDeferredValue hook', () => {
@@ -581,29 +1158,52 @@ describe('ReactHooksInspectionIntegration', () => {
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        id: 0,
-        isStateEditable: false,
-        name: 'DeferredValue',
-        value: 'abc',
-        subHooks: [],
-      },
-      {
-        id: 1,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 1,
-        subHooks: [],
-      },
-      {
-        id: 2,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 2,
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "DeferredValue",
+          "subHooks": [],
+          "value": "abc",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": 1,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": 2,
+        },
+      ]
+    `);
   });
 
   it('should support useId hook', () => {
@@ -624,13 +1224,22 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].name).toEqual('Id');
     expect(String(tree[0].value).startsWith(':r')).toBe(true);
 
-    expect(tree[1]).toEqual({
-      id: 1,
-      isStateEditable: true,
-      name: 'State',
-      value: 'hello',
-      subHooks: [],
-    });
+    expect(normalizeSourceLoc(tree)[1]).toMatchInlineSnapshot(`
+      {
+        "debugInfo": null,
+        "hookSource": {
+          "columnNumber": 0,
+          "fileName": "**",
+          "functionName": "Foo",
+          "lineNumber": 0,
+        },
+        "id": 1,
+        "isStateEditable": true,
+        "name": "State",
+        "subHooks": [],
+        "value": "hello",
+      }
+    `);
   });
 
   describe('useMemoCache', () => {
@@ -714,60 +1323,218 @@ describe('ReactHooksInspectionIntegration', () => {
       const renderer = ReactTestRenderer.create(<Example />);
       const childFiber = renderer.root.findByType(Example)._currentFiber();
       const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'LabeledValue',
-          value: __DEV__ ? 'custom label a' : undefined,
-          subHooks: [
+      if (__DEV__) {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
             {
-              isStateEditable: true,
-              id: 0,
-              name: 'State',
-              value: 'a',
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "LabeledValue",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useLabeledValue",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "a",
+                },
+              ],
+              "value": "custom label a",
             },
-          ],
-        },
-        {
-          isStateEditable: true,
-          id: 1,
-          name: 'State',
-          value: 'b',
-          subHooks: [],
-        },
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'Anonymous',
-          value: undefined,
-          subHooks: [
             {
-              isStateEditable: true,
-              id: 2,
-              name: 'State',
-              value: 'c',
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": 1,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "b",
             },
-          ],
-        },
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'LabeledValue',
-          value: __DEV__ ? 'custom label d' : undefined,
-          subHooks: [
             {
-              isStateEditable: true,
-              id: 3,
-              name: 'State',
-              value: 'd',
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Anonymous",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useAnonymous",
+                    "lineNumber": 0,
+                  },
+                  "id": 2,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "c",
+                },
+              ],
+              "value": undefined,
             },
-          ],
-        },
-      ]);
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "LabeledValue",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useLabeledValue",
+                    "lineNumber": 0,
+                  },
+                  "id": 3,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "d",
+                },
+              ],
+              "value": "custom label d",
+            },
+          ]
+        `);
+      } else
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "LabeledValue",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useLabeledValue",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "a",
+                },
+              ],
+              "value": undefined,
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": 1,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": [],
+              "value": "b",
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Anonymous",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useAnonymous",
+                    "lineNumber": 0,
+                  },
+                  "id": 2,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "c",
+                },
+              ],
+              "value": undefined,
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "LabeledValue",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useLabeledValue",
+                    "lineNumber": 0,
+                  },
+                  "id": 3,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": "d",
+                },
+              ],
+              "value": undefined,
+            },
+          ]
+        `);
     });
 
     it('should support inspectable values for nested custom hooks', () => {
@@ -786,31 +1553,104 @@ describe('ReactHooksInspectionIntegration', () => {
       const renderer = ReactTestRenderer.create(<Example />);
       const childFiber = renderer.root.findByType(Example)._currentFiber();
       const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'Outer',
-          value: __DEV__ ? 'outer' : undefined,
-          subHooks: [
+      if (__DEV__) {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
             {
-              isStateEditable: false,
-              id: null,
-              name: 'Inner',
-              value: __DEV__ ? 'inner' : undefined,
-              subHooks: [
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Outer",
+              "subHooks": [
                 {
-                  isStateEditable: true,
-                  id: 0,
-                  name: 'State',
-                  value: 0,
-                  subHooks: [],
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useOuter",
+                    "lineNumber": 0,
+                  },
+                  "id": null,
+                  "isStateEditable": false,
+                  "name": "Inner",
+                  "subHooks": [
+                    {
+                      "debugInfo": null,
+                      "hookSource": {
+                        "columnNumber": 0,
+                        "fileName": "**",
+                        "functionName": "useInner",
+                        "lineNumber": 0,
+                      },
+                      "id": 0,
+                      "isStateEditable": true,
+                      "name": "State",
+                      "subHooks": [],
+                      "value": 0,
+                    },
+                  ],
+                  "value": "inner",
                 },
               ],
+              "value": "outer",
             },
-          ],
-        },
-      ]);
+          ]
+        `);
+      } else
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Outer",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useOuter",
+                    "lineNumber": 0,
+                  },
+                  "id": null,
+                  "isStateEditable": false,
+                  "name": "Inner",
+                  "subHooks": [
+                    {
+                      "debugInfo": null,
+                      "hookSource": {
+                        "columnNumber": 0,
+                        "fileName": "**",
+                        "functionName": "useInner",
+                        "lineNumber": 0,
+                      },
+                      "id": 0,
+                      "isStateEditable": true,
+                      "name": "State",
+                      "subHooks": [],
+                      "value": 0,
+                    },
+                  ],
+                  "value": undefined,
+                },
+              ],
+              "value": undefined,
+            },
+          ]
+        `);
     });
 
     it('should support multiple inspectable values per custom hooks', () => {
@@ -833,53 +1673,194 @@ describe('ReactHooksInspectionIntegration', () => {
       const renderer = ReactTestRenderer.create(<Example />);
       const childFiber = renderer.root.findByType(Example)._currentFiber();
       const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'SingleLabelCustom',
-          value: __DEV__ ? 'single one' : undefined,
-          subHooks: [
+      if (__DEV__) {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
             {
-              isStateEditable: true,
-              id: 0,
-              name: 'State',
-              value: 0,
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "SingleLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useSingleLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": "single one",
             },
-          ],
-        },
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'MultiLabelCustom',
-          value: __DEV__ ? ['one', 'two', 'three'] : undefined,
-          subHooks: [
             {
-              isStateEditable: true,
-              id: 1,
-              name: 'State',
-              value: 0,
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "MultiLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useMultiLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 1,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": [
+                "one",
+                "two",
+                "three",
+              ],
             },
-          ],
-        },
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'SingleLabelCustom',
-          value: __DEV__ ? 'single two' : undefined,
-          subHooks: [
             {
-              isStateEditable: true,
-              id: 2,
-              name: 'State',
-              value: 0,
-              subHooks: [],
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "SingleLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useSingleLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 2,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": "single two",
             },
-          ],
-        },
-      ]);
+          ]
+        `);
+      } else
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "SingleLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useSingleLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": undefined,
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "MultiLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useMultiLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 1,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": undefined,
+            },
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "SingleLabelCustom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useSingleLabelCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 2,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": undefined,
+            },
+          ]
+        `);
     });
 
     it('should ignore useDebugValue() made outside of a custom hook', () => {
@@ -905,23 +1886,74 @@ describe('ReactHooksInspectionIntegration', () => {
       const renderer = ReactTestRenderer.create(<Example />);
       const childFiber = renderer.root.findByType(Example)._currentFiber();
       const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          isStateEditable: false,
-          id: null,
-          name: 'Custom',
-          value: __DEV__ ? 'bar:123' : undefined,
-          subHooks: [
+      if (__DEV__) {
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
             {
-              isStateEditable: true,
-              id: 0,
-              name: 'State',
-              subHooks: [],
-              value: 0,
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Custom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": "bar:123",
             },
-          ],
-        },
-      ]);
+          ]
+        `);
+      } else
+        expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+          [
+            {
+              "debugInfo": null,
+              "hookSource": {
+                "columnNumber": 0,
+                "fileName": "**",
+                "functionName": "Example",
+                "lineNumber": 0,
+              },
+              "id": null,
+              "isStateEditable": false,
+              "name": "Custom",
+              "subHooks": [
+                {
+                  "debugInfo": null,
+                  "hookSource": {
+                    "columnNumber": 0,
+                    "fileName": "**",
+                    "functionName": "useCustom",
+                    "lineNumber": 0,
+                  },
+                  "id": 0,
+                  "isStateEditable": true,
+                  "name": "State",
+                  "subHooks": [],
+                  "value": 0,
+                },
+              ],
+              "value": undefined,
+            },
+          ]
+        `);
     });
   });
 
@@ -956,15 +1988,24 @@ describe('ReactHooksInspectionIntegration', () => {
 
     const childFiber = renderer.root._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: 'def',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": "def",
+        },
+      ]
+    `);
   });
 
   it('should support an injected dispatcher', () => {
@@ -1004,7 +2045,7 @@ describe('ReactHooksInspectionIntegration', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
       didCatch = true;
     }
@@ -1049,22 +2090,40 @@ describe('ReactHooksInspectionIntegration', () => {
 
     const childFiber = renderer.root._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: null,
-        name: 'Context',
-        value: 1,
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 0,
-        name: 'State',
-        value: {count: 2},
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": 1,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": {
+            "count": 2,
+          },
+        },
+      ]
+    `);
   });
 
   it('should support composite useSyncExternalStore hook', () => {
@@ -1082,28 +2141,236 @@ describe('ReactHooksInspectionIntegration', () => {
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        id: 0,
-        isStateEditable: false,
-        name: 'SyncExternalStore',
-        value: 'snapshot',
-        subHooks: [],
-      },
-      {
-        id: 1,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'memo',
-        subHooks: [],
-      },
-      {
-        id: 2,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'not used',
-        subHooks: [],
-      },
-    ]);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "SyncExternalStore",
+          "subHooks": [],
+          "value": "snapshot",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "memo",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+  });
+
+  it('should support use(Context) hook', () => {
+    const Context = React.createContext('default');
+    function Foo() {
+      const value = React.use(Context);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": "default",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "memo",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+  });
+
+  // @gate enableAsyncActions
+  it('should support useOptimistic hook', () => {
+    const useOptimistic = React.useOptimistic;
+    function Foo() {
+      const [value] = useOptimistic('abc', currentState => currentState);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "Optimistic",
+          "subHooks": [],
+          "value": "abc",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "memo",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+  });
+
+  // @gate enableFormActions && enableAsyncActions
+  it('should support useFormState hook', () => {
+    function Foo() {
+      const [value] = ReactDOM.useFormState(function increment(n) {
+        return n;
+      }, 0);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": false,
+          "name": "FormState",
+          "subHooks": [],
+          "value": 0,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "memo",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
   });
 });

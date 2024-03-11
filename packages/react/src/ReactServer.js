@@ -21,17 +21,13 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
-import {cloneElement, createElement, isValidElement} from './ReactElement';
-import {createRef} from './ReactCreateRef';
-import {createServerContext} from './ReactServerContext';
 import {
-  use,
-  useId,
-  useCallback,
-  useContext,
-  useDebugValue,
-  useMemo,
-} from './ReactHooks';
+  cloneElement,
+  createElement,
+  isValidElement,
+} from './jsx/ReactJSXElement';
+import {createRef} from './ReactCreateRef';
+import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
@@ -56,7 +52,6 @@ export {
   cloneElement,
   createElement,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -66,7 +61,6 @@ export {
   startTransition,
   useId,
   useCallback,
-  useContext,
   useDebugValue,
   useMemo,
   version,

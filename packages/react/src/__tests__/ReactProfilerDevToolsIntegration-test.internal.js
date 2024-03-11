@@ -118,13 +118,17 @@ describe('ReactProfiler DevTools integration', () => {
 
     Scheduler.unstable_advanceTime(20);
 
+    function Throws() {
+      throw new Error('Oops!');
+    }
+
     expect(() => {
       rendered.update(
-        <div ref="this-will-cause-an-error">
+        <Throws>
           <AdvanceTime byAmount={3} />
-        </div>,
+        </Throws>,
       );
-    }).toThrow();
+    }).toThrow('Oops!');
 
     Scheduler.unstable_advanceTime(20);
 

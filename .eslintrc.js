@@ -382,6 +382,13 @@ module.exports = {
       },
     },
     {
+      // disable no focused tests for test setup helper files even if they are inside __tests__ directory
+      files: ['**/setupTests.js'],
+      rules: {
+        'jest/no-focused-tests': OFF,
+      },
+    },
+    {
       files: [
         '**/__tests__/**/*.js',
         'scripts/**/*.js',
@@ -448,6 +455,13 @@ module.exports = {
         __IS_CHROME__: 'readonly',
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
+        __IS_INTERNAL_VERSION__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-devtools-shared/**/*.js'],
+      globals: {
+        __IS_INTERNAL_VERSION__: 'readonly',
       },
     },
   ],

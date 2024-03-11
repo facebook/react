@@ -34,19 +34,21 @@ describe('ReactStrictMode', () => {
     useReducer = React.useReducer;
   });
 
-  it('should appear in the client component stack', () => {
+  it('should appear in the client component stack', async () => {
     function Foo() {
       return <div ariaTypo="" />;
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+        );
+      });
     }).toErrorDev(
       'Invalid ARIA attribute `ariaTypo`. ' +
         'ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
@@ -75,7 +77,8 @@ describe('ReactStrictMode', () => {
   });
 
   // @gate __DEV__
-  it('should invoke precommit lifecycle methods twice', () => {
+  // @gate !disableLegacyMode
+  it('should invoke only precommit lifecycle methods twice in legacy roots', async () => {
     let log = [];
     let shouldComponentUpdate = false;
     class ClassComponent extends React.Component {
@@ -162,7 +165,7 @@ describe('ReactStrictMode', () => {
     ]);
   });
 
-  it('should invoke setState callbacks twice', () => {
+  it('should invoke setState callbacks twice', async () => {
     let instance;
     class ClassComponent extends React.Component {
       state = {
@@ -177,17 +180,21 @@ describe('ReactStrictMode', () => {
     let setStateCount = 0;
 
     const container = document.createElement('div');
-    ReactDOM.render(
-      <React.StrictMode>
-        <ClassComponent />
-      </React.StrictMode>,
-      container,
-    );
-    instance.setState(state => {
-      setStateCount++;
-      return {
-        count: state.count + 1,
-      };
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <ClassComponent />
+        </React.StrictMode>,
+      );
+    });
+    await act(() => {
+      instance.setState(state => {
+        setStateCount++;
+        return {
+          count: state.count + 1,
+        };
+      });
     });
 
     // Callback should be invoked twice in DEV
@@ -196,7 +203,48 @@ describe('ReactStrictMode', () => {
     expect(instance.state.count).toBe(2);
   });
 
-  it('should invoke precommit lifecycle methods twice in DEV', () => {
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useState and useReducer initializers functions', async () => {
+    const log = [];
+
+    function App() {
+      React.useState(() => {
+        log.push('Compute initial state count: 1');
+        return 1;
+      });
+      React.useReducer(
+        s => s,
+        2,
+        s => {
+          log.push('Compute initial reducer count: 2');
+          return s;
+        },
+      );
+
+      return 3;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('3');
+
+    expect(log).toEqual([
+      'Compute initial state count: 1',
+      'Compute initial state count: 1',
+      'Compute initial reducer count: 2',
+      'Compute initial reducer count: 2',
+    ]);
+  });
+
+  // @gate !disableLegacyMode
+  it('should invoke only precommit lifecycle methods twice in DEV legacy roots', async () => {
     const {StrictMode} = React;
 
     let log = [];
@@ -303,7 +351,7 @@ describe('ReactStrictMode', () => {
     }
   });
 
-  it('should invoke setState callbacks twice in DEV', () => {
+  it('should invoke setState callbacks twice in DEV', async () => {
     const {StrictMode} = React;
 
     let instance;
@@ -320,17 +368,21 @@ describe('ReactStrictMode', () => {
     let setStateCount = 0;
 
     const container = document.createElement('div');
-    ReactDOM.render(
-      <StrictMode>
-        <ClassComponent />
-      </StrictMode>,
-      container,
-    );
-    instance.setState(state => {
-      setStateCount++;
-      return {
-        count: state.count + 1,
-      };
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <StrictMode>
+          <ClassComponent />
+        </StrictMode>,
+      );
+    });
+    await act(() => {
+      instance.setState(state => {
+        setStateCount++;
+        return {
+          count: state.count + 1,
+        };
+      });
     });
 
     // Callback should be invoked twice (in DEV)
@@ -522,7 +574,6 @@ describe('Concurrent Mode', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
   });
@@ -575,18 +626,18 @@ describe('Concurrent Mode', () => {
     ).toErrorDev(
       [
         /* eslint-disable max-len */
-        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Bar, Foo`,
-        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
@@ -639,18 +690,18 @@ Please update the following components: App`,
       ).toErrorDev(
         [
           /* eslint-disable max-len */
-          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Child`,
-          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
@@ -662,20 +713,20 @@ Please update the following components: App`,
     }).toWarnDev(
       [
         /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
@@ -727,7 +778,7 @@ Please update the following components: Parent`,
     await act(() => root.render(<StrictRoot foo={false} />));
   });
 
-  it('should also warn inside of "strict" mode trees', () => {
+  it('should also warn inside of "strict" mode trees', async () => {
     const {StrictMode} = React;
 
     class SyncRoot extends React.Component {
@@ -765,13 +816,20 @@ Please update the following components: Parent`,
 
     const container = document.createElement('div');
 
-    expect(() => ReactDOM.render(<SyncRoot />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<SyncRoot />);
+      });
+    }).toErrorDev(
       'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
 
     // Dedupe
-    ReactDOM.render(<SyncRoot />, container);
+    await act(() => {
+      root.render(<SyncRoot />);
+    });
   });
 });
 
@@ -779,11 +837,11 @@ describe('symbol checks', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
   });
 
-  it('should switch from StrictMode to a Fragment and reset state', () => {
+  it('should switch from StrictMode to a Fragment and reset state', async () => {
     const {Fragment, StrictMode} = React;
 
     function ParentComponent({useFragment}) {
@@ -813,13 +871,18 @@ describe('symbol checks', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<ParentComponent useFragment={false} />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ParentComponent useFragment={false} />);
+    });
     expect(container.textContent).toBe('count:1');
-    ReactDOM.render(<ParentComponent useFragment={true} />, container);
+    await act(() => {
+      root.render(<ParentComponent useFragment={true} />);
+    });
     expect(container.textContent).toBe('count:1');
   });
 
-  it('should switch from a Fragment to StrictMode and reset state', () => {
+  it('should switch from a Fragment to StrictMode and reset state', async () => {
     const {Fragment, StrictMode} = React;
 
     function ParentComponent({useFragment}) {
@@ -849,13 +912,18 @@ describe('symbol checks', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<ParentComponent useFragment={true} />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ParentComponent useFragment={true} />);
+    });
     expect(container.textContent).toBe('count:1');
-    ReactDOM.render(<ParentComponent useFragment={false} />, container);
+    await act(() => {
+      root.render(<ParentComponent useFragment={false} />);
+    });
     expect(container.textContent).toBe('count:1');
   });
 
-  it('should update with StrictMode without losing state', () => {
+  it('should update with StrictMode without losing state', async () => {
     const {StrictMode} = React;
 
     function ParentComponent() {
@@ -881,9 +949,14 @@ describe('symbol checks', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<ParentComponent />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ParentComponent />);
+    });
     expect(container.textContent).toBe('count:1');
-    ReactDOM.render(<ParentComponent />, container);
+    await act(() => {
+      root.render(<ParentComponent />);
+    });
     expect(container.textContent).toBe('count:2');
   });
 });
@@ -894,9 +967,11 @@ describe('string refs', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
   });
 
-  it('should warn within a strict tree', () => {
+  // @gate !disableStringRefs
+  it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
     class OuterComponent extends React.Component {
@@ -916,28 +991,33 @@ describe('string refs', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<OuterComponent />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<OuterComponent />);
+      });
     }).toErrorDev(
       'Warning: Component "StrictMode" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in OuterComponent (at **)',
     );
 
-    // Dedup
-    ReactDOM.render(<OuterComponent />, container);
+    await act(() => {
+      root.render(<OuterComponent />);
+    });
   });
 
-  it('should warn within a strict tree', () => {
+  // @gate !disableStringRefs
+  it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
     class OuterComponent extends React.Component {
       render() {
         return (
           <StrictMode>
-            <InnerComponent />
+            <InnerComponent ref="somestring" />
           </StrictMode>
         );
       }
@@ -945,30 +1025,27 @@ describe('string refs', () => {
 
     class InnerComponent extends React.Component {
       render() {
-        return <MiddleComponent ref="somestring" />;
-      }
-    }
-
-    class MiddleComponent extends React.Component {
-      render() {
         return null;
       }
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<OuterComponent />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<OuterComponent />);
+      });
     }).toErrorDev(
-      'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
+      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in InnerComponent (at **)\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in OuterComponent (at **)',
     );
 
-    // Dedup
-    ReactDOM.render(<OuterComponent />, container);
+    await act(() => {
+      root.render(<OuterComponent />);
+    });
   });
 });
 
@@ -976,8 +1053,8 @@ describe('context legacy', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
     PropTypes = require('prop-types');
   });
 
@@ -986,7 +1063,7 @@ describe('context legacy', () => {
   });
 
   // @gate !disableLegacyContext || !__DEV__
-  it('should warn if the legacy context API have been used in strict mode', () => {
+  it('should warn if the legacy context API have been used in strict mode', async () => {
     class LegacyContextProvider extends React.Component {
       getChildContext() {
         return {color: 'purple'};
@@ -1039,8 +1116,11 @@ describe('context legacy', () => {
     };
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<Root />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Root />);
+      });
     }).toErrorDev(
       'Warning: Legacy context API has been detected within a strict-mode tree.' +
         '\n\nThe old API will be supported in all 16.x releases, but applications ' +
@@ -1048,26 +1128,28 @@ describe('context legacy', () => {
         '\n\nPlease update the following components: ' +
         'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
         '\n\nLearn more about this warning here: ' +
-        'https://reactjs.org/link/legacy-context' +
+        'https://react.dev/link/legacy-context' +
         '\n    in LegacyContextProvider (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',
     );
 
     // Dedupe
-    ReactDOM.render(<Root />, container);
+    await act(() => {
+      root.render(<Root />);
+    });
   });
 
   describe('console logs logging', () => {
     beforeEach(() => {
       jest.resetModules();
       React = require('react');
-      ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
+      act = require('internal-test-utils').act;
     });
 
     if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {
-      it('does not disable logs for class double render', () => {
+      it('does not disable logs for class double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1080,13 +1162,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
         // Note: we should display the first log because otherwise
@@ -1095,7 +1178,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double ctor', () => {
+      it('does not disable logs for class double ctor', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1111,13 +1194,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
         // Note: we should display the first log because otherwise
@@ -1126,7 +1210,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double getDerivedStateFromProps', () => {
+      it('does not disable logs for class double getDerivedStateFromProps', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1143,13 +1227,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
         // Note: we should display the first log because otherwise
@@ -1158,7 +1243,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double shouldComponentUpdate', () => {
+      it('does not disable logs for class double shouldComponentUpdate', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1175,19 +1260,21 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-        // Trigger sCU:
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
 
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
@@ -1197,7 +1284,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class state updaters', () => {
+      it('does not disable logs for class state updaters', async () => {
         spyOnDevAndProd(console, 'log');
 
         let inst;
@@ -1211,16 +1298,20 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-        inst.setState(() => {
-          count++;
-          console.log('foo ' + count);
-          return {};
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
+        await act(() => {
+          inst.setState(() => {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          });
         });
 
         expect(count).toBe(__DEV__ ? 2 : 1);
@@ -1231,7 +1322,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for function double render', () => {
+      it('does not disable logs for function double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1242,13 +1333,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
         // Note: we should display the first log because otherwise
@@ -1257,7 +1349,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
     } else {
-      it('disable logs for class double render', () => {
+      it('disable logs for class double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1270,13 +1362,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise
@@ -1285,7 +1378,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disables logs for class double ctor', () => {
+      it('disables logs for class double ctor', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1301,13 +1394,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise
@@ -1316,7 +1410,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class double getDerivedStateFromProps', () => {
+      it('disable logs for class double getDerivedStateFromProps', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1333,13 +1427,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise
@@ -1348,7 +1443,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class double shouldComponentUpdate', () => {
+      it('disable logs for class double shouldComponentUpdate', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1365,20 +1460,21 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-        // Trigger sCU:
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise
@@ -1387,7 +1483,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class state updaters', () => {
+      it('disable logs for class state updaters', async () => {
         spyOnDevAndProd(console, 'log');
 
         let inst;
@@ -1401,16 +1497,20 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-        inst.setState(() => {
-          count++;
-          console.log('foo ' + count);
-          return {};
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
+        await act(() => {
+          inst.setState(() => {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          });
         });
 
         expect(count).toBe(__DEV__ ? 2 : 1);
@@ -1421,7 +1521,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for function double render', () => {
+      it('disable logs for function double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1432,13 +1532,14 @@ describe('context legacy', () => {
         }
 
         const container = document.createElement('div');
-        ReactDOM.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-          container,
-        );
-
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <React.StrictMode>
+              <Foo />
+            </React.StrictMode>,
+          );
+        });
         expect(count).toBe(__DEV__ ? 2 : 1);
         expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise

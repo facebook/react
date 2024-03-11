@@ -39,6 +39,7 @@ import {
   enableCache,
   enableTransitionTracing,
   enableFloat,
+  enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
 
@@ -74,8 +75,6 @@ import {
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
-  Ref,
-  RefStatic,
   Placement,
   Update,
   Visibility,
@@ -142,11 +141,9 @@ import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
-  warnIfUnhydratedTailNodes,
   popHydrationState,
   resetHydrationState,
   getIsHydrating,
-  hasUnhydratedTailNodes,
   upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext';
 import {
@@ -183,10 +180,6 @@ import {suspendCommit} from './ReactFiberThenable';
  */
 function markUpdate(workInProgress: Fiber) {
   workInProgress.flags |= Update;
-}
-
-function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref | RefStatic;
 }
 
 /**
@@ -871,18 +864,6 @@ function completeDehydratedSuspenseBoundary(
   workInProgress: Fiber,
   nextState: SuspenseState | null,
 ): boolean {
-  if (
-    hasUnhydratedTailNodes() &&
-    (workInProgress.mode & ConcurrentMode) !== NoMode &&
-    (workInProgress.flags & DidCapture) === NoFlags
-  ) {
-    warnIfUnhydratedTailNodes(workInProgress);
-    resetHydrationState();
-    workInProgress.flags |= ForceClientRender | DidCapture;
-
-    return false;
-  }
-
   const wasHydrated = popHydrationState(workInProgress);
 
   if (nextState !== null && nextState.dehydrated !== null) {
@@ -1082,9 +1063,6 @@ function completeWork(
           // @TODO refactor this block to create the instance here in complete
           // phase if we are not hydrating.
           markUpdate(workInProgress);
-          if (workInProgress.ref !== null) {
-            markRef(workInProgress);
-          }
           if (nextResource !== null) {
             // This is a Hoistable Resource
 
@@ -1118,9 +1096,6 @@ function completeWork(
             // We are transitioning to, from, or between Hoistable Resources
             // and require an update
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
           if (nextResource !== null) {
             // This is a Hoistable Resource
@@ -1193,10 +1168,6 @@ function completeWork(
               renderLanes,
             );
           }
-
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
-          }
         } else {
           if (!newProps) {
             if (workInProgress.stateNode === null) {
@@ -1231,11 +1202,6 @@ function completeWork(
             workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
-
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
         bubbleProperties(workInProgress);
         return null;
@@ -1253,10 +1219,6 @@ function completeWork(
           newProps,
           renderLanes,
         );
-
-        if (current.ref !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
       } else {
         if (!newProps) {
           if (workInProgress.stateNode === null) {
@@ -1308,11 +1270,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-        }
-
-        if (workInProgress.ref !== null) {
-          // If there is a ref on a host node we need to schedule a callback
-          markRef(workInProgress);
         }
       }
       bubbleProperties(workInProgress);
@@ -1366,7 +1323,6 @@ function completeWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseHandler(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       // Special path for dehydrated boundaries. We may eventually move this
@@ -1387,10 +1343,12 @@ function completeWork(
           );
         if (!fallthroughToNormalSuspensePath) {
           if (workInProgress.flags & ForceClientRender) {
+            popSuspenseHandler(workInProgress);
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
           } else {
+            popSuspenseHandler(workInProgress);
             // Did not finish hydrating, either because this is the initial
             // render or because something suspended.
             return null;
@@ -1399,6 +1357,8 @@ function completeWork(
 
         // Continue with the normal Suspense path.
       }
+
+      popSuspenseHandler(workInProgress);
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
@@ -1505,7 +1465,12 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      const context: ReactContext<any> = workInProgress.type._context;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
@@ -1733,15 +1698,15 @@ function completeWork(
           workInProgress.stateNode = scopeInstance;
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
-            markRef(workInProgress);
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
           }
         } else {
           if (workInProgress.ref !== null) {
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
         }
         bubbleProperties(workInProgress);

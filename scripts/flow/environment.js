@@ -286,7 +286,7 @@ declare module 'async_hooks' {
   declare class AsyncLocalStorage<T> {
     disable(): void;
     getStore(): T | void;
-    run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+    run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
     enterWith(store: T): void;
   }
   declare interface AsyncResource {}
@@ -316,7 +316,7 @@ declare module 'async_hooks' {
 declare class AsyncLocalStorage<T> {
   disable(): void;
   getStore(): T | void;
-  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+  run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
   enterWith(store: T): void;
 }
 

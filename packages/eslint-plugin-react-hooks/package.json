@@ -26,7 +26,7 @@
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "peerDependencies": {
     "eslint": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0"
   },

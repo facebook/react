@@ -7,7 +7,10 @@
  * @flow
  */
 
-export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
+import {disableClientCache} from 'shared/ReactFeatureFlags';
+import {cache as cacheImpl} from './ReactCacheImpl';
+
+export function noopCache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
   // On the client (i.e. not a Server Components environment) `cache` has
   // no caching behavior. We just return the function as-is.
   //
@@ -25,3 +28,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     return fn.apply(null, arguments);
   };
 }
+
+export const cache: typeof noopCache = disableClientCache
+  ? noopCache
+  : cacheImpl;

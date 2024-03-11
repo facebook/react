@@ -15,7 +15,6 @@
  */
 
 import type {ReactContext, Wakeable} from 'shared/ReactTypes';
-import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -30,6 +29,7 @@ import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 import type Agent from './agent';
 
 type BundleType =
@@ -279,8 +279,6 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
-
-  // Location of component in source code.
   source: Source | null,
 
   type: ElementType,

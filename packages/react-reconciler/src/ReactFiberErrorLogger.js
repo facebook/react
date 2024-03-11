@@ -61,7 +61,7 @@ export function logCapturedError(
       if (boundary.tag === HostRoot) {
         errorBoundaryMessage =
           'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-          'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.';
+          'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.';
       } else {
         const errorBoundaryName =
           getComponentNameFromFiber(boundary) || 'Anonymous';

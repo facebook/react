@@ -23,7 +23,7 @@ export function setComponentTree(
   if (__DEV__) {
     if (!getNodeFromInstance || !getInstanceFromNode) {
       console.error(
-        'EventPluginUtils.setComponentTree(...): Injected ' +
+        'Injected ' +
           'module is missing getNodeFromInstance or getInstanceFromNode.',
       );
     }
@@ -150,7 +150,7 @@ export function executeDirectDispatch(event) {
   const dispatchInstance = event._dispatchInstances;
 
   if (isArray(dispatchListener)) {
-    throw new Error('executeDirectDispatch(...): Invalid `event`.');
+    throw new Error('Invalid `event`.');
   }
 
   event.currentTarget = dispatchListener

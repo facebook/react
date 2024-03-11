@@ -14,11 +14,7 @@ import type {PriorityLevel} from '../SchedulerPriorities';
 import {
   enableSchedulerDebugging,
   enableProfiling,
-  enableIsInputPending,
-  enableIsInputPendingContinuous,
   frameYieldMs,
-  continuousYieldMs,
-  maxYieldMs,
   userBlockingPriorityTimeout,
   lowPriorityTimeout,
   normalPriorityTimeout,
@@ -103,17 +99,6 @@ const localClearTimeout =
   typeof clearTimeout === 'function' ? clearTimeout : null;
 const localSetImmediate =
   typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
-
-const isInputPending =
-  typeof navigator !== 'undefined' &&
-  // $FlowFixMe[prop-missing]
-  navigator.scheduling !== undefined &&
-  // $FlowFixMe[incompatible-type]
-  navigator.scheduling.isInputPending !== undefined
-    ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
-    : null;
-
-const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
 function advanceTimers(currentTime: number) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -468,11 +453,7 @@ let taskTimeoutID: TimeoutID = (-1: any);
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
 let frameInterval = frameYieldMs;
-const continuousInputInterval = continuousYieldMs;
-const maxInterval = maxYieldMs;
 let startTime = -1;
-
-let needsPaint = false;
 
 function shouldYieldToHost(): boolean {
   const timeElapsed = getCurrentTime() - startTime;
@@ -481,58 +462,11 @@ function shouldYieldToHost(): boolean {
     // smaller than a single frame. Don't yield yet.
     return false;
   }
-
-  // The main thread has been blocked for a non-negligible amount of time. We
-  // may want to yield control of the main thread, so the browser can perform
-  // high priority tasks. The main ones are painting and user input. If there's
-  // a pending paint or a pending input, then we should yield. But if there's
-  // neither, then we can yield less often while remaining responsive. We'll
-  // eventually yield regardless, since there could be a pending paint that
-  // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
-  // like network events.
-  if (enableIsInputPending) {
-    if (needsPaint) {
-      // There's a pending paint (signaled by `requestPaint`). Yield now.
-      return true;
-    }
-    if (timeElapsed < continuousInputInterval) {
-      // We haven't blocked the thread for that long. Only yield if there's a
-      // pending discrete input (e.g. click). It's OK if there's pending
-      // continuous input (e.g. mouseover).
-      if (isInputPending !== null) {
-        return isInputPending();
-      }
-    } else if (timeElapsed < maxInterval) {
-      // Yield if there's either a pending discrete or continuous input.
-      if (isInputPending !== null) {
-        return isInputPending(continuousOptions);
-      }
-    } else {
-      // We've blocked the thread for a long time. Even if there's no pending
-      // input, there may be some other scheduled work that we don't know about,
-      // like a network event. Yield now.
-      return true;
-    }
-  }
-
-  // `isInputPending` isn't available. Yield now.
+  // Yield now.
   return true;
 }
 
-function requestPaint() {
-  if (
-    enableIsInputPending &&
-    navigator !== undefined &&
-    // $FlowFixMe[prop-missing]
-    navigator.scheduling !== undefined &&
-    // $FlowFixMe[incompatible-type]
-    navigator.scheduling.isInputPending !== undefined
-  ) {
-    needsPaint = true;
-  }
-
-  // Since we yield every frame regardless, `requestPaint` has no effect.
-}
+function requestPaint() {}
 
 function forceFrameRate(fps: number) {
   if (fps < 0 || fps > 125) {
@@ -577,9 +511,6 @@ const performWorkUntilDeadline = () => {
       }
     }
   }
-  // Yielding to the browser will give it a chance to paint, so we can
-  // reset this.
-  needsPaint = false;
 };
 
 let schedulePerformWorkUntilDeadline;

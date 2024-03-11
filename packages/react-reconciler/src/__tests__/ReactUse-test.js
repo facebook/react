@@ -230,11 +230,17 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      startTransition(() => {
-        root.render(<App />);
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<App />);
+        });
       });
-    });
+    }).toErrorDev([
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    ]);
     assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
   });
@@ -394,11 +400,20 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      startTransition(() => {
-        root.render(<App />);
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<App />);
+        });
       });
-    });
+    }).toErrorDev([
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    ]);
     assertLog([
       // First attempt. The uncached promise suspends.
       'Suspend! [Async]',
@@ -1733,25 +1748,38 @@ describe('ReactUse', () => {
     );
   });
 
-  test('warn if async client component calls a hook (e.g. useState)', async () => {
-    async function AsyncClientComponent() {
-      useState();
-      return <Text text="Hi" />;
-    }
+  test(
+    'warn if async client component calls a hook (e.g. useState) ' +
+      'during a non-sync update',
+    async () => {
+      async function AsyncClientComponent() {
+        useState();
+        return <Text text="Hi" />;
+      }
 
-    const root = ReactNoop.createRoot();
-    await expect(async () => {
-      await act(() => {
-        startTransition(() => {
-          root.render(<AsyncClientComponent />);
+      const root = ReactNoop.createRoot();
+      await expect(async () => {
+        await act(() => {
+          startTransition(() => {
+            root.render(<AsyncClientComponent />);
+          });
         });
-      });
-    }).toErrorDev([
-      'Hooks are not supported inside an async component. This ' +
-        "error is often caused by accidentally adding `'use client'` " +
-        'to a module that was originally written for the server.',
-    ]);
-  });
+      }).toErrorDev([
+        // Note: This used to log a different warning about not using hooks
+        // inside async components, like we do on the server. Since then, we
+        // decided to warn for _any_ async client component regardless of
+        // whether the update is sync. But if we ever add back support for async
+        // client components, we should add back the hook warning.
+        'async/await is not yet supported in Client Components, only Server ' +
+          'Components. This error is often caused by accidentally adding ' +
+          "`'use client'` to a module that was originally written for " +
+          'the server.',
+        'A component was suspended by an uncached promise. Creating ' +
+          'promises inside a Client Component or hook is not yet ' +
+          'supported, except via a Suspense-compatible library or framework.',
+      ]);
+    },
+  );
 
   test('warn if async client component calls a hook (e.g. use)', async () => {
     const promise = Promise.resolve();
@@ -1769,9 +1797,21 @@ describe('ReactUse', () => {
         });
       });
     }).toErrorDev([
-      'Hooks are not supported inside an async component. This ' +
-        "error is often caused by accidentally adding `'use client'` " +
-        'to a module that was originally written for the server.',
+      // Note: This used to log a different warning about not using hooks
+      // inside async components, like we do on the server. Since then, we
+      // decided to warn for _any_ async client component regardless of
+      // whether the update is sync. But if we ever add back support for async
+      // client components, we should add back the hook warning.
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
     ]);
   });
 });

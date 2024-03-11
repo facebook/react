@@ -7,12 +7,11 @@
  * @flow
  */
 
-import {normalizeCodeLocInfo} from './utils';
+import {getVersionedRenderImplementation, normalizeCodeLocInfo} from './utils';
 
 describe('component stack', () => {
   let React;
   let act;
-  let legacyRender;
   let mockError;
   let mockWarn;
 
@@ -30,10 +29,11 @@ describe('component stack', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
 
     React = require('react');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >=16.9
   it('should log the current component stack along with an error or warning', () => {
@@ -45,9 +45,7 @@ describe('component stack', () => {
       return null;
     };
 
-    const container = document.createElement('div');
-
-    act(() => legacyRender(<Grandparent />, container));
+    act(() => render(<Grandparent />));
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
@@ -79,14 +77,50 @@ describe('component stack', () => {
       return null;
     };
 
-    const container = document.createElement('div');
-    act(() => legacyRender(<Example test="abc" />, container));
+    act(() => render(<Example test="abc" />));
 
     expect(useEffectCount).toBe(1);
 
     expect(mockWarn).toHaveBeenCalledWith(
       'Warning to trigger appended component stacks.',
       '\n    in Example (at **)',
+    );
+  });
+
+  // @reactVersion >=18.3
+  it('should log the current component stack with debug info from promises', () => {
+    const Child = () => {
+      console.error('Test error.');
+      console.warn('Test warning.');
+      return null;
+    };
+    const ChildPromise = Promise.resolve(<Child />);
+    ChildPromise.status = 'fulfilled';
+    ChildPromise.value = <Child />;
+    ChildPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+      },
+    ];
+    const Parent = () => ChildPromise;
+    const Grandparent = () => <Parent />;
+
+    act(() => render(<Grandparent />));
+
+    expect(mockError).toHaveBeenCalledWith(
+      'Test error.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
+    );
+    expect(mockWarn).toHaveBeenCalledWith(
+      'Test warning.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
     );
   });
 });

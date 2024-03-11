@@ -209,7 +209,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which is inside StrictMode. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -220,7 +220,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which renders StrictMode children. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -368,7 +368,7 @@ export function updateContainer(
     if (__DEV__) {
       if (typeof callback !== 'function') {
         console.error(
-          'render(...): Expected the last optional `callback` argument to be a ' +
+          'Expected the last optional `callback` argument to be a ' +
             'function. Instead received: %s.',
           callback,
         );

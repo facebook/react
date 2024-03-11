@@ -128,34 +128,13 @@ function createBridgeAndStore() {
     }
   };
 
-  const viewElementSourceFunction = id => {
-    const rendererID = store.getRendererIDForElement(id);
-    if (rendererID != null) {
-      // Ask the renderer interface to determine the component function,
-      // and store it as a global variable on the window
-      bridge.send('viewElementSource', {id, rendererID});
+  const viewElementSourceFunction = (source, symbolicatedSource) => {
+    const {sourceURL, line, column} = symbolicatedSource
+      ? symbolicatedSource
+      : source;
 
-      setTimeout(() => {
-        // Ask Chrome to display the location of the component function,
-        // or a render method if it is a Class (ideally Class instance, not type)
-        // assuming the renderer found one.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$type != null) {
-                  if (
-                    window.$type &&
-                    window.$type.prototype &&
-                    window.$type.prototype.isReactComponent
-                  ) {
-                    // inspect Component.render, not constructor
-                    inspect(window.$type.prototype.render);
-                  } else {
-                    // inspect Functional Component
-                    inspect(window.$type);
-                  }
-                }
-              `);
-      }, 100);
-    }
+    // We use 1-based line and column, Chrome expects them 0-based.
+    chrome.devtools.panels.openResource(sourceURL, line - 1, column - 1);
   };
 
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
@@ -183,16 +162,13 @@ function createBridgeAndStore() {
         store,
         warnIfUnsupportedVersionDetected: true,
         viewAttributeSourceFunction,
+        // Firefox doesn't support chrome.devtools.panels.openResource yet
+        canViewElementSourceFunction: () => __IS_CHROME__ || __IS_EDGE__,
         viewElementSourceFunction,
-        viewUrlSourceFunction,
       }),
     );
   };
 }
-
-const viewUrlSourceFunction = (url, line, col) => {
-  chrome.devtools.panels.openResource(url, line, col);
-};
 
 function ensureInitialHTMLIsCleared(container) {
   if (container._hasInitialHTMLBeenCleared) {

@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "peerDependencies": {
     "react": "^18.2.0"
   }

@@ -12,12 +12,14 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 const renderSubtreeIntoContainer =
   require('react-dom').unstable_renderSubtreeIntoContainer;
 
 describe('renderSubtreeIntoContainer', () => {
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
 
@@ -57,51 +59,14 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('bar');
   });
 
-  it('should throw if parentComponent is invalid', () => {
-    const portal = document.createElement('div');
-
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo}</div>;
-      }
-    }
-
-    // ESLint is confused here and thinks Parent is unused, presumably because
-    // it is only used inside of the class body?
-    // eslint-disable-next-line no-unused-vars
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: 'bar',
-        };
-      }
-
-      render() {
-        return null;
-      }
-
-      componentDidMount() {
-        expect(function () {
-          renderSubtreeIntoContainer(<Parent />, <Component />, portal);
-        }).toThrowError('parentComponentmust be a valid React Component');
-      }
-    }
-  });
-
   // @gate !disableLegacyContext
-  it('should update context if it changes due to setState', () => {
+  // @gate !disableLegacyMode
+  it('should update context if it changes due to setState', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -154,15 +119,23 @@ describe('renderSubtreeIntoContainer', () => {
         );
       }
     }
+    const root = ReactDOMClient.createRoot(container);
+    const parentRef = React.createRef();
+    await act(async () => {
+      root.render(<Parent ref={parentRef} />);
+    });
+    const instance = parentRef.current;
 
-    const instance = ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
-    instance.setState({bar: 'changed'});
+    await act(async () => {
+      instance.setState({bar: 'changed'});
+    });
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
   // @gate !disableLegacyContext
-  it('should update context if it changes due to re-render', () => {
+  // @gate !disableLegacyMode
+  it('should update context if it changes due to re-render', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -212,13 +185,19 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent bar="initial" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
-    ReactDOM.render(<Parent bar="changed" />, container);
+    await act(async () => {
+      root.render(<Parent bar="changed" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
-  it('should render portal with non-context-provider parent', () => {
+  // @gate !disableLegacyMode
+  it('should render portal with non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -237,12 +216,16 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent bar="initial" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('hello');
   });
 
   // @gate !disableLegacyContext
-  it('should get context through non-context-provider parent', () => {
+  // @gate !disableLegacyMode
+  it('should get context through non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -281,12 +264,16 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent value="foo" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent value="foo" />);
+    });
     expect(portal.textContent).toBe('foo');
   });
 
   // @gate !disableLegacyContext
-  it('should get context through middle non-context-provider layer', () => {
+  // @gate !disableLegacyMode
+  it('should get context through middle non-context-provider layer', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal1 = document.createElement('div');
@@ -333,11 +320,15 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent value="foo" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent value="foo" />);
+    });
     expect(portal2.textContent).toBe('foo');
   });
 
-  it('fails gracefully when mixing React 15 and 16', () => {
+  // @gate !disableLegacyMode
+  it('legacy test: fails gracefully when mixing React 15 and 16', () => {
     class C extends React.Component {
       render() {
         return <div />;

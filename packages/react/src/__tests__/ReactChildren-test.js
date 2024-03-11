@@ -11,12 +11,14 @@
 
 describe('ReactChildren', () => {
   let React;
-  let ReactTestUtils;
+  let ReactDOMClient;
+  let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
   });
 
   it('should support identity for simple', () => {
@@ -181,11 +183,14 @@ describe('ReactChildren', () => {
         {false}
         {null}
         {undefined}
+        {9n}
       </div>
     );
 
     function assertCalls() {
-      expect(callback).toHaveBeenCalledTimes(9);
+      expect(callback).toHaveBeenCalledTimes(
+        gate(flags => flags.enableBigIntSupport) ? 10 : 9,
+      );
       expect(callback).toHaveBeenCalledWith(div, 0);
       expect(callback).toHaveBeenCalledWith(span, 1);
       expect(callback).toHaveBeenCalledWith(a, 2);
@@ -195,6 +200,11 @@ describe('ReactChildren', () => {
       expect(callback).toHaveBeenCalledWith(null, 6);
       expect(callback).toHaveBeenCalledWith(null, 7);
       expect(callback).toHaveBeenCalledWith(null, 8);
+      if (gate(flags => flags.enableBigIntSupport)) {
+        expect(callback).toHaveBeenCalledWith(9n, 9);
+      } else {
+        expect(callback).not.toHaveBeenCalledWith(9n, 9);
+      }
       callback.mockClear();
     }
 
@@ -207,13 +217,24 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    expect(mappedChildren).toEqual([
-      <div key=".$divNode" />,
-      <span key=".1:0:$spanNode" />,
-      <a key=".2:$aNode" />,
-      'string',
-      1234,
-    ]);
+    expect(mappedChildren).toEqual(
+      gate(flags => flags.enableBigIntSupport)
+        ? [
+            <div key=".$divNode" />,
+            <span key=".1:0:$spanNode" />,
+            <a key=".2:$aNode" />,
+            'string',
+            1234,
+            9n,
+          ]
+        : [
+            <div key=".$divNode" />,
+            <span key=".1:0:$spanNode" />,
+            <a key=".2:$aNode" />,
+            'string',
+            1234,
+          ],
+    );
   });
 
   it('should be called for each child in nested structure', () => {
@@ -947,6 +968,38 @@ describe('ReactChildren', () => {
     );
   });
 
+  it('should render React.lazy after suspending', async () => {
+    const lazyElement = React.lazy(async () => ({default: <div />}));
+    function Component() {
+      return React.Children.map([lazyElement], c =>
+        React.cloneElement(c, {children: 'hi'}),
+      );
+    }
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
+    expect(container.innerHTML).toBe('<div>hi</div>');
+  });
+
+  it('should render cached Promises after suspending', async () => {
+    const promise = Promise.resolve(<div />);
+    function Component() {
+      return React.Children.map([promise], c =>
+        React.cloneElement(c, {children: 'hi'}),
+      );
+    }
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
+    expect(container.innerHTML).toBe('<div>hi</div>');
+  });
+
   it('should throw on regex', () => {
     // Really, we care about dates (#4840) but those have nondeterministic
     // serialization (timezones) so let's test a regex instead:
@@ -962,40 +1015,52 @@ describe('ReactChildren', () => {
   });
 
   describe('with fragments enabled', () => {
-    it('warns for keys for arrays of elements in a fragment', () => {
+    it('warns for keys for arrays of elements in a fragment', async () => {
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div />, <div />];
         }
       }
 
-      expect(() =>
-        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />),
-      ).toErrorDev(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<ComponentReturningArray />);
+        });
+      }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://reactjs.org/link/warning-keys for more information.' +
+          ' See https://react.dev/link/warning-keys for more information.' +
           '\n    in ComponentReturningArray (at **)',
       );
     });
 
-    it('does not warn when there are keys on elements in a fragment', () => {
+    it('does not warn when there are keys on elements in a fragment', async () => {
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
         }
       }
 
-      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<ComponentReturningArray />);
+      });
     });
 
-    it('warns for keys for arrays at the top level', () => {
-      expect(() =>
-        ReactTestUtils.renderIntoDocument([<div />, <div />]),
-      ).toErrorDev(
+    it('warns for keys for arrays at the top level', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render([<div />, <div />]);
+        });
+      }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://reactjs.org/link/warning-keys for more information.',
+          ' See https://react.dev/link/warning-keys for more information.',
         {withoutStack: true}, // There's nothing on the stack
       );
     });

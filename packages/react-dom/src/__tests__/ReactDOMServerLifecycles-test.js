@@ -260,7 +260,7 @@ describe('ReactDOMServerLifecycles', () => {
         '<div>1-2</div>',
       );
     }).toErrorDev(
-      'Warning: setState(...): Can only update a mounting component. This ' +
+      'Warning: Can only update a mounting component. This ' +
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',
@@ -295,7 +295,7 @@ describe('ReactDOMServerLifecycles', () => {
     }
 
     expect(() => ReactDOMServer.renderToString(<MyComponent />)).toWarnDev(
-      'componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+      'componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
         '* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n\n' +
         'Please update the following components: MyComponent',
     );
