@@ -7,7 +7,8 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientConfigBrowser';
+export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
+export * from 'react-client/src/ReactFlightClientConsoleConfigBrowser';
 export * from 'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = false;

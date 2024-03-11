@@ -16,7 +16,6 @@ import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {
   ReactFormState,
-  ServerContextJSONValue,
   Thenable,
 } from 'shared/ReactTypes';
 import type {
@@ -71,9 +70,9 @@ function createCancelHandler(request: Request, reason: string) {
 }
 
 type Options = {
+  environmentName?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
 
@@ -90,9 +89,9 @@ export function renderToPipeableStream(
     model,
     null,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);

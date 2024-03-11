@@ -84,6 +84,7 @@ export function createFromReadableStream<T>(
     null,
     null,
     callCurrentServerCallback,
+    undefined, // encodeFormAction
     undefined, // nonce
   );
   startReadingFromStream(response, stream);
@@ -97,6 +98,7 @@ export function createFromFetch<T>(
     null,
     null,
     callCurrentServerCallback,
+    undefined, // encodeFormAction
     undefined, // nonce
   );
   promiseForResponse.then(

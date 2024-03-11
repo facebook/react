@@ -13,7 +13,7 @@ export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 // For now, we get this from the global scope, but this will likely move to a module.
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<Request> = supportsRequestStorage
+export const requestStorage: AsyncLocalStorage<Request | void> = supportsRequestStorage
   ? new AsyncLocalStorage()
   : (null: any);
 

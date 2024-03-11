@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes.js';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
@@ -39,8 +39,14 @@ export function createServerReference<A: Iterable<any>, T>(
   return createServerReferenceImpl(id, noServerCall);
 }
 
+type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
+
 export type Options = {
   nonce?: string,
+  encodeFormAction?: EncodeFormActionCallback,
 };
 
 function createResponseFromOptions(options?: Options) {
@@ -48,6 +54,7 @@ function createResponseFromOptions(options?: Options) {
     null,
     null,
     noServerCall,
+    options?.encodeFormAction,
     typeof options?.nonce === 'string' ? options.nonce : undefined,
   );
 }

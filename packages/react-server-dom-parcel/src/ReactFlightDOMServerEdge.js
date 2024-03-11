@@ -10,7 +10,6 @@
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   ReactFormState,
-  ServerContextJSONValue,
   Thenable,
 } from 'shared/ReactTypes';
 import {
@@ -46,9 +45,9 @@ export {
 } from './ReactFlightParcelReferences';
 
 type Options = {
+  environmentName?: string,
   identifierPrefix?: string,
   signal?: AbortSignal,
-  context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -61,9 +60,9 @@ export function renderToReadableStream(
     model,
     null,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
