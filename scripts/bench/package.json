@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "chalk": "^2.1.0",
-    "chrome-launcher": "^0.10.5",
+    "chrome-launcher": "^0.13.2",
     "cli-table": "^0.3.1",
     "http-server": "^0.10.0",
     "http2": "^3.3.6",
