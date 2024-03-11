@@ -6,24 +6,16 @@
  */
 
 import fs from "fs/promises";
-import glob from "glob";
+import * as glob from "glob";
 import path from "path";
 import { FILTER_PATH, FIXTURES_PATH, SNAPSHOT_EXTENSION } from "./constants";
 
-const KIND_DEFAULT = "only";
 const INPUT_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx"];
 
-export type TestFilter =
-  | {
-      kind: "only";
-      debug: boolean;
-      paths: Array<string>;
-    }
-  | {
-      kind: "skip";
-      debug: boolean;
-      paths: Array<string>;
-    };
+export type TestFilter = {
+  debug: boolean;
+  paths: Array<string>;
+};
 
 async function exists(file: string): Promise<boolean> {
   try {
@@ -43,20 +35,6 @@ function stripExtension(filename: string, extensions: Array<string>): string {
   return filename;
 }
 
-function shouldSkip(filter: TestFilter | null, filterId: string) {
-  if (filter) {
-    if (filter.kind === "only" && filter.paths.indexOf(filterId) === -1) {
-      return true;
-    } else if (
-      filter.kind === "skip" &&
-      filter.paths.indexOf(filterId) !== -1
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
 export async function readTestFilter(): Promise<TestFilter | null> {
   if (!(await exists(FILTER_PATH))) {
     throw new Error(`testfilter file not found at ${FILTER_PATH}`);
@@ -65,17 +43,12 @@ export async function readTestFilter(): Promise<TestFilter | null> {
   const input = await fs.readFile(FILTER_PATH, "utf8");
   const lines = input.trim().split("\n");
 
-  let filter: "only" | "skip" = KIND_DEFAULT;
   let debug: boolean = false;
   const line0 = lines[0];
   if (line0 != null) {
     // Try to parse pragmas
     let consumedLine0 = false;
     if (line0.indexOf("@only") !== -1) {
-      filter = "only";
-      consumedLine0 = true;
-    } else if (line0.indexOf("@skip") !== -1) {
-      filter = "skip";
       consumedLine0 = true;
     }
     if (line0.indexOf("@debug") !== -1) {
@@ -88,9 +61,8 @@ export async function readTestFilter(): Promise<TestFilter | null> {
     }
   }
   return {
-    kind: filter,
     debug,
-    paths: lines,
+    paths: lines.filter((line) => !line.trimStart().startsWith("//")),
   };
 }
 
@@ -122,17 +94,27 @@ async function readInputFixtures(
   rootDir: string,
   filter: TestFilter | null
 ): Promise<Map<string, { value: string; filepath: string }>> {
-  const inputFiles = glob.sync(`**/*{${INPUT_EXTENSIONS.join(",")}}`, {
-    cwd: rootDir,
-  });
+  let inputFiles: Array<string>;
+  if (filter == null) {
+    inputFiles = glob.sync(`**/*{${INPUT_EXTENSIONS.join(",")}}`, {
+      cwd: rootDir,
+    });
+  } else {
+    inputFiles = (
+      await Promise.all(
+        filter.paths.map((pattern) =>
+          glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(",")}}`, {
+            cwd: rootDir,
+          })
+        )
+      )
+    ).flat();
+  }
   const inputs: Array<Promise<[string, { value: string; filepath: string }]>> =
     [];
   for (const filePath of inputFiles) {
     // Do not include extensions in unique identifier for fixture
     const partialPath = stripExtension(filePath, INPUT_EXTENSIONS);
-    if (shouldSkip(filter, partialPath)) {
-      continue;
-    }
     inputs.push(
       fs.readFile(path.join(rootDir, filePath), "utf8").then((input) => {
         return [
@@ -151,16 +133,26 @@ async function readOutputFixtures(
   rootDir: string,
   filter: TestFilter | null
 ): Promise<Map<string, string>> {
-  const outputFiles = glob.sync(`**/*${SNAPSHOT_EXTENSION}`, {
-    cwd: rootDir,
-  });
+  let outputFiles: Array<string>;
+  if (filter == null) {
+    outputFiles = glob.sync(`**/*${SNAPSHOT_EXTENSION}`, {
+      cwd: rootDir,
+    });
+  } else {
+    outputFiles = (
+      await Promise.all(
+        filter.paths.map((pattern) =>
+          glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {
+            cwd: rootDir,
+          })
+        )
+      )
+    ).flat();
+  }
   const outputs: Array<Promise<[string, string]>> = [];
   for (const filePath of outputFiles) {
     // Do not include extensions in unique identifier for fixture
     const partialPath = stripExtension(filePath, [SNAPSHOT_EXTENSION]);
-    if (shouldSkip(filter, partialPath)) {
-      continue;
-    }
 
     const outputPath = path.join(rootDir, filePath);
     const output: Promise<[string, string]> = fs
