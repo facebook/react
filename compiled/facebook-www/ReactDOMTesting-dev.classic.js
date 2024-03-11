@@ -146,12 +146,11 @@ if (__DEV__) {
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableClientRenderFallbackOnTextMismatch =
-        dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch; // On WWW, false is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
+    var enableClientRenderFallbackOnTextMismatch = true;
     var enableFormActions = true;
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
@@ -36617,7 +36616,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-0d16943c";
+    var ReactVersion = "18.3.0-www-classic-32d29ecb";
 
     function createPortal$1(
       children,

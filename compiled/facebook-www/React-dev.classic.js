@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-14ddc39a";
+    var ReactVersion = "18.3.0-www-classic-7d5d3599";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -402,8 +402,7 @@ if (__DEV__) {
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
-    // On WWW, false is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, false is used for a new modern build.
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

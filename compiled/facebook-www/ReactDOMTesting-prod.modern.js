@@ -77,8 +77,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   assign = Object.assign,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
@@ -7384,10 +7382,7 @@ function completeWork(current, workInProgress, renderLanes) {
                       renderLanes,
                       currentResource
                     );
-                    if (
-                      currentResource &&
-                      enableClientRenderFallbackOnTextMismatch
-                    ) {
+                    if (currentResource) {
                       current = !1;
                       break a;
                     }
@@ -7402,10 +7397,7 @@ function completeWork(current, workInProgress, renderLanes) {
                         renderLanes,
                         isConcurrentMode$24
                       );
-                    if (
-                      isConcurrentMode$24 &&
-                      enableClientRenderFallbackOnTextMismatch
-                    ) {
+                    if (isConcurrentMode$24) {
                       current = !1;
                       break a;
                     }
@@ -15002,8 +14994,7 @@ function checkForUnmatchedText(serverText, clientText, isConcurrentMode) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
   if (
     normalizeMarkupForTextOrAttribute(serverText) !== clientText &&
-    isConcurrentMode &&
-    enableClientRenderFallbackOnTextMismatch
+    isConcurrentMode
   )
     throw Error(formatProdErrorMessage(425));
 }
@@ -16242,7 +16233,7 @@ function hydrateInstance(
         internalInstanceHandle,
         hostContext
       ),
-    (hostContext && enableClientRenderFallbackOnTextMismatch) ||
+    hostContext ||
       "body" === type ||
       (instance.textContent = internalInstanceHandle));
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
@@ -17143,7 +17134,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1786 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-ddc8fe6f",
+  version: "18.3.0-www-modern-a121dc59",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2156 = {
@@ -17174,7 +17165,7 @@ var internals$jscomp$inline_2156 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ddc8fe6f"
+  reconcilerVersion: "18.3.0-www-modern-a121dc59"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2157 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17583,4 +17574,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-ddc8fe6f";
+exports.version = "18.3.0-www-modern-a121dc59";
