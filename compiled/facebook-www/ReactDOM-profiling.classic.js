@@ -70,8 +70,6 @@ var ReactSharedInternals =
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableClientRenderFallbackOnTextMismatch =
     dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
-  enableProfilerNestedUpdateScheduledHook =
-    dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -10867,7 +10865,6 @@ function addTransitionProgressCallbackToPendingTransition(
 var hasUncaughtError = !1,
   firstUncaughtError = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
-  rootCommittingMutationOrLayoutEffects = null,
   rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsLanes = 0,
@@ -10915,36 +10912,21 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
   markRootUpdated(root, lane);
   if (0 === (executionContext & 2) || root !== workInProgressRoot) {
     isDevToolsPresent && addFiberToLanesMap(root, fiber, lane);
-    if (
-      enableProfilerNestedUpdateScheduledHook &&
-      0 !== (executionContext & 4) &&
-      root === rootCommittingMutationOrLayoutEffects &&
-      fiber.mode & 2
-    )
-      for (var current = fiber; null !== current; ) {
-        if (12 === current.tag) {
-          var _current$memoizedProp = current.memoizedProps,
-            id = _current$memoizedProp.id;
-          _current$memoizedProp = _current$memoizedProp.onNestedUpdateScheduled;
-          "function" === typeof _current$memoizedProp &&
-            _current$memoizedProp(id);
-        }
-        current = current.return;
+    if (enableTransitionTracing) {
+      var transition = ReactCurrentBatchConfig$1.transition;
+      if (
+        null !== transition &&
+        null != transition.name &&
+        (-1 === transition.startTime && (transition.startTime = now$1()),
+        enableTransitionTracing)
+      ) {
+        var transitionLanesMap = root.transitionLanes,
+          index$11 = 31 - clz32(lane),
+          transitions = transitionLanesMap[index$11];
+        null === transitions && (transitions = new Set());
+        transitions.add(transition);
+        transitionLanesMap[index$11] = transitions;
       }
-    if (
-      enableTransitionTracing &&
-      ((current = ReactCurrentBatchConfig$1.transition),
-      null !== current &&
-        null != current.name &&
-        (-1 === current.startTime && (current.startTime = now$1()),
-        enableTransitionTracing))
-    ) {
-      id = root.transitionLanes;
-      _current$memoizedProp = 31 - clz32(lane);
-      var transitions = id[_current$memoizedProp];
-      null === transitions && (transitions = new Set());
-      transitions.add(current);
-      id[_current$memoizedProp] = transitions;
     }
     root === workInProgressRoot &&
       (0 === (executionContext & 2) &&
@@ -11827,8 +11809,6 @@ function commitRootImpl(
       finishedWork
     );
     commitTime = now();
-    enableProfilerNestedUpdateScheduledHook &&
-      (rootCommittingMutationOrLayoutEffects = root);
     commitMutationEffects(root, finishedWork, lanes);
     shouldFireAfterActiveInstanceBlur$208 &&
       ((_enabled = !0),
@@ -11849,8 +11829,6 @@ function commitRootImpl(
       null !== injectedProfilingHooks &&
       "function" === typeof injectedProfilingHooks.markLayoutEffectsStopped &&
       injectedProfilingHooks.markLayoutEffectsStopped();
-    enableProfilerNestedUpdateScheduledHook &&
-      (rootCommittingMutationOrLayoutEffects = null);
     requestPaint();
     executionContext = prevExecutionContext;
     currentUpdatePriority = spawnedLane;
@@ -18006,7 +17984,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1907 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-f40ff6ee",
+  version: "18.3.0-www-classic-819e0a71",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18050,7 +18028,7 @@ var devToolsConfig$jscomp$inline_1907 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-f40ff6ee"
+  reconcilerVersion: "18.3.0-www-classic-819e0a71"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18368,7 +18346,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-f40ff6ee";
+exports.version = "18.3.0-www-classic-819e0a71";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

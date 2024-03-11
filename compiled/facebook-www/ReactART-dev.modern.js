@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-c4d09ac8";
+    var ReactVersion = "18.3.0-www-modern-d1dd2d63";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -194,8 +194,6 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableProfilerNestedUpdateScheduledHook =
-      dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
@@ -25003,10 +25001,7 @@ if (__DEV__) {
     }
     var hasUncaughtError = false;
     var firstUncaughtError = null;
-    var legacyErrorBoundariesThatAlreadyFailed = null; // Only used when enableProfilerNestedUpdateScheduledHook is true;
-    // to track which root is currently committing layout effects.
-
-    var rootCommittingMutationOrLayoutEffects = null;
+    var legacyErrorBoundariesThatAlreadyFailed = null;
     var rootDoesHavePassiveEffects = false;
     var rootWithPendingPassiveEffects = null;
     var pendingPassiveEffectsLanes = NoLanes;
@@ -25201,32 +25196,6 @@ if (__DEV__) {
         }
 
         warnIfUpdatesNotWrappedWithActDEV(fiber);
-
-        if (enableProfilerNestedUpdateScheduledHook) {
-          if (
-            (executionContext & CommitContext) !== NoContext &&
-            root === rootCommittingMutationOrLayoutEffects
-          ) {
-            if (fiber.mode & ProfileMode) {
-              var current = fiber;
-
-              while (current !== null) {
-                if (current.tag === Profiler) {
-                  var _current$memoizedProp = current.memoizedProps,
-                    id = _current$memoizedProp.id,
-                    onNestedUpdateScheduled =
-                      _current$memoizedProp.onNestedUpdateScheduled;
-
-                  if (typeof onNestedUpdateScheduled === "function") {
-                    onNestedUpdateScheduled(id);
-                  }
-                }
-
-                current = current.return;
-              }
-            }
-          }
-        }
 
         if (enableTransitionTracing) {
           var transition = ReactCurrentBatchConfig.transition;
@@ -27198,12 +27167,6 @@ if (__DEV__) {
           // Mark the current commit time to be shared by all Profilers in this
           // batch. This enables them to be grouped later.
           recordCommitTime();
-        }
-
-        if (enableProfilerNestedUpdateScheduledHook) {
-          // Track the root here, rather than in commitLayoutEffects(), because of ref setters.
-          // Updates scheduled during ref detachment should also be flagged.
-          rootCommittingMutationOrLayoutEffects = root;
         } // The next phase is the mutation phase, where we mutate the host tree.
 
         commitMutationEffects(root, finishedWork, lanes);
@@ -27235,10 +27198,6 @@ if (__DEV__) {
 
         if (enableSchedulingProfiler) {
           markLayoutEffectsStopped();
-        }
-
-        if (enableProfilerNestedUpdateScheduledHook) {
-          rootCommittingMutationOrLayoutEffects = null;
         } // Tell Scheduler to yield at the end of the frame, so the browser has an
         // opportunity to paint.
 
