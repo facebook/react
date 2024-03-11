@@ -14,7 +14,6 @@
 import React = require('react');
 import ReactDOM = require('react-dom');
 import ReactDOMClient = require('react-dom/client');
-import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
 import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 

@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
 const StrictMode = React.StrictMode;
 
 describe('findDOMNode', () => {
@@ -31,7 +30,8 @@ describe('findDOMNode', () => {
       }
     }
 
-    const myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
+    const container = document.createElement('div');
+    const myNode = ReactDOM.render(<MyNode />, container);
     const myDiv = ReactDOM.findDOMNode(myNode);
     const mySameDiv = ReactDOM.findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
@@ -99,7 +99,10 @@ describe('findDOMNode', () => {
         return <div />;
       }
     }
-    expect(() => ReactTestUtils.renderIntoDocument(<Bar />)).not.toThrow();
+    expect(() => {
+      const container = document.createElement('div');
+      ReactDOM.render(<Bar />, container);
+    }).not.toThrow();
   });
 
   // @gate !disableLegacyMode
@@ -117,8 +120,10 @@ describe('findDOMNode', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(
+    const container = document.createElement('div');
+    ReactDOM.render(
       <ContainsStrictModeChild ref={n => (parent = n)} />,
+      container,
     );
 
     let match;
@@ -145,10 +150,13 @@ describe('findDOMNode', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(
+    const container = document.createElement('div');
+
+    ReactDOM.render(
       <StrictMode>
         <IsInStrictMode ref={n => (parent = n)} />
       </StrictMode>,
+      container,
     );
 
     let match;
