@@ -114,7 +114,6 @@ function subscribeFixtures(
   onChange: (state: RunnerState) => void
 ) {
   // Watch the fixtures directory for changes
-  /* const fileSubscription = */
   watcher.subscribe(FIXTURES_PATH, async (err, _events) => {
     if (err) {
       console.error(err);
@@ -127,6 +126,7 @@ function subscribeFixtures(
     const isRealUpdate = performance.now() - state.lastUpdate > 5000;
     if (isRealUpdate) {
       // Fixtures changed, re-run tests
+      state.mode.action = RunnerAction.Test;
       onChange(state);
     }
   });
@@ -136,23 +136,20 @@ function subscribeFilterFile(
   state: RunnerState,
   onChange: (state: RunnerState) => void
 ) {
-  const filterSubscription = watcher.subscribe(
-    process.cwd(),
-    async (err, events) => {
-      if (err) {
-        console.error(err);
-        process.exit(1);
-      } else if (
-        events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !== -1
-      ) {
-        state.filter = await readTestFilter();
-        if (state.mode.filter) {
-          state.mode.action = RunnerAction.Test;
-          onChange(state);
-        }
+  watcher.subscribe(process.cwd(), async (err, events) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    } else if (
+      events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !== -1
+    ) {
+      state.filter = await readTestFilter();
+      if (state.mode.filter) {
+        state.mode.action = RunnerAction.Test;
+        onChange(state);
       }
     }
-  );
+  });
 }
 
 function subscribeTsc(
@@ -172,11 +169,7 @@ function subscribeTsc(
         state.compilerVersion++;
       }
       state.isCompilerBuildValid = isSuccess;
-      if (state.filter) {
-        state.mode.action = RunnerAction.Test;
-      } else {
-        state.mode.action = RunnerAction.Test;
-      }
+      state.mode.action = RunnerAction.Test;
       onChange(state);
     }
   );
@@ -194,6 +187,7 @@ function subscribeKeyEvents(
       process.exit(0);
     } else if (key.name === "f") {
       state.mode.filter = !state.mode.filter;
+      state.mode.action = RunnerAction.Test;
     } else {
       // any other key re-runs tests
       state.mode.action = RunnerAction.Test;

@@ -6,6 +6,7 @@
  */
 
 import { Worker } from "jest-worker";
+import { cpus } from "os";
 import process from "process";
 import * as readline from "readline";
 import ts from "typescript";
@@ -23,6 +24,7 @@ import {
 import * as runnerWorker from "./runner-worker";
 
 const WORKER_PATH = require.resolve("./runner-worker.js");
+const NUM_WORKERS = cpus().length - 1;
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -163,12 +165,40 @@ async function onChange(
 export async function main(opts: RunnerOptions): Promise<void> {
   const worker: Worker & typeof runnerWorker = new Worker(WORKER_PATH, {
     enableWorkerThreads: opts.workerThreads,
+    numWorkers: NUM_WORKERS,
   }) as any;
   worker.getStderr().pipe(process.stderr);
   worker.getStdout().pipe(process.stdout);
 
   if (opts.watch) {
     makeWatchRunner((state) => onChange(worker, state), opts.filter);
+    if (opts.filter) {
+      /**
+       * Warm up wormers when in watch mode. Loading the Forget babel plugin
+       * and all of its transitive dependencies takes 1-3s (per worker) on a M1.
+       * As jest-worker dispatches tasks using a round-robin strategy, we can
+       * avoid an additional 1-3s wait on the first num_workers runs by warming
+       * up workers eagerly.
+       */
+      for (let i = 0; i < NUM_WORKERS - 1; i++) {
+        worker.transformFixture(
+          {
+            fixturePath: "tmp",
+            snapshotPath: "./tmp.expect.md",
+            inputPath: "./tmp.js",
+            input: `
+            function Foo(props) {
+              return identity(props);
+            }
+            `,
+            snapshot: null,
+          },
+          0,
+          false,
+          false
+        );
+      }
+    }
   } else {
     // Non-watch mode. For simplicity we re-use the same watchSrc() function.
     // After the first build completes run tests and exit
