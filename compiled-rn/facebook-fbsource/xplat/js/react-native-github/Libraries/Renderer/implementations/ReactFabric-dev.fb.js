@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9c2330dcbae0932d46415008abf39f83>>
+ * @generated SignedSource<<2cdd07c219807a7aa7c60e7298609102>>
  */
 
 "use strict";
@@ -25662,7 +25662,7 @@ to return true:wantsResponderID|                            |
     }
     var hasUncaughtError = false;
     var firstUncaughtError = null;
-    var legacyErrorBoundariesThatAlreadyFailed = null; // Only used when enableProfilerNestedUpdateScheduledHook is true;
+    var legacyErrorBoundariesThatAlreadyFailed = null;
     var rootDoesHavePassiveEffects = false;
     var rootWithPendingPassiveEffects = null;
     var pendingPassiveEffectsLanes = NoLanes;
@@ -27804,7 +27804,7 @@ to return true:wantsResponderID|                            |
           // Mark the current commit time to be shared by all Profilers in this
           // batch. This enables them to be grouped later.
           recordCommitTime();
-        }
+        } // The next phase is the mutation phase, where we mutate the host tree.
 
         commitMutationEffects(root, finishedWork, lanes);
         // the mutation phase, so that the previous tree is still current during
@@ -27821,7 +27821,7 @@ to return true:wantsResponderID|                            |
 
         {
           markLayoutEffectsStopped();
-        }
+        } // Tell Scheduler to yield at the end of the frame, so the browser has an
         // opportunity to paint.
 
         requestPaint();
@@ -30184,7 +30184,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-d10dabcc";
+    var ReactVersion = "18.3.0-canary-625ba3e2";
 
     function createPortal$1(
       children,

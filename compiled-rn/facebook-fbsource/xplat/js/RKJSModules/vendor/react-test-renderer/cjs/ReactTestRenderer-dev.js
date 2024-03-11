@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db79d0fa61da74ae92c8d9795516873a>>
+ * @generated SignedSource<<5567992397ed27615daacd939e3142d0>>
  */
 
 "use strict";
@@ -21581,7 +21581,7 @@ if (__DEV__) {
     }
     var hasUncaughtError = false;
     var firstUncaughtError = null;
-    var legacyErrorBoundariesThatAlreadyFailed = null; // Only used when enableProfilerNestedUpdateScheduledHook is true;
+    var legacyErrorBoundariesThatAlreadyFailed = null;
     var rootDoesHavePassiveEffects = false;
     var rootWithPendingPassiveEffects = null;
     var pendingPassiveEffectsLanes = NoLanes;
@@ -23594,7 +23594,7 @@ if (__DEV__) {
           // Mark the current commit time to be shared by all Profilers in this
           // batch. This enables them to be grouped later.
           recordCommitTime();
-        }
+        } // The next phase is the mutation phase, where we mutate the host tree.
 
         commitMutationEffects(root, finishedWork);
         // the mutation phase, so that the previous tree is still current during
@@ -25677,7 +25677,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-dfaed5582-20240311";
+    var ReactVersion = "18.3.0-canary-0d1ae5d75-20240311";
 
     // Might add PROFILE later.
 
