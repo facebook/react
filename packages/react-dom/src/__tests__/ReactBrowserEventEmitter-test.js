@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOMClient;
-let ReactTestUtils;
 let act;
 
 let idCallOrder;
@@ -28,7 +27,6 @@ const recordIDAndReturnFalse = function (id, event) {
 };
 const LISTENER = jest.fn();
 const ON_CLICK_KEY = 'onClick';
-const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 
 let GRANDPARENT;
 let PARENT;
@@ -50,7 +48,6 @@ describe('ReactBrowserEventEmitter', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -184,7 +181,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should continue bubbling if an error is thrown', async () => {
     await renderTree();
     await putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    await putListener(PARENT, ON_CLICK_KEY, function () {
+    await putListener(PARENT, ON_CLICK_KEY, function (event) {
       recordID(PARENT);
       throw new Error('Handler interrupted');
     });
@@ -193,15 +190,36 @@ describe('ReactBrowserEventEmitter', () => {
       ON_CLICK_KEY,
       recordID.bind(null, GRANDPARENT),
     );
-    await expect(
-      act(() => {
-        ReactTestUtils.Simulate.click(CHILD);
-      }),
-    ).rejects.toThrow();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    const errorHandler = jest.fn(event => {
+      event.preventDefault();
+    });
+    window.addEventListener('error', errorHandler);
+    try {
+      await act(() => {
+        CHILD.click();
+      });
+      expect(idCallOrder.length).toBe(3);
+      expect(idCallOrder[0]).toBe(CHILD);
+      expect(idCallOrder[1]).toBe(PARENT);
+      expect(idCallOrder[2]).toBe(GRANDPARENT);
+      expect(errorHandler).toHaveBeenCalledTimes(__DEV__ ? 2 : 1);
+      expect(errorHandler.mock.calls[0][0]).toEqual(
+        expect.objectContaining({
+          error: expect.any(Error),
+          message: 'Handler interrupted',
+        }),
+      );
+      if (__DEV__) {
+        expect(errorHandler.mock.calls[1][0]).toEqual(
+          expect.objectContaining({
+            error: expect.any(Error),
+            message: 'Handler interrupted',
+          }),
+        );
+      }
+    } finally {
+      window.removeEventListener('error', errorHandler);
+    }
   });
 
   it('should set currentTarget', async () => {
@@ -346,15 +364,5 @@ describe('ReactBrowserEventEmitter', () => {
       CHILD.click();
     });
     expect(handleParentClick).toHaveBeenCalledTimes(0);
-  });
-
-  it('should have mouse enter simulated by test utils', async () => {
-    await renderTree();
-    await putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
-    await act(() => {
-      ReactTestUtils.Simulate.mouseEnter(CHILD);
-    });
-    expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(CHILD);
   });
 });
