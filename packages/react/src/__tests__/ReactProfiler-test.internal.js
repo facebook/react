@@ -14,7 +14,6 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
-let ReactTestRenderer;
 let act;
 let AdvanceTime;
 let assertLog;
@@ -27,7 +26,6 @@ function loadModules({
   enableProfilerCommitHooks = true,
   enableProfilerNestedUpdatePhase = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
-  useNoopRenderer = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -40,17 +38,9 @@ function loadModules({
 
   React = require('react');
   Scheduler = require('scheduler');
-  act = require('internal-test-utils').act;
-
-  if (useNoopRenderer) {
-    ReactNoop = require('react-noop-renderer');
-    ReactTestRenderer = null;
-  } else {
-    ReactNoop = null;
-    ReactTestRenderer = require('react-test-renderer');
-  }
-
+  ReactNoop = require('react-noop-renderer');
   const InternalTestUtils = require('internal-test-utils');
+  act = InternalTestUtils.act;
   assertLog = InternalTestUtils.assertLog;
   waitFor = InternalTestUtils.waitFor;
   waitForAll = InternalTestUtils.waitForAll;
@@ -72,96 +62,13 @@ function loadModules({
   };
 }
 
-describe('Profiler', () => {
-  describe('works in profiling and non-profiling bundles', () => {
-    [true, false].forEach(enableProfilerTimer => {
-      describe(`enableProfilerTimer:${
-        enableProfilerTimer ? 'enabled' : 'disabled'
-      }`, () => {
-        beforeEach(() => {
-          jest.resetModules();
-
-          loadModules({enableProfilerTimer});
-        });
-
-        // This will throw in production too,
-        // But the test is only interested in verifying the DEV error message.
-        if (__DEV__ && enableProfilerTimer) {
-          it('should warn if required params are missing', () => {
-            expect(() => {
-              ReactTestRenderer.create(<React.Profiler />);
-            }).toErrorDev(
-              'Profiler must specify an "id" of type `string` as a prop. Received the type `undefined` instead.',
-              {
-                withoutStack: true,
-              },
-            );
-          });
-        }
-
-        it('should support an empty Profiler (with no children)', () => {
-          // As root
-          expect(
-            ReactTestRenderer.create(
-              <React.Profiler id="label" onRender={jest.fn()} />,
-            ).toJSON(),
-          ).toMatchSnapshot();
-
-          // As non-root
-          expect(
-            ReactTestRenderer.create(
-              <div>
-                <React.Profiler id="label" onRender={jest.fn()} />
-              </div>,
-            ).toJSON(),
-          ).toMatchSnapshot();
-        });
-
-        it('should render children', () => {
-          const FunctionComponent = ({label}) => <span>{label}</span>;
-          const renderer = ReactTestRenderer.create(
-            <div>
-              <span>outside span</span>
-              <React.Profiler id="label" onRender={jest.fn()}>
-                <span>inside span</span>
-                <FunctionComponent label="function component" />
-              </React.Profiler>
-            </div>,
-          );
-          expect(renderer.toJSON()).toMatchSnapshot();
-        });
-
-        it('should support nested Profilers', () => {
-          const FunctionComponent = ({label}) => <div>{label}</div>;
-          class ClassComponent extends React.Component {
-            render() {
-              return <block>{this.props.label}</block>;
-            }
-          }
-          const renderer = ReactTestRenderer.create(
-            <React.Profiler id="outer" onRender={jest.fn()}>
-              <FunctionComponent label="outer function component" />
-              <React.Profiler id="inner" onRender={jest.fn()}>
-                <ClassComponent label="inner class component" />
-                <span>inner span</span>
-              </React.Profiler>
-            </React.Profiler>,
-          );
-          expect(renderer.toJSON()).toMatchSnapshot();
-        });
-      });
-    });
-  });
-});
-
 describe(`onRender`, () => {
   beforeEach(() => {
     jest.resetModules();
-
     loadModules();
   });
 
-  it('should handle errors thrown', () => {
+  it('should handle errors thrown', async () => {
     const callback = jest.fn(id => {
       if (id === 'throw') {
         throw Error('expected');
@@ -180,17 +87,19 @@ describe(`onRender`, () => {
 
     // Errors thrown from onRender should not break the commit phase,
     // Or prevent other lifecycles from being called.
-    expect(() =>
-      ReactTestRenderer.create(
-        <ClassComponent>
-          <React.Profiler id="do-not-throw" onRender={callback}>
-            <React.Profiler id="throw" onRender={callback}>
-              <div />
+    await expect(
+      act(() => {
+        ReactNoop.render(
+          <ClassComponent>
+            <React.Profiler id="do-not-throw" onRender={callback}>
+              <React.Profiler id="throw" onRender={callback}>
+                <div />
+              </React.Profiler>
             </React.Profiler>
-          </React.Profiler>
-        </ClassComponent>,
-      ),
-    ).toThrow('expected');
+          </ClassComponent>,
+        );
+      }),
+    ).rejects.toThrow('expected');
     expect(didMount).toBe(true);
     expect(callback).toHaveBeenCalledTimes(2);
   });
@@ -204,14 +113,11 @@ describe(`onRender`, () => {
     };
 
     React.startTransition(() => {
-      ReactTestRenderer.create(
+      ReactNoop.render(
         <React.Profiler id="test" onRender={callback}>
           <Yield value="first" />
           <Yield value="last" />
         </React.Profiler>,
-        {
-          isConcurrent: true,
-        },
       );
     });
 
@@ -222,7 +128,7 @@ describe(`onRender`, () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not record times for components outside of Profiler tree', () => {
+  it('does not record times for components outside of Profiler tree', async () => {
     // Mock the Scheduler module so we can track how many times the current
     // time is read
     jest.mock('scheduler', obj => {
@@ -243,15 +149,17 @@ describe(`onRender`, () => {
     // Clear yields in case the current time is read during initialization.
     Scheduler.unstable_clearLog();
 
-    ReactTestRenderer.create(
-      <div>
-        <AdvanceTime />
-        <AdvanceTime />
-        <AdvanceTime />
-        <AdvanceTime />
-        <AdvanceTime />
-      </div>,
-    );
+    await act(() => {
+      ReactNoop.render(
+        <div>
+          <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
+        </div>,
+      );
+    });
 
     // Restore original mock
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
@@ -259,9 +167,17 @@ describe(`onRender`, () => {
     // TODO: unstable_now is called by more places than just the profiler.
     // Rewrite this test so it's less fragile.
     if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
-      assertLog(['read current time', 'read current time']);
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+      ]);
     } else {
       assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
         'read current time',
         'read current time',
         'read current time',
@@ -301,7 +217,10 @@ describe(`onRender`, () => {
       );
     }
 
-    const renderer = ReactTestRenderer.create(<App />);
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -319,7 +238,9 @@ describe(`onRender`, () => {
 
     Scheduler.unstable_advanceTime(20); // 10 -> 30
 
-    renderer.update(<App />);
+    await act(() => {
+      root.render(<App />);
+    });
 
     if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
       // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
@@ -352,16 +273,19 @@ describe(`onRender`, () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('logs render times for both mount and update', () => {
+  it('logs render times for both mount and update', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="test" onRender={callback}>
-        <AdvanceTime />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <AdvanceTime />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -379,11 +303,13 @@ describe(`onRender`, () => {
 
     Scheduler.unstable_advanceTime(20); // 15 -> 35
 
-    renderer.update(
-      <React.Profiler id="test" onRender={callback}>
-        <AdvanceTime />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <AdvanceTime />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -401,11 +327,13 @@ describe(`onRender`, () => {
 
     Scheduler.unstable_advanceTime(20); // 45 -> 65
 
-    renderer.update(
-      <React.Profiler id="test" onRender={callback}>
-        <AdvanceTime byAmount={4} />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <AdvanceTime byAmount={4} />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -420,22 +348,25 @@ describe(`onRender`, () => {
     expect(call[5]).toBe(69); // commit time
   });
 
-  it('includes render times of nested Profilers in their parent times', () => {
+  it('includes render times of nested Profilers in their parent times', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    ReactTestRenderer.create(
-      <React.Fragment>
-        <React.Profiler id="parent" onRender={callback}>
-          <AdvanceTime byAmount={10}>
-            <React.Profiler id="child" onRender={callback}>
-              <AdvanceTime byAmount={20} />
-            </React.Profiler>
-          </AdvanceTime>
-        </React.Profiler>
-      </React.Fragment>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Fragment>
+          <React.Profiler id="parent" onRender={callback}>
+            <AdvanceTime byAmount={10}>
+              <React.Profiler id="child" onRender={callback}>
+                <AdvanceTime byAmount={20} />
+              </React.Profiler>
+            </AdvanceTime>
+          </React.Profiler>
+        </React.Fragment>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -455,21 +386,24 @@ describe(`onRender`, () => {
     expect(parentCall[5]).toBe(35); // commit time
   });
 
-  it('traces sibling Profilers separately', () => {
+  it('traces sibling Profilers separately', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    ReactTestRenderer.create(
-      <React.Fragment>
-        <React.Profiler id="first" onRender={callback}>
-          <AdvanceTime byAmount={20} />
-        </React.Profiler>
-        <React.Profiler id="second" onRender={callback}>
-          <AdvanceTime byAmount={5} />
-        </React.Profiler>
-      </React.Fragment>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Fragment>
+          <React.Profiler id="first" onRender={callback}>
+            <AdvanceTime byAmount={20} />
+          </React.Profiler>
+          <React.Profiler id="second" onRender={callback}>
+            <AdvanceTime byAmount={5} />
+          </React.Profiler>
+        </React.Fragment>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -488,20 +422,23 @@ describe(`onRender`, () => {
     expect(secondCall[5]).toBe(30); // commit time
   });
 
-  it('does not include time spent outside of profile root', () => {
+  it('does not include time spent outside of profile root', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    ReactTestRenderer.create(
-      <React.Fragment>
-        <AdvanceTime byAmount={20} />
-        <React.Profiler id="test" onRender={callback}>
-          <AdvanceTime byAmount={5} />
-        </React.Profiler>
-        <AdvanceTime byAmount={20} />
-      </React.Fragment>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Fragment>
+          <AdvanceTime byAmount={20} />
+          <React.Profiler id="test" onRender={callback}>
+            <AdvanceTime byAmount={5} />
+          </React.Profiler>
+          <AdvanceTime byAmount={20} />
+        </React.Fragment>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -513,7 +450,7 @@ describe(`onRender`, () => {
     expect(call[5]).toBe(50); // commit time
   });
 
-  it('is not called when blocked by sCU false', () => {
+  it('is not called when blocked by sCU false', async () => {
     const callback = jest.fn();
 
     let instance;
@@ -525,22 +462,24 @@ describe(`onRender`, () => {
       }
     }
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="outer" onRender={callback}>
-        <Updater>
-          <React.Profiler id="inner" onRender={callback}>
-            <div />
-          </React.Profiler>
-        </Updater>
-      </React.Profiler>,
-    );
-
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="outer" onRender={callback}>
+          <Updater>
+            <React.Profiler id="inner" onRender={callback}>
+              <div />
+            </React.Profiler>
+          </Updater>
+        </React.Profiler>,
+      );
+    });
     // All profile callbacks are called for initial render
     expect(callback).toHaveBeenCalledTimes(2);
 
     callback.mockReset();
 
-    renderer.unstable_flushSync(() => {
+    ReactNoop.flushSync(() => {
       instance.setState({
         count: 1,
       });
@@ -553,30 +492,35 @@ describe(`onRender`, () => {
     expect(callback.mock.calls[0][0]).toBe('outer');
   });
 
-  it('decreases actual time but not base time when sCU prevents an update', () => {
+  it('decreases actual time but not base time when sCU prevents an update', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="test" onRender={callback}>
-        <AdvanceTime byAmount={10}>
-          <AdvanceTime byAmount={13} shouldComponentUpdate={false} />
-        </AdvanceTime>
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <AdvanceTime byAmount={10}>
+            <AdvanceTime byAmount={13} shouldComponentUpdate={false} />
+          </AdvanceTime>
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
     Scheduler.unstable_advanceTime(30); // 28 -> 58
 
-    renderer.update(
-      <React.Profiler id="test" onRender={callback}>
-        <AdvanceTime byAmount={4}>
-          <AdvanceTime byAmount={7} shouldComponentUpdate={false} />
-        </AdvanceTime>
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <AdvanceTime byAmount={4}>
+            <AdvanceTime byAmount={7} shouldComponentUpdate={false} />
+          </AdvanceTime>
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -595,7 +539,7 @@ describe(`onRender`, () => {
     expect(updateCall[5]).toBe(62); // commit time
   });
 
-  it('includes time spent in render phase lifecycles', () => {
+  it('includes time spent in render phase lifecycles', async () => {
     class WithLifecycles extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -616,19 +560,24 @@ describe(`onRender`, () => {
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="test" onRender={callback}>
-        <WithLifecycles />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <WithLifecycles />
+        </React.Profiler>,
+      );
+    });
 
     Scheduler.unstable_advanceTime(15); // 13 -> 28
 
-    renderer.update(
-      <React.Profiler id="test" onRender={callback}>
-        <WithLifecycles />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <WithLifecycles />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -648,9 +597,8 @@ describe(`onRender`, () => {
   });
 
   it('should clear nested-update flag when multiple cascading renders are scheduled', async () => {
-    loadModules({
-      useNoopRenderer: true,
-    });
+    jest.resetModules();
+    loadModules();
 
     function Component() {
       const [didMount, setDidMount] = React.useState(false);
@@ -689,9 +637,8 @@ describe(`onRender`, () => {
   });
 
   it('is properly distinguish updates and nested-updates when there is more than sync remaining work', () => {
-    loadModules({
-      useNoopRenderer: true,
-    });
+    jest.resetModules();
+    loadModules();
 
     function Component() {
       const [didMount, setDidMount] = React.useState(false);
@@ -742,14 +689,14 @@ describe(`onRender`, () => {
 
       Scheduler.unstable_advanceTime(5); // 0 -> 5
 
+      const root = ReactNoop.createRoot();
       // Render partially, but run out of time before completing.
       React.startTransition(() => {
-        ReactTestRenderer.create(
+        root.render(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={2} />
             <Yield renderTime={3} />
           </React.Profiler>,
-          {isConcurrent: true},
         );
       });
 
@@ -779,10 +726,11 @@ describe(`onRender`, () => {
 
       Scheduler.unstable_advanceTime(5); // 0 -> 5
 
+      const root = ReactNoop.createRoot();
       // Render partially, but don't finish.
       // This partial render should take 5ms of simulated time.
       React.startTransition(() => {
-        ReactTestRenderer.create(
+        root.render(
           <React.Profiler id="outer" onRender={callback}>
             <Yield renderTime={5} />
             <Yield renderTime={10} />
@@ -790,7 +738,6 @@ describe(`onRender`, () => {
               <Yield renderTime={17} />
             </React.Profiler>
           </React.Profiler>,
-          {isConcurrent: true},
         );
       });
 
@@ -832,16 +779,15 @@ describe(`onRender`, () => {
 
       Scheduler.unstable_advanceTime(5); // 0 -> 5
 
+      const root = ReactNoop.createRoot();
       // Render a partially update, but don't finish.
       // This partial render should take 10ms of simulated time.
-      let renderer;
       React.startTransition(() => {
-        renderer = ReactTestRenderer.create(
+        root.render(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={10} />
             <Yield renderTime={20} />
           </React.Profiler>,
-          {isConcurrent: true},
         );
       });
 
@@ -853,8 +799,8 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // The interrupted work simulates an additional 5ms of time.
-      renderer.unstable_flushSync(() => {
-        renderer.update(
+      ReactNoop.flushSync(() => {
+        root.render(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={5} />
           </React.Profiler>,
@@ -888,13 +834,12 @@ describe(`onRender`, () => {
       };
 
       Scheduler.unstable_advanceTime(5); // 0 -> 5
-
-      const renderer = ReactTestRenderer.create(
+      const root = ReactNoop.createRoot();
+      root.render(
         <React.Profiler id="test" onRender={callback}>
           <Yield renderTime={6} />
           <Yield renderTime={15} />
         </React.Profiler>,
-        {isConcurrent: true},
       );
 
       // Render everything initially.
@@ -914,7 +859,7 @@ describe(`onRender`, () => {
       // Render a partially update, but don't finish.
       // This partial render should take 3ms of simulated time.
       React.startTransition(() => {
-        renderer.update(
+        root.render(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={3} />
             <Yield renderTime={5} />
@@ -938,8 +883,8 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // The interrupted work simulates an additional 11ms of time.
-      renderer.unstable_flushSync(() => {
-        renderer.update(
+      ReactNoop.flushSync(() => {
+        root.render(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={11} />
           </React.Profiler>,
@@ -994,12 +939,12 @@ describe(`onRender`, () => {
 
       Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-      const renderer = ReactTestRenderer.create(
+      const root = ReactNoop.createRoot();
+      root.render(
         <React.Profiler id="test" onRender={callback}>
           <FirstComponent />
           <SecondComponent />
         </React.Profiler>,
-        {isConcurrent: true},
       );
 
       // Render everything initially.
@@ -1036,7 +981,7 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // This simulates a total of 37ms of actual render time.
-      renderer.unstable_flushSync(() => second.setState({renderTime: 30}));
+      ReactNoop.flushSync(() => second.setState({renderTime: 30}));
       assertLog(['SecondComponent:30', 'Yield:7']);
 
       // The actual time should include only the most recent render (37ms),
@@ -1082,7 +1027,7 @@ describe(`onRender`, () => {
           });
         });
 
-        it('should accumulate actual time after an error handled by componentDidCatch()', () => {
+        it('should accumulate actual time after an error handled by componentDidCatch()', async () => {
           const callback = jest.fn();
 
           const ThrowsError = ({unused}) => {
@@ -1107,14 +1052,16 @@ describe(`onRender`, () => {
 
           Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-          ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <ErrorBoundary>
-                <AdvanceTime byAmount={9} />
-                <ThrowsError />
-              </ErrorBoundary>
-            </React.Profiler>,
-          );
+          await act(() => {
+            ReactNoop.render(
+              <React.Profiler id="test" onRender={callback}>
+                <ErrorBoundary>
+                  <AdvanceTime byAmount={9} />
+                  <ThrowsError />
+                </ErrorBoundary>
+              </React.Profiler>,
+            );
+          });
 
           expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1130,14 +1077,19 @@ describe(`onRender`, () => {
           // base time includes: 2 (ErrorBoundary)
           // Since the tree is empty for the initial commit
           expect(mountCall[3]).toBe(2);
-          // start time
-          expect(mountCall[4]).toBe(5);
-          // commit time: 5 initially + 14 of work
+          // start time: 5 initially + 14 of work
           // Add an additional 3 (ThrowsError) if we replayed the failed work
-          expect(mountCall[5]).toBe(
+          expect(mountCall[4]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
               ? 22
               : 19,
+          );
+          // commit time: 19 initially + 14 of work
+          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
+          expect(mountCall[5]).toBe(
+            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
+              ? 39
+              : 33,
           );
 
           // The update includes the ErrorBoundary and its fallback child
@@ -1149,19 +1101,19 @@ describe(`onRender`, () => {
           // start time
           expect(updateCall[4]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 22
-              : 19,
+              ? 39
+              : 33,
           );
-          // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
-          // Add an additional 3 (ThrowsError) if we replayed the failed work
+          // commit time: 33 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
+          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
           expect(updateCall[5]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 44
-              : 41,
+              ? 61
+              : 55,
           );
         });
 
-        it('should accumulate actual time after an error handled by getDerivedStateFromError()', () => {
+        it('should accumulate actual time after an error handled by getDerivedStateFromError()', async () => {
           const callback = jest.fn();
 
           const ThrowsError = ({unused}) => {
@@ -1186,14 +1138,16 @@ describe(`onRender`, () => {
 
           Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-          ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <ErrorBoundary>
-                <AdvanceTime byAmount={5} />
-                <ThrowsError />
-              </ErrorBoundary>
-            </React.Profiler>,
-          );
+          await act(() => {
+            ReactNoop.render(
+              <React.Profiler id="test" onRender={callback}>
+                <ErrorBoundary>
+                  <AdvanceTime byAmount={5} />
+                  <ThrowsError />
+                </ErrorBoundary>
+              </React.Profiler>,
+            );
+          });
 
           expect(callback).toHaveBeenCalledTimes(1);
 
@@ -1210,12 +1164,16 @@ describe(`onRender`, () => {
           // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
           expect(mountCall[3]).toBe(22);
           // start time
-          expect(mountCall[4]).toBe(5);
-          // commit time
-          expect(mountCall[5]).toBe(
+          expect(mountCall[4]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
               ? 54
               : 44,
+          );
+          // commit time
+          expect(mountCall[5]).toBe(
+            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
+              ? 103
+              : 83,
           );
         });
 
@@ -1223,7 +1181,6 @@ describe(`onRender`, () => {
           jest.resetModules();
 
           loadModules({
-            useNoopRenderer: true,
             replayFailedUnitOfWorkWithInvokeGuardedCallback,
           });
 
@@ -1260,26 +1217,31 @@ describe(`onRender`, () => {
     });
   });
 
-  it('reflects the most recently rendered id value', () => {
+  it('reflects the most recently rendered id value', async () => {
     const callback = jest.fn();
 
     Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="one" onRender={callback}>
-        <AdvanceTime byAmount={2} />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="one" onRender={callback}>
+          <AdvanceTime byAmount={2} />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
     Scheduler.unstable_advanceTime(20); // 7 -> 27
 
-    renderer.update(
-      <React.Profiler id="two" onRender={callback}>
-        <AdvanceTime byAmount={1} />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="two" onRender={callback}>
+          <AdvanceTime byAmount={1} />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1298,7 +1260,7 @@ describe(`onRender`, () => {
     expect(updateCall[4]).toBe(27); // start time
   });
 
-  it('should not be called until after mutations', () => {
+  it('should not be called until after mutations', async () => {
     let classComponentMounted = false;
     const callback = jest.fn(
       (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
@@ -1319,12 +1281,14 @@ describe(`onRender`, () => {
         return null;
       }
     }
-
-    ReactTestRenderer.create(
-      <React.Profiler id="test" onRender={callback}>
-        <ClassComponent />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="test" onRender={callback}>
+          <ClassComponent />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
   });
@@ -1337,7 +1301,7 @@ describe(`onCommit`, () => {
     loadModules();
   });
 
-  it('should report time spent in layout effects and commit lifecycles', () => {
+  it('should report time spent in layout effects and commit lifecycles', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = () => {
@@ -1376,13 +1340,15 @@ describe(`onCommit`, () => {
     }
 
     Scheduler.unstable_advanceTime(1);
-
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="mount-test" onCommit={callback}>
-        <ComponentWithEffects />
-        <ComponentWithCommitHooks />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="mount-test" onCommit={callback}>
+          <ComponentWithEffects />
+          <ComponentWithCommitHooks />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -1396,12 +1362,14 @@ describe(`onCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    renderer.update(
-      <React.Profiler id="update-test" onCommit={callback}>
-        <ComponentWithEffects />
-        <ComponentWithCommitHooks />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="update-test" onCommit={callback}>
+          <ComponentWithEffects />
+          <ComponentWithCommitHooks />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1415,7 +1383,9 @@ describe(`onCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    renderer.update(<React.Profiler id="unmount-test" onCommit={callback} />);
+    await act(() => {
+      root.render(<React.Profiler id="unmount-test" onCommit={callback} />);
+    });
 
     expect(callback).toHaveBeenCalledTimes(3);
 
@@ -1428,7 +1398,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(1112030); // commit start time (before mutations or effects)
   });
 
-  it('should report time spent in layout effects and commit lifecycles with cascading renders', () => {
+  it('should report time spent in layout effects and commit lifecycles with cascading renders', async () => {
     const callback = jest.fn();
 
     const ComponentWithEffects = ({shouldCascade}) => {
@@ -1466,13 +1436,15 @@ describe(`onCommit`, () => {
     }
 
     Scheduler.unstable_advanceTime(1);
-
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="mount-test" onCommit={callback}>
-        <ComponentWithEffects shouldCascade={true} />
-        <ComponentWithCommitHooks />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="mount-test" onCommit={callback}>
+          <ComponentWithEffects shouldCascade={true} />
+          <ComponentWithCommitHooks />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(2);
 
@@ -1494,12 +1466,14 @@ describe(`onCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    renderer.update(
-      <React.Profiler id="update-test" onCommit={callback}>
-        <ComponentWithEffects />
-        <ComponentWithCommitHooks shouldCascade={true} />
-      </React.Profiler>,
-    );
+    await act(() => {
+      root.render(
+        <React.Profiler id="update-test" onCommit={callback}>
+          <ComponentWithEffects />
+          <ComponentWithCommitHooks shouldCascade={true} />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(4);
 
@@ -1520,7 +1494,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(3300011272); // commit start time (before mutations or effects)
   });
 
-  it('should include time spent in ref callbacks', () => {
+  it('should include time spent in ref callbacks', async () => {
     const callback = jest.fn();
 
     const refSetter = ref => {
@@ -1544,11 +1518,14 @@ describe(`onCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    const renderer = ReactTestRenderer.create(
-      <React.Profiler id="root" onCommit={callback}>
-        <Component />
-      </React.Profiler>,
-    );
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.Profiler id="root" onCommit={callback}>
+          <Component />
+        </React.Profiler>,
+      );
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -1562,7 +1539,9 @@ describe(`onCommit`, () => {
 
     callback.mockClear();
 
-    renderer.update(<React.Profiler id="root" onCommit={callback} />);
+    await act(() => {
+      root.render(<React.Profiler id="root" onCommit={callback} />);
+    });
 
     expect(callback).toHaveBeenCalledTimes(1);
 
@@ -1595,9 +1574,9 @@ describe(`onCommit`, () => {
 
     const setCountRef = React.createRef(null);
 
-    let renderer = null;
+    const root = ReactNoop.createRoot();
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root-mount" onCommit={callback}>
           <React.Profiler id="a">
             <ComponentWithEffects
@@ -1636,7 +1615,7 @@ describe(`onCommit`, () => {
     expect(call[3]).toBe(1013); // commit start time (before mutations or effects)
 
     await act(() => {
-      renderer.update(
+      root.render(
         <React.Profiler id="root-update" onCommit={callback}>
           <React.Profiler id="b">
             <ComponentWithEffects duration={1000} cleanupDuration={10000} />
@@ -1694,8 +1673,9 @@ describe(`onCommit`, () => {
 
     // Test an error that happens during an effect
 
+    const root = ReactNoop.createRoot();
     await act(() => {
-      ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
             fallback={
@@ -1778,10 +1758,9 @@ describe(`onCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    let renderer = null;
-
+    const root = ReactNoop.createRoot();
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
             fallback={
@@ -1823,7 +1802,7 @@ describe(`onCommit`, () => {
     // Test an error that happens during an cleanup function
 
     await act(() => {
-      renderer.update(
+      root.render(
         <React.Profiler id="root" onCommit={callback}>
           <ErrorBoundary
             fallback={
@@ -1906,9 +1885,9 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    let renderer;
+    const root = ReactNoop.createRoot();
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="mount-test" onPostCommit={callback}>
           <ComponentWithEffects />
         </React.Profiler>,
@@ -1929,7 +1908,7 @@ describe(`onPostCommit`, () => {
     Scheduler.unstable_advanceTime(1);
 
     await act(() => {
-      renderer.update(
+      root.render(
         <React.Profiler id="update-test" onPostCommit={callback}>
           <ComponentWithEffects />
         </React.Profiler>,
@@ -1950,9 +1929,7 @@ describe(`onPostCommit`, () => {
     Scheduler.unstable_advanceTime(1);
 
     await act(() => {
-      renderer.update(
-        <React.Profiler id="unmount-test" onPostCommit={callback} />,
-      );
+      root.render(<React.Profiler id="unmount-test" onPostCommit={callback} />);
     });
     await waitForAll([]);
 
@@ -1991,8 +1968,9 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
+    const root = ReactNoop.createRoot();
     await act(() => {
-      ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="mount-test" onPostCommit={callback}>
           <ComponentWithEffects />
         </React.Profiler>,
@@ -2038,9 +2016,9 @@ describe(`onPostCommit`, () => {
 
     const setCountRef = React.createRef(null);
 
-    let renderer = null;
+    const root = ReactNoop.createRoot();
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root-mount" onPostCommit={callback}>
           <React.Profiler id="a">
             <ComponentWithEffects
@@ -2079,7 +2057,7 @@ describe(`onPostCommit`, () => {
     expect(call[3]).toBe(1013); // commit start time (before mutations or effects)
 
     await act(() => {
-      renderer.update(
+      root.render(
         <React.Profiler id="root-update" onPostCommit={callback}>
           <React.Profiler id="b">
             <ComponentWithEffects duration={1000} cleanupDuration={10000} />
@@ -2136,9 +2114,9 @@ describe(`onPostCommit`, () => {
     Scheduler.unstable_advanceTime(1);
 
     // Test an error that happens during an effect
-
+    const root = ReactNoop.createRoot();
     await act(() => {
-      ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
             fallback={
@@ -2222,10 +2200,9 @@ describe(`onPostCommit`, () => {
 
     Scheduler.unstable_advanceTime(1);
 
-    let renderer = null;
-
+    const root = ReactNoop.createRoot();
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      root.render(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
             fallback={
@@ -2267,7 +2244,7 @@ describe(`onPostCommit`, () => {
     // Test an error that happens during an cleanup function
 
     await act(() => {
-      renderer.update(
+      root.render(
         <React.Profiler id="root" onPostCommit={callback}>
           <ErrorBoundary
             fallback={
