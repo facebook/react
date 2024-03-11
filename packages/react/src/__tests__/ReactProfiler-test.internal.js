@@ -1077,14 +1077,15 @@ describe(`onRender`, () => {
           // base time includes: 2 (ErrorBoundary)
           // Since the tree is empty for the initial commit
           expect(mountCall[3]).toBe(2);
-          // start time
+          // start time: 5 initially + 14 of work
+          // Add an additional 3 (ThrowsError) if we replayed the failed work
           expect(mountCall[4]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
               ? 22
               : 19,
           );
-          // commit time: 5 initially + 14 of work
-          // Add an additional 3 (ThrowsError) if we replayed the failed work
+          // commit time: 19 initially + 14 of work
+          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
           expect(mountCall[5]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
               ? 39
@@ -1103,8 +1104,8 @@ describe(`onRender`, () => {
               ? 39
               : 33,
           );
-          // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
-          // Add an additional 3 (ThrowsError) if we replayed the failed work
+          // commit time: 33 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
+          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
           expect(updateCall[5]).toBe(
             __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
               ? 61
