@@ -277,10 +277,6 @@ export const enableUpdaterTracking = __PROFILE__;
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-// Profiler API accepts a function to be called when a nested update is scheduled.
-// This callback accepts the component type (class instance or function) the update is scheduled for.
-export const enableProfilerNestedUpdateScheduledHook = false;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
