@@ -2004,6 +2004,9 @@ function commitDeletionEffectsOnFiber(
   nearestMountedAncestor: Fiber,
   deletedFiber: Fiber,
 ) {
+  if (deletedFiber.memoizedProps && deletedFiber.memoizedProps.onBlur) {
+    deletedFiber.memoizedProps.onBlur(new Event('blur', {bubbles: true}));
+  }
   onCommitUnmount(deletedFiber);
 
   // The cases in this outer switch modify the stack before they traverse
