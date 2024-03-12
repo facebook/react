@@ -226,8 +226,16 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   ...mediaEventTypes,
 ]);
 
-let hasError: boolean = false;
-let caughtError: mixed = null;
+const reportErrorToBrowser =
+  typeof reportError === 'function'
+    ? // In modern browsers, reportError will dispatch an error event,
+      // emulating an uncaught JavaScript error.
+      reportError
+    : (error: mixed) => {
+        // In older browsers and test environments, fallback to console.error.
+        // eslint-disable-next-line react-internal/no-production-logging
+        console['error'](error);
+      };
 
 function executeDispatch(
   event: ReactSyntheticEvent,
@@ -238,12 +246,7 @@ function executeDispatch(
   try {
     listener(event);
   } catch (error) {
-    if (!hasError) {
-      hasError = true;
-      caughtError = error;
-    } else {
-      // TODO: Make sure this error gets logged somehow.
-    }
+    reportErrorToBrowser(error);
   }
   event.currentTarget = null;
 }
@@ -284,13 +287,6 @@ export function processDispatchQueue(
     const {event, listeners} = dispatchQueue[i];
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
     //  event system doesn't use pooling.
-  }
-  // This would be a good time to rethrow if any of the event handlers threw.
-  if (hasError) {
-    const error = caughtError;
-    hasError = false;
-    caughtError = null;
-    throw error;
   }
 }
 
