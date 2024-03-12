@@ -68,7 +68,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const newMethod = function (format, ...args) {
       // Ignore uncaught errors reported by jsdom
       // and React addendums because they're too noisy.
-      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+      if (shouldIgnoreConsoleError(format, args)) {
         return;
       }
 

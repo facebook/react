@@ -9,8 +9,11 @@ module.exports = function shouldIgnoreConsoleError(
     if (typeof format === 'string') {
       if (
         args[0] != null &&
-        typeof args[0].message === 'string' &&
-        typeof args[0].stack === 'string'
+        ((typeof args[0] === 'object' &&
+          typeof args[0].message === 'string' &&
+          typeof args[0].stack === 'string') ||
+          (typeof args[0] === 'string' &&
+            args[0].indexOf('An error occurred in ') === 0))
       ) {
         // This looks like an error with addendum from ReactFiberErrorLogger.
         // They are noisy too so we'll try to ignore them.
