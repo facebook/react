@@ -86,7 +86,7 @@ describe('ReactHooks', () => {
       return <Child text={text} />;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0, 0', 'Child: 0, 0', 'Effect: 0, 0']);
     expect(root).toMatchRenderedOutput('0, 0');
@@ -174,7 +174,7 @@ describe('ReactHooks', () => {
 
     Parent = memo(Parent);
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent theme="light" />);
     await waitForAll(['Parent: 0, 0 (light)', 'Child: 0, 0 (light)']);
     expect(root).toMatchRenderedOutput('0, 0 (light)');
@@ -232,7 +232,7 @@ describe('ReactHooks', () => {
       return counter;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Counter />);
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -266,7 +266,7 @@ describe('ReactHooks', () => {
       return counter;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Counter />);
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -322,7 +322,7 @@ describe('ReactHooks', () => {
       });
       return <Child text={text} />;
     }
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     await act(() => {
       root.update(
         <ThemeProvider>
@@ -390,7 +390,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -465,7 +465,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0', 'Child: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -523,7 +523,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 1', 'Child: 1']);
     expect(root).toMatchRenderedOutput('1');
