@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-8b82099e";
+    var ReactVersion = "18.3.0-www-classic-1b1f613f";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -682,7 +682,8 @@ if (__DEV__) {
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, false is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+    // On WWW, false is used for a new modern build.
     var enableFloat = true;
     var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
