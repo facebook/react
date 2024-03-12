@@ -1915,6 +1915,7 @@ type FormStateActionQueueNode<P> = {
 function dispatchFormState<S, P>(
   fiber: Fiber,
   actionQueue: FormStateActionQueue<S, P>,
+  setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
   payload: P,
 ): void {
@@ -1931,7 +1932,12 @@ function dispatchFormState<S, P>(
     };
     newLast.next = actionQueue.pending = newLast;
 
-    runFormStateAction(actionQueue, (setState: any), payload);
+    runFormStateAction(
+      actionQueue,
+      (setPendingState: any),
+      (setState: any),
+      payload,
+    );
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
@@ -1945,6 +1951,7 @@ function dispatchFormState<S, P>(
 
 function runFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
+  setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
   payload: P,
 ) {
@@ -1960,6 +1967,11 @@ function runFormStateAction<S, P>(
   if (__DEV__) {
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
+
+  // Optimistically update the pending state, similar to useTransition.
+  // This will be reverted automatically when all actions are finished.
+  setPendingState(true);
+
   try {
     const returnValue = action(prevState, payload);
     if (
@@ -1976,9 +1988,18 @@ function runFormStateAction<S, P>(
       thenable.then(
         (nextState: Awaited<S>) => {
           actionQueue.state = nextState;
-          finishRunningFormStateAction(actionQueue, (setState: any));
+          finishRunningFormStateAction(
+            actionQueue,
+            (setPendingState: any),
+            (setState: any),
+          );
         },
-        () => finishRunningFormStateAction(actionQueue, (setState: any)),
+        () =>
+          finishRunningFormStateAction(
+            actionQueue,
+            (setPendingState: any),
+            (setState: any),
+          ),
       );
 
       setState((thenable: any));
@@ -1987,7 +2008,11 @@ function runFormStateAction<S, P>(
 
       const nextState = ((returnValue: any): Awaited<S>);
       actionQueue.state = nextState;
-      finishRunningFormStateAction(actionQueue, (setState: any));
+      finishRunningFormStateAction(
+        actionQueue,
+        (setPendingState: any),
+        (setState: any),
+      );
     }
   } catch (error) {
     // This is a trick to get the `useFormState` hook to rethrow the error.
@@ -2000,7 +2025,11 @@ function runFormStateAction<S, P>(
       // $FlowFixMe: Not sure why this doesn't work
     }: RejectedThenable<Awaited<S>>);
     setState(rejectedThenable);
-    finishRunningFormStateAction(actionQueue, (setState: any));
+    finishRunningFormStateAction(
+      actionQueue,
+      (setPendingState: any),
+      (setState: any),
+    );
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
 
@@ -2022,6 +2051,7 @@ function runFormStateAction<S, P>(
 
 function finishRunningFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
+  setPendingState: Dispatch<S | Awaited<S>>,
   setState: Dispatch<S | Awaited<S>>,
 ) {
   // The action finished running. Pop it from the queue and run the next pending
@@ -2038,7 +2068,12 @@ function finishRunningFormStateAction<S, P>(
       last.next = next;
 
       // Run the next action.
-      runFormStateAction(actionQueue, (setState: any), next.payload);
+      runFormStateAction(
+        actionQueue,
+        (setPendingState: any),
+        (setState: any),
+        next.payload,
+      );
     }
   }
 }
@@ -2051,7 +2086,7 @@ function mountFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialStateProp: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   let initialState: Awaited<S> = initialStateProp;
   if (getIsHydrating()) {
     const root: FiberRoot = (getWorkInProgressRoot(): any);
@@ -2090,6 +2125,19 @@ function mountFormState<S, P>(
   ): any);
   stateQueue.dispatch = setState;
 
+  // Pending state. This is used to store the pending state of the action.
+  // Tracked optimistically, like a transition pending state.
+  const pendingStateHook = mountStateImpl((false: Thenable<boolean> | boolean));
+  const setPendingState: boolean => void = (dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    false,
+    ((pendingStateHook.queue: any): UpdateQueue<
+      S | Awaited<S>,
+      S | Awaited<S>,
+    >),
+  ): any);
+
   // Action queue hook. This is used to queue pending actions. The queue is
   // shared between all instances of the hook. Similar to a regular state queue,
   // but different because the actions are run sequentially, and they run in
@@ -2106,6 +2154,7 @@ function mountFormState<S, P>(
     null,
     currentlyRenderingFiber,
     actionQueue,
+    setPendingState,
     setState,
   );
   actionQueue.dispatch = dispatch;
@@ -2115,14 +2164,14 @@ function mountFormState<S, P>(
   // an effect.
   actionQueueHook.memoizedState = action;
 
-  return [initialState, dispatch];
+  return [initialState, dispatch, false];
 }
 
 function updateFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = ((currentHook: any): Hook);
   return updateFormStateImpl(
@@ -2140,12 +2189,14 @@ function updateFormStateImpl<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   const [actionResult] = updateReducerImpl<S | Thenable<S>, S | Thenable<S>>(
     stateHook,
     currentStateHook,
     formStateReducer,
   );
+
+  const [isPending] = updateState(false);
 
   // This will suspend until the action finishes.
   const state: Awaited<S> =
@@ -2172,7 +2223,7 @@ function updateFormStateImpl<S, P>(
     );
   }
 
-  return [state, dispatch];
+  return [state, dispatch, isPending];
 }
 
 function formStateActionEffect<S, P>(
@@ -2186,7 +2237,7 @@ function rerenderFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   // Unlike useState, useFormState doesn't support render phase updates.
   // Also unlike useState, we need to replay all pending updates again in case
   // the passthrough value changed.
@@ -2218,7 +2269,8 @@ function rerenderFormState<S, P>(
   // This may have changed during the rerender.
   actionQueueHook.memoizedState = action;
 
-  return [state, dispatch];
+  // For mount, pending is always false.
+  return [state, dispatch, false];
 }
 
 function pushEffect(
@@ -3765,7 +3817,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         mountHookTypesDev();
         return mountFormState(action, initialState, permalink);
@@ -3935,7 +3987,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return mountFormState(action, initialState, permalink);
@@ -4107,7 +4159,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return updateFormState(action, initialState, permalink);
@@ -4279,7 +4331,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return rerenderFormState(action, initialState, permalink);
@@ -4472,7 +4524,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         mountHookTypesDev();
@@ -4670,7 +4722,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
@@ -4868,7 +4920,7 @@ if (__DEV__) {
         action: (Awaited<S>, P) => S,
         initialState: Awaited<S>,
         permalink?: string,
-      ): [Awaited<S>, (P) => void] {
+      ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();

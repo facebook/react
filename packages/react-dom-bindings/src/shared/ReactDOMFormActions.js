@@ -80,7 +80,7 @@ export function useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   if (!(enableFormActions && enableAsyncActions)) {
     throw new Error('Not implemented.');
   } else {

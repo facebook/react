@@ -615,7 +615,7 @@ function useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   resolveCurrentlyRenderingComponent();
 
   // Count the number of useFormState hooks per component. We also use this to
@@ -708,7 +708,7 @@ function useFormState<S, P>(
       };
     }
 
-    return [state, dispatch];
+    return [state, dispatch, false];
   } else {
     // This is not a server action, so the implementation is much simpler.
 
@@ -718,7 +718,7 @@ function useFormState<S, P>(
     const dispatch = (payload: P): void => {
       boundAction(payload);
     };
-    return [initialState, dispatch];
+    return [initialState, dispatch, false];
   }
 }
 
