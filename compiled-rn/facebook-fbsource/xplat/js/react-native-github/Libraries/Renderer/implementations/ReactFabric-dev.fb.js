@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8f10777b98503bfd96c32ebc9c31ea5e>>
+ * @generated SignedSource<<80123652bb9b7be7f517855aca5ff3f1>>
  */
 
 "use strict";
@@ -12305,7 +12305,13 @@ to return true:wantsResponderID|                            |
     } // useFormState actions run sequentially, because each action receives the
     // previous state as an argument. We store pending actions on a queue.
 
-    function dispatchFormState(fiber, actionQueue, setState, payload) {
+    function dispatchFormState(
+      fiber,
+      actionQueue,
+      setPendingState,
+      setState,
+      payload
+    ) {
       if (isRenderPhaseUpdate(fiber)) {
         throw new Error("Cannot update form state while rendering.");
       }
@@ -12320,7 +12326,7 @@ to return true:wantsResponderID|                            |
           next: null // circular
         };
         newLast.next = actionQueue.pending = newLast;
-        runFormStateAction(actionQueue, setState, payload);
+        runFormStateAction(actionQueue, setPendingState, setState, payload);
       } else {
         // There's already an action running. Add to the queue.
         var first = last.next;
@@ -12332,7 +12338,12 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function runFormStateAction(actionQueue, setState, payload) {
+    function runFormStateAction(
+      actionQueue,
+      setPendingState,
+      setState,
+      payload
+    ) {
       var action = actionQueue.action;
       var prevState = actionQueue.state; // This is a fork of startTransition
 
@@ -12344,7 +12355,10 @@ to return true:wantsResponderID|                            |
 
       {
         ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
-      }
+      } // Optimistically update the pending state, similar to useTransition.
+      // This will be reverted automatically when all actions are finished.
+
+      setPendingState(true);
 
       try {
         var returnValue = action(prevState, payload);
@@ -12361,10 +12375,18 @@ to return true:wantsResponderID|                            |
           thenable.then(
             function (nextState) {
               actionQueue.state = nextState;
-              finishRunningFormStateAction(actionQueue, setState);
+              finishRunningFormStateAction(
+                actionQueue,
+                setPendingState,
+                setState
+              );
             },
             function () {
-              return finishRunningFormStateAction(actionQueue, setState);
+              return finishRunningFormStateAction(
+                actionQueue,
+                setPendingState,
+                setState
+              );
             }
           );
           setState(thenable);
@@ -12372,7 +12394,7 @@ to return true:wantsResponderID|                            |
           setState(returnValue);
           var nextState = returnValue;
           actionQueue.state = nextState;
-          finishRunningFormStateAction(actionQueue, setState);
+          finishRunningFormStateAction(actionQueue, setPendingState, setState);
         }
       } catch (error) {
         // This is a trick to get the `useFormState` hook to rethrow the error.
@@ -12384,7 +12406,7 @@ to return true:wantsResponderID|                            |
           reason: error // $FlowFixMe: Not sure why this doesn't work
         };
         setState(rejectedThenable);
-        finishRunningFormStateAction(actionQueue, setState);
+        finishRunningFormStateAction(actionQueue, setPendingState, setState);
       } finally {
         ReactCurrentBatchConfig$2.transition = prevTransition;
 
@@ -12406,7 +12428,11 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function finishRunningFormStateAction(actionQueue, setState) {
+    function finishRunningFormStateAction(
+      actionQueue,
+      setPendingState,
+      setState
+    ) {
       // The action finished running. Pop it from the queue and run the next pending
       // action, if there are any.
       var last = actionQueue.pending;
@@ -12422,7 +12448,12 @@ to return true:wantsResponderID|                            |
           var next = first.next;
           last.next = next; // Run the next action.
 
-          runFormStateAction(actionQueue, setState, next.payload);
+          runFormStateAction(
+            actionQueue,
+            setPendingState,
+            setState,
+            next.payload
+          );
         }
       }
     }
@@ -12452,7 +12483,16 @@ to return true:wantsResponderID|                            |
         currentlyRenderingFiber$1,
         stateQueue
       );
-      stateQueue.dispatch = setState; // Action queue hook. This is used to queue pending actions. The queue is
+      stateQueue.dispatch = setState; // Pending state. This is used to store the pending state of the action.
+      // Tracked optimistically, like a transition pending state.
+
+      var pendingStateHook = mountStateImpl(false);
+      var setPendingState = dispatchOptimisticSetState.bind(
+        null,
+        currentlyRenderingFiber$1,
+        false,
+        pendingStateHook.queue
+      ); // Action queue hook. This is used to queue pending actions. The queue is
       // shared between all instances of the hook. Similar to a regular state queue,
       // but different because the actions are run sequentially, and they run in
       // an event instead of during render.
@@ -12470,6 +12510,7 @@ to return true:wantsResponderID|                            |
         null,
         currentlyRenderingFiber$1,
         actionQueue,
+        setPendingState,
         setState
       );
       actionQueue.dispatch = dispatch; // Stash the action function on the memoized state of the hook. We'll use this
@@ -12477,7 +12518,7 @@ to return true:wantsResponderID|                            |
       // an effect.
 
       actionQueueHook.memoizedState = action;
-      return [initialState, dispatch];
+      return [initialState, dispatch, false];
     }
 
     function updateFormState(action, initialState, permalink) {
@@ -12498,7 +12539,10 @@ to return true:wantsResponderID|                            |
           currentStateHook,
           formStateReducer
         ),
-        actionResult = _updateReducerImpl[0]; // This will suspend until the action finishes.
+        actionResult = _updateReducerImpl[0];
+
+      var _updateState = updateState(),
+        isPending = _updateState[0]; // This will suspend until the action finishes.
 
       var state =
         typeof actionResult === "object" &&
@@ -12522,7 +12566,7 @@ to return true:wantsResponderID|                            |
         );
       }
 
-      return [state, dispatch];
+      return [state, dispatch, isPending];
     }
 
     function formStateActionEffect(actionQueue, action) {
@@ -12550,8 +12594,9 @@ to return true:wantsResponderID|                            |
       var actionQueue = actionQueueHook.queue;
       var dispatch = actionQueue.dispatch; // This may have changed during the rerender.
 
-      actionQueueHook.memoizedState = action;
-      return [state, dispatch];
+      actionQueueHook.memoizedState = action; // For mount, pending is always false.
+
+      return [state, dispatch, false];
     }
 
     function pushEffect(tag, create, inst, deps) {
@@ -13139,8 +13184,8 @@ to return true:wantsResponderID|                            |
     }
 
     function updateTransition() {
-      var _updateState = updateState(),
-        booleanOrThenable = _updateState[0];
+      var _updateState2 = updateState(),
+        booleanOrThenable = _updateState2[0];
 
       var hook = updateWorkInProgressHook();
       var start = hook.memoizedState;
@@ -29756,7 +29801,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-1259eab4";
+    var ReactVersion = "18.3.0-canary-04bb7356";
 
     function createPortal$1(
       children,
