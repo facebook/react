@@ -1782,6 +1782,14 @@ describe('ReactIncrementalErrorHandling', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`Provider.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
+      ...gate(flags =>
+        flags.disableLegacyContext
+          ? [
+              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+            ]
+          : [],
+      ),
     ]);
   });
 

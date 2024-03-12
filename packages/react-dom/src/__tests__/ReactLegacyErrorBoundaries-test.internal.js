@@ -859,14 +859,22 @@ describe('ReactLegacyErrorBoundaries', () => {
           </ErrorBoundary>,
           container,
         ),
-      ).toErrorDev(
+      ).toErrorDev([
         'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
           'returns a class instance. ' +
           'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
           "If you can't use a class try assigning the prototype on the function as a workaround. " +
           '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
           "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
+        ...gate(flags =>
+          flags.disableLegacyContext
+            ? [
+                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+              ]
+            : [],
+        ),
+      ]);
       expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
     });
   }
