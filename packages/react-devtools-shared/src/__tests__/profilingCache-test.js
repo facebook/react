@@ -411,6 +411,21 @@ describe('ProfilingCache', () => {
         },
       }
     `);
+
+    if (gate(flags => !flags.disableLegacyContext)) {
+      expect(changeDescriptions[1].get(6).context).toEqual(['count']);
+      expect(changeDescriptions[1].get(7).props).toEqual(['count']);
+      expect(changeDescriptions[2].get(6).context).toEqual([]);
+      expect(changeDescriptions[3].get(6).context).toEqual([]);
+      expect(changeDescriptions[4].get(6).context).toEqual([]);
+
+      changeDescriptions[1].get(6).context = null;
+      changeDescriptions[1].get(7).props = [];
+      changeDescriptions[2].get(6).context = null;
+      changeDescriptions[3].get(6).context = null;
+      changeDescriptions[4].get(6).context = null;
+    }
+
     expect(changeDescriptions[1]).toMatchInlineSnapshot(`
       Map {
         5 => {
@@ -436,15 +451,11 @@ describe('ProfilingCache', () => {
           "didHooksChange": false,
           "hooks": [],
           "isFirstMount": false,
-          "props": [
-            "count",
-          ],
+          "props": [],
           "state": null,
         },
         6 => {
-          "context": [
-            "count",
-          ],
+          "context": null,
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -490,7 +501,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": [],
+          "context": null,
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -536,7 +547,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": [],
+          "context": null,
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -583,7 +594,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": [],
+          "context": null,
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
