@@ -20,6 +20,7 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // flag here but it won't be set to `true` in any of our test runs. Need to
 // update the test configuration.
 
+export const alwaysThrottleDisappearingFallbacks = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const enableAsyncActions = __VARIANT__;
