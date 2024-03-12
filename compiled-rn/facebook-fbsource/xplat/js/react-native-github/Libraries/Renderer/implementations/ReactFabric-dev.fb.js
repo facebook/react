@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2cdd07c219807a7aa7c60e7298609102>>
+ * @generated SignedSource<<8f10777b98503bfd96c32ebc9c31ea5e>>
  */
 
 "use strict";
@@ -104,292 +104,14 @@ if (__DEV__) {
       }
     }
 
-    var fakeNode = null;
-
-    {
-      if (
-        typeof window !== "undefined" &&
-        typeof window.dispatchEvent === "function" &&
-        typeof document !== "undefined" && // $FlowFixMe[method-unbinding]
-        typeof document.createEvent === "function"
-      ) {
-        fakeNode = document.createElement("react");
-      }
-    }
-
-    function invokeGuardedCallbackImpl(name, func, context) {
-      {
-        // In DEV mode, we use a special version
-        // that plays more nicely with the browser's DevTools. The idea is to preserve
-        // "Pause on exceptions" behavior. Because React wraps all user-provided
-        // functions in invokeGuardedCallback, and the production version of
-        // invokeGuardedCallback uses a try-catch, all user exceptions are treated
-        // like caught exceptions, and the DevTools won't pause unless the developer
-        // takes the extra step of enabling pause on caught exceptions. This is
-        // unintuitive, though, because even though React has caught the error, from
-        // the developer's perspective, the error is uncaught.
-        //
-        // To preserve the expected "Pause on exceptions" behavior, we don't use a
-        // try-catch in DEV. Instead, we synchronously dispatch a fake event to a fake
-        // DOM node, and call the user-provided callback from inside an event handler
-        // for that fake event. If the callback throws, the error is "captured" using
-        // event loop context, it does not interrupt the normal program flow.
-        // Effectively, this gives us try-catch behavior without actually using
-        // try-catch. Neat!
-        // fakeNode signifies we are in an environment with a document and window object
-        if (fakeNode) {
-          var evt = document.createEvent("Event");
-          var didCall = false; // Keeps track of whether the user-provided callback threw an error. We
-          // set this to true at the beginning, then set it to false right after
-          // calling the function. If the function errors, `didError` will never be
-          // set to false. This strategy works even if the browser is flaky and
-          // fails to call our global error handler, because it doesn't rely on
-          // the error event at all.
-
-          var didError = true; // Keeps track of the value of window.event so that we can reset it
-          // during the callback to let user code access window.event in the
-          // browsers that support it.
-
-          var windowEvent = window.event; // Keeps track of the descriptor of window.event to restore it after event
-          // dispatching: https://github.com/facebook/react/issues/13688
-
-          var windowEventDescriptor = Object.getOwnPropertyDescriptor(
-            window,
-            "event"
-          );
-
-          var restoreAfterDispatch = function () {
-            // We immediately remove the callback from event listeners so that
-            // nested `invokeGuardedCallback` calls do not clash. Otherwise, a
-            // nested call would trigger the fake event handlers of any call higher
-            // in the stack.
-            fakeNode.removeEventListener(evtType, callCallback, false); // We check for window.hasOwnProperty('event') to prevent the
-            // window.event assignment in both IE <= 10 as they throw an error
-            // "Member not found" in strict mode, and in Firefox which does not
-            // support window.event.
-
-            if (
-              typeof window.event !== "undefined" &&
-              window.hasOwnProperty("event")
-            ) {
-              window.event = windowEvent;
-            }
-          }; // Create an event handler for our fake event. We will synchronously
-          // dispatch our fake event using `dispatchEvent`. Inside the handler, we
-          // call the user-provided callback.
-          // $FlowFixMe[method-unbinding]
-
-          var _funcArgs = Array.prototype.slice.call(arguments, 3);
-
-          var callCallback = function () {
-            didCall = true;
-            restoreAfterDispatch(); // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
-
-            func.apply(context, _funcArgs);
-            didError = false;
-          }; // Create a global error event handler. We use this to capture the value
-          // that was thrown. It's possible that this error handler will fire more
-          // than once; for example, if non-React code also calls `dispatchEvent`
-          // and a handler for that event throws. We should be resilient to most of
-          // those cases. Even if our error event handler fires more than once, the
-          // last error event is always used. If the callback actually does error,
-          // we know that the last error event is the correct one, because it's not
-          // possible for anything else to have happened in between our callback
-          // erroring and the code that follows the `dispatchEvent` call below. If
-          // the callback doesn't error, but the error event was fired, we know to
-          // ignore it because `didError` will be false, as described above.
-
-          var error; // Use this to track whether the error event is ever called.
-
-          var didSetError = false;
-          var isCrossOriginError = false;
-
-          var handleWindowError = function (event) {
-            error = event.error;
-            didSetError = true;
-
-            if (error === null && event.colno === 0 && event.lineno === 0) {
-              isCrossOriginError = true;
-            }
-
-            if (event.defaultPrevented) {
-              // Some other error handler has prevented default.
-              // Browsers silence the error report if this happens.
-              // We'll remember this to later decide whether to log it or not.
-              if (error != null && typeof error === "object") {
-                try {
-                  error._suppressLogging = true;
-                } catch (inner) {
-                  // Ignore.
-                }
-              }
-            }
-          }; // Create a fake event type.
-
-          var evtType = "react-" + (name ? name : "invokeguardedcallback"); // Attach our event handlers
-
-          window.addEventListener("error", handleWindowError);
-          fakeNode.addEventListener(evtType, callCallback, false); // Synchronously dispatch our fake event. If the user-provided function
-          // errors, it will trigger our global error handler.
-
-          evt.initEvent(evtType, false, false);
-          fakeNode.dispatchEvent(evt);
-
-          if (windowEventDescriptor) {
-            Object.defineProperty(window, "event", windowEventDescriptor);
-          }
-
-          if (didCall && didError) {
-            if (!didSetError) {
-              // The callback errored, but the error event never fired.
-              // eslint-disable-next-line react-internal/prod-error-codes
-              error = new Error(
-                "An error was thrown inside one of your components, but React " +
-                  "doesn't know what it was. This is likely due to browser " +
-                  'flakiness. React does its best to preserve the "Pause on ' +
-                  'exceptions" behavior of the DevTools, which requires some ' +
-                  "DEV-mode only tricks. It's possible that these don't work in " +
-                  "your browser. Try triggering the error in production mode, " +
-                  "or switching to a modern browser. If you suspect that this is " +
-                  "actually an issue with React, please file an issue."
-              );
-            } else if (isCrossOriginError) {
-              // eslint-disable-next-line react-internal/prod-error-codes
-              error = new Error(
-                "A cross-origin error was thrown. React doesn't have access to " +
-                  "the actual error object in development. " +
-                  "See https://react.dev/link/crossorigin-error for more information."
-              );
-            }
-
-            this.onError(error);
-          } // Remove our event listeners
-
-          window.removeEventListener("error", handleWindowError);
-
-          if (didCall) {
-            return;
-          } else {
-            // Something went really wrong, and our event was not dispatched.
-            // https://github.com/facebook/react/issues/16734
-            // https://github.com/facebook/react/issues/16585
-            // Fall back to the production implementation.
-            restoreAfterDispatch(); // we fall through and call the prod version instead
-          }
-        } // We only get here if we are in an environment that either does not support the browser
-        // variant or we had trouble getting the browser to emit the error.
-        // $FlowFixMe[method-unbinding]
-
-        var funcArgs = Array.prototype.slice.call(arguments, 3);
-
-        try {
-          // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
-          func.apply(context, funcArgs);
-        } catch (error) {
-          this.onError(error);
-        }
-      }
-    }
-
-    var hasError = false;
-    var caughtError = null; // Used by event system to capture/rethrow the first error.
-
-    var hasRethrowError = false;
-    var rethrowError = null;
-    var reporter = {
-      onError: function (error) {
-        hasError = true;
-        caughtError = error;
-      }
-    };
-    /**
-     * Call a function while guarding against errors that happens within it.
-     * Returns an error if it throws, otherwise null.
-     *
-     * In production, this is implemented using a try-catch. The reason we don't
-     * use a try-catch directly is so that we can swap out a different
-     * implementation in DEV mode.
-     *
-     * @param {String} name of the guard to use for logging or debugging
-     * @param {Function} func The function to invoke
-     * @param {*} context The context to use when calling the function
-     * @param {...*} args Arguments for function
-     */
-
-    function invokeGuardedCallback(name, func, context, a, b, c, d, e, f) {
-      hasError = false;
-      caughtError = null;
-      invokeGuardedCallbackImpl.apply(reporter, arguments);
-    }
-    /**
-     * Same as invokeGuardedCallback, but instead of returning an error, it stores
-     * it in a global so it can be rethrown by `rethrowCaughtError` later.
-     * TODO: See if caughtError and rethrowError can be unified.
-     *
-     * @param {String} name of the guard to use for logging or debugging
-     * @param {Function} func The function to invoke
-     * @param {*} context The context to use when calling the function
-     * @param {...*} args Arguments for function
-     */
-
-    function invokeGuardedCallbackAndCatchFirstError(
-      name,
-      func,
-      context,
-      a,
-      b,
-      c,
-      d,
-      e,
-      f
-    ) {
-      invokeGuardedCallback.apply(this, arguments);
-
-      if (hasError) {
-        var error = clearCaughtError();
-
-        if (!hasRethrowError) {
-          hasRethrowError = true;
-          rethrowError = error;
-        }
-      }
-    }
-    /**
-     * During execution of guarded functions we will capture the first error which
-     * we will rethrow to be handled by the top level error handler.
-     */
-
-    function rethrowCaughtError() {
-      if (hasRethrowError) {
-        var error = rethrowError;
-        hasRethrowError = false;
-        rethrowError = null;
-        throw error;
-      }
-    }
-    function hasCaughtError() {
-      return hasError;
-    }
-    function clearCaughtError() {
-      if (hasError) {
-        var error = caughtError;
-        hasError = false;
-        caughtError = null;
-        return error;
-      } else {
-        throw new Error(
-          "clearCaughtError was called but no error was captured. This error " +
-            "is likely caused by a bug in React. Please file an issue."
-        );
-      }
-    }
-
     var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
 
     function isArray(a) {
       return isArrayImpl(a);
     }
 
+    var hasError = false;
+    var caughtError = null;
     var getFiberCurrentPropsFromNode$1 = null;
     var getInstanceFromNode$1 = null;
     var getNodeFromInstance$1 = null;
@@ -445,9 +167,17 @@ if (__DEV__) {
      */
 
     function executeDispatch(event, listener, inst) {
-      var type = event.type || "unknown-event";
       event.currentTarget = getNodeFromInstance$1(inst);
-      invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+
+      try {
+        listener(event);
+      } catch (error) {
+        if (!hasError) {
+          hasError = true;
+          caughtError = error;
+        }
+      }
+
       event.currentTarget = null;
     }
     /**
@@ -559,6 +289,14 @@ if (__DEV__) {
 
     function hasDispatches(event) {
       return !!event._dispatchListeners;
+    }
+    function rethrowCaughtError() {
+      if (hasError) {
+        var error = caughtError;
+        hasError = false;
+        caughtError = null;
+        throw error;
+      }
     }
 
     var assign = Object.assign;
@@ -6418,16 +6156,8 @@ to return true:wantsResponderID|                            |
     }
 
     var isHydrating = false; // This flag allows for warning supression when we expect there to be mismatches
-    // due to earlier mismatches or a suspended fiber.
-
-    var didSuspendOrErrorDEV = false; // Hydration errors that were thrown inside this boundary
 
     var hydrationErrors = null;
-    function didSuspendOrErrorWhileHydratingDEV() {
-      {
-        return didSuspendOrErrorDEV;
-      }
-    }
 
     function prepareToHydrateHostInstance(fiber, hostContext) {
       {
@@ -16376,25 +16106,8 @@ to return true:wantsResponderID|                            |
         if (true) {
           var source = errorInfo.source;
           var stack = errorInfo.stack;
-          var componentStack = stack !== null ? stack : ""; // Browsers support silencing uncaught errors by calling
-          // `preventDefault()` in window `error` handler.
-          // We record this information as an expando on the error.
-
-          if (error != null && error._suppressLogging) {
-            if (boundary.tag === ClassComponent) {
-              // The error is recoverable and was silenced.
-              // Ignore it and don't print the stack addendum.
-              // This is handy for testing error boundaries without noise.
-              return;
-            } // The error is fatal. Since the silencing might have
-            // been accidental, we'll surface it anyway.
-            // However, the browser would have silenced the original error
-            // so we'll print it first, and then print the stack addendum.
-
-            console["error"](error); // Don't transform to our wrapper
-            // For a more detailed description of this block, see:
-            // https://github.com/facebook/react/pull/13384
-          }
+          var componentStack = stack !== null ? stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
+          // See https://github.com/facebook/react/pull/13384
 
           var componentName = source ? getComponentNameFromFiber(source) : null;
           var componentNameMessage = componentName
@@ -16416,19 +16129,17 @@ to return true:wantsResponderID|                            |
               ("using the error boundary you provided, " +
                 errorBoundaryName +
                 ".");
-          }
+          } // In development, we provide our own message which includes the component stack
+          // in addition to the error.
 
-          var combinedMessage =
-            componentNameMessage +
-            "\n" +
-            componentStack +
-            "\n\n" +
-            ("" + errorBoundaryMessage); // In development, we provide our own message with just the component stack.
-          // We don't include the original error message and JS stack because the browser
-          // has already printed it. Even if the application swallows the error, it is still
-          // displayed by the browser thanks to the DEV-only fake event trick in ReactErrorUtils.
-
-          console["error"](combinedMessage); // Don't transform to our wrapper
+          console["error"](
+            // Don't transform to our wrapper
+            "%o\n\n%s\n%s\n\n%s",
+            error,
+            componentNameMessage,
+            componentStack,
+            errorBoundaryMessage
+          );
         }
       } catch (e) {
         // This method must not throw, or React internal state will get messed up.
@@ -19993,7 +19704,7 @@ to return true:wantsResponderID|                            |
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
     }
 
-    function beginWork$1(current, workInProgress, renderLanes) {
+    function beginWork(current, workInProgress, renderLanes) {
       {
         if (workInProgress._debugNeedsRemount && current !== null) {
           // This will restart the begin phase with a new fiber.
@@ -22361,20 +22072,6 @@ to return true:wantsResponderID|                            |
         (current.mode & ProfileMode) !== NoMode &&
         (getExecutionContext() & CommitContext) !== NoContext
       );
-    }
-
-    function reportUncaughtErrorInDEV(error) {
-      // Wrapping each small part of the commit phase into a guarded
-      // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
-      // But we rely on it to surface errors to DEV tools like overlays
-      // (https://github.com/facebook/react/issues/21712).
-      // As a compromise, rethrow only caught errors in a guard.
-      {
-        invokeGuardedCallback(null, function () {
-          throw error;
-        });
-        clearCaughtError();
-      }
     }
 
     function callComponentWillUnmountWithTimer(current, instance) {
@@ -28183,7 +27880,6 @@ to return true:wantsResponderID|                            |
       error$1
     ) {
       {
-        reportUncaughtErrorInDEV(error$1);
         setIsRunningInsertionEffect(false);
       }
 
@@ -28687,81 +28383,6 @@ to return true:wantsResponderID|                            |
         }
       }
     }
-    var beginWork;
-
-    {
-      var dummyFiber = null;
-
-      beginWork = function (current, unitOfWork, lanes) {
-        // If a component throws an error, we replay it again in a synchronously
-        // dispatched event, so that the debugger will treat it as an uncaught
-        // error See ReactErrorUtils for more information.
-        // Before entering the begin phase, copy the work-in-progress onto a dummy
-        // fiber. If beginWork throws, we'll use this to reset the state.
-        var originalWorkInProgressCopy = assignFiberPropertiesInDEV(
-          dummyFiber,
-          unitOfWork
-        );
-
-        try {
-          return beginWork$1(current, unitOfWork, lanes);
-        } catch (originalError) {
-          if (
-            didSuspendOrErrorWhileHydratingDEV() ||
-            originalError === SuspenseException ||
-            originalError === SelectiveHydrationException ||
-            (originalError !== null &&
-              typeof originalError === "object" &&
-              typeof originalError.then === "function")
-          ) {
-            // Don't replay promises.
-            // Don't replay errors if we are hydrating and have already suspended or handled an error
-            throw originalError;
-          } // Don't reset current debug fiber, since we're about to work on the
-          // same fiber again.
-          // Unwind the failed stack frame
-
-          resetSuspendedWorkLoopOnUnwind(unitOfWork);
-          unwindInterruptedWork(current, unitOfWork); // Restore the original properties of the fiber.
-
-          assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy);
-
-          if (unitOfWork.mode & ProfileMode) {
-            // Reset the profiler timer.
-            startProfilerTimer(unitOfWork);
-          } // Run beginWork again.
-
-          invokeGuardedCallback(
-            null,
-            beginWork$1,
-            null,
-            current,
-            unitOfWork,
-            lanes
-          );
-
-          if (hasCaughtError()) {
-            var replayError = clearCaughtError();
-
-            if (
-              typeof replayError === "object" &&
-              replayError !== null &&
-              replayError._suppressLogging &&
-              typeof originalError === "object" &&
-              originalError !== null &&
-              !originalError._suppressLogging
-            ) {
-              // If suppressed, let the flag carry over to the original error which is the one we'll rethrow.
-              originalError._suppressLogging = true;
-            }
-          } // We always throw the original error in case the second render pass is not idempotent.
-          // This can happen if a memoized function or CommonJS module doesn't throw after first invocation.
-
-          throw originalError;
-        }
-      };
-    }
-
     var didWarnAboutUpdateInRender = false;
     var didWarnAboutUpdateInRenderForAnotherComponent;
 
@@ -30008,55 +29629,6 @@ to return true:wantsResponderID|                            |
         implementation: portal.implementation
       };
       return fiber;
-    } // Used for stashing WIP properties to replay failed work in DEV.
-
-    function assignFiberPropertiesInDEV(target, source) {
-      if (target === null) {
-        // This Fiber's initial properties will always be overwritten.
-        // We only use a Fiber to ensure the same hidden class so DEV isn't slow.
-        target = createFiber(IndeterminateComponent, null, null, NoMode);
-      } // This is intentionally written as a list of all properties.
-      // We tried to use Object.assign() instead but this is called in
-      // the hottest path, and Object.assign() was too slow:
-      // https://github.com/facebook/react/issues/12502
-      // This code is DEV-only so size is not a concern.
-
-      target.tag = source.tag;
-      target.key = source.key;
-      target.elementType = source.elementType;
-      target.type = source.type;
-      target.stateNode = source.stateNode;
-      target.return = source.return;
-      target.child = source.child;
-      target.sibling = source.sibling;
-      target.index = source.index;
-      target.ref = source.ref;
-      target.refCleanup = source.refCleanup;
-      target.pendingProps = source.pendingProps;
-      target.memoizedProps = source.memoizedProps;
-      target.updateQueue = source.updateQueue;
-      target.memoizedState = source.memoizedState;
-      target.dependencies = source.dependencies;
-      target.mode = source.mode;
-      target.flags = source.flags;
-      target.subtreeFlags = source.subtreeFlags;
-      target.deletions = source.deletions;
-      target.lanes = source.lanes;
-      target.childLanes = source.childLanes;
-      target.alternate = source.alternate;
-
-      {
-        target.actualDuration = source.actualDuration;
-        target.actualStartTime = source.actualStartTime;
-        target.selfBaseDuration = source.selfBaseDuration;
-        target.treeBaseDuration = source.treeBaseDuration;
-      }
-
-      target._debugInfo = source._debugInfo;
-      target._debugOwner = source._debugOwner;
-      target._debugNeedsRemount = source._debugNeedsRemount;
-      target._debugHookTypes = source._debugHookTypes;
-      return target;
     }
 
     function FiberRootNode(
@@ -30184,7 +29756,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-625ba3e2";
+    var ReactVersion = "18.3.0-canary-1259eab4";
 
     function createPortal$1(
       children,
