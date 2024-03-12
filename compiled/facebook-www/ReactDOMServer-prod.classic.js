@@ -3269,14 +3269,15 @@ var HooksDispatcher = {
               formData.append("$ACTION_KEY", nextPostbackStateKey));
             return prefix;
           });
-        return [initialState, action];
+        return [initialState, action, !1];
       }
       var boundAction$23 = action.bind(null, initialState);
       return [
         initialState,
         function (payload) {
           boundAction$23(payload);
-        }
+        },
+        !1
       ];
     }
   },
@@ -5704,4 +5705,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-70ff46d1";
+exports.version = "18.3.0-www-classic-3f97a873";

@@ -14674,7 +14674,13 @@ if (__DEV__) {
     } // useFormState actions run sequentially, because each action receives the
     // previous state as an argument. We store pending actions on a queue.
 
-    function dispatchFormState(fiber, actionQueue, setState, payload) {
+    function dispatchFormState(
+      fiber,
+      actionQueue,
+      setPendingState,
+      setState,
+      payload
+    ) {
       if (isRenderPhaseUpdate(fiber)) {
         throw new Error("Cannot update form state while rendering.");
       }
@@ -14689,7 +14695,7 @@ if (__DEV__) {
           next: null // circular
         };
         newLast.next = actionQueue.pending = newLast;
-        runFormStateAction(actionQueue, setState, payload);
+        runFormStateAction(actionQueue, setPendingState, setState, payload);
       } else {
         // There's already an action running. Add to the queue.
         var first = last.next;
@@ -14701,7 +14707,12 @@ if (__DEV__) {
       }
     }
 
-    function runFormStateAction(actionQueue, setState, payload) {
+    function runFormStateAction(
+      actionQueue,
+      setPendingState,
+      setState,
+      payload
+    ) {
       var action = actionQueue.action;
       var prevState = actionQueue.state; // This is a fork of startTransition
 
@@ -14713,7 +14724,10 @@ if (__DEV__) {
 
       {
         ReactCurrentBatchConfig$3.transition._updatedFibers = new Set();
-      }
+      } // Optimistically update the pending state, similar to useTransition.
+      // This will be reverted automatically when all actions are finished.
+
+      setPendingState(true);
 
       try {
         var returnValue = action(prevState, payload);
@@ -14730,10 +14744,18 @@ if (__DEV__) {
           thenable.then(
             function (nextState) {
               actionQueue.state = nextState;
-              finishRunningFormStateAction(actionQueue, setState);
+              finishRunningFormStateAction(
+                actionQueue,
+                setPendingState,
+                setState
+              );
             },
             function () {
-              return finishRunningFormStateAction(actionQueue, setState);
+              return finishRunningFormStateAction(
+                actionQueue,
+                setPendingState,
+                setState
+              );
             }
           );
           setState(thenable);
@@ -14741,7 +14763,7 @@ if (__DEV__) {
           setState(returnValue);
           var nextState = returnValue;
           actionQueue.state = nextState;
-          finishRunningFormStateAction(actionQueue, setState);
+          finishRunningFormStateAction(actionQueue, setPendingState, setState);
         }
       } catch (error) {
         // This is a trick to get the `useFormState` hook to rethrow the error.
@@ -14753,7 +14775,7 @@ if (__DEV__) {
           reason: error // $FlowFixMe: Not sure why this doesn't work
         };
         setState(rejectedThenable);
-        finishRunningFormStateAction(actionQueue, setState);
+        finishRunningFormStateAction(actionQueue, setPendingState, setState);
       } finally {
         ReactCurrentBatchConfig$3.transition = prevTransition;
 
@@ -14775,7 +14797,11 @@ if (__DEV__) {
       }
     }
 
-    function finishRunningFormStateAction(actionQueue, setState) {
+    function finishRunningFormStateAction(
+      actionQueue,
+      setPendingState,
+      setState
+    ) {
       // The action finished running. Pop it from the queue and run the next pending
       // action, if there are any.
       var last = actionQueue.pending;
@@ -14791,7 +14817,12 @@ if (__DEV__) {
           var next = first.next;
           last.next = next; // Run the next action.
 
-          runFormStateAction(actionQueue, setState, next.payload);
+          runFormStateAction(
+            actionQueue,
+            setPendingState,
+            setState,
+            next.payload
+          );
         }
       }
     }
@@ -14836,7 +14867,16 @@ if (__DEV__) {
         currentlyRenderingFiber$1,
         stateQueue
       );
-      stateQueue.dispatch = setState; // Action queue hook. This is used to queue pending actions. The queue is
+      stateQueue.dispatch = setState; // Pending state. This is used to store the pending state of the action.
+      // Tracked optimistically, like a transition pending state.
+
+      var pendingStateHook = mountStateImpl(false);
+      var setPendingState = dispatchOptimisticSetState.bind(
+        null,
+        currentlyRenderingFiber$1,
+        false,
+        pendingStateHook.queue
+      ); // Action queue hook. This is used to queue pending actions. The queue is
       // shared between all instances of the hook. Similar to a regular state queue,
       // but different because the actions are run sequentially, and they run in
       // an event instead of during render.
@@ -14854,6 +14894,7 @@ if (__DEV__) {
         null,
         currentlyRenderingFiber$1,
         actionQueue,
+        setPendingState,
         setState
       );
       actionQueue.dispatch = dispatch; // Stash the action function on the memoized state of the hook. We'll use this
@@ -14861,7 +14902,7 @@ if (__DEV__) {
       // an effect.
 
       actionQueueHook.memoizedState = action;
-      return [initialState, dispatch];
+      return [initialState, dispatch, false];
     }
 
     function updateFormState(action, initialState, permalink) {
@@ -14882,7 +14923,10 @@ if (__DEV__) {
           currentStateHook,
           formStateReducer
         ),
-        actionResult = _updateReducerImpl[0]; // This will suspend until the action finishes.
+        actionResult = _updateReducerImpl[0];
+
+      var _updateState = updateState(),
+        isPending = _updateState[0]; // This will suspend until the action finishes.
 
       var state =
         typeof actionResult === "object" &&
@@ -14906,7 +14950,7 @@ if (__DEV__) {
         );
       }
 
-      return [state, dispatch];
+      return [state, dispatch, isPending];
     }
 
     function formStateActionEffect(actionQueue, action) {
@@ -14934,8 +14978,9 @@ if (__DEV__) {
       var actionQueue = actionQueueHook.queue;
       var dispatch = actionQueue.dispatch; // This may have changed during the rerender.
 
-      actionQueueHook.memoizedState = action;
-      return [state, dispatch];
+      actionQueueHook.memoizedState = action; // For mount, pending is always false.
+
+      return [state, dispatch, false];
     }
 
     function pushEffect(tag, create, inst, deps) {
@@ -15634,8 +15679,8 @@ if (__DEV__) {
     }
 
     function updateTransition() {
-      var _updateState = updateState(),
-        booleanOrThenable = _updateState[0];
+      var _updateState2 = updateState(),
+        booleanOrThenable = _updateState2[0];
 
       var hook = updateWorkInProgressHook();
       var start = hook.memoizedState;
@@ -35719,7 +35764,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-610259aa";
+    var ReactVersion = "18.3.0-www-classic-bdc658a4";
 
     function createPortal$1(
       children,

@@ -3990,22 +3990,29 @@ function updateOptimisticImpl(hook, current, passthrough, reducer) {
     "function" === typeof reducer ? reducer : basicStateReducer
   );
 }
-function dispatchFormState(fiber, actionQueue, setState, payload) {
+function dispatchFormState(
+  fiber,
+  actionQueue,
+  setPendingState,
+  setState,
+  payload
+) {
   if (isRenderPhaseUpdate(fiber)) throw Error(formatProdErrorMessage(485));
   fiber = actionQueue.pending;
   null === fiber
     ? ((fiber = { payload: payload, next: null }),
       (fiber.next = actionQueue.pending = fiber),
-      runFormStateAction(actionQueue, setState, payload))
+      runFormStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
         { payload: payload, next: fiber.next });
 }
-function runFormStateAction(actionQueue, setState, payload) {
+function runFormStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
     prevTransition = ReactCurrentBatchConfig$3.transition,
     currentTransition = { _callbacks: new Set() };
   ReactCurrentBatchConfig$3.transition = currentTransition;
+  setPendingState(!0);
   try {
     var returnValue = action(prevState, payload);
     null !== returnValue &&
@@ -4015,24 +4022,32 @@ function runFormStateAction(actionQueue, setState, payload) {
         returnValue.then(
           function (nextState) {
             actionQueue.state = nextState;
-            finishRunningFormStateAction(actionQueue, setState);
+            finishRunningFormStateAction(
+              actionQueue,
+              setPendingState,
+              setState
+            );
           },
           function () {
-            return finishRunningFormStateAction(actionQueue, setState);
+            return finishRunningFormStateAction(
+              actionQueue,
+              setPendingState,
+              setState
+            );
           }
         ),
         setState(returnValue))
       : (setState(returnValue),
         (actionQueue.state = returnValue),
-        finishRunningFormStateAction(actionQueue, setState));
+        finishRunningFormStateAction(actionQueue, setPendingState, setState));
   } catch (error) {
     setState({ then: function () {}, status: "rejected", reason: error }),
-      finishRunningFormStateAction(actionQueue, setState);
+      finishRunningFormStateAction(actionQueue, setPendingState, setState);
   } finally {
     ReactCurrentBatchConfig$3.transition = prevTransition;
   }
 }
-function finishRunningFormStateAction(actionQueue, setState) {
+function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
   var last = actionQueue.pending;
   if (null !== last) {
     var first = last.next;
@@ -4040,28 +4055,34 @@ function finishRunningFormStateAction(actionQueue, setState) {
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runFormStateAction(actionQueue, setState, first.payload));
+        runFormStateAction(
+          actionQueue,
+          setPendingState,
+          setState,
+          first.payload
+        ));
   }
 }
 function formStateReducer(oldState, newState) {
   return newState;
 }
 function updateFormStateImpl(stateHook, currentStateHook, action) {
-  stateHook = updateReducerImpl(
+  currentStateHook = updateReducerImpl(
     stateHook,
     currentStateHook,
     formStateReducer
   )[0];
-  stateHook =
-    "object" === typeof stateHook &&
-    null !== stateHook &&
-    "function" === typeof stateHook.then
-      ? useThenable(stateHook)
-      : stateHook;
-  currentStateHook = updateWorkInProgressHook();
-  var actionQueue = currentStateHook.queue,
+  stateHook = updateReducer(basicStateReducer)[0];
+  currentStateHook =
+    "object" === typeof currentStateHook &&
+    null !== currentStateHook &&
+    "function" === typeof currentStateHook.then
+      ? useThenable(currentStateHook)
+      : currentStateHook;
+  var actionQueueHook = updateWorkInProgressHook(),
+    actionQueue = actionQueueHook.queue,
     dispatch = actionQueue.dispatch;
-  action !== currentStateHook.memoizedState &&
+  action !== actionQueueHook.memoizedState &&
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
@@ -4069,7 +4090,7 @@ function updateFormStateImpl(stateHook, currentStateHook, action) {
       { destroy: void 0 },
       null
     ));
-  return [stateHook, dispatch];
+  return [currentStateHook, dispatch, stateHook];
 }
 function formStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
@@ -4697,6 +4718,13 @@ HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
     JSCompiler_inline_result
   );
   JSCompiler_inline_result.dispatch = ssrFormState;
+  JSCompiler_inline_result = mountStateImpl(!1);
+  var setPendingState = dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    !1,
+    JSCompiler_inline_result.queue
+  );
   JSCompiler_inline_result = mountWorkInProgressHook();
   inRootOrSingleton = {
     state: initialStateProp,
@@ -4709,11 +4737,12 @@ HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
     null,
     currentlyRenderingFiber$1,
     inRootOrSingleton,
+    setPendingState,
     ssrFormState
   );
   inRootOrSingleton.dispatch = ssrFormState;
   JSCompiler_inline_result.memoizedState = action;
-  return [initialStateProp, ssrFormState];
+  return [initialStateProp, ssrFormState, !1];
 };
 HooksDispatcherOnMount.useOptimistic = function (passthrough) {
   var hook = mountWorkInProgressHook();
@@ -4838,7 +4867,7 @@ HooksDispatcherOnRerender.useFormState = function (action) {
   currentStateHook = updateWorkInProgressHook();
   var dispatch = currentStateHook.queue.dispatch;
   currentStateHook.memoizedState = action;
-  return [stateHook, dispatch];
+  return [stateHook, dispatch, !1];
 };
 HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
@@ -17946,7 +17975,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1902 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-74717070",
+  version: "18.3.0-www-classic-b1962418",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17990,7 +18019,7 @@ var devToolsConfig$jscomp$inline_1902 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-74717070"
+  reconcilerVersion: "18.3.0-www-classic-b1962418"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18308,7 +18337,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-74717070";
+exports.version = "18.3.0-www-classic-b1962418";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

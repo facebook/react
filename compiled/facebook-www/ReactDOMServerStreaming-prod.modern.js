@@ -3150,14 +3150,15 @@ var HooksDispatcher = {
               formData.append("$ACTION_KEY", nextPostbackStateKey));
             return prefix;
           });
-        return [initialState, action];
+        return [initialState, action, !1];
       }
       var boundAction$23 = action.bind(null, initialState);
       return [
         initialState,
         function (payload) {
           boundAction$23(payload);
-        }
+        },
+        !1
       ];
     }
   },

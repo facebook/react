@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-1b1f613f";
+    var ReactVersion = "18.3.0-www-classic-665182c7";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -10549,7 +10549,7 @@ if (__DEV__) {
           };
         }
 
-        return [state, dispatch];
+        return [state, dispatch, false];
       } else {
         // This is not a server action, so the implementation is much simpler.
         // Bind the state to the first argument of the action.
@@ -10559,7 +10559,7 @@ if (__DEV__) {
           _boundAction(payload);
         };
 
-        return [initialState, _dispatch2];
+        return [initialState, _dispatch2, false];
       }
     }
 

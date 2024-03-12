@@ -10354,7 +10354,7 @@ if (__DEV__) {
           };
         }
 
-        return [state, dispatch];
+        return [state, dispatch, false];
       } else {
         // This is not a server action, so the implementation is much simpler.
         // Bind the state to the first argument of the action.
@@ -10364,7 +10364,7 @@ if (__DEV__) {
           _boundAction(payload);
         };
 
-        return [initialState, _dispatch2];
+        return [initialState, _dispatch2, false];
       }
     }
 
