@@ -1,7 +1,6 @@
 let React;
 let ReactTestRenderer;
 let Scheduler;
-let ReactFeatureFlags;
 let Suspense;
 let lazy;
 let waitFor;
@@ -24,9 +23,6 @@ function normalizeCodeLocInfo(str) {
 describe('ReactLazy', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
     lazy = React.lazy;

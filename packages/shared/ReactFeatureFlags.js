@@ -251,10 +251,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 

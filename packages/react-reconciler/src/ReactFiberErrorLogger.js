@@ -11,7 +11,6 @@ import type {Fiber} from './ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';
-import {ClassComponent} from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {HostRoot} from 'react-reconciler/src/ReactWorkTags';
 
@@ -33,24 +32,8 @@ export function logCapturedError(
       const source = errorInfo.source;
       const stack = errorInfo.stack;
       const componentStack = stack !== null ? stack : '';
-      // Browsers support silencing uncaught errors by calling
-      // `preventDefault()` in window `error` handler.
-      // We record this information as an expando on the error.
-      if (error != null && error._suppressLogging) {
-        if (boundary.tag === ClassComponent) {
-          // The error is recoverable and was silenced.
-          // Ignore it and don't print the stack addendum.
-          // This is handy for testing error boundaries without noise.
-          return;
-        }
-        // The error is fatal. Since the silencing might have
-        // been accidental, we'll surface it anyway.
-        // However, the browser would have silenced the original error
-        // so we'll print it first, and then print the stack addendum.
-        console['error'](error); // Don't transform to our wrapper
-        // For a more detailed description of this block, see:
-        // https://github.com/facebook/react/pull/13384
-      }
+      // TODO: There's no longer a way to silence these warnings e.g. for tests.
+      // See https://github.com/facebook/react/pull/13384
 
       const componentName = source ? getComponentNameFromFiber(source) : null;
       const componentNameMessage = componentName
@@ -69,15 +52,17 @@ export function logCapturedError(
           `React will try to recreate this component tree from scratch ` +
           `using the error boundary you provided, ${errorBoundaryName}.`;
       }
-      const combinedMessage =
-        `${componentNameMessage}\n${componentStack}\n\n` +
-        `${errorBoundaryMessage}`;
 
-      // In development, we provide our own message with just the component stack.
-      // We don't include the original error message and JS stack because the browser
-      // has already printed it. Even if the application swallows the error, it is still
-      // displayed by the browser thanks to the DEV-only fake event trick in ReactErrorUtils.
-      console['error'](combinedMessage); // Don't transform to our wrapper
+      // In development, we provide our own message which includes the component stack
+      // in addition to the error.
+      console['error'](
+        // Don't transform to our wrapper
+        '%o\n\n%s\n%s\n\n%s',
+        error,
+        componentNameMessage,
+        componentStack,
+        errorBoundaryMessage,
+      );
     } else {
       // In production, we print the error directly.
       // This will include the message, the JS stack, and anything the browser wants to show.

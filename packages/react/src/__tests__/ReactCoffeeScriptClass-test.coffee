@@ -55,9 +55,7 @@ describe 'ReactCoffeeScriptClass', ->
           root.render React.createElement(Foo)
       ).toThrow()
     ).toErrorDev([
-      # A failed component renders four times in DEV in concurrent mode
-      'No `render` method found on the Foo instance',
-      'No `render` method found on the Foo instance',
+      # A failed component renders twice in DEV in concurrent mode
       'No `render` method found on the Foo instance',
       'No `render` method found on the Foo instance',
     ])

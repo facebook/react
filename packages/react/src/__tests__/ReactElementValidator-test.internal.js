@@ -19,16 +19,12 @@ let React;
 let ReactDOMClient;
 let act;
 
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactElementValidator', () => {
   let ComponentClass;
 
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;

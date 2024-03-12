@@ -232,18 +232,6 @@ const forks = Object.freeze({
     }
   },
 
-  // Different wrapping/reporting for caught errors.
-  './packages/shared/invokeGuardedCallbackImpl.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/shared/forks/invokeGuardedCallbackImpl.www.js';
-      default:
-        return null;
-    }
-  },
-
   // Different dialogs for caught errors.
   './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
     bundleType,

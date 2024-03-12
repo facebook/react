@@ -1043,7 +1043,6 @@ describe('ReactHooks', () => {
       );
     }).toErrorDev([
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Warning: React has detected a change in the order of Hooks called by App. ' +
         'This will lead to bugs and errors if not fixed. For more information, ' +
         'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
@@ -1105,9 +1104,6 @@ describe('ReactHooks', () => {
         </Boundary>,
       );
     }).toErrorDev([
-      // We see it twice due to replay
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
@@ -1143,9 +1139,6 @@ describe('ReactHooks', () => {
         </Boundary>,
       );
     }).toErrorDev([
-      // We see it twice due to replay
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);

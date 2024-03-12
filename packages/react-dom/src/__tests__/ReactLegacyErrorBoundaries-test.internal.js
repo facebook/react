@@ -12,7 +12,6 @@
 let PropTypes;
 let React;
 let ReactDOM;
-let ReactFeatureFlags;
 
 // TODO: Refactor this test once componentDidCatch setState is deprecated.
 describe('ReactLegacyErrorBoundaries', () => {
@@ -39,8 +38,6 @@ describe('ReactLegacyErrorBoundaries', () => {
   beforeEach(() => {
     jest.resetModules();
     PropTypes = require('prop-types');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
 
@@ -689,7 +686,7 @@ describe('ReactLegacyErrorBoundaries', () => {
       expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.render is no longer supported',
       );
-      expect(console.error.mock.calls[1][0]).toContain(
+      expect(console.error.mock.calls[1][2]).toContain(
         'The above error occurred in the <BrokenRender> component:',
       );
     }

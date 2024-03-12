@@ -278,7 +278,7 @@ describe('ReactDOMServerIntegration', () => {
         }
         const e = await render(
           <ForgetfulParent />,
-          render === clientRenderOnBadMarkup ? 4 : 1,
+          render === clientRenderOnBadMarkup ? 2 : 1,
         );
         expect(e.textContent).toBe('nope');
       },

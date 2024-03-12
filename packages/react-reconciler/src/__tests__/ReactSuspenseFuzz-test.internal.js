@@ -3,7 +3,6 @@ let Suspense;
 let ReactNoop;
 let Scheduler;
 let act;
-let ReactFeatureFlags;
 let Random;
 
 const SEED = process.env.FUZZ_TEST_SEED || 'default';
@@ -21,9 +20,6 @@ function prettyFormat(thing) {
 describe('ReactSuspenseFuzz', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
     ReactNoop = require('react-noop-renderer');

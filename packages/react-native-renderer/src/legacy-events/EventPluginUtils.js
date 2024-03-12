@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import isArray from 'shared/isArray';
+
+let hasError = false;
+let caughtError = null;
 
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
@@ -62,9 +64,17 @@ function validateEventDispatches(event) {
  * @param {*} inst Internal component instance
  */
 export function executeDispatch(event, listener, inst) {
-  const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    if (!hasError) {
+      hasError = true;
+      caughtError = error;
+    } else {
+      // TODO: Make sure this error gets logged somehow.
+    }
+  }
   event.currentTarget = null;
 }
 
@@ -169,4 +179,13 @@ export function executeDirectDispatch(event) {
  */
 export function hasDispatches(event) {
   return !!event._dispatchListeners;
+}
+
+export function rethrowCaughtError() {
+  if (hasError) {
+    const error = caughtError;
+    hasError = false;
+    caughtError = null;
+    throw error;
+  }
 }

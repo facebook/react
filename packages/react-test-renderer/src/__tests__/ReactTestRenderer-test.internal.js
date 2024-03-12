@@ -11,7 +11,6 @@
 'use strict';
 
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const {format: prettyFormat} = require('pretty-format');
