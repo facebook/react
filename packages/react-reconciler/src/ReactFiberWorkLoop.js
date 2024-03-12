@@ -348,8 +348,6 @@ export let entangledRenderLanes: Lanes = NoLanes;
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
-// A fatal error, if one is thrown
-let workInProgressRootFatalError: mixed = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
@@ -974,11 +972,9 @@ export function performConcurrentWorkOnRoot(
           }
         }
         if (exitStatus === RootFatalErrored) {
-          const fatalError = workInProgressRootFatalError;
           prepareFreshStack(root, NoLanes);
           markRootSuspended(root, lanes, NoLane);
-          ensureRootIsScheduled(root);
-          throw fatalError;
+          break;
         }
 
         // We now have a consistent tree. The next step is either to commit it,
@@ -1391,11 +1387,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   }
 
   if (exitStatus === RootFatalErrored) {
-    const fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, NoLanes);
     markRootSuspended(root, lanes, NoLane);
     ensureRootIsScheduled(root);
-    throw fatalError;
+    return null;
   }
 
   if (exitStatus === RootDidNotComplete) {
@@ -1625,7 +1620,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressThrownValue = null;
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
-  workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
@@ -1738,7 +1732,6 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   if (erroredWork === null) {
     // This is a fatal error
     workInProgressRootExitStatus = RootFatalErrored;
-    workInProgressRootFatalError = thrownValue;
     return;
   }
 
@@ -2556,7 +2549,6 @@ function panicOnRootError(error: mixed) {
   // caught by an error boundary. This is a fatal error, or panic condition,
   // because we've run out of ways to recover.
   workInProgressRootExitStatus = RootFatalErrored;
-  workInProgressRootFatalError = error;
   // Set `workInProgress` to null. This represents advancing to the next
   // sibling, or the parent if there are no siblings. But since the root
   // has no siblings nor a parent, we set it to null. Usually this is
