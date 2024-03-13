@@ -59,7 +59,6 @@ import {
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
-  onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
@@ -96,9 +95,7 @@ function createRootErrorUpdate(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element: null};
-  const error = errorInfo.value;
   update.callback = () => {
-    onUncaughtError(error);
     logCapturedError(fiber, errorInfo);
   };
   return update;
