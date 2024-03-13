@@ -18,7 +18,7 @@ import {
   Phi,
   Place,
 } from "../HIR/HIR";
-import { printPlace } from "../HIR/PrintHIR";
+import { printIdentifier, printPlace } from "../HIR/PrintHIR";
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -375,31 +375,57 @@ export function leaveSSA(fn: HIRFunction): void {
       terminal.kind === "for-of" ||
       terminal.kind === "for-in"
     ) {
-      const init = fn.body.blocks.get(terminal.init)!;
+      let init = fn.body.blocks.get(terminal.init)!;
       pushPhis(init);
 
+      // The first block after the end of the init
+      let initContinuation =
+        terminal.kind === "for" ? terminal.test : terminal.loop;
       /*
        * To avoid generating a let binding for the initializer prior to the loop,
-       * check to see if the for declares an iterator variable
+       * check to see if the for declares an iterator variable.
        */
-      const initIdentifier = init.instructions.at(-1);
-      if (
-        initIdentifier !== undefined &&
-        initIdentifier.value.kind === "StoreLocal"
-      ) {
-        const value = initIdentifier.value;
-        if (value.lvalue.place.identifier.name !== null) {
-          const originalLVal = declarations.get(
-            value.lvalue.place.identifier.name.value
-          );
-          if (originalLVal === undefined) {
-            declarations.set(value.lvalue.place.identifier.name.value, {
-              lvalue: value.lvalue,
-              place: value.lvalue.place,
-            });
-            value.lvalue.kind = InstructionKind.Const;
+      while (init.id !== initContinuation) {
+        for (const instr of init.instructions) {
+          if (
+            instr.value.kind === "StoreLocal" &&
+            instr.value.lvalue.kind !== InstructionKind.Reassign
+          ) {
+            const value = instr.value;
+            if (value.lvalue.place.identifier.name !== null) {
+              const originalLVal = declarations.get(
+                value.lvalue.place.identifier.name.value
+              );
+              if (originalLVal === undefined) {
+                declarations.set(value.lvalue.place.identifier.name.value, {
+                  lvalue: value.lvalue,
+                  place: value.lvalue.place,
+                });
+                value.lvalue.kind = InstructionKind.Const;
+              }
+            }
           }
         }
+
+        let next: BlockId | null = null;
+        switch (init.terminal.kind) {
+          case "maybe-throw": {
+            next = init.terminal.continuation;
+            break;
+          }
+          case "goto": {
+            next = init.terminal.block;
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+        if (next === null) {
+          break;
+        }
+
+        init = fn.body.blocks.get(next)!;
       }
 
       if (terminal.kind === "for" && terminal.update !== null) {
@@ -446,7 +472,7 @@ export function leaveSSA(fn: HIRFunction): void {
       CompilerError.invariant(declaration != null, {
         loc: null,
         reason: "Expected a declaration for all variables",
-        description: null,
+        description: `${printIdentifier(phi.id)} in block bb${phiBlock.id}`,
         suggestions: null,
       });
       if (isPhiMutatedAfterCreation) {
