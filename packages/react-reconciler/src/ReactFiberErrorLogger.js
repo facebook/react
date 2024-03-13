@@ -14,16 +14,7 @@ import {showErrorDialog} from './ReactFiberErrorDialog';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {HostRoot} from 'react-reconciler/src/ReactWorkTags';
 
-const reportErrorToBrowser =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
+import reportGlobalError from 'shared/reportGlobalError';
 
 export function logCapturedError(
   boundary: Fiber,
@@ -44,7 +35,7 @@ export function logCapturedError(
       // For uncaught root errors we report them as uncaught to the browser's
       // onerror callback. This won't have component stacks and the error addendum.
       // So we add those into a separate console.warn.
-      reportErrorToBrowser(error);
+      reportGlobalError(error);
       if (__DEV__) {
         const source = errorInfo.source;
         const stack = errorInfo.stack;

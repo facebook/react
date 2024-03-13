@@ -68,6 +68,8 @@ import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
 
+import reportGlobalError from 'shared/reportGlobalError';
+
 type DispatchListener = {
   instance: null | Fiber,
   listener: Function,
@@ -226,17 +228,6 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   ...mediaEventTypes,
 ]);
 
-const reportErrorToBrowser =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
-
 function executeDispatch(
   event: ReactSyntheticEvent,
   listener: Function,
@@ -246,7 +237,7 @@ function executeDispatch(
   try {
     listener(event);
   } catch (error) {
-    reportErrorToBrowser(error);
+    reportGlobalError(error);
   }
   event.currentTarget = null;
 }
