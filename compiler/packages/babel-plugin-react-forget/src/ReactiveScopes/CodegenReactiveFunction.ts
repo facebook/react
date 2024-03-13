@@ -1495,23 +1495,15 @@ function codegenInstructionValue(
         tagValue.type === "StringLiteral" &&
         SINGLE_CHILD_FBT_TAGS.has(tagValue.value)
       ) {
-        CompilerError.invariant(
-          instrValue.children != null &&
-            (instrValue.children.length === 3 ||
-              instrValue.children.length === 1),
-          {
-            loc: instrValue.loc,
-            reason:
-              "Expected fbt element to have 3 children (whitespace, content, whitespace) or 1 (content)",
-            suggestions: null,
-            description: null,
-          }
+        CompilerError.invariant(instrValue.children != null, {
+          loc: instrValue.loc,
+          reason: "Expected fbt element to have children",
+          suggestions: null,
+          description: null,
+        });
+        children = instrValue.children.map((child) =>
+          codegenJsxFbtChildElement(cx, child)
         );
-        if (instrValue.children.length === 3) {
-          children = [codegenJsxFbtChildElement(cx, instrValue.children[1]!)];
-        } else {
-          children = [codegenJsxFbtChildElement(cx, instrValue.children[0]!)];
-        }
       } else {
         children =
           instrValue.children !== null
