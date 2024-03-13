@@ -47,6 +47,7 @@ type HookLogEntry = {
   stackError: Error,
   value: mixed,
   debugInfo: ReactDebugInfo | null,
+  dispatcherMethodName: string,
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -131,6 +132,8 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
           );
         } catch (x) {}
       }
+
+      Dispatcher.useId();
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -207,6 +210,7 @@ function use<T>(usable: Usable<T>): T {
             value: fulfilledValue,
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
+            dispatcherMethodName: 'use',
           });
           return fulfilledValue;
         }
@@ -224,6 +228,7 @@ function use<T>(usable: Usable<T>): T {
         value: thenable,
         debugInfo:
           thenable._debugInfo === undefined ? null : thenable._debugInfo,
+        dispatcherMethodName: 'use',
       });
       throw SuspenseException;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -236,6 +241,7 @@ function use<T>(usable: Usable<T>): T {
         stackError: new Error(),
         value,
         debugInfo: null,
+        dispatcherMethodName: 'use',
       });
 
       return value;
@@ -254,6 +260,7 @@ function useContext<T>(context: ReactContext<T>): T {
     stackError: new Error(),
     value: value,
     debugInfo: null,
+    dispatcherMethodName: 'useContext',
   });
   return value;
 }
@@ -275,6 +282,7 @@ function useState<S>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
+    dispatcherMethodName: 'useState',
   });
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -297,6 +305,7 @@ function useReducer<S, I, A>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
+    dispatcherMethodName: 'useReducer',
   });
   return [state, (action: A) => {}];
 }
@@ -310,6 +319,7 @@ function useRef<T>(initialValue: T): {current: T} {
     stackError: new Error(),
     value: ref.current,
     debugInfo: null,
+    dispatcherMethodName: 'useRef',
   });
   return ref;
 }
@@ -322,6 +332,7 @@ function useCacheRefresh(): () => void {
     stackError: new Error(),
     value: hook !== null ? hook.memoizedState : function refresh() {},
     debugInfo: null,
+    dispatcherMethodName: 'useCacheRefresh',
   });
   return () => {};
 }
@@ -337,6 +348,7 @@ function useLayoutEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
+    dispatcherMethodName: 'useLayoutEffect',
   });
 }
 
@@ -351,6 +363,7 @@ function useInsertionEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
+    dispatcherMethodName: 'useInsertionEffect',
   });
 }
 
@@ -365,6 +378,7 @@ function useEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
+    dispatcherMethodName: 'useEffect',
   });
 }
 
@@ -388,6 +402,7 @@ function useImperativeHandle<T>(
     stackError: new Error(),
     value: instance,
     debugInfo: null,
+    dispatcherMethodName: 'useImperativeHandle',
   });
 }
 
@@ -398,6 +413,7 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     stackError: new Error(),
     value: typeof formatterFn === 'function' ? formatterFn(value) : value,
     debugInfo: null,
+    dispatcherMethodName: 'useDebugValue',
   });
 }
 
@@ -409,6 +425,7 @@ function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
     stackError: new Error(),
     value: hook !== null ? hook.memoizedState[0] : callback,
     debugInfo: null,
+    dispatcherMethodName: 'useCallback',
   });
   return callback;
 }
@@ -425,6 +442,7 @@ function useMemo<T>(
     stackError: new Error(),
     value,
     debugInfo: null,
+    dispatcherMethodName: 'useMemo',
   });
   return value;
 }
@@ -446,6 +464,7 @@ function useSyncExternalStore<T>(
     stackError: new Error(),
     value,
     debugInfo: null,
+    dispatcherMethodName: 'useSyncExternalStore',
   });
   return value;
 }
@@ -468,6 +487,7 @@ function useTransition(): [
     stackError: new Error(),
     value: isPending,
     debugInfo: null,
+    dispatcherMethodName: 'useTransition',
   });
   return [isPending, () => {}];
 }
@@ -481,6 +501,7 @@ function useDeferredValue<T>(value: T, initialValue?: T): T {
     stackError: new Error(),
     value: prevValue,
     debugInfo: null,
+    dispatcherMethodName: 'useDeferredValue',
   });
   return prevValue;
 }
@@ -494,6 +515,7 @@ function useId(): string {
     stackError: new Error(),
     value: id,
     debugInfo: null,
+    dispatcherMethodName: 'useId',
   });
   return id;
 }
@@ -544,6 +566,7 @@ function useOptimistic<S, A>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
+    dispatcherMethodName: 'useOptimistic',
   });
   return [state, (action: A) => {}];
 }
@@ -603,6 +626,7 @@ function useFormState<S, P>(
     stackError: stackError,
     value: value,
     debugInfo: debugInfo,
+    dispatcherMethodName: 'useFormState',
   });
 
   if (error !== null) {
@@ -672,6 +696,7 @@ function useActionState<S, P>(
     stackError: stackError,
     value: value,
     debugInfo: debugInfo,
+    dispatcherMethodName: 'useActionState',
   });
 
   if (error !== null) {
@@ -759,8 +784,7 @@ export type HooksTree = Array<HooksNode>;
 // of a hook call. A simple way to demonstrate this is wrapping `new Error()`
 // in a wrapper constructor like a polyfill. That'll add an extra frame.
 // Similar things can happen with the call to the dispatcher. The top frame
-// may not be the primitive. Likewise the primitive can have fewer stack frames
-// such as when a call to useState got inlined to use dispatcher.useState.
+// may not be the primitive.
 //
 // We also can't assume that the last frame of the root call is the same
 // frame as the last frame of the hook call because long stack traces can be
@@ -810,26 +834,16 @@ function findCommonAncestorIndex(rootStack: any, hookStack: any) {
   return -1;
 }
 
-function isReactWrapper(functionName: any, primitiveName: string) {
+function isReactWrapper(functionName: any, wrapperName: string) {
   if (!functionName) {
     return false;
   }
-  switch (primitiveName) {
-    case 'Context':
-    case 'Context (use)':
-    case 'Promise':
-    case 'Unresolved':
-      if (functionName.endsWith('use')) {
-        return true;
-      }
-  }
-  const expectedPrimitiveName = 'use' + primitiveName;
-  if (functionName.length < expectedPrimitiveName.length) {
+  if (functionName.length < wrapperName.length) {
     return false;
   }
   return (
-    functionName.lastIndexOf(expectedPrimitiveName) ===
-    functionName.length - expectedPrimitiveName.length
+    functionName.lastIndexOf(wrapperName) ===
+    functionName.length - wrapperName.length
   );
 }
 
@@ -841,17 +855,18 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
   }
   for (let i = 0; i < primitiveStack.length && i < hookStack.length; i++) {
     if (primitiveStack[i].source !== hookStack[i].source) {
-      // If the next two frames are functions called `useX` then we assume that they're part of the
-      // wrappers that the React packager or other packages adds around the dispatcher.
+      // If the next frame is a method from the dispatcher, we
+      // assume that the next frame after that is the actual public API call.
+      // This prohibits nesting dispatcher calls in hooks.
       if (
         i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.primitive)
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherMethodName)
       ) {
         i++;
       }
       if (
         i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.primitive)
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherMethodName)
       ) {
         i++;
       }
@@ -875,18 +890,26 @@ function parseTrimmedStack(rootStack: any, hook: HookLogEntry) {
     // Something went wrong. Give up.
     return null;
   }
-  return hookStack.slice(primitiveIndex, rootIndex - 1);
+  return [
+    hookStack[primitiveIndex - 1],
+    hookStack.slice(primitiveIndex, rootIndex - 1),
+  ];
 }
 
-function parseCustomHookName(functionName: void | string): string {
+function parseHookName(functionName: void | string): string {
   if (!functionName) {
     return '';
   }
   let startIndex = functionName.lastIndexOf('.');
   if (startIndex === -1) {
     startIndex = 0;
+  } else {
+    startIndex += 1;
   }
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {
+    if (functionName.length - startIndex === 3) {
+      return 'Use';
+    }
     startIndex += 3;
   }
   return functionName.slice(startIndex);
@@ -903,8 +926,17 @@ function buildTree(
   const stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     const hook = readHookLog[i];
-    const stack = parseTrimmedStack(rootStack, hook);
-    if (stack !== null) {
+    const parseResult = parseTrimmedStack(rootStack, hook);
+    let displayName = hook.displayName;
+    if (parseResult !== null) {
+      const [primitiveFrame, stack] = parseResult;
+      if (hook.displayName === null) {
+        displayName =
+          parseHookName(primitiveFrame.functionName) ||
+          // Older versions of React do not have sourcemaps.
+          // In those versions there was always a 1:1 mapping between wrapper and dispatcher method.
+          parseHookName(hook.dispatcherMethodName);
+      }
       // Note: The indices 0 <= n < length-1 will contain the names.
       // The indices 1 <= n < length will contain the source locations.
       // That's why we get the name from n - 1 and don't check the source
@@ -934,7 +966,7 @@ function buildTree(
         const levelChild: HooksNode = {
           id: null,
           isStateEditable: false,
-          name: parseCustomHookName(stack[j - 1].functionName),
+          name: parseHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
           debugInfo: null,
@@ -952,7 +984,7 @@ function buildTree(
       }
       prevStack = stack;
     }
-    const {displayName, primitive, debugInfo} = hook;
+    const {primitive, debugInfo} = hook;
 
     // For now, the "id" of stateful hooks is just the stateful hook index.
     // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
@@ -967,11 +999,11 @@ function buildTree(
 
     // For the time being, only State and Reducer hooks support runtime overrides.
     const isStateEditable = primitive === 'Reducer' || primitive === 'State';
-    const name = displayName || primitive;
+
     const levelChild: HooksNode = {
       id,
       isStateEditable,
-      name: name,
+      name: displayName || 'Unknown',
       value: hook.value,
       subHooks: [],
       debugInfo: debugInfo,
@@ -984,6 +1016,7 @@ function buildTree(
       fileName: null,
       columnNumber: null,
     };
+    const stack = parseResult !== null ? parseResult[1] : null;
     if (stack && stack.length >= 1) {
       const stackFrame = stack[0];
       hookSource.lineNumber = stackFrame.lineNumber;
