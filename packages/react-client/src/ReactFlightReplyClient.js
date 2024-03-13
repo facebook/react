@@ -14,6 +14,8 @@ import type {
   RejectedThenable,
   ReactCustomFormAction,
 } from 'shared/ReactTypes';
+import type {LazyComponent} from 'react/src/ReactLazy';
+
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
@@ -84,9 +86,9 @@ export type ReactServerValue =
 
 type ReactServerObject = {+[key: string]: ReactServerValue};
 
-// function serializeByValueID(id: number): string {
-//   return '$' + id.toString(16);
-// }
+function serializeByValueID(id: number): string {
+  return '$' + id.toString(16);
+}
 
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
@@ -206,6 +208,78 @@ export function processReply(
     }
 
     if (typeof value === 'object') {
+      switch ((value: any).$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          throw new Error(
+            'React Element cannot be passed to Server Functions from the Client.' +
+              (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
+          );
+        }
+        case REACT_LAZY_TYPE: {
+          // Resolve lazy as if it wasn't here. In the future this will be encoded as a Promise.
+          const lazy: LazyComponent<any, any> = (value: any);
+          const payload = lazy._payload;
+          const init = lazy._init;
+          if (formData === null) {
+            // Upgrade to use FormData to allow us to stream this value.
+            formData = new FormData();
+          }
+          try {
+            const resolvedModel = init(payload);
+            // We always outline this as a separate part even though we could inline it
+            // because it ensures a more deterministic encoding.
+            pendingParts++;
+            const lazyId = nextPartId++;
+            const partJSON = JSON.stringify(resolvedModel, resolveToJSON);
+            // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+            const data: FormData = formData;
+            // eslint-disable-next-line react-internal/safe-string-coercion
+            data.append(formFieldPrefix + lazyId, partJSON);
+            pendingParts--;
+            return serializeByValueID(lazyId);
+          } catch (x) {
+            if (
+              typeof x === 'object' &&
+              x !== null &&
+              typeof x.then === 'function'
+            ) {
+              // Suspended
+              pendingParts++;
+              const lazyId = nextPartId++;
+              const thenable: Thenable<any> = (x: any);
+              thenable.then(
+                partValue => {
+                  try {
+                    const partJSON = JSON.stringify(partValue, resolveToJSON);
+                    // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+                    const data: FormData = formData;
+                    // eslint-disable-next-line react-internal/safe-string-coercion
+                    data.append(formFieldPrefix + lazyId, partJSON);
+                    pendingParts--;
+                    if (pendingParts === 0) {
+                      resolve(data);
+                    }
+                  } catch (reason) {
+                    reject(reason);
+                  }
+                },
+                reason => {
+                  // In the future we could consider serializing this as an error
+                  // that throws on the server instead.
+                  reject(reason);
+                },
+              );
+              return serializeByValueID(lazyId);
+            } else {
+              // In the future we could consider serializing this as an error
+              // that throws on the server instead.
+              reject(x);
+              return null;
+            }
+          }
+        }
+      }
+
       // $FlowFixMe[method-unbinding]
       if (typeof value.then === 'function') {
         // We assume that any object with a .then property is a "Thenable" type,
@@ -219,14 +293,18 @@ export function processReply(
         const thenable: Thenable<any> = (value: any);
         thenable.then(
           partValue => {
-            const partJSON = JSON.stringify(partValue, resolveToJSON);
-            // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
-            const data: FormData = formData;
-            // eslint-disable-next-line react-internal/safe-string-coercion
-            data.append(formFieldPrefix + promiseId, partJSON);
-            pendingParts--;
-            if (pendingParts === 0) {
-              resolve(data);
+            try {
+              const partJSON = JSON.stringify(partValue, resolveToJSON);
+              // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+              const data: FormData = formData;
+              // eslint-disable-next-line react-internal/safe-string-coercion
+              data.append(formFieldPrefix + promiseId, partJSON);
+              pendingParts--;
+              if (pendingParts === 0) {
+                resolve(data);
+              }
+            } catch (reason) {
+              reject(reason);
             }
           },
           reason => {
@@ -294,17 +372,7 @@ export function processReply(
         );
       }
       if (__DEV__) {
-        if ((value: any).$$typeof === REACT_ELEMENT_TYPE) {
-          console.error(
-            'React Element cannot be passed to Server Functions from the Client.%s',
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else if ((value: any).$$typeof === REACT_LAZY_TYPE) {
-          console.error(
-            'React Lazy cannot be passed to Server Functions from the Client.%s',
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else if (
+        if (
           (value: any).$$typeof ===
           (enableRenderableContext ? REACT_CONTEXT_TYPE : REACT_PROVIDER_TYPE)
         ) {

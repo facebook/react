@@ -17,6 +17,7 @@ global.TextDecoder = require('util').TextDecoder;
 
 // let serverExports;
 let webpackServerMap;
+let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 
@@ -31,6 +32,7 @@ describe('ReactFlightDOMReply', () => {
     const WebpackMock = require('./utils/WebpackMock');
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
+    React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
@@ -240,5 +242,37 @@ describe('ReactFlightDOMReply', () => {
       error = e;
     }
     expect(error.message).toBe('Connection closed.');
+  });
+
+  it('resolves a promise and includes its value', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    const bodyPromise = ReactServerDOMClient.encodeReply({promise: promise});
+    resolve('Hi');
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(await result.promise).toBe('Hi');
+  });
+
+  it('resolves a React.lazy and includes its value', async () => {
+    let resolve;
+    const lazy = React.lazy(() => new Promise(r => (resolve = r)));
+    const bodyPromise = ReactServerDOMClient.encodeReply({lazy: lazy});
+    resolve('Hi');
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(result.lazy).toBe('Hi');
+  });
+
+  it('errors when called with JSX by default', async () => {
+    let error;
+    try {
+      await ReactServerDOMClient.encodeReply(<div />);
+    } catch (x) {
+      error = x;
+    }
+    expect(error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining(''),
+      }),
+    );
   });
 });
