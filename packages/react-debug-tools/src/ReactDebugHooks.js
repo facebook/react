@@ -17,6 +17,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {
   ContextDependency,
+  Dependencies,
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
@@ -33,6 +34,7 @@ import {
   REACT_MEMO_CACHE_SENTINEL,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -157,7 +159,7 @@ function readContext<T>(context: ReactContext<T>): T {
   } else {
     if (currentContextDependency === null) {
       throw new Error(
-        'Context reads do not line up with context dependencies. This is a bug in React.',
+        'Context reads do not line up with context dependencies. This is a bug in React Debug Tools.',
       );
     }
 
@@ -1075,9 +1077,28 @@ export function inspectHooksOfFiber(
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
-  const dependencies = currentFiber.dependencies;
-  currentContextDependency =
-    dependencies !== null ? dependencies.firstContext : null;
+  if (hasOwnProperty.call(currentFiber, 'dependencies')) {
+    // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
+    const dependencies = currentFiber.dependencies;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'dependencies_old')) {
+    const dependencies: Dependencies = (currentFiber: any).dependencies_old;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
+    const dependencies: Dependencies = (currentFiber: any).dependencies_new;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
+    const contextDependencies = (currentFiber: any).contextDependencies;
+    currentContextDependency =
+      contextDependencies !== null ? contextDependencies.first : null;
+  } else {
+    throw new Error(
+      'Unsupported React version. This is a bug in React Debug Tools.',
+    );
+  }
 
   const type = fiber.type;
   let props = fiber.memoizedProps;
