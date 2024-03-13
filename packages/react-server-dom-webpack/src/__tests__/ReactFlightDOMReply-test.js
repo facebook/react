@@ -271,8 +271,43 @@ describe('ReactFlightDOMReply', () => {
     }
     expect(error).toEqual(
       expect.objectContaining({
-        message: expect.stringContaining(''),
+        message: __DEV__
+          ? expect.stringContaining(
+              'React Element cannot be passed to Server Functions from the Client without a temporary reference set.',
+            )
+          : expect.stringContaining(''),
       }),
     );
+  });
+
+  it('can pass JSX through a round trip using temporary references', async () => {
+    function Component() {
+      return <div />;
+    }
+
+    const children = <Component />;
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(
+      {children},
+      {
+        temporaryReferences,
+      },
+    );
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    const stream = ReactServerDOMServer.renderToReadableStream(serverPayload);
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    // This should've been the same reference that we already saw.
+    expect(response.children).toBe(children);
   });
 });

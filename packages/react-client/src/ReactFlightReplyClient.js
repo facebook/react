@@ -15,6 +15,7 @@ import type {
   ReactCustomFormAction,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
@@ -31,6 +32,8 @@ import {
   isSimpleObject,
   objectName,
 } from 'shared/ReactSerializationErrors';
+
+import {writeTemporaryReference} from './ReactFlightTemporaryReferences';
 
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
@@ -98,6 +101,10 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
+function serializeTemporaryReferenceID(id: number): string {
+  return '$T' + id.toString(16);
+}
+
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -160,6 +167,7 @@ function escapeStringValue(value: string): string {
 export function processReply(
   root: ReactServerValue,
   formFieldPrefix: string,
+  temporaryReferences: void | TemporaryReferenceSet,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
 ): void {
@@ -210,9 +218,15 @@ export function processReply(
     if (typeof value === 'object') {
       switch ((value: any).$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          throw new Error(
-            'React Element cannot be passed to Server Functions from the Client.' +
-              (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
+          if (temporaryReferences === undefined) {
+            throw new Error(
+              'React Element cannot be passed to Server Functions from the Client without a ' +
+                'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+                (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
+            );
+          }
+          return serializeTemporaryReferenceID(
+            writeTemporaryReference(temporaryReferences, value),
           );
         }
         case REACT_LAZY_TYPE: {
@@ -366,9 +380,15 @@ export function processReply(
         proto !== ObjectPrototype &&
         (proto === null || getPrototypeOf(proto) !== null)
       ) {
-        throw new Error(
-          'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
-            'Classes or null prototypes are not supported.',
+        if (temporaryReferences === undefined) {
+          throw new Error(
+            'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
+              'Classes or null prototypes are not supported.',
+          );
+        }
+        // We can serialize class instances as temporary references.
+        return serializeTemporaryReferenceID(
+          writeTemporaryReference(temporaryReferences, value),
         );
       }
       if (__DEV__) {
@@ -450,9 +470,14 @@ export function processReply(
         formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
-      throw new Error(
-        'Client Functions cannot be passed directly to Server Functions. ' +
-          'Only Functions passed from the Server can be passed back again.',
+      if (temporaryReferences === undefined) {
+        throw new Error(
+          'Client Functions cannot be passed directly to Server Functions. ' +
+            'Only Functions passed from the Server can be passed back again.',
+        );
+      }
+      return serializeTemporaryReferenceID(
+        writeTemporaryReference(temporaryReferences, value),
       );
     }
 
@@ -511,6 +536,7 @@ function encodeFormData(reference: any): Thenable<FormData> {
   processReply(
     reference,
     '',
+    undefined, // TODO: This means React Elements can't be used as state in progressive enhancement.
     (body: string | FormData) => {
       if (typeof body === 'string') {
         const data = new FormData();

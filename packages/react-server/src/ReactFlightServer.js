@@ -59,6 +59,7 @@ import type {
   ReactAsyncInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {TemporaryReference} from './ReactFlightServerTemporaryReferences';
 
 import {
   resolveClientReferenceMetadata,
@@ -72,6 +73,11 @@ import {
   createHints,
   initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
+
+import {
+  isTemporaryReference,
+  resolveTemporaryReferenceID,
+} from './ReactFlightServerTemporaryReferences';
 
 import {
   HooksDispatcher,
@@ -788,7 +794,7 @@ function renderElement(
     }
   }
   if (typeof type === 'function') {
-    if (isClientReference(type)) {
+    if (isClientReference(type) || isTemporaryReference(type)) {
       // This is a reference to a Client Component.
       return renderClientElement(task, type, key, props);
     }
@@ -949,6 +955,10 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
+function serializeTemporaryReferenceID(id: string): string {
+  return '$T' + id;
+}
+
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -1083,6 +1093,14 @@ function serializeServerReference(
   const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
+}
+
+function serializeTemporaryReference(
+  request: Request,
+  temporaryReference: TemporaryReference<any>,
+): string {
+  const id = resolveTemporaryReferenceID(temporaryReference);
+  return serializeTemporaryReferenceID(id);
 }
 
 function serializeLargeTextString(request: Request, text: string): string {
@@ -1635,6 +1653,9 @@ function renderModelDestructive(
     if (isServerReference(value)) {
       return serializeServerReference(request, (value: any));
     }
+    if (isTemporaryReference(value)) {
+      return serializeTemporaryReference(request, (value: any));
+    }
 
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
@@ -2102,6 +2123,9 @@ function renderConsoleValue(
         parentPropertyName,
         (value: any),
       );
+    }
+    if (isTemporaryReference(value)) {
+      return serializeTemporaryReference(request, (value: any));
     }
 
     // Serialize the body of the function as an eval so it can be printed.
