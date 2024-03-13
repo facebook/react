@@ -1109,41 +1109,41 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
 
-  // Only used for versions of React without memoized context value in context dependencies.
-  const contextMap = new Map<ReactContext<any>, any>();
-  if (hasOwnProperty.call(currentFiber, 'dependencies')) {
-    // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
-    const dependencies = currentFiber.dependencies;
-    currentContextDependency =
-      dependencies !== null ? dependencies.firstContext : null;
-  } else if (hasOwnProperty.call(currentFiber, 'dependencies_old')) {
-    const dependencies: Dependencies = (currentFiber: any).dependencies_old;
-    currentContextDependency =
-      dependencies !== null ? dependencies.firstContext : null;
-    setupContexts(contextMap, fiber);
-  } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
-    const dependencies: Dependencies = (currentFiber: any).dependencies_new;
-    currentContextDependency =
-      dependencies !== null ? dependencies.firstContext : null;
-    setupContexts(contextMap, fiber);
-  } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
-    const contextDependencies = (currentFiber: any).contextDependencies;
-    currentContextDependency =
-      contextDependencies !== null ? contextDependencies.first : null;
-    setupContexts(contextMap, fiber);
-  } else {
-    throw new Error(
-      'Unsupported React version. This is a bug in React Debug Tools.',
-    );
-  }
-
   const type = fiber.type;
   let props = fiber.memoizedProps;
   if (type !== fiber.elementType) {
     props = resolveDefaultProps(type, props);
   }
 
+  // Only used for versions of React without memoized context value in context dependencies.
+  const contextMap = new Map<ReactContext<any>, any>();
   try {
+    if (hasOwnProperty.call(currentFiber, 'dependencies')) {
+      // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
+      const dependencies = currentFiber.dependencies;
+      currentContextDependency =
+        dependencies !== null ? dependencies.firstContext : null;
+    } else if (hasOwnProperty.call(currentFiber, 'dependencies_old')) {
+      const dependencies: Dependencies = (currentFiber: any).dependencies_old;
+      currentContextDependency =
+        dependencies !== null ? dependencies.firstContext : null;
+      setupContexts(contextMap, fiber);
+    } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
+      const dependencies: Dependencies = (currentFiber: any).dependencies_new;
+      currentContextDependency =
+        dependencies !== null ? dependencies.firstContext : null;
+      setupContexts(contextMap, fiber);
+    } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
+      const contextDependencies = (currentFiber: any).contextDependencies;
+      currentContextDependency =
+        contextDependencies !== null ? contextDependencies.first : null;
+      setupContexts(contextMap, fiber);
+    } else {
+      throw new Error(
+        'Unsupported React version. This is a bug in React Debug Tools.',
+      );
+    }
+
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
