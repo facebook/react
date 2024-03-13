@@ -229,8 +229,23 @@ class Context {
           this.joinedScopes.union([current.shadowedBy, current.scope]);
         }
       } else if (found && current.shadowedBy === null) {
-        // `scope` is shadowing `current`, but we don't know they are interleaved yet
+        // `scope` is shadowing `current` and may interleave
         current.shadowedBy = scope;
+        if (current.scope.range.end > scope.range.end) {
+          /*
+           * Current is shadowed by `scope`, and we know that `current` will mutate
+           * again (per its range), so the scopes are already known to interleave.
+           *
+           * Eagerly extend the ranges of the scopes so that we don't prematurely end
+           * a scope relative to its eventual post-merge mutable range
+           */
+          const end = makeInstructionId(
+            Math.max(current.scope.range.end, scope.range.end)
+          );
+          current.scope.range.end = end;
+          scope.range.end = end;
+          this.joinedScopes.union([current.scope, scope]);
+        }
       }
     }
     if (!currentBlock.seen.has(scope.id)) {
