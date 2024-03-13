@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3a1a367017d4c9c4d53a27776b68c3f9>>
+ * @generated SignedSource<<d2ad8cf505447dec09fe24623849b875>>
  */
 
 "use strict";
@@ -1282,8 +1282,6 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlags.passChildrenWhenCloningPersistedNodes,
-  useMicrotasksForSchedulingInFabric =
-    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -1723,8 +1721,11 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
-var scheduleMicrotask =
-  "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
+var supportsMicrotasks =
+    "undefined" !== typeof RN$enableMicrotasksInReact &&
+    !!RN$enableMicrotasksInReact,
+  scheduleMicrotask =
+    "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
 function getInstanceFromNode(node) {
   return null != node.canonical && null != node.canonical.internalInstanceHandle
     ? node.canonical.internalInstanceHandle
@@ -2453,7 +2454,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return currentTime;
 }
 function scheduleImmediateTask(cb) {
-  useMicrotasksForSchedulingInFabric
+  supportsMicrotasks
     ? scheduleMicrotask(function () {
         0 !== (executionContext & 6)
           ? scheduleCallback$3(ImmediatePriority, cb)
@@ -11331,7 +11332,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1184 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-ca9ab9fa",
+    version: "18.3.0-canary-7d52778b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11387,7 +11388,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-ca9ab9fa"
+  reconcilerVersion: "18.3.0-canary-7d52778b"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

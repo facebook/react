@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<79ffaa0355a9d9b89df41eabe7496793>>
+ * @generated SignedSource<<15dc76ff98842d803f8a59fa78e23283>>
  */
 
 "use strict";
@@ -1278,8 +1278,6 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlags.passChildrenWhenCloningPersistedNodes,
-  useMicrotasksForSchedulingInFabric =
-    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -1601,8 +1599,11 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
-var scheduleMicrotask =
-  "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
+var supportsMicrotasks =
+    "undefined" !== typeof RN$enableMicrotasksInReact &&
+    !!RN$enableMicrotasksInReact,
+  scheduleMicrotask =
+    "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
 function getInstanceFromNode(node) {
   return null != node.canonical && null != node.canonical.internalInstanceHandle
     ? node.canonical.internalInstanceHandle
@@ -2329,7 +2330,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return currentTime;
 }
 function scheduleImmediateTask(cb) {
-  useMicrotasksForSchedulingInFabric
+  supportsMicrotasks
     ? scheduleMicrotask(function () {
         0 !== (executionContext & 6)
           ? scheduleCallback$3(ImmediatePriority, cb)
@@ -10625,7 +10626,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1103 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-119507e5",
+    version: "18.3.0-canary-1aaf050f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10668,7 +10669,7 @@ var internals$jscomp$inline_1330 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-119507e5"
+  reconcilerVersion: "18.3.0-canary-1aaf050f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1331 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<80123652bb9b7be7f517855aca5ff3f1>>
+ * @generated SignedSource<<9378c92e70cea9a594311fbdc67e5fa3>>
  */
 
 "use strict";
@@ -2987,8 +2987,6 @@ to return true:wantsResponderID|                            |
       enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlags.passChildrenWhenCloningPersistedNodes,
-      useMicrotasksForSchedulingInFabric =
-        dynamicFlags.useMicrotasksForSchedulingInFabric,
       useModernStrictMode = dynamicFlags.useModernStrictMode; // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
@@ -5029,7 +5027,9 @@ to return true:wantsResponderID|                            |
     //     Microtasks
     // -------------------
 
-    var supportsMicrotasks = useMicrotasksForSchedulingInFabric;
+    var supportsMicrotasks =
+      typeof RN$enableMicrotasksInReact !== "undefined" &&
+      !!RN$enableMicrotasksInReact;
     var scheduleMicrotask =
       typeof queueMicrotask === "function" ? queueMicrotask : scheduleTimeout;
 
@@ -29801,7 +29801,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-04bb7356";
+    var ReactVersion = "18.3.0-canary-61d1189b";
 
     function createPortal$1(
       children,
