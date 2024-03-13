@@ -6218,9 +6218,9 @@ if (__DEV__) {
       return aliases.get(name) || name;
     }
 
-    // When adding attributes to the HTML or SVG allowed attribute list, be sure to
     // also add them to this module to ensure casing and incorrect name
     // warnings.
+
     var possibleStandardNames = {
       // HTML
       accept: "accept",
@@ -7153,6 +7153,10 @@ if (__DEV__) {
                 // Boolean properties can accept boolean values
                 return true;
               }
+              // fallthrough
+
+              case "inert":
+              // fallthrough for new boolean props without the flag on
 
               default: {
                 var prefix = name.toLowerCase().slice(0, 5);
@@ -7234,6 +7238,9 @@ if (__DEV__) {
                 case "itemScope": {
                   break;
                 }
+
+                case "inert":
+                // fallthrough for new boolean props without the flag on
 
                 default: {
                   return true;
@@ -35764,7 +35771,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-bdc658a4";
+    var ReactVersion = "18.3.0-www-classic-ecd67585";
 
     function createPortal$1(
       children,
@@ -40274,7 +40281,6 @@ if (__DEV__) {
     var canDiffStyleForHydrationWarning;
 
     {
-      // IE 11 parses & normalizes the style attribute as opposed to other
       // browsers. It adds spaces and sorts the properties in some
       // non-alphabetical order. Handling that would require sorting CSS
       // properties in the client & server versions or applying
@@ -40282,6 +40288,7 @@ if (__DEV__) {
       // normalized. Since it only affects IE, we're skipping style warnings
       // in that browser completely in favor of doing all that work.
       // See https://github.com/facebook/react/issues/11807
+
       canDiffStyleForHydrationWarning =
         disableIEWorkarounds || (canUseDOM && !document.documentMode);
     }
@@ -40943,6 +40950,13 @@ if (__DEV__) {
           break;
         }
         // Boolean
+
+        case "inert": {
+          setValueForAttribute(domElement, key, value);
+          break;
+        }
+
+        // fallthrough for new boolean props without the flag on
 
         case "allowFullScreen":
         case "async":
@@ -43185,6 +43199,10 @@ if (__DEV__) {
               extraAttributes
             );
             continue;
+
+          case "inert":
+
+          // fallthrough for new boolean props without the flag on
 
           default: {
             if (

@@ -15276,6 +15276,9 @@ function setProp(domElement, tag, key, value, props, prevValue) {
           )
         : domElement.removeAttribute(key);
       break;
+    case "inert":
+      setValueForAttribute(domElement, key, value);
+      break;
     case "allowFullScreen":
     case "async":
     case "autoPlay":
@@ -17975,7 +17978,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1902 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-b1962418",
+  version: "18.3.0-www-classic-5be4d00a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18019,7 +18022,7 @@ var devToolsConfig$jscomp$inline_1902 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b1962418"
+  reconcilerVersion: "18.3.0-www-classic-5be4d00a"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18337,7 +18340,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-b1962418";
+exports.version = "18.3.0-www-classic-5be4d00a";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

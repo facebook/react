@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-665182c7";
+    var ReactVersion = "18.3.0-www-classic-8476b078";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -1168,9 +1168,9 @@ if (__DEV__) {
       }
     }
 
-    // When adding attributes to the HTML or SVG allowed attribute list, be sure to
     // also add them to this module to ensure casing and incorrect name
     // warnings.
+
     var possibleStandardNames = {
       // HTML
       accept: "accept",
@@ -1906,6 +1906,10 @@ if (__DEV__) {
                 // Boolean properties can accept boolean values
                 return true;
               }
+              // fallthrough
+
+              case "inert":
+              // fallthrough for new boolean props without the flag on
 
               default: {
                 var prefix = name.toLowerCase().slice(0, 5);
@@ -1987,6 +1991,9 @@ if (__DEV__) {
                 case "itemScope": {
                   break;
                 }
+
+                case "inert":
+                // fallthrough for new boolean props without the flag on
 
                 default: {
                   return true;
@@ -2476,7 +2483,7 @@ if (__DEV__) {
     // It should also be noted that this maximum is a soft maximum. we have not reached the limit we will
     // allow one more header to be captured which means in practice if the limit is approached it will be exceeded
 
-    var DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000; // Allows us to keep track of what we've already written so we can refer back to it.
+    var DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000;
     // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
     // is set, the server will send instructions via data attributes (instead of inline scripts)
 
@@ -3552,6 +3559,9 @@ if (__DEV__) {
         case "xmlSpace":
           pushStringAttribute(target, "xml:space", value);
           return;
+
+        case "inert":
+        // fallthrough for new boolean props without the flag on
 
         default:
           if (

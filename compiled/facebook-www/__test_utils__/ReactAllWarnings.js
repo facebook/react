@@ -272,6 +272,7 @@ export default [
   "Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s=\"%s\" or %s={value.toString()}.",
   "Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s=\"%s\" or %s={value.toString()}.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.",
   "Received a `%s` for a string attribute `is`. If this is expected, cast the value to a string.",
+  "Received an empty string for a boolean attribute `%s`. This will treat the attribute as if it were false. Either pass `false` to silence this warning, or pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
   "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue.",
   "Received the string `%s` for the boolean attribute `%s`. %s Did you mean %s={%s}?",
   "Render methods should be a pure function of props and state; triggering nested component updates from render is not allowed. If necessary, trigger nested updates in componentDidUpdate.\n\nCheck the render method of %s.",
