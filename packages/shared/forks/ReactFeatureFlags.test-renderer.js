@@ -62,7 +62,6 @@ export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
-export const enableNewBooleanProps = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -100,6 +99,7 @@ export const enableReactTestRendererWarning = false;
 export const enableBigIntSupport = __NEXT_MAJOR__;
 export const disableLegacyMode = __NEXT_MAJOR__;
 export const disableLegacyContext = __NEXT_MAJOR__;
+export const enableNewBooleanProps = __NEXT_MAJOR__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
