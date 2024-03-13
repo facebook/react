@@ -92,6 +92,26 @@ const rule: Rule.RuleModule = {
       options.logger?.logEvent("", err);
     }
 
+    function hasFlowSuppression(
+      nodeLoc: BabelSourceLocation,
+      suppression: string
+    ) {
+      const sourceCode = context.getSourceCode();
+      const comments = sourceCode.getAllComments();
+      const flowSuppressionRegex = new RegExp(
+        "\\$FlowFixMe\\[" + suppression + "\\]"
+      );
+      for (const commentNode of comments) {
+        if (
+          flowSuppressionRegex.test(commentNode.value) &&
+          commentNode.loc!.end.line === nodeLoc.start.line - 1
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     const babelAST = HermesParser.parse(sourceCode, {
       babel: true,
       enableExperimentalComponentSyntax: true,
@@ -114,6 +134,10 @@ const rule: Rule.RuleModule = {
         if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
             if (!isReportableDiagnostic(detail)) {
+              continue;
+            }
+            if (hasFlowSuppression(detail.loc, "react-rule-hook")) {
+              // If Flow already caught this error, we don't need to report it again.
               continue;
             }
             let suggest: Array<Rule.SuggestionReportDescriptor> = [];

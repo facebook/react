@@ -37,6 +37,18 @@ const tests: ForgetTestCases = {
       `,
     },
     {
+      name: "Violation with Flow suppression",
+      code: `
+      // Valid since error already suppressed with flow.
+      function useHookWithHook() {
+        if (cond) {
+          // $FlowFixMe[react-rule-hook]
+          useConditionalHook();
+        }
+      }
+    `,
+    },
+    {
       name: "Basic example with component syntax",
       code: normalizeIndent`
         export default component HelloWorld(
