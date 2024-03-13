@@ -28,6 +28,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   FunctionComponent,
   SimpleMemoComponent,
+  ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
 import {
@@ -164,7 +165,13 @@ function readContext<T>(context: ReactContext<T>): T {
     }
 
     // For now we don't expose readContext usage in the hooks debugging info.
-    const value = ((currentContextDependency.memoizedValue: any): T);
+    const value = hasOwnProperty.call(currentContextDependency, 'memoizedValue')
+      ? // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+        ((currentContextDependency.memoizedValue: any): T)
+      : // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
+        // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+        ((currentContextDependency.context._currentValue: any): T);
+    // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
     currentContextDependency = currentContextDependency.next;
 
     return value;
@@ -1011,6 +1018,30 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog);
 }
 
+function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
+  let current: null | Fiber = fiber;
+  while (current) {
+    if (current.tag === ContextProvider) {
+      let context: ReactContext<any> = current.type;
+      if ((context: any)._context !== undefined) {
+        // Support inspection of pre-19+ providers.
+        context = (context: any)._context;
+      }
+      if (!contextMap.has(context)) {
+        // Store the current value that we're going to restore later.
+        contextMap.set(context, context._currentValue);
+        // Set the inner most provider value on the context.
+        context._currentValue = current.memoizedProps.value;
+      }
+    }
+    current = current.return;
+  }
+}
+
+function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
+  contextMap.forEach((value, context) => (context._currentValue = value));
+}
+
 function inspectHooksOfForwardRef<Props, Ref>(
   renderFunction: (Props, Ref) => React$Node,
   props: Props,
@@ -1077,6 +1108,9 @@ export function inspectHooksOfFiber(
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
+
+  // Only used for versions of React without memoized context value in context dependencies.
+  const contextMap = new Map<ReactContext<any>, any>();
   if (hasOwnProperty.call(currentFiber, 'dependencies')) {
     // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
     const dependencies = currentFiber.dependencies;
@@ -1086,14 +1120,17 @@ export function inspectHooksOfFiber(
     const dependencies: Dependencies = (currentFiber: any).dependencies_old;
     currentContextDependency =
       dependencies !== null ? dependencies.firstContext : null;
+    setupContexts(contextMap, fiber);
   } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
     const dependencies: Dependencies = (currentFiber: any).dependencies_new;
     currentContextDependency =
       dependencies !== null ? dependencies.firstContext : null;
+    setupContexts(contextMap, fiber);
   } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
     const contextDependencies = (currentFiber: any).contextDependencies;
     currentContextDependency =
       contextDependencies !== null ? contextDependencies.first : null;
+    setupContexts(contextMap, fiber);
   } else {
     throw new Error(
       'Unsupported React version. This is a bug in React Debug Tools.',
@@ -1121,5 +1158,7 @@ export function inspectHooksOfFiber(
     currentFiber = null;
     currentHook = null;
     currentContextDependency = null;
+
+    restoreContexts(contextMap);
   }
 }
