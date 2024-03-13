@@ -965,14 +965,31 @@ function codegenForInit(
         instruction,
       }))
     ).body;
-    const declaration = body[0]!;
-    CompilerError.invariant(declaration.type === "VariableDeclaration", {
+    const declarators: Array<t.VariableDeclarator> = [];
+    let kind: "let" | "const" = "const";
+    body.forEach((instr) => {
+      CompilerError.invariant(
+        instr.type === "VariableDeclaration" &&
+          (instr.kind === "let" || instr.kind === "const"),
+        {
+          reason: "Expected a variable declaration",
+          loc: init.loc,
+          description: null,
+          suggestions: null,
+        }
+      );
+      if (instr.kind === "let") {
+        kind = "let";
+      }
+      declarators.push(...instr.declarations);
+    });
+    CompilerError.invariant(declarators.length > 0, {
       reason: "Expected a variable declaration",
+      loc: init.loc,
       description: null,
-      loc: declaration.loc ?? null,
       suggestions: null,
     });
-    return declaration;
+    return t.variableDeclaration(kind, declarators);
   } else {
     return codegenInstructionValueToExpression(cx, init);
   }

@@ -12,6 +12,11 @@ function Component(props) {
   return items;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ items: ["a", "b", 42] }],
+};
+
 ```
 
 ## Code
@@ -23,7 +28,7 @@ function Component(props) {
   let items;
   if ($[0] !== props.items) {
     items = [];
-    for (let i = 0; i < length; i++) {
+    for (let i = 0, length = props.items.length; i < length; i++) {
       items.push(props.items[i]);
     }
     $[0] = props.items;
@@ -34,5 +39,12 @@ function Component(props) {
   return items;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ items: ["a", "b", 42] }],
+};
+
 ```
       
+### Eval output
+(kind: ok) ["a","b",42]
