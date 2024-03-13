@@ -63,6 +63,7 @@ import {
   pruneUnusedScopes,
   renameVariables,
 } from "../ReactiveScopes";
+import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -203,6 +204,13 @@ function* runWithEnvironment(
 
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
+
+  alignMethodCallScopes(hir);
+  yield log({
+    kind: "hir",
+    name: "AlignMethodCallScopes",
+    value: hir,
+  });
 
   alignObjectMethodScopes(hir);
   yield log({
