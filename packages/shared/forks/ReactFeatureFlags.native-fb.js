@@ -28,7 +28,6 @@ export const {
   enableUnifiedSyncLane,
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
-  useMicrotasksForSchedulingInFabric,
   useModernStrictMode,
 } = dynamicFlags;
 

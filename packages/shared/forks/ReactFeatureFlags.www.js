@@ -106,7 +106,6 @@ export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
 
-export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableAsyncDebugInfo = false;

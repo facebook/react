@@ -115,8 +115,6 @@ export const enableFizzExternalRuntime = true;
 
 export const alwaysThrottleRetries = true;
 
-export const useMicrotasksForSchedulingInFabric = false;
-
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
