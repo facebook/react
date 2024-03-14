@@ -227,7 +227,7 @@ function lowerStatement(
   builder: HIRBuilder,
   stmtPath: NodePath<t.Statement>,
   label: string | null = null
-): undefined {
+): void {
   const stmtNode = stmtPath.node;
   switch (stmtNode.type) {
     case "ThrowStatement": {
@@ -1285,6 +1285,11 @@ function lowerStatement(
 
       return;
     }
+    case "TypeAlias":
+    case "TSTypeAliasDeclaration": {
+      // We do not preserve type annotations/syntax through transformation
+      return;
+    }
     case "ClassDeclaration":
     case "DeclareClass":
     case "DeclareExportAllDeclaration":
@@ -1303,7 +1308,6 @@ function lowerStatement(
     case "ImportDeclaration":
     case "InterfaceDeclaration":
     case "OpaqueType":
-    case "TypeAlias":
     case "TSDeclareFunction":
     case "TSEnumDeclaration":
     case "TSExportAssignment":
@@ -1311,7 +1315,6 @@ function lowerStatement(
     case "TSInterfaceDeclaration":
     case "TSModuleDeclaration":
     case "TSNamespaceExportDeclaration":
-    case "TSTypeAliasDeclaration":
     case "WithStatement": {
       builder.errors.push({
         reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
