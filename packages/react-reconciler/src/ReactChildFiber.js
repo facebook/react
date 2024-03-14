@@ -58,7 +58,7 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
-import {readContextDuringReconcilation} from './ReactFiberNewContext';
+import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
@@ -746,7 +746,7 @@ function createChildReconciler(
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
           returnFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
           debugInfo,
         );
@@ -873,7 +873,7 @@ function createChildReconciler(
         return updateSlot(
           returnFiber,
           oldFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
           debugInfo,
         );
@@ -994,7 +994,7 @@ function createChildReconciler(
           existingChildren,
           returnFiber,
           newIdx,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
           debugInfo,
         );
@@ -1710,7 +1710,7 @@ function createChildReconciler(
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
           debugInfo,
         );
