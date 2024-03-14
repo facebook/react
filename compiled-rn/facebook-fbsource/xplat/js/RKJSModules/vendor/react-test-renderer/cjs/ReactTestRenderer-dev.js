@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6ab290eb8548e08a74bf8def3f649394>>
+ * @generated SignedSource<<15edad3f290e335d70dc9466dde6cfcc>>
  */
 
 "use strict";
@@ -5636,7 +5636,7 @@ if (__DEV__) {
             var context = newChild;
             return createChild(
               returnFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -5759,7 +5759,7 @@ if (__DEV__) {
             return updateSlot(
               returnFiber,
               oldFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -5884,7 +5884,7 @@ if (__DEV__) {
               existingChildren,
               returnFiber,
               newIdx,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -6629,7 +6629,7 @@ if (__DEV__) {
             return reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -16193,7 +16193,7 @@ if (__DEV__) {
 
       return readContextForConsumer(currentlyRenderingFiber, context);
     }
-    function readContextDuringReconcilation(consumer, context, renderLanes) {
+    function readContextDuringReconciliation(consumer, context, renderLanes) {
       if (currentlyRenderingFiber === null) {
         prepareToReadContext(consumer, renderLanes);
       }
@@ -25454,7 +25454,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-bbc571aee-20240313";
+    var ReactVersion = "18.3.0-canary-9ffe9102f-20240314";
 
     // Might add PROFILE later.
 

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9378c92e70cea9a594311fbdc67e5fa3>>
+ * @generated SignedSource<<48c206274b16ddb872dd142a6fc17769>>
  */
 
 "use strict";
@@ -9440,7 +9440,7 @@ to return true:wantsResponderID|                            |
             var context = newChild;
             return createChild(
               returnFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -9563,7 +9563,7 @@ to return true:wantsResponderID|                            |
             return updateSlot(
               returnFiber,
               oldFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -9688,7 +9688,7 @@ to return true:wantsResponderID|                            |
               existingChildren,
               returnFiber,
               newIdx,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -10433,7 +10433,7 @@ to return true:wantsResponderID|                            |
             return reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -20318,7 +20318,7 @@ to return true:wantsResponderID|                            |
 
       return readContextForConsumer(currentlyRenderingFiber, context);
     }
-    function readContextDuringReconcilation(consumer, context, renderLanes) {
+    function readContextDuringReconciliation(consumer, context, renderLanes) {
       if (currentlyRenderingFiber === null) {
         prepareToReadContext(consumer, renderLanes);
       }
@@ -29801,7 +29801,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-61d1189b";
+    var ReactVersion = "18.3.0-canary-01f0d8b1";
 
     function createPortal$1(
       children,
