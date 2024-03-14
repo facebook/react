@@ -77,6 +77,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
   enableClientRenderFallbackOnTextMismatch =
     dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   assign = Object.assign,
@@ -15167,8 +15168,10 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         : domElement.removeAttribute(key);
       break;
     case "inert":
-      setValueForAttribute(domElement, key, value);
-      break;
+      if (!enableNewBooleanProps) {
+        setValueForAttribute(domElement, key, value);
+        break;
+      }
     case "allowFullScreen":
     case "async":
     case "autoPlay":
@@ -17137,7 +17140,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1781 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-10e7e20a",
+  version: "18.3.0-www-modern-4057bb15",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2151 = {
@@ -17168,7 +17171,7 @@ var internals$jscomp$inline_2151 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-10e7e20a"
+  reconcilerVersion: "18.3.0-www-modern-4057bb15"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2152 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17577,4 +17580,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-10e7e20a";
+exports.version = "18.3.0-www-modern-4057bb15";

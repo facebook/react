@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-8476b078";
+    var ReactVersion = "18.3.0-www-classic-3a1cc8c2";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -682,7 +682,8 @@ if (__DEV__) {
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps;
     // On WWW, false is used for a new modern build.
     var enableFloat = true;
     var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
@@ -1664,6 +1665,10 @@ if (__DEV__) {
       zoomandpan: "zoomAndPan"
     };
 
+    if (enableNewBooleanProps) {
+      possibleStandardNames.inert = "inert";
+    }
+
     var warnedProperties = {};
     var EVENT_NAME_REGEX = /^on./;
     var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
@@ -1908,7 +1913,12 @@ if (__DEV__) {
               }
               // fallthrough
 
-              case "inert":
+              case "inert": {
+                if (enableNewBooleanProps) {
+                  // Boolean properties can accept boolean values
+                  return true;
+                }
+              }
               // fallthrough for new boolean props without the flag on
 
               default: {
@@ -1992,7 +2002,11 @@ if (__DEV__) {
                   break;
                 }
 
-                case "inert":
+                case "inert": {
+                  if (enableNewBooleanProps) {
+                    break;
+                  }
+                }
                 // fallthrough for new boolean props without the flag on
 
                 default: {
@@ -2484,6 +2498,11 @@ if (__DEV__) {
     // allow one more header to be captured which means in practice if the limit is approached it will be exceeded
 
     var DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000;
+    var didWarnForNewBooleanPropsWithEmptyValue;
+
+    {
+      didWarnForNewBooleanPropsWithEmptyValue = {};
+    } // Allows us to keep track of what we've already written so we can refer back to it.
     // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
     // is set, the server will send instructions via data attributes (instead of inline scripts)
 
@@ -3560,7 +3579,40 @@ if (__DEV__) {
           pushStringAttribute(target, "xml:space", value);
           return;
 
-        case "inert":
+        case "inert": {
+          if (enableNewBooleanProps) {
+            {
+              if (
+                value === "" &&
+                !didWarnForNewBooleanPropsWithEmptyValue[name]
+              ) {
+                didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+
+                error(
+                  "Received an empty string for a boolean attribute `%s`. " +
+                    "This will treat the attribute as if it were false. " +
+                    "Either pass `false` to silence this warning, or " +
+                    "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                  name
+                );
+              }
+            } // Boolean
+
+            if (
+              value &&
+              typeof value !== "function" &&
+              typeof value !== "symbol"
+            ) {
+              target.push(
+                attributeSeparator,
+                stringToChunk(name),
+                attributeEmptyString
+              );
+            }
+
+            return;
+          }
+        }
         // fallthrough for new boolean props without the flag on
 
         default:

@@ -145,6 +145,7 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
       enableClientRenderFallbackOnTextMismatch =
         dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch; // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
@@ -6851,6 +6852,10 @@ if (__DEV__) {
       zoomandpan: "zoomAndPan"
     };
 
+    if (enableNewBooleanProps) {
+      possibleStandardNames.inert = "inert";
+    }
+
     var ariaProperties = {
       "aria-current": 0,
       // state
@@ -7292,7 +7297,12 @@ if (__DEV__) {
               }
               // fallthrough
 
-              case "inert":
+              case "inert": {
+                if (enableNewBooleanProps) {
+                  // Boolean properties can accept boolean values
+                  return true;
+                }
+              }
               // fallthrough for new boolean props without the flag on
 
               default: {
@@ -7376,7 +7386,11 @@ if (__DEV__) {
                   break;
                 }
 
-                case "inert":
+                case "inert": {
+                  if (enableNewBooleanProps) {
+                    break;
+                  }
+                }
                 // fallthrough for new boolean props without the flag on
 
                 default: {
@@ -36395,7 +36409,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-6d7ca4e7";
+    var ReactVersion = "18.3.0-www-classic-e323f09a";
 
     function createPortal$1(
       children,
@@ -40902,9 +40916,11 @@ if (__DEV__) {
     var didWarnFormActionName = false;
     var didWarnFormActionTarget = false;
     var didWarnFormActionMethod = false;
+    var didWarnForNewBooleanPropsWithEmptyValue;
     var canDiffStyleForHydrationWarning;
 
     {
+      didWarnForNewBooleanPropsWithEmptyValue = {}; // IE 11 parses & normalizes the style attribute as opposed to other
       // browsers. It adds spaces and sorts the properties in some
       // non-alphabetical order. Handling that would require sorting CSS
       // properties in the client & server versions or applying
@@ -41575,10 +41591,28 @@ if (__DEV__) {
         }
         // Boolean
 
-        case "inert": {
-          setValueForAttribute(domElement, key, value);
-          break;
-        }
+        case "inert":
+          if (!enableNewBooleanProps) {
+            setValueForAttribute(domElement, key, value);
+            break;
+          } else {
+            {
+              if (
+                value === "" &&
+                !didWarnForNewBooleanPropsWithEmptyValue[key]
+              ) {
+                didWarnForNewBooleanPropsWithEmptyValue[key] = true;
+
+                error(
+                  "Received an empty string for a boolean attribute `%s`. " +
+                    "This will treat the attribute as if it were false. " +
+                    "Either pass `false` to silence this warning, or " +
+                    "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                  key
+                );
+              }
+            }
+          }
 
         // fallthrough for new boolean props without the flag on
 
@@ -43825,6 +43859,33 @@ if (__DEV__) {
             continue;
 
           case "inert":
+            if (enableNewBooleanProps) {
+              {
+                if (
+                  value === "" &&
+                  !didWarnForNewBooleanPropsWithEmptyValue[propKey]
+                ) {
+                  didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
+
+                  error(
+                    "Received an empty string for a boolean attribute `%s`. " +
+                      "This will treat the attribute as if it were false. " +
+                      "Either pass `false` to silence this warning, or " +
+                      "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                    propKey
+                  );
+                }
+              }
+
+              hydrateBooleanAttribute(
+                domElement,
+                propKey,
+                propKey,
+                value,
+                extraAttributes
+              );
+              continue;
+            }
 
           // fallthrough for new boolean props without the flag on
 
