@@ -6,7 +6,7 @@
  */
 
 import { RuleTester as ESLintTester } from "eslint";
-import ReactForgetDiagnostics from "../src/rules/ReactForgetDiagnostics";
+import ReactCompilerRule from "../src/rules/ReactCompilerRule";
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -144,4 +144,4 @@ const eslintTester = new ESLintTester({
     enableExperimentalComponentSyntax: true,
   },
 });
-eslintTester.run("react-forget-diagnostics", ReactForgetDiagnostics, tests);
+eslintTester.run("react-compiler", ReactCompilerRule, tests);

@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactForgetDiagnostics from "./rules/ReactForgetDiagnostics";
+import ReactCompilerRule from "./rules/ReactCompilerRule";
 
 module.exports = {
   rules: {
-    "react-forget-diagnostics": ReactForgetDiagnostics,
+    "react-compiler": ReactCompilerRule,
   },
 };
