@@ -1078,8 +1078,8 @@ class Driver {
         });
       }
       default: {
-        CompilerError.invariant(false, {
-          reason: `Unexpected value block terminal kind '${terminal.kind}'`,
+        CompilerError.throwTodo({
+          reason: `Support '${terminal.kind}' as a value block terminal (conditional, logical, optional chaining, etc)`,
           description: null,
           loc: terminal.loc,
           suggestions: null,
