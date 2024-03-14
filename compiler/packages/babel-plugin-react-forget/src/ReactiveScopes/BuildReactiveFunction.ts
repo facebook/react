@@ -1069,6 +1069,14 @@ class Driver {
           suggestions: null,
         });
       }
+      case "label": {
+        CompilerError.throwTodo({
+          reason: `Support labeled statements combined with value blocks (conditional, logical, optional chaining, etc)`,
+          description: null,
+          loc: terminal.loc,
+          suggestions: null,
+        });
+      }
       default: {
         CompilerError.invariant(false, {
           reason: `Unexpected value block terminal kind '${terminal.kind}'`,

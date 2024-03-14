@@ -23,7 +23,7 @@ function Component(props) {
 > 4 |       return [props.value];
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 5 |     }) || []
-    | ^^^^^^^^^^^^^ [ReactForget] Invariant: Unexpected value block terminal kind 'label' (3:5)
+    | ^^^^^^^^^^^^^ [ReactForget] Todo: Support labeled statements combined with value blocks (conditional, logical, optional chaining, etc) (3:5)
   6 |   );
   7 | }
   8 |
