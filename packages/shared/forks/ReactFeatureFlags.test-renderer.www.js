@@ -89,6 +89,7 @@ export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
+export const disableDOMTestUtils = false;
 
 export const enableBigIntSupport = true;
 
