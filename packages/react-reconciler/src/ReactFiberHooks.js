@@ -2259,6 +2259,9 @@ function rerenderFormState<S, P>(
     );
   }
 
+  // For mount, pending is always false.
+  const [isPending] = rerenderState(false);
+
   // This is a mount. No updates to process.
   const state: Awaited<S> = stateHook.memoizedState;
 
@@ -2269,8 +2272,7 @@ function rerenderFormState<S, P>(
   // This may have changed during the rerender.
   actionQueueHook.memoizedState = action;
 
-  // For mount, pending is always false.
-  return [state, dispatch, false];
+  return [state, dispatch, isPending];
 }
 
 function pushEffect(

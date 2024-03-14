@@ -1296,7 +1296,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('B');
   });
 
-
   // @gate enableFormActions
   // @gate enableAsyncActions
   test('useFormState works in StrictMode', async () => {
@@ -1326,14 +1325,19 @@ describe('ReactDOMForm', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(() => root.render(<React.StrictMode><App /></React.StrictMode>));
+    await act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
     assertLog(['0']);
     expect(container.textContent).toBe('0');
 
     await act(() => dispatch('increment'));
     assertLog(['Async action started [1]', 'Pending 0']);
     expect(container.textContent).toBe('Pending 0');
-
 
     await act(() => resolveText('Wait [1]'));
     assertLog(['1']);
