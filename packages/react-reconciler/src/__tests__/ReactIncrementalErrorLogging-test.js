@@ -60,22 +60,34 @@ describe('ReactIncrementalErrorLogging', () => {
     );
     await waitForThrow('constructor error');
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      __DEV__
-        ? expect.stringMatching(
-            new RegExp(
-              'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) div(.*)\n\n' +
-                'Consider adding an error boundary to your tree ' +
-                'to customize error handling behavior\\.',
-            ),
-          )
-        : expect.objectContaining({
-            message: 'constructor error',
-          }),
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('%o'),
+        expect.objectContaining({
+          message: 'constructor error',
+        }),
+        expect.stringContaining(
+          'The above error occurred in the <ErrorThrowingComponent> component:',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+              '\\s+(in|at) span(.*)\n' +
+              '\\s+(in|at) div(.*)',
+          ),
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
+        ),
+      );
+    } else {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'constructor error',
+        }),
+      );
+    }
   });
 
   it('should log errors that occur during the commit phase', async () => {
@@ -96,22 +108,34 @@ describe('ReactIncrementalErrorLogging', () => {
     );
     await waitForThrow('componentDidMount error');
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      __DEV__
-        ? expect.stringMatching(
-            new RegExp(
-              'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) div(.*)\n\n' +
-                'Consider adding an error boundary to your tree ' +
-                'to customize error handling behavior\\.',
-            ),
-          )
-        : expect.objectContaining({
-            message: 'componentDidMount error',
-          }),
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('%o'),
+        expect.objectContaining({
+          message: 'componentDidMount error',
+        }),
+        expect.stringContaining(
+          'The above error occurred in the <ErrorThrowingComponent> component:',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+              '\\s+(in|at) span(.*)\n' +
+              '\\s+(in|at) div(.*)',
+          ),
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
+        ),
+      );
+    } else {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'componentDidMount error',
+        }),
+      );
+    }
   });
 
   it('should ignore errors thrown in log method to prevent cycle', async () => {
@@ -135,22 +159,34 @@ describe('ReactIncrementalErrorLogging', () => {
     );
     await waitForThrow('render error');
     expect(logCapturedErrorCalls.length).toBe(1);
-    expect(logCapturedErrorCalls[0]).toEqual(
-      __DEV__
-        ? expect.stringMatching(
-            new RegExp(
-              'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-                '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) div(.*)\n\n' +
-                'Consider adding an error boundary to your tree ' +
-                'to customize error handling behavior\\.',
-            ),
-          )
-        : expect.objectContaining({
-            message: 'render error',
-          }),
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('%o'),
+        expect.objectContaining({
+          message: 'render error',
+        }),
+        expect.stringContaining(
+          'The above error occurred in the <ErrorThrowingComponent> component:',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+              '\\s+(in|at) span(.*)\n' +
+              '\\s+(in|at) div(.*)',
+          ),
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
+        ),
+      );
+    } else {
+      expect(logCapturedErrorCalls[0]).toEqual(
+        expect.objectContaining({
+          message: 'render error',
+        }),
+      );
+    }
     // The error thrown in logCapturedError should be rethrown with a clean stack
     expect(() => {
       jest.runAllTimers();
@@ -194,31 +230,40 @@ describe('ReactIncrementalErrorLogging', () => {
         'render: 0',
 
         'render: 1',
-        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
 
         // Retry one more time before handling error
         'render: 1',
-        __DEV__ && 'render: 1', // replay due to invokeGuardedCallback
 
         'componentWillUnmount: 0',
       ].filter(Boolean),
     );
 
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      __DEV__
-        ? expect.stringMatching(
-            new RegExp(
-              'The above error occurred in the <Foo> component:\n' +
-                '\\s+(in|at) Foo (.*)\n' +
-                '\\s+(in|at) ErrorBoundary (.*)\n\n' +
-                'React will try to recreate this component tree from scratch ' +
-                'using the error boundary you provided, ErrorBoundary.',
-            ),
-          )
-        : expect.objectContaining({
-            message: 'oops',
-          }),
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('%o'),
+        expect.objectContaining({
+          message: 'oops',
+        }),
+        expect.stringContaining(
+          'The above error occurred in the <Foo> component:',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
+          ),
+        ),
+        expect.stringContaining(
+          'React will try to recreate this component tree from scratch ' +
+            'using the error boundary you provided, ErrorBoundary.',
+        ),
+      );
+    } else {
+      expect(console.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'oops',
+        }),
+      );
+    }
   });
 });

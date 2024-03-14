@@ -22,6 +22,8 @@ let useEffect;
 let useLayoutEffect;
 let assertLog;
 
+let originalError;
+
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
 describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
@@ -44,6 +46,9 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
             : 'react-dom-17/umd/react-dom.production.min.js',
         ),
       );
+      // Because React 17 prints extra logs we need to ignore them.
+      originalError = console.error;
+      console.error = jest.fn();
     }
 
     React = require('react');
@@ -80,6 +85,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       require('use-sync-external-store/shim').useSyncExternalStore;
     useSyncExternalStoreWithSelector =
       require('use-sync-external-store/shim/with-selector').useSyncExternalStoreWithSelector;
+  });
+
+  afterEach(() => {
+    if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
+      console.error = originalError;
+    }
   });
 
   function Text({text}) {
@@ -593,12 +604,20 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           'the number of nested updates to prevent infinite loops.',
       );
     }).toErrorDev(
-      'The result of getSnapshot should be cached to avoid an infinite loop',
+      gate(flags => flags.enableUseSyncExternalStoreShim)
+        ? [
+            'Uncaught [',
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+            'The above error occurred in the',
+          ]
+        : [
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+          ],
       {
         withoutStack: gate(flags => {
           if (flags.enableUseSyncExternalStoreShim) {
             // Stacks don't work when mixing the source and the npm package.
-            return flags.source;
+            return flags.source ? 1 : 0;
           }
           return false;
         }),

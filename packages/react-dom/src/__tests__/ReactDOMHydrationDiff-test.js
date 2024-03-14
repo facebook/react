@@ -51,15 +51,6 @@ describe('ReactDOMServerHydration', () => {
     if (format instanceof Error) {
       return 'Caught [' + format.message + ']';
     }
-    if (
-      format !== null &&
-      typeof format === 'object' &&
-      String(format).indexOf('Error: Uncaught [') === 0
-    ) {
-      // Ignore errors captured by jsdom and their stacks.
-      // We only want console errors in this suite.
-      return null;
-    }
     rest[rest.length - 1] = normalizeCodeLocInfo(rest[rest.length - 1]);
     return util.format(format, ...rest);
   }

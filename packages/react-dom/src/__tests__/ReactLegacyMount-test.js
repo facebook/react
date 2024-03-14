@@ -14,7 +14,6 @@ const {COMMENT_NODE} = require('react-dom-bindings/src/client/HTMLNodeType');
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
 let Scheduler;
 let ReactDOMClient;
 let assertLog;
@@ -28,7 +27,6 @@ describe('ReactMount', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -71,7 +69,10 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(Component)).toErrorDev(
+    expect(() => {
+      const container = document.createElement('div');
+      ReactDOM.render(Component, container);
+    }).toErrorDev(
       'Functions are not valid as a React child. ' +
         'This may happen if you return Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.\n' +

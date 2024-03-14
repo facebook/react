@@ -21,10 +21,6 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
-import {
-  rethrowCaughtError,
-  invokeGuardedCallbackAndCatchFirstError,
-} from 'shared/ReactErrorUtils';
 import {enableFloat} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
@@ -354,6 +350,9 @@ function nativeTouchData(x, y) {
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
 
+let hasError: boolean = false;
+let caughtError: mixed = null;
+
 /**
  * Dispatch the event to the listener.
  * @param {SyntheticEvent} event SyntheticEvent to handle
@@ -361,9 +360,15 @@ function nativeTouchData(x, y) {
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, listener, inst) {
-  const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    if (!hasError) {
+      hasError = true;
+      caughtError = error;
+    }
+  }
   event.currentTarget = null;
 }
 
@@ -619,7 +624,12 @@ function makeSimulator(eventType) {
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
       executeDispatchesAndRelease(event);
-      rethrowCaughtError();
+      if (hasError) {
+        const error = caughtError;
+        hasError = false;
+        caughtError = null;
+        throw error;
+      }
     });
     restoreStateIfNeeded();
   };

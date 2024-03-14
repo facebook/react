@@ -12,7 +12,6 @@
 let ReactCache;
 let createResource;
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 let Suspense;
@@ -27,9 +26,6 @@ describe('ReactCache', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
     ReactCache = require('react-cache');

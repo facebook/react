@@ -519,6 +519,47 @@ describe('ReactTestUtils', () => {
         expect.objectContaining({target: input}),
       );
     });
+
+    it('should have mouse enter simulated by test utils', async () => {
+      const idCallOrder = [];
+      const recordID = function (id) {
+        idCallOrder.push(id);
+      };
+      let CHILD;
+      function Child(props) {
+        return (
+          <div
+            ref={current => (CHILD = current)}
+            onMouseEnter={() => {
+              recordID(CHILD);
+            }}
+          />
+        );
+      }
+
+      class ChildWrapper extends React.PureComponent {
+        render() {
+          return <Child />;
+        }
+      }
+
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <div>
+              <ChildWrapper />
+              <button disabled={true} />
+            </div>
+          </div>,
+        );
+      });
+      await act(() => {
+        ReactTestUtils.Simulate.mouseEnter(CHILD);
+      });
+      expect(idCallOrder).toEqual([CHILD]);
+    });
   });
 
   it('should call setState callback with no arguments', async () => {

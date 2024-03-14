@@ -14,7 +14,6 @@
 import React = require('react');
 import ReactDOM = require('react-dom');
 import ReactDOMClient = require('react-dom/client');
-import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
 import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -333,11 +332,7 @@ describe('ReactTypeScriptClass', function() {
         ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
       ).toThrow();
     }).toErrorDev([
-      // A failed component renders four times in DEV in concurrent mode
-      'Warning: No `render` method found on the Empty instance: ' +
-        'you may have forgotten to define `render`.',
-      'Warning: No `render` method found on the Empty instance: ' +
-        'you may have forgotten to define `render`.',
+      // A failed component renders twice in DEV in concurrent mode
       'Warning: No `render` method found on the Empty instance: ' +
         'you may have forgotten to define `render`.',
       'Warning: No `render` method found on the Empty instance: ' +

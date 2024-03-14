@@ -1980,11 +1980,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
 
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect creation', async () => {
         let useLayoutEffectShouldThrow = false;
 
-        function ThrowsInLayoutEffect() {
+        function ThrowsInLayoutEffect({unused}) {
           Scheduler.log('ThrowsInLayoutEffect render');
           React.useLayoutEffect(() => {
             Scheduler.log('ThrowsInLayoutEffect useLayoutEffect create');
@@ -2117,9 +2116,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
 
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect destruction', async () => {
-        function ThrowsInLayoutEffectDestroy() {
+        function ThrowsInLayoutEffectDestroy({unused}) {
           Scheduler.log('ThrowsInLayoutEffectDestroy render');
           React.useLayoutEffect(() => {
             Scheduler.log('ThrowsInLayoutEffectDestroy useLayoutEffect create');
@@ -3013,11 +3011,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     describe('that throw errors', () => {
       // @gate enableLegacyCache
-      // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled in ref callbacks', async () => {
         let useRefCallbackShouldThrow = false;
 
-        function ThrowsInRefCallback() {
+        function ThrowsInRefCallback({unused}) {
           Scheduler.log('ThrowsInRefCallback render');
           const refCallback = React.useCallback(value => {
             Scheduler.log('ThrowsInRefCallback refCallback ref? ' + !!value);

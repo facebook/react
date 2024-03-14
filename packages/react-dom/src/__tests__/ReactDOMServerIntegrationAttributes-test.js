@@ -754,6 +754,41 @@ describe('ReactDOMServerIntegration', () => {
       }
     });
 
+    itRenders('new boolean `true` attributes', async render => {
+      const element = await render(
+        <div inert={true} />,
+        ReactFeatureFlags.enableNewBooleanProps ? 0 : 1,
+      );
+
+      expect(element.getAttribute('inert')).toBe(
+        ReactFeatureFlags.enableNewBooleanProps ? '' : null,
+      );
+    });
+
+    itRenders('new boolean `""` attributes', async render => {
+      const element = await render(
+        <div inert="" />,
+        ReactFeatureFlags.enableNewBooleanProps
+          ? // Warns since this used to render `inert=""` like `inert={true}`
+            // but now renders it like `inert={false}`.
+            1
+          : 0,
+      );
+
+      expect(element.getAttribute('inert')).toBe(
+        ReactFeatureFlags.enableNewBooleanProps ? null : '',
+      );
+    });
+
+    itRenders('new boolean `false` attributes', async render => {
+      const element = await render(
+        <div inert={false} />,
+        ReactFeatureFlags.enableNewBooleanProps ? 0 : 1,
+      );
+
+      expect(element.getAttribute('inert')).toBe(null);
+    });
+
     itRenders(
       'no unknown attributes for custom elements with null value',
       async render => {

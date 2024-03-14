@@ -13,7 +13,6 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
-const ReactTestUtils = require('react-dom/test-utils');
 const act = require('internal-test-utils').act;
 const renderSubtreeIntoContainer =
   require('react-dom').unstable_renderSubtreeIntoContainer;
@@ -60,7 +59,8 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('bar');
   });
 

@@ -10,7 +10,6 @@
 
 'use strict';
 
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let PropTypes;
 let React;
 let ReactNoop;
@@ -24,8 +23,6 @@ let waitForThrow;
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -1513,7 +1510,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.mock.calls[0][0]).toContain(
+      expect(console.error.mock.calls[0][1]).toBe(notAnError);
+      expect(console.error.mock.calls[0][2]).toContain(
         'The above error occurred in the <BadRender> component:',
       );
     } else {
@@ -1784,6 +1782,14 @@ describe('ReactIncrementalErrorHandling', () => {
         "If you can't use a class try assigning the prototype on the function as a workaround. " +
         '`Provider.prototype = React.Component.prototype`. ' +
         "Don't use an arrow function since it cannot be called with `new` by React.",
+      ...gate(flags =>
+        flags.disableLegacyContext
+          ? [
+              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+            ]
+          : [],
+      ),
     ]);
   });
 
@@ -1914,7 +1920,7 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error.mock.calls[0][0]).toContain(
         'Cannot update a component (`%s`) while rendering a different component',
       );
-      expect(console.error.mock.calls[1][0]).toContain(
+      expect(console.error.mock.calls[1][2]).toContain(
         'The above error occurred in the <App> component',
       );
     }
