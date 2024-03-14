@@ -2714,7 +2714,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return createChild(
           returnFiber,
-          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          readContextDuringReconciliation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -2761,7 +2761,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         return updateSlot(
           returnFiber,
           oldFiber,
-          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          readContextDuringReconciliation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -2829,7 +2829,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           existingChildren,
           returnFiber,
           newIdx,
-          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          readContextDuringReconciliation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -3158,7 +3158,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
-          readContextDuringReconcilation(returnFiber, newChild, lanes),
+          readContextDuringReconciliation(returnFiber, newChild, lanes),
           lanes
         );
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -7308,7 +7308,7 @@ function prepareToReadContext(workInProgress, renderLanes) {
 function readContext(context) {
   return readContextForConsumer(currentlyRenderingFiber, context);
 }
-function readContextDuringReconcilation(consumer, context, renderLanes) {
+function readContextDuringReconciliation(consumer, context, renderLanes) {
   null === currentlyRenderingFiber &&
     prepareToReadContext(consumer, renderLanes);
   return readContextForConsumer(consumer, context);
@@ -16747,7 +16747,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-aea768af",
+  version: "18.3.0-www-modern-f1ed7683",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2140 = {
@@ -16778,7 +16778,7 @@ var internals$jscomp$inline_2140 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-aea768af"
+  reconcilerVersion: "18.3.0-www-modern-f1ed7683"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2141 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17037,4 +17037,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-aea768af";
+exports.version = "18.3.0-www-modern-f1ed7683";

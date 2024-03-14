@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-6a870747";
+    var ReactVersion = "18.3.0-www-modern-dede75f6";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -6734,7 +6734,7 @@ if (__DEV__) {
             var context = newChild;
             return createChild(
               returnFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -6857,7 +6857,7 @@ if (__DEV__) {
             return updateSlot(
               returnFiber,
               oldFiber,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -6982,7 +6982,7 @@ if (__DEV__) {
               existingChildren,
               returnFiber,
               newIdx,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -7727,7 +7727,7 @@ if (__DEV__) {
             return reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
-              readContextDuringReconcilation(returnFiber, context, lanes),
+              readContextDuringReconciliation(returnFiber, context, lanes),
               lanes,
               debugInfo
             );
@@ -18566,7 +18566,7 @@ if (__DEV__) {
 
       return readContextForConsumer(currentlyRenderingFiber, context);
     }
-    function readContextDuringReconcilation(consumer, context, renderLanes) {
+    function readContextDuringReconciliation(consumer, context, renderLanes) {
       if (currentlyRenderingFiber === null) {
         prepareToReadContext(consumer, renderLanes);
       }
