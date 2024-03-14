@@ -582,22 +582,30 @@ function codegenReactiveScope(
   }
   statements.push(memoStatement);
 
-  if (scope.earlyReturnValue !== null) {
+  const earlyReturnValue = scope.earlyReturnValue;
+  if (earlyReturnValue !== null) {
+    CompilerError.invariant(
+      earlyReturnValue.value.name !== null &&
+        earlyReturnValue.value.name.kind === "named",
+      {
+        reason: `Expected early return value to be promoted to a named variable`,
+        loc: earlyReturnValue.loc,
+        description: null,
+        suggestions: null,
+      }
+    );
+    const name: ValidIdentifierName = earlyReturnValue.value.name.value;
     statements.push(
       t.ifStatement(
         t.binaryExpression(
           "!==",
-          t.identifier(scope.earlyReturnValue.value.name!.value),
+          t.identifier(name),
           t.callExpression(
             t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
             [t.stringLiteral(EARLY_RETURN_SENTINEL)]
           )
         ),
-        t.blockStatement([
-          t.returnStatement(
-            t.identifier(scope.earlyReturnValue.value.name!.value)
-          ),
-        ])
+        t.blockStatement([t.returnStatement(t.identifier(name))])
       )
     );
   }

@@ -307,13 +307,6 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  propagateEarlyReturns(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PropagateEarlyReturns",
-    value: reactiveFunction,
-  });
-
   pruneUnusedScopes(reactiveFunction);
   yield log({
     kind: "reactive",
@@ -332,6 +325,13 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "PruneAlwaysInvalidatingScopes",
+    value: reactiveFunction,
+  });
+
+  propagateEarlyReturns(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PropagateEarlyReturns",
     value: reactiveFunction,
   });
 

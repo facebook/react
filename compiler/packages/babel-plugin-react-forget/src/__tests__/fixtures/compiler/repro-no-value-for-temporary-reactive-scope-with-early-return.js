@@ -1,5 +1,6 @@
 // @flow @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { identity, makeObject_Primitives } from "shared-runtime";
+import fbt from "fbt";
 
 function Component(props) {
   const object = makeObject_Primitives();
@@ -17,3 +18,8 @@ function Component(props) {
     </div>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
