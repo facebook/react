@@ -504,7 +504,7 @@ function codegenReactiveScope(
   if (testCondition === null) {
     CompilerError.invariant(firstOutputIndex !== null, {
       reason: `Expected scope to have at least one declaration`,
-      description: `Scope '@{scope.id} has no declarations`,
+      description: `Scope '@${scope.id}' has no declarations`,
       loc: null,
       suggestions: null,
     });
