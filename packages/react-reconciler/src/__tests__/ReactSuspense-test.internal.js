@@ -107,7 +107,7 @@ describe('ReactSuspense', () => {
         <Suspense fallback={<Text text="Loading..." />}>
           {renderBar ? (
             <Bar>
-              <AsyncText text="A" ms={100} />
+              <AsyncText text="A" />
               <Text text="B" />
             </Bar>
           ) : null}
@@ -153,10 +153,10 @@ describe('ReactSuspense', () => {
     root.render(
       <>
         <Suspense fallback={<Text text="Loading A..." />}>
-          <AsyncText text="A" ms={5000} />
+          <AsyncText text="A" />
         </Suspense>
         <Suspense fallback={<Text text="Loading B..." />}>
-          <AsyncText text="B" ms={6000} />
+          <AsyncText text="B" />
         </Suspense>
       </>,
     );
@@ -258,9 +258,9 @@ describe('ReactSuspense', () => {
       Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText text="A" ms={200} />
+          <AsyncText text="A" />
           <Suspense fallback={<Text text="Loading more..." />}>
-            <AsyncText text="B" ms={300} />
+            <AsyncText text="B" />
           </Suspense>
         </Suspense>
       );
@@ -294,9 +294,9 @@ describe('ReactSuspense', () => {
       Scheduler.log('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText text="A" ms={200} />
+          <AsyncText text="A" />
           <Suspense fallback={<Text text="Loading more..." />}>
-            <AsyncText text="B" ms={1200} />
+            <AsyncText text="B" />
           </Suspense>
         </Suspense>
       );
@@ -346,7 +346,7 @@ describe('ReactSuspense', () => {
           <>
             <Text text={`A${step}`} />
             <Suspense fallback={<Text text="Loading..." />}>
-              {shouldSuspend ? <AsyncText text="Async" ms={2000} /> : null}
+              {shouldSuspend ? <AsyncText text="Async" /> : null}
             </Suspense>
             <Text text={`B${step}`} />
             <Text text={`C${step}`} />
@@ -627,7 +627,7 @@ describe('ReactSuspense', () => {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <TextWithLayout text="Child 1" />
-          {show && <AsyncText ms={1000} text="Child 2" />}
+          {show && <AsyncText text="Child 2" />}
         </Suspense>
       );
     }
@@ -722,7 +722,7 @@ describe('ReactSuspense', () => {
         return (
           <Suspense fallback={<TextWithLifecycle text="Loading..." />}>
             <TextWithLifecycle text="A" />
-            <AsyncTextWithLifecycle ms={100} text="B" ref={instance} />
+            <AsyncTextWithLifecycle text="B" ref={instance} />
             <TextWithLifecycle text="C" />
           </Suspense>
         );
@@ -776,7 +776,7 @@ describe('ReactSuspense', () => {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
             <Stateful />
-            <AsyncText ms={1000} text={props.text} />
+            <AsyncText text={props.text} />
           </Suspense>
         );
       }
@@ -822,7 +822,7 @@ describe('ReactSuspense', () => {
             <Indirection>
               <Indirection>
                 <Indirection>
-                  <AsyncText ms={1000} text={props.text} />
+                  <AsyncText text={props.text} />
                 </Indirection>
               </Indirection>
             </Indirection>
@@ -872,7 +872,7 @@ describe('ReactSuspense', () => {
       function App({text}) {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
-            <AsyncTextWithUnmount text={text} ms={100} />
+            <AsyncTextWithUnmount text={text} />
           </Suspense>
         );
       }
@@ -902,7 +902,7 @@ describe('ReactSuspense', () => {
       function App({text}) {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
-            <AsyncTextWithEffect text={text} ms={100} />
+            <AsyncTextWithEffect text={text} />
           </Suspense>
         );
       }
@@ -920,7 +920,7 @@ describe('ReactSuspense', () => {
         state = {step: 1};
         render() {
           instance = this;
-          return <AsyncText ms={1000} text={`Step: ${this.state.step}`} />;
+          return <AsyncText text={`Step: ${this.state.step}`} />;
         }
       }
 
@@ -976,9 +976,9 @@ describe('ReactSuspense', () => {
       function App(props) {
         return (
           <Suspense fallback={<ShouldMountOnce />}>
-            <AsyncText ms={1000} text="Child 1" />
-            <AsyncText ms={2000} text="Child 2" />
-            <AsyncText ms={3000} text="Child 3" />
+            <AsyncText text="Child 1" />
+            <AsyncText text="Child 2" />
+            <AsyncText text="Child 3" />
           </Suspense>
         );
       }
@@ -1019,7 +1019,7 @@ describe('ReactSuspense', () => {
 
         return (
           <Suspense fallback={<Text text="Loading..." />}>
-            <AsyncText key={tab} text={'Tab: ' + tab} ms={1000} />
+            <AsyncText key={tab} text={'Tab: ' + tab} />
             <Text key={tab + 'sibling'} text=" + sibling" />
           </Suspense>
         );
@@ -1087,9 +1087,9 @@ describe('ReactSuspense', () => {
       function App() {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
-            <AsyncText text="A" ms={1000} />
-            <AsyncText text="B" ms={2000} />
-            <AsyncText text="C" ms={3000} />
+            <AsyncText text="A" />
+            <AsyncText text="B" />
+            <AsyncText text="C" />
           </Suspense>
         );
       }
