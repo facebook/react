@@ -10,6 +10,13 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 
+// -----------------------------------------------------------------------------
+// Ready for next major.
+//
+// Alias __NEXT_MAJOR__ to false for easier skimming.
+// -----------------------------------------------------------------------------
+const __NEXT_MAJOR__ = false;
+
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
@@ -18,7 +25,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableCache = true;
+export const enableCache = __NEXT_MAJOR__;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
