@@ -208,7 +208,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <>
           <Suspense fallback={<Text text="Loading..." />}>
             <Bar>
-              <AsyncText text="A" ms={100} />
+              <AsyncText text="A" />
               <Text text="B" />
             </Bar>
           </Suspense>
@@ -422,7 +422,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense fallback={<Text text="Loading..." />}>
           {renderContent ? (
             <ErrorBoundary ref={errorBoundary}>
-              <AsyncText text="Result" ms={1000} />
+              <AsyncText text="Result" />
             </ErrorBoundary>
           ) : null}
         </Suspense>
@@ -619,7 +619,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
       return (
         <Suspense fallback="Loading...">
-          <AsyncText ms={2000} text="Async" />
+          <AsyncText text="Async" />
         </Suspense>
       );
     }
@@ -715,9 +715,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       <Fragment>
         <Text text="Sync" />
         <Suspense fallback={<Text text="Loading outer..." />}>
-          <AsyncText text="Outer content" ms={300} />
+          <AsyncText text="Outer content" />
           <Suspense fallback={<Text text="Loading inner..." />}>
-            <AsyncText text="Inner content" ms={1000} />
+            <AsyncText text="Inner content" />
           </Suspense>
         </Suspense>
       </Fragment>,
@@ -2821,7 +2821,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             <Offscreen />
           </LegacyHiddenDiv>
           <Suspense fallback={<Text text="Loading..." />}>
-            {showContent ? <AsyncText text="A" ms={2000} /> : null}
+            {showContent ? <AsyncText text="A" /> : null}
           </Suspense>
         </>
       );
