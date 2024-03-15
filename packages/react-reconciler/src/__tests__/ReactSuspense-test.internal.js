@@ -1,7 +1,6 @@
 let React;
 let ReactDOMClient;
 let ReactDOM;
-let ReactFeatureFlags;
 let Scheduler;
 let Suspense;
 let act;
@@ -16,9 +15,6 @@ let waitFor;
 describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');

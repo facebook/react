@@ -413,7 +413,7 @@ export type Dispatcher = {
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
-  ) => [Awaited<S>, (P) => void],
+  ) => [Awaited<S>, (P) => void, boolean],
 };
 
 export type CacheDispatcher = {

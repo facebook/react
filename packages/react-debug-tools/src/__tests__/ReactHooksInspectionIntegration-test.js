@@ -1206,6 +1206,264 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
+  it('should return the deferred value', async () => {
+    let unsuspend;
+    function Lazy() {
+      return 'Lazy';
+    }
+    const Suspender = React.lazy(
+      () =>
+        new Promise(resolve => {
+          unsuspend = () => resolve({default: Lazy});
+        }),
+    );
+    const Context = React.createContext('default');
+    let setShow;
+    function Foo(props) {
+      const [show, _setShow] = React.useState(false);
+      const deferredShow = React.useDeferredValue(show);
+      const isPending = show !== deferredShow;
+      const contextDisplay = isPending ? React.use(Context) : '<none>';
+      React.useMemo(() => 'hello', []);
+      React.useMemo(() => 'not used', []);
+
+      // Otherwise we capture the version from the react-debug-tools dispatcher.
+      if (setShow === undefined) {
+        setShow = _setShow;
+      }
+
+      return (
+        <React.Suspense fallback="Loading">
+          Context: {contextDisplay}, {isPending ? 'Pending' : 'Nothing Pending'}
+          {deferredShow ? [', ', <Suspender key="suspender" />] : null}
+        </React.Suspense>
+      );
+    }
+    const renderer = await act(() => {
+      return ReactTestRenderer.create(
+        <Context.Provider value="provided">
+          <Foo />
+        </Context.Provider>,
+        {isConcurrent: true},
+      );
+    });
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(renderer).toMatchRenderedOutput('Context: <none>, Nothing Pending');
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "DeferredValue",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+
+    await act(() => {
+      setShow(true);
+    });
+
+    expect(renderer).toMatchRenderedOutput('Context: provided, Pending');
+    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": true,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "DeferredValue",
+          "subHooks": [],
+          "value": false,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": null,
+          "isStateEditable": false,
+          "name": "Context",
+          "subHooks": [],
+          "value": "provided",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+
+    await act(() => {
+      unsuspend();
+    });
+
+    expect(renderer).toMatchRenderedOutput(
+      'Context: <none>, Nothing Pending, Lazy',
+    );
+    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "subHooks": [],
+          "value": true,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 1,
+          "isStateEditable": false,
+          "name": "DeferredValue",
+          "subHooks": [],
+          "value": true,
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "hello",
+        },
+        {
+          "debugInfo": null,
+          "hookSource": {
+            "columnNumber": 0,
+            "fileName": "**",
+            "functionName": "Foo",
+            "lineNumber": 0,
+          },
+          "id": 3,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": [],
+          "value": "not used",
+        },
+      ]
+    `);
+  });
+
   it('should support useId hook', () => {
     function Foo(props) {
       const id = React.useId();

@@ -14,7 +14,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
@@ -64,6 +63,7 @@ export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
+export const enableNewBooleanProps = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -80,7 +80,6 @@ export const enableAsyncActions = true;
 
 export const alwaysThrottleRetries = true;
 
-export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;

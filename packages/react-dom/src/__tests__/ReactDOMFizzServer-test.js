@@ -3234,7 +3234,7 @@ describe('ReactDOMFizzServer', () => {
   it('logs regular (non-hydration) errors when the UI recovers', async () => {
     let shouldThrow = true;
 
-    function A() {
+    function A({unused}) {
       if (shouldThrow) {
         Scheduler.log('Oops!');
         throw new Error('Oops!');
@@ -3267,7 +3267,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // Partially render A, but yield before the render has finished
-    await waitFor(['Oops!', 'Oops!']);
+    await waitFor(['Oops!']);
 
     // React will try rendering again synchronously. During the retry, A will
     // not throw. This simulates a concurrent data race that is fixed by
@@ -4643,8 +4643,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  // @gate __DEV__
-  it('does not invokeGuardedCallback for errors after the first hydration error', async () => {
+  it('does not log for errors after the first hydration error', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4717,21 +4716,13 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([
         'throwing: first error',
-        // this repeated first error is the invokeGuardedCallback throw
-        'throwing: first error',
 
         // onRecoverableError because the UI recovered without surfacing the
         // error to the user.
         'Logged recoverable error: first error',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
-      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
-      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
-      expect(mockError.mock.calls).toEqual([
-        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
-        // suspense boundary
-        ['Error: Uncaught [Error: first error]'],
-      ]);
+      expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
 
       expect(getVisibleChildren(container)).toEqual(
@@ -4749,8 +4740,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate __DEV__
-  it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
+  it('does not log for errors after a preceding fiber suspends', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4854,7 +4844,6 @@ describe('ReactDOMFizzServer', () => {
       await unsuspend();
       await waitForAll([
         'throwing: first error',
-        'throwing: first error',
         'Logged recoverable error: first error',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
@@ -4870,7 +4859,6 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate __DEV__
   it('(outdated behavior) suspending after erroring will cause errors previously queued to be silenced until the boundary resolves', async () => {
     // NOTE: This test was originally written to test a scenario that doesn't happen
     // anymore. If something errors during hydration, we immediately unwind the
@@ -4969,19 +4957,11 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([
         'throwing: first error',
-        // duplicate because first error is re-done in invokeGuardedCallback
-        'throwing: first error',
         'suspending',
         'Logged recoverable error: first error',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
-      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
-      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
-      expect(mockError.mock.calls).toEqual([
-        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
-        // suspense boundary
-        ['Error: Uncaught [Error: first error]'],
-      ]);
+      expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
 
       expect(getVisibleChildren(container)).toEqual(

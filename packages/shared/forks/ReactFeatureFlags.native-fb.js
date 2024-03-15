@@ -28,7 +28,6 @@ export const {
   enableUnifiedSyncLane,
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
-  useMicrotasksForSchedulingInFabric,
   useModernStrictMode,
 } = dynamicFlags;
 
@@ -54,7 +53,6 @@ export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
@@ -82,6 +80,7 @@ export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = true;
+export const enableNewBooleanProps = true;
 
 export const enableTransitionTracing = false;
 

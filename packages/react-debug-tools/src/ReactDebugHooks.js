@@ -444,14 +444,15 @@ function useTransition(): [
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = nextHook();
+  const prevValue = hook !== null ? hook.memoizedState : value;
   hookLog.push({
     displayName: null,
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value: hook !== null ? hook.memoizedState : value,
+    value: prevValue,
     debugInfo: null,
   });
-  return value;
+  return prevValue;
 }
 
 function useId(): string {
@@ -521,8 +522,9 @@ function useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   const hook = nextHook(); // FormState
+  nextHook(); // PendingState
   nextHook(); // ActionQueue
   const stackError = new Error();
   let value;
@@ -580,7 +582,9 @@ function useFormState<S, P>(
   // value being a Thenable is equivalent to error being not null
   // i.e. we only reach this point with Awaited<S>
   const state = ((value: any): Awaited<S>);
-  return [state, (payload: P) => {}];
+
+  // TODO: support displaying pending value
+  return [state, (payload: P) => {}, false];
 }
 
 const Dispatcher: DispatcherType = {

@@ -50,7 +50,7 @@ export function experimental_useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   if (__DEV__) {
     console.error(
       'useFormState is now in canary. Remove the experimental_ prefix. ' +

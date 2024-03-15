@@ -18,7 +18,6 @@ export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
   enableDebugTracing,
   enableUseRefAccessWarning,
@@ -38,6 +37,8 @@ export const {
   enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
+  enableNewBooleanProps,
+  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -48,7 +49,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableClientRenderFallbackOnTextMismatch = true;
+
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
@@ -106,7 +107,6 @@ export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
 
-export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableAsyncDebugInfo = false;

@@ -25,7 +25,6 @@ function loadModules({
   enableProfilerTimer = true,
   enableProfilerCommitHooks = true,
   enableProfilerNestedUpdatePhase = true,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -33,8 +32,6 @@ function loadModules({
   ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
   ReactFeatureFlags.enableProfilerNestedUpdatePhase =
     enableProfilerNestedUpdatePhase;
-  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
   Scheduler = require('scheduler');
@@ -1015,205 +1012,170 @@ describe(`onRender`, () => {
       expect(call[5]).toBe(380); // commit time
     });
 
-    [true, false].forEach(replayFailedUnitOfWorkWithInvokeGuardedCallback => {
-      describe(`replayFailedUnitOfWorkWithInvokeGuardedCallback ${
-        replayFailedUnitOfWorkWithInvokeGuardedCallback ? 'enabled' : 'disabled'
-      }`, () => {
-        beforeEach(() => {
-          jest.resetModules();
+    it('should accumulate actual time after an error handled by componentDidCatch()', async () => {
+      const callback = jest.fn();
 
-          loadModules({
-            replayFailedUnitOfWorkWithInvokeGuardedCallback,
-          });
-        });
+      const ThrowsError = ({unused}) => {
+        Scheduler.unstable_advanceTime(3);
+        throw Error('expected error');
+      };
 
-        it('should accumulate actual time after an error handled by componentDidCatch()', async () => {
-          const callback = jest.fn();
-
-          const ThrowsError = ({unused}) => {
-            Scheduler.unstable_advanceTime(3);
-            throw Error('expected error');
-          };
-
-          class ErrorBoundary extends React.Component {
-            state = {error: null};
-            componentDidCatch(error) {
-              this.setState({error});
-            }
-            render() {
-              Scheduler.unstable_advanceTime(2);
-              return this.state.error === null ? (
-                this.props.children
-              ) : (
-                <AdvanceTime byAmount={20} />
-              );
-            }
-          }
-
-          Scheduler.unstable_advanceTime(5); // 0 -> 5
-
-          await act(() => {
-            ReactNoop.render(
-              <React.Profiler id="test" onRender={callback}>
-                <ErrorBoundary>
-                  <AdvanceTime byAmount={9} />
-                  <ThrowsError />
-                </ErrorBoundary>
-              </React.Profiler>,
-            );
-          });
-
-          expect(callback).toHaveBeenCalledTimes(2);
-
-          // Callbacks bubble (reverse order).
-          const [mountCall, updateCall] = callback.mock.calls;
-
-          // The initial mount only includes the ErrorBoundary (which takes 2)
-          // But it spends time rendering all of the failed subtree also.
-          expect(mountCall[1]).toBe('mount');
-          // actual time includes: 2 (ErrorBoundary) + 9 (AdvanceTime) + 3 (ThrowsError)
-          // We don't count the time spent in replaying the failed unit of work (ThrowsError)
-          expect(mountCall[2]).toBe(14);
-          // base time includes: 2 (ErrorBoundary)
-          // Since the tree is empty for the initial commit
-          expect(mountCall[3]).toBe(2);
-          // start time: 5 initially + 14 of work
-          // Add an additional 3 (ThrowsError) if we replayed the failed work
-          expect(mountCall[4]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 22
-              : 19,
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        componentDidCatch(error) {
+          this.setState({error});
+        }
+        render() {
+          Scheduler.unstable_advanceTime(2);
+          return this.state.error === null ? (
+            this.props.children
+          ) : (
+            <AdvanceTime byAmount={20} />
           );
-          // commit time: 19 initially + 14 of work
-          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
-          expect(mountCall[5]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 39
-              : 33,
-          );
+        }
+      }
 
-          // The update includes the ErrorBoundary and its fallback child
-          expect(updateCall[1]).toBe('nested-update');
-          // actual time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
-          expect(updateCall[2]).toBe(22);
-          // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
-          expect(updateCall[3]).toBe(22);
-          // start time
-          expect(updateCall[4]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 39
-              : 33,
-          );
-          // commit time: 33 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
-          // Add an additional 6 (ThrowsError *2) if we replayed the failed work
-          expect(updateCall[5]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 61
-              : 55,
-          );
-        });
+      Scheduler.unstable_advanceTime(5); // 0 -> 5
 
-        it('should accumulate actual time after an error handled by getDerivedStateFromError()', async () => {
-          const callback = jest.fn();
-
-          const ThrowsError = ({unused}) => {
-            Scheduler.unstable_advanceTime(10);
-            throw Error('expected error');
-          };
-
-          class ErrorBoundary extends React.Component {
-            state = {error: null};
-            static getDerivedStateFromError(error) {
-              return {error};
-            }
-            render() {
-              Scheduler.unstable_advanceTime(2);
-              return this.state.error === null ? (
-                this.props.children
-              ) : (
-                <AdvanceTime byAmount={20} />
-              );
-            }
-          }
-
-          Scheduler.unstable_advanceTime(5); // 0 -> 5
-
-          await act(() => {
-            ReactNoop.render(
-              <React.Profiler id="test" onRender={callback}>
-                <ErrorBoundary>
-                  <AdvanceTime byAmount={5} />
-                  <ThrowsError />
-                </ErrorBoundary>
-              </React.Profiler>,
-            );
-          });
-
-          expect(callback).toHaveBeenCalledTimes(1);
-
-          // Callbacks bubble (reverse order).
-          const [mountCall] = callback.mock.calls;
-
-          // The initial mount includes the ErrorBoundary's error state,
-          // But it also spends actual time rendering UI that fails and isn't included.
-          expect(mountCall[1]).toBe('mount');
-          // actual time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
-          // Then the re-render: 2 (ErrorBoundary) + 20 (AdvanceTime)
-          // We don't count the time spent in replaying the failed unit of work (ThrowsError)
-          expect(mountCall[2]).toBe(39);
-          // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
-          expect(mountCall[3]).toBe(22);
-          // start time
-          expect(mountCall[4]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 54
-              : 44,
-          );
-          // commit time
-          expect(mountCall[5]).toBe(
-            __DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback
-              ? 103
-              : 83,
-          );
-        });
-
-        it('should reset the fiber stack correct after a "complete" phase error', async () => {
-          jest.resetModules();
-
-          loadModules({
-            replayFailedUnitOfWorkWithInvokeGuardedCallback,
-          });
-
-          // Simulate a renderer error during the "complete" phase.
-          // This mimics behavior like React Native's View/Text nesting validation.
-          ReactNoop.render(
-            <React.Profiler id="profiler" onRender={jest.fn()}>
-              <errorInCompletePhase>hi</errorInCompletePhase>
-            </React.Profiler>,
-          );
-          await waitForThrow('Error in host config.');
-
-          // A similar case we've seen caused by an invariant in ReactDOM.
-          // It didn't reproduce without a host component inside.
-          ReactNoop.render(
-            <React.Profiler id="profiler" onRender={jest.fn()}>
-              <errorInCompletePhase>
-                <span>hi</span>
-              </errorInCompletePhase>
-            </React.Profiler>,
-          );
-          await waitForThrow('Error in host config.');
-
-          // So long as the profiler timer's fiber stack is reset correctly,
-          // Subsequent renders should not error.
-          ReactNoop.render(
-            <React.Profiler id="profiler" onRender={jest.fn()}>
-              <span>hi</span>
-            </React.Profiler>,
-          );
-          await waitForAll([]);
-        });
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(
+          <React.Profiler id="test" onRender={callback}>
+            <ErrorBoundary>
+              <AdvanceTime byAmount={9} />
+              <ThrowsError />
+            </ErrorBoundary>
+          </React.Profiler>,
+        );
       });
+
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      // Callbacks bubble (reverse order).
+      const [mountCall, updateCall] = callback.mock.calls;
+
+      // The initial mount only includes the ErrorBoundary (which takes 2)
+      // But it spends time rendering all of the failed subtree also.
+      expect(mountCall[1]).toBe('mount');
+      // actual time includes: 2 (ErrorBoundary) + 9 (AdvanceTime) + 3 (ThrowsError)
+      // We don't count the time spent in replaying the failed unit of work (ThrowsError)
+      expect(mountCall[2]).toBe(14);
+      // base time includes: 2 (ErrorBoundary)
+      // Since the tree is empty for the initial commit
+      expect(mountCall[3]).toBe(2);
+
+      // start time: 5 initially + 14 of work
+      // Add an additional 3 (ThrowsError) if we replayed the failed work
+      expect(mountCall[4]).toBe(19);
+      // commit time: 19 initially + 14 of work
+      // Add an additional 6 (ThrowsError *2) if we replayed the failed work
+      expect(mountCall[5]).toBe(33);
+
+      // The update includes the ErrorBoundary and its fallback child
+      expect(updateCall[1]).toBe('nested-update');
+      // actual time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+      expect(updateCall[2]).toBe(22);
+      // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+      expect(updateCall[3]).toBe(22);
+      // start time
+      expect(updateCall[4]).toBe(33);
+      // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
+      // Add an additional 3 (ThrowsError) if we replayed the failed work
+      expect(updateCall[5]).toBe(55);
+    });
+
+    it('should accumulate actual time after an error handled by getDerivedStateFromError()', async () => {
+      const callback = jest.fn();
+
+      const ThrowsError = ({unused}) => {
+        Scheduler.unstable_advanceTime(10);
+        throw Error('expected error');
+      };
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          return {error};
+        }
+        render() {
+          Scheduler.unstable_advanceTime(2);
+          return this.state.error === null ? (
+            this.props.children
+          ) : (
+            <AdvanceTime byAmount={20} />
+          );
+        }
+      }
+
+      Scheduler.unstable_advanceTime(5); // 0 -> 5
+
+      await act(() => {
+        const root = ReactNoop.createRoot();
+        root.render(
+          <React.Profiler id="test" onRender={callback}>
+            <ErrorBoundary>
+              <AdvanceTime byAmount={5} />
+              <ThrowsError />
+            </ErrorBoundary>
+          </React.Profiler>,
+        );
+      });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      // Callbacks bubble (reverse order).
+      const [mountCall] = callback.mock.calls;
+
+      // The initial mount includes the ErrorBoundary's error state,
+      // But it also spends actual time rendering UI that fails and isn't included.
+      expect(mountCall[1]).toBe('mount');
+      // actual time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+      // Then the re-render: 2 (ErrorBoundary) + 20 (AdvanceTime)
+      // We don't count the time spent in replaying the failed unit of work (ThrowsError)
+      expect(mountCall[2]).toBe(39);
+      // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+      expect(mountCall[3]).toBe(22);
+      // start time
+      expect(mountCall[4]).toBe(44);
+      // commit time
+      expect(mountCall[5]).toBe(83);
+    });
+
+    it('should reset the fiber stack correct after a "complete" phase error', async () => {
+      jest.resetModules();
+
+      loadModules({
+        useNoopRenderer: true,
+      });
+
+      // Simulate a renderer error during the "complete" phase.
+      // This mimics behavior like React Native's View/Text nesting validation.
+      ReactNoop.render(
+        <React.Profiler id="profiler" onRender={jest.fn()}>
+          <errorInCompletePhase>hi</errorInCompletePhase>
+        </React.Profiler>,
+      );
+      await waitForThrow('Error in host config.');
+
+      // A similar case we've seen caused by an invariant in ReactDOM.
+      // It didn't reproduce without a host component inside.
+      ReactNoop.render(
+        <React.Profiler id="profiler" onRender={jest.fn()}>
+          <errorInCompletePhase>
+            <span>hi</span>
+          </errorInCompletePhase>
+        </React.Profiler>,
+      );
+      await waitForThrow('Error in host config.');
+
+      // So long as the profiler timer's fiber stack is reset correctly,
+      // Subsequent renders should not error.
+      ReactNoop.render(
+        <React.Profiler id="profiler" onRender={jest.fn()}>
+          <span>hi</span>
+        </React.Profiler>,
+      );
+      await waitForAll([]);
     });
   });
 

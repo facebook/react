@@ -202,21 +202,13 @@ describe('ReactBrowserEventEmitter', () => {
       expect(idCallOrder[0]).toBe(CHILD);
       expect(idCallOrder[1]).toBe(PARENT);
       expect(idCallOrder[2]).toBe(GRANDPARENT);
-      expect(errorHandler).toHaveBeenCalledTimes(__DEV__ ? 2 : 1);
+      expect(errorHandler).toHaveBeenCalledTimes(1);
       expect(errorHandler.mock.calls[0][0]).toEqual(
         expect.objectContaining({
           error: expect.any(Error),
           message: 'Handler interrupted',
         }),
       );
-      if (__DEV__) {
-        expect(errorHandler.mock.calls[1][0]).toEqual(
-          expect.objectContaining({
-            error: expect.any(Error),
-            message: 'Handler interrupted',
-          }),
-        );
-      }
     } finally {
       window.removeEventListener('error', errorHandler);
     }

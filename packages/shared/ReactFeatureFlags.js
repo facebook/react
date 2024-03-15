@@ -115,8 +115,6 @@ export const enableFizzExternalRuntime = true;
 
 export const alwaysThrottleRetries = true;
 
-export const useMicrotasksForSchedulingInFabric = false;
-
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
@@ -140,8 +138,8 @@ export const transitionLaneExpirationMs = 5000;
 // -----------------------------------------------------------------------------
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
-// Not ready to break experimental yet.
-export const disableLegacyContext = false;
+// Removes legacy style context
+export const disableLegacyContext = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
@@ -200,6 +198,13 @@ export const enableReactTestRendererWarning = false;
 // before removing them in stable in the next Major
 export const disableLegacyMode = __NEXT_MAJOR__;
 
+// HTML boolean attributes need a special PropertyInfoRecord.
+// Between support of these attributes in browsers and React supporting them as
+// boolean props library users can use them as `<div someBooleanAttribute="" />`.
+// However, once React considers them as boolean props an empty string will
+// result in false property i.e. break existing usage.
+export const enableNewBooleanProps = __NEXT_MAJOR__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -250,10 +255,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
-// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
