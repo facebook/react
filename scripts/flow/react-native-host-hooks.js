@@ -159,10 +159,15 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function createPublicTextInstance(
     internalInstanceHandle: mixed,
   ): PublicTextInstance;
+  declare export function getInternalInstanceHandleFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): ?Object;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
 }
+
+declare const RN$enableMicrotasksInReact: boolean;
 
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info

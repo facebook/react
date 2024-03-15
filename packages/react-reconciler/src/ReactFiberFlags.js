@@ -41,6 +41,7 @@ export const StoreConsistency = /*             */ 0b0000000000000100000000000000
 // possible, because we're about to run out of bits.
 export const ScheduleRetry = StoreConsistency;
 export const ShouldSuspendCommit = Visibility;
+export const DidDefer = ContentReset;
 
 export const LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency;

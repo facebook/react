@@ -9,45 +9,55 @@
 
 describe('ReactDOMEventListener', () => {
   let React;
-  let OuterReactDOM;
+  let OuterReactDOMClient;
   let InnerReactDOM;
+  let InnerReactDOMClient;
+  let act;
   let container;
+  let root;
 
   beforeEach(() => {
     window.TextEvent = function () {};
     jest.resetModules();
     jest.isolateModules(() => {
       React = require('react');
-      OuterReactDOM = require('react-dom');
+      act = require('internal-test-utils').act;
+      OuterReactDOMClient = require('react-dom/client');
     });
     jest.isolateModules(() => {
       InnerReactDOM = require('react-dom');
+      InnerReactDOMClient = require('react-dom/client');
     });
-    expect(OuterReactDOM).not.toBe(InnerReactDOM);
+    expect(OuterReactDOMClient).not.toBe(InnerReactDOMClient);
   });
 
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    await cleanup();
   });
 
-  function cleanup() {
+  async function cleanup() {
     if (container) {
-      OuterReactDOM.unmountComponentAtNode(container);
+      await act(() => {
+        root.unmount();
+      });
       document.body.removeChild(container);
       container = null;
     }
   }
 
-  function render(tree) {
-    cleanup();
+  async function render(tree) {
+    await cleanup();
     container = document.createElement('div');
     document.body.appendChild(container);
-    OuterReactDOM.render(tree, container);
+    root = OuterReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(tree);
+    });
   }
 
   describe('bubbling events', () => {
-    it('onAnimationEnd', () => {
-      testNativeBubblingEvent({
+    it('onAnimationEnd', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationEnd',
         reactEventType: 'animationend',
@@ -63,8 +73,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onAnimationIteration', () => {
-      testNativeBubblingEvent({
+    it('onAnimationIteration', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationIteration',
         reactEventType: 'animationiteration',
@@ -80,8 +90,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onAnimationStart', () => {
-      testNativeBubblingEvent({
+    it('onAnimationStart', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationStart',
         reactEventType: 'animationstart',
@@ -97,8 +107,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onAuxClick', () => {
-      testNativeBubblingEvent({
+    it('onAuxClick', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAuxClick',
         reactEventType: 'auxclick',
@@ -114,8 +124,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onBlur', () => {
-      testNativeBubblingEvent({
+    it('onBlur', async () => {
+      await testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onBlur',
         reactEventType: 'blur',
@@ -134,8 +144,8 @@ describe('ReactDOMEventListener', () => {
     // because we emulate the React 16 behavior where
     // the click handler is attached to the document.
     // @gate !enableLegacyFBSupport
-    it('onClick', () => {
-      testNativeBubblingEvent({
+    it('onClick', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onClick',
         reactEventType: 'click',
@@ -146,8 +156,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onContextMenu', () => {
-      testNativeBubblingEvent({
+    it('onContextMenu', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onContextMenu',
         reactEventType: 'contextmenu',
@@ -163,8 +173,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCopy', () => {
-      testNativeBubblingEvent({
+    it('onCopy', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onCopy',
         reactEventType: 'copy',
@@ -180,8 +190,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCut', () => {
-      testNativeBubblingEvent({
+    it('onCut', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onCut',
         reactEventType: 'cut',
@@ -197,8 +207,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDoubleClick', () => {
-      testNativeBubblingEvent({
+    it('onDoubleClick', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDoubleClick',
         reactEventType: 'dblclick',
@@ -214,8 +224,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDrag', () => {
-      testNativeBubblingEvent({
+    it('onDrag', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDrag',
         reactEventType: 'drag',
@@ -231,8 +241,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragEnd', () => {
-      testNativeBubblingEvent({
+    it('onDragEnd', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragEnd',
         reactEventType: 'dragend',
@@ -248,8 +258,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragEnter', () => {
-      testNativeBubblingEvent({
+    it('onDragEnter', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragEnter',
         reactEventType: 'dragenter',
@@ -265,8 +275,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragExit', () => {
-      testNativeBubblingEvent({
+    it('onDragExit', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragExit',
         reactEventType: 'dragexit',
@@ -282,8 +292,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragLeave', () => {
-      testNativeBubblingEvent({
+    it('onDragLeave', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragLeave',
         reactEventType: 'dragleave',
@@ -299,8 +309,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragOver', () => {
-      testNativeBubblingEvent({
+    it('onDragOver', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragOver',
         reactEventType: 'dragover',
@@ -316,8 +326,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDragStart', () => {
-      testNativeBubblingEvent({
+    it('onDragStart', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragStart',
         reactEventType: 'dragstart',
@@ -333,8 +343,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDrop', () => {
-      testNativeBubblingEvent({
+    it('onDrop', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDrop',
         reactEventType: 'drop',
@@ -350,8 +360,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onFocus', () => {
-      testNativeBubblingEvent({
+    it('onFocus', async () => {
+      await testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onFocus',
         reactEventType: 'focus',
@@ -366,8 +376,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onGotPointerCapture', () => {
-      testNativeBubblingEvent({
+    it('onGotPointerCapture', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onGotPointerCapture',
         reactEventType: 'gotpointercapture',
@@ -383,8 +393,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onKeyDown', () => {
-      testNativeBubblingEvent({
+    it('onKeyDown', async () => {
+      await testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyDown',
         reactEventType: 'keydown',
@@ -400,8 +410,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onKeyPress', () => {
-      testNativeBubblingEvent({
+    it('onKeyPress', async () => {
+      await testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyPress',
         reactEventType: 'keypress',
@@ -418,8 +428,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onKeyUp', () => {
-      testNativeBubblingEvent({
+    it('onKeyUp', async () => {
+      await testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyUp',
         reactEventType: 'keyup',
@@ -435,8 +445,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onLostPointerCapture', () => {
-      testNativeBubblingEvent({
+    it('onLostPointerCapture', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onLostPointerCapture',
         reactEventType: 'lostpointercapture',
@@ -452,8 +462,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onMouseDown', () => {
-      testNativeBubblingEvent({
+    it('onMouseDown', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseDown',
         reactEventType: 'mousedown',
@@ -469,8 +479,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onMouseOut', () => {
-      testNativeBubblingEvent({
+    it('onMouseOut', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseOut',
         reactEventType: 'mouseout',
@@ -486,8 +496,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onMouseOver', () => {
-      testNativeBubblingEvent({
+    it('onMouseOver', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseOver',
         reactEventType: 'mouseover',
@@ -503,8 +513,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onMouseUp', () => {
-      testNativeBubblingEvent({
+    it('onMouseUp', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseUp',
         reactEventType: 'mouseup',
@@ -520,8 +530,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPaste', () => {
-      testNativeBubblingEvent({
+    it('onPaste', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPaste',
         reactEventType: 'paste',
@@ -537,8 +547,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerCancel', () => {
-      testNativeBubblingEvent({
+    it('onPointerCancel', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerCancel',
         reactEventType: 'pointercancel',
@@ -554,8 +564,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerDown', () => {
-      testNativeBubblingEvent({
+    it('onPointerDown', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerDown',
         reactEventType: 'pointerdown',
@@ -571,8 +581,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerMove', () => {
-      testNativeBubblingEvent({
+    it('onPointerMove', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerMove',
         reactEventType: 'pointermove',
@@ -588,8 +598,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerOut', () => {
-      testNativeBubblingEvent({
+    it('onPointerOut', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerOut',
         reactEventType: 'pointerout',
@@ -605,8 +615,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerOver', () => {
-      testNativeBubblingEvent({
+    it('onPointerOver', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerOver',
         reactEventType: 'pointerover',
@@ -622,8 +632,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPointerUp', () => {
-      testNativeBubblingEvent({
+    it('onPointerUp', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerUp',
         reactEventType: 'pointerup',
@@ -639,8 +649,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onReset', () => {
-      testNativeBubblingEvent({
+    it('onReset', async () => {
+      await testNativeBubblingEvent({
         type: 'form',
         reactEvent: 'onReset',
         reactEventType: 'reset',
@@ -655,8 +665,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onSubmit', () => {
-      testNativeBubblingEvent({
+    it('onSubmit', async () => {
+      await testNativeBubblingEvent({
         type: 'form',
         reactEvent: 'onSubmit',
         reactEventType: 'submit',
@@ -671,8 +681,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTouchCancel', () => {
-      testNativeBubblingEvent({
+    it('onTouchCancel', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchCancel',
         reactEventType: 'touchcancel',
@@ -688,8 +698,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTouchEnd', () => {
-      testNativeBubblingEvent({
+    it('onTouchEnd', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchEnd',
         reactEventType: 'touchend',
@@ -705,8 +715,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTouchMove', () => {
-      testNativeBubblingEvent({
+    it('onTouchMove', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchMove',
         reactEventType: 'touchmove',
@@ -722,8 +732,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTouchStart', () => {
-      testNativeBubblingEvent({
+    it('onTouchStart', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchStart',
         reactEventType: 'touchstart',
@@ -739,8 +749,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTransitionEnd', () => {
-      testNativeBubblingEvent({
+    it('onTransitionEnd', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTransitionEnd',
         reactEventType: 'transitionend',
@@ -756,8 +766,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onWheel', () => {
-      testNativeBubblingEvent({
+    it('onWheel', async () => {
+      await testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onWheel',
         reactEventType: 'wheel',
@@ -775,8 +785,8 @@ describe('ReactDOMEventListener', () => {
   });
 
   describe('non-bubbling events that bubble in React', () => {
-    it('onAbort', () => {
-      testEmulatedBubblingEvent({
+    it('onAbort', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onAbort',
         reactEventType: 'abort',
@@ -791,8 +801,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCancel', () => {
-      testEmulatedBubblingEvent({
+    it('onCancel', async () => {
+      await testEmulatedBubblingEvent({
         type: 'dialog',
         reactEvent: 'onCancel',
         reactEventType: 'cancel',
@@ -807,8 +817,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCanPlay', () => {
-      testEmulatedBubblingEvent({
+    it('onCanPlay', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onCanPlay',
         reactEventType: 'canplay',
@@ -823,8 +833,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCanPlayThrough', () => {
-      testEmulatedBubblingEvent({
+    it('onCanPlayThrough', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onCanPlayThrough',
         reactEventType: 'canplaythrough',
@@ -839,8 +849,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onClose', () => {
-      testEmulatedBubblingEvent({
+    it('onClose', async () => {
+      await testEmulatedBubblingEvent({
         type: 'dialog',
         reactEvent: 'onClose',
         reactEventType: 'close',
@@ -855,8 +865,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDurationChange', () => {
-      testEmulatedBubblingEvent({
+    it('onDurationChange', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onDurationChange',
         reactEventType: 'durationchange',
@@ -871,8 +881,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onEmptied', () => {
-      testEmulatedBubblingEvent({
+    it('onEmptied', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEmptied',
         reactEventType: 'emptied',
@@ -887,8 +897,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onEncrypted', () => {
-      testEmulatedBubblingEvent({
+    it('onEncrypted', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEncrypted',
         reactEventType: 'encrypted',
@@ -903,8 +913,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onEnded', () => {
-      testEmulatedBubblingEvent({
+    it('onEnded', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEnded',
         reactEventType: 'ended',
@@ -919,8 +929,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onError', () => {
-      testEmulatedBubblingEvent({
+    it('onError', async () => {
+      await testEmulatedBubblingEvent({
         type: 'img',
         reactEvent: 'onError',
         reactEventType: 'error',
@@ -935,8 +945,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onInvalid', () => {
-      testEmulatedBubblingEvent({
+    it('onInvalid', async () => {
+      await testEmulatedBubblingEvent({
         type: 'input',
         reactEvent: 'onInvalid',
         reactEventType: 'invalid',
@@ -951,8 +961,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onLoad', () => {
-      testEmulatedBubblingEvent({
+    it('onLoad', async () => {
+      await testEmulatedBubblingEvent({
         type: 'img',
         reactEvent: 'onLoad',
         reactEventType: 'load',
@@ -967,8 +977,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onLoadedData', () => {
-      testEmulatedBubblingEvent({
+    it('onLoadedData', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadedData',
         reactEventType: 'loadeddata',
@@ -983,8 +993,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onLoadedMetadata', () => {
-      testEmulatedBubblingEvent({
+    it('onLoadedMetadata', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadedMetadata',
         reactEventType: 'loadedmetadata',
@@ -999,8 +1009,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onLoadStart', () => {
-      testEmulatedBubblingEvent({
+    it('onLoadStart', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadStart',
         reactEventType: 'loadstart',
@@ -1015,8 +1025,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPause', () => {
-      testEmulatedBubblingEvent({
+    it('onPause', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPause',
         reactEventType: 'pause',
@@ -1031,8 +1041,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPlay', () => {
-      testEmulatedBubblingEvent({
+    it('onPlay', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPlay',
         reactEventType: 'play',
@@ -1047,8 +1057,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onPlaying', () => {
-      testEmulatedBubblingEvent({
+    it('onPlaying', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPlaying',
         reactEventType: 'playing',
@@ -1063,8 +1073,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onProgress', () => {
-      testEmulatedBubblingEvent({
+    it('onProgress', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onProgress',
         reactEventType: 'progress',
@@ -1079,8 +1089,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onRateChange', () => {
-      testEmulatedBubblingEvent({
+    it('onRateChange', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onRateChange',
         reactEventType: 'ratechange',
@@ -1095,8 +1105,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onResize', () => {
-      testEmulatedBubblingEvent({
+    it('onResize', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onResize',
         reactEventType: 'resize',
@@ -1111,8 +1121,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onSeeked', () => {
-      testEmulatedBubblingEvent({
+    it('onSeeked', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSeeked',
         reactEventType: 'seeked',
@@ -1127,8 +1137,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onSeeking', () => {
-      testEmulatedBubblingEvent({
+    it('onSeeking', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSeeking',
         reactEventType: 'seeking',
@@ -1143,8 +1153,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onStalled', () => {
-      testEmulatedBubblingEvent({
+    it('onStalled', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onStalled',
         reactEventType: 'stalled',
@@ -1159,8 +1169,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onSuspend', () => {
-      testEmulatedBubblingEvent({
+    it('onSuspend', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSuspend',
         reactEventType: 'suspend',
@@ -1175,8 +1185,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onTimeUpdate', () => {
-      testEmulatedBubblingEvent({
+    it('onTimeUpdate', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onTimeUpdate',
         reactEventType: 'timeupdate',
@@ -1191,8 +1201,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onToggle', () => {
-      testEmulatedBubblingEvent({
+    it('onToggle', async () => {
+      await testEmulatedBubblingEvent({
         type: 'details',
         reactEvent: 'onToggle',
         reactEventType: 'toggle',
@@ -1207,8 +1217,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onVolumeChange', () => {
-      testEmulatedBubblingEvent({
+    it('onVolumeChange', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onVolumeChange',
         reactEventType: 'volumechange',
@@ -1223,8 +1233,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onWaiting', () => {
-      testEmulatedBubblingEvent({
+    it('onWaiting', async () => {
+      await testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onWaiting',
         reactEventType: 'waiting',
@@ -1241,8 +1251,8 @@ describe('ReactDOMEventListener', () => {
   });
 
   describe('non-bubbling events that do not bubble in React', () => {
-    it('onScroll', () => {
-      testNonBubblingEvent({
+    it('onScroll', async () => {
+      await testNonBubblingEvent({
         type: 'div',
         reactEvent: 'onScroll',
         reactEventType: 'scroll',
@@ -1257,8 +1267,8 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onScrollEnd', () => {
-      testNonBubblingEvent({
+    it('onScrollEnd', async () => {
+      await testNonBubblingEvent({
         type: 'div',
         reactEvent: 'onScrollEnd',
         reactEventType: 'scrollend',
@@ -1279,10 +1289,10 @@ describe('ReactDOMEventListener', () => {
   // work very well across different roots. For now, we'll
   // just document the current state in these tests.
   describe('enter/leave events', () => {
-    it('onMouseEnter and onMouseLeave', () => {
+    it('onMouseEnter and onMouseLeave', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="div"
           targetRef={targetRef}
@@ -1352,10 +1362,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onPointerEnter and onPointerLeave', () => {
+    it('onPointerEnter and onPointerLeave', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="div"
           targetRef={targetRef}
@@ -1436,10 +1446,10 @@ describe('ReactDOMEventListener', () => {
   // work very well across different roots. For now, we'll
   // just document the current state in these tests.
   describe('polyfilled events', () => {
-    it('onBeforeInput', () => {
+    it('onBeforeInput', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1499,10 +1509,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onChange', () => {
+    it('onChange', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1558,10 +1568,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onCompositionStart', () => {
+    it('onCompositionStart', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1620,10 +1630,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onCompositionEnd', () => {
+    it('onCompositionEnd', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1682,10 +1692,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onCompositionUpdate', () => {
+    it('onCompositionUpdate', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1744,10 +1754,10 @@ describe('ReactDOMEventListener', () => {
       `);
     });
 
-    it('onSelect', () => {
+    it('onSelect', async () => {
       const log = [];
       const targetRef = React.createRef();
-      render(
+      await render(
         <Fixture
           type="input"
           targetRef={targetRef}
@@ -1806,47 +1816,47 @@ describe('ReactDOMEventListener', () => {
 
   // Events that bubble in React and in the browser.
   // React delegates them to the root.
-  function testNativeBubblingEvent(config) {
-    testNativeBubblingEventWithTargetListener(config);
-    testNativeBubblingEventWithoutTargetListener(config);
-    testReactStopPropagationInOuterCapturePhase(config);
-    testReactStopPropagationInInnerCapturePhase(config);
-    testReactStopPropagationInInnerBubblePhase(config);
-    testReactStopPropagationInOuterBubblePhase(config);
-    testNativeStopPropagationInOuterCapturePhase(config);
-    testNativeStopPropagationInInnerCapturePhase(config);
-    testNativeStopPropagationInInnerBubblePhase(config);
-    testNativeStopPropagationInOuterBubblePhase(config);
+  async function testNativeBubblingEvent(config) {
+    await testNativeBubblingEventWithTargetListener(config);
+    await testNativeBubblingEventWithoutTargetListener(config);
+    await testReactStopPropagationInOuterCapturePhase(config);
+    await testReactStopPropagationInInnerCapturePhase(config);
+    await testReactStopPropagationInInnerBubblePhase(config);
+    await testReactStopPropagationInOuterBubblePhase(config);
+    await testNativeStopPropagationInOuterCapturePhase(config);
+    await testNativeStopPropagationInInnerCapturePhase(config);
+    await testNativeStopPropagationInInnerBubblePhase(config);
+    await testNativeStopPropagationInOuterBubblePhase(config);
   }
 
   // Events that bubble in React but not in the browser.
   // React attaches them to the elements.
-  function testEmulatedBubblingEvent(config) {
-    testEmulatedBubblingEventWithTargetListener(config);
-    testEmulatedBubblingEventWithoutTargetListener(config);
-    testReactStopPropagationInOuterCapturePhase(config);
-    testReactStopPropagationInInnerCapturePhase(config);
-    testReactStopPropagationInInnerBubblePhase(config);
-    testNativeStopPropagationInOuterCapturePhase(config);
-    testNativeStopPropagationInInnerCapturePhase(config);
-    testNativeStopPropagationInInnerEmulatedBubblePhase(config);
+  async function testEmulatedBubblingEvent(config) {
+    await testEmulatedBubblingEventWithTargetListener(config);
+    await testEmulatedBubblingEventWithoutTargetListener(config);
+    await testReactStopPropagationInOuterCapturePhase(config);
+    await testReactStopPropagationInInnerCapturePhase(config);
+    await testReactStopPropagationInInnerBubblePhase(config);
+    await testNativeStopPropagationInOuterCapturePhase(config);
+    await testNativeStopPropagationInInnerCapturePhase(config);
+    await testNativeStopPropagationInInnerEmulatedBubblePhase(config);
   }
 
   // Events that don't bubble either in React or in the browser.
-  function testNonBubblingEvent(config) {
-    testNonBubblingEventWithTargetListener(config);
-    testNonBubblingEventWithoutTargetListener(config);
-    testReactStopPropagationInOuterCapturePhase(config);
-    testReactStopPropagationInInnerCapturePhase(config);
-    testReactStopPropagationInInnerBubblePhase(config);
-    testNativeStopPropagationInOuterCapturePhase(config);
-    testNativeStopPropagationInInnerCapturePhase(config);
+  async function testNonBubblingEvent(config) {
+    await testNonBubblingEventWithTargetListener(config);
+    await testNonBubblingEventWithoutTargetListener(config);
+    await testReactStopPropagationInOuterCapturePhase(config);
+    await testReactStopPropagationInInnerCapturePhase(config);
+    await testReactStopPropagationInInnerBubblePhase(config);
+    await testNativeStopPropagationInOuterCapturePhase(config);
+    await testNativeStopPropagationInInnerCapturePhase(config);
   }
 
-  function testNativeBubblingEventWithTargetListener(eventConfig) {
+  async function testNativeBubblingEventWithTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -1900,10 +1910,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testEmulatedBubblingEventWithTargetListener(eventConfig) {
+  async function testEmulatedBubblingEventWithTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -1959,10 +1969,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNonBubblingEventWithTargetListener(eventConfig) {
+  async function testNonBubblingEventWithTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2015,10 +2025,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeBubblingEventWithoutTargetListener(eventConfig) {
+  async function testNativeBubblingEventWithoutTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2067,10 +2077,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testEmulatedBubblingEventWithoutTargetListener(eventConfig) {
+  async function testEmulatedBubblingEventWithoutTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2121,10 +2131,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNonBubblingEventWithoutTargetListener(eventConfig) {
+  async function testNonBubblingEventWithoutTargetListener(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2172,10 +2182,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testReactStopPropagationInOuterCapturePhase(eventConfig) {
+  async function testReactStopPropagationInOuterCapturePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={node => {
@@ -2235,10 +2245,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testReactStopPropagationInInnerCapturePhase(eventConfig) {
+  async function testReactStopPropagationInInnerCapturePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={node => {
@@ -2299,10 +2309,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testReactStopPropagationInInnerBubblePhase(eventConfig) {
+  async function testReactStopPropagationInInnerBubblePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2364,10 +2374,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testReactStopPropagationInOuterBubblePhase(eventConfig) {
+  async function testReactStopPropagationInOuterBubblePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2421,10 +2431,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeStopPropagationInOuterCapturePhase(eventConfig) {
+  async function testNativeStopPropagationInOuterCapturePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2489,10 +2499,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeStopPropagationInInnerCapturePhase(eventConfig) {
+  async function testNativeStopPropagationInInnerCapturePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2559,10 +2569,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeStopPropagationInInnerBubblePhase(eventConfig) {
+  async function testNativeStopPropagationInInnerBubblePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={node => {
@@ -2625,10 +2635,12 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeStopPropagationInInnerEmulatedBubblePhase(eventConfig) {
+  async function testNativeStopPropagationInInnerEmulatedBubblePhase(
+    eventConfig,
+  ) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={node => {
@@ -2694,10 +2706,10 @@ describe('ReactDOMEventListener', () => {
     `);
   }
 
-  function testNativeStopPropagationInOuterBubblePhase(eventConfig) {
+  async function testNativeStopPropagationInOuterBubblePhase(eventConfig) {
     const log = [];
     const targetRef = React.createRef();
-    render(
+    await render(
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
@@ -2802,9 +2814,12 @@ describe('ReactDOMEventListener', () => {
       const parent = ref.current;
       const innerContainer = document.createElement('div');
       parent.appendChild(innerContainer);
-      InnerReactDOM.render(children, innerContainer);
+      const innerReactRoot = InnerReactDOMClient.createRoot(innerContainer);
+      InnerReactDOM.flushSync(() => {
+        innerReactRoot.render(children);
+      });
       return () => {
-        InnerReactDOM.unmountComponentAtNode(innerContainer);
+        innerReactRoot.unmount();
         parent.removeChild(innerContainer);
       };
     }, [children, ref]);

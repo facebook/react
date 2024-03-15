@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
@@ -18,23 +18,14 @@ let assertLog;
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
-    ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
-
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
-  });
 
-  function supportsDoubleInvokeEffects() {
-    return gate(
-      flags =>
-        flags.build === 'development' &&
-        flags.createRootStrictEffectsByDefault &&
-        flags.dfsEffectsRefactor,
-    );
-  }
+    React = require('react');
+    Scheduler = require('scheduler');
+    ReactNoop = require('react-noop-renderer');
+  });
 
   it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
@@ -51,8 +42,13 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
+      root.render(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
@@ -73,14 +69,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -94,7 +92,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -105,7 +108,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
@@ -126,14 +129,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useEffect One mount',
         'useEffect Two mount',
@@ -147,7 +152,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -158,7 +168,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount(null);
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useEffect One unmount', 'useEffect Two unmount']);
@@ -179,14 +189,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
@@ -200,7 +212,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -211,7 +228,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
@@ -230,14 +247,15 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -249,13 +267,17 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([]);
@@ -286,10 +308,14 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'componentWillUnmount',
@@ -319,14 +345,16 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'componentWillUnmount',
@@ -337,13 +365,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -364,27 +397,34 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog(['componentWillUnmount']);
     } else {
       assertLog([]);
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -409,8 +449,13 @@ describe('StrictEffectsMode', () => {
       }
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
+      root.render(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['componentDidMount']);
@@ -437,12 +482,14 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'mount',
         'useLayoutEffect mount',
@@ -502,10 +549,15 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'App useLayoutEffect mount',
         'App useEffect mount',
@@ -522,7 +574,7 @@ describe('StrictEffectsMode', () => {
       _setShowChild(true);
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
@@ -583,14 +635,16 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
@@ -611,7 +665,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'mount'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -622,7 +681,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
@@ -664,14 +723,16 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -686,7 +747,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'mount'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -697,7 +763,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([

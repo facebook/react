@@ -349,9 +349,8 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
+        const lastCall = mockError.mock.calls[mockError.mock.calls.length - 1];
+        expect(lastCall).toEqual([
           'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
           'article',
           'section',
@@ -538,6 +537,7 @@ describe('ReactDOMServerPartialHydration', () => {
     assertLog([
       'Server rendered',
       'Client rendered',
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
       'There was an error while hydrating this Suspense boundary. ' +
         'Switched to client rendering.',
     ]);
@@ -718,6 +718,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  // @gate !disableLegacyMode
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;
@@ -776,14 +777,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span2 = container.getElementsByTagName('span')[0];
     // This is a new node.
     expect(span).not.toBe(span2);
-
-    if (gate(flags => flags.dfsEffectsRefactor)) {
-      // The effects list refactor causes this to be null because the Suspense Activity's child
-      // is null. However, since we can't hydrate Suspense in legacy this change in behavior is ok
-      expect(ref.current).toBe(null);
-    } else {
-      expect(ref.current).toBe(span2);
-    }
+    expect(ref.current).toBe(null);
 
     // Resolving the promise should render the final content.
     suspend = false;

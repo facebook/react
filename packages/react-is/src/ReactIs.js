@@ -11,7 +11,6 @@
 
 import {
   REACT_CONTEXT_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -20,11 +19,13 @@ import {
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 export function typeOf(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
@@ -44,13 +45,21 @@ export function typeOf(object: any): mixed {
             const $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
-              case REACT_SERVER_CONTEXT_TYPE:
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
               case REACT_LAZY_TYPE:
               case REACT_MEMO_TYPE:
-              case REACT_PROVIDER_TYPE:
                 return $$typeofType;
+              case REACT_CONSUMER_TYPE:
+                if (enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
+              case REACT_PROVIDER_TYPE:
+                if (!enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
               default:
                 return $$typeof;
             }
@@ -63,8 +72,12 @@ export function typeOf(object: any): mixed {
   return undefined;
 }
 
-export const ContextConsumer = REACT_CONTEXT_TYPE;
-export const ContextProvider = REACT_PROVIDER_TYPE;
+export const ContextConsumer: symbol = enableRenderableContext
+  ? REACT_CONSUMER_TYPE
+  : REACT_CONTEXT_TYPE;
+export const ContextProvider: symbol = enableRenderableContext
+  ? REACT_CONTEXT_TYPE
+  : REACT_PROVIDER_TYPE;
 export const Element = REACT_ELEMENT_TYPE;
 export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
@@ -78,41 +91,19 @@ export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
 export {isValidElementType};
 
-let hasWarnedAboutDeprecatedIsAsyncMode = false;
-let hasWarnedAboutDeprecatedIsConcurrentMode = false;
-
-// AsyncMode should be deprecated
-export function isAsyncMode(object: any): boolean {
-  if (__DEV__) {
-    if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-      hasWarnedAboutDeprecatedIsAsyncMode = true;
-      // Using console['warn'] to evade Babel and ESLint
-      console['warn'](
-        'The ReactIs.isAsyncMode() alias has been deprecated, ' +
-          'and will be removed in React 18+.',
-      );
-    }
-  }
-  return false;
-}
-export function isConcurrentMode(object: any): boolean {
-  if (__DEV__) {
-    if (!hasWarnedAboutDeprecatedIsConcurrentMode) {
-      hasWarnedAboutDeprecatedIsConcurrentMode = true;
-      // Using console['warn'] to evade Babel and ESLint
-      console['warn'](
-        'The ReactIs.isConcurrentMode() alias has been deprecated, ' +
-          'and will be removed in React 18+.',
-      );
-    }
-  }
-  return false;
-}
 export function isContextConsumer(object: any): boolean {
-  return typeOf(object) === REACT_CONTEXT_TYPE;
+  if (enableRenderableContext) {
+    return typeOf(object) === REACT_CONSUMER_TYPE;
+  } else {
+    return typeOf(object) === REACT_CONTEXT_TYPE;
+  }
 }
 export function isContextProvider(object: any): boolean {
-  return typeOf(object) === REACT_PROVIDER_TYPE;
+  if (enableRenderableContext) {
+    return typeOf(object) === REACT_CONTEXT_TYPE;
+  } else {
+    return typeOf(object) === REACT_PROVIDER_TYPE;
+  }
 }
 export function isElement(object: any): boolean {
   return (

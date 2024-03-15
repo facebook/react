@@ -52,14 +52,18 @@ import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
-import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
+import {
+  allowConcurrentByDefault,
+  enableReactTestRendererWarning,
+} from 'shared/ReactFeatureFlags';
 
-const act = React.unstable_act;
+const act = React.act;
 
 // TODO: Remove from public bundle
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
+  isConcurrent: boolean,
   unstable_isConcurrent: boolean,
   unstable_strictMode: boolean,
   unstable_concurrentUpdatesByDefault: boolean,
@@ -470,6 +474,14 @@ function create(
   getInstance(): React$Component<any, any> | PublicInstance | null,
   unstable_flushSync: typeof flushSync,
 } {
+  if (__DEV__) {
+    if (enableReactTestRendererWarning === true) {
+      console.warn(
+        'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      );
+    }
+  }
+
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
   let isStrictMode = false;
@@ -479,7 +491,10 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
+    if (
+      options.unstable_isConcurrent === true ||
+      options.isConcurrent === true
+    ) {
       isConcurrent = true;
     }
     if (options.unstable_strictMode === true) {

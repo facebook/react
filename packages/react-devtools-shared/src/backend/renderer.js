@@ -36,11 +36,13 @@ import {
   renamePathInObject,
   setInObject,
   utfEncodeString,
+  filterOutLocationComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {
   gt,
   gte,
+  parseSourceFromComponentStack,
   serializeToString,
 } from 'react-devtools-shared/src/backend/utils';
 import {
@@ -79,6 +81,7 @@ import {
   PROVIDER_SYMBOL_STRING,
   CONTEXT_NUMBER,
   CONTEXT_SYMBOL_STRING,
+  CONSUMER_SYMBOL_STRING,
   STRICT_MODE_NUMBER,
   STRICT_MODE_SYMBOL_STRING,
   PROFILER_NUMBER,
@@ -122,6 +125,8 @@ import type {
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
+import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | number;
@@ -424,7 +429,10 @@ export function getInternalReactConstants(version: string): {
   }
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
-  function getDisplayNameForFiber(fiber: Fiber): string | null {
+  function getDisplayNameForFiber(
+    fiber: Fiber,
+    shouldSkipForgetCheck: boolean = false,
+  ): string | null {
     const {elementType, type, tag} = fiber;
 
     let resolvedType = type;
@@ -433,6 +441,18 @@ export function getInternalReactConstants(version: string): {
     }
 
     let resolvedContext: any = null;
+    // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
+    if (!shouldSkipForgetCheck && fiber.updateQueue?.memoCache != null) {
+      const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
+        fiber,
+        true,
+      );
+      if (displayNameWithoutForgetWrapper == null) {
+        return null;
+      }
+
+      return `Forget(${displayNameWithoutForgetWrapper})`;
+    }
 
     switch (tag) {
       case CacheComponent:
@@ -510,6 +530,15 @@ export function getInternalReactConstants(version: string): {
           case CONTEXT_NUMBER:
           case CONTEXT_SYMBOL_STRING:
           case SERVER_CONTEXT_SYMBOL_STRING:
+            if (
+              fiber.type._context === undefined &&
+              fiber.type.Provider === fiber.type
+            ) {
+              // In 19+, Context.Provider === Context, so this is a provider.
+              resolvedContext = fiber.type;
+              return `${resolvedContext.displayName || 'Context'}.Provider`;
+            }
+
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
             // NOTE Keep in sync with inspectElementRaw()
@@ -517,6 +546,10 @@ export function getInternalReactConstants(version: string): {
 
             // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
             // If you change the name, figure out a more resilient way to detect it.
+            return `${resolvedContext.displayName || 'Context'}.Consumer`;
+          case CONSUMER_SYMBOL_STRING:
+            // 19+
+            resolvedContext = fiber.type._context;
             return `${resolvedContext.displayName || 'Context'}.Consumer`;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
@@ -554,6 +587,8 @@ const fiberToIDMap: Map<Fiber, number> = new Map();
 // This Map is used to e.g. get the display name for a Fiber or schedule an update,
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
+
+const fiberToComponentStackMap: WeakMap<Fiber, string> = new WeakMap();
 
 export function attach(
   hook: DevToolsHook,
@@ -889,7 +924,11 @@ export function attach(
   // because they are stored in localStorage within the context of the extension.
   // Instead it relies on the extension to pass filters through.
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
-    applyComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+    const componentFiltersWithoutLocationBasedOnes =
+      filterOutLocationComponentFilters(
+        window.__REACT_DEVTOOLS_COMPONENT_FILTERS__,
+      );
+    applyComponentFilters(componentFiltersWithoutLocationBasedOnes);
   } else {
     // Unfortunately this feature is not expected to work for React Native for now.
     // It would be annoying for us to spam YellowBox warnings with unactionable stuff,
@@ -943,7 +982,7 @@ export function attach(
 
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const {_debugSource, tag, type, key} = fiber;
+    const {tag, type, key} = fiber;
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -995,15 +1034,21 @@ export function attach(
       }
     }
 
-    if (_debugSource != null && hideElementsWithPaths.size > 0) {
-      const {fileName} = _debugSource;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const pathRegExp of hideElementsWithPaths) {
-        if (pathRegExp.test(fileName)) {
-          return true;
+    /* DISABLED: https://github.com/facebook/react/pull/28417
+    if (hideElementsWithPaths.size > 0) {
+      const source = getSourceForFiber(fiber);
+
+      if (source != null) {
+        const {fileName} = source;
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const pathRegExp of hideElementsWithPaths) {
+          if (pathRegExp.test(fileName)) {
+            return true;
+          }
         }
       }
     }
+    */
 
     return false;
   }
@@ -1212,10 +1257,12 @@ export function attach(
       }
 
       fiberToIDMap.delete(fiber);
+      fiberToComponentStackMap.delete(fiber);
 
       const {alternate} = fiber;
       if (alternate !== null) {
         fiberToIDMap.delete(alternate);
+        fiberToComponentStackMap.delete(alternate);
       }
 
       if (forceErrorForFiberIDs.has(fiberID)) {
@@ -3117,7 +3164,6 @@ export function attach(
 
     const {
       _debugOwner,
-      _debugSource,
       stateNode,
       key,
       memoizedProps,
@@ -3164,8 +3210,14 @@ export function attach(
         }
       }
     } else if (
-      typeSymbol === CONTEXT_NUMBER ||
-      typeSymbol === CONTEXT_SYMBOL_STRING
+      // Detect pre-19 Context Consumers
+      (typeSymbol === CONTEXT_NUMBER || typeSymbol === CONTEXT_SYMBOL_STRING) &&
+      !(
+        // In 19+, CONTEXT_SYMBOL_STRING means a Provider instead.
+        // It will be handled in a different branch below.
+        // Eventually, this entire branch can be removed.
+        (type._context === undefined && type.Provider === type)
+      )
     ) {
       // 16.3-16.5 read from "type" because the Consumer is the actual context object.
       // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
@@ -3189,6 +3241,35 @@ export function attach(
           // NOTE Keep in sync with getDisplayNameForFiber()
           const providerResolvedContext =
             currentType._context || currentType.context;
+          if (providerResolvedContext === consumerResolvedContext) {
+            context = current.memoizedProps.value;
+            break;
+          }
+        }
+
+        current = current.return;
+      }
+    } else if (
+      // Detect 19+ Context Consumers
+      typeSymbol === CONSUMER_SYMBOL_STRING
+    ) {
+      // This branch is 19+ only, where Context.Provider === Context.
+      // NOTE Keep in sync with getDisplayNameForFiber()
+      const consumerResolvedContext = type._context;
+
+      // Global context value.
+      context = consumerResolvedContext._currentValue || null;
+
+      // Look for overridden value.
+      let current = ((fiber: any): Fiber).return;
+      while (current !== null) {
+        const currentType = current.type;
+        const currentTypeSymbol = getTypeSymbol(currentType);
+        if (
+          // In 19+, these are Context Providers
+          currentTypeSymbol === CONTEXT_SYMBOL_STRING
+        ) {
+          const providerResolvedContext = currentType;
           if (providerResolvedContext === consumerResolvedContext) {
             context = current.memoizedProps.value;
             break;
@@ -3238,7 +3319,6 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
-          true, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.
@@ -3294,6 +3374,11 @@ export function attach(
       }
     }
 
+    let source = null;
+    if (canViewSource) {
+      source = getSourceForFiber(fiber);
+    }
+
     return {
       id,
 
@@ -3326,6 +3411,7 @@ export function attach(
 
       // Can view component source location.
       canViewSource,
+      source,
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
@@ -3346,9 +3432,6 @@ export function attach(
 
       // List of owners
       owners,
-
-      // Location of component in source code.
-      source: _debugSource || null,
 
       rootType,
       rendererPackageName: renderer.rendererPackageName,
@@ -3709,9 +3792,6 @@ export function attach(
     const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
-    }
-    if (result.source !== null) {
-      console.log('Location:', result.source);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
@@ -4459,6 +4539,34 @@ export function attach(
     return idToArbitraryFiberMap.has(id);
   }
 
+  function getComponentStackForFiber(fiber: Fiber): string | null {
+    let componentStack = fiberToComponentStackMap.get(fiber);
+    if (componentStack == null) {
+      const dispatcherRef = renderer.currentDispatcherRef;
+      if (dispatcherRef == null) {
+        return null;
+      }
+
+      componentStack = getStackByFiberInDevAndProd(
+        ReactTypeOfWork,
+        fiber,
+        dispatcherRef,
+      );
+      fiberToComponentStackMap.set(fiber, componentStack);
+    }
+
+    return componentStack;
+  }
+
+  function getSourceForFiber(fiber: Fiber): Source | null {
+    const componentStack = getComponentStackForFiber(fiber);
+    if (componentStack == null) {
+      return null;
+    }
+
+    return parseSourceFromComponentStack(componentStack);
+  }
+
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -4469,6 +4577,8 @@ export function attach(
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
+    getComponentStackForFiber,
+    getSourceForFiber,
     getDisplayNameForFiberID,
     getFiberForNative,
     getFiberIDForNative,

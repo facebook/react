@@ -86,6 +86,38 @@ describe('ReactDOMFizzForm', () => {
   });
 
   // @gate enableUseDeferredValueInitialArg
+  // @gate enablePostpone
+  it(
+    'if initial value postpones during hydration, it will switch to the ' +
+      'final value instead',
+    async () => {
+      function Content() {
+        const isInitial = useDeferredValue(false, true);
+        if (isInitial) {
+          React.unstable_postpone();
+        }
+        return <Text text="Final" />;
+      }
+
+      function App() {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Content />
+          </Suspense>
+        );
+      }
+
+      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      await readIntoContainer(stream);
+      expect(container.textContent).toEqual('Loading...');
+
+      // After hydration, it's updated to the final value
+      await act(() => ReactDOMClient.hydrateRoot(container, <App />));
+      expect(container.textContent).toEqual('Final');
+    },
+  );
+
+  // @gate enableUseDeferredValueInitialArg
   it(
     'useDeferredValue during hydration has higher priority than remaining ' +
       'incremental hydration',

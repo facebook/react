@@ -28,11 +28,13 @@ import {
 import {Children} from 'react';
 
 import {
+  enableBigIntSupport,
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
   enableFloat,
   enableFormActions,
   enableFizzExternalRuntime,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -87,21 +89,19 @@ import {getValueDescriptorExpectingObjectForWarning} from '../shared/ReactDOMRes
 import {NotPending} from '../shared/ReactDOMFormActions';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+const ReactDOMCurrentDispatcher =
+  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
-const ReactDOMServerDispatcher = {
+const previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
   prefetchDNS,
   preconnect,
   preload,
   preloadModule,
-  preinitStyle,
   preinitScript,
+  preinitStyle,
   preinitModuleScript,
 };
-
-export function prepareHostDispatcher() {
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
-}
 
 // We make every property of the descriptor optional because it is not a contract that
 // the headers provided by onHeaders has any particular header types.
@@ -147,12 +147,11 @@ export type RenderState = {
   // external runtime script chunks
   externalRuntimeScript: null | ExternalRuntimeScript,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  importMapChunks: Array<Chunk | PrecomputedChunk>,
 
   // Hoistable chunks
   charsetChunks: Array<Chunk | PrecomputedChunk>,
-  preconnectChunks: Array<Chunk | PrecomputedChunk>,
-  importMapChunks: Array<Chunk | PrecomputedChunk>,
-  preloadChunks: Array<Chunk | PrecomputedChunk>,
+  viewportChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
 
   // Headers queues for Resources that can flush early
@@ -200,9 +199,6 @@ export type RenderState = {
     scripts: Map<string, Resource>,
     moduleScripts: Map<string, Resource>,
   },
-
-  // Module-global-like reference for current boundary resources
-  boundaryResources: ?BoundaryResources,
 
   // Module-global-like reference for flushing/hoisting state of style resources
   // We need to track whether the current request has flushed any style resources
@@ -350,6 +346,11 @@ const importMapScriptEnd = stringToPrecomputedChunk('</script>');
 // allow one more header to be captured which means in practice if the limit is approached it will be exceeded
 const DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000;
 
+let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
+if (__DEV__) {
+  didWarnForNewBooleanPropsWithEmptyValue = {};
+}
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
@@ -457,6 +458,7 @@ export function createRenderState(
 
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
+    importMapChunks,
 
     onHeaders,
     headers,
@@ -473,9 +475,7 @@ export function createRenderState(
     },
 
     charsetChunks: [],
-    preconnectChunks: [],
-    importMapChunks,
-    preloadChunks: [],
+    viewportChunks: [],
     hoistableChunks: [],
 
     // cleared on flush
@@ -497,7 +497,7 @@ export function createRenderState(
 
     nonce,
     // like a module global for currently rendering boundary
-    boundaryResources: null,
+    hoistableState: null,
     stylesToHoist: false,
   };
 
@@ -1020,7 +1020,7 @@ function makeFormFieldPrefix(resumableState: ResumableState): string {
 const actionJavaScriptURL = stringToPrecomputedChunk(
   escapeTextForBrowser(
     // eslint-disable-next-line no-script-url
-    "javascript:throw new Error('A React form was unexpectedly submitted.')",
+    "javascript:throw new Error('React form unexpectedly submitted.')",
   ),
 );
 
@@ -1231,6 +1231,7 @@ function pushAttribute(
     case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'ref':
       // Ignored. These are built-in to React on the client.
       return;
     case 'autoFocus':
@@ -1403,6 +1404,32 @@ function pushAttribute(
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
       return;
+    case 'inert': {
+      if (enableNewBooleanProps) {
+        if (__DEV__) {
+          if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[name]) {
+            didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+            console.error(
+              'Received an empty string for a boolean attribute `%s`. ' +
+                'This will treat the attribute as if it were false. ' +
+                'Either pass `false` to silence this warning, or ' +
+                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+              name,
+            );
+          }
+        }
+        // Boolean
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          target.push(
+            attributeSeparator,
+            stringToChunk(name),
+            attributeEmptyString,
+          );
+        }
+        return;
+      }
+    }
+    // fallthrough for new boolean props without the flag on
     default:
       if (
         // shouldIgnoreAttribute
@@ -1457,7 +1484,7 @@ function pushInnerHTML(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
@@ -1508,6 +1535,54 @@ function checkSelectProp(props: any, propName: string) {
   }
 }
 
+function pushStartAnchor(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+): ReactNodeList {
+  target.push(startChunkForTag('a'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        case 'href':
+          if (propValue === '') {
+            // Empty `href` is special on anchors so we're short-circuiting here.
+            // On other tags it should trigger a warning
+            pushStringAttribute(target, 'href', '');
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
+          break;
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
+  return children;
+}
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1528,7 +1603,7 @@ function pushStartSelect(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultSelectValue = true;
     }
@@ -1582,7 +1657,9 @@ function flattenOptionChildren(children: mixed): string {
       if (
         !didWarnInvalidOptionChildren &&
         typeof child !== 'string' &&
-        typeof child !== 'number'
+        typeof child !== 'number' &&
+        ((enableBigIntSupport && typeof child !== 'bigint') ||
+          !enableBigIntSupport)
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
@@ -1972,7 +2049,7 @@ function pushInput(
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -1985,7 +2062,7 @@ function pushInput(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
         'A component',
         props.type,
       );
@@ -2120,7 +2197,7 @@ function pushStartTextArea(
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
-          'https://reactjs.org/link/controlled-components',
+          'https://react.dev/link/controlled-components',
       );
       didWarnDefaultTextareaValue = true;
     }
@@ -2230,6 +2307,7 @@ function pushMeta(
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
+  isFallback: boolean,
 ): null {
   if (enableFloat) {
     if (
@@ -2245,11 +2323,24 @@ function pushMeta(
         target.push(textSeparator);
       }
 
-      if (typeof props.charSet === 'string') {
+      if (isFallback) {
+        // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+        // because they are likely superceded by primary content and we want to avoid needing to clean
+        // them up when the primary content is ready. They are never hydrated on the client anyway because
+        // boundaries in fallback are awaited or client render, in either case there is never hydration
+        return null;
+      } else if (typeof props.charSet === 'string') {
+        // "charset" Should really be config and not picked up from tags however since this is
+        // the only way to embed the tag today we flush it on a special queue on the Request so it
+        // can go before everything else. Like viewport this means that the tag will escape it's
+        // parent container.
         return pushSelfClosing(renderState.charsetChunks, props, 'meta');
       } else if (props.name === 'viewport') {
-        // "viewport" isn't related to preconnect but it has the right priority
-        return pushSelfClosing(renderState.preconnectChunks, props, 'meta');
+        // "viewport" is flushed on the Request so it can go earlier that Float resources that
+        // might be affected by it. This means it can escape the boundary it is rendered within.
+        // This is a pragmatic solution to viewport being incredibly sensitive to document order
+        // without requiring all hoistables to be flushed too early.
+        return pushSelfClosing(renderState.viewportChunks, props, 'meta');
       } else {
         return pushSelfClosing(renderState.hoistableChunks, props, 'meta');
       }
@@ -2264,9 +2355,11 @@ function pushLink(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  hoistableState: null | HoistableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
+  isFallback: boolean,
 ): null {
   if (enableFloat) {
     const rel = props.rel;
@@ -2384,8 +2477,8 @@ function pushLink(
           // We add the newly created resource to our StyleQueue and if necessary
           // track the resource with the currently rendering boundary
           styleQueue.sheets.set(key, resource);
-          if (renderState.boundaryResources) {
-            renderState.boundaryResources.stylesheets.add(resource);
+          if (hoistableState) {
+            hoistableState.stylesheets.add(resource);
           }
         } else {
           // We need to track whether this boundary should wait on this resource or not.
@@ -2396,8 +2489,8 @@ function pushLink(
           if (styleQueue) {
             const resource = styleQueue.sheets.get(key);
             if (resource) {
-              if (renderState.boundaryResources) {
-                renderState.boundaryResources.stylesheets.add(resource);
+              if (hoistableState) {
+                hoistableState.stylesheets.add(resource);
               }
             }
           }
@@ -2422,14 +2515,14 @@ function pushLink(
         target.push(textSeparator);
       }
 
-      switch (props.rel) {
-        case 'preconnect':
-        case 'dns-prefetch':
-          return pushLinkImpl(renderState.preconnectChunks, props);
-        case 'preload':
-          return pushLinkImpl(renderState.preloadChunks, props);
-        default:
-          return pushLinkImpl(renderState.hoistableChunks, props);
+      if (isFallback) {
+        // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+        // because they are likely superceded by primary content and we want to avoid needing to clean
+        // them up when the primary content is ready. They are never hydrated on the client anyway because
+        // boundaries in fallback are awaited or client render, in either case there is never hydration
+        return null;
+      } else {
+        return pushLinkImpl(renderState.hoistableChunks, props);
       }
     }
   } else {
@@ -2472,6 +2565,7 @@ function pushStyle(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  hoistableState: null | HoistableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2571,8 +2665,8 @@ function pushStyle(
       // it. However, it's possible when you resume that the style has already been emitted
       // and then it wouldn't be recreated in the RenderState and there's no need to track
       // it again since we should've hoisted it to the shell already.
-      if (renderState.boundaryResources) {
-        renderState.boundaryResources.styles.add(styleQueue);
+      if (hoistableState) {
+        hoistableState.styles.add(styleQueue);
       }
     }
 
@@ -2885,6 +2979,7 @@ function pushTitle(
   renderState: RenderState,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
+  isFallback: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     if (hasOwnProperty.call(props, 'children')) {
@@ -2898,36 +2993,40 @@ function pushTitle(
 
       if (Array.isArray(children) && children.length > 1) {
         console.error(
-          'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an Array with length %s instead.' +
+          'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
             ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
             ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
             ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
+          enableBigIntSupport ? ', bigint' : '',
           children.length,
         );
       } else if (typeof child === 'function' || typeof child === 'symbol') {
         const childType =
           typeof child === 'function' ? 'a Function' : 'a Sybmol';
         console.error(
-          'React expect children of <title> tags to be a string, number, or object with a novel `toString` method but found %s instead.' +
+          'React expect children of <title> tags to be a string, number%s, or object with a novel `toString` method but found %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>' +
             ' tags to a single string value.',
+          enableBigIntSupport ? ', bigint' : '',
           childType,
         );
       } else if (child && child.toString === {}.toString) {
         if (child.$$typeof != null) {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that appears to be' +
+            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that appears to be' +
               ' a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to' +
               ' be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is' +
               ' a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+            enableBigIntSupport ? ', bigint' : '',
           );
         } else {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number, or object with a novel `toString` method but found an object that does not implement' +
+            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that does not implement' +
               ' a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags' +
               ' to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>' +
               ' is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+            enableBigIntSupport ? ', bigint' : '',
           );
         }
       }
@@ -2940,8 +3039,15 @@ function pushTitle(
       !noscriptTagInScope &&
       props.itemProp == null
     ) {
-      pushTitleImpl(renderState.hoistableChunks, props);
-      return null;
+      if (isFallback) {
+        // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+        // because they are likely superceded by primary content and we want to avoid needing to clean
+        // them up when the primary content is ready. They are never hydrated on the client anyway because
+        // boundaries in fallback are awaited or client render, in either case there is never hydration
+        return null;
+      } else {
+        pushTitleImpl(renderState.hoistableChunks, props);
+      }
     } else {
       return pushTitleImpl(target, props);
     }
@@ -3054,14 +3160,17 @@ function pushStartTitle(
     } else if (
       childForValidation != null &&
       typeof childForValidation !== 'string' &&
-      typeof childForValidation !== 'number'
+      typeof childForValidation !== 'number' &&
+      ((enableBigIntSupport && typeof childForValidation !== 'bigint') ||
+        !enableBigIntSupport)
     ) {
       console.error(
-        'A title element received a value that was not a string or number for children. ' +
+        'A title element received a value that was not a string or number%s for children. ' +
           'In the browser title Elements can only have Text Nodes as children. If ' +
           'the children being rendered output more than a single text node in aggregate the browser ' +
           'will display markup and comments as text in the title and hydration will likely fail and ' +
           'fall back to client rendering',
+        enableBigIntSupport ? ' or bigint' : '',
       );
     }
   }
@@ -3323,6 +3432,7 @@ function pushStartCustomElement(
           break;
         case 'suppressContentEditableWarning':
         case 'suppressHydrationWarning':
+        case 'ref':
           // Ignored. These are built-in to React on the client.
           break;
         case 'className':
@@ -3420,7 +3530,7 @@ function pushStartPreformattedElement(
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'Please visit https://react.dev/link/dangerously-set-inner-html ' +
           'for more information.',
       );
     }
@@ -3472,8 +3582,10 @@ export function pushStartInstance(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
+  isFallback: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -3513,7 +3625,14 @@ export function pushStartInstance(
     case 'span':
     case 'svg':
     case 'path':
+      // Fast track very common tags
+      break;
     case 'a':
+      if (enableFilterEmptyStringAttributesDOM) {
+        return pushStartAnchor(target, props);
+      } else {
+        break;
+      }
     case 'g':
     case 'p':
     case 'li':
@@ -3542,6 +3661,7 @@ export function pushStartInstance(
             renderState,
             formatContext.insertionMode,
             !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+            isFallback,
           )
         : pushStartTitle(target, props);
     case 'link':
@@ -3550,9 +3670,11 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
+        hoistableState,
         textEmbedded,
         formatContext.insertionMode,
         !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+        isFallback,
       );
     case 'script':
       return enableFloat
@@ -3572,6 +3694,7 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
+        hoistableState,
         textEmbedded,
         formatContext.insertionMode,
         !!(formatContext.tagScope & NOSCRIPT_SCOPE),
@@ -3584,6 +3707,7 @@ export function pushStartInstance(
         textEmbedded,
         formatContext.insertionMode,
         !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+        isFallback,
       );
     // Newline eating tags
     case 'listing':
@@ -3616,7 +3740,7 @@ export function pushStartInstance(
       return pushSelfClosing(target, props, type);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
     case 'annotation-xml':
     case 'color-profile':
     case 'font-face':
@@ -4120,7 +4244,7 @@ export function writeCompletedBoundaryInstruction(
   resumableState: ResumableState,
   renderState: RenderState,
   id: number,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): boolean {
   let requiresStyleInsertion;
   if (enableFloat) {
@@ -4196,11 +4320,11 @@ export function writeCompletedBoundaryInstruction(
     //    e.g. [&#34;A&#34;, &#34;B&#34;]
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3a);
-      // boundaryResources encodes an array literal
-      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+      // hoistableState encodes an array literal
+      writeStyleResourceDependenciesInJS(destination, hoistableState);
     } else {
       writeChunk(destination, completeBoundaryData3a);
-      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+      writeStyleResourceDependenciesInAttr(destination, hoistableState);
     }
   } else {
     if (scriptFormat) {
@@ -4449,9 +4573,9 @@ function hasStylesToHoist(stylesheet: StylesheetResource): boolean {
   return false;
 }
 
-export function writeResourcesForBoundary(
+export function writeHoistablesForBoundary(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
   renderState: RenderState,
 ): boolean {
   // Reset these on each invocation, they are only safe to read in this function
@@ -4459,10 +4583,15 @@ export function writeResourcesForBoundary(
   destinationHasCapacity = true;
 
   // Flush style tags for each precedence this boundary depends on
-  boundaryResources.styles.forEach(flushStyleTagsLateForBoundary, destination);
+  hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination);
 
   // Determine if this boundary has stylesheets that need to be awaited upon completion
-  boundaryResources.stylesheets.forEach(hasStylesToHoist);
+  hoistableState.stylesheets.forEach(hasStylesToHoist);
+
+  // We don't actually want to flush any hoistables until the boundary is complete so we omit
+  // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+  // regular elements, each rendered element has a unique representation in the DOM. We don't want
+  // these elements to appear in the DOM early, before the boundary has actually completed
 
   if (currentlyRenderingBoundaryHasStylesToHoist) {
     renderState.stylesToHoist = true;
@@ -4629,11 +4758,11 @@ export function writePreamble(
   renderState.preconnects.forEach(flushResource, destination);
   renderState.preconnects.clear();
 
-  const preconnectChunks = renderState.preconnectChunks;
-  for (i = 0; i < preconnectChunks.length; i++) {
-    writeChunk(destination, preconnectChunks[i]);
+  const viewportChunks = renderState.viewportChunks;
+  for (i = 0; i < viewportChunks.length; i++) {
+    writeChunk(destination, viewportChunks[i]);
   }
-  preconnectChunks.length = 0;
+  viewportChunks.length = 0;
 
   renderState.fontPreloads.forEach(flushResource, destination);
   renderState.fontPreloads.clear();
@@ -4658,13 +4787,6 @@ export function writePreamble(
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
 
-  // Write embedding preloadChunks
-  const preloadChunks = renderState.preloadChunks;
-  for (i = 0; i < preloadChunks.length; i++) {
-    writeChunk(destination, preloadChunks[i]);
-  }
-  preloadChunks.length = 0;
-
   // Write embedding hoistableChunks
   const hoistableChunks = renderState.hoistableChunks;
   for (i = 0; i < hoistableChunks.length; i++) {
@@ -4672,13 +4794,9 @@ export function writePreamble(
   }
   hoistableChunks.length = 0;
 
-  // Flush closing head if necessary
   if (htmlChunks && headChunks === null) {
-    // We have an <html> rendered but no <head> rendered. We however inserted
-    // a <head> up above so we need to emit the </head> now. This is safe because
-    // if the main content contained the </head> it would also have provided a
-    // <head>. This means that all the content inside <html> is either <body> or
-    // invalid HTML
+    // we have an <html> but we inserted an implicit <head> tag. We need
+    // to close it since the main content won't have it
     writeChunk(destination, endChunkForTag('head'));
   }
 }
@@ -4699,14 +4817,14 @@ export function writeHoistables(
   // We omit charsetChunks because we have already sent the shell and if it wasn't
   // already sent it is too late now.
 
+  const viewportChunks = renderState.viewportChunks;
+  for (i = 0; i < viewportChunks.length; i++) {
+    writeChunk(destination, viewportChunks[i]);
+  }
+  viewportChunks.length = 0;
+
   renderState.preconnects.forEach(flushResource, destination);
   renderState.preconnects.clear();
-
-  const preconnectChunks = renderState.preconnectChunks;
-  for (i = 0; i < preconnectChunks.length; i++) {
-    writeChunk(destination, preconnectChunks[i]);
-  }
-  preconnectChunks.length = 0;
 
   renderState.fontPreloads.forEach(flushResource, destination);
   renderState.fontPreloads.clear();
@@ -4731,13 +4849,6 @@ export function writeHoistables(
 
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
-
-  // Write embedding preloadChunks
-  const preloadChunks = renderState.preloadChunks;
-  for (i = 0; i < preloadChunks.length; i++) {
-    writeChunk(destination, preloadChunks[i]);
-  }
-  preloadChunks.length = 0;
 
   // Write embedding hoistableChunks
   const hoistableChunks = renderState.hoistableChunks;
@@ -4769,12 +4880,12 @@ const arrayCloseBracket = stringToPrecomputedChunk(']');
 //  [["JS_escaped_string1", "JS_escaped_string2"]]
 function writeStyleResourceDependenciesInJS(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.stylesheets.forEach(resource => {
+  hoistableState.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -4895,6 +5006,7 @@ function writeStyleResourceAttributeInJS(
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'style':
+    case 'ref':
       // Ignored
       return;
 
@@ -4962,12 +5074,12 @@ function writeStyleResourceAttributeInJS(
 //  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
 function writeStyleResourceDependenciesInAttr(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.stylesheets.forEach(resource => {
+  hoistableState.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -5088,6 +5200,7 @@ function writeStyleResourceAttributeInAttr(
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'style':
+    case 'ref':
       // Ignored
       return;
 
@@ -5214,7 +5327,7 @@ type StylesheetResource = {
   state: StylesheetState,
 };
 
-export type BoundaryResources = {
+export type HoistableState = {
   styles: Set<StyleQueue>,
   stylesheets: Set<StylesheetResource>,
 };
@@ -5226,18 +5339,11 @@ export type StyleQueue = {
   sheets: Map<string, StylesheetResource>,
 };
 
-export function createBoundaryResources(): BoundaryResources {
+export function createHoistableState(): HoistableState {
   return {
     styles: new Set(),
     stylesheets: new Set(),
   };
-}
-
-export function setCurrentlyRenderingBoundaryResourcesTarget(
-  renderState: RenderState,
-  boundaryResources: null | BoundaryResources,
-) {
-  renderState.boundaryResources = boundaryResources;
 }
 
 function getResourceKey(href: string): string {
@@ -5266,6 +5372,7 @@ function prefetchDNS(href: string) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.prefetchDNS(href);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5321,6 +5428,7 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preconnect(href, crossOrigin);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5384,6 +5492,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preload(href, as, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5587,6 +5696,7 @@ function preloadModule(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preloadModule(href, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5663,6 +5773,7 @@ function preinitStyle(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitStyle(href, precedence, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5750,6 +5861,7 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitScript(src, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5815,6 +5927,7 @@ function preinitModuleScript(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
+    previousDispatcher.preinitModuleScript(src, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -6087,31 +6200,25 @@ function escapeStringForLinkHeaderQuotedParamValueContextReplacer(
 }
 
 function hoistStyleQueueDependency(
-  this: BoundaryResources,
+  this: HoistableState,
   styleQueue: StyleQueue,
 ) {
   this.styles.add(styleQueue);
 }
 
 function hoistStylesheetDependency(
-  this: BoundaryResources,
+  this: HoistableState,
   stylesheet: StylesheetResource,
 ) {
   this.stylesheets.add(stylesheet);
 }
 
-export function hoistResources(
-  renderState: RenderState,
-  source: BoundaryResources,
+export function hoistHoistables(
+  parentState: HoistableState,
+  childState: HoistableState,
 ): void {
-  const currentBoundaryResources = renderState.boundaryResources;
-  if (currentBoundaryResources) {
-    source.styles.forEach(hoistStyleQueueDependency, currentBoundaryResources);
-    source.stylesheets.forEach(
-      hoistStylesheetDependency,
-      currentBoundaryResources,
-    );
-  }
+  childState.styles.forEach(hoistStyleQueueDependency, parentState);
+  childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
 }
 
 // This function is called at various times depending on whether we are rendering

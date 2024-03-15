@@ -44,6 +44,7 @@ import {
   findNodeHandle,
   dispatchCommand,
   sendAccessibilityEvent,
+  isChildPublicInstance,
 } from './ReactNativePublicCompat';
 
 // $FlowFixMe[missing-local-annot]
@@ -137,6 +138,8 @@ export {
   // This export is typically undefined in production builds.
   // See the "enableGetInspectorDataForInstanceInProduction" flag.
   getInspectorDataForInstance,
+  // DEV-only:
+  isChildPublicInstance,
 };
 
 injectIntoDevTools({

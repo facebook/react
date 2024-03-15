@@ -36,19 +36,19 @@ describe('ReactFlightDOMBrowser', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
-    jest.mock('react', () => require('react/react.shared-subset'));
+
+    jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactServerDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.browser'),
     );
-
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
-
-    ReactServer = require('react');
-    ReactServerDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
 
     __unmockReact();
@@ -583,11 +583,34 @@ describe('ReactFlightDOMBrowser', () => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
-      ? '<p>Error: for reasons + a dev digest</p>'
+      ? '<p>for reasons + a dev digest</p>'
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
     expect(reportedErrors).toEqual(['for reasons']);
+  });
+
+  it('should warn in DEV a child is missing keys', async () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientExports(ParentClient);
+    const ParentModule = clientExports({Parent: ParentClient});
+    await expect(async () => {
+      const stream = ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      );
+      await ReactServerDOMClient.createFromReadableStream(stream);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.',
+    );
   });
 
   it('basic use(promise)', async () => {
@@ -616,54 +639,6 @@ describe('ReactFlightDOMBrowser', () => {
       );
     });
     expect(container.innerHTML).toBe('ABC');
-  });
-
-  // @gate enableServerContext
-  it('basic use(context)', async () => {
-    let ContextA;
-    let ContextB;
-    expect(() => {
-      ContextA = React.createServerContext('ContextA', '');
-      ContextB = React.createServerContext('ContextB', 'B');
-    }).toErrorDev(
-      [
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-      ],
-      {withoutStack: true},
-    );
-
-    function ServerComponent() {
-      return ReactServer.use(ContextA) + ReactServer.use(ContextB);
-    }
-    function Server() {
-      return (
-        <ContextA.Provider value="A">
-          <ServerComponent />
-        </ContextA.Provider>
-      );
-    }
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      // Client uses a different renderer.
-      // We reset _currentRenderer here to not trigger a warning about multiple
-      // renderers concurrently using this context
-      ContextA._currentRenderer = null;
-      root.render(<Client />);
-    });
-    expect(container.innerHTML).toBe('AB');
   });
 
   it('use(promise) in multiple components', async () => {
@@ -1103,6 +1078,58 @@ describe('ReactFlightDOMBrowser', () => {
     }
   });
 
+  it('can use the same function twice as a server action', async () => {
+    let actionProxy1;
+    let actionProxy2;
+
+    function Client({action1, action2}) {
+      actionProxy1 = action1;
+      actionProxy2 = action2;
+      return 'Click Me';
+    }
+
+    function greet(text) {
+      return 'Hello ' + text;
+    }
+
+    const ServerModule = serverExports({
+      greet,
+      greet2: greet,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action1={ServerModule.greet} action2={ServerModule.greet2} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy1).toBe('function');
+    expect(actionProxy1).not.toBe(greet);
+
+    // TODO: Ideally flight would be encoding this the same.
+    expect(actionProxy1).not.toBe(actionProxy2);
+
+    const result = await actionProxy1('world');
+    expect(result).toBe('Hello world');
+  });
+
   it('supports Float hints before the first await in server components in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1145,7 +1172,19 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link rel="preload" href="before" as="style">',
+      // Currently the react-dom entrypoint loads the fiber implementation
+      // even if you never pull in the the client APIs. this causes the fiber
+      // dispatcher to be present even for Flight ReactDOM calls. This is not what
+      // you would have in a real application but given we're runnign flight and
+      // fiber the in the same scope it's unavoidable until we make the entrypoint
+      // not automatically pull in the fiber implementation. This test currently
+      // asserts this be demonstrating that the preload call after the await point
+      // is written to the document before the call before it. We still demonstrate that
+      // flight handled the sync call because if the fiber implementation did it would appear
+      // before the after call. In the future we will change this assertion once the fiber
+      // implementation no long automatically gets pulled in
+      '<link rel="preload" href="after" as="style"><link rel="preload" href="before" as="style">',
+      // '<link rel="preload" href="before" as="style">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });

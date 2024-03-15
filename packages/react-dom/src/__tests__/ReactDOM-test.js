@@ -11,19 +11,23 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
+
+let act;
 
 describe('ReactDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+
+    act = require('internal-test-utils').act;
   });
 
-  it('should bubble onSubmit', function () {
+  it('should bubble onSubmit', async () => {
     const container = document.createElement('div');
 
     let count = 0;
@@ -50,8 +54,11 @@ describe('ReactDOM', () => {
     }
 
     document.body.appendChild(container);
+    const root = ReactDOMClient.createRoot(container);
     try {
-      ReactDOM.render(<Parent />, container);
+      await act(() => {
+        root.render(<Parent />);
+      });
       buttonRef.click();
       expect(count).toBe(1);
     } finally {
@@ -59,23 +66,37 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('allows a DOM element to be used with a string', () => {
+  it('allows a DOM element to be used with a string', async () => {
     const element = React.createElement('div', {className: 'foo'});
-    const node = ReactTestUtils.renderIntoDocument(element);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const node = container.firstChild;
     expect(node.tagName).toBe('DIV');
   });
 
-  it('should allow children to be passed as an argument', () => {
-    const argNode = ReactTestUtils.renderIntoDocument(
-      React.createElement('div', null, 'child'),
-    );
+  it('should allow children to be passed as an argument', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(React.createElement('div', null, 'child'));
+    });
+
+    const argNode = container.firstChild;
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it('should overwrite props.children with children argument', () => {
-    const conflictNode = ReactTestUtils.renderIntoDocument(
-      React.createElement('div', {children: 'fakechild'}, 'child'),
-    );
+  it('should overwrite props.children with children argument', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(React.createElement('div', {children: 'fakechild'}, 'child'));
+    });
+
+    const conflictNode = container.firstChild;
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -83,45 +104,68 @@ describe('ReactDOM', () => {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it('should purge the DOM cache when removing nodes', () => {
-    let myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />
-      </div>,
-    );
+  it('should purge the DOM cache when removing nodes', async () => {
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dog" />,
+          <div key="theBird" className="bird" />
+        </div>,
+      );
+    });
     // Warm the cache with theDog
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dogbeforedelete" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dogbeforedelete" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Remove theDog - this should purge the cache
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Now, put theDog back. It's now a different DOM node.
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dog" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Change the className of theDog. It will use the same element
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="bigdog" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="bigdog" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
+
+    const myDiv = container.firstChild;
     const dog = myDiv.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
-  it('throws in render() if the mount callback is not a function', () => {
+  // @gate !disableLegacyMode
+  it('throws in render() if the mount callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -140,7 +184,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -152,7 +196,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -164,7 +208,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -173,7 +217,8 @@ describe('ReactDOM', () => {
     );
   });
 
-  it('throws in render() if the update callback is not a function', () => {
+  // @gate !disableLegacyMode
+  it('throws in render() if the update callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -193,7 +238,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
     }).toThrowError(
@@ -206,7 +251,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -219,7 +264,7 @@ describe('ReactDOM', () => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
       }).toErrorDev(
-        'render(...): Expected the last optional `callback` argument to be ' +
+        'Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
     }).toThrowError(
@@ -228,7 +273,7 @@ describe('ReactDOM', () => {
     );
   });
 
-  it('preserves focus', () => {
+  it('preserves focus', async () => {
     let input;
     let input2;
     class A extends React.Component {
@@ -255,8 +300,11 @@ describe('ReactDOM', () => {
     const log = [];
     const container = document.createElement('div');
     document.body.appendChild(container);
+    const root = ReactDOMClient.createRoot(container);
     try {
-      ReactDOM.render(<A showTwo={false} />, container);
+      await act(() => {
+        root.render(<A showTwo={false} />);
+      });
       input.focus();
 
       // When the second input is added, let's simulate losing focus, which is
@@ -277,7 +325,9 @@ describe('ReactDOM', () => {
       });
 
       expect(document.activeElement.id).toBe('one');
-      ReactDOM.render(<A showTwo={true} />, container);
+      await act(() => {
+        root.render(<A showTwo={true} />);
+      });
       // input2 gets added, which causes input to get blurred. Then
       // componentDidUpdate focuses input2 and that should make it down to here,
       // not get overwritten by focus restoration.
@@ -288,7 +338,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('calls focus() on autoFocus elements after they have been mounted to the DOM', () => {
+  it('calls focus() on autoFocus elements after they have been mounted to the DOM', async () => {
     const originalFocus = HTMLElement.prototype.focus;
 
     try {
@@ -305,14 +355,16 @@ describe('ReactDOM', () => {
 
       const container = document.createElement('div');
       document.body.appendChild(container);
-      ReactDOM.render(
-        <div>
-          <h1>Auto-focus Test</h1>
-          <input autoFocus={true} />
-          <p>The above input should be focused after mount.</p>
-        </div>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <h1>Auto-focus Test</h1>
+            <input autoFocus={true} />
+            <p>The above input should be focused after mount.</p>
+          </div>,
+        );
+      });
 
       expect(inputFocusedAfterMount).toBe(true);
       expect(focusedElement.tagName).toBe('INPUT');
@@ -321,7 +373,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
+  it("shouldn't fire duplicate event handler while handling other nested dispatch", async () => {
     const actual = [];
 
     class Wrapper extends React.Component {
@@ -352,8 +404,11 @@ describe('ReactDOM', () => {
 
     const container = document.createElement('div');
     document.body.appendChild(container);
+    const root = ReactDOMClient.createRoot(container);
     try {
-      ReactDOM.render(<Wrapper />, container);
+      await act(() => {
+        root.render(<Wrapper />);
+      });
 
       const expected = [
         '1st node clicked',
@@ -366,7 +421,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('should not crash with devtools installed', () => {
+  it('should not crash with devtools installed', async () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
         inject: function () {},
@@ -382,33 +437,43 @@ describe('ReactDOM', () => {
           return <div />;
         }
       }
-      ReactDOM.render(<Component />, document.createElement('container'));
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<Component />);
+      });
     } finally {
       delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
     }
   });
 
-  it('should not crash calling findDOMNode inside a function component', () => {
-    const container = document.createElement('div');
-
+  it('should not crash calling findDOMNode inside a function component', async () => {
     class Component extends React.Component {
       render() {
         return <div />;
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
+    });
+
     const App = () => {
       ReactDOM.findDOMNode(instance);
       return <div />;
     };
 
     if (__DEV__) {
-      ReactDOM.render(<App />, container);
+      root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<App />);
+      });
     }
   });
 
-  it('reports stacks with re-entrant renderToString() calls on the client', () => {
+  it('reports stacks with re-entrant renderToString() calls on the client', async () => {
     function Child2(props) {
       return <span ariaTypo3="no">{props.children}</span>;
     }
@@ -441,8 +506,12 @@ describe('ReactDOM', () => {
       );
     }
 
-    const container = document.createElement('div');
-    expect(() => ReactDOM.render(<App />, container)).toErrorDev([
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<App />);
+      });
+    }).toErrorDev([
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +

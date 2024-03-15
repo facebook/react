@@ -57,7 +57,7 @@ describe('ReactHooks', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     });
   }
@@ -86,7 +86,7 @@ describe('ReactHooks', () => {
       return <Child text={text} />;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0, 0', 'Child: 0, 0', 'Effect: 0, 0']);
     expect(root).toMatchRenderedOutput('0, 0');
@@ -174,7 +174,7 @@ describe('ReactHooks', () => {
 
     Parent = memo(Parent);
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Parent theme="light" />);
     await waitForAll(['Parent: 0, 0 (light)', 'Child: 0, 0 (light)']);
     expect(root).toMatchRenderedOutput('0, 0 (light)');
@@ -232,7 +232,7 @@ describe('ReactHooks', () => {
       return counter;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Counter />);
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -266,7 +266,7 @@ describe('ReactHooks', () => {
       return counter;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Counter />);
     await waitForAll(['Count: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -322,7 +322,7 @@ describe('ReactHooks', () => {
       });
       return <Child text={text} />;
     }
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     await act(() => {
       root.update(
         <ThemeProvider>
@@ -390,7 +390,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -465,7 +465,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 0', 'Child: 0']);
     expect(root).toMatchRenderedOutput('0');
@@ -523,7 +523,7 @@ describe('ReactHooks', () => {
       return <Child text={counter} />;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
     root.update(<Parent />);
     await waitForAll(['Parent: 1', 'Child: 1']);
     expect(root).toMatchRenderedOutput('1');
@@ -838,7 +838,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // the next round, it does a fresh mount, so should render
     expect(() => root.update(<MemoApp />)).not.toThrow(
@@ -847,7 +847,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // and then again, fail
     expect(() => root.update(<MemoApp />)).toThrow(
@@ -856,7 +856,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -1043,10 +1043,9 @@ describe('ReactHooks', () => {
       );
     }).toErrorDev([
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Warning: React has detected a change in the order of Hooks called by App. ' +
         'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+        'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
         '   Previous render            Next render\n' +
         '   ------------------------------------------------------\n' +
         '1. useReducer                 useReducer\n' +
@@ -1105,9 +1104,6 @@ describe('ReactHooks', () => {
         </Boundary>,
       );
     }).toErrorDev([
-      // We see it twice due to replay
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
@@ -1143,9 +1139,6 @@ describe('ReactHooks', () => {
         </Boundary>,
       );
     }).toErrorDev([
-      // We see it twice due to replay
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
@@ -1504,7 +1497,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameB)}\n` +
@@ -1554,7 +1547,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameA)}\n` +
@@ -1633,7 +1626,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(
@@ -1675,7 +1668,7 @@ describe('ReactHooks', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useReducer                 useState\n' +

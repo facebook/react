@@ -32,7 +32,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
+import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
@@ -53,6 +53,7 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
+  suspendIfUpdateReadFromEntangledAsyncAction,
 } from './ReactFiberClassUpdateQueue';
 import {NoLanes} from './ReactFiberLane';
 import {
@@ -117,18 +118,18 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-function warnOnInvalidCallback(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed) {
   if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = callerName + '_' + (callback: any);
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const key = String(callback);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
+        'Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
-        callerName,
         callback,
       );
     }
@@ -201,7 +202,7 @@ const classComponentUpdater = {
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'setState');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -235,7 +236,7 @@ const classComponentUpdater = {
 
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'replaceState');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -269,7 +270,7 @@ const classComponentUpdater = {
 
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'forceUpdate');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -358,13 +359,13 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     if (!renderPresent) {
       if (ctor.prototype && typeof ctor.prototype.render === 'function') {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: you may have forgotten to define `render`.',
           name,
         );
@@ -503,9 +504,8 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     const hasMutatedProps = instance.props !== newProps;
     if (instance.props !== undefined && hasMutatedProps) {
       console.error(
-        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
-        name,
         name,
       );
     }
@@ -595,8 +595,7 @@ function constructClassInstance(
         // Allow null for conditional declaration
         contextType === null ||
         (contextType !== undefined &&
-          contextType.$$typeof === REACT_CONTEXT_TYPE &&
-          contextType._context === undefined); // Not a <Context.Consumer>
+          contextType.$$typeof === REACT_CONTEXT_TYPE);
 
       if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
         didWarnAboutInvalidateContextType.add(ctor);
@@ -610,10 +609,7 @@ function constructClassInstance(
             'try moving the createContext() call to a separate file.';
         } else if (typeof contextType !== 'object') {
           addendum = ' However, it is set to a ' + typeof contextType + '.';
-        } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
-          addendum = ' Did you accidentally pass the Context.Provider instead?';
-        } else if (contextType._context !== undefined) {
-          // <Context.Consumer>
+        } else if (contextType.$$typeof === REACT_CONSUMER_TYPE) {
           addendum = ' Did you accidentally pass the Context.Consumer instead?';
         } else {
           addendum =
@@ -734,7 +730,7 @@ function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://reactjs.org/link/unsafe-component-lifecycles',
+              'https://react.dev/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
@@ -892,6 +888,7 @@ function mountClassInstance(
     // If we had additional state updates during this life-cycle, let's
     // process them now.
     processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+    suspendIfUpdateReadFromEntangledAsyncAction();
     instance.state = workInProgress.memoizedState;
   }
 
@@ -959,6 +956,7 @@ function resumeMountClassInstance(
   const oldState = workInProgress.memoizedState;
   let newState = (instance.state = oldState);
   processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+  suspendIfUpdateReadFromEntangledAsyncAction();
   newState = workInProgress.memoizedState;
   if (
     oldProps === newProps &&
@@ -1109,6 +1107,7 @@ function updateClassInstance(
   const oldState = workInProgress.memoizedState;
   let newState = (instance.state = oldState);
   processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+  suspendIfUpdateReadFromEntangledAsyncAction();
   newState = workInProgress.memoizedState;
 
   if (

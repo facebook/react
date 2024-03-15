@@ -13,37 +13,27 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
-import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
-  enableFloat,
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
   enableAsyncActions,
   enableFormActions,
 } from 'shared/ReactFeatureFlags';
 
-import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
-const {Dispatcher} = ReactDOMSharedInternals;
-if (enableFloat && typeof document !== 'undefined') {
-  // Set the default dispatcher to the client dispatcher
-  Dispatcher.current = ReactDOMClientDispatcher;
-}
-
 export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
   _internalRoot: FiberRoot | null,
-  ...
 };
+
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  ...
 };
 
 export type HydrateRootOptions = {
@@ -57,7 +47,6 @@ export type HydrateRootOptions = {
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   formState?: ReactFormState<any, any> | null,
-  ...
 };
 
 import {
@@ -111,7 +100,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     if (__DEV__) {
       if (typeof arguments[1] === 'function') {
         console.error(
-          'render(...): does not support the second callback argument. ' +
+          'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       } else if (isValidContainer(arguments[1])) {
@@ -136,7 +125,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
     if (__DEV__) {
       if (typeof arguments[0] === 'function') {
         console.error(
-          'unmount(...): does not support a callback argument. ' +
+          'does not support a callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       }
@@ -166,7 +155,7 @@ export function createRoot(
   options?: CreateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('createRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);
@@ -230,7 +219,6 @@ export function createRoot(
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
-  Dispatcher.current = ReactDOMClientDispatcher;
 
   const rootContainerElement: Document | Element | DocumentFragment =
     container.nodeType === COMMENT_NODE
@@ -260,7 +248,7 @@ export function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('hydrateRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);
@@ -324,7 +312,6 @@ export function hydrateRoot(
     formState,
   );
   markContainerAsRoot(root.current, container);
-  Dispatcher.current = ReactDOMClientDispatcher;
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
 

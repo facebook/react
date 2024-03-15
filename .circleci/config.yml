@@ -97,6 +97,16 @@ jobs:
       - setup_node_modules
       - run: node ./scripts/tasks/flow-ci
 
+
+  yarn_flags:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn flags
+
   scrape_warning_messages:
     docker: *docker
     environment: *environment
@@ -106,8 +116,8 @@ jobs:
       - setup_node_modules
       - run:
           command: |
-            mkdir -p ./build
-            node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
+            mkdir -p ./build/__test_utils__
+            node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - persist_to_workspace:
           root: .
           paths:
@@ -235,6 +245,53 @@ jobs:
           environment:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
+
+  run_fixtures_flight_tests:
+    docker:
+      - image: cimg/openjdk:20.0-node
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - setup_node_modules
+      - restore_cache:
+          name: Restore yarn cache of fixture
+          keys:
+            - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install fixture dependencies
+          working_directory: fixtures/flight
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - save_cache:
+          name: Save yarn cache of fixture
+          key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          working_directory: fixtures/flight
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          name: Run tests
+          working_directory: fixtures/flight
+          command: yarn test
+          environment:
+          # Otherwise the webserver is a blackbox
+            DEBUG: pw:webserver
+      - store_artifacts:
+          path: fixtures/flight/playwright-report
+      - store_artifacts:
+          path: fixtures/flight/test-results
 
   run_devtools_tests_for_versions:
     docker: *docker
@@ -373,18 +430,6 @@ jobs:
             yarn predev
             yarn test --maxWorkers=2
 
-  test_fuzz:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          name: Run fuzz tests
-          command: |
-            FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
-            FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
-
   publish_prerelease:
     parameters:
       commit_sha:
@@ -412,6 +457,11 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
+      - yarn_flags:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_flow:
           filters:
             branches:
@@ -528,19 +578,9 @@ workflows:
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
-
-  fuzz_tests:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    triggers:
-      - schedule:
-          # Fuzz tests run hourly
-          cron: "0 * * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - test_fuzz
+      - run_fixtures_flight_tests:
+          requires:
+            - yarn_build
 
   devtools_regression_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>

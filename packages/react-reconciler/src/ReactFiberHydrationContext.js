@@ -74,7 +74,8 @@ import {
   canHydrateSuspenseInstance,
   canHydrateFormStateMarker,
   isFormStateMarkerMatching,
-  isHydratableText,
+  validateHydratableInstance,
+  validateHydratableTextInstance,
 } from './ReactFiberConfig';
 import {OffscreenLane} from './ReactFiberLane';
 import {
@@ -113,13 +114,6 @@ export function markDidThrowWhileHydratingDEV() {
   if (__DEV__) {
     didSuspendOrErrorDEV = true;
   }
-}
-
-export function didSuspendOrErrorWhileHydratingDEV(): boolean {
-  if (__DEV__) {
-    return didSuspendOrErrorDEV;
-  }
-  return false;
 }
 
 function enterHydrationState(fiber: Fiber): boolean {
@@ -202,7 +196,6 @@ function deleteHydratableInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
-  warnUnhydratedInstance(returnFiber, instance);
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
@@ -216,7 +209,7 @@ function deleteHydratableInstance(
   }
 }
 
-function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+function warnNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   if (__DEV__) {
     if (didSuspendOrErrorDEV) {
       // Inside a boundary that already suspended. We're currently rendering the
@@ -339,7 +332,6 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
 }
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  warnNonhydratedInstance(returnFiber, fiber);
 }
 
 function tryHydrateInstance(fiber: Fiber, nextInstance: any) {
@@ -446,15 +438,29 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
+
+  // Validate that this is ok to render here before any mismatches.
+  const currentHostContext = getHostContext();
+  const shouldKeepWarning = validateHydratableInstance(
+    fiber.type,
+    fiber.pendingProps,
+    currentHostContext,
+  );
+
   const initialInstance = nextHydratableInstance;
   const nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       throwOnHydrationMismatch(fiber);
     }
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+    if (shouldKeepWarning) {
+      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+    }
     isHydrating = false;
     hydrationParentFiber = fiber;
     nextHydratableInstance = initialInstance;
@@ -463,7 +469,9 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrateInstance(fiber, nextInstance)) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       throwOnHydrationMismatch(fiber);
     }
     // If we can't hydrate this instance let's try the next one.
@@ -477,6 +485,9 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     ) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       isHydrating = false;
       hydrationParentFiber = fiber;
       nextHydratableInstance = initialInstance;
@@ -486,6 +497,9 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     // superfluous and we'll delete it. Since we can't eagerly delete it
     // we'll have to schedule a deletion. To do that, this node needs a dummy
     // fiber associated with it.
+    if (shouldKeepWarning) {
+      warnUnhydratedInstance(prevHydrationParentFiber, firstAttemptedInstance);
+    }
     deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
   }
 }
@@ -495,19 +509,28 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
     return;
   }
   const text = fiber.pendingProps;
-  const isHydratable = isHydratableText(text);
+
+  let shouldKeepWarning = true;
+  // Validate that this is ok to render here before any mismatches.
+  const currentHostContext = getHostContext();
+  shouldKeepWarning = validateHydratableTextInstance(text, currentHostContext);
 
   const initialInstance = nextHydratableInstance;
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !isHydratable) {
+  if (!nextInstance) {
     // We exclude non hydrabable text because we know there are no matching hydratables.
     // We either throw or insert depending on the render mode.
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       throwOnHydrationMismatch(fiber);
     }
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+    if (shouldKeepWarning) {
+      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+    }
     isHydrating = false;
     hydrationParentFiber = fiber;
     nextHydratableInstance = initialInstance;
@@ -516,7 +539,9 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrateText(fiber, nextInstance)) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       throwOnHydrationMismatch(fiber);
     }
     // If we can't hydrate this instance let's try the next one.
@@ -531,6 +556,9 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
     ) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+      if (shouldKeepWarning) {
+        warnNonHydratedInstance((hydrationParentFiber: any), fiber);
+      }
       isHydrating = false;
       hydrationParentFiber = fiber;
       nextHydratableInstance = initialInstance;
@@ -540,6 +568,9 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
     // superfluous and we'll delete it. Since we can't eagerly delete it
     // we'll have to schedule a deletion. To do that, this node needs a dummy
     // fiber associated with it.
+    if (shouldKeepWarning) {
+      warnUnhydratedInstance(prevHydrationParentFiber, firstAttemptedInstance);
+    }
     deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
   }
 }
@@ -552,11 +583,12 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   const nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
       throwOnHydrationMismatch(fiber);
     }
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+    warnNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
     hydrationParentFiber = fiber;
     nextHydratableInstance = initialInstance;
@@ -565,7 +597,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrateSuspense(fiber, nextInstance)) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
       throwOnHydrationMismatch(fiber);
     }
     // If we can't hydrate this instance let's try the next one.
@@ -580,6 +612,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
     ) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+      warnNonHydratedInstance((hydrationParentFiber: any), fiber);
       isHydrating = false;
       hydrationParentFiber = fiber;
       nextHydratableInstance = initialInstance;
@@ -589,6 +622,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
     // superfluous and we'll delete it. Since we can't eagerly delete it
     // we'll have to schedule a deletion. To do that, this node needs a dummy
     // fiber associated with it.
+    warnUnhydratedInstance(prevHydrationParentFiber, firstAttemptedInstance);
     deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
   }
 }
@@ -834,6 +868,7 @@ function popHydrationState(fiber: Fiber): boolean {
         throwOnHydrationMismatch(fiber);
       } else {
         while (nextInstance) {
+          warnUnhydratedInstance(fiber, nextInstance);
           deleteHydratableInstance(fiber, nextInstance);
           nextInstance = getNextHydratableSibling(nextInstance);
         }
@@ -849,10 +884,6 @@ function popHydrationState(fiber: Fiber): boolean {
       : null;
   }
   return true;
-}
-
-function hasUnhydratedTailNodes(): boolean {
-  return isHydrating && nextHydratableInstance !== null;
 }
 
 function warnIfUnhydratedTailNodes(fiber: Fiber) {
@@ -910,6 +941,4 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
-  hasUnhydratedTailNodes,
-  warnIfUnhydratedTailNodes,
 };

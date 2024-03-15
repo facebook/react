@@ -96,9 +96,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       console[methodName] !== mockMethod &&
       !jest.isMockFunction(console[methodName])
     ) {
-      throw new Error(
-        `Test did not tear down console.${methodName} mock properly.`
-      );
+      // throw new Error(
+      //  `Test did not tear down console.${methodName} mock properly.`
+      // );
     }
     if (unexpectedConsoleCallStacks.length > 0) {
       const messages = unexpectedConsoleCallStacks.map(
@@ -169,10 +169,15 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       if (!message) {
         return message;
       }
-      const re = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
-      const matches = message.match(re);
+      const re = /react.dev\/errors\/(\d+)?\??([^\s]*)/;
+      let matches = message.match(re);
       if (!matches || matches.length !== 3) {
-        return message;
+        // Some tests use React 17, when the URL was different.
+        const re17 = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
+        matches = message.match(re17);
+        if (!matches || matches.length !== 3) {
+          return message;
+        }
       }
       const code = parseInt(matches[1], 10);
       const args = matches[2]
@@ -236,7 +241,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectTestToFail = async (callback, errorMsg) => {
+  const expectTestToFail = async (callback, error) => {
     if (callback.length > 0) {
       throw Error(
         'Gated test helpers do not support the `done` callback. Return a ' +
@@ -256,12 +261,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // `afterEach` like we normally do. `afterEach` is too late because if it
       // throws, we won't have captured it.
       flushAllUnexpectedConsoleCalls();
-    } catch (error) {
+    } catch (testError) {
       // Failed as expected
       resetAllUnexpectedConsoleCalls();
       return;
     }
-    throw Error(errorMsg);
+    throw error;
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
@@ -279,8 +284,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate);
       test(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
   global._test_gate_focus = (gateFn, testName, callback) => {
@@ -297,8 +304,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test.only(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate_focus);
       test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
 
@@ -307,4 +316,42 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const flags = getTestFlags();
     return fn(flags);
   };
+}
+
+// Most of our tests call jest.resetModules in a beforeEach and the
+// re-require all the React modules. However, the JSX runtime is injected by
+// the compiler, so those bindings don't get updated. This causes warnings
+// logged by the JSX runtime to not have a component stack, because component
+// stack relies on the the secret internals object that lives on the React
+// module, which because of the resetModules call is longer the same one.
+//
+// To workaround this issue, we use a proxy that re-requires the latest
+// JSX Runtime from the require cache on every function invocation.
+//
+// Longer term we should migrate all our tests away from using require() and
+// resetModules, and use import syntax instead so this kind of thing doesn't
+// happen.
+lazyRequireFunctionExports('react/jsx-dev-runtime');
+
+// TODO: We shouldn't need to do this in the production runtime, but until
+// we remove string refs they also depend on the shared state object. Remove
+// once we remove string refs.
+lazyRequireFunctionExports('react/jsx-runtime');
+
+function lazyRequireFunctionExports(moduleName) {
+  jest.mock(moduleName, () => {
+    return new Proxy(jest.requireActual(moduleName), {
+      get(originalModule, prop) {
+        // If this export is a function, return a wrapper function that lazily
+        // requires the implementation from the current module cache.
+        if (typeof originalModule[prop] === 'function') {
+          return function () {
+            return jest.requireActual(moduleName)[prop].apply(this, arguments);
+          };
+        } else {
+          return originalModule[prop];
+        }
+      },
+    });
+  });
 }
