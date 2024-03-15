@@ -70,12 +70,6 @@ export function typedArrayToBinaryChunk(
   return content;
 }
 
-export function clonePrecomputedChunk(
-  chunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return chunk;
-}
-
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
   return Buffer.byteLength(chunk, 'utf8');
 }
