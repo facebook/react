@@ -54,6 +54,7 @@ import {
   enableFloat,
   enableLegacyHidden,
   alwaysThrottleRetries,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -189,7 +190,6 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {doesFiberContain} from './ReactFiberTreeReflection';
-import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
   markComponentPassiveEffectMountStarted,
@@ -241,20 +241,6 @@ function shouldProfile(current: Fiber): boolean {
     (current.mode & ProfileMode) !== NoMode &&
     (getExecutionContext() & CommitContext) !== NoContext
   );
-}
-
-export function reportUncaughtErrorInDEV(error: mixed) {
-  // Wrapping each small part of the commit phase into a guarded
-  // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
-  // But we rely on it to surface errors to DEV tools like overlays
-  // (https://github.com/facebook/react/issues/21712).
-  // As a compromise, rethrow only caught errors in a guard.
-  if (__DEV__) {
-    invokeGuardedCallback(null, () => {
-      throw error;
-    });
-    clearCaughtError();
-  }
 }
 
 function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
@@ -702,7 +688,7 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
                 '  }\n' +
                 '  fetchData();\n' +
                 `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
+                'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
             }
@@ -1624,7 +1610,11 @@ function commitAttachRef(finishedWork: Fiber) {
       }
     } else {
       if (__DEV__) {
-        if (!ref.hasOwnProperty('current')) {
+        // TODO: We should move these warnings to happen during the render
+        // phase (markRef).
+        if (disableStringRefs && typeof ref === 'string') {
+          console.error('String refs are no longer supported.');
+        } else if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().',
@@ -1693,7 +1683,6 @@ function detachFiberAfterEffects(fiber: Fiber) {
   fiber.stateNode = null;
 
   if (__DEV__) {
-    fiber._debugSource = null;
     fiber._debugOwner = null;
   }
 

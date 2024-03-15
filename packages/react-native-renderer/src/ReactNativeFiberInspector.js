@@ -24,6 +24,7 @@ import {
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -37,7 +38,6 @@ function createHierarchy(fiberHierarchy) {
     getInspectorData: findNodeHandle => {
       return {
         props: getHostProps(fiber),
-        source: fiber._debugSource,
         measure: callback => {
           // If this is Fabric, we'll find a shadow node and use that to measure.
           const hostFiber = findCurrentHostFiber(fiber);
@@ -98,7 +98,7 @@ function getInspectorDataForInstance(
         hierarchy: [],
         props: emptyObject,
         selectedIndex: null,
-        source: null,
+        componentStack: '',
       };
     }
 
@@ -107,15 +107,16 @@ function getInspectorDataForInstance(
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
-    const source = instance._debugSource;
     const selectedIndex = fiberHierarchy.indexOf(instance);
+    const componentStack =
+      fiber !== null ? getStackByFiberInDevAndProd(fiber) : '';
 
     return {
       closestInstance: instance,
       hierarchy,
       props,
       selectedIndex,
-      source,
+      componentStack,
     };
   }
 

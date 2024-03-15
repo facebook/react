@@ -167,6 +167,8 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
 }
 
+declare const RN$enableMicrotasksInReact: boolean;
+
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
 declare var nativeFabricUIManager: {

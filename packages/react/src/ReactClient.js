@@ -30,7 +30,7 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
-} from './ReactElement';
+} from './jsx/ReactJSXElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
@@ -62,7 +62,6 @@ import {
   useOptimistic,
 } from './ReactHooks';
 
-import {createServerContext} from './ReactServerContext';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -81,7 +80,6 @@ export {
   Component,
   PureComponent,
   createContext,
-  createServerContext,
   forwardRef,
   lazy,
   memo,

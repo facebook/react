@@ -12,6 +12,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {
   enableCustomElementPropertySupport,
   enableFormActions,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
@@ -186,7 +187,8 @@ function validateProperty(tagName, name, value, eventRegistry) {
       case 'suppressHydrationWarning':
       case 'defaultValue': // Reserved
       case 'defaultChecked':
-      case 'innerHTML': {
+      case 'innerHTML':
+      case 'ref': {
         return true;
       }
       case 'innerText': // Properties
@@ -239,6 +241,14 @@ function validateProperty(tagName, name, value, eventRegistry) {
             // Boolean properties can accept boolean values
             return true;
           }
+          // fallthrough
+          case 'inert': {
+            if (enableNewBooleanProps) {
+              // Boolean properties can accept boolean values
+              return true;
+            }
+          }
+          // fallthrough for new boolean props without the flag on
           default: {
             const prefix = name.toLowerCase().slice(0, 5);
             if (prefix === 'data-' || prefix === 'aria-') {
@@ -313,6 +323,12 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'itemScope': {
               break;
             }
+            case 'inert': {
+              if (enableNewBooleanProps) {
+                break;
+              }
+            }
+            // fallthrough for new boolean props without the flag on
             default: {
               return true;
             }
@@ -355,7 +371,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
       console.error(
         'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
           'or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://reactjs.org/link/attribute-behavior ',
+          'For details, see https://react.dev/link/attribute-behavior ',
         unknownPropString,
         type,
       );
@@ -363,7 +379,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
       console.error(
         'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
           'or pass a string or number value to keep them in the DOM. ' +
-          'For details, see https://reactjs.org/link/attribute-behavior ',
+          'For details, see https://react.dev/link/attribute-behavior ',
         unknownPropString,
         type,
       );

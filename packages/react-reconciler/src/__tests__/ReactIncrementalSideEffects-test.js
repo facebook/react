@@ -1296,16 +1296,22 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo show={true} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n\n' +
-        'Check the render method ' +
-        'of `Foo`.\n' +
-        '    in FunctionComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
-    );
+
+    if (gate(flags => flags.enableRefAsProp)) {
+      await waitForAll([]);
+    } else {
+      await expect(async () => await waitForAll([])).toErrorDev(
+        'Warning: Function components cannot be given refs. ' +
+          'Attempts to access this ref will fail. ' +
+          'Did you mean to use React.forwardRef()?\n\n' +
+          'Check the render method ' +
+          'of `Foo`.\n' +
+          '    in FunctionComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
+      );
+    }
+
     expect(ops).toEqual([
       classInstance,
       // no call for function components
@@ -1340,6 +1346,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
+  // @gate !disableStringRefs
   it('supports string refs', async () => {
     let fooInstance = null;
 
@@ -1366,7 +1373,7 @@ describe('ReactIncrementalSideEffects', () => {
       'Warning: Component "Foo" contains the string ref "bar". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in Foo (at **)',
     ]);
     expect(fooInstance.refs.bar.test).toEqual('test');

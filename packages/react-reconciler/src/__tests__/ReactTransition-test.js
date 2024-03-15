@@ -719,7 +719,7 @@ describe('ReactTransition', () => {
           <>
             <Text text={`A${step}`} />
             <Suspense fallback={<Text text="Loading..." />}>
-              {shouldSuspend ? <AsyncText text="Async" ms={2000} /> : null}
+              {shouldSuspend ? <AsyncText text="Async" /> : null}
             </Suspense>
             <Text text={`B${step}`} />
             <Text text={`C${step}`} />

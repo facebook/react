@@ -15,9 +15,9 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
+let act;
 
 const EXPECTED_SAFE_URL =
   "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
@@ -33,15 +33,14 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   function initModules() {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
 
     // Make them available to the helpers.
     return {
-      ReactDOM,
+      ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 
@@ -167,11 +166,16 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     },
   );
 
-  it('rejects a javascript protocol href if it is added during an update', () => {
+  it('rejects a javascript protocol href if it is added during an update', async () => {
     const container = document.createElement('div');
-    ReactDOM.render(<a href="thisisfine">click me</a>, container);
-    expect(() => {
-      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<a href="thisisfine">click me</a>);
+    });
+    await expect(async () => {
+      await act(() => {
+        root.render(<a href="javascript:notfine">click me</a>);
+      });
     }).toErrorDev(
       'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
@@ -191,19 +195,16 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
   function initModules() {
     jest.resetModules();
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.disableJavaScriptURLs = true;
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
 
     // Make them available to the helpers.
     return {
-      ReactDOM,
+      ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 
@@ -325,11 +326,16 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     },
   );
 
-  it('rejects a javascript protocol href if it is added during an update', () => {
+  it('rejects a javascript protocol href if it is added during an update', async () => {
     const container = document.createElement('div');
-    ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<a href="http://thisisfine/">click me</a>);
+    });
     expect(container.firstChild.href).toBe('http://thisisfine/');
-    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    await act(() => {
+      root.render(<a href="javascript:notfine">click me</a>);
+    });
     expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
   });
 
@@ -369,15 +375,22 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     expect(e.href).toBe('https://reactjs.org/');
   });
 
-  it('rejects a javascript protocol href if it is added during an update twice', () => {
+  it('rejects a javascript protocol href if it is added during an update twice', async () => {
     const container = document.createElement('div');
-    ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<a href="http://thisisfine/">click me</a>);
+    });
     expect(container.firstChild.href).toBe('http://thisisfine/');
-    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    await act(async () => {
+      root.render(<a href="javascript:notfine">click me</a>);
+    });
     expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
     // The second update ensures that a global flag hasn't been added to the regex
     // which would fail to match the second time it is called.
-    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    await act(async () => {
+      root.render(<a href="javascript:notfine">click me</a>);
+    });
     expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
   });
 });

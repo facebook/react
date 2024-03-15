@@ -11,8 +11,9 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
+let act;
 
 describe('ReactComponent', () => {
   beforeEach(() => {
@@ -20,11 +21,13 @@ describe('ReactComponent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
   });
 
-  it('should throw on invalid render targets', () => {
+  // @gate !disableLegacyMode
+  it('should throw on invalid render targets in legacy roots', () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function () {
@@ -36,40 +39,56 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
-  it('should throw when supplying a string ref outside of render method', () => {
-    let instance = <div ref="badDiv" />;
-    expect(function () {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+  // @gate !disableStringRefs
+  it('should throw when supplying a string ref outside of render method', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<div ref="badDiv" />);
+      }),
+    ).rejects.toThrow(
+      'Element ref was specified as a string (badDiv) but no owner ' +
+        'was set',
+    );
   });
 
-  it('should throw (in dev) when children are mutated during render', () => {
+  it('should throw (in dev) when children are mutated during render', async () => {
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
     if (__DEV__) {
-      expect(() => {
-        ReactTestUtils.renderIntoDocument(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(
+        act(() => {
+          root.render(
+            <Wrapper>
+              <span key={0} />
+              <span key={1} />
+              <span key={2} />
+            </Wrapper>,
+          );
+        }),
+      ).rejects.toThrowError(/Cannot assign to read only property.*/);
+    } else {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
           <Wrapper>
             <span key={0} />
             <span key={1} />
             <span key={2} />
           </Wrapper>,
         );
-      }).toThrowError(/Cannot assign to read only property.*/);
-    } else {
-      ReactTestUtils.renderIntoDocument(
-        <Wrapper>
-          <span key={0} />
-          <span key={1} />
-          <span key={2} />
-        </Wrapper>,
-      );
+      });
     }
   });
 
-  it('should throw (in dev) when children are mutated during update', () => {
+  it('should throw (in dev) when children are mutated during update', async () => {
     class Wrapper extends React.Component {
       componentDidMount() {
         this.props.children[1] = <p key={1} />; // Mutation is illegal
@@ -82,27 +101,37 @@ describe('ReactComponent', () => {
     }
 
     if (__DEV__) {
-      expect(() => {
-        ReactTestUtils.renderIntoDocument(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(
+        act(() => {
+          root.render(
+            <Wrapper>
+              <span key={0} />
+              <span key={1} />
+              <span key={2} />
+            </Wrapper>,
+          );
+        }),
+      ).rejects.toThrowError(/Cannot assign to read only property.*/);
+    } else {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
           <Wrapper>
             <span key={0} />
             <span key={1} />
             <span key={2} />
           </Wrapper>,
         );
-      }).toThrowError(/Cannot assign to read only property.*/);
-    } else {
-      ReactTestUtils.renderIntoDocument(
-        <Wrapper>
-          <span key={0} />
-          <span key={1} />
-          <span key={2} />
-        </Wrapper>,
-      );
+      });
     }
   });
 
-  it('should support string refs on owned components', () => {
+  // @gate !disableStringRefs
+  it('should support string refs on owned components', async () => {
     const innerObj = {};
     const outerObj = {};
 
@@ -133,25 +162,29 @@ describe('ReactComponent', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component />);
+      });
     }).toErrorDev([
       'Warning: Component "div" contains the string ref "inner". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in div (at **)\n' +
         '    in Wrapper (at **)\n' +
         '    in Component (at **)',
       'Warning: Component "Component" contains the string ref "outer". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
         '    in Component (at **)',
     ]);
   });
 
-  it('should not have string refs on unmounted components', () => {
+  it('should not have string refs on unmounted components', async () => {
     class Parent extends React.Component {
       render() {
         return (
@@ -172,10 +205,14 @@ describe('ReactComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent child={<span />} />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Parent child={<span />} />);
+    });
   });
 
-  it('should support callback-style refs', () => {
+  it('should support callback-style refs', async () => {
     const innerObj = {};
     const outerObj = {};
 
@@ -211,11 +248,16 @@ describe('ReactComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
     expect(mounted).toBe(true);
   });
 
-  it('should support object-style refs', () => {
+  it('should support object-style refs', async () => {
     const innerObj = {};
     const outerObj = {};
 
@@ -254,11 +296,16 @@ describe('ReactComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
     expect(mounted).toBe(true);
   });
 
-  it('should support new-style refs with mixed-up owners', () => {
+  it('should support new-style refs with mixed-up owners', async () => {
     class Wrapper extends React.Component {
       getTitle = () => {
         return this.props.title;
@@ -296,11 +343,17 @@ describe('ReactComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Component />);
+    });
+
     expect(mounted).toBe(true);
   });
 
-  it('should call refs at the correct time', () => {
+  it('should call refs at the correct time', async () => {
     const log = [];
 
     class Inner extends React.Component {
@@ -358,11 +411,18 @@ describe('ReactComponent', () => {
     // mount, update, unmount
     const el = document.createElement('div');
     log.push('start mount');
-    ReactDOM.render(<Outer />, el);
+    const root = ReactDOMClient.createRoot(el);
+    await act(() => {
+      root.render(<Outer />);
+    });
     log.push('start update');
-    ReactDOM.render(<Outer />, el);
+    await act(() => {
+      root.render(<Outer />);
+    });
     log.push('start unmount');
-    ReactDOM.unmountComponentAtNode(el);
+    await act(() => {
+      root.unmount();
+    });
 
     /* eslint-disable indent */
     expect(log).toEqual([
@@ -396,7 +456,8 @@ describe('ReactComponent', () => {
     /* eslint-enable indent */
   });
 
-  it('fires the callback after a component is rendered', () => {
+  // @gate !disableLegacyMode
+  it('fires the callback after a component is rendered in legacy roots', () => {
     const callback = jest.fn();
     const container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
@@ -407,14 +468,20 @@ describe('ReactComponent', () => {
     expect(callback).toHaveBeenCalledTimes(3);
   });
 
-  it('throws usefully when rendering badly-typed elements', () => {
+  it('throws usefully when rendering badly-typed elements', async () => {
     const X = undefined;
-    expect(() => {
-      expect(() => ReactTestUtils.renderIntoDocument(<X />)).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    await expect(
+      expect(async () => {
+        await act(() => {
+          root.render(<X />);
+        });
+      }).toErrorDev(
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: undefined.',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -424,18 +491,24 @@ describe('ReactComponent', () => {
     );
 
     const Y = null;
-    expect(() => {
-      expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      expect(async () => {
+        await act(() => {
+          root.render(<Y />);
+        });
+      }).toErrorDev(
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: null.',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: null.',
     );
   });
 
-  it('includes owner name in the error about badly-typed elements', () => {
+  it('includes owner name in the error about badly-typed elements', async () => {
     const X = undefined;
 
     function Indirection(props) {
@@ -454,12 +527,18 @@ describe('ReactComponent', () => {
       return <Bar />;
     }
 
-    expect(() => {
-      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      expect(async () => {
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev(
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: undefined.',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -470,7 +549,7 @@ describe('ReactComponent', () => {
     );
   });
 
-  it('throws if a plain object is used as a child', () => {
+  it('throws if a plain object is used as a child', async () => {
     const children = {
       x: <span />,
       y: <span />,
@@ -478,15 +557,18 @@ describe('ReactComponent', () => {
     };
     const element = <div>{[children]}</div>;
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(element, container);
-    }).toThrowError(
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(element);
+      }),
+    ).rejects.toThrowError(
       'Objects are not valid as a React child (found: object with keys {x, y, z}). ' +
         'If you meant to render a collection of children, use an array instead.',
     );
   });
 
-  it('throws if a plain object even if it is in an owner', () => {
+  it('throws if a plain object even if it is in an owner', async () => {
     class Foo extends React.Component {
       render() {
         const children = {
@@ -498,9 +580,12 @@ describe('ReactComponent', () => {
       }
     }
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<Foo />, container);
-    }).toThrowError(
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<Foo />);
+      }),
+    ).rejects.toThrowError(
       'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
         ' If you meant to render a collection of children, use an array ' +
         'instead.',
@@ -545,35 +630,48 @@ describe('ReactComponent', () => {
   });
 
   describe('with new features', () => {
-    it('warns on function as a return value from a function', () => {
+    it('warns on function as a return value from a function', async () => {
       function Foo() {
         return Foo;
       }
       const container = document.createElement('div');
-      expect(() => ReactDOM.render(<Foo />, container)).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
       );
     });
 
-    it('warns on function as a return value from a class', () => {
+    it('warns on function as a return value from a class', async () => {
       class Foo extends React.Component {
         render() {
           return Foo;
         }
       }
       const container = document.createElement('div');
-      expect(() => ReactDOM.render(<Foo />, container)).toErrorDev(
+      await expect(async () => {
+        const root = ReactDOMClient.createRoot(container);
+
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
       );
     });
 
-    it('warns on function as a child to host component', () => {
+    it('warns on function as a child to host component', async () => {
       function Foo() {
         return (
           <div>
@@ -582,17 +680,23 @@ describe('ReactComponent', () => {
         );
       }
       const container = document.createElement('div');
-      expect(() => ReactDOM.render(<Foo />, container)).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<Foo />);
+        });
+      }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
       );
     });
 
-    it('does not warn for function-as-a-child that gets resolved', () => {
+    it('does not warn for function-as-a-child that gets resolved', async () => {
       function Bar(props) {
         return props.children();
       }
@@ -600,11 +704,15 @@ describe('ReactComponent', () => {
         return <Bar>{() => 'Hello'}</Bar>;
       }
       const container = document.createElement('div');
-      ReactDOM.render(<Foo />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+
       expect(container.innerHTML).toBe('Hello');
     });
 
-    it('deduplicates function type warnings based on component type', () => {
+    it('deduplicates function type warnings based on component type', async () => {
       class Foo extends React.PureComponent {
         constructor() {
           super();
@@ -624,23 +732,30 @@ describe('ReactComponent', () => {
         }
       }
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       let component;
-      expect(() => {
-        component = ReactDOM.render(<Foo />, container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<Foo ref={current => (component = current)} />);
+        });
       }).toErrorDev([
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <div>{Foo}</div>\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
       ]);
-      component.setState({type: 'portobello mushrooms'});
+      await act(() => {
+        component.setState({type: 'portobello mushrooms'});
+      });
     });
   });
 });

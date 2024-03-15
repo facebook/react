@@ -25,7 +25,7 @@ export type ReactText = string | number;
 
 export type ReactProvider<T> = {
   $$typeof: symbol | number,
-  type: ReactProviderType<T>,
+  type: ReactContext<T>,
   key: null | string,
   ref: null,
   props: {
@@ -34,14 +34,14 @@ export type ReactProvider<T> = {
   },
 };
 
-export type ReactProviderType<T> = {
+export type ReactConsumerType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
 };
 
 export type ReactConsumer<T> = {
   $$typeof: symbol | number,
-  type: ReactContext<T>,
+  type: ReactConsumerType<T>,
   key: null | string,
   ref: null,
   props: {
@@ -51,8 +51,8 @@ export type ReactConsumer<T> = {
 
 export type ReactContext<T> = {
   $$typeof: symbol | number,
-  Consumer: ReactContext<T>,
-  Provider: ReactProviderType<T>,
+  Consumer: ReactConsumerType<T>,
+  Provider: ReactContext<T>,
   _currentValue: T,
   _currentValue2: T,
   _threadCount: number,
@@ -62,21 +62,7 @@ export type ReactContext<T> = {
   // This value may be added by application code
   // to improve DEV tooling display names
   displayName?: string,
-
-  // only used by ServerContext
-  _defaultValue: T,
-  _globalName: string,
 };
-
-export type ServerContextJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | $ReadOnlyArray<ServerContextJSONValue>
-  | {+[key: string]: ServerContextJSONValue};
-
-export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
   $$typeof: symbol | number,
@@ -125,20 +111,24 @@ interface ThenableImpl<T> {
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface PendingThenable<T> extends ThenableImpl<T> {
   status: 'pending';
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface FulfilledThenable<T> extends ThenableImpl<T> {
   status: 'fulfilled';
   value: T;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface RejectedThenable<T> extends ThenableImpl<T> {
   status: 'rejected';
   reason: mixed;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export type Thenable<T> =
@@ -187,3 +177,16 @@ export type Awaited<T> = T extends null | void
       : empty // the argument to `then` was not callable.
     : T // argument was not an object
   : T; // non-thenable
+
+export type ReactComponentInfo = {
+  +name?: string,
+  +env?: string,
+};
+
+export type ReactAsyncInfo = {
+  +started?: number,
+  +completed?: number,
+  +stack?: string,
+};
+
+export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;

@@ -38,6 +38,7 @@ function createResponseFromOptions(options: void | Options) {
     options && options.moduleBaseURL ? options.moduleBaseURL : '',
     null,
     options && options.callServer ? options.callServer : undefined,
+    undefined, // encodeFormAction
     undefined, // nonce
   );
 }

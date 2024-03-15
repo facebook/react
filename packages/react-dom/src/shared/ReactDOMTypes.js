@@ -90,7 +90,7 @@ export type HostDispatcher = {
     precedence: ?string,
     options?: ?PreinitStyleOptions,
   ) => void,
-  preinitScript: (src: string, options?: PreinitScriptOptions) => void,
+  preinitScript: (src: string, options?: ?PreinitScriptOptions) => void,
   preinitModuleScript: (
     src: string,
     options?: ?PreinitModuleScriptOptions,

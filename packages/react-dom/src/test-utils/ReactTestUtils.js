@@ -21,10 +21,6 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
-import {
-  rethrowCaughtError,
-  invokeGuardedCallbackAndCatchFirstError,
-} from 'shared/ReactErrorUtils';
 import {enableFloat} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
@@ -39,7 +35,9 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 
-const act = React.unstable_act;
+// TODO: Add a warning if this API is accessed with advice to switch to
+// importing directly from the React package instead.
+const act = React.act;
 
 function Event(suffix) {}
 
@@ -114,7 +112,7 @@ function validateClassInstance(inst, methodName) {
   }
 
   throw new Error(
-    `${methodName}(...): the first argument must be a React class instance. ` +
+    `The first argument must be a React class instance. ` +
       `Instead received: ${received}.`,
   );
 }
@@ -328,7 +326,7 @@ function mockComponent(module, mockTagName) {
       console.warn(
         'ReactTestUtils.mockComponent() is deprecated. ' +
           'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://reactjs.org/link/test-utils-mock-component for more information.',
+          'See https://react.dev/link/test-utils-mock-component for more information.',
       );
     }
   }
@@ -352,6 +350,9 @@ function nativeTouchData(x, y) {
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
 
+let hasError: boolean = false;
+let caughtError: mixed = null;
+
 /**
  * Dispatch the event to the listener.
  * @param {SyntheticEvent} event SyntheticEvent to handle
@@ -359,9 +360,15 @@ function nativeTouchData(x, y) {
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, listener, inst) {
-  const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    if (!hasError) {
+      hasError = true;
+      caughtError = error;
+    }
+  }
   event.currentTarget = null;
 }
 
@@ -617,7 +624,12 @@ function makeSimulator(eventType) {
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
       executeDispatchesAndRelease(event);
-      rethrowCaughtError();
+      if (hasError) {
+        const error = caughtError;
+        hasError = false;
+        caughtError = null;
+        throw error;
+      }
     });
     restoreStateIfNeeded();
   };

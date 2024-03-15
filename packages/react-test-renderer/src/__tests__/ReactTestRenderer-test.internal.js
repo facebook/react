@@ -11,7 +11,6 @@
 'use strict';
 
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const {format: prettyFormat} = require('pretty-format');
@@ -51,6 +50,21 @@ function cleanNodeOrArray(node) {
 }
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    ReactFeatureFlags.enableReactTestRendererWarning = false;
+  });
+
+  it('should warn if enableReactTestRendererWarning is enabled', () => {
+    ReactFeatureFlags.enableReactTestRendererWarning = true;
+    expect(() => {
+      ReactTestRenderer.create(<div />);
+    }).toWarnDev(
+      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      {withoutStack: true},
+    );
+  });
+
   it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;
@@ -268,6 +282,7 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([null]);
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('warns correctly for refs on SFCs', () => {
     function Bar() {
       return <div>Hello, world</div>;
@@ -288,8 +303,7 @@ describe('ReactTestRenderer', () => {
     expect(() => ReactTestRenderer.create(<Foo />)).toErrorDev(
       'Warning: Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n\n' +
-        'Check the render method of `Foo`.\n' +
+        'Did you mean to use React.forwardRef()?\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
@@ -982,9 +996,14 @@ describe('ReactTestRenderer', () => {
       </div>
     ));
 
+    let refFn;
+
     class App extends React.Component {
       render() {
-        return <InnerRefed ref={r => (this.ref = r)} />;
+        refFn = inst => {
+          this.ref = inst;
+        };
+        return <InnerRefed ref={refFn} />;
       }
     }
 
@@ -1005,7 +1024,11 @@ describe('ReactTestRenderer', () => {
             {
               instance: null,
               nodeType: 'host',
-              props: {},
+              props: gate(flags => flags.enableRefAsProp)
+                ? {
+                    ref: refFn,
+                  }
+                : {},
               rendered: [],
               type: 'span',
             },

@@ -66,12 +66,14 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
+  enableBigIntSupport,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -85,8 +87,10 @@ let didWarnFormActionType = false;
 let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
+let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
+  didWarnForNewBooleanPropsWithEmptyValue = {};
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -326,7 +330,7 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
 
 export function checkForUnmatchedText(
   serverText: string,
-  clientText: string | number,
+  clientText: string | number | bigint,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
@@ -397,12 +401,17 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (typeof value === 'number') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
         if (__DEV__) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
       }
@@ -434,7 +443,11 @@ function setProp(
     case 'src':
     case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && key === 'href')
+        ) {
           if (__DEV__) {
             if (key === 'src') {
               console.error(
@@ -600,7 +613,7 @@ function setProp(
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -636,7 +649,9 @@ function setProp(
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
+      // TODO: `ref` is pretty common, should we move it up?
       // Noop
       break;
     }
@@ -700,6 +715,25 @@ function setProp(
       break;
     }
     // Boolean
+    case 'inert':
+      if (!enableNewBooleanProps) {
+        setValueForAttribute(domElement, key, value);
+        break;
+      } else {
+        if (__DEV__) {
+          if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[key]) {
+            didWarnForNewBooleanPropsWithEmptyValue[key] = true;
+            console.error(
+              'Received an empty string for a boolean attribute `%s`. ' +
+                'This will treat the attribute as if it were false. ' +
+                'Either pass `false` to silence this warning, or ' +
+                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+              key,
+            );
+          }
+        }
+      }
+    // fallthrough for new boolean props without the flag on
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -926,7 +960,7 @@ function setPropOnCustomElement(
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -949,7 +983,11 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (typeof value === 'number') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
       break;
@@ -984,7 +1022,8 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
       // Noop
       break;
     }
@@ -1485,7 +1524,7 @@ export function updateProperties(
               'This is likely caused by the value changing from undefined to ' +
               'a defined value, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnUncontrolledToControlled = true;
         }
@@ -1499,7 +1538,7 @@ export function updateProperties(
               'This is likely caused by the value changing from a defined to ' +
               'undefined, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnControlledToUncontrolled = true;
         }
@@ -2190,6 +2229,7 @@ function diffHydratedCustomComponent(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2265,7 +2305,7 @@ function diffHydratedCustomComponent(
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 function diffHydratedGenericElement(
   domElement: Element,
@@ -2303,6 +2343,7 @@ function diffHydratedGenericElement(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2350,7 +2391,11 @@ function diffHydratedGenericElement(
       case 'src':
       case 'href':
         if (enableFilterEmptyStringAttributesDOM) {
-          if (value === '') {
+          if (
+            value === '' &&
+            // <a href=""> is fine for "reload" links.
+            !(tag === 'a' && propKey === 'href')
+          ) {
             if (__DEV__) {
               if (propKey === 'src') {
                 console.error(
@@ -2640,6 +2685,33 @@ function diffHydratedGenericElement(
           extraAttributes,
         );
         continue;
+      case 'inert':
+        if (enableNewBooleanProps) {
+          if (__DEV__) {
+            if (
+              value === '' &&
+              !didWarnForNewBooleanPropsWithEmptyValue[propKey]
+            ) {
+              didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
+              console.error(
+                'Received an empty string for a boolean attribute `%s`. ' +
+                  'This will treat the attribute as if it were false. ' +
+                  'Either pass `false` to silence this warning, or ' +
+                  'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+                propKey,
+              );
+            }
+          }
+          hydrateBooleanAttribute(
+            domElement,
+            propKey,
+            propKey,
+            value,
+            extraAttributes,
+          );
+          continue;
+        }
+      // fallthrough for new boolean props without the flag on
       default: {
         if (
           // shouldIgnoreAttribute
@@ -2804,7 +2876,12 @@ export function diffHydratedProperties(
   // even listeners these nodes might be wired up to.
   // TODO: Warn if there is more than a single textNode as a child.
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
-  if (typeof children === 'string' || typeof children === 'number') {
+  if (
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    (enableBigIntSupport && typeof children === 'bigint')
+  ) {
+    // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
     if (domElement.textContent !== '' + children) {
       if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(
@@ -2949,13 +3026,6 @@ export function warnForInsertedHydratedText(
   text: string,
 ) {
   if (__DEV__) {
-    if (text === '') {
-      // We expect to insert empty text nodes since they're not represented in
-      // the HTML.
-      // TODO: Remove this special case if we can just avoid inserting empty
-      // text nodes.
-      return;
-    }
     if (didWarnInvalidHydration) {
       return;
     }

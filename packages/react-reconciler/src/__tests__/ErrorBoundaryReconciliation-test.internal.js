@@ -3,7 +3,6 @@ describe('ErrorBoundaryReconciliation', () => {
   let DidCatchErrorBoundary;
   let GetDerivedErrorBoundary;
   let React;
-  let ReactFeatureFlags;
   let ReactTestRenderer;
   let span;
   let act;
@@ -11,9 +10,6 @@ describe('ErrorBoundaryReconciliation', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactTestRenderer = require('react-test-renderer');
     React = require('react');
     act = require('internal-test-utils').act;

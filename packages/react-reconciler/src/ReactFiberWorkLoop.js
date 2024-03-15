@@ -25,12 +25,10 @@ import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {RenderTaskFn} from './ReactFiberRootScheduler';
 
 import {
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
-  enableProfilerNestedUpdateScheduledHook,
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
@@ -40,6 +38,7 @@ import {
   useModernStrictMode,
   disableLegacyContext,
   alwaysThrottleRetries,
+  enableInfiniteRenderLoopDetection,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -77,16 +76,9 @@ import {
   preloadInstance,
 } from './ReactFiberConfig';
 
-import {
-  createWorkInProgress,
-  assignFiberPropertiesInDEV,
-  resetWorkInProgress,
-} from './ReactFiber';
+import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {
-  getIsHydrating,
-  didSuspendOrErrorWhileHydratingDEV,
-} from './ReactFiberHydrationContext';
+import {getIsHydrating} from './ReactFiberHydrationContext';
 import {
   NoMode,
   ProfileMode,
@@ -106,7 +98,6 @@ import {
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
-  Profiler,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -147,10 +138,10 @@ import {
   getNextLanes,
   getEntangledLanes,
   getLanesToRetrySynchronouslyOnError,
-  markRootUpdated,
-  markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
-  markRootPinged,
   upgradePendingLanesToSync,
+  markRootSuspended as _markRootSuspended,
+  markRootUpdated as _markRootUpdated,
+  markRootPinged as _markRootPinged,
   markRootFinished,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
@@ -161,6 +152,7 @@ import {
   OffscreenLane,
   SyncUpdateLanes,
   UpdateLanes,
+  claimNextTransitionLane,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -170,10 +162,10 @@ import {
   lowerEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
+import {requestCurrentTransition} from './ReactFiberTransition';
 import {
   SelectiveHydrationException,
-  beginWork as originalBeginWork,
+  beginWork,
   replayFunctionComponent,
 } from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
@@ -194,7 +186,6 @@ import {
   reconnectPassiveEffects,
   reappearLayoutEffects,
   disconnectPassiveEffect,
-  reportUncaughtErrorInDEV,
   invokeLayoutEffectMountInDEV,
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
@@ -237,11 +228,6 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
   markCommitStarted,
@@ -379,6 +365,13 @@ let workInProgressRootConcurrentErrors: Array<CapturedValue<mixed>> | null =
 // We will log them once the tree commits.
 let workInProgressRootRecoverableErrors: Array<CapturedValue<mixed>> | null =
   null;
+
+// Tracks when an update occurs during the render phase.
+let workInProgressRootDidIncludeRecursiveRenderUpdate: boolean = false;
+// Thacks when an update occurs during the commit phase. It's a separate
+// variable from the one for renders because the commit phase may run
+// concurrently to a render phase.
+let didIncludeCommitPhaseUpdate: boolean = false;
 
 // The most recent time we either committed a fallback, or when a fallback was
 // filled in with the resolved UI. This lets us throttle the appearance of new
@@ -572,10 +565,6 @@ let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-// Only used when enableProfilerNestedUpdateScheduledHook is true;
-// to track which root is currently committing layout effects.
-let rootCommittingMutationOrLayoutEffects: FiberRoot | null = null;
-
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
@@ -633,15 +622,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
 
-  const isTransition = requestCurrentTransition() !== NoTransition;
-  if (isTransition) {
-    if (__DEV__ && ReactCurrentBatchConfig.transition !== null) {
-      const transition = ReactCurrentBatchConfig.transition;
-      if (!transition._updatedFibers) {
-        transition._updatedFibers = new Set();
+  const transition = requestCurrentTransition();
+  if (transition !== null) {
+    if (__DEV__) {
+      const batchConfigTransition = ReactCurrentBatchConfig.transition;
+      if (!batchConfigTransition._updatedFibers) {
+        batchConfigTransition._updatedFibers = new Set();
       }
 
-      transition._updatedFibers.add(fiber);
+      batchConfigTransition._updatedFibers.add(fiber);
     }
 
     const actionScopeLane = peekEntangledActionLane();
@@ -651,7 +640,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
       : // We may or may not be inside an async action scope. If we are, this
         // is the first update in that scope. Either way, we need to get a
         // fresh transition lane.
-        requestTransitionLane();
+        requestTransitionLane(transition);
   }
 
   // Updates originating inside certain React methods, like flushSync, have
@@ -712,7 +701,7 @@ export function requestDeferredLane(): Lane {
       workInProgressDeferredLane = OffscreenLane;
     } else {
       // Everything else is spawned as a transition.
-      workInProgressDeferredLane = requestTransitionLane();
+      workInProgressDeferredLane = claimNextTransitionLane();
     }
   }
 
@@ -797,26 +786,6 @@ export function scheduleUpdateOnFiber(
     }
 
     warnIfUpdatesNotWrappedWithActDEV(fiber);
-
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      if (
-        (executionContext & CommitContext) !== NoContext &&
-        root === rootCommittingMutationOrLayoutEffects
-      ) {
-        if (fiber.mode & ProfileMode) {
-          let current: null | Fiber = fiber;
-          while (current !== null) {
-            if (current.tag === Profiler) {
-              const {id, onNestedUpdateScheduled} = current.memoizedProps;
-              if (typeof onNestedUpdateScheduled === 'function') {
-                onNestedUpdateScheduled(id);
-              }
-            }
-            current = current.return;
-          }
-        }
-      }
-    }
 
     if (enableTransitionTracing) {
       const transition = ReactCurrentBatchConfig.transition;
@@ -1153,6 +1122,7 @@ function finishConcurrentRender(
       root,
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
+      workInProgressRootDidIncludeRecursiveRenderUpdate,
       workInProgressDeferredLane,
     );
   } else {
@@ -1188,6 +1158,7 @@ function finishConcurrentRender(
             finishedWork,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
+            workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane,
           ),
@@ -1201,6 +1172,7 @@ function finishConcurrentRender(
       finishedWork,
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
+      workInProgressRootDidIncludeRecursiveRenderUpdate,
       lanes,
       workInProgressDeferredLane,
     );
@@ -1212,6 +1184,7 @@ function commitRootWhenReady(
   finishedWork: Fiber,
   recoverableErrors: Array<CapturedValue<mixed>> | null,
   transitions: Array<Transition> | null,
+  didIncludeRenderPhaseUpdate: boolean,
   lanes: Lanes,
   spawnedLane: Lane,
 ) {
@@ -1239,7 +1212,13 @@ function commitRootWhenReady(
       // us that it's ready. This will be canceled if we start work on the
       // root again.
       root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(null, root, recoverableErrors, transitions),
+        commitRoot.bind(
+          null,
+          root,
+          recoverableErrors,
+          transitions,
+          didIncludeRenderPhaseUpdate,
+        ),
       );
       markRootSuspended(root, lanes, spawnedLane);
       return;
@@ -1247,7 +1226,13 @@ function commitRootWhenReady(
   }
 
   // Otherwise, commit immediately.
-  commitRoot(root, recoverableErrors, transitions, spawnedLane);
+  commitRoot(
+    root,
+    recoverableErrors,
+    transitions,
+    didIncludeRenderPhaseUpdate,
+    spawnedLane,
+  );
 }
 
 function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
@@ -1303,6 +1288,46 @@ function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
   return true;
 }
 
+// The extra indirections around markRootUpdated and markRootSuspended is
+// needed to avoid a circular dependency between this module and
+// ReactFiberLane. There's probably a better way to split up these modules and
+// avoid this problem. Perhaps all the root-marking functions should move into
+// the work loop.
+
+function markRootUpdated(root: FiberRoot, updatedLanes: Lanes) {
+  _markRootUpdated(root, updatedLanes);
+
+  if (enableInfiniteRenderLoopDetection) {
+    // Check for recursive updates
+    if (executionContext & RenderContext) {
+      workInProgressRootDidIncludeRecursiveRenderUpdate = true;
+    } else if (executionContext & CommitContext) {
+      didIncludeCommitPhaseUpdate = true;
+    }
+
+    throwIfInfiniteUpdateLoopDetected();
+  }
+}
+
+function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
+  _markRootPinged(root, pingedLanes);
+
+  if (enableInfiniteRenderLoopDetection) {
+    // Check for recursive pings. Pings are conceptually different from updates in
+    // other contexts but we call it an "update" in this context because
+    // repeatedly pinging a suspended render can cause a recursive render loop.
+    // The relevant property is that it can result in a new render attempt
+    // being scheduled.
+    if (executionContext & RenderContext) {
+      workInProgressRootDidIncludeRecursiveRenderUpdate = true;
+    } else if (executionContext & CommitContext) {
+      didIncludeCommitPhaseUpdate = true;
+    }
+
+    throwIfInfiniteUpdateLoopDetected();
+  }
+}
+
 function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
@@ -1310,14 +1335,12 @@ function markRootSuspended(
 ) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
-  // TODO: Lol maybe there's a better way to factor this besides this
-  // obnoxiously named function :)
   suspendedLanes = removeLanes(suspendedLanes, workInProgressRootPingedLanes);
   suspendedLanes = removeLanes(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes,
   );
-  markRootSuspended_dontCallThisOneDirectly(root, suspendedLanes, spawnedLane);
+  _markRootSuspended(root, suspendedLanes, spawnedLane);
 }
 
 // This is the entry point for synchronous tasks that don't go
@@ -1390,6 +1413,7 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     root,
     workInProgressRootRecoverableErrors,
     workInProgressTransitions,
+    workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
   );
 
@@ -1606,6 +1630,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressDeferredLane = NoLane;
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
+  workInProgressRootDidIncludeRecursiveRenderUpdate = false;
 
   // Get the lanes that are entangled with whatever we're about to render. We
   // track these separately so we can distinguish the priority of the render
@@ -1994,7 +2019,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
         }
@@ -2114,7 +2139,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnData: {
@@ -2172,7 +2197,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+              throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             }
             break;
           }
@@ -2229,7 +2254,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Otherwise, unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnDeprecatedThrowPromise: {
@@ -2239,7 +2264,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnHydration: {
@@ -2464,7 +2489,11 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   ReactCurrentOwner.current = null;
 }
 
-function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
+function throwAndUnwindWorkLoop(
+  root: FiberRoot,
+  unitOfWork: Fiber,
+  thrownValue: mixed,
+) {
   // This is a fork of performUnitOfWork specifcally for unwinding a fiber
   // that threw an exception.
   //
@@ -2473,40 +2502,32 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
   resetSuspendedWorkLoopOnUnwind(unitOfWork);
 
   const returnFiber = unitOfWork.return;
-  if (returnFiber === null || workInProgressRoot === null) {
-    // Expected to be working on a non-root fiber. This is a fatal error
-    // because there's no ancestor that can handle it; the root is
-    // supposed to capture all errors that weren't caught by an error
-    // boundary.
-    workInProgressRootExitStatus = RootFatalErrored;
-    workInProgressRootFatalError = thrownValue;
-    // Set `workInProgress` to null. This represents advancing to the next
-    // sibling, or the parent if there are no siblings. But since the root
-    // has no siblings nor a parent, we set it to null. Usually this is
-    // handled by `completeUnitOfWork` or `unwindWork`, but since we're
-    // intentionally not calling those, we need set it here.
-    // TODO: Consider calling `unwindWork` to pop the contexts.
-    workInProgress = null;
-    return;
-  }
-
   try {
     // Find and mark the nearest Suspense or error boundary that can handle
     // this "exception".
-    throwException(
-      workInProgressRoot,
+    const didFatal = throwException(
+      root,
       returnFiber,
       unitOfWork,
       thrownValue,
       workInProgressRootRenderLanes,
     );
+    if (didFatal) {
+      panicOnRootError(thrownValue);
+      return;
+    }
   } catch (error) {
     // We had trouble processing the error. An example of this happening is
     // when accessing the `componentDidCatch` property of an error boundary
     // throws an error. A weird edge case. There's a regression test for this.
     // To prevent an infinite loop, bubble the error up to the next parent.
-    workInProgress = returnFiber;
-    throw error;
+    if (returnFiber !== null) {
+      workInProgress = returnFiber;
+      throw error;
+    } else {
+      panicOnRootError(thrownValue);
+      return;
+    }
   }
 
   if (unitOfWork.flags & Incomplete) {
@@ -2524,6 +2545,22 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
     // this particular path is how that would be implemented.
     completeUnitOfWork(unitOfWork);
   }
+}
+
+function panicOnRootError(error: mixed) {
+  // There's no ancestor that can handle this exception. This should never
+  // happen because the root is supposed to capture all errors that weren't
+  // caught by an error boundary. This is a fatal error, or panic condition,
+  // because we've run out of ways to recover.
+  workInProgressRootExitStatus = RootFatalErrored;
+  workInProgressRootFatalError = error;
+  // Set `workInProgress` to null. This represents advancing to the next
+  // sibling, or the parent if there are no siblings. But since the root
+  // has no siblings nor a parent, we set it to null. Usually this is
+  // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+  // intentionally not calling those, we need set it here.
+  // TODO: Consider calling `unwindWork` to pop the contexts.
+  workInProgress = null;
 }
 
 function completeUnitOfWork(unitOfWork: Fiber): void {
@@ -2662,6 +2699,7 @@ function commitRoot(
   root: FiberRoot,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
+  didIncludeRenderPhaseUpdate: boolean,
   spawnedLane: Lane,
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
@@ -2676,6 +2714,7 @@ function commitRoot(
       root,
       recoverableErrors,
       transitions,
+      didIncludeRenderPhaseUpdate,
       previousUpdateLanePriority,
       spawnedLane,
     );
@@ -2691,6 +2730,7 @@ function commitRootImpl(
   root: FiberRoot,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
+  didIncludeRenderPhaseUpdate: boolean,
   renderPriorityLevel: EventPriority,
   spawnedLane: Lane,
 ) {
@@ -2770,6 +2810,9 @@ function commitRootImpl(
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
   markRootFinished(root, remainingLanes, spawnedLane);
+
+  // Reset this before firing side effects so we can detect recursive updates.
+  didIncludeCommitPhaseUpdate = false;
 
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
@@ -2855,12 +2898,6 @@ function commitRootImpl(
       recordCommitTime();
     }
 
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      // Track the root here, rather than in commitLayoutEffects(), because of ref setters.
-      // Updates scheduled during ref detachment should also be flagged.
-      rootCommittingMutationOrLayoutEffects = root;
-    }
-
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
 
@@ -2897,10 +2934,6 @@ function commitRootImpl(
 
     if (enableSchedulingProfiler) {
       markLayoutEffectsStopped();
-    }
-
-    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-      rootCommittingMutationOrLayoutEffects = null;
     }
 
     // Tell Scheduler to yield at the end of the frame, so the browser has an
@@ -3023,10 +3056,15 @@ function commitRootImpl(
   // hydration lanes in this check, because render triggered by selective
   // hydration is conceptually not an update.
   if (
+    // Check if there was a recursive update spawned by this render, in either
+    // the render phase or the commit phase. We track these explicitly because
+    // we can't infer from the remaining lanes alone.
+    (enableInfiniteRenderLoopDetection &&
+      (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
     // Was the finished render the result of an update (not hydration)?
-    includesSomeLane(lanes, UpdateLanes) &&
-    // Did it schedule a sync update?
-    includesSomeLane(remainingLanes, SyncUpdateLanes)
+    (includesSomeLane(lanes, UpdateLanes) &&
+      // Did it schedule a sync update?
+      includesSomeLane(remainingLanes, SyncUpdateLanes))
   ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
@@ -3345,7 +3383,6 @@ export function captureCommitPhaseError(
   error: mixed,
 ) {
   if (__DEV__) {
-    reportUncaughtErrorInDEV(error);
     setIsRunningInsertionEffect(false);
   }
   if (sourceFiber.tag === HostRoot) {
@@ -3569,6 +3606,19 @@ export function throwIfInfiniteUpdateLoopDetected() {
     rootWithNestedUpdates = null;
     rootWithPassiveNestedUpdates = null;
 
+    if (enableInfiniteRenderLoopDetection) {
+      if (executionContext & RenderContext && workInProgressRoot !== null) {
+        // We're in the render phase. Disable the concurrent error recovery
+        // mechanism to ensure that the error we're about to throw gets handled.
+        // We need it to trigger the nearest error boundary so that the infinite
+        // update loop is broken.
+        workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
+          workInProgressRoot.errorRecoveryDisabledLanes,
+          workInProgressRootRenderLanes,
+        );
+      }
+    }
+
     throw new Error(
       'Maximum update depth exceeded. This can happen when a component ' +
         'repeatedly calls setState inside componentWillUpdate or ' +
@@ -3691,12 +3741,9 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode) {
+    if (useModernStrictMode && root.tag !== LegacyRoot) {
       let doubleInvokeEffects = true;
 
-      if (root.tag === LegacyRoot && !(root.current.mode & StrictLegacyMode)) {
-        doubleInvokeEffects = false;
-      }
       if (
         root.tag === ConcurrentRoot &&
         !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
@@ -3822,84 +3869,6 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
   }
 }
 
-let beginWork;
-if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-  const dummyFiber = null;
-  beginWork = (current: null | Fiber, unitOfWork: Fiber, lanes: Lanes) => {
-    // If a component throws an error, we replay it again in a synchronously
-    // dispatched event, so that the debugger will treat it as an uncaught
-    // error See ReactErrorUtils for more information.
-
-    // Before entering the begin phase, copy the work-in-progress onto a dummy
-    // fiber. If beginWork throws, we'll use this to reset the state.
-    const originalWorkInProgressCopy = assignFiberPropertiesInDEV(
-      dummyFiber,
-      unitOfWork,
-    );
-    try {
-      return originalBeginWork(current, unitOfWork, lanes);
-    } catch (originalError) {
-      if (
-        didSuspendOrErrorWhileHydratingDEV() ||
-        originalError === SuspenseException ||
-        originalError === SelectiveHydrationException ||
-        (originalError !== null &&
-          typeof originalError === 'object' &&
-          typeof originalError.then === 'function')
-      ) {
-        // Don't replay promises.
-        // Don't replay errors if we are hydrating and have already suspended or handled an error
-        throw originalError;
-      }
-
-      // Don't reset current debug fiber, since we're about to work on the
-      // same fiber again.
-
-      // Unwind the failed stack frame
-      resetSuspendedWorkLoopOnUnwind(unitOfWork);
-      unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
-
-      // Restore the original properties of the fiber.
-      assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy);
-
-      if (enableProfilerTimer && unitOfWork.mode & ProfileMode) {
-        // Reset the profiler timer.
-        startProfilerTimer(unitOfWork);
-      }
-
-      // Run beginWork again.
-      invokeGuardedCallback(
-        null,
-        originalBeginWork,
-        null,
-        current,
-        unitOfWork,
-        lanes,
-      );
-
-      if (hasCaughtError()) {
-        const replayError = clearCaughtError();
-        if (
-          typeof replayError === 'object' &&
-          replayError !== null &&
-          replayError._suppressLogging &&
-          typeof originalError === 'object' &&
-          originalError !== null &&
-          !originalError._suppressLogging
-        ) {
-          // If suppressed, let the flag carry over to the original error which is the one we'll rethrow.
-          originalError._suppressLogging = true;
-        }
-      }
-      // We always throw the original error in case the second render pass is not idempotent.
-      // This can happen if a memoized function or CommonJS module doesn't throw after first invocation.
-      throw originalError;
-    }
-  };
-} else {
-  beginWork = originalBeginWork;
-}
-
 let didWarnAboutUpdateInRender = false;
 let didWarnAboutUpdateInRenderForAnotherComponent;
 if (__DEV__) {
@@ -3925,7 +3894,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber: Fiber) {
             console.error(
               'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
-                'follow the stack trace as described in https://reactjs.org/link/setstate-in-render',
+                'follow the stack trace as described in https://react.dev/link/setstate-in-render',
               setStateComponentName,
               renderingComponentName,
               renderingComponentName,
@@ -4031,7 +4000,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
             '/* assert on the output */\n\n' +
             "This ensures that you're testing the behavior the user would see " +
             'in the browser.' +
-            ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+            ' Learn more at https://react.dev/link/wrap-tests-with-act',
           getComponentNameFromFiber(fiber),
         );
       } finally {
@@ -4063,7 +4032,7 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+          ' Learn more at https://react.dev/link/wrap-tests-with-act',
       );
     }
   }

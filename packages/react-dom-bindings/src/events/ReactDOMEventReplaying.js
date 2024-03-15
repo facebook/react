@@ -537,7 +537,8 @@ export function retryIfBlockedOn(
 
   if (enableFormActions) {
     // Check the document if there are any queued form actions.
-    const root = unblocked.getRootNode();
+    // If there's no ownerDocument, then this is the document.
+    const root = unblocked.ownerDocument || unblocked;
     const formReplayingQueue: void | FormReplayingQueue = (root: any)
       .$$reactFormReplay;
     if (formReplayingQueue != null) {

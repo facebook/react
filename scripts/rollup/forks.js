@@ -93,7 +93,8 @@ const forks = Object.freeze({
     if (
       entry === 'react-dom' ||
       entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMServer.js'
+      entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-dom/unstable_testing'
     ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
@@ -226,18 +227,6 @@ const forks = Object.freeze({
       case UMD_PROD:
       case UMD_PROFILING:
         return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different wrapping/reporting for caught errors.
-  './packages/shared/invokeGuardedCallbackImpl.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/shared/forks/invokeGuardedCallbackImpl.www.js';
       default:
         return null;
     }
