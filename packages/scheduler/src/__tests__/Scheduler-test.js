@@ -247,7 +247,8 @@ describe('SchedulerBrowser', () => {
     });
     runtime.assertLog(['Post Message']);
     cancelCallback(task);
-    runtime.assertLog([]);
+    runtime.fireMessageEvent();
+    runtime.assertLog(['Message Event']);
   });
 
   it('throws when a task errors then continues in a new event', () => {
