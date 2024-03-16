@@ -544,9 +544,6 @@ if (__DEV__) {
     function stringToPrecomputedChunk(content) {
       return content;
     }
-    function clonePrecomputedChunk(chunk) {
-      return chunk;
-    }
     function closeWithError(destination, error) {
       destination.done = true;
       destination.fatal = true;
@@ -6418,10 +6415,7 @@ if (__DEV__) {
           ) {
             resumableState.instructions |=
               SentStyleInsertionFunction | SentCompleteBoundaryFunction;
-            writeChunk(
-              destination,
-              clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
-            );
+            writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
           } else if (
             (resumableState.instructions & SentStyleInsertionFunction) ===
             NothingSent

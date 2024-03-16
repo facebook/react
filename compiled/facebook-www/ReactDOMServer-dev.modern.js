@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-7205a424";
+    var ReactVersion = "18.3.0-www-modern-ac7e39a5";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -547,9 +547,6 @@ if (__DEV__) {
     }
     function stringToPrecomputedChunk(content) {
       return content;
-    }
-    function clonePrecomputedChunk(chunk) {
-      return chunk;
     }
     function closeWithError(destination, error) {
       // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
@@ -6422,10 +6419,7 @@ if (__DEV__) {
           ) {
             resumableState.instructions |=
               SentStyleInsertionFunction | SentCompleteBoundaryFunction;
-            writeChunk(
-              destination,
-              clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
-            );
+            writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
           } else if (
             (resumableState.instructions & SentStyleInsertionFunction) ===
             NothingSent
