@@ -135,6 +135,7 @@ function handleTimeout(currentTime: number) {
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
+        isHostTimeoutScheduled = true;
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
       }
     }
@@ -246,6 +247,7 @@ function workLoop(initialTime: number) {
   } else {
     const firstTimer = peek(timerQueue);
     if (firstTimer !== null) {
+      isHostTimeoutScheduled = true;
       requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
     }
     return false;
