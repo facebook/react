@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-8be7683a";
+    var ReactVersion = "18.3.0-www-modern-b0c54115";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -3382,11 +3382,11 @@ if (__DEV__) {
 
     var HostTransitionContext = {
       $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
       _currentValue: null,
       _currentValue2: null,
-      _threadCount: 0,
-      Provider: null,
-      Consumer: null
+      _threadCount: 0
     };
 
     function requiredContext(c) {
@@ -10957,8 +10957,8 @@ if (__DEV__) {
       useContext: throwInvalidHookError,
       useEffect: throwInvalidHookError,
       useImperativeHandle: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
       useLayoutEffect: throwInvalidHookError,
+      useInsertionEffect: throwInvalidHookError,
       useMemo: throwInvalidHookError,
       useReducer: throwInvalidHookError,
       useRef: throwInvalidHookError,

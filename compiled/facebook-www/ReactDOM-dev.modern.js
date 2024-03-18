@@ -325,11 +325,11 @@ if (__DEV__) {
 
     var HostTransitionContext = {
       $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
       _currentValue: null,
       _currentValue2: null,
-      _threadCount: 0,
-      Provider: null,
-      Consumer: null
+      _threadCount: 0
     };
 
     function requiredContext(c) {
@@ -16065,8 +16065,8 @@ if (__DEV__) {
       useContext: throwInvalidHookError,
       useEffect: throwInvalidHookError,
       useImperativeHandle: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
       useLayoutEffect: throwInvalidHookError,
+      useInsertionEffect: throwInvalidHookError,
       useMemo: throwInvalidHookError,
       useReducer: throwInvalidHookError,
       useRef: throwInvalidHookError,
@@ -35632,7 +35632,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-e747153f";
+    var ReactVersion = "18.3.0-www-modern-a7e0f9ae";
 
     function createPortal$1(
       children,

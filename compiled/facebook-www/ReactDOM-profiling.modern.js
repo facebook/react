@@ -143,11 +143,11 @@ var contextStackCursor = createCursor(null),
   hostTransitionProviderCursor = createCursor(null),
   HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null
+    _threadCount: 0
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -4356,8 +4356,8 @@ var ContextOnlyDispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -17491,7 +17491,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1861 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-8be7683a",
+  version: "18.3.0-www-modern-b0c54115",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17536,7 +17536,7 @@ var devToolsConfig$jscomp$inline_1861 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-8be7683a"
+  reconcilerVersion: "18.3.0-www-modern-b0c54115"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17782,7 +17782,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-8be7683a";
+exports.version = "18.3.0-www-modern-b0c54115";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

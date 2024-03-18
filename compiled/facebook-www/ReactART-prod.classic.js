@@ -931,11 +931,11 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   hostTransitionProviderCursor = createCursor(null),
   HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null
+    _threadCount: 0
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -3524,8 +3524,8 @@ var ContextOnlyDispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -10626,7 +10626,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-0bce71b7",
+    version: "18.3.0-www-classic-4fbf3623",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1320 = {
@@ -10657,7 +10657,7 @@ var internals$jscomp$inline_1320 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-0bce71b7"
+  reconcilerVersion: "18.3.0-www-classic-4fbf3623"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1321 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
