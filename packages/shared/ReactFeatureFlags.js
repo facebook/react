@@ -214,7 +214,7 @@ export const enableNewBooleanProps = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-export const disableModulePatternComponents = false;
+export const disableModulePatternComponents = __NEXT_MAJOR__;
 
 export const enableUseRefAccessWarning = false;
 
