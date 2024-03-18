@@ -132,6 +132,8 @@ if (__DEV__) {
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+      alwaysThrottleDisappearingFallbacks =
+        dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -28771,7 +28773,7 @@ if (__DEV__) {
             var wasShowingFallback =
               current !== null && current.memoizedState !== null;
 
-            if (alwaysThrottleRetries) {
+            if (alwaysThrottleDisappearingFallbacks) {
               if (isShowingFallback !== wasShowingFallback) {
                 // A fallback is either appearing or disappearing.
                 markCommitTimeOfFallback();
@@ -35632,7 +35634,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-a7e0f9ae";
+    var ReactVersion = "18.3.0-www-modern-a3956207";
 
     function createPortal$1(
       children,

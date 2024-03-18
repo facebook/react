@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-b0c54115";
+    var ReactVersion = "18.3.0-www-modern-f2f5c035";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -172,6 +172,8 @@ if (__DEV__) {
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+      alwaysThrottleDisappearingFallbacks =
+        dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -22823,7 +22825,7 @@ if (__DEV__) {
             var wasShowingFallback =
               current !== null && current.memoizedState !== null;
 
-            if (alwaysThrottleRetries) {
+            if (alwaysThrottleDisappearingFallbacks) {
               if (isShowingFallback !== wasShowingFallback) {
                 // A fallback is either appearing or disappearing.
                 markCommitTimeOfFallback();
