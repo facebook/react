@@ -447,6 +447,7 @@ describe('ReactARTComponents', () => {
   let ReactTestRenderer;
   beforeEach(() => {
     jest.resetModules();
+    // Isolate test renderer.
     ReactTestRenderer = require('react-test-renderer');
     act = require('internal-test-utils').act;
   });
