@@ -51,7 +51,7 @@ export type CompilerErrorDetailOptions = {
   description?: string | null | undefined;
   severity: ErrorSeverity;
   loc: SourceLocation | null;
-  suggestions: Array<CompilerSuggestion> | null;
+  suggestions?: Array<CompilerSuggestion> | null | undefined;
 };
 
 /*
@@ -83,7 +83,7 @@ export class CompilerErrorDetail {
 
   printErrorMessage(): string {
     const buffer = [`${this.severity}: ${this.reason}`];
-    if (this.description !== null) {
+    if (this.description != null) {
       buffer.push(`. ${this.description}`);
     }
     if (this.loc != null && typeof this.loc !== "symbol") {
