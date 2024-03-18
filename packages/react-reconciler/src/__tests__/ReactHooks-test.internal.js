@@ -1899,7 +1899,7 @@ describe('ReactHooks', () => {
     }).rejects.toThrow('Hello');
 
     if (__DEV__) {
-      expect(jest.mocked(console.error)).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.mock.calls[0][0]).toContain(
         'Warning: Cannot update a component (`%s`) while rendering ' +
           'a different component (`%s`).',
