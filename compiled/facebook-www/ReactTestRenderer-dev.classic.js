@@ -26055,7 +26055,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-91cd5cc2";
+    var ReactVersion = "18.3.0-www-classic-2256e5ca";
 
     // Might add PROFILE later.
 
@@ -26959,10 +26959,7 @@ if (__DEV__) {
           createNodeMock = options.createNodeMock;
         }
 
-        if (
-          options.unstable_isConcurrent === true ||
-          options.isConcurrent === true
-        ) {
+        if (options.unstable_isConcurrent === true) {
           isConcurrent = true;
         }
 
