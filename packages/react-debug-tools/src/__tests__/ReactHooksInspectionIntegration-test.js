@@ -1244,7 +1244,7 @@ describe('ReactHooksInspectionIntegration', () => {
         <Context.Provider value="provided">
           <Foo />
         </Context.Provider>,
-        {isConcurrent: true},
+        {unstable_isConcurrent: true},
       );
     });
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
