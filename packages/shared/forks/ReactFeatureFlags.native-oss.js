@@ -86,6 +86,7 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const enableAsyncActions = false;
 
+export const alwaysThrottleDisappearingFallbacks = false;
 export const alwaysThrottleRetries = false;
 
 export const passChildrenWhenCloningPersistedNodes = false;

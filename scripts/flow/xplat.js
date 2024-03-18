@@ -8,6 +8,7 @@
  */
 
 declare module 'ReactNativeInternalFeatureFlags' {
+  declare export var alwaysThrottleDisappearingFallbacks: boolean;
   declare export var alwaysThrottleRetries: boolean;
   declare export var consoleManagedByDevToolsDuringStrictMode: boolean;
   declare export var enableAsyncActions: boolean;
