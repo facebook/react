@@ -528,6 +528,13 @@ export type Instruction = {
   loc: SourceLocation;
 };
 
+export type TInstruction<T extends InstructionValue> = {
+  id: InstructionId;
+  lvalue: Place;
+  value: T;
+  loc: SourceLocation;
+};
+
 export type LValue = {
   place: Place;
   kind: InstructionKind;
@@ -625,6 +632,17 @@ export type Phi = {
   type: Type;
 };
 
+export type StartMemoize = {
+  kind: "StartMemoize";
+  deps: Array<Place>;
+  loc: SourceLocation;
+};
+export type FinishMemoize = {
+  kind: "FinishMemoize";
+  decl: Place;
+  loc: SourceLocation;
+};
+
 /*
  * Forget currently does not handle MethodCall correctly in
  * all cases. Specifically, we do not bind the receiver and method property
@@ -657,6 +675,12 @@ export type CallExpression = {
   typeArguments?: Array<t.FlowType>;
 };
 
+export type LoadLocal = {
+  kind: "LoadLocal";
+  place: Place;
+  loc: SourceLocation;
+};
+
 /*
  * The value of a given instruction. Note that values are not recursive: complex
  * values such as objects or arrays are always defined by instructions to define
@@ -667,11 +691,7 @@ export type CallExpression = {
  */
 
 export type InstructionValue =
-  | {
-      kind: "LoadLocal";
-      place: Place;
-      loc: SourceLocation;
-    }
+  | LoadLocal
   | {
       kind: "LoadContext";
       place: Place;
@@ -773,12 +793,7 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   // load `object.property`
-  | {
-      kind: "PropertyLoad";
-      object: Place;
-      property: string;
-      loc: SourceLocation;
-    }
+  | PropertyLoad
   // `delete object.property`
   | {
       kind: "PropertyDelete";
@@ -873,7 +888,8 @@ export type InstructionValue =
    * during codegen. It can't be pruned during DCE because we need to preserve the
    * instruction so it can be visible in InferReferenceEffects.
    */
-  | { kind: "Memoize"; value: Place; loc: SourceLocation }
+  | StartMemoize
+  | FinishMemoize
   /*
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow
@@ -928,6 +944,13 @@ export type Primitive = {
 };
 
 export type JSXText = { kind: "JSXText"; value: string; loc: SourceLocation };
+
+export type PropertyLoad = {
+  kind: "PropertyLoad";
+  object: Place;
+  property: string;
+  loc: SourceLocation;
+};
 
 export type LoadGlobal = {
   kind: "LoadGlobal";

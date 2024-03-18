@@ -939,7 +939,10 @@ function codegenInstructionNullable(
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);
       }
     }
-  } else if (instr.value.kind === "Memoize") {
+  } else if (
+    instr.value.kind === "StartMemoize" ||
+    instr.value.kind === "FinishMemoize"
+  ) {
     return null;
   } else if (instr.value.kind === "Debugger") {
     return t.debuggerStatement();
@@ -1787,7 +1790,8 @@ function codegenInstructionValue(
       break;
     }
     case "ReactiveFunctionValue":
-    case "Memoize":
+    case "StartMemoize":
+    case "FinishMemoize":
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":

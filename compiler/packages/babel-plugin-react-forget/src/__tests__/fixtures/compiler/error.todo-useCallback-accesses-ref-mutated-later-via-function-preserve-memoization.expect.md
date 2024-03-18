@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
    5 |   const ref = useRef({ inner: null });
    6 |
 >  7 |   const onChange = useCallback((event) => {
-     |                    ^^^^^^^^^^^^^^^^^^^^^^^^
+     |                                ^^^^^^^^^^^^
 >  8 |     // The ref should still be mutable here even though function deps are frozen in
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >  9 |     // @enablePreserveExistingMemoizationGuarantees mode
@@ -45,7 +45,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 10 |     ref.current.inner = event.target.value;
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   });
-     | ^^^^^ [ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
+     | ^^^^ [ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
 
 [ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
   12 |

@@ -14,6 +14,7 @@ import {
   ReactiveScopeBlock,
   ScopeId,
 } from "../HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
 import {
   ReactiveFunctionVisitor,
@@ -71,20 +72,24 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
     state: CompilerError
   ): void {
     this.traverseInstruction(instruction, state);
-    if (instruction.value.kind === "Memoize") {
-      const value = instruction.value.value;
-      if (
-        isMutable(instruction as Instruction, value) ||
-        isUnmemoized(value.identifier, this.scopes)
-      ) {
-        state.push({
-          reason:
-            "This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized",
-          description: null,
-          severity: ErrorSeverity.InvalidReact,
-          loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
-          suggestions: null,
-        });
+    if (
+      instruction.value.kind === "StartMemoize" ||
+      instruction.value.kind === "FinishMemoize"
+    ) {
+      for (const value of eachInstructionValueOperand(instruction.value)) {
+        if (
+          isMutable(instruction as Instruction, value) ||
+          isUnmemoized(value.identifier, this.scopes)
+        ) {
+          state.push({
+            reason:
+              "This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized",
+            description: null,
+            severity: ErrorSeverity.InvalidReact,
+            loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
+            suggestions: null,
+          });
+        }
       }
     }
   }

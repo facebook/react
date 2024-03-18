@@ -335,7 +335,8 @@ function* generateInstructionTypes(
     case "NextIterableOf":
     case "UnsupportedNode":
     case "Debugger":
-    case "Memoize": {
+    case "FinishMemoize":
+    case "StartMemoize": {
       break;
     }
     default:

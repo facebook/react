@@ -600,8 +600,14 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       } ${printPlace(instrValue.value)}`;
       break;
     }
-    case "Memoize": {
-      value = `Memoize ${printPlace(instrValue.value)}`;
+    case "StartMemoize": {
+      value = `StartMemoize deps=${instrValue.deps.map((dep) =>
+        printPlace(dep)
+      )}`;
+      break;
+    }
+    case "FinishMemoize": {
+      value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
       break;
     }
     case "ReactiveFunctionValue": {

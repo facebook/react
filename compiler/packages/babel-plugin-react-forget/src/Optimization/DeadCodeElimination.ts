@@ -338,7 +338,8 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     case "StoreContext": {
       return false;
     }
-    case "Memoize": {
+    case "StartMemoize":
+    case "FinishMemoize": {
       /**
        * This instruction is used by the @enablePreserveExistingMemoizationGuarantees feature
        * to preserve information about memoization semantics in the original code. We can't

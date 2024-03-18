@@ -216,8 +216,14 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
-    case "Memoize": {
-      yield instrValue.value;
+    case "StartMemoize": {
+      for (const dep of instrValue.deps) {
+        yield dep;
+      }
+      break;
+    }
+    case "FinishMemoize": {
+      yield instrValue.decl;
       break;
     }
     case "Debugger":
@@ -521,8 +527,14 @@ export function mapInstructionValueOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "Memoize": {
-      instrValue.value = fn(instrValue.value);
+    case "StartMemoize": {
+      for (let i = 0; i < instrValue.deps.length; i++) {
+        instrValue.deps[i] = fn(instrValue.deps[i]);
+      }
+      break;
+    }
+    case "FinishMemoize": {
+      instrValue.decl = fn(instrValue.decl);
       break;
     }
     case "Debugger":

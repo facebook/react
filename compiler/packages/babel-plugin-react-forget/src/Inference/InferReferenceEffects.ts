@@ -1391,21 +1391,24 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         continue;
       }
-      case "Memoize": {
-        if (env.config.enablePreserveExistingMemoizationGuarantees) {
-          state.reference(
-            instrValue.value,
-            functionEffects,
-            Effect.Freeze,
-            ValueReason.Other
-          );
-        } else {
-          state.reference(
-            instrValue.value,
-            functionEffects,
-            Effect.Read,
-            ValueReason.Other
-          );
+      case "StartMemoize":
+      case "FinishMemoize": {
+        for (const val of eachInstructionValueOperand(instrValue)) {
+          if (env.config.enablePreserveExistingMemoizationGuarantees) {
+            state.reference(
+              val,
+              functionEffects,
+              Effect.Freeze,
+              ValueReason.Other
+            );
+          } else {
+            state.reference(
+              val,
+              functionEffects,
+              Effect.Read,
+              ValueReason.Other
+            );
+          }
         }
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;

@@ -154,7 +154,8 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "NextIterableOf":
     case "NextPropertyOf":
     case "Debugger":
-    case "Memoize":
+    case "StartMemoize":
+    case "FinishMemoize":
     case "UnaryExpression":
     case "BinaryExpression":
     case "PropertyLoad": {

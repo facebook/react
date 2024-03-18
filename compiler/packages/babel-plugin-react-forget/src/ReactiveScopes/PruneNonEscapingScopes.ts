@@ -453,7 +453,8 @@ function computeMemoizationInputs(
       };
     }
     case "NextPropertyOf":
-    case "Memoize":
+    case "StartMemoize":
+    case "FinishMemoize":
     case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":
@@ -926,8 +927,8 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
      * need to be memoized. Remove associated `Memoize` instructions so that
      * we don't report false positives on "missing" memoization of these values.
      */
-    if (instruction.value.kind === "Memoize") {
-      const identifier = instruction.value.value.identifier;
+    if (instruction.value.kind === "FinishMemoize") {
+      const identifier = instruction.value.decl.identifier;
       if (
         identifier.scope !== null &&
         this.prunedScopes.has(identifier.scope.id)
