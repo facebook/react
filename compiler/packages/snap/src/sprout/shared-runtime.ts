@@ -96,6 +96,10 @@ export function setProperty(arg: any, property: any): void {
   }
 }
 
+export function arrayPush<T>(arr: Array<T>, ...values: Array<T>): void {
+  arr.push(...values);
+}
+
 export function graphql(value: string): string {
   return value;
 }

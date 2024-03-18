@@ -83,7 +83,7 @@ export function writeReactiveBlock(
   writer.writeLine("}");
 }
 
-function printDependency(dependency: ReactiveScopeDependency): string {
+export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
     printIdentifier(dependency.identifier) +
     printType(dependency.identifier.type);

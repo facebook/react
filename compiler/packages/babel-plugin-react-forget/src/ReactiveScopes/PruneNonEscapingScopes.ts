@@ -933,7 +933,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
         identifier.scope !== null &&
         this.prunedScopes.has(identifier.scope.id)
       ) {
-        return { kind: "remove" };
+        instruction.value.pruned = true;
       }
     }
 

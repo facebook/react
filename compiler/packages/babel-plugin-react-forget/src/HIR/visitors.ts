@@ -217,8 +217,12 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "StartMemoize": {
-      for (const dep of instrValue.deps) {
-        yield dep;
+      if (instrValue.deps != null) {
+        for (const dep of instrValue.deps) {
+          if (dep.root.kind === "NamedLocal") {
+            yield dep.root.value;
+          }
+        }
       }
       break;
     }
@@ -528,8 +532,12 @@ export function mapInstructionValueOperands(
       break;
     }
     case "StartMemoize": {
-      for (let i = 0; i < instrValue.deps.length; i++) {
-        instrValue.deps[i] = fn(instrValue.deps[i]);
+      if (instrValue.deps != null) {
+        for (const dep of instrValue.deps) {
+          if (dep.root.kind === "NamedLocal") {
+            dep.root.value = fn(dep.root.value);
+          }
+        }
       }
       break;
     }

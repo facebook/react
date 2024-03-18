@@ -19,6 +19,7 @@ import type {
   Instruction,
   InstructionValue,
   LValue,
+  ManualMemoDependency,
   MutableRange,
   ObjectMethod,
   ObjectPropertyKey,
@@ -601,9 +602,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "StartMemoize": {
-      value = `StartMemoize deps=${instrValue.deps.map((dep) =>
-        printPlace(dep)
-      )}`;
+      value = `StartMemoize deps=${
+        instrValue.deps?.map((dep) => printManualMemoDependency(dep, false)) ??
+        "(none)"
+      }`;
       break;
     }
     case "FinishMemoize": {
@@ -744,6 +746,25 @@ function printScope(scope: ReactiveScope | null): string {
   return `${scope !== null ? `_@${scope.id}` : ""}`;
 }
 
+export function printManualMemoDependency(
+  val: ManualMemoDependency,
+  nameOnly: boolean
+): string {
+  let rootStr;
+  if (val.root.kind === "Global") {
+    rootStr = val.root.identifierName;
+  } else {
+    CompilerError.invariant(val.root.value.identifier.name?.kind === "named", {
+      reason: "DepsValidation: expected named local variable in depslist",
+      suggestions: null,
+      loc: val.root.value.loc,
+    });
+    rootStr = nameOnly
+      ? val.root.value.identifier.name.value
+      : printIdentifier(val.root.value.identifier);
+  }
+  return `${rootStr}${val.path.length > 0 ? "." : ""}${val.path.join(".")}`;
+}
 export function printType(type: Type): string {
   if (type.kind === "Type") return "";
   // TODO(mofeiZ): add debugName for generated ids

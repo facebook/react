@@ -632,14 +632,41 @@ export type Phi = {
   type: Type;
 };
 
+/**
+ * Valid ManualMemoDependencies are always of the form
+ * `sourceDeclaredVariable.a.b?.c`, since this is documented
+ * and enforced by the `react-hooks/exhaustive-deps` rule.
+ *
+ * `root` must either reference a ValidatedIdentifier or a global
+ * variable.
+ */
+export type ManualMemoDependency = {
+  root:
+    | {
+        kind: "NamedLocal";
+        value: Place;
+      }
+    | { kind: "Global"; identifierName: string };
+  path: Array<string>;
+};
+
 export type StartMemoize = {
   kind: "StartMemoize";
-  deps: Array<Place>;
+  // Start/FinishMemoize markers should have matching ids
+  manualMemoId: number;
+  /**
+   * deps-list from source code, or null if one was not provided
+   * (e.g. useMemo without a second arg)
+   */
+  deps: Array<ManualMemoDependency> | null;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
   kind: "FinishMemoize";
+  // Start/FinishMemoize markers should have matching ids
+  manualMemoId: number;
   decl: Place;
+  pruned?: true;
   loc: SourceLocation;
 };
 

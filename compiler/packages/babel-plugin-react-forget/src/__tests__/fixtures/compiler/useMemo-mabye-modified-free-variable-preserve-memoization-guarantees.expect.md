@@ -27,7 +27,7 @@ function Component(props) {
     x.value = props.value;
     mutate(x, free, part);
     return x;
-  }, [props.value]);
+  }, [props.value, free, part]);
 
   // These calls should be inferred as non-mutating due to the above freeze inference
   identity(free);
