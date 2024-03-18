@@ -77,7 +77,7 @@ describe('InspectedElement', () => {
     // Used by inspectElementAtIndex() helper function
     utils.act(() => {
       testRendererInstance = TestRenderer.create(null, {
-        isConcurrent: true,
+        unstable_isConcurrent: true,
       });
     });
 
@@ -356,7 +356,7 @@ describe('InspectedElement', () => {
         ['An update to %s inside a test was not wrapped in act'],
         () => {
           testRendererInstance = TestRenderer.create(null, {
-            isConcurrent: true,
+            unstable_isConcurrent: true,
           });
         },
       );
@@ -510,7 +510,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -2069,7 +2069,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -2129,7 +2129,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -2405,7 +2405,7 @@ describe('InspectedElement', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>,
-          {isConcurrent: true},
+          {unstable_isConcurrent: true},
         );
       }, false);
       await utils.actAsync(() => {
@@ -2943,7 +2943,7 @@ describe('InspectedElement', () => {
           ['An update to %s inside a test was not wrapped in act'],
           () => {
             testRendererInstance = TestRenderer.create(null, {
-              isConcurrent: true,
+              unstable_isConcurrent: true,
             });
           },
         );

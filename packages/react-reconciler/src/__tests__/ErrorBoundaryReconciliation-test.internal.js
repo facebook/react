@@ -55,7 +55,7 @@ describe('ErrorBoundaryReconciliation', () => {
           <ErrorBoundary fallbackTagName={fallbackTagName}>
             <BrokenRender fail={false} />
           </ErrorBoundary>,
-          {isConcurrent: isConcurrent},
+          {unstable_isConcurrent: isConcurrent},
         );
       });
       expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
