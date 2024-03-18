@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6c9f7fe03ad0703b972eef9473b57c69>>
+ * @generated SignedSource<<26c28bc563c475bc48b8350e745dfaa4>>
  */
 
 "use strict";
@@ -2123,11 +2123,11 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   hostTransitionProviderCursor = createCursor(null),
   HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null
+    _threadCount: 0
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -4851,8 +4851,8 @@ var ContextOnlyDispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -11332,7 +11332,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1184 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-e8e1a13c",
+    version: "18.3.0-canary-154313d4",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11388,7 +11388,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-e8e1a13c"
+  reconcilerVersion: "18.3.0-canary-154313d4"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

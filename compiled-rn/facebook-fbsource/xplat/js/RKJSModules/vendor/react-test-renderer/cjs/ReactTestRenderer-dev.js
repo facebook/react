@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a3b83de91596e95a8c9484b94ff6b74c>>
+ * @generated SignedSource<<65b88d386b80bb668ee1220244f5891b>>
  */
 
 "use strict";
@@ -2570,11 +2570,11 @@ if (__DEV__) {
 
     var HostTransitionContext = {
       $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
       _currentValue: null,
       _currentValue2: null,
-      _threadCount: 0,
-      Provider: null,
-      Consumer: null
+      _threadCount: 0
     };
 
     function requiredContext(c) {
@@ -9616,8 +9616,8 @@ if (__DEV__) {
       useContext: throwInvalidHookError,
       useEffect: throwInvalidHookError,
       useImperativeHandle: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
       useLayoutEffect: throwInvalidHookError,
+      useInsertionEffect: throwInvalidHookError,
       useMemo: throwInvalidHookError,
       useReducer: throwInvalidHookError,
       useRef: throwInvalidHookError,
@@ -25454,7 +25454,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-45d56071b-20240318";
+    var ReactVersion = "18.3.0-canary-4d686a2da-20240318";
 
     // Might add PROFILE later.
 

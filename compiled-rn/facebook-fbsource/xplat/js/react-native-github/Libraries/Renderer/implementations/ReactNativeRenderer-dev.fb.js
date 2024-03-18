@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<51a07e08c2e142d6d820d76841b5f546>>
+ * @generated SignedSource<<961c930d323670120a1ce352e0cf2d5c>>
  */
 
 "use strict";
@@ -6345,11 +6345,11 @@ to return true:wantsResponderID|                            |
 
     var HostTransitionContext = {
       $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
       _currentValue: null,
       _currentValue2: null,
-      _threadCount: 0,
-      Provider: null,
-      Consumer: null
+      _threadCount: 0
     };
 
     function requiredContext(c) {
@@ -13841,8 +13841,8 @@ to return true:wantsResponderID|                            |
       useContext: throwInvalidHookError,
       useEffect: throwInvalidHookError,
       useImperativeHandle: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
       useLayoutEffect: throwInvalidHookError,
+      useInsertionEffect: throwInvalidHookError,
       useMemo: throwInvalidHookError,
       useReducer: throwInvalidHookError,
       useRef: throwInvalidHookError,
@@ -30241,7 +30241,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-1330e5ea";
+    var ReactVersion = "18.3.0-canary-2c537ce9";
 
     function createPortal$1(
       children,

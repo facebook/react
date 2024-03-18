@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f468fcfeadb843d99ac63af6cde06553>>
+ * @generated SignedSource<<bad8dcf29728fb2c7ec3ee84033aabb1>>
  */
 
 "use strict";
@@ -2001,11 +2001,11 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   hostTransitionProviderCursor = createCursor(null),
   HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null
+    _threadCount: 0
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -4724,8 +4724,8 @@ var ContextOnlyDispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -10626,7 +10626,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1103 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-8f98d002",
+    version: "18.3.0-canary-45ebe421",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10669,7 +10669,7 @@ var internals$jscomp$inline_1330 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-8f98d002"
+  reconcilerVersion: "18.3.0-canary-45ebe421"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1331 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

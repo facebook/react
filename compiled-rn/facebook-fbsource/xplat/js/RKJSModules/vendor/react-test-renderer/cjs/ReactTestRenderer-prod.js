@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f286949b9793004b5a064c2aeef09640>>
+ * @generated SignedSource<<b8f1ce1ab15d9e71ef26da594ea2a0c5>>
  */
 
 "use strict";
@@ -663,11 +663,11 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   hostTransitionProviderCursor = createCursor(null),
   HostTransitionContext = {
     $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null
+    _threadCount: 0
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -3109,8 +3109,8 @@ var ContextOnlyDispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
-  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
   useRef: throwInvalidHookError,
@@ -9175,7 +9175,7 @@ var devToolsConfig$jscomp$inline_1016 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-45d56071b-20240318",
+  version: "18.3.0-canary-4d686a2da-20240318",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1194 = {
@@ -9206,7 +9206,7 @@ var internals$jscomp$inline_1194 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-45d56071b-20240318"
+  reconcilerVersion: "18.3.0-canary-4d686a2da-20240318"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1195 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
