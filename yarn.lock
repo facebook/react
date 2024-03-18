@@ -7956,17 +7956,17 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-flow-bin@^0.230.0:
-  version "0.230.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.230.0.tgz#eefb67215270ab144cd1fa0203061d1687d1cfa6"
-  integrity sha512-Yx/AnKXR+D4Ieb7xlanfe7cNamJEsuXG6RLWCOl7OSzehMDmrZUuGh2Ycvf4tCKdM1nYt2569p3kkNELiBonaw==
+flow-bin@^0.231.0:
+  version "0.231.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.231.0.tgz#b9fde021e60ff6e40e4f0212b6c426fdde798ac7"
+  integrity sha512-nB5/rH+bUCIAXWagwIEYM0q/2M4mgkD5q16/eZyNx7sfqsmMkZLg0KmPH5hgvzq6PkVoeCoM8sjhPyzLW2wT+w==
 
-flow-remove-types@^2.230.0:
-  version "2.230.0"
-  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.230.0.tgz#6db703e68dddfe29fc41b82c0d809972f330a455"
-  integrity sha512-VNIr9AyA+XvcYyy26q5qCTyKuWriymAqax+B4k/bBLAK2IVhafDxX9F2ERZydmqqcbY+jxgybgvy90O1Dg//Gg==
+flow-remove-types@^2.231.0:
+  version "2.231.0"
+  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.231.0.tgz#64f9a99fd13b3614e28e75b1c55cb2a1f479571e"
+  integrity sha512-QIkIrJskFsCH1MPSRE6roN0ukW4Kohj6Oja5FwQM4sxcb6X46i8UV8dC+5yNRY6enh4UQPlr/iJ6KrGUUOUTJg==
   dependencies:
-    hermes-parser "0.19.2"
+    hermes-parser "0.20.1"
     pirates "^3.0.2"
     vlq "^0.2.1"
 
@@ -8703,22 +8703,10 @@ hermes-eslint@^0.20.1:
     hermes-estree "0.20.1"
     hermes-parser "0.20.1"
 
-hermes-estree@0.19.2:
-  version "0.19.2"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.19.2.tgz#b35f59c7fa184ac63a049a9ad37b370c5151bd20"
-  integrity sha512-dMDmDgaW9LXQxGOQ+gsAZUlXiPXkHvUrpKESCPhkm3pH0SjHy5uaBaT8psxmPol1EBh8GVM2lGC/W0bhuW/fpQ==
-
 hermes-estree@0.20.1:
   version "0.20.1"
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.20.1.tgz#0b9a544cf883a779a8e1444b915fa365bef7f72d"
   integrity sha512-SQpZK4BzR48kuOg0v4pb3EAGNclzIlqMj3Opu/mu7bbAoFw6oig6cEt/RAi0zTFW/iW6Iz9X9ggGuZTAZ/yZHg==
-
-hermes-parser@0.19.2:
-  version "0.19.2"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.19.2.tgz#67b0fd92f4d7a374234f58c4f980f816734a7695"
-  integrity sha512-FxPcupAYzTks42tx8c29UGW59BbZQ67aKKS4jFi0eiD8Q3US3O8raxfNx0yi0ha0dTCq1WXK2MlJv+RCjkVp3Q==
-  dependencies:
-    hermes-estree "0.19.2"
 
 hermes-parser@0.20.1, hermes-parser@^0.20.1:
   version "0.20.1"
