@@ -51,7 +51,7 @@ describe('ReactHooks', () => {
       await expect(async () => {
         await act(() => {
           ReactTestRenderer.create(<Example />, {
-            unstable_unstable_isConcurrent: true,
+            unstable_isConcurrent: true,
           });
         });
       }).rejects.toThrow(
