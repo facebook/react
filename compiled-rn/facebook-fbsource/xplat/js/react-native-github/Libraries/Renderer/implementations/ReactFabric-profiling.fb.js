@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<26c28bc563c475bc48b8350e745dfaa4>>
+ * @generated SignedSource<<92a5460b92f7a609cb3fc8d6b726415d>>
  */
 
 "use strict";
@@ -1268,7 +1268,9 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
     }
   });
 }
-var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+var alwaysThrottleDisappearingFallbacks =
+    dynamicFlags.alwaysThrottleDisappearingFallbacks,
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions = dynamicFlags.enableAsyncActions,
@@ -8840,7 +8842,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (finishedWork.child.flags & 8192) {
         var isShowingFallback = null !== finishedWork.memoizedState;
         current = null !== current && null !== current.memoizedState;
-        alwaysThrottleRetries
+        alwaysThrottleDisappearingFallbacks
           ? isShowingFallback !== current &&
             (globalMostRecentFallbackTime = now$1())
           : isShowingFallback &&
@@ -11332,7 +11334,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1184 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-154313d4",
+    version: "18.3.0-canary-40c1e627",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11388,7 +11390,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-154313d4"
+  reconcilerVersion: "18.3.0-canary-40c1e627"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

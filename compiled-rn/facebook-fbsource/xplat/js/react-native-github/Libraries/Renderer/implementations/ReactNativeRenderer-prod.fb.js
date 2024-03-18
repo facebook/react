@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1220d516fcec3101959c6d1fd5cbc8c0>>
+ * @generated SignedSource<<e8f5f760fffab04fce84512df962a250>>
  */
 
 "use strict";
@@ -1112,6 +1112,8 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler({
 });
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  alwaysThrottleDisappearingFallbacks =
+    dynamicFlags.alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
@@ -8460,7 +8462,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       finishedWork.child.flags & 8192 &&
         ((newProps = null !== finishedWork.memoizedState),
         (current = null !== current && null !== current.memoizedState),
-        alwaysThrottleRetries
+        alwaysThrottleDisappearingFallbacks
           ? newProps !== current && (globalMostRecentFallbackTime = now())
           : newProps && !current && (globalMostRecentFallbackTime = now()));
       flags & 4 &&
@@ -10843,7 +10845,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1172 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-ca090109",
+    version: "18.3.0-canary-57ef8da6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10886,7 +10888,7 @@ var internals$jscomp$inline_1413 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-ca090109"
+  reconcilerVersion: "18.3.0-canary-57ef8da6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1414 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e0529a44eea2a06c29b44e0f6f3094ea>>
+ * @generated SignedSource<<d73b12c3f574028ed9e0ad9b51186c44>>
  */
 
 "use strict";
@@ -2972,7 +2972,9 @@ to return true:wantsResponderID|                            |
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     // the exports object every time a flag is read.
 
-    var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+    var alwaysThrottleDisappearingFallbacks =
+        dynamicFlags.alwaysThrottleDisappearingFallbacks,
+      alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
       consoleManagedByDevToolsDuringStrictMode =
         dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
       enableAsyncActions = dynamicFlags.enableAsyncActions,
@@ -23729,7 +23731,7 @@ to return true:wantsResponderID|                            |
             var wasShowingFallback =
               current !== null && current.memoizedState !== null;
 
-            if (alwaysThrottleRetries) {
+            if (alwaysThrottleDisappearingFallbacks) {
               if (isShowingFallback !== wasShowingFallback) {
                 // A fallback is either appearing or disappearing.
                 markCommitTimeOfFallback();
@@ -29801,7 +29803,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-dcb437de";
+    var ReactVersion = "18.3.0-canary-0088978b";
 
     function createPortal$1(
       children,
