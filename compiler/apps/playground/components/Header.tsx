@@ -53,26 +53,15 @@ export default function Header() {
   };
 
   return (
-    <div className="flex items-center justify-between w-screen px-5 py-3 border-b border-gray-200 fixed bg-white z-10 h-14">
+    <div className="fixed z-10 flex items-center justify-between w-screen px-5 py-3 bg-white border-b border-gray-200 h-14">
       <div className="flex items-center flex-none h-full gap-2 text-lg">
         <Logo
           className={clsx(
             "w-8 h-8 text-link",
-            process.env.NODE_ENV === "development" && "text-yellow-600"
+            process.env.NODE_ENV === "development" && "text-yellow-600",
           )}
         />
         <p className="hidden select-none sm:block">React Forget Playground</p>
-        <div
-          title="Do not share this outside of Meta"
-          className={clsx(
-            "px-1 mb-px text-sm font-bold tracking-wide uppercase rounded bg-highlight dark:bg-highlight-dark whitespace-nowrap",
-            process.env.NODE_ENV === "development"
-              ? "text-yellow-600"
-              : "text-red-600"
-          )}
-        >
-          {process.env.NODE_ENV === "development" ? "DEV" : "Private"}
-        </div>
       </div>
       <div className="flex items-center text-[15px] gap-4">
         <button
