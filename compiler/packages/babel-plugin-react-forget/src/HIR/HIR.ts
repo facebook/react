@@ -1123,6 +1123,11 @@ export enum ValueReason {
   Context = "context",
 
   /**
+   * A value returned from `useState`
+   */
+  State = "state",
+
+  /**
    * Props of a component or arguments of a hook.
    */
   ReactiveFunctionArgument = "reactive-function-argument",

@@ -261,6 +261,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       hookKind: "useState",
       returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
     }),
   ],
   [
