@@ -257,9 +257,45 @@ describe('ReactFlightDOMReply', () => {
     let resolve;
     const lazy = React.lazy(() => new Promise(r => (resolve = r)));
     const bodyPromise = ReactServerDOMClient.encodeReply({lazy: lazy});
-    resolve('Hi');
+    resolve({default: 'Hi'});
     const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
     expect(result.lazy).toBe('Hi');
+  });
+
+  it('resolves a proxy throwing a promise inside React.lazy', async () => {
+    let resolve1;
+    let resolve2;
+    const lazy = React.lazy(() => new Promise(r => (resolve1 = r)));
+    const promise = new Promise(r => (resolve2 = r));
+    const bodyPromise1 = ReactServerDOMClient.encodeReply({lazy: lazy});
+    const target = {value: ''};
+    let loaded = false;
+    const proxy = new Proxy(target, {
+      get(targetObj, prop, receiver) {
+        if (prop === 'value') {
+          if (!loaded) {
+            throw promise;
+          }
+          return 'Hello';
+        }
+        return targetObj[prop];
+      },
+    });
+    await resolve1({default: proxy});
+
+    // Encode it again so that we have an already initialized lazy
+    // This is now already resolved but the proxy inside isn't. This ensures
+    // we trigger the retry code path.
+    const bodyPromise2 = ReactServerDOMClient.encodeReply({lazy: lazy});
+
+    // Then resolve the inner thrown promise.
+    loaded = true;
+    await resolve2('Hello');
+
+    const result1 = await ReactServerDOMServer.decodeReply(await bodyPromise1);
+    expect(await result1.lazy.value).toBe('Hello');
+    const result2 = await ReactServerDOMServer.decodeReply(await bodyPromise2);
+    expect(await result2.lazy.value).toBe('Hello');
   });
 
   it('errors when called with JSX by default', async () => {

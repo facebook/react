@@ -238,18 +238,17 @@ export function processReply(
             // Upgrade to use FormData to allow us to stream this value.
             formData = new FormData();
           }
+          pendingParts++;
           try {
             const resolvedModel = init(payload);
             // We always outline this as a separate part even though we could inline it
             // because it ensures a more deterministic encoding.
-            pendingParts++;
             const lazyId = nextPartId++;
             const partJSON = JSON.stringify(resolvedModel, resolveToJSON);
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
             // eslint-disable-next-line react-internal/safe-string-coercion
             data.append(formFieldPrefix + lazyId, partJSON);
-            pendingParts--;
             return serializeByValueID(lazyId);
           } catch (x) {
             if (
@@ -261,28 +260,24 @@ export function processReply(
               pendingParts++;
               const lazyId = nextPartId++;
               const thenable: Thenable<any> = (x: any);
-              thenable.then(
-                partValue => {
-                  try {
-                    const partJSON = JSON.stringify(partValue, resolveToJSON);
-                    // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
-                    const data: FormData = formData;
-                    // eslint-disable-next-line react-internal/safe-string-coercion
-                    data.append(formFieldPrefix + lazyId, partJSON);
-                    pendingParts--;
-                    if (pendingParts === 0) {
-                      resolve(data);
-                    }
-                  } catch (reason) {
-                    reject(reason);
+              const retry = function () {
+                // While the first promise resolved, its value isn't necessarily what we'll
+                // resolve into because we might suspend again.
+                try {
+                  const partJSON = JSON.stringify(value, resolveToJSON);
+                  // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+                  const data: FormData = formData;
+                  // eslint-disable-next-line react-internal/safe-string-coercion
+                  data.append(formFieldPrefix + lazyId, partJSON);
+                  pendingParts--;
+                  if (pendingParts === 0) {
+                    resolve(data);
                   }
-                },
-                reason => {
-                  // In the future we could consider serializing this as an error
-                  // that throws on the server instead.
+                } catch (reason) {
                   reject(reason);
-                },
-              );
+                }
+              };
+              thenable.then(retry, retry);
               return serializeByValueID(lazyId);
             } else {
               // In the future we could consider serializing this as an error
@@ -290,6 +285,8 @@ export function processReply(
               reject(x);
               return null;
             }
+          } finally {
+            pendingParts--;
           }
         }
       }
