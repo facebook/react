@@ -26,11 +26,18 @@ import {
   createServerReference,
 } from 'react-client/src/ReactFlightReplyClient';
 
+import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
+
+export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
+
+export type {TemporaryReferenceSet};
+
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
   moduleBaseURL?: string,
   callServer?: CallServerCallback,
+  temporaryReferences?: TemporaryReferenceSet,
 };
 
 function createResponseFromOptions(options: void | Options) {
@@ -40,6 +47,9 @@ function createResponseFromOptions(options: void | Options) {
     options && options.callServer ? options.callServer : undefined,
     undefined, // encodeFormAction
     undefined, // nonce
+    options && options.temporaryReferences
+      ? options.temporaryReferences
+      : undefined,
   );
 }
 
@@ -97,11 +107,20 @@ function createFromFetch<T>(
 
 function encodeReply(
   value: ReactServerValue,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Promise<
   string | URLSearchParams | FormData,
 > /* We don't use URLSearchParams yet but maybe */ {
   return new Promise((resolve, reject) => {
-    processReply(value, '', resolve, reject);
+    processReply(
+      value,
+      '',
+      options && options.temporaryReferences
+        ? options.temporaryReferences
+        : undefined,
+      resolve,
+      reject,
+    );
   });
 }
 
