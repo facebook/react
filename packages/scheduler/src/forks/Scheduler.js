@@ -61,12 +61,10 @@ const hasPerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
 if (hasPerformanceNow) {
-  const localPerformance = performance;
-  getCurrentTime = () => localPerformance.now();
+  getCurrentTime = performance.now.bind(performance);
 } else {
-  const localDate = Date;
-  const initialTime = localDate.now();
-  getCurrentTime = () => localDate.now() - initialTime;
+  const initialTime = Date.now();
+  getCurrentTime = () => Date.now() - initialTime;
 }
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
