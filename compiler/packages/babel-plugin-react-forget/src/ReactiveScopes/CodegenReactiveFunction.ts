@@ -1089,6 +1089,7 @@ const createJsxIdentifier = withLoc(t.jsxIdentifier);
 const createJsxExpressionContainer = withLoc(t.jsxExpressionContainer);
 const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
+const createJsxOpeningElement = withLoc(t.jsxOpeningElement);
 const createStringLiteral = withLoc(t.stringLiteral);
 
 function createHookGuard(
@@ -1515,9 +1516,14 @@ function codegenInstructionValue(
       }
       value = createJsxElement(
         instrValue.loc,
-        t.jsxOpeningElement(tag, attributes, instrValue.children === null),
+        createJsxOpeningElement(
+          instrValue.openingLoc,
+          tag,
+          attributes,
+          instrValue.children === null
+        ),
         instrValue.children !== null
-          ? createJsxClosingElement(instrValue.tag.loc, tag)
+          ? createJsxClosingElement(instrValue.closingLoc, tag)
           : null,
         children,
         instrValue.children === null

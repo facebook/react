@@ -1967,6 +1967,7 @@ function lowerExpression(
     case "JSXElement": {
       const expr = exprPath as NodePath<t.JSXElement>;
       const opening = expr.get("openingElement");
+      const openingLoc = opening.node.loc ?? GeneratedSource;
       const tag = lowerJsxElementName(builder, opening.get("name"));
       const props: Array<JsxAttribute> = [];
       for (const attribute of opening.get("attributes")) {
@@ -2073,7 +2074,7 @@ function lowerExpression(
               return lowerValueToTemporary(builder, {
                 kind: "JSXText",
                 value: text,
-                loc: exprLoc,
+                loc: child.node.loc ?? GeneratedSource,
               });
             }
             return lowerJsxElement(builder, child);
@@ -2091,6 +2092,8 @@ function lowerExpression(
         props,
         children: children.length === 0 ? null : children,
         loc: exprLoc,
+        openingLoc: openingLoc,
+        closingLoc: expr.get("closingElement").node?.loc ?? GeneratedSource,
       };
     }
     case "JSXFragment": {

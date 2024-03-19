@@ -795,6 +795,8 @@ export type InstructionValue =
       props: Array<JsxAttribute>;
       children: Array<Place> | null; // null === no children
       loc: SourceLocation;
+      openingLoc: SourceLocation;
+      closingLoc: SourceLocation;
     }
   | {
       kind: "ObjectExpression";
