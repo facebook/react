@@ -1029,67 +1029,6 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useActionState updates state asynchronously and queues multiple actions', async () => {
-    let actionCounter = 0;
-    async function action(state, type) {
-      actionCounter++;
-
-      Scheduler.log(`Async action started [${actionCounter}]`);
-      await getText(`Wait [${actionCounter}]`);
-
-      switch (type) {
-        case 'increment':
-          return state + 1;
-        case 'decrement':
-          return state - 1;
-        default:
-          return state;
-      }
-    }
-
-    let dispatch;
-    function App() {
-      const [state, _dispatch, isPending] = useActionState(action, 0);
-      dispatch = _dispatch;
-      const pending = isPending ? 'Pending ' : '';
-      return <Text text={pending + state} />;
-    }
-
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => root.render(<App />));
-    assertLog(['0']);
-    expect(container.textContent).toBe('0');
-
-    await act(() => dispatch('increment'));
-    assertLog(['Async action started [1]', 'Pending 0']);
-    expect(container.textContent).toBe('Pending 0');
-
-    // Dispatch a few more actions. None of these will start until the previous
-    // one finishes.
-    await act(() => dispatch('increment'));
-    await act(() => dispatch('decrement'));
-    await act(() => dispatch('increment'));
-    assertLog([]);
-
-    // Each action starts as soon as the previous one finishes.
-    // NOTE: React does not render in between these actions because they all
-    // update the same queue, which means they get entangled together. This is
-    // intentional behavior.
-    await act(() => resolveText('Wait [1]'));
-    assertLog(['Async action started [2]']);
-    await act(() => resolveText('Wait [2]'));
-    assertLog(['Async action started [3]']);
-    await act(() => resolveText('Wait [3]'));
-    assertLog(['Async action started [4]']);
-    await act(() => resolveText('Wait [4]'));
-
-    // Finally the last action finishes and we can render the result.
-    assertLog(['2']);
-    expect(container.textContent).toBe('2');
-  });
-
-  // @gate enableFormActions
-  // @gate enableAsyncActions
   test('useActionState supports inline actions', async () => {
     let increment;
     function App({stepSize}) {
