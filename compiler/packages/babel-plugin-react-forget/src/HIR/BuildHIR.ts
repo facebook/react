@@ -2058,6 +2058,25 @@ function lowerExpression(
             suggestions: null,
           });
         }
+        const fbtEnumLocations: Array<SourceLocation> = [];
+        expr.traverse({
+          JSXNamespacedName(path) {
+            if (
+              path.node.namespace.name === "fbt" &&
+              path.node.name.name === "enum"
+            ) {
+              fbtEnumLocations.push(path.node.loc ?? GeneratedSource);
+            }
+          },
+        });
+        if (fbtEnumLocations.length > 1) {
+          CompilerError.throwTodo({
+            reason: `Support <fbt> tags with multiple <fbt:enum> values`,
+            loc: fbtEnumLocations.at(-1) ?? GeneratedSource,
+            description: null,
+            suggestions: null,
+          });
+        }
       }
 
       let children: Array<Place>;
