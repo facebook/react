@@ -406,7 +406,7 @@ if (argv.csv) {
     `Flag name, ${FLAG_COLUMNS.join(', ')}`,
     ...Object.keys(table).map(flag => {
       const row = sorted[flag];
-      return `${flag}, ${FLAG_COLUMNS.map(flag => row[flag]).join(', ')}`;
+      return `${flag}, ${FLAG_COLUMNS.map(col => row[col]).join(', ')}`;
     }),
   ];
   fs.writeFile('./flags.csv', csvRows.join('\n'), function (err) {
