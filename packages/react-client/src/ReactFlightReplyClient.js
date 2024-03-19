@@ -16,6 +16,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
+import type {ClientReferenceMetadata} from './ReactFlightClientConfig';
 
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
@@ -59,6 +60,9 @@ export type EncodeFormActionCallback = <A>(
   args: Promise<A>,
 ) => ReactCustomFormAction;
 
+const knownClientReferences: WeakMap<Function, ClientReferenceMetadata> =
+  new WeakMap();
+
 export type ServerReferenceId = any;
 
 const knownServerReferences: WeakMap<
@@ -95,6 +99,10 @@ function serializeByValueID(id: number): string {
 
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
+}
+
+function serializeClientReferenceID(id: number): string {
+  return '$C' + id.toString(16);
 }
 
 function serializeServerReferenceID(id: number): string {
@@ -454,9 +462,12 @@ export function processReply(
     }
 
     if (typeof value === 'function') {
-      const metaData = knownServerReferences.get(value);
-      if (metaData !== undefined) {
-        const metaDataJSON = JSON.stringify(metaData, resolveToJSON);
+      const serverMetaData = knownServerReferences.get(value);
+      if (serverMetaData !== undefined) {
+        const metaDataJSON: string = JSON.stringify(
+          serverMetaData,
+          resolveToJSON,
+        );
         if (formData === null) {
           // Upgrade to use FormData to allow us to stream this value.
           formData = new FormData();
@@ -468,6 +479,25 @@ export function processReply(
         return serializeServerReferenceID(refId);
       }
       if (temporaryReferences === undefined) {
+        const clientMetadata = knownClientReferences.get(value);
+        if (clientMetadata !== undefined) {
+          // If this function once was loaded by a server response from this same client
+          // we can pass it back given the same metadata that was sent to us. So that the
+          // server can return it to us again.
+          // $FlowFixMe[incompatible-type]: The meta data should be known to never yield undefined.
+          const metaDataJSON: string = JSON.stringify(
+            clientMetadata,
+            resolveToJSON,
+          );
+          if (formData === null) {
+            // Upgrade to use FormData to allow us to stream this value.
+            formData = new FormData();
+          }
+          const refId = nextPartId++;
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          formData.set(formFieldPrefix + refId, metaDataJSON);
+          return serializeClientReferenceID(refId);
+        }
         throw new Error(
           'Client Functions cannot be passed directly to Server Functions. ' +
             'Only Functions passed from the Server can be passed back again.',
@@ -683,6 +713,18 @@ function isSignatureEqual(
       }
       throw boundPromise;
     }
+  }
+}
+
+export function registerClientReference<T>(
+  reference: T,
+  metadata: ClientReferenceMetadata,
+): void {
+  if (typeof reference === 'function') {
+    // Currently we only track functions, like Components, because objects might be
+    // serializable and if they are the receiving side might expect to be able to
+    // use them. Functions on the other hand would error anywayy.
+    knownClientReferences.set(reference, metadata);
   }
 }
 

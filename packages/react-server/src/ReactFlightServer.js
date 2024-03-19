@@ -59,7 +59,10 @@ import type {
   ReactAsyncInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {TemporaryReference} from './ReactFlightServerTemporaryReferences';
+import type {
+  TemporaryReference,
+  ReplyClientReference,
+} from './ReactFlightServerTemporaryReferences';
 
 import {
   resolveClientReferenceMetadata,
@@ -77,6 +80,8 @@ import {
 import {
   isTemporaryReference,
   resolveTemporaryReferenceID,
+  isReplyClientReference,
+  resolveReplyClientReferenceMetadata,
 } from './ReactFlightServerTemporaryReferences';
 
 import {
@@ -794,7 +799,11 @@ function renderElement(
     }
   }
   if (typeof type === 'function') {
-    if (isClientReference(type) || isTemporaryReference(type)) {
+    if (
+      isClientReference(type) ||
+      isTemporaryReference(type) ||
+      isReplyClientReference(type)
+    ) {
       // This is a reference to a Client Component.
       return renderClientElement(task, type, key, props);
     }
@@ -1055,6 +1064,19 @@ function serializeClientReference(
     emitErrorChunk(request, errorId, digest, x);
     return serializeByValueID(errorId);
   }
+}
+
+function serializeReplyClientReference(
+  request: Request,
+  replyClientReference: ReplyClientReference<any>,
+): string {
+  // TODO: Consider deduping these.
+  const clientReferenceMetadata: ClientReferenceMetadata =
+    resolveReplyClientReferenceMetadata(replyClientReference);
+  request.pendingChunks++;
+  const importId = request.nextChunkId++;
+  emitImportChunk(request, importId, clientReferenceMetadata);
+  return serializeByValueID(importId);
 }
 
 function outlineModel(request: Request, value: ReactClientValue): number {
@@ -1656,6 +1678,9 @@ function renderModelDestructive(
     if (isTemporaryReference(value)) {
       return serializeTemporaryReference(request, (value: any));
     }
+    if (isReplyClientReference(value)) {
+      return serializeReplyClientReference(request, (value: any));
+    }
 
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
@@ -2126,6 +2151,9 @@ function renderConsoleValue(
     }
     if (isTemporaryReference(value)) {
       return serializeTemporaryReference(request, (value: any));
+    }
+    if (isReplyClientReference(value)) {
+      return serializeReplyClientReference(request, (value: any));
     }
 
     // Serialize the body of the function as an eval so it can be printed.

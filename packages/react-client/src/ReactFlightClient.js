@@ -55,7 +55,10 @@ import {
   printToConsole,
 } from './ReactFlightClientConfig';
 
-import {registerServerReference} from './ReactFlightReplyClient';
+import {
+  registerServerReference,
+  registerClientReference,
+} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
@@ -128,7 +131,7 @@ type ResolvedModelChunk<T> = {
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
   value: ClientReference<T>,
-  reason: null,
+  reason: ClientReferenceMetadata,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
@@ -334,9 +337,10 @@ function createResolvedModelChunk<T>(
 function createResolvedModuleChunk<T>(
   response: Response,
   value: ClientReference<T>,
+  metadata: ClientReferenceMetadata,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODULE, value, null, response);
+  return new Chunk(RESOLVED_MODULE, value, metadata, response);
 }
 
 function createInitializedTextChunk(
@@ -381,6 +385,7 @@ function resolveModelChunk<T>(
 function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
   value: ClientReference<T>,
+  metadata: ClientReferenceMetadata,
 ): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // We already resolved. We didn't expect to see this.
@@ -391,6 +396,7 @@ function resolveModuleChunk<T>(
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
+  resolvedChunk.reason = metadata;
   if (resolveListeners !== null) {
     initializeModuleChunk(resolvedChunk);
     wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
@@ -450,9 +456,11 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
 function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
   try {
     const value: T = requireModule(chunk.value);
+    registerClientReference(value, chunk.reason);
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -949,16 +957,28 @@ function resolveModule(
       blockedChunk.status = BLOCKED;
     }
     promise.then(
-      () => resolveModuleChunk(blockedChunk, clientReference),
+      () =>
+        resolveModuleChunk(
+          blockedChunk,
+          clientReference,
+          clientReferenceMetadata,
+        ),
       error => triggerErrorOnChunk(blockedChunk, error),
     );
   } else {
     if (!chunk) {
-      chunks.set(id, createResolvedModuleChunk(response, clientReference));
+      chunks.set(
+        id,
+        createResolvedModuleChunk(
+          response,
+          clientReference,
+          clientReferenceMetadata,
+        ),
+      );
     } else {
       // This can't actually happen because we don't have any forward
       // references to modules.
-      resolveModuleChunk(chunk, clientReference);
+      resolveModuleChunk(chunk, clientReference, clientReferenceMetadata);
     }
   }
 }

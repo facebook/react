@@ -15,6 +15,8 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+let clientExports;
+let webpackMap;
 // let serverExports;
 let webpackServerMap;
 let React;
@@ -30,6 +32,8 @@ describe('ReactFlightDOMReply', () => {
       require('react-server-dom-webpack/server.browser'),
     );
     const WebpackMock = require('./utils/WebpackMock');
+    clientExports = WebpackMock.clientExports;
+    webpackMap = WebpackMock.webpackMap;
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
@@ -345,5 +349,32 @@ describe('ReactFlightDOMReply', () => {
 
     // This should've been the same reference that we already saw.
     expect(response.children).toBe(children);
+  });
+
+  it('can pass a client reference send by the server back again', async () => {
+    function Component() {
+      return <div />;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    const stream1 = ReactServerDOMServer.renderToReadableStream(
+      {component: ClientComponent},
+      webpackMap,
+    );
+    const response1 =
+      await ReactServerDOMClient.createFromReadableStream(stream1);
+    expect(response1.component).toBe(Component);
+
+    const body = await ReactServerDOMClient.encodeReply({
+      replied: response1.component,
+    });
+    const serverPayload = await ReactServerDOMServer.decodeReply(body);
+
+    const stream2 = ReactServerDOMServer.renderToReadableStream(serverPayload);
+    const response2 =
+      await ReactServerDOMClient.createFromReadableStream(stream2);
+
+    expect(response2.replied).toBe(Component);
   });
 });

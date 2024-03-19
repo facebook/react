@@ -34,7 +34,7 @@ export type ServerManifest = void;
 
 export type ServerReferenceId = string;
 
-export opaque type ClientReferenceMetadata = ImportMetadata;
+export type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {

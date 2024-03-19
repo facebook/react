@@ -16,6 +16,7 @@ import type {
   ServerReferenceId,
   ServerManifest,
   ClientReference as ServerReference,
+  ClientReferenceMetadata,
 } from 'react-client/src/ReactFlightClientConfig';
 
 import {
@@ -24,7 +25,10 @@ import {
   requireModule,
 } from 'react-client/src/ReactFlightClientConfig';
 
-import {createTemporaryReference} from './ReactFlightServerTemporaryReferences';
+import {
+  createTemporaryReference,
+  createReplyClientReference,
+} from './ReactFlightServerTemporaryReferences';
 
 export type JSONValue =
   | number
@@ -418,6 +422,16 @@ function parseModelString(
       case 'T': {
         // Temporary Reference
         return createTemporaryReference(value.slice(2));
+      }
+      case 'C': {
+        // Client Reference
+        const id = parseInt(value.slice(2), 16);
+        // TODO: Just encode this in the reference inline instead of as a model.
+        const metaData: ClientReferenceMetadata = getOutlinedModel(
+          response,
+          id,
+        );
+        return createReplyClientReference(metaData);
       }
       case 'Q': {
         // Map

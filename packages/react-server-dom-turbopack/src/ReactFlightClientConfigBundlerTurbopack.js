@@ -43,10 +43,10 @@ export type ServerManifest = {
 export type ServerReferenceId = string;
 
 export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
-export opaque type ClientReferenceMetadata = ImportMetadata;
+export type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
-export opaque type ClientReference<T> = ClientReferenceMetadata;
+export type ClientReference<T> = ClientReferenceMetadata;
 
 // The reason this function needs to defined here in this file instead of just
 // being exported directly from the TurbopackDestination... file is because the

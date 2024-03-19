@@ -7,6 +7,26 @@
  * @flow
  */
 
+import type {ClientReferenceMetadata} from './ReactFlightServerConfig';
+
+const REPLY_REFERENCE_TAG = Symbol.for('react.reply.reference');
+
+// eslint-disable-next-line no-unused-vars
+export opaque type ReplyClientReference<T> = {
+  $$typeof: symbol,
+  $$metadata: ClientReferenceMetadata,
+};
+
+export function isReplyClientReference(reference: Object): boolean {
+  return reference.$$typeof === REPLY_REFERENCE_TAG;
+}
+
+export function resolveReplyClientReferenceMetadata<T>(
+  replyClientReference: ReplyClientReference<T>,
+): ClientReferenceMetadata {
+  return replyClientReference.$$metadata;
+}
+
 const TEMPORARY_REFERENCE_TAG = Symbol.for('react.temporary.reference');
 
 // eslint-disable-next-line no-unused-vars
@@ -39,8 +59,8 @@ const proxyHandlers = {
         return target.$$typeof;
       case '$$id':
         return target.$$id;
-      case '$$async':
-        return target.$$async;
+      case '$$metadata':
+        return target.$$metadata;
       case 'name':
         return undefined;
       case 'displayName':
@@ -95,5 +115,25 @@ export function createTemporaryReference<T>(id: string): TemporaryReference<T> {
     },
   );
 
+  return new Proxy(reference, proxyHandlers);
+}
+
+export function createReplyClientReference<T>(
+  metadata: ClientReferenceMetadata,
+): ReplyClientReference<T> {
+  const reference: ReplyClientReference<any> = Object.defineProperties(
+    (function () {
+      throw new Error(
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        `Attempted to call a temporary Client Reference from the server but it is on the client. ` +
+          `It's not possible to invoke a client function from the server, it can ` +
+          `only be rendered as a Component or passed to props of a Client Component.`,
+      );
+    }: any),
+    {
+      $$typeof: {value: REPLY_REFERENCE_TAG},
+      $$metadata: {value: metadata},
+    },
+  );
   return new Proxy(reference, proxyHandlers);
 }
