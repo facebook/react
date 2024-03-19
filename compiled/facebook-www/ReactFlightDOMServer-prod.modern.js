@@ -164,7 +164,8 @@ function trimOptions(options) {
       ((hasProperties = !0), (trimmed[key] = options[key]));
   return hasProperties ? trimmed : null;
 }
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var TEMPORARY_REFERENCE_TAG = Symbol.for("react.temporary.reference"),
+  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -595,7 +596,7 @@ function renderElement(request, task, type, key, ref, props) {
       "Refs cannot be used in Server Components, nor passed to Client Components."
     );
   if ("function" === typeof type)
-    return isClientReference(type)
+    return isClientReference(type) || type.$$typeof === TEMPORARY_REFERENCE_TAG
       ? renderClientElement(task, type, key, props)
       : renderFunctionComponent(request, task, key, type, props);
   if ("string" === typeof type)

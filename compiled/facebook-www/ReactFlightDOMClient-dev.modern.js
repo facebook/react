@@ -257,6 +257,17 @@ if (__DEV__) {
     var REACT_ELEMENT_TYPE = Symbol.for("react.element");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
 
+    function readTemporaryReference(set, id) {
+      if (id < 0 || id >= set.length) {
+        throw new Error(
+          "The RSC response contained a reference that doesn't exist in the temporary reference set. " +
+            "Always pass the matching set that was used to create the reply when parsing its response."
+        );
+      }
+
+      return set[id];
+    }
+
     var knownServerReferences = new WeakMap(); // Serializable values
 
     function registerServerReference(proxy, reference, encodeFormAction) {
@@ -784,19 +795,35 @@ if (__DEV__) {
             return createServerReferenceProxy(response, metadata);
           }
 
-          case "Q": {
-            // Map
+          case "T": {
+            // Temporary Reference
             var _id3 = parseInt(value.slice(2), 16);
 
-            var data = getOutlinedModel(response, _id3);
+            var temporaryReferences = response._tempRefs;
+
+            if (temporaryReferences == null) {
+              throw new Error(
+                "Missing a temporary reference set but the RSC response returned a temporary reference. " +
+                  "Pass a temporaryReference option with the set that was used with the reply."
+              );
+            }
+
+            return readTemporaryReference(temporaryReferences, _id3);
+          }
+
+          case "Q": {
+            // Map
+            var _id4 = parseInt(value.slice(2), 16);
+
+            var data = getOutlinedModel(response, _id4);
             return new Map(data);
           }
 
           case "W": {
             // Set
-            var _id4 = parseInt(value.slice(2), 16);
+            var _id5 = parseInt(value.slice(2), 16);
 
-            var _data = getOutlinedModel(response, _id4);
+            var _data = getOutlinedModel(response, _id5);
 
             return new Set(_data);
           }
@@ -853,9 +880,9 @@ if (__DEV__) {
 
           default: {
             // We assume that anything else is a reference ID.
-            var _id5 = parseInt(value.slice(1), 16);
+            var _id6 = parseInt(value.slice(1), 16);
 
-            var _chunk2 = getChunk(response, _id5);
+            var _chunk2 = getChunk(response, _id6);
 
             switch (_chunk2.status) {
               case RESOLVED_MODEL:
@@ -950,7 +977,8 @@ if (__DEV__) {
       moduleLoading,
       callServer,
       encodeFormAction,
-      nonce
+      nonce,
+      temporaryReferences
     ) {
       var chunks = new Map();
       var response = {
@@ -966,7 +994,8 @@ if (__DEV__) {
         _rowID: 0,
         _rowTag: 0,
         _rowLength: 0,
-        _buffer: []
+        _buffer: [],
+        _tempRefs: temporaryReferences
       }; // Don't inline this call because it causes closure to outline the call above.
 
       response._fromJSON = createFromJSONCallback(response);

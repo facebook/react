@@ -434,6 +434,15 @@ if (__DEV__) {
     var supportsRequestStorage = false;
     var requestStorage = null;
 
+    var TEMPORARY_REFERENCE_TAG = Symbol.for("react.temporary.reference"); // eslint-disable-next-line no-unused-vars
+
+    function isTemporaryReference(reference) {
+      return reference.$$typeof === TEMPORARY_REFERENCE_TAG;
+    }
+    function resolveTemporaryReferenceID(temporaryReference) {
+      return temporaryReference.$$id;
+    }
+
     // ATTENTION
     // When adding new symbols to this file,
     // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
@@ -1644,7 +1653,7 @@ if (__DEV__) {
       }
 
       if (typeof type === "function") {
-        if (isClientReference(type)) {
+        if (isClientReference(type) || isTemporaryReference(type)) {
           // This is a reference to a Client Component.
           return renderClientElement(task, type, key, props);
         } // This is a Server Component.
@@ -1814,6 +1823,10 @@ if (__DEV__) {
       return "$F" + id.toString(16);
     }
 
+    function serializeTemporaryReferenceID(id) {
+      return "$T" + id;
+    }
+
     function serializeSymbolReference(name) {
       return "$S" + name;
     }
@@ -1940,6 +1953,11 @@ if (__DEV__) {
       var metadataId = outlineModel(request, serverReferenceMetadata);
       writtenServerReferences.set(serverReference, metadataId);
       return serializeServerReferenceID(metadataId);
+    }
+
+    function serializeTemporaryReference(request, temporaryReference) {
+      var id = resolveTemporaryReferenceID(temporaryReference);
+      return serializeTemporaryReferenceID(id);
     }
 
     function serializeLargeTextString(request, text) {
@@ -2377,6 +2395,10 @@ if (__DEV__) {
           return serializeServerReference(request, value);
         }
 
+        if (isTemporaryReference(value)) {
+          return serializeTemporaryReference(request, value);
+        }
+
         if (/^on[A-Z]/.test(parentPropertyName)) {
           throw new Error(
             "Event handlers cannot be passed to Client Component props." +
@@ -2700,6 +2722,10 @@ if (__DEV__) {
             parentPropertyName,
             value
           );
+        }
+
+        if (isTemporaryReference(value)) {
+          return serializeTemporaryReference(request, value);
         } // Serialize the body of the function as an eval so it can be printed.
         // $FlowFixMe[method-unbinding]
 

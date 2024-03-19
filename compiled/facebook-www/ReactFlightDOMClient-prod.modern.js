@@ -269,6 +269,18 @@ function parseModelString(response, parentObject, key, value) {
           (parentObject = getOutlinedModel(response, parentObject)),
           createServerReferenceProxy(response, parentObject)
         );
+      case "T":
+        parentObject = parseInt(value.slice(2), 16);
+        response = response._tempRefs;
+        if (null == response)
+          throw Error(
+            "Missing a temporary reference set but the RSC response returned a temporary reference. Pass a temporaryReference option with the set that was used with the reply."
+          );
+        if (0 > parentObject || parentObject >= response.length)
+          throw Error(
+            "The RSC response contained a reference that doesn't exist in the temporary reference set. Always pass the matching set that was used to create the reply when parsing its response."
+          );
+        return response[parentObject];
       case "Q":
         return (
           (parentObject = parseInt(value.slice(2), 16)),
@@ -570,7 +582,8 @@ exports.createFromReadableStream = function (stream, options) {
     _rowID: 0,
     _rowTag: 0,
     _rowLength: 0,
-    _buffer: []
+    _buffer: [],
+    _tempRefs: void 0
   };
   options._fromJSON = createFromJSONCallback(options);
   startReadingFromStream(options, stream);

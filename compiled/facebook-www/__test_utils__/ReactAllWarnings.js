@@ -221,8 +221,6 @@ export default [
   "Profiler must specify an \"id\" of type `string` as a prop. Received the type `%s` instead.",
   "Prop `%s` did not match. Server: %s Client: %s",
   "React Context Providers cannot be passed to Server Functions from the Client.%s",
-  "React Element cannot be passed to Server Functions from the Client.%s",
-  "React Lazy cannot be passed to Server Functions from the Client.%s",
   "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://react.dev/link/react-polyfills",
   "React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.",
   "React encountered a <link rel=\"stylesheet\" href=\"%s\" ... /> with a `precedence` prop that also included %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.",
