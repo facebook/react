@@ -2044,6 +2044,21 @@ function lowerExpression(
         }
         props.push({ kind: "JsxAttribute", name: propName, place: value });
       }
+      if (tag.kind === "BuiltinTag" && tag.name === "fbt") {
+        const openingIdentifier = opening.get("name");
+        const tagIdentifier = openingIdentifier.isJSXIdentifier()
+          ? builder.resolveIdentifier(openingIdentifier)
+          : null;
+        if (tagIdentifier != null) {
+          CompilerError.throwTodo({
+            reason: `Support <fbt> tags where 'fbt' is a local variable instead of a global`,
+            loc: openingIdentifier.node.loc ?? GeneratedSource,
+            description: null,
+            suggestions: null,
+          });
+        }
+      }
+
       let children: Array<Place>;
       if (tag.kind === "BuiltinTag" && tag.name === "fbt") {
         children = expr
