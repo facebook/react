@@ -239,6 +239,18 @@ function processExperimental(buildDir, version) {
     );
   }
 
+  [
+    buildDir + '/react-native/implementations/',
+    buildDir + '/facebook-react-native/',
+  ].forEach(reactNativeBuildDir => {
+    if (fs.existsSync(reactNativeBuildDir)) {
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        reactNativeBuildDir,
+        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
+      );
+    }
+  });
+
   // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
