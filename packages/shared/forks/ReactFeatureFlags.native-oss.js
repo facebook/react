@@ -18,7 +18,6 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 // Alias __TODO_NEXT_RN_MAJOR__ to false for easier skimming.
 // -----------------------------------------------------------------------------
 const __TODO_NEXT_RN_MAJOR__ = false;
-export const enableCache = __TODO_NEXT_RN_MAJOR__;
 export const enableRefAsProp = __TODO_NEXT_RN_MAJOR__;
 export const disableStringRefs = __TODO_NEXT_RN_MAJOR__;
 export const disableLegacyMode = __TODO_NEXT_RN_MAJOR__;
@@ -31,12 +30,18 @@ export const enableDeferRootSchedulingToMicrotask = __TODO_NEXT_RN_MAJOR__;
 export const alwaysThrottleDisappearingFallbacks = __TODO_NEXT_RN_MAJOR__;
 export const alwaysThrottleRetries = __TODO_NEXT_RN_MAJOR__;
 export const enableInfiniteRenderLoopDetection = __TODO_NEXT_RN_MAJOR__;
-export const enableRenderableContext = __TODO_NEXT_RN_MAJOR__;
 export const enableComponentStackLocations = __TODO_NEXT_RN_MAJOR__;
 export const disableModulePatternComponents = __TODO_NEXT_RN_MAJOR__;
 
 // -----------------------------------------------------------------------------
-// Enabled for next React Native major.
+// These are ready to flip after the next React npm release (or RN switches to
+// Canary, but can't flip before then because of react/renderer mismatches.
+// -----------------------------------------------------------------------------
+export const enableCache = __TODO_NEXT_RN_MAJOR__;
+export const enableRenderableContext = __TODO_NEXT_RN_MAJOR__;
+
+// -----------------------------------------------------------------------------
+// Already enabled for next React Native major.
 // Hardcode these to true after the next RN major.
 //
 // Alias __NEXT_RN_MAJOR__ to true for easier skimming.
