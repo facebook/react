@@ -226,6 +226,30 @@ export function Stringify(props: any): React.ReactElement {
   );
 }
 
+export function ValidateMemoization({
+  inputs,
+  output,
+}: {
+  inputs: Array<any>;
+  output: any;
+}) {
+  "use no forget";
+  const [previousInputs, setPreviousInputs] = React.useState(inputs);
+  const [previousOutput, setPreviousOutput] = React.useState(output);
+  if (
+    inputs.length !== previousInputs.length ||
+    inputs.some((item, i) => item !== previousInputs[i])
+  ) {
+    // Some input changed, we expect the output to change
+    setPreviousInputs(inputs);
+    setPreviousOutput(output);
+  } else if (output !== previousOutput) {
+    // Else output should be stable
+    throw new Error("Output identity changed but inputs did not");
+  }
+  return React.createElement(Stringify, { inputs, output });
+}
+
 export function createHookWrapper<TProps, TRet>(
   useMaybeHook: (props: TProps) => TRet
 ): FunctionComponent<TProps> {

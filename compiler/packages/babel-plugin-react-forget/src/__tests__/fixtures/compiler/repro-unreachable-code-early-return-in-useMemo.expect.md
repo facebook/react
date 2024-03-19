@@ -4,34 +4,10 @@
 ```javascript
 // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { useMemo, useState } from "react";
-import { Stringify, identity } from "shared-runtime";
+import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component({ value }) {
-  "use no forget";
-  const result = useValue(value);
-  return <Validate inputs={[value]} output={result} />;
-}
-
-function Validate({ inputs, output }) {
-  "use no forget";
-  const [previousInputs, setPreviousInputs] = useState(inputs);
-  const [previousOutput, setPreviousOutput] = useState(output);
-  if (
-    inputs.length !== previousInputs.length ||
-    inputs.some((item, i) => item !== previousInputs[i])
-  ) {
-    // Some input changed, we expect the output to change
-    setPreviousInputs(inputs);
-    setPreviousOutput(output);
-  } else if (output !== previousOutput) {
-    // Else output should be stable
-    throw new Error("Output identity changed but inputs did not");
-  }
-  return <Stringify inputs={inputs} output={output} />;
-}
-
-function useValue(value) {
-  return useMemo(() => {
+  const result = useMemo(() => {
     if (value == null) {
       return null;
     }
@@ -41,6 +17,7 @@ function useValue(value) {
       return null;
     }
   }, [value]);
+  return <ValidateMemoization inputs={[value]} output={result} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -69,70 +46,65 @@ import {
   useState,
   unstable_useMemoCache as useMemoCache,
 } from "react";
-import { Stringify, identity } from "shared-runtime";
+import { ValidateMemoization, identity } from "shared-runtime";
 
-function Component({ value }) {
-  "use no forget";
-  const result = useValue(value);
-  return <Validate inputs={[value]} output={result} />;
-}
-
-function Validate({ inputs, output }) {
-  "use no forget";
-  const [previousInputs, setPreviousInputs] = useState(inputs);
-  const [previousOutput, setPreviousOutput] = useState(output);
-  if (
-    inputs.length !== previousInputs.length ||
-    inputs.some((item, i) => item !== previousInputs[i])
-  ) {
-    // Some input changed, we expect the output to change
-    setPreviousInputs(inputs);
-    setPreviousOutput(output);
-  } else if (output !== previousOutput) {
-    // Else output should be stable
-    throw new Error("Output identity changed but inputs did not");
-  }
-  return <Stringify inputs={inputs} output={output} />;
-}
-
-function useValue(value) {
-  const $ = useMemoCache(5);
-  let t0;
+function Component(t0) {
+  const $ = useMemoCache(10);
+  const { value } = t0;
+  let t1;
   bb13: {
     if (value == null) {
       if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = null;
+        t1 = null;
         break bb13;
-        $[0] = t0;
+        $[0] = t1;
       } else {
-        t0 = $[0];
+        t1 = $[0];
       }
     }
     try {
-      let t2;
+      let t3;
       if ($[1] !== value) {
-        t2 = { value };
+        t3 = { value };
         $[1] = value;
-        $[2] = t2;
+        $[2] = t3;
       } else {
-        t2 = $[2];
+        t3 = $[2];
       }
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = t2;
-        $[3] = t0;
+        t1 = t3;
+        $[3] = t1;
       } else {
-        t0 = $[3];
+        t1 = $[3];
       }
-    } catch (t1) {
+    } catch (t2) {
       if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = null;
-        $[4] = t0;
+        t1 = null;
+        $[4] = t1;
       } else {
-        t0 = $[4];
+        t1 = $[4];
       }
     }
   }
-  return t0;
+  const result = t1;
+  let t2;
+  if ($[5] !== value) {
+    t2 = [value];
+    $[5] = value;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  let t3;
+  if ($[7] !== t2 || $[8] !== result) {
+    t3 = <ValidateMemoization inputs={t2} output={result} />;
+    $[7] = t2;
+    $[8] = result;
+    $[9] = t3;
+  } else {
+    t3 = $[9];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
