@@ -14,7 +14,6 @@ import {
   InstructionKind,
   LValue,
   LValuePattern,
-  makeInstructionId,
   Phi,
   Place,
 } from "../HIR/HIR";
@@ -311,50 +310,6 @@ export function leaveSSA(fn: HIRFunction): void {
           rewritePhis.push({ phi, block: phiBlock });
         } else {
           reassignmentPhis.push({ phi, block: phiBlock });
-        }
-        const hasBackEdge = backEdgePhis.has(phi);
-        const isPhiMutatedAfterCreation: boolean =
-          phi.id.mutableRange.end >
-          (phiBlock.instructions.at(0)?.id ?? phiBlock.terminal.id);
-
-        /*
-         * Named variables whose phi doesn't have a back-edge can potentially be independenly
-         * memoized, depending on whether the phi is after its creation.
-         */
-        if (phi.id.name !== null && !hasBackEdge) {
-          if (!isPhiMutatedAfterCreation) {
-            /*
-             * Simple case: predecesor-only values flowing into a phi, which is never modified:
-             * adjust the phi's range to clarify that the identifier does not mutate
-             */
-            phi.id.mutableRange.start = terminal.id;
-            phi.id.mutableRange.end = makeInstructionId(terminal.id + 1);
-          } else {
-            /*
-             * Predecessor only values flow into a phi, which is modified later:
-             * all operands flow into the phi and can be modified, must extend their ranges
-             */
-            for (const [, operand] of phi.operands) {
-              operand.mutableRange.end = phi.id.mutableRange.end;
-            }
-          }
-          continue;
-        }
-        /*
-         * Otherwise this is a temporary phi (logical or ternary) or occurs in a loop. In either
-         * case we can't independently memoize any of the values: unify their ranges to span the
-         * min(start) to max(end) so that we create a single scope for all the computation.
-         */
-        let start = block.terminal.id as number;
-        let end = Number.MIN_SAFE_INTEGER;
-        const operands = [phi.id, ...phi.operands.values()];
-        for (const operand of operands) {
-          start = Math.min(start, operand.mutableRange.start);
-          end = Math.max(end, operand.mutableRange.end);
-        }
-        for (const operand of operands) {
-          operand.mutableRange.start = makeInstructionId(start);
-          operand.mutableRange.end = makeInstructionId(end);
         }
       }
     }

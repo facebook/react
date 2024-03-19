@@ -84,6 +84,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
 
   override visitInstruction(instr: ReactiveInstruction, state: Context): void {
     switch (instr.value.kind) {
+      case "OptionalExpression":
       case "SequenceExpression":
       case "ConditionalExpression":
       case "LogicalExpression": {

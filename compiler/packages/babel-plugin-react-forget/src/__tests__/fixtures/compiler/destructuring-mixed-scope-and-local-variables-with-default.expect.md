@@ -56,7 +56,7 @@ function useFragment(_arg1, _arg2) {
 }
 
 function Component(props) {
-  const $ = useMemoCache(16);
+  const $ = useMemoCache(14);
   const post = useFragment(graphql`...`, props.post);
   let media;
   let allUrls;
@@ -65,48 +65,40 @@ function Component(props) {
     allUrls = [];
 
     const { media: t0, comments: t1, urls: t2 } = post;
+    media = t0 === undefined ? null : t0;
     let t3;
-    if ($[4] !== t0) {
-      t3 = t0 === undefined ? null : t0;
-      $[4] = t0;
+    if ($[4] !== t1) {
+      t3 = t1 === undefined ? [] : t1;
+      $[4] = t1;
       $[5] = t3;
     } else {
       t3 = $[5];
     }
-    media = t3;
+    const comments = t3;
     let t4;
-    if ($[6] !== t1) {
-      t4 = t1 === undefined ? [] : t1;
-      $[6] = t1;
+    if ($[6] !== t2) {
+      t4 = t2 === undefined ? [] : t2;
+      $[6] = t2;
       $[7] = t4;
     } else {
       t4 = $[7];
     }
-    const comments = t4;
+    const urls = t4;
     let t5;
-    if ($[8] !== t2) {
-      t5 = t2 === undefined ? [] : t2;
-      $[8] = t2;
-      $[9] = t5;
-    } else {
-      t5 = $[9];
-    }
-    const urls = t5;
-    let t6;
-    if ($[10] !== comments.length) {
-      t6 = (e) => {
+    if ($[8] !== comments.length) {
+      t5 = (e) => {
         if (!comments.length) {
           return;
         }
 
         console.log(comments.length);
       };
-      $[10] = comments.length;
-      $[11] = t6;
+      $[8] = comments.length;
+      $[9] = t5;
     } else {
-      t6 = $[11];
+      t5 = $[9];
     }
-    onClick = t6;
+    onClick = t5;
 
     allUrls.push(...urls);
     $[0] = post;
@@ -119,14 +111,14 @@ function Component(props) {
     onClick = $[3];
   }
   let t0;
-  if ($[12] !== media || $[13] !== allUrls || $[14] !== onClick) {
+  if ($[10] !== media || $[11] !== allUrls || $[12] !== onClick) {
     t0 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
-    $[12] = media;
-    $[13] = allUrls;
-    $[14] = onClick;
-    $[15] = t0;
+    $[10] = media;
+    $[11] = allUrls;
+    $[12] = onClick;
+    $[13] = t0;
   } else {
-    t0 = $[15];
+    t0 = $[13];
   }
   return t0;
 }

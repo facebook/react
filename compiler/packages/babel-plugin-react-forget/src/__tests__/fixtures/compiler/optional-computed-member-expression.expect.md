@@ -14,7 +14,7 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] !== props) {
     t0 = makeObject(props);
@@ -24,16 +24,7 @@ function Component(props) {
     t0 = $[1];
   }
   const object = t0;
-  let t1;
-  if ($[2] !== object || $[3] !== props) {
-    t1 = object?.[props.key];
-    $[2] = object;
-    $[3] = props;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  return t1;
+  return object?.[props.key];
 }
 
 ```

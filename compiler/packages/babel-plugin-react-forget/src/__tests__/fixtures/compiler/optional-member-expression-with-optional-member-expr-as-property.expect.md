@@ -14,7 +14,7 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeObject();
@@ -23,15 +23,7 @@ function Component(props) {
     t0 = $[0];
   }
   const x = t0;
-  let t1;
-  if ($[1] !== props) {
-    t1 = x.y?.[props.a?.[props.b?.[props.c]]];
-    $[1] = props;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
+  return x.y?.[props.a?.[props.b?.[props.c]]];
 }
 
 ```

@@ -54,7 +54,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(t0) {
-  const $ = useMemoCache(11);
+  const $ = useMemoCache(8);
   const { label, highlightedItem } = t0;
   const serverTime = useServerTime();
   let t1;
@@ -63,16 +63,8 @@ function Component(t0) {
     const highlight = new Highlight(highlightedItem);
 
     const time = serverTime.get();
-    let t2;
-    if ($[5] !== time || $[6] !== label) {
-      t2 = time / 1000 || label;
-      $[5] = time;
-      $[6] = label;
-      $[7] = t2;
-    } else {
-      t2 = $[7];
-    }
-    timestampLabel = t2;
+
+    timestampLabel = time / 1000 || label;
 
     t1 = highlight.render();
     $[0] = highlightedItem;
@@ -85,18 +77,18 @@ function Component(t0) {
     timestampLabel = $[4];
   }
   let t2;
-  if ($[8] !== t1 || $[9] !== timestampLabel) {
+  if ($[5] !== t1 || $[6] !== timestampLabel) {
     t2 = (
       <>
         {t1}
         {timestampLabel}
       </>
     );
-    $[8] = t1;
-    $[9] = timestampLabel;
-    $[10] = t2;
+    $[5] = t1;
+    $[6] = timestampLabel;
+    $[7] = t2;
   } else {
-    t2 = $[10];
+    t2 = $[7];
   }
   return t2;
 }

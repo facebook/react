@@ -49,60 +49,45 @@ import {
 import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component(t0) {
-  const $ = useMemoCache(10);
+  const $ = useMemoCache(7);
   const { value } = t0;
   let t1;
   bb13: {
     if (value == null) {
-      if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = null;
-        break bb13;
-        $[0] = t1;
-      } else {
-        t1 = $[0];
-      }
+      t1 = null;
+      break bb13;
     }
     try {
       let t3;
-      if ($[1] !== value) {
+      if ($[0] !== value) {
         t3 = { value };
-        $[1] = value;
-        $[2] = t3;
+        $[0] = value;
+        $[1] = t3;
       } else {
-        t3 = $[2];
+        t3 = $[1];
       }
-      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = t3;
-        $[3] = t1;
-      } else {
-        t1 = $[3];
-      }
+      t1 = t3;
     } catch (t2) {
-      if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = null;
-        $[4] = t1;
-      } else {
-        t1 = $[4];
-      }
+      t1 = null;
     }
   }
   const result = t1;
   let t2;
-  if ($[5] !== value) {
+  if ($[2] !== value) {
     t2 = [value];
-    $[5] = value;
-    $[6] = t2;
+    $[2] = value;
+    $[3] = t2;
   } else {
-    t2 = $[6];
+    t2 = $[3];
   }
   let t3;
-  if ($[7] !== t2 || $[8] !== result) {
+  if ($[4] !== t2 || $[5] !== result) {
     t3 = <ValidateMemoization inputs={t2} output={result} />;
-    $[7] = t2;
-    $[8] = result;
-    $[9] = t3;
+    $[4] = t2;
+    $[5] = result;
+    $[6] = t3;
   } else {
-    t3 = $[9];
+    t3 = $[6];
   }
   return t3;
 }
