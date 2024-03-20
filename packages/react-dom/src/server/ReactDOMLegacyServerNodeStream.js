@@ -59,10 +59,9 @@ function onError() {
   // Non-fatal errors are ignored.
 }
 
-function renderToNodeStreamImpl(
+function renderToStaticNodeStream(
   children: ReactNodeList,
-  options: void | ServerOptions,
-  generateStaticMarkup: boolean,
+  options?: ServerOptions,
 ): Readable {
   function onAllReady() {
     // We wait until everything has loaded before starting to write.
@@ -78,7 +77,7 @@ function renderToNodeStreamImpl(
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, generateStaticMarkup),
+    createRenderState(resumableState, true),
     createRootFormatContext(),
     Infinity,
     onError,
@@ -92,23 +91,4 @@ function renderToNodeStreamImpl(
   return destination;
 }
 
-function renderToNodeStream(
-  children: ReactNodeList,
-  options?: ServerOptions,
-): Readable {
-  if (__DEV__) {
-    console.error(
-      'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-    );
-  }
-  return renderToNodeStreamImpl(children, options, false);
-}
-
-function renderToStaticNodeStream(
-  children: ReactNodeList,
-  options?: ServerOptions,
-): Readable {
-  return renderToNodeStreamImpl(children, options, true);
-}
-
-export {renderToNodeStream, renderToStaticNodeStream};
+export {renderToStaticNodeStream};
