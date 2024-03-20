@@ -1158,6 +1158,25 @@ function updateClassComponent(
   nextProps: any,
   renderLanes: Lanes,
 ) {
+  let nextPropsWithoutRef;
+  if (enableRefAsProp && 'ref' in nextProps) {
+    // `ref` is just a prop now, but class components expects it to not appear
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here. The class "consumes" the ref as it binds the ref to the class
+    // instance already.
+    nextPropsWithoutRef = ({}: {[string]: any});
+    for (const key in nextProps) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        nextPropsWithoutRef[key] = nextProps[key];
+      }
+    }
+  } else {
+    nextPropsWithoutRef = nextProps;
+  }
+
   if (__DEV__) {
     // This is used by DevTools to force a boundary to error.
     switch (shouldError(workInProgress)) {
@@ -1211,15 +1230,20 @@ function updateClassComponent(
     resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
 
     // In the initial pass we might need to construct the instance.
-    constructClassInstance(workInProgress, Component, nextProps);
-    mountClassInstance(workInProgress, Component, nextProps, renderLanes);
+    constructClassInstance(workInProgress, Component, nextPropsWithoutRef);
+    mountClassInstance(
+      workInProgress,
+      Component,
+      nextPropsWithoutRef,
+      renderLanes,
+    );
     shouldUpdate = true;
   } else if (current === null) {
     // In a resume, we'll already have an instance we can reuse.
     shouldUpdate = resumeMountClassInstance(
       workInProgress,
       Component,
-      nextProps,
+      nextPropsWithoutRef,
       renderLanes,
     );
   } else {
@@ -1227,7 +1251,7 @@ function updateClassComponent(
       current,
       workInProgress,
       Component,
-      nextProps,
+      nextPropsWithoutRef,
       renderLanes,
     );
   }
@@ -1241,7 +1265,7 @@ function updateClassComponent(
   );
   if (__DEV__) {
     const inst = workInProgress.stateNode;
-    if (shouldUpdate && inst.props !== nextProps) {
+    if (shouldUpdate && inst.props !== nextPropsWithoutRef) {
       if (!didWarnAboutReassigningProps) {
         console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +

@@ -13,6 +13,9 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let Scheduler;
+let act;
+let assertLog;
 
 describe('ReactES6Class', () => {
   let container;
@@ -26,10 +29,12 @@ describe('ReactES6Class', () => {
   let renderedName = null;
 
   beforeEach(() => {
+    ({act, assertLog} = require('internal-test-utils'));
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    Scheduler = require('scheduler/unstable_mock');
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -592,6 +597,43 @@ describe('ReactES6Class', () => {
       expect(ref.current.refs.inner.getName()).toBe('foo');
     });
   }
+
+  it('does not pass ref as a prop', async () => {
+    gate(x => {
+      console.log('enableRefAsProp', x.enableRefAsProp);
+    });
+
+    class Child extends React.Component {
+      render() {
+        Scheduler.log(
+          `Child rendered with props: ${Object.keys(this.props).join(', ')}`,
+        );
+        return null;
+      }
+    }
+
+    class Parent extends React.Component {
+      render() {
+        Scheduler.log(
+          `Parent rendered with props: ${Object.keys(this.props).join(', ')}`,
+        );
+        return <Child {...this.props} />;
+      }
+    }
+
+    const ref = value => {
+      Scheduler.log('ref callback called ' + value.constructor.name);
+    };
+    await act(async () => {
+      root.render(<Parent prop1="one" ref={ref} />);
+    });
+
+    assertLog([
+      'Parent rendered with props: prop1',
+      'Child rendered with props: prop1',
+      'ref callback called Parent',
+    ]);
+  });
 
   it('supports drilling through to the DOM using findDOMNode', () => {
     const ref = React.createRef();
