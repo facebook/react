@@ -102,10 +102,41 @@ function prettyPrintScopeDependency(val: ReactiveScopeDependency): string {
   return `${rootStr}${val.path.length > 0 ? "." : ""}${val.path.join(".")}`;
 }
 
+enum CompareDependencyResult {
+  Ok = 0,
+  RootDifference = 1,
+  PathDifference = 2,
+  Subpath = 3,
+  RefAccessDifference = 4,
+}
+
+function merge(
+  a: CompareDependencyResult,
+  b: CompareDependencyResult
+): CompareDependencyResult {
+  return Math.max(a, b);
+}
+
+function getCompareDependencyResultDescription(
+  result: CompareDependencyResult
+): string {
+  switch (result) {
+    case CompareDependencyResult.Ok:
+      return "dependencies equal";
+    case CompareDependencyResult.RootDifference:
+    case CompareDependencyResult.PathDifference:
+      return "inferred different dependency than source";
+    case CompareDependencyResult.RefAccessDifference:
+      return "differences in ref.current access";
+    case CompareDependencyResult.Subpath:
+      return "inferred less specific property than source";
+  }
+}
+
 function compareDeps(
   inferred: ManualMemoDependency,
   source: ManualMemoDependency
-): boolean {
+): CompareDependencyResult {
   const rootsEqual =
     (inferred.root.kind === "Global" &&
       source.root.kind === "Global" &&
@@ -114,7 +145,7 @@ function compareDeps(
       source.root.kind === "NamedLocal" &&
       inferred.root.value.identifier.id === source.root.value.identifier.id);
   if (!rootsEqual) {
-    return false;
+    return CompareDependencyResult.RootDifference;
   }
 
   let isSubpath = true;
@@ -131,9 +162,20 @@ function compareDeps(
       (inferred.path.length >= source.path.length &&
         !inferred.path.includes("current")))
   ) {
-    return true;
+    return CompareDependencyResult.Ok;
   } else {
-    return false;
+    if (isSubpath) {
+      if (
+        source.path.includes("current") ||
+        inferred.path.includes("current")
+      ) {
+        return CompareDependencyResult.RefAccessDifference;
+      } else {
+        return CompareDependencyResult.Subpath;
+      }
+    } else {
+      return CompareDependencyResult.PathDifference;
+    }
   }
 }
 
@@ -197,9 +239,13 @@ function validateInferredDep(
       return;
     }
   }
+  let errorDiagnostic: CompareDependencyResult | null = null;
   for (const originalDep of validDepsInMemoBlock) {
-    if (compareDeps(normalizedDep, originalDep)) {
+    const compareResult = compareDeps(normalizedDep, originalDep);
+    if (compareResult === CompareDependencyResult.Ok) {
       return;
+    } else {
+      errorDiagnostic = merge(errorDiagnostic ?? compareResult, compareResult);
     }
   }
   errorState.push({
@@ -210,7 +256,11 @@ function validateInferredDep(
       dep
     )}\`, but the source dependencies were [${validDepsInMemoBlock
       .map((dep) => printManualMemoDependency(dep, true))
-      .join(", ")}]`,
+      .join(", ")}]. Detail: ${
+      errorDiagnostic
+        ? getCompareDependencyResultDescription(errorDiagnostic)
+        : "none"
+    }`,
     loc: GeneratedSource,
     suggestions: null,
   });

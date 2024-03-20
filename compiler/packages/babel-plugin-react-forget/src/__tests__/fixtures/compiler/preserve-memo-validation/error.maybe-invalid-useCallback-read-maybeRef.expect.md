@@ -17,7 +17,7 @@ function useHook(maybeRef) {
 ## Error
 
 ```
-[ReactForget] Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `maybeRef.current`, but the source dependencies were [maybeRef]
+[ReactForget] Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `maybeRef.current`, but the source dependencies were [maybeRef]. Detail: differences in ref.current access
 ```
           
       
