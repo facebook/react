@@ -49,11 +49,7 @@ type HookLogEntry = {
   value: mixed,
   debugInfo: ReactDebugInfo | null,
   dispatcherMethodName: string,
-  /**
-   * A list of hook function names that may call this dispatcher method.
-   * If `null`, we assume that the wrapper name is equal to the dispatcher mthod name.
-   */
-  wrapperNames: Array<string> | null,
+  wrapperNames: Array<string>,
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -222,7 +218,7 @@ function use<T>(usable: Usable<T>): T {
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
             dispatcherMethodName: 'use',
-            wrapperNames: null,
+            wrapperNames: ['use'],
           });
           return fulfilledValue;
         }
@@ -241,7 +237,7 @@ function use<T>(usable: Usable<T>): T {
         debugInfo:
           thenable._debugInfo === undefined ? null : thenable._debugInfo,
         dispatcherMethodName: 'use',
-        wrapperNames: null,
+        wrapperNames: ['use'],
       });
       throw SuspenseException;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -255,7 +251,7 @@ function use<T>(usable: Usable<T>): T {
         value,
         debugInfo: null,
         dispatcherMethodName: 'use',
-        wrapperNames: null,
+        wrapperNames: ['use'],
       });
 
       return value;
@@ -275,7 +271,7 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherMethodName: 'useContext',
-    wrapperNames: null,
+    wrapperNames: ['useContext'],
   });
   return value;
 }
@@ -298,7 +294,7 @@ function useState<S>(
     value: state,
     debugInfo: null,
     dispatcherMethodName: 'useState',
-    wrapperNames: null,
+    wrapperNames: ['useState'],
   });
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -322,7 +318,7 @@ function useReducer<S, I, A>(
     value: state,
     debugInfo: null,
     dispatcherMethodName: 'useReducer',
-    wrapperNames: null,
+    wrapperNames: ['useReducer'],
   });
   return [state, (action: A) => {}];
 }
@@ -337,7 +333,7 @@ function useRef<T>(initialValue: T): {current: T} {
     value: ref.current,
     debugInfo: null,
     dispatcherMethodName: 'useRef',
-    wrapperNames: null,
+    wrapperNames: ['useRef'],
   });
   return ref;
 }
@@ -351,7 +347,7 @@ function useCacheRefresh(): () => void {
     value: hook !== null ? hook.memoizedState : function refresh() {},
     debugInfo: null,
     dispatcherMethodName: 'useCacheRefresh',
-    wrapperNames: null,
+    wrapperNames: ['useCacheRefresh'],
   });
   return () => {};
 }
@@ -368,7 +364,7 @@ function useLayoutEffect(
     value: create,
     debugInfo: null,
     dispatcherMethodName: 'useLayoutEffect',
-    wrapperNames: null,
+    wrapperNames: ['useLayoutEffect'],
   });
 }
 
@@ -384,7 +380,7 @@ function useInsertionEffect(
     value: create,
     debugInfo: null,
     dispatcherMethodName: 'useInsertionEffect',
-    wrapperNames: null,
+    wrapperNames: ['useInsertionEffect'],
   });
 }
 
@@ -400,7 +396,7 @@ function useEffect(
     value: create,
     debugInfo: null,
     dispatcherMethodName: 'useEffect',
-    wrapperNames: null,
+    wrapperNames: ['useEffect'],
   });
 }
 
@@ -425,7 +421,7 @@ function useImperativeHandle<T>(
     value: instance,
     debugInfo: null,
     dispatcherMethodName: 'useImperativeHandle',
-    wrapperNames: null,
+    wrapperNames: ['useImperativeHandle'],
   });
 }
 
@@ -437,7 +433,7 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     value: typeof formatterFn === 'function' ? formatterFn(value) : value,
     debugInfo: null,
     dispatcherMethodName: 'useDebugValue',
-    wrapperNames: null,
+    wrapperNames: ['useDebugValue'],
   });
 }
 
@@ -450,7 +446,7 @@ function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
     value: hook !== null ? hook.memoizedState[0] : callback,
     debugInfo: null,
     dispatcherMethodName: 'useCallback',
-    wrapperNames: null,
+    wrapperNames: ['useCallback'],
   });
   return callback;
 }
@@ -468,7 +464,7 @@ function useMemo<T>(
     value,
     debugInfo: null,
     dispatcherMethodName: 'useMemo',
-    wrapperNames: null,
+    wrapperNames: ['useMemo'],
   });
   return value;
 }
@@ -491,7 +487,7 @@ function useSyncExternalStore<T>(
     value,
     debugInfo: null,
     dispatcherMethodName: 'useSyncExternalStore',
-    wrapperNames: null,
+    wrapperNames: ['useSyncExternalStore'],
   });
   return value;
 }
@@ -515,7 +511,7 @@ function useTransition(): [
     value: isPending,
     debugInfo: null,
     dispatcherMethodName: 'useTransition',
-    wrapperNames: null,
+    wrapperNames: ['useTransition'],
   });
   return [isPending, () => {}];
 }
@@ -530,7 +526,7 @@ function useDeferredValue<T>(value: T, initialValue?: T): T {
     value: prevValue,
     debugInfo: null,
     dispatcherMethodName: 'useDeferredValue',
-    wrapperNames: null,
+    wrapperNames: ['useDeferredValue'],
   });
   return prevValue;
 }
@@ -545,7 +541,7 @@ function useId(): string {
     value: id,
     debugInfo: null,
     dispatcherMethodName: 'useId',
-    wrapperNames: null,
+    wrapperNames: ['useId'],
   });
   return id;
 }
@@ -597,7 +593,7 @@ function useOptimistic<S, A>(
     value: state,
     debugInfo: null,
     dispatcherMethodName: 'useOptimistic',
-    wrapperNames: null,
+    wrapperNames: ['useOptimistic'],
   });
   return [state, (action: A) => {}];
 }
@@ -658,7 +654,7 @@ function useFormState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherMethodName: 'useFormState',
-    wrapperNames: null,
+    wrapperNames: ['useFormState'],
   });
 
   if (error !== null) {
@@ -922,18 +918,8 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
       ) {
         i++;
       }
-      if (hook.wrapperNames !== null) {
-        for (let j = 0; j < hook.wrapperNames.length; j++) {
-          const wrapperName = hook.wrapperNames[j];
-          if (
-            i < hookStack.length - 1 &&
-            isReactWrapper(hookStack[i].functionName, wrapperName)
-          ) {
-            i++;
-          }
-        }
-      } else {
-        const wrapperName = hook.dispatcherMethodName;
+      for (let j = 0; j < hook.wrapperNames.length; j++) {
+        const wrapperName = hook.wrapperNames[j];
         if (
           i < hookStack.length - 1 &&
           isReactWrapper(hookStack[i].functionName, wrapperName)
