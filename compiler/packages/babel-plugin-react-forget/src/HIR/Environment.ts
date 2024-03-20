@@ -9,6 +9,7 @@ import * as t from "@babel/types";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { CompilerError } from "../CompilerError";
+import { Logger } from "../Entrypoint";
 import { Err, Ok, Result } from "../Utils/Result";
 import { log } from "../Utils/logger";
 import {
@@ -423,6 +424,8 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
+  logger: Logger | null;
+  filename: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
 
@@ -432,10 +435,14 @@ export class Environment {
   constructor(
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
-    contextIdentifiers: Set<t.Identifier>
+    contextIdentifiers: Set<t.Identifier>,
+    logger: Logger | null,
+    filename: string | null
   ) {
     this.fnType = fnType;
     this.config = config;
+    this.filename = filename;
+    this.logger = logger;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
 

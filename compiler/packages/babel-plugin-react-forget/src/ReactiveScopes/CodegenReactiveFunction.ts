@@ -70,8 +70,7 @@ export type CodegenFunction = {
 
 export function codegenFunction(
   fn: ReactiveFunction,
-  uniqueIdentifiers: Set<string>,
-  filename: string | null
+  uniqueIdentifiers: Set<string>
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(
     fn.env,
@@ -144,7 +143,7 @@ export function codegenFunction(
       t.expressionStatement(
         t.callExpression(
           t.identifier(emitInstrumentForget.fn.importSpecifierName),
-          [t.stringLiteral(fn.id), t.stringLiteral(filename ?? "")]
+          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? "")]
         )
       )
     );

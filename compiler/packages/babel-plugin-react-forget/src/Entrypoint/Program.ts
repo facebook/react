@@ -269,8 +269,8 @@ export function compileProgram(
       }
       const config = environment.unwrap();
 
-      compiledFn = compileFn(fn, config, fnType, pass.filename);
-      pass.opts.logger?.logEvent(pass.filename, {
+      compiledFn = compileFn(fn, config, fnType, options.logger, pass.filename);
+      options.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
         fnLoc: fn.node.loc ?? null,
         fnName: compiledFn.id?.name ?? null,

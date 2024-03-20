@@ -150,6 +150,11 @@ export type LoggerEvent =
       detail: CompilerErrorDetailOptions;
     }
   | {
+      kind: "CompileDiagnostic";
+      fnLoc: t.SourceLocation | null;
+      detail: Omit<Omit<CompilerErrorDetailOptions, "severity">, "suggestions">;
+    }
+  | {
       kind: "CompileSuccess";
       fnLoc: t.SourceLocation | null;
       fnName: string | null;

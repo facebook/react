@@ -8,6 +8,7 @@
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import prettyFormat from "pretty-format";
+import { Logger } from ".";
 import {
   HIRFunction,
   ReactiveFunction,
@@ -97,16 +98,24 @@ export function* run(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
+
+  logger: Logger | null,
   filename: string | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
-  const env = new Environment(fnType, config, contextIdentifiers);
+  const env = new Environment(
+    fnType,
+    config,
+    contextIdentifiers,
+    logger,
+    filename
+  );
   yield {
     kind: "debug",
     name: "EnvironmentConfig",
     value: prettyFormat(env.config),
   };
-  const ast = yield* runWithEnvironment(func, env, filename);
+  const ast = yield* runWithEnvironment(func, env);
   return ast;
 }
 
@@ -118,8 +127,7 @@ function* runWithEnvironment(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  env: Environment,
-  filename: string | null
+  env: Environment
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
@@ -381,11 +389,7 @@ function* runWithEnvironment(
     validatePreservedManualMemoization(reactiveFunction);
   }
 
-  const ast = codegenFunction(
-    reactiveFunction,
-    uniqueIdentifiers,
-    filename
-  ).unwrap();
+  const ast = codegenFunction(reactiveFunction, uniqueIdentifiers).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
 
   /**
@@ -406,9 +410,10 @@ export function compileFn(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
+  logger: Logger | null,
   filename: string | null
 ): CodegenFunction {
-  let generator = run(func, config, fnType, filename);
+  let generator = run(func, config, fnType, logger, filename);
   while (true) {
     const next = generator.next();
     if (next.done) {
