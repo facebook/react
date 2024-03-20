@@ -9,25 +9,25 @@
 
 /* eslint-disable */
 
-declare var __PROFILE__: boolean;
-declare var __UMD__: boolean;
-declare var __EXPERIMENTAL__: boolean;
-declare var __VARIANT__: boolean;
+declare const __PROFILE__: boolean;
+declare const __UMD__: boolean;
+declare const __EXPERIMENTAL__: boolean;
+declare const __VARIANT__: boolean;
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
+declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
-declare var globalThis: Object;
+declare const globalThis: Object;
 
-declare var queueMicrotask: (fn: Function) => void;
-declare var reportError: (error: mixed) => void;
-declare var AggregateError: Class<Error>;
+declare const queueMicrotask: (fn: Function) => void;
+declare const reportError: (error: mixed) => void;
+declare const AggregateError: Class<Error>;
 
-declare var FinalizationRegistry: any;
+declare const FinalizationRegistry: any;
 
 declare module 'create-react-class' {
-  declare var exports: React$CreateClass;
+  declare const exports: React$CreateClass;
 }
 
 // Flow hides the props of React$Element, this overrides it to unhide
@@ -43,7 +43,7 @@ declare opaque type React$Element<
   +ref: any,
 };
 
-declare var trustedTypes: {
+declare const trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
   isScriptURL: (value: any) => boolean,
@@ -89,22 +89,22 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
-declare var __webpack_require__: ((id: string) => any) & {
+declare const __webpack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
 declare function __turbopack_load__(id: string): Promise<mixed>;
-declare var __turbopack_require__: ((id: string) => any) & {
+declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
 declare module 'fs/promises' {
-  declare var access: (path: string, mode?: number) => Promise<void>;
-  declare var lstat: (
+  declare const access: (path: string, mode?: number) => Promise<void>;
+  declare const lstat: (
     path: string,
     options?: ?{bigint?: boolean},
   ) => Promise<mixed>;
-  declare var readdir: (
+  declare const readdir: (
     path: string,
     options?:
       | ?string
@@ -113,7 +113,7 @@ declare module 'fs/promises' {
           withFileTypes?: ?boolean,
         },
   ) => Promise<Buffer>;
-  declare var readFile: (
+  declare const readFile: (
     path: string,
     options?:
       | ?string
@@ -121,7 +121,7 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<Buffer>;
-  declare var readlink: (
+  declare const readlink: (
     path: string,
     options?:
       | ?string
@@ -129,7 +129,7 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<mixed>;
-  declare var realpath: (
+  declare const realpath: (
     path: string,
     options?:
       | ?string
@@ -137,13 +137,13 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<mixed>;
-  declare var stat: (
+  declare const stat: (
     path: string,
     options?: ?{bigint?: boolean},
   ) => Promise<mixed>;
 }
 declare module 'pg' {
-  declare var Pool: (options: mixed) => {
+  declare const Pool: (options: mixed) => {
     query: (query: string, values?: Array<mixed>) => void,
   };
 }
@@ -320,7 +320,7 @@ declare class AsyncLocalStorage<T> {
   enterWith(store: T): void;
 }
 
-declare var async_hooks: {
+declare const async_hooks: {
   createHook(callbacks: any): any,
   executionAsyncId(): number,
 };
@@ -332,7 +332,7 @@ declare module 'node:worker_threads' {
   }
 }
 
-declare var Bun: {
+declare const Bun: {
   hash(
     input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
   ): number,

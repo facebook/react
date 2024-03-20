@@ -8,16 +8,16 @@
  */
 
 declare module 'ReactNativeInternalFeatureFlags' {
-  declare export var alwaysThrottleDisappearingFallbacks: boolean;
-  declare export var alwaysThrottleRetries: boolean;
-  declare export var consoleManagedByDevToolsDuringStrictMode: boolean;
-  declare export var enableAsyncActions: boolean;
-  declare export var enableComponentStackLocations: boolean;
-  declare export var enableDeferRootSchedulingToMicrotask: boolean;
-  declare export var enableInfiniteRenderLoopDetection: boolean;
-  declare export var enableRenderableContext: boolean;
-  declare export var enableUnifiedSyncLane: boolean;
-  declare export var enableUseRefAccessWarning: boolean;
-  declare export var passChildrenWhenCloningPersistedNodes: boolean;
-  declare export var useModernStrictMode: boolean;
+  declare export const alwaysThrottleDisappearingFallbacks: boolean;
+  declare export const alwaysThrottleRetries: boolean;
+  declare export const consoleManagedByDevToolsDuringStrictMode: boolean;
+  declare export const enableAsyncActions: boolean;
+  declare export const enableComponentStackLocations: boolean;
+  declare export const enableDeferRootSchedulingToMicrotask: boolean;
+  declare export const enableInfiniteRenderLoopDetection: boolean;
+  declare export const enableRenderableContext: boolean;
+  declare export const enableUnifiedSyncLane: boolean;
+  declare export const enableUseRefAccessWarning: boolean;
+  declare export const passChildrenWhenCloningPersistedNodes: boolean;
+  declare export const useModernStrictMode: boolean;
 }
