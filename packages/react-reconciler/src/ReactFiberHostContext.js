@@ -46,11 +46,11 @@ const hostTransitionProviderCursor: StackCursor<Fiber | null> =
 // inside useHostTransitionStatus.
 export const HostTransitionContext: ReactContext<TransitionStatus | null> = {
   $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
   _currentValue: null,
   _currentValue2: null,
   _threadCount: 0,
-  Provider: (null: any),
-  Consumer: (null: any),
 };
 
 function requiredContext<Value>(c: Value | null): Value {

@@ -113,6 +113,8 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
+export const alwaysThrottleDisappearingFallbacks = true;
+
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
@@ -212,7 +214,7 @@ export const enableNewBooleanProps = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-export const disableModulePatternComponents = false;
+export const disableModulePatternComponents = __NEXT_MAJOR__;
 
 export const enableUseRefAccessWarning = false;
 

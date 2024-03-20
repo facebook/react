@@ -24,13 +24,8 @@ import Wedge from 'react-art/Wedge';
 
 // Isolate DOM renderer.
 jest.resetModules();
-
 const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
-
-// Isolate test renderer.
-jest.resetModules();
-const ReactTestRenderer = require('react-test-renderer');
+let act = require('internal-test-utils').act;
 
 // Isolate the noop renderer
 jest.resetModules();
@@ -449,85 +444,137 @@ describe('ReactART', () => {
 });
 
 describe('ReactARTComponents', () => {
-  it('should generate a <Shape> with props for drawing the Circle', () => {
-    const circle = ReactTestRenderer.create(
-      <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
-    );
+  let ReactTestRenderer;
+  beforeEach(() => {
+    jest.resetModules();
+    // Isolate test renderer.
+    ReactTestRenderer = require('react-test-renderer');
+    act = require('internal-test-utils').act;
+  });
+
+  it('should generate a <Shape> with props for drawing the Circle', async () => {
+    let circle;
+    await act(() => {
+      circle = ReactTestRenderer.create(
+        <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(circle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with props for drawing the Rectangle', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
-    );
+  it('should generate a <Shape> with props for drawing the Rectangle', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with positive width when width prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle width={-50} height={50} />,
-    );
+  it('should generate a <Shape> with positive width when width prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle width={-50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with positive height when height prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle height={-50} width={50} />,
-    );
+  it('should generate a <Shape> with positive height when height prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle height={-50} width={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusTopLeft={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusTopLeft={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusTopRight={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusTopRight={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusBottomRight={-30} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusBottomRight={-30} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle
-        radiusTopRight={25}
-        radiusTopLeft={26}
-        width={50}
-        height={40}
-      />,
-    );
+  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle
+          radiusTopRight={25}
+          radiusTopLeft={26}
+          width={50}
+          height={40}
+        />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with props for drawing the Wedge', () => {
-    const wedge = ReactTestRenderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
-    );
+  it('should generate a <Shape> with props for drawing the Wedge', async () => {
+    let wedge;
+    await act(() => {
+      wedge = ReactTestRenderer.create(
+        <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(wedge.toJSON()).toMatchSnapshot();
   });
 
-  it('should return null if startAngle equals to endAngle on Wedge', () => {
-    const wedge = ReactTestRenderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
-    );
+  it('should return null if startAngle equals to endAngle on Wedge', async () => {
+    let wedge;
+    await act(() => {
+      wedge = ReactTestRenderer.create(
+        <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(wedge.toJSON()).toBeNull();
   });
 });

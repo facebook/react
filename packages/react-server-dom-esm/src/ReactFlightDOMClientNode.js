@@ -60,6 +60,7 @@ function createFromNodeStream<T>(
     noServerCall,
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,
+    undefined, // TODO: If encodeReply is supported, this should support temporaryReferences
   );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);

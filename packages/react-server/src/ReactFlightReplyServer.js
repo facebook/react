@@ -24,6 +24,8 @@ import {
   requireModule,
 } from 'react-client/src/ReactFlightClientConfig';
 
+import {createTemporaryReference} from './ReactFlightServerTemporaryReferences';
+
 export type JSONValue =
   | number
   | null
@@ -412,6 +414,10 @@ function parseModelString(
           parentObject,
           key,
         );
+      }
+      case 'T': {
+        // Temporary Reference
+        return createTemporaryReference(value.slice(2));
       }
       case 'Q': {
         // Map

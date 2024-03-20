@@ -50,7 +50,6 @@ import {
   writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
-  clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 import {
   resolveRequest,
@@ -4267,15 +4266,13 @@ export function writeCompletedBoundaryInstruction(
       ) {
         resumableState.instructions |=
           SentStyleInsertionFunction | SentCompleteBoundaryFunction;
-        writeChunk(
-          destination,
-          clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
-        );
+        writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
       } else if (
         (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
         resumableState.instructions |= SentStyleInsertionFunction;
+
         writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
       } else {
         writeChunk(destination, completeBoundaryWithStylesScript1Partial);

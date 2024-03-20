@@ -26,6 +26,7 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
+  alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -37,6 +38,7 @@ export const {
   enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
+  enableNewBooleanProps,
   enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
@@ -101,8 +103,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-
-export const enableNewBooleanProps = false;
 
 export const enableFizzExternalRuntime = true;
 

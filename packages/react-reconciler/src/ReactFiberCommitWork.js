@@ -40,6 +40,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 
 import {
+  alwaysThrottleDisappearingFallbacks,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -53,7 +54,6 @@ import {
   enableUseEffectEventHook,
   enableFloat,
   enableLegacyHidden,
-  alwaysThrottleRetries,
   disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -2896,7 +2896,7 @@ function commitMutationEffectsOnFiber(
           current !== null &&
           (current.memoizedState: SuspenseState | null) !== null;
 
-        if (alwaysThrottleRetries) {
+        if (alwaysThrottleDisappearingFallbacks) {
           if (isShowingFallback !== wasShowingFallback) {
             // A fallback is either appearing or disappearing.
             markCommitTimeOfFallback();
