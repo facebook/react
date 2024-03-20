@@ -4725,6 +4725,7 @@ HooksDispatcherOnRerender.useFormState = function (action) {
     currentStateHook = currentHook;
   if (null !== currentStateHook)
     return updateFormStateImpl(stateHook, currentStateHook, action);
+  updateWorkInProgressHook();
   stateHook = stateHook.memoizedState;
   currentStateHook = updateWorkInProgressHook();
   var dispatch = currentStateHook.queue.dispatch;
@@ -17236,7 +17237,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1817 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-aafdf38d",
+  version: "18.3.0-www-classic-907e805e",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2176 = {
@@ -17266,7 +17267,7 @@ var internals$jscomp$inline_2176 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-aafdf38d"
+  reconcilerVersion: "18.3.0-www-classic-907e805e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2177 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17597,4 +17598,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-aafdf38d";
+exports.version = "18.3.0-www-classic-907e805e";

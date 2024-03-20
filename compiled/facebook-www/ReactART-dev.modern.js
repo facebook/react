@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-f2f5c035";
+    var ReactVersion = "18.3.0-www-modern-9382a497";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -9922,7 +9922,10 @@ if (__DEV__) {
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
         return updateFormStateImpl(stateHook, currentStateHook, action);
-      } // This is a mount. No updates to process.
+      }
+
+      updateWorkInProgressHook(); // State
+      // This is a mount. No updates to process.
 
       var state = stateHook.memoizedState;
       var actionQueueHook = updateWorkInProgressHook();

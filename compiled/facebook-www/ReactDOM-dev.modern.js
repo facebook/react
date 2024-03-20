@@ -14956,7 +14956,10 @@ if (__DEV__) {
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
         return updateFormStateImpl(stateHook, currentStateHook, action);
-      } // This is a mount. No updates to process.
+      }
+
+      updateWorkInProgressHook(); // State
+      // This is a mount. No updates to process.
 
       var state = stateHook.memoizedState;
       var actionQueueHook = updateWorkInProgressHook();
@@ -35634,7 +35637,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-a3956207";
+    var ReactVersion = "18.3.0-www-modern-bbd6e896";
 
     function createPortal$1(
       children,

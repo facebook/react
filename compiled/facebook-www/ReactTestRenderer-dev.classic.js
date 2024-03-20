@@ -9026,7 +9026,10 @@ if (__DEV__) {
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
         return updateFormStateImpl(stateHook, currentStateHook, action);
-      } // This is a mount. No updates to process.
+      }
+
+      updateWorkInProgressHook(); // State
+      // This is a mount. No updates to process.
 
       var state = stateHook.memoizedState;
       var actionQueueHook = updateWorkInProgressHook();
@@ -26056,7 +26059,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-d5b76d41";
+    var ReactVersion = "18.3.0-www-classic-e1aa4d34";
 
     // Might add PROFILE later.
 
