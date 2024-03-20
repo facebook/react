@@ -370,7 +370,6 @@ function codegenReactiveScope(
   const outputComments: Array<string> = [];
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
-    const depValue = codegenDependency(cx, dep);
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
       "!==",
@@ -379,7 +378,7 @@ function codegenReactiveScope(
         t.numericLiteral(index),
         true
       ),
-      depValue
+      codegenDependency(cx, dep)
     );
 
     if (cx.env.config.enableChangeVariableCodegen) {
@@ -402,7 +401,7 @@ function codegenReactiveScope(
             t.numericLiteral(index),
             true
           ),
-          depValue
+          codegenDependency(cx, dep)
         )
       )
     );
