@@ -302,24 +302,6 @@ describe('ReactFlightDOMReply', () => {
     expect(await result2.lazy.value).toBe('Hello');
   });
 
-  it('errors when called with JSX by default', async () => {
-    let error;
-    try {
-      await ReactServerDOMClient.encodeReply(<div />);
-    } catch (x) {
-      error = x;
-    }
-    expect(error).toEqual(
-      expect.objectContaining({
-        message: __DEV__
-          ? expect.stringContaining(
-              'React Element cannot be passed to Server Functions from the Client without a temporary reference set.',
-            )
-          : expect.stringContaining(''),
-      }),
-    );
-  });
-
   it('can pass JSX through a round trip using temporary references', async () => {
     function Component() {
       return <div />;
@@ -376,5 +358,29 @@ describe('ReactFlightDOMReply', () => {
       await ReactServerDOMClient.createFromReadableStream(stream2);
 
     expect(response2.replied).toBe(Component);
+  });
+
+  it('can pass a client JSX sent by the server back again', async () => {
+    function Component() {
+      return <div />;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    const stream1 = ReactServerDOMServer.renderToReadableStream(
+      <ClientComponent />,
+      webpackMap,
+    );
+    const response1 =
+      await ReactServerDOMClient.createFromReadableStream(stream1);
+
+    const body = await ReactServerDOMClient.encodeReply(response1);
+    const serverPayload = await ReactServerDOMServer.decodeReply(body);
+
+    const stream2 = ReactServerDOMServer.renderToReadableStream(serverPayload);
+    const response2 =
+      await ReactServerDOMClient.createFromReadableStream(stream2);
+
+    expect(response2.type).toBe(Component);
   });
 });

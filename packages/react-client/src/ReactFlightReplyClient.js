@@ -227,11 +227,18 @@ export function processReply(
       switch ((value: any).$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (temporaryReferences === undefined) {
-            throw new Error(
-              'React Element cannot be passed to Server Functions from the Client without a ' +
-                'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
-                (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
-            );
+            const element: React$Element<any> = (value: any);
+            // Serialize as a plain object with a symbol property
+            // TODO: Consider if we should use a special encoding for this or restore a proper
+            // element object on the server. E.g. we probably need the _store stuff in case it
+            // is passed as a child. For now we assume it'll just be passed back to Flight.
+            return {
+              $$typeof: REACT_ELEMENT_TYPE,
+              type: element.type,
+              key: element.key,
+              ref: element.ref,
+              props: element.props,
+            };
           }
           return serializeTemporaryReferenceID(
             writeTemporaryReference(temporaryReferences, value),
