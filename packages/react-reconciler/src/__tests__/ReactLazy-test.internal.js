@@ -8,7 +8,6 @@ let waitForAll;
 let waitForThrow;
 let assertLog;
 let act;
-let ReactFeatureFlags;
 
 let fakeModuleCache;
 
@@ -24,7 +23,6 @@ function normalizeCodeLocInfo(str) {
 describe('ReactLazy', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     React = require('react');
     Suspense = React.Suspense;
     lazy = React.lazy;
@@ -1453,14 +1451,6 @@ describe('ReactLazy', () => {
   });
 
   describe('legacy mode', () => {
-    beforeEach(() => {
-      ReactFeatureFlags.disableLegacyMode = false;
-    });
-
-    afterEach(() => {
-      ReactFeatureFlags.disableLegacyMode = true;
-    });
-
     it('mount and reorder lazy elements (legacy mode)', async () => {
       class Child extends React.Component {
         componentDidMount() {
