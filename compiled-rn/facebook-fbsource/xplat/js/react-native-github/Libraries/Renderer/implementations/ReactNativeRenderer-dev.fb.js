@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<439efd7bd2891caf5884fee0ab29b3e4>>
+ * @generated SignedSource<<a3ccc4d41f5e95ddb8fc8bea82ac2be7>>
  */
 
 "use strict";
@@ -12860,7 +12860,10 @@ to return true:wantsResponderID|                            |
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
         return updateFormStateImpl(stateHook, currentStateHook, action);
-      } // This is a mount. No updates to process.
+      }
+
+      updateWorkInProgressHook(); // State
+      // This is a mount. No updates to process.
 
       var state = stateHook.memoizedState;
       var actionQueueHook = updateWorkInProgressHook();
@@ -30243,7 +30246,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-a25c002c";
+    var ReactVersion = "18.3.0-canary-f9d3cc00";
 
     function createPortal$1(
       children,

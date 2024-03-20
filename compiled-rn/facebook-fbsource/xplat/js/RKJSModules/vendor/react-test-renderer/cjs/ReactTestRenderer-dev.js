@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<65b88d386b80bb668ee1220244f5891b>>
+ * @generated SignedSource<<5b7fff1847563e0ae235d49afe9f4fed>>
  */
 
 "use strict";
@@ -8758,7 +8758,10 @@ if (__DEV__) {
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
         return updateFormStateImpl(stateHook, currentStateHook, action);
-      } // This is a mount. No updates to process.
+      }
+
+      updateWorkInProgressHook(); // State
+      // This is a mount. No updates to process.
 
       var state = stateHook.memoizedState;
       var actionQueueHook = updateWorkInProgressHook();
@@ -25454,7 +25457,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-92eb08bf";
+    var ReactVersion = "18.3.0-canary-af06220a";
 
     // Might add PROFILE later.
 

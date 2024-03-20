@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<92a5460b92f7a609cb3fc8d6b726415d>>
+ * @generated SignedSource<<652d343c3fa5159faa35c67f06ad300f>>
  */
 
 "use strict";
@@ -4543,6 +4543,7 @@ function rerenderFormState(action) {
     currentStateHook = currentHook;
   if (null !== currentStateHook)
     return updateFormStateImpl(stateHook, currentStateHook, action);
+  updateWorkInProgressHook();
   stateHook = stateHook.memoizedState;
   currentStateHook = updateWorkInProgressHook();
   var dispatch = currentStateHook.queue.dispatch;
@@ -11334,7 +11335,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1184 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-40c1e627",
+    version: "18.3.0-canary-7fdd2689",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11390,7 +11391,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-40c1e627"
+  reconcilerVersion: "18.3.0-canary-7fdd2689"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
