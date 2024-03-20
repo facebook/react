@@ -101,24 +101,59 @@ function prettyPrintScopeDependency(val: ReactiveScopeDependency): string {
   }
   return `${rootStr}${val.path.length > 0 ? "." : ""}${val.path.join(".")}`;
 }
-function depsEqual(
-  dep1: ManualMemoDependency,
-  dep2: ManualMemoDependency
+
+function compareDeps(
+  inferred: ManualMemoDependency,
+  source: ManualMemoDependency
 ): boolean {
   const rootsEqual =
-    (dep1.root.kind === "Global" &&
-      dep2.root.kind === "Global" &&
-      dep1.root.identifierName === dep2.root.identifierName) ||
-    (dep1.root.kind === "NamedLocal" &&
-      dep2.root.kind === "NamedLocal" &&
-      dep1.root.value.identifier.id === dep2.root.value.identifier.id);
-  return (
-    rootsEqual &&
-    dep1.path.length === dep2.path.length &&
-    dep1.path.every((val, idx) => val === dep2.path[idx])
-  );
+    (inferred.root.kind === "Global" &&
+      source.root.kind === "Global" &&
+      inferred.root.identifierName === source.root.identifierName) ||
+    (inferred.root.kind === "NamedLocal" &&
+      source.root.kind === "NamedLocal" &&
+      inferred.root.value.identifier.id === source.root.value.identifier.id);
+  if (!rootsEqual) {
+    return false;
+  }
+
+  let isSubpath = true;
+  for (let i = 0; i < Math.min(inferred.path.length, source.path.length); i++) {
+    if (inferred.path[i] !== source.path[i]) {
+      isSubpath = false;
+      break;
+    }
+  }
+
+  if (
+    isSubpath &&
+    (source.path.length === inferred.path.length ||
+      (inferred.path.length >= source.path.length &&
+        !inferred.path.includes("current")))
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
+/**
+ * Validate that an inferred dependency either matches a source dependency
+ * or is produced by earlier instructions in the same manual memoization
+ * call.
+ * Inferred dependency `rootA.[pathA]` matches a source dependency `rootB.[pathB]`
+ * when:
+ *   - rootA and rootB are loads from the same named identifier. Note that this
+ *     identifier must be also named in source, as DropManualMemoization, which
+ *     runs before any renaming passes, only records loads from named variables.
+ *   - and one of the following holds:
+ *       - pathA and pathB are identifical
+ *       - pathB is a subpath of pathA and neither read into a `ref` type*
+ *
+ * We do not allow for partial matches on ref types because they are not immutable
+ * values, e.g.
+ * ref_prev === ref_new does not imply ref_prev.current === ref_new.current
+ */
 function validateInferredDep(
   dep: ReactiveScopeDependency,
   temporaries: Map<IdentifierId, ManualMemoDependency>,
@@ -154,19 +189,16 @@ function validateInferredDep(
       path: [...dep.path],
     };
   }
-  for (const originalDep of validDepsInMemoBlock) {
-    if (depsEqual(originalDep, normalizedDep)) {
-      return;
-    }
-  }
   for (const decl of declsWithinMemoBlock) {
-    const normalizedDecl = temporaries.get(decl);
-    if (normalizedDecl != null && depsEqual(normalizedDecl, normalizedDep)) {
-      return;
-    } else if (
+    if (
       normalizedDep.root.kind === "NamedLocal" &&
       decl === normalizedDep.root.value.identifier.id
     ) {
+      return;
+    }
+  }
+  for (const originalDep of validDepsInMemoBlock) {
+    if (compareDeps(normalizedDep, originalDep)) {
       return;
     }
   }

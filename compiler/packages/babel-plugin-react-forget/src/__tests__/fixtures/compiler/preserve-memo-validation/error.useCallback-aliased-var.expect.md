@@ -20,8 +20,6 @@ function useHook(x) {
 
 ```
 [ReactForget] Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `aliasedX`, but the source dependencies were [x, aliasedProp]
-
-[ReactForget] Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `x.y.z`, but the source dependencies were [x, aliasedProp]
 ```
           
       
