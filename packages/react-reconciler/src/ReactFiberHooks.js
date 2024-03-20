@@ -2259,6 +2259,8 @@ function rerenderFormState<S, P>(
     );
   }
 
+  updateWorkInProgressHook(); // State
+
   // This is a mount. No updates to process.
   const state: Awaited<S> = stateHook.memoizedState;
 

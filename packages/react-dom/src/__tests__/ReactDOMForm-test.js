@@ -1295,4 +1295,52 @@ describe('ReactDOMForm', () => {
     assertLog(['B']);
     expect(container.textContent).toBe('B');
   });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState works in StrictMode', async () => {
+    let actionCounter = 0;
+    async function action(state, type) {
+      actionCounter++;
+
+      Scheduler.log(`Async action started [${actionCounter}]`);
+      await getText(`Wait [${actionCounter}]`);
+
+      switch (type) {
+        case 'increment':
+          return state + 1;
+        case 'decrement':
+          return state - 1;
+        default:
+          return state;
+      }
+    }
+
+    let dispatch;
+    function App() {
+      const [state, _dispatch, isPending] = useFormState(action, 0);
+      dispatch = _dispatch;
+      const pending = isPending ? 'Pending ' : '';
+      return <Text text={pending + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    assertLog(['0']);
+    expect(container.textContent).toBe('0');
+
+    await act(() => dispatch('increment'));
+    assertLog(['Async action started [1]', 'Pending 0']);
+    expect(container.textContent).toBe('Pending 0');
+
+    await act(() => resolveText('Wait [1]'));
+    assertLog(['1']);
+    expect(container.textContent).toBe('1');
+  });
 });
