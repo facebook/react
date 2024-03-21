@@ -3982,6 +3982,18 @@ function gatherCapturedDeps(
   }
 
   fn.traverse({
+    TypeAnnotation(path) {
+      path.skip();
+    },
+    TSTypeAnnotation(path) {
+      path.skip();
+    },
+    TypeAlias(path) {
+      path.skip();
+    },
+    TSTypeAliasDeclaration(path) {
+      path.skip();
+    },
     Expression(path) {
       if (path.isAssignmentExpression()) {
         /*
