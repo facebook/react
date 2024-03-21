@@ -897,4 +897,77 @@ describe('ReactFlightDOMForm', () => {
 
     expect(form.action).toBe('http://localhost/permalink');
   });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState can return JSX state during MPA form submission', async () => {
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return <div>error message</div>;
+      },
+    );
+
+    function Form({action}) {
+      const [errorMsg, dispatch] = useFormState(action, null);
+      return <form action={dispatch}>{errorMsg}</form>;
+    }
+
+    const FormRef = await clientExports(Form);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <FormRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form1 = container.getElementsByTagName('form')[0];
+    expect(form1.textContent).toBe('');
+
+    async function submitTheForm() {
+      const form = container.getElementsByTagName('form')[0];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        <FormRef action={serverAction} />,
+        webpackMap,
+      );
+      const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+        postbackRscStream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse,
+        {formState: formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+    }
+
+    await expect(submitTheForm).toErrorDev(
+      'Warning: Failed to serialize an action for progressive enhancement:\n' +
+        'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
+        '  [<div/>]\n' +
+        '   ^^^^^^',
+    );
+
+    // The error message was returned as JSX.
+    const form2 = container.getElementsByTagName('form')[0];
+    expect(form2.textContent).toBe('error message');
+    expect(form2.firstChild.tagName).toBe('DIV');
+  });
 });
