@@ -78,7 +78,7 @@ function renderToNodeStreamImpl(
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, false),
+    createRenderState(resumableState, generateStaticMarkup),
     createRootFormatContext(),
     Infinity,
     onError,
