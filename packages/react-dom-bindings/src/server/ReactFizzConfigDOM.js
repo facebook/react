@@ -2573,7 +2573,7 @@ function pushStyle(
     if (hasOwnProperty.call(props, 'children')) {
       const children = props.children;
 
-      const child = Array.isArray(children)
+      const child = isArray(children)
         ? children.length < 2
           ? children[0]
           : null
@@ -2582,7 +2582,7 @@ function pushStyle(
       if (
         typeof child === 'function' ||
         typeof child === 'symbol' ||
-        Array.isArray(child)
+        isArray(child)
       ) {
         const childType =
           typeof child === 'function'
@@ -2708,7 +2708,7 @@ function pushStyleImpl(
   }
   target.push(endOfStartTag);
 
-  const child = Array.isArray(children)
+  const child = isArray(children)
     ? children.length < 2
       ? children[0]
       : null
@@ -2750,7 +2750,7 @@ function pushStyleContents(
     }
   }
 
-  const child = Array.isArray(children)
+  const child = isArray(children)
     ? children.length < 2
       ? children[0]
       : null
@@ -2984,13 +2984,13 @@ function pushTitle(
     if (hasOwnProperty.call(props, 'children')) {
       const children = props.children;
 
-      const child = Array.isArray(children)
+      const child = isArray(children)
         ? children.length < 2
           ? children[0]
           : null
         : children;
 
-      if (Array.isArray(children) && children.length > 1) {
+      if (isArray(children) && children.length > 1) {
         console.error(
           'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
@@ -3084,7 +3084,7 @@ function pushTitleImpl(
   }
   target.push(endOfStartTag);
 
-  const child = Array.isArray(children)
+  const child = isArray(children)
     ? children.length < 2
       ? children[0]
       : null
@@ -3134,10 +3134,10 @@ function pushStartTitle(
 
   if (__DEV__) {
     const childForValidation =
-      Array.isArray(children) && children.length < 2
+      isArray(children) && children.length < 2
         ? children[0] || null
         : children;
-    if (Array.isArray(children) && children.length > 1) {
+    if (isArray(children) && children.length > 1) {
       console.error(
         'A title element received an array with more than 1 element as children. ' +
           'In browsers title Elements can only have Text Nodes as children. If ' +
@@ -3344,7 +3344,7 @@ function pushScriptImpl(
       const descriptiveStatement =
         typeof children === 'number'
           ? 'a number for children'
-          : Array.isArray(children)
+          : isArray(children)
           ? 'an array for children'
           : 'something unexpected for children';
       console.error(

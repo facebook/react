@@ -11,6 +11,7 @@ import * as React from 'react';
 import {useContext} from 'react';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
+import isArray from 'shared/isArray';
 
 import styles from './WhatChanged.css';
 
@@ -102,7 +103,7 @@ export default function WhatChanged({fiberID}: Props): React.Node {
   }
 
   if (didHooksChange) {
-    if (Array.isArray(hooks)) {
+    if (isArray(hooks)) {
       changes.push(
         <div key="hooks" className={styles.Item}>
           • {hookIndicesToString(hooks)}
