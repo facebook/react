@@ -121,11 +121,15 @@ describe('ReactLazy', () => {
       },
     }));
 
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyText text="Hi" />
-      </Suspense>,
-    );
+    let root;
+    await act(() => {
+      root = ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>,
+        {unstable_isConcurrent: true},
+      );
+    });
 
     assertLog(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
@@ -150,13 +154,17 @@ describe('ReactLazy', () => {
       }
     }
 
-    const root = ReactTestRenderer.create(
-      <ErrorBoundary>
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>
-      </ErrorBoundary>,
-    );
+    let root;
+    await act(() => {
+      root = ReactTestRenderer.create(
+        <ErrorBoundary>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <LazyText text="Hi" />
+          </Suspense>
+        </ErrorBoundary>,
+        {unstable_isConcurrent: true},
+      );
+    });
     assertLog([]);
     expect(root).toMatchRenderedOutput('Error: oh no');
   });
@@ -627,11 +635,15 @@ describe('ReactLazy', () => {
 
     const LazyClass = lazy(() => fakeImport(C));
 
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyClass num={1} />
-      </Suspense>,
-    );
+    let root;
+    await act(() => {
+      root = ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyClass num={1} />
+        </Suspense>,
+        {unstable_isConcurrent: true},
+      );
+    });
 
     assertLog(['Loading...']);
     await waitForAll([]);
@@ -641,20 +653,24 @@ describe('ReactLazy', () => {
 
     assertLog([]);
 
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyClass num={2} />
-      </Suspense>,
-    );
+    await act(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyClass num={2} />
+        </Suspense>,
+      );
+    });
 
     assertLog(['UNSAFE_componentWillMount: A', 'A2']);
     expect(root).toMatchRenderedOutput('A2');
 
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyClass num={3} />
-      </Suspense>,
-    );
+    await act(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyClass num={3} />
+        </Suspense>,
+      );
+    });
     assertLog([
       'UNSAFE_componentWillReceiveProps: A -> A',
       'UNSAFE_componentWillUpdate: A -> A',
@@ -1234,7 +1250,7 @@ describe('ReactLazy', () => {
     expect(componentStackMessage).toContain('in ResolvedText');
   });
 
-  it('should error with a component stack containing Lazy if unresolved', () => {
+  it('should error with a component stack containing Lazy if unresolved', async () => {
     let componentStackMessage;
 
     const LazyText = lazy(() => ({
@@ -1258,13 +1274,16 @@ describe('ReactLazy', () => {
       }
     }
 
-    ReactTestRenderer.create(
-      <ErrorBoundary>
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>
-      </ErrorBoundary>,
-    );
+    await act(() => {
+      ReactTestRenderer.create(
+        <ErrorBoundary>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <LazyText text="Hi" />
+          </Suspense>
+        </ErrorBoundary>,
+        {unstable_isConcurrent: true},
+      );
+    });
 
     assertLog([]);
 
@@ -1362,79 +1381,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  it('mount and reorder lazy types (legacy mode)', async () => {
-    class Child extends React.Component {
-      componentDidMount() {
-        Scheduler.log('Did mount: ' + this.props.label);
-      }
-      componentDidUpdate() {
-        Scheduler.log('Did update: ' + this.props.label);
-      }
-      render() {
-        return <Text text={this.props.label} />;
-      }
-    }
-
-    function ChildA({lowerCase}) {
-      return <Child label={lowerCase ? 'a' : 'A'} />;
-    }
-
-    function ChildB({lowerCase}) {
-      return <Child label={lowerCase ? 'b' : 'B'} />;
-    }
-
-    const LazyChildA = lazy(() => {
-      Scheduler.log('Init A');
-      return fakeImport(ChildA);
-    });
-    const LazyChildB = lazy(() => {
-      Scheduler.log('Init B');
-      return fakeImport(ChildB);
-    });
-    const LazyChildA2 = lazy(() => {
-      Scheduler.log('Init A2');
-      return fakeImport(ChildA);
-    });
-    const LazyChildB2 = lazy(() => {
-      Scheduler.log('Init B2');
-      return fakeImport(ChildB);
-    });
-
-    function Parent({swap}) {
-      return (
-        <Suspense fallback={<Text text="Outer..." />}>
-          <Suspense fallback={<Text text="Loading..." />}>
-            {swap
-              ? [
-                  <LazyChildB2 key="B" lowerCase={true} />,
-                  <LazyChildA2 key="A" lowerCase={true} />,
-                ]
-              : [<LazyChildA key="A" />, <LazyChildB key="B" />]}
-          </Suspense>
-        </Suspense>
-      );
-    }
-
-    const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: false,
-    });
-
-    assertLog(['Init A', 'Init B', 'Loading...']);
-    expect(root).not.toMatchRenderedOutput('AB');
-
-    await resolveFakeImport(ChildA);
-    await resolveFakeImport(ChildB);
-
-    await waitForAll(['A', 'B', 'Did mount: A', 'Did mount: B']);
-    expect(root).toMatchRenderedOutput('AB');
-
-    // Swap the position of A and B
-    root.update(<Parent swap={true} />);
-    assertLog(['Init B2', 'Loading...']);
-    await waitForAll(['Init A2', 'b', 'a', 'Did update: b', 'Did update: a']);
-    expect(root).toMatchRenderedOutput('ba');
-  });
-
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1504,72 +1450,147 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  it('mount and reorder lazy elements (legacy mode)', async () => {
-    class Child extends React.Component {
-      componentDidMount() {
-        Scheduler.log('Did mount: ' + this.props.label);
+  describe('legacy mode', () => {
+    it('mount and reorder lazy elements (legacy mode)', async () => {
+      class Child extends React.Component {
+        componentDidMount() {
+          Scheduler.log('Did mount: ' + this.props.label);
+        }
+        componentDidUpdate() {
+          Scheduler.log('Did update: ' + this.props.label);
+        }
+        render() {
+          return <Text text={this.props.label} />;
+        }
       }
-      componentDidUpdate() {
-        Scheduler.log('Did update: ' + this.props.label);
+
+      const ChildA = <Child key="A" label="A" />;
+      const lazyChildA = lazy(() => {
+        Scheduler.log('Init A');
+        return fakeImport(ChildA);
+      });
+      const ChildB = <Child key="B" label="B" />;
+      const lazyChildB = lazy(() => {
+        Scheduler.log('Init B');
+        return fakeImport(ChildB);
+      });
+      const ChildA2 = <Child key="A" label="a" />;
+      const lazyChildA2 = lazy(() => {
+        Scheduler.log('Init A2');
+        return fakeImport(ChildA2);
+      });
+      const ChildB2 = <Child key="B" label="b" />;
+      const lazyChildB2 = lazy(() => {
+        Scheduler.log('Init B2');
+        return fakeImport(ChildB2);
+      });
+
+      function Parent({swap}) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            {swap ? [lazyChildB2, lazyChildA2] : [lazyChildA, lazyChildB]}
+          </Suspense>
+        );
       }
-      render() {
-        return <Text text={this.props.label} />;
+
+      const root = ReactTestRenderer.create(<Parent swap={false} />, {
+        unstable_isConcurrent: false,
+      });
+
+      assertLog(['Init A', 'Loading...']);
+      expect(root).not.toMatchRenderedOutput('AB');
+
+      await resolveFakeImport(ChildA);
+      // We need to flush to trigger the B to load.
+      await waitForAll(['Init B']);
+      await resolveFakeImport(ChildB);
+
+      await waitForAll(['A', 'B', 'Did mount: A', 'Did mount: B']);
+      expect(root).toMatchRenderedOutput('AB');
+
+      // Swap the position of A and B
+      root.update(<Parent swap={true} />);
+      assertLog(['Init B2', 'Loading...']);
+      await resolveFakeImport(ChildB2);
+      // We need to flush to trigger the second one to load.
+      await waitForAll(['Init A2']);
+      await resolveFakeImport(ChildA2);
+
+      await waitForAll(['b', 'a', 'Did update: b', 'Did update: a']);
+      expect(root).toMatchRenderedOutput('ba');
+    });
+
+    it('mount and reorder lazy types (legacy mode)', async () => {
+      class Child extends React.Component {
+        componentDidMount() {
+          Scheduler.log('Did mount: ' + this.props.label);
+        }
+        componentDidUpdate() {
+          Scheduler.log('Did update: ' + this.props.label);
+        }
+        render() {
+          return <Text text={this.props.label} />;
+        }
       }
-    }
 
-    const ChildA = <Child key="A" label="A" />;
-    const lazyChildA = lazy(() => {
-      Scheduler.log('Init A');
-      return fakeImport(ChildA);
+      function ChildA({lowerCase}) {
+        return <Child label={lowerCase ? 'a' : 'A'} />;
+      }
+
+      function ChildB({lowerCase}) {
+        return <Child label={lowerCase ? 'b' : 'B'} />;
+      }
+
+      const LazyChildA = lazy(() => {
+        Scheduler.log('Init A');
+        return fakeImport(ChildA);
+      });
+      const LazyChildB = lazy(() => {
+        Scheduler.log('Init B');
+        return fakeImport(ChildB);
+      });
+      const LazyChildA2 = lazy(() => {
+        Scheduler.log('Init A2');
+        return fakeImport(ChildA);
+      });
+      const LazyChildB2 = lazy(() => {
+        Scheduler.log('Init B2');
+        return fakeImport(ChildB);
+      });
+
+      function Parent({swap}) {
+        return (
+          <Suspense fallback={<Text text="Outer..." />}>
+            <Suspense fallback={<Text text="Loading..." />}>
+              {swap
+                ? [
+                    <LazyChildB2 key="B" lowerCase={true} />,
+                    <LazyChildA2 key="A" lowerCase={true} />,
+                  ]
+                : [<LazyChildA key="A" />, <LazyChildB key="B" />]}
+            </Suspense>
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<Parent swap={false} />, {
+        unstable_isConcurrent: false,
+      });
+
+      assertLog(['Init A', 'Init B', 'Loading...']);
+      expect(root).not.toMatchRenderedOutput('AB');
+
+      await resolveFakeImport(ChildA);
+      await resolveFakeImport(ChildB);
+
+      await waitForAll(['A', 'B', 'Did mount: A', 'Did mount: B']);
+      expect(root).toMatchRenderedOutput('AB');
+
+      // Swap the position of A and B
+      root.update(<Parent swap={true} />);
+      assertLog(['Init B2', 'Loading...']);
+      await waitForAll(['Init A2', 'b', 'a', 'Did update: b', 'Did update: a']);
+      expect(root).toMatchRenderedOutput('ba');
     });
-    const ChildB = <Child key="B" label="B" />;
-    const lazyChildB = lazy(() => {
-      Scheduler.log('Init B');
-      return fakeImport(ChildB);
-    });
-    const ChildA2 = <Child key="A" label="a" />;
-    const lazyChildA2 = lazy(() => {
-      Scheduler.log('Init A2');
-      return fakeImport(ChildA2);
-    });
-    const ChildB2 = <Child key="B" label="b" />;
-    const lazyChildB2 = lazy(() => {
-      Scheduler.log('Init B2');
-      return fakeImport(ChildB2);
-    });
-
-    function Parent({swap}) {
-      return (
-        <Suspense fallback={<Text text="Loading..." />}>
-          {swap ? [lazyChildB2, lazyChildA2] : [lazyChildA, lazyChildB]}
-        </Suspense>
-      );
-    }
-
-    const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: false,
-    });
-
-    assertLog(['Init A', 'Loading...']);
-    expect(root).not.toMatchRenderedOutput('AB');
-
-    await resolveFakeImport(ChildA);
-    // We need to flush to trigger the B to load.
-    await waitForAll(['Init B']);
-    await resolveFakeImport(ChildB);
-
-    await waitForAll(['A', 'B', 'Did mount: A', 'Did mount: B']);
-    expect(root).toMatchRenderedOutput('AB');
-
-    // Swap the position of A and B
-    root.update(<Parent swap={true} />);
-    assertLog(['Init B2', 'Loading...']);
-    await resolveFakeImport(ChildB2);
-    // We need to flush to trigger the second one to load.
-    await waitForAll(['Init A2']);
-    await resolveFakeImport(ChildA2);
-
-    await waitForAll(['b', 'a', 'Did update: b', 'Did update: a']);
-    expect(root).toMatchRenderedOutput('ba');
   });
 });
