@@ -396,10 +396,6 @@ function parseModelString(
         const chunk = getChunk(response, id);
         return chunk;
       }
-      case 'S': {
-        // Symbol
-        return Symbol.for(value.slice(2));
-      }
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);

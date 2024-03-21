@@ -9,7 +9,7 @@
 
 interface Reference {}
 
-export opaque type TemporaryReferenceSet = Array<Reference>;
+export opaque type TemporaryReferenceSet = Array<Reference | symbol>;
 
 export function createTemporaryReferenceSet(): TemporaryReferenceSet {
   return [];
@@ -17,7 +17,7 @@ export function createTemporaryReferenceSet(): TemporaryReferenceSet {
 
 export function writeTemporaryReference(
   set: TemporaryReferenceSet,
-  object: Reference,
+  object: Reference | symbol,
 ): number {
   // We always create a new entry regardless if we've already written the same
   // object. This ensures that we always generate a deterministic encoding of
@@ -27,15 +27,15 @@ export function writeTemporaryReference(
   return newId;
 }
 
-export function readTemporaryReference(
+export function readTemporaryReference<T>(
   set: TemporaryReferenceSet,
   id: number,
-): Reference {
+): T {
   if (id < 0 || id >= set.length) {
     throw new Error(
       "The RSC response contained a reference that doesn't exist in the temporary reference set. " +
         'Always pass the matching set that was used to create the reply when parsing its response.',
     );
   }
-  return set[id];
+  return (set[id]: any);
 }
