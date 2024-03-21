@@ -1045,12 +1045,41 @@ function pushAdditionalFormField(
 
 function pushAdditionalFormFields(
   target: Array<Chunk | PrecomputedChunk>,
-  formData: null | FormData,
+  formData: void | null | FormData,
 ) {
-  if (formData !== null) {
+  if (formData != null) {
     // $FlowFixMe[prop-missing]: FormData has forEach.
     formData.forEach(pushAdditionalFormField, target);
   }
+}
+
+function getCustomFormFields(
+  resumableState: ResumableState,
+  formAction: any,
+): null | ReactCustomFormAction {
+  const customAction = formAction.$$FORM_ACTION;
+  if (typeof customAction === 'function') {
+    const prefix = makeFormFieldPrefix(resumableState);
+    try {
+      return formAction.$$FORM_ACTION(prefix);
+    } catch (x) {
+      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+        // Rethrow suspense.
+        throw x;
+      }
+      // If we fail to encode the form action for progressive enhancement for some reason,
+      // fallback to trying replaying on the client instead of failing the page. It might
+      // work there.
+      if (__DEV__) {
+        // TODO: Should this be some kind of recoverable error?
+        console.error(
+          'Failed to serialize an action for progressive enhancement:\n%s',
+          x,
+        );
+      }
+    }
+  }
+  return null;
 }
 
 function pushFormActionAttribute(
@@ -1062,7 +1091,7 @@ function pushFormActionAttribute(
   formMethod: any,
   formTarget: any,
   name: any,
-): null | FormData {
+): void | null | FormData {
   let formData = null;
   if (enableFormActions && typeof formAction === 'function') {
     // Function form actions cannot control the form properties
@@ -1092,12 +1121,10 @@ function pushFormActionAttribute(
         );
       }
     }
-    const customAction: ReactCustomFormAction = formAction.$$FORM_ACTION;
-    if (typeof customAction === 'function') {
+    const customFields = getCustomFormFields(resumableState, formAction);
+    if (customFields !== null) {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
-      const prefix = makeFormFieldPrefix(resumableState);
-      const customFields = formAction.$$FORM_ACTION(prefix);
       name = customFields.name;
       formAction = customFields.action || '';
       formEncType = customFields.encType;
@@ -1882,12 +1909,10 @@ function pushStartForm(
         );
       }
     }
-    const customAction: ReactCustomFormAction = formAction.$$FORM_ACTION;
-    if (typeof customAction === 'function') {
+    const customFields = getCustomFormFields(resumableState, formAction);
+    if (customFields !== null) {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
-      const prefix = makeFormFieldPrefix(resumableState);
-      const customFields = formAction.$$FORM_ACTION(prefix);
       formAction = customFields.action || '';
       formEncType = customFields.encType;
       formMethod = customFields.method;
