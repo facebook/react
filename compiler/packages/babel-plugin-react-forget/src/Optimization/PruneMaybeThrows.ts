@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "..";
 import {
+  BlockId,
+  GeneratedSource,
   GotoVariant,
   HIRFunction,
   Instruction,
@@ -17,12 +20,11 @@ import {
 } from "../HIR";
 import {
   markInstructionIds,
-  markPredecessors,
   removeDeadDoWhileStatements,
   removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
 } from "../HIR/HIRBuilder";
-import { eliminateRedundantPhi } from "../SSA";
+import { printIdentifier } from "../HIR/PrintHIR";
 
 /*
  * This pass prunes `maybe-throw` terminals for blocks that can provably *never* throw.
@@ -30,8 +32,8 @@ import { eliminateRedundantPhi } from "../SSA";
  * array/object literals. Even a variable reference could throw bc of the TDZ.
  */
 export function pruneMaybeThrows(fn: HIRFunction): void {
-  const didPrune = pruneMaybeThrowsImpl(fn);
-  if (didPrune) {
+  const terminalMapping = pruneMaybeThrowsImpl(fn);
+  if (terminalMapping) {
     /*
      * If terminals have changed then blocks may have become newly unreachable.
      * Re-run minification of the graph (incl reordering instruction ids)
@@ -42,36 +44,36 @@ export function pruneMaybeThrows(fn: HIRFunction): void {
     removeDeadDoWhileStatements(fn.body);
     removeUnnecessaryTryCatch(fn.body);
     markInstructionIds(fn.body);
-    markPredecessors(fn.body);
+    mergeConsecutiveBlocks(fn);
 
-    // Now that predecessors are updated, prune phi operands that can never be reached
+    // Rewrite phi operands to reference the updated predecessor blocks
     for (const [, block] of fn.body.blocks) {
       for (const phi of block.phis) {
-        for (const [predecessor] of phi.operands) {
+        for (const [predecessor, operand] of phi.operands) {
           if (!block.preds.has(predecessor)) {
+            const mappedTerminal = terminalMapping.get(predecessor);
+            CompilerError.invariant(mappedTerminal != null, {
+              reason: `Expected non-existing phi operand's predecessor to have been mapped to a new terminal`,
+              loc: GeneratedSource,
+              description: `Could not find mapping for predecessor bb${predecessor} in block bb${
+                block.id
+              } for phi ${printIdentifier(phi.id)}`,
+              suggestions: null,
+            });
             phi.operands.delete(predecessor);
+            phi.operands.set(mappedTerminal, operand);
           }
         }
       }
     }
-    /*
-     * By removing some phi operands, there may be phis that were not previously
-     * redundant but now are
-     */
-    eliminateRedundantPhi(fn);
-    /*
-     * Finally, merge together any blocks that are now guaranteed to execute
-     * consecutively
-     */
-    mergeConsecutiveBlocks(fn);
 
     assertConsistentIdentifiers(fn);
     assertTerminalSuccessorsExist(fn);
   }
 }
 
-function pruneMaybeThrowsImpl(fn: HIRFunction): boolean {
-  let hasChanges = false;
+function pruneMaybeThrowsImpl(fn: HIRFunction): Map<BlockId, BlockId> | null {
+  const terminalMapping = new Map<BlockId, BlockId>();
   for (const [_, block] of fn.body.blocks) {
     const terminal = block.terminal;
     if (terminal.kind !== "maybe-throw") {
@@ -81,7 +83,8 @@ function pruneMaybeThrowsImpl(fn: HIRFunction): boolean {
       instructionMayThrow(instr)
     );
     if (!canThrow) {
-      hasChanges = true;
+      const source = terminalMapping.get(block.id) ?? block.id;
+      terminalMapping.set(terminal.continuation, source);
       block.terminal = {
         kind: "goto",
         block: terminal.continuation,
@@ -91,7 +94,7 @@ function pruneMaybeThrowsImpl(fn: HIRFunction): boolean {
       };
     }
   }
-  return hasChanges;
+  return terminalMapping.size > 0 ? terminalMapping : null;
 }
 
 function instructionMayThrow(instr: Instruction): boolean {

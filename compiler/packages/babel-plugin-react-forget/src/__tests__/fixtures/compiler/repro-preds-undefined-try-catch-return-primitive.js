@@ -1,8 +1,8 @@
-
-## Input
-
-```javascript
 // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+
+import { useMemo } from "react";
+
+const checkforTouchEvents = true;
 function useSupportsTouchEvent() {
   return useMemo(() => {
     if (checkforTouchEvents) {
@@ -16,13 +16,7 @@ function useSupportsTouchEvent() {
   }, []);
 }
 
-```
-
-
-## Error
-
-```
-Cannot read properties of undefined (reading 'preds')
-```
-          
-      
+export const FIXTURE_ENTRYPOINT = {
+  fn: useSupportsTouchEvent,
+  params: [],
+};
