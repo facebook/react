@@ -105,10 +105,6 @@ function serializeTemporaryReferenceID(id: number): string {
   return '$T' + id.toString(16);
 }
 
-function serializeSymbolReference(name: string): string {
-  return '$S' + name;
-}
-
 function serializeFormDataReference(id: number): string {
   // Why K? F is "Function". D is "Date". What else?
   return '$K' + id.toString(16);
@@ -479,18 +475,16 @@ export function processReply(
     }
 
     if (typeof value === 'symbol') {
-      // $FlowFixMe[incompatible-type] `description` might be undefined
-      const name: string = value.description;
-      if (Symbol.for(name) !== value) {
+      if (temporaryReferences === undefined) {
         throw new Error(
-          'Only global symbols received from Symbol.for(...) can be passed to Server Functions. ' +
-            `The symbol Symbol.for(${
-              // $FlowFixMe[incompatible-type] `description` might be undefined
-              value.description
-            }) cannot be found among global symbols.`,
+          'Symbols cannot be passed to a Server Function without a ' +
+            'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+            (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
         );
       }
-      return serializeSymbolReference(name);
+      return serializeTemporaryReferenceID(
+        writeTemporaryReference(temporaryReferences, value),
+      );
     }
 
     if (typeof value === 'bigint') {

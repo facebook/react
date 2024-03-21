@@ -501,5 +501,6 @@
   "513": "Cannot render a Client Context Provider on the Server. Instead, you can export a Client Component wrapper that itself renders a Client Context Provider.",
   "514": "Cannot access %s on the server. You cannot dot into a temporary client reference from a server component. You can only pass the value through to the client.",
   "515": "Cannot assign to a temporary client reference from a server module.",
-  "516": "Attempted to call a temporary Client Reference from the server but it is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component."
+  "516": "Attempted to call a temporary Client Reference from the server but it is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.",
+  "517": "Symbols cannot be passed to a Server Function without a temporary reference set. Pass a TemporaryReferenceSet to the options.%s"
 }
