@@ -1238,7 +1238,6 @@ function abortRootTransitions(
   abort: TransitionAbort,
   deletedTransitions: Set<Transition>,
   deletedOffscreenInstance: OffscreenInstance | null,
-  isInDeletedTree: boolean,
 ) {
   if (enableTransitionTracing) {
     const rootTransitions = root.incompleteTransitions;
@@ -1356,7 +1355,6 @@ function abortParentMarkerTransitionsForDeletedFiber(
             abort,
             deletedTransitions,
             deletedOffscreenInstance,
-            isInDeletedTree,
           );
 
           break;

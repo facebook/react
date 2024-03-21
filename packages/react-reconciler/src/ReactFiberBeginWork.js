@@ -1604,11 +1604,7 @@ function updateHostComponent(
   return workInProgress.child;
 }
 
-function updateHostHoistable(
-  current: null | Fiber,
-  workInProgress: Fiber,
-  renderLanes: Lanes,
-) {
+function updateHostHoistable(current: null | Fiber, workInProgress: Fiber) {
   markRef(current, workInProgress);
   const currentProps = current === null ? null : current.memoizedProps;
   const resource = (workInProgress.memoizedState = getResource(
@@ -4090,7 +4086,7 @@ function beginWork(
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostHoistable:
       if (enableFloat && supportsResources) {
-        return updateHostHoistable(current, workInProgress, renderLanes);
+        return updateHostHoistable(current, workInProgress);
       }
     // Fall through
     case HostSingleton:
