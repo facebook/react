@@ -406,10 +406,6 @@ function pushStringAttribute(target, name, value) {
     "boolean" !== typeof value &&
     target.push(" ", name, '="', escapeTextForBrowser(value), '"');
 }
-function makeFormFieldPrefix(resumableState) {
-  var id = resumableState.nextFormID++;
-  return resumableState.idPrefix + id;
-}
 var actionJavaScriptURL = escapeTextForBrowser(
   "javascript:throw new Error('React form unexpectedly submitted.')"
 );
@@ -423,6 +419,19 @@ function pushAdditionalFormField(value, key) {
   pushStringAttribute(this, "value", value);
   this.push("/>");
 }
+function getCustomFormFields(resumableState, formAction) {
+  if ("function" === typeof formAction.$$FORM_ACTION) {
+    var id = resumableState.nextFormID++;
+    resumableState = resumableState.idPrefix + id;
+    try {
+      return formAction.$$FORM_ACTION(resumableState);
+    } catch (x) {
+      if ("object" === typeof x && null !== x && "function" === typeof x.then)
+        throw x;
+    }
+  }
+  return null;
+}
 function pushFormActionAttribute(
   target,
   resumableState,
@@ -434,19 +443,19 @@ function pushFormActionAttribute(
   name
 ) {
   var formData = null;
-  "function" === typeof formAction &&
-    ("function" === typeof formAction.$$FORM_ACTION
-      ? ((formEncType = makeFormFieldPrefix(resumableState)),
-        (resumableState = formAction.$$FORM_ACTION(formEncType)),
-        (name = resumableState.name),
-        (formAction = resumableState.action || ""),
-        (formEncType = resumableState.encType),
-        (formMethod = resumableState.method),
-        (formTarget = resumableState.target),
-        (formData = resumableState.data))
+  if ("function" === typeof formAction) {
+    var customFields = getCustomFormFields(resumableState, formAction);
+    null !== customFields
+      ? ((name = customFields.name),
+        (formAction = customFields.action || ""),
+        (formEncType = customFields.encType),
+        (formMethod = customFields.method),
+        (formTarget = customFields.target),
+        (formData = customFields.data))
       : (target.push(" ", "formAction", '="', actionJavaScriptURL, '"'),
         (formTarget = formMethod = formEncType = formAction = name = null),
-        injectFormReplayingRuntime(resumableState, renderState)));
+        injectFormReplayingRuntime(resumableState, renderState));
+  }
   null != name && pushAttribute(target, "name", name);
   null != formAction && pushAttribute(target, "formAction", formAction);
   null != formEncType && pushAttribute(target, "formEncType", formEncType);
@@ -1059,7 +1068,7 @@ function pushStartInstance(
         : null !== defaultValue$jscomp$0 &&
           pushAttribute(target$jscomp$0, "value", defaultValue$jscomp$0);
       target$jscomp$0.push("/>");
-      null !== formData &&
+      null != formData &&
         formData.forEach(pushAdditionalFormField, target$jscomp$0);
       return null;
     case "button":
@@ -1117,7 +1126,7 @@ function pushStartInstance(
         name$jscomp$0
       );
       target$jscomp$0.push(">");
-      null !== formData$jscomp$0 &&
+      null != formData$jscomp$0 &&
         formData$jscomp$0.forEach(pushAdditionalFormField, target$jscomp$0);
       pushInnerHTML(target$jscomp$0, innerHTML$jscomp$2, children$jscomp$3);
       if ("string" === typeof children$jscomp$3) {
@@ -1167,24 +1176,32 @@ function pushStartInstance(
         }
       var formData$jscomp$1 = null,
         formActionName = null;
-      if ("function" === typeof formAction$jscomp$1)
-        if ("function" === typeof formAction$jscomp$1.$$FORM_ACTION) {
-          var prefix$9 = makeFormFieldPrefix(resumableState),
-            customFields = formAction$jscomp$1.$$FORM_ACTION(prefix$9);
-          formAction$jscomp$1 = customFields.action || "";
-          formEncType$jscomp$1 = customFields.encType;
-          formMethod$jscomp$1 = customFields.method;
-          formTarget$jscomp$1 = customFields.target;
-          formData$jscomp$1 = customFields.data;
-          formActionName = customFields.name;
-        } else
-          target$jscomp$0.push(" ", "action", '="', actionJavaScriptURL, '"'),
+      if ("function" === typeof formAction$jscomp$1) {
+        var customFields = getCustomFormFields(
+          resumableState,
+          formAction$jscomp$1
+        );
+        null !== customFields
+          ? ((formAction$jscomp$1 = customFields.action || ""),
+            (formEncType$jscomp$1 = customFields.encType),
+            (formMethod$jscomp$1 = customFields.method),
+            (formTarget$jscomp$1 = customFields.target),
+            (formData$jscomp$1 = customFields.data),
+            (formActionName = customFields.name))
+          : (target$jscomp$0.push(
+              " ",
+              "action",
+              '="',
+              actionJavaScriptURL,
+              '"'
+            ),
             (formTarget$jscomp$1 =
               formMethod$jscomp$1 =
               formEncType$jscomp$1 =
               formAction$jscomp$1 =
                 null),
-            injectFormReplayingRuntime(resumableState, renderState);
+            injectFormReplayingRuntime(resumableState, renderState));
+      }
       null != formAction$jscomp$1 &&
         pushAttribute(target$jscomp$0, "action", formAction$jscomp$1);
       null != formEncType$jscomp$1 &&
@@ -1198,7 +1215,7 @@ function pushStartInstance(
         (target$jscomp$0.push('<input type="hidden"'),
         pushStringAttribute(target$jscomp$0, "name", formActionName),
         target$jscomp$0.push("/>"),
-        null !== formData$jscomp$1 &&
+        null != formData$jscomp$1 &&
           formData$jscomp$1.forEach(pushAdditionalFormField, target$jscomp$0));
       pushInnerHTML(target$jscomp$0, innerHTML$jscomp$3, children$jscomp$4);
       if ("string" === typeof children$jscomp$4) {
@@ -1302,10 +1319,10 @@ function pushStartInstance(
             styleQueue.sheets.set(href, resource);
             hoistableState && hoistableState.stylesheets.add(resource);
           } else if (styleQueue) {
-            var resource$10 = styleQueue.sheets.get(href);
-            resource$10 &&
+            var resource$9 = styleQueue.sheets.get(href);
+            resource$9 &&
               hoistableState &&
-              hoistableState.stylesheets.add(resource$10);
+              hoistableState.stylesheets.add(resource$9);
           }
           textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
           JSCompiler_inline_result$jscomp$3 = null;
@@ -3161,11 +3178,11 @@ var HooksDispatcher = {
           });
         return [initialState, action, !1];
       }
-      var boundAction$23 = action.bind(null, initialState);
+      var boundAction$22 = action.bind(null, initialState);
       return [
         initialState,
         function (payload) {
-          boundAction$23(payload);
+          boundAction$22(payload);
         },
         !1
       ];
@@ -3219,16 +3236,16 @@ function describeNativeComponentFrame(fn, construct) {
           } else {
             try {
               Fake.call();
-            } catch (x$25) {
-              control = x$25;
+            } catch (x$24) {
+              control = x$24;
             }
             fn.call(Fake.prototype);
           }
         } else {
           try {
             throw Error();
-          } catch (x$26) {
-            control = x$26;
+          } catch (x$25) {
+            control = x$25;
           }
           (Fake = fn()) &&
             "function" === typeof Fake.catch &&
@@ -4462,15 +4479,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$43) {
+    } catch (thrownValue$42) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$43 === SuspenseException
+          thrownValue$42 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$43),
+            : thrownValue$42),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5151,11 +5168,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$47 = partialBoundaries[i];
+      var boundary$46 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$47.completedSegments;
+        var completedSegments = boundary$46.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -5165,7 +5182,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$47,
+              boundary$46,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -5177,7 +5194,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeHoistablesForBoundary(
           boundary,
-          boundary$47.contentState,
+          boundary$46.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5232,8 +5249,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$49) {
-    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
+  } catch (error$48) {
+    logRecoverableError(request, error$48, {}), fatalError(request, error$48);
   }
 }
 exports.abortStream = function (stream, reason) {

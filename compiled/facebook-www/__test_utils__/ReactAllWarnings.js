@@ -169,6 +169,7 @@ export default [
   "Expected useImperativeHandle() second argument to be a function that creates a handle. Instead received: %s.",
   "Extra attributes from the server: %s",
   "Factory.type is deprecated. Access the class directly before passing it to createFactory.",
+  "Failed to serialize an action for progressive enhancement:\n%s",
   "Form field values (value, checked, defaultValue, or defaultChecked props) must be strings, not %s. This value must be coerced to a string before using it here.",
   "Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?%s",
   "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.",
