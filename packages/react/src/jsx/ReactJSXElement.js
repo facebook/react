@@ -13,6 +13,7 @@ import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_CLIENT_REFERENCE_TYPE
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
@@ -22,8 +23,6 @@ import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
-const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
 let specialPropKeyWarningShown;
 let specialPropRefWarningShown;
@@ -942,7 +941,7 @@ function validateChildKeys(node, parentType) {
     if (typeof node !== 'object' || !node) {
       return;
     }
-    if (node.$$typeof === REACT_CLIENT_REFERENCE) {
+    if (node.$$typeof === REACT_CLIENT_REFERENCE_TYPE) {
       // This is a reference to a client component so it's unknown.
     } else if (isArray(node)) {
       for (let i = 0; i < node.length; i++) {

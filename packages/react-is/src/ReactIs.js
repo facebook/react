@@ -23,7 +23,8 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
-} from 'shared/ReactSymbols';
+  REACT_CLIENT_REFERENCE_TYPE,
+} from 'shared/ReactSymbols
 import isValidElementType from 'shared/isValidElementType';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
@@ -88,6 +89,7 @@ export const Profiler = REACT_PROFILER_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
 export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+export const ClientReference = REACT_CLIENT_REFERENCE_TYPE;
 
 export {isValidElementType};
 
@@ -138,4 +140,7 @@ export function isSuspense(object: any): boolean {
 }
 export function isSuspenseList(object: any): boolean {
   return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
+}
+export function isClientReference(object: any): boolean {
+  return typeOf(object) === REACT_CLIENT_REFERENCE_TYPE;
 }
