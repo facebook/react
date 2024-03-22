@@ -56,7 +56,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
-export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;

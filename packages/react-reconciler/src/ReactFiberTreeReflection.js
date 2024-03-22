@@ -25,7 +25,6 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {enableFloat} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -280,7 +279,7 @@ function findCurrentHostFiberImpl(node: Fiber): Fiber | null {
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostHoistable : false) ||
+    tag === HostHoistable ||
     tag === HostSingleton ||
     tag === HostText
   ) {
@@ -311,7 +310,7 @@ function findCurrentHostFiberWithNoPortalsImpl(node: Fiber): Fiber | null {
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostHoistable : false) ||
+    tag === HostHoistable ||
     tag === HostSingleton ||
     tag === HostText
   ) {

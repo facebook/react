@@ -123,7 +123,6 @@ describe('ReactDOM HostSingleton', () => {
       : children;
   }
 
-  // @gate enableFloat
   it('warns if you render the same singleton twice at the same time', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
@@ -208,7 +207,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableFloat
   it('renders into html, head, and body persistently so the node identities never change and extraneous styles are retained', async () => {
     // Server render some html that will get replaced with a client render
     await actIntoEmptyDocument(() => {
@@ -806,7 +804,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableFloat
   it('clears persistent body when it is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

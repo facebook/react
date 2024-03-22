@@ -52,7 +52,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFloat,
   enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
@@ -647,7 +646,7 @@ export function dispatchEventForPluginEventSystem(
             if (
               parentTag === HostComponent ||
               parentTag === HostText ||
-              (enableFloat ? parentTag === HostHoistable : false) ||
+              parentTag === HostHoistable ||
               parentTag === HostSingleton
             ) {
               node = ancestorInst = parentNode;
@@ -705,7 +704,7 @@ export function accumulateSinglePhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {
@@ -819,7 +818,7 @@ export function accumulateTwoPhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {
@@ -922,7 +921,7 @@ function accumulateEnterLeaveListenersForEvent(
     }
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {

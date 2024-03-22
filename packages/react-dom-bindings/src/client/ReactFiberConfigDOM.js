@@ -91,7 +91,6 @@ import {
   enableBigIntSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFloat,
   enableTrustedTypesIntegration,
   enableFormActions,
   enableAsyncActions,
@@ -2161,25 +2160,16 @@ function preconnectAs(
 }
 
 function prefetchDNS(href: string) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.prefetchDNS(href);
   preconnectAs('dns-prefetch', href, null);
 }
 
 function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preconnect(href, crossOrigin);
   preconnectAs('preconnect', href, crossOrigin);
 }
 
 function preload(href: string, as: string, options?: ?PreloadImplOptions) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preload(href, as, options);
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && href && as) {
@@ -2258,9 +2248,6 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
 }
 
 function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preloadModule(href, options);
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && href) {
@@ -2322,9 +2309,6 @@ function preinitStyle(
   precedence: ?string,
   options?: ?PreinitStyleOptions,
 ) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preinitStyle(href, precedence, options);
 
   const ownerDocument = getGlobalDocument();
@@ -2399,9 +2383,6 @@ function preinitStyle(
 }
 
 function preinitScript(src: string, options?: ?PreinitScriptOptions) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preinitScript(src, options);
 
   const ownerDocument = getGlobalDocument();
@@ -2458,9 +2439,6 @@ function preinitModuleScript(
   src: string,
   options?: ?PreinitModuleScriptOptions,
 ) {
-  if (!enableFloat) {
-    return;
-  }
   previousDispatcher.preinitModuleScript(src, options);
 
   const ownerDocument = getGlobalDocument();

@@ -62,15 +62,9 @@ describe('ReactDOMFizzServerBrowser', () => {
       </html>,
     );
     const result = await readResult(stream);
-    if (gate(flags => flags.enableFloat)) {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(result).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   it('should emit bootstrap script src at the end', async () => {

@@ -5080,7 +5080,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('can emit the preamble even if the head renders asynchronously', async () => {
     function AsyncNoOutput() {
       readText('nooutput');
@@ -5133,7 +5132,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
     const chunks = [];
     writable.on('data', chunk => {
@@ -5734,14 +5732,7 @@ describe('ReactDOMFizzServer', () => {
           ', or object with a novel `toString` method but found an Array with length 2 instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
       ]);
 
-      if (gate(flags => flags.enableFloat)) {
-        expect(getVisibleChildren(document.head)).toEqual(<title />);
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'hello1<!-- -->hello2'}</title>,
-        );
-      }
-
+      expect(getVisibleChildren(document.head)).toEqual(<title />);
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5749,24 +5740,9 @@ describe('ReactDOMFizzServer', () => {
         },
       });
       await waitForAll([]);
-      if (gate(flags => flags.enableFloat)) {
-        expect(errors).toEqual([]);
-        // with float, the title doesn't render on the client or on the server
-        expect(getVisibleChildren(document.head)).toEqual(<title />);
-      } else {
-        expect(errors).toEqual(
-          [
-            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
-              ? 'Text content does not match server-rendered HTML.'
-              : null,
-            'Hydration failed because the initial UI does not match what was rendered on the server.',
-            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-          ].filter(Boolean),
-        );
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{['hello1', 'hello2']}</title>,
-        );
-      }
+      expect(errors).toEqual([]);
+      // with float, the title doesn't render on the client or on the server
+      expect(getVisibleChildren(document.head)).toEqual(<title />);
     });
 
     it('should warn in dev if you pass a React Component as a child to <title>', async () => {
@@ -5784,37 +5760,20 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      if (gate(flags => flags.enableFloat)) {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'React expects the `children` prop of <title> tags to be a string, number' +
-            gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
-            ', or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
-        ]);
-      } else {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'A title element received a React element for children. In the browser title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering',
-        ]);
-      }
-
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
-
+      await expect(async () => {
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+      }).toErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number' +
+          gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
+          ', or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+      ]);
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5823,14 +5782,10 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([]);
       expect(errors).toEqual([]);
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
     });
 
     it('should warn in dev if you pass an object that does not implement toString as a child to <title>', async () => {
@@ -5842,37 +5797,20 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      if (gate(flags => flags.enableFloat)) {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'React expects the `children` prop of <title> tags to be a string, number' +
-            gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
-            ', or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
-        ]);
-      } else {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'A title element received a React element for children. In the browser title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering',
-        ]);
-      }
-
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
-
+      await expect(async () => {
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+      }).toErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number' +
+          gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
+          ', or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+      ]);
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5881,14 +5819,10 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([]);
       expect(errors).toEqual([]);
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
     });
   });
 
@@ -6436,7 +6370,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('warns if script has complex children', async () => {
     function MyScript() {
       return 'bar();';
