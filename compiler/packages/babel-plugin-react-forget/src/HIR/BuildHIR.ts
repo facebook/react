@@ -2916,8 +2916,9 @@ function lowerJsxElementName(
   if (exprPath.isJSXIdentifier()) {
     const tag: string = exprPath.node.name;
     if (tag.match(/^[A-Z]/)) {
+      const kind = getLoadKind(builder, exprPath);
       return lowerValueToTemporary(builder, {
-        kind: "LoadLocal",
+        kind: kind,
         place: lowerIdentifier(builder, exprPath),
         loc: exprLoc,
       });
@@ -3245,7 +3246,7 @@ function getStoreKind(
 
 function getLoadKind(
   builder: HIRBuilder,
-  identifier: NodePath<t.Identifier>
+  identifier: NodePath<t.Identifier | t.JSXIdentifier>
 ): "LoadLocal" | "LoadContext" {
   const isContext = builder.isContextIdentifier(identifier);
   return isContext ? "LoadContext" : "LoadLocal";

@@ -267,7 +267,7 @@ export default class HIRBuilder {
     return resolvedBinding;
   }
 
-  isContextIdentifier(path: NodePath<t.Identifier>): boolean {
+  isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {
     const binding = this.#resolveBabelBinding(path);
     if (binding) {
       return this.#env.isContextIdentifier(binding.identifier);
