@@ -9,8 +9,9 @@
   "dependencies": {
     "@babel/core": "^7.19.1",
     "@babel/plugin-proposal-private-methods": "^7.18.6",
-    "babel-plugin-react-forget": "*",
-    "hermes-parser": "^0.19.1"
+    "hermes-parser": "^0.20.1",
+    "zod": "^3.22.4",
+    "zod-validation-error": "^3.0.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.4",
