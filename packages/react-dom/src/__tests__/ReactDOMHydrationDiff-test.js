@@ -17,6 +17,10 @@ let act;
 const util = require('util');
 const realConsoleError = console.error;
 
+function errorHandler() {
+  // forward to console.error but don't fail the tests
+}
+
 describe('ReactDOMServerHydration', () => {
   let container;
 
@@ -27,12 +31,14 @@ describe('ReactDOMServerHydration', () => {
     ReactDOMServer = require('react-dom/server');
     act = React.act;
 
+    window.addEventListener('error', errorHandler);
     console.error = jest.fn();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
 
   afterEach(() => {
+    window.removeEventListener('error', errorHandler);
     document.body.removeChild(container);
     console.error = realConsoleError;
   });

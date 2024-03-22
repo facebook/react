@@ -887,9 +887,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', () => {
+  it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', async () => {
     const root = ReactNoop.createLegacyRoot();
-    expect(() => root.render(<AsyncText text="Async" />)).toThrow(
+    await expect(async () => {
+      await act(() => root.render(<AsyncText text="Async" />));
+    }).rejects.toThrow(
       'A component suspended while responding to synchronous input.',
     );
   });

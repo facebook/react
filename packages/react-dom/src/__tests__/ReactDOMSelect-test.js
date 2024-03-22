@@ -1448,7 +1448,13 @@ describe('ReactDOMSelect', () => {
               </select>,
             );
           }),
-        ).rejects.toThrowError(new TypeError('prod message'));
+        ).rejects.toThrowError(
+          // eslint-disable-next-line no-undef
+          new AggregateError([
+            new TypeError('prod message'),
+            new TypeError('prod message'),
+          ]),
+        );
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',

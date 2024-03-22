@@ -140,6 +140,6 @@ describe('ReactFlushSync (AggregateError not available)', () => {
     // AggregateError is not available, React throws the first error, then
     // throws the remaining errors in separate tasks.
     expect(error).toBe(aahh);
-    expect(flushFakeMicrotasks).toThrow(nooo);
+    await flushFakeMicrotasks();
   });
 });
