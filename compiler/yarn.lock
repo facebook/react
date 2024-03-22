@@ -6466,6 +6466,11 @@ hermes-estree@0.19.2:
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.19.2.tgz#b35f59c7fa184ac63a049a9ad37b370c5151bd20"
   integrity sha512-dMDmDgaW9LXQxGOQ+gsAZUlXiPXkHvUrpKESCPhkm3pH0SjHy5uaBaT8psxmPol1EBh8GVM2lGC/W0bhuW/fpQ==
 
+hermes-estree@0.20.1:
+  version "0.20.1"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.20.1.tgz#0b9a544cf883a779a8e1444b915fa365bef7f72d"
+  integrity sha512-SQpZK4BzR48kuOg0v4pb3EAGNclzIlqMj3Opu/mu7bbAoFw6oig6cEt/RAi0zTFW/iW6Iz9X9ggGuZTAZ/yZHg==
+
 hermes-parser@0.14.0:
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.14.0.tgz#edb2e7172fce996d2c8bbba250d140b70cc1aaaf"
@@ -6493,6 +6498,13 @@ hermes-parser@^0.19.1:
   integrity sha512-FxPcupAYzTks42tx8c29UGW59BbZQ67aKKS4jFi0eiD8Q3US3O8raxfNx0yi0ha0dTCq1WXK2MlJv+RCjkVp3Q==
   dependencies:
     hermes-estree "0.19.2"
+
+hermes-parser@^0.20.1:
+  version "0.20.1"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.20.1.tgz#ad10597b99f718b91e283f81cbe636c50c3cff92"
+  integrity sha512-BL5P83cwCogI8D7rrDCgsFY0tdYUtmFP9XaXtl2IQjC+2Xo+4okjfXintlTxcIwl4qeGddEl28Z11kbVIw0aNA==
+  dependencies:
+    hermes-estree "0.20.1"
 
 hmac-drbg@^1.0.1:
   version "1.0.1"
@@ -11841,6 +11853,11 @@ zod-validation-error@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/zod-validation-error/-/zod-validation-error-2.1.0.tgz#208eac75237dfed47c0018d2fe8fd03501bfc9ac"
   integrity sha512-VJh93e2wb4c3tWtGgTa0OF/dTt/zoPCPzXq4V11ZjxmEAFaPi/Zss1xIZdEB5RD8GD00U0/iVXgqkF77RV7pdQ==
+
+zod-validation-error@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/zod-validation-error/-/zod-validation-error-3.0.3.tgz#d2e0bbb1bb5fcf0ae406095180dc3c31d8145b8e"
+  integrity sha512-cETTrcMq3Ze58vhdR0zD37uJm/694I6mAxcf/ei5bl89cC++fBNxrC2z8lkFze/8hVMPwrbtrwXHR2LB50fpHw==
 
 zod@^3.22.4:
   version "3.22.4"
