@@ -133,7 +133,6 @@ describe('ReactFlightDOMForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
-  // @gate enableFormActions
   it('can submit a passed server action without hydrating it', async () => {
     let foo = null;
 
@@ -168,7 +167,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can submit an imported server action without hydrating it', async () => {
     let foo = null;
 
@@ -201,7 +199,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can submit a complex closure server action without hydrating it', async () => {
     let foo = null;
 
@@ -236,7 +233,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   it('can submit a multiple complex closure server action without hydrating it', async () => {
     let foo = null;
 
@@ -277,7 +273,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barc');
   });
 
-  // @gate enableFormActions
   it('can bind an imported server action on the client without hydrating it', async () => {
     let foo = null;
 
@@ -309,7 +304,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   it('can bind a server action on the client without hydrating it', async () => {
     let foo = null;
 
@@ -350,7 +344,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it("useActionState's dispatch binds the initial state to the provided action", async () => {
     const serverAction = serverExports(
@@ -399,7 +392,6 @@ describe('ReactFlightDOMForm', () => {
     expect(await returnValue).toEqual({count: 6});
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useActionState can reuse state during MPA form submission', async () => {
     const serverAction = serverExports(
@@ -489,7 +481,6 @@ describe('ReactFlightDOMForm', () => {
     }
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it(
     'useActionState preserves state if arity is the same, but different ' +
@@ -609,7 +600,6 @@ describe('ReactFlightDOMForm', () => {
     },
   );
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useActionState does not reuse state if action signatures are different', async () => {
     // This is the same as the previous test, except instead of using bind to
@@ -697,7 +687,6 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('111');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('when permalink is provided, useActionState compares that instead of the keypath', async () => {
     const serverAction = serverExports(
@@ -804,7 +793,6 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('1');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useActionState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
@@ -850,7 +838,6 @@ describe('ReactFlightDOMForm', () => {
     expect(form.action).toBe('http://localhost/permalink');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useActionState `permalink` is coerced to string', async () => {
     const serverAction = serverExports(function action(prevState) {
@@ -904,7 +891,6 @@ describe('ReactFlightDOMForm', () => {
     expect(form.action).toBe('http://localhost/permalink');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useFormState can return JSX state during MPA form submission', async () => {
     const serverAction = serverExports(

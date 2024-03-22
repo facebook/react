@@ -10,7 +10,7 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Awaited} from 'shared/ReactTypes';
 
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -67,7 +67,7 @@ function resolveDispatcher() {
 }
 
 export function useFormStatus(): FormStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
@@ -81,7 +81,7 @@ export function useFormState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();

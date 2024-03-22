@@ -59,7 +59,6 @@ export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
-export const enableFormActions = true;
 export const enableAsyncActions = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.

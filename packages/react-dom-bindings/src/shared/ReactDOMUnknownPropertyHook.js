@@ -11,7 +11,6 @@ import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {
   enableCustomElementPropertySupport,
-  enableFormActions,
   enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 
@@ -42,21 +41,18 @@ function validateProperty(tagName, name, value, eventRegistry) {
       return true;
     }
 
-    if (enableFormActions) {
-      // Actions are special because unlike events they can have other value types.
-      if (typeof value === 'function') {
-        if (tagName === 'form' && name === 'action') {
-          return true;
-        }
-        if (tagName === 'input' && name === 'formAction') {
-          return true;
-        }
-        if (tagName === 'button' && name === 'formAction') {
-          return true;
-        }
+    // Actions are special because unlike events they can have other value types.
+    if (typeof value === 'function') {
+      if (tagName === 'form' && name === 'action') {
+        return true;
+      }
+      if (tagName === 'input' && name === 'formAction') {
+        return true;
+      }
+      if (tagName === 'button' && name === 'formAction') {
+        return true;
       }
     }
-
     // We can't rely on the event system being injected on the server.
     if (eventRegistry != null) {
       const {registrationNameDependencies, possibleRegistrationNames} =

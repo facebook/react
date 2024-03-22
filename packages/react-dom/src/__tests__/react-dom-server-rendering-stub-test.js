@@ -82,7 +82,6 @@ describe('react-dom-server-rendering-stub', () => {
     expect(x).toBe(false);
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('exports useFormStatus', async () => {
     function App() {

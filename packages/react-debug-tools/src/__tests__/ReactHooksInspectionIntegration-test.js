@@ -2672,7 +2672,7 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  // @gate enableFormActions && enableAsyncActions
+  // @gate enableAsyncActions
   it('should support useFormState hook', async () => {
     function Foo() {
       const [value] = ReactDOM.useFormState(function increment(n) {

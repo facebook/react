@@ -35,7 +35,6 @@ import {
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
   enableAsyncActions,
-  enableFormActions,
   enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -814,7 +813,7 @@ if (enableUseEffectEventHook) {
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
 }
 if (enableAsyncActions) {
