@@ -7,7 +7,7 @@
  * @flow
  */
 
-declare var $$$config: any;
+declare const $$$config: any;
 
 export opaque type ClientManifest = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars

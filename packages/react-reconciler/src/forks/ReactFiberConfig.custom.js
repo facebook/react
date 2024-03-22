@@ -23,7 +23,7 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$config: any;
+declare const $$$config: any;
 export opaque type Type = mixed; // eslint-disable-line no-undef
 export opaque type Props = mixed; // eslint-disable-line no-undef
 export opaque type Container = mixed; // eslint-disable-line no-undef
