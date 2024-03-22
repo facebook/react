@@ -63,6 +63,34 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   // public version of `act`, though we maybe should in the future.
   await waitForMicrotasks();
 
+  let hasError = false;
+  let thrownError: mixed = null;
+  const errorHandlerDOM = function (event: ErrorEvent) {
+    // Prevent logs from reprinting this error.
+    event.preventDefault();
+    if (!hasError) {
+      hasError = true;
+      thrownError = event.error;
+    }
+  };
+  const errorHandlerNode = function (err: mixed) {
+    if (!hasError) {
+      hasError = true;
+      thrownError = err;
+    }
+  };
+  // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
+  if (
+    typeof window === 'object' &&
+    typeof window.addEventListener === 'function'
+  ) {
+    // We're in a JS DOM environment.
+    window.addEventListener('error', errorHandlerDOM);
+  } else if (typeof process === 'object') {
+    // Node environment
+    process.on('uncaughtException', errorHandlerNode);
+  }
+
   try {
     const result = await scope();
 
@@ -106,8 +134,24 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       Scheduler.unstable_flushUntilNextPaint();
     } while (true);
 
+    if (hasError) {
+      // Rethrow any errors logged by the global error handling.
+      throw thrownError;
+    }
+
     return result;
   } finally {
+    if (
+      typeof window === 'object' &&
+      typeof window.addEventListener === 'function'
+    ) {
+      // We're in a JS DOM environment.
+      window.removeEventListener('error', errorHandlerDOM);
+    } else if (typeof process === 'object') {
+      // Node environment
+      process.off('uncaughtException', errorHandlerNode);
+    }
+
     const depth = actingUpdatesScopeDepth;
     if (depth === 1) {
       global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
