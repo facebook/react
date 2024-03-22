@@ -22,8 +22,7 @@ const ReactCurrentActQueue = {
   didUsePromise: false,
 
   // Track first uncaught error within this act
-  hasError: false,
-  thrownError: (null: mixed),
+  thrownErrors: ([]: Array<mixed>),
 };
 
 export default ReactCurrentActQueue;

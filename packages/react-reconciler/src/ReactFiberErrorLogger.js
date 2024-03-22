@@ -38,10 +38,7 @@ export function logCapturedError(
       if (__DEV__ && ReactCurrentActQueue.current !== null) {
         // For uncaught errors inside act, we track them on the act and then
         // rethrow them into the test.
-        if (!ReactCurrentActQueue.hasError) {
-          ReactCurrentActQueue.hasError = true;
-          ReactCurrentActQueue.thrownError = error;
-        }
+        ReactCurrentActQueue.thrownErrors.push(error);
         return;
       }
       // For uncaught root errors we report them as uncaught to the browser's
