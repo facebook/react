@@ -7,11 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f4f9eb9ce7783ae0921b56d253c4faad>>
+ * @generated SignedSource<<f71d56737b959dc3ce937d61f1bd9834>>
  */
 
 "use strict";
-var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -27,7 +27,7 @@ var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
-  enableRenderableContext = dynamicFlags.enableRenderableContext,
+  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
   if ("object" === typeof object && null !== object) {

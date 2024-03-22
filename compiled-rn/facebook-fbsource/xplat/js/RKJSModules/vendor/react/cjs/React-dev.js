@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7d6e6eb20c84cbe47eca19d4810dcb60>>
+ * @generated SignedSource<<ea0358e696426d4e3e4a41698c95dba1>>
  */
 
 "use strict";
@@ -24,9 +24,9 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags");
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-71c3a245";
+    var ReactVersion = "18.3.0-canary-f6aabfc7";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -490,7 +490,8 @@ if (__DEV__) {
       return isArrayImpl(a);
     }
 
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
     // the exports object every time a flag is read.
 
     var enableAsyncActions = dynamicFlags.enableAsyncActions,

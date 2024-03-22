@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9d38179074b2fce93bbd3958437928a4>>
+ * @generated SignedSource<<af7de104fc236eac212bded7bf6ecd5d>>
  */
 
 "use strict";
@@ -15,7 +15,7 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -86,8 +86,8 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  enableAsyncActions = dynamicFlags.enableAsyncActions,
-  enableRenderableContext = dynamicFlags.enableRenderableContext,
+  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
   ReactCurrentBatchConfig = { transition: null },
@@ -624,7 +624,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-e9a347e8";
+exports.version = "18.3.0-canary-eb44066b";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

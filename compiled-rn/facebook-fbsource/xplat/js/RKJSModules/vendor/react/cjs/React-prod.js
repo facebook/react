@@ -7,11 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0ad08d0ae422694c93c891090ccf41af>>
+ * @generated SignedSource<<66e537022089ccfa9fc66af1a02c3dcf>>
  */
 
 "use strict";
-var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -83,8 +83,8 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  enableAsyncActions = dynamicFlags.enableAsyncActions,
-  enableRenderableContext = dynamicFlags.enableRenderableContext,
+  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
   ReactCurrentBatchConfig = { transition: null },
@@ -628,4 +628,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-20925769";
+exports.version = "18.3.0-canary-56830a7d";

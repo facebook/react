@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a3ccc4d41f5e95ddb8fc8bea82ac2be7>>
+ * @generated SignedSource<<27d37ff5b6d602728d80f08a81faa7e5>>
  */
 
 "use strict";
@@ -27,7 +27,7 @@ if (__DEV__) {
     var React = require("react");
     require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
     var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface");
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags");
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
     var Scheduler = require("scheduler");
 
     var ReactSharedInternals =
@@ -2680,7 +2680,8 @@ to return true:wantsResponderID|                            |
       key._reactInternals = value;
     }
 
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
     // the exports object every time a flag is read.
 
     var alwaysThrottleDisappearingFallbacks =
@@ -30246,7 +30247,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-f9d3cc00";
+    var ReactVersion = "18.3.0-canary-78cf960c";
 
     function createPortal$1(
       children,

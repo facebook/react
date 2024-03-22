@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6d931d2de9a1892cd33381697c43409f>>
+ * @generated SignedSource<<2efa0f7ab5ad5e492b13b7c939b8e190>>
  */
 
 "use strict";
@@ -16,7 +16,7 @@ if (__DEV__) {
   (function () {
     "use strict";
 
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags");
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -39,7 +39,8 @@ if (__DEV__) {
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_CACHE_TYPE = Symbol.for("react.cache");
 
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
     // the exports object every time a flag is read.
 
     var enableRenderableContext = dynamicFlags.enableRenderableContext;

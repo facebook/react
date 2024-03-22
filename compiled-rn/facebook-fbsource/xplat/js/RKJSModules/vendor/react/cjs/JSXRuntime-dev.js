@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9adef053c6c5541fdc8c531c06ac6d64>>
+ * @generated SignedSource<<adeaae2f5066d7efda21fb798629deec>>
  */
 
 "use strict";
@@ -17,7 +17,7 @@ if (__DEV__) {
     "use strict";
 
     var React = require("react");
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags");
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -103,7 +103,8 @@ if (__DEV__) {
       }
     }
 
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
     // the exports object every time a flag is read.
 
     var enableComponentStackLocations =
