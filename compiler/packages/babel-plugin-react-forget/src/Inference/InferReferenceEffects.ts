@@ -1190,7 +1190,9 @@ function inferBlock(
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         let hasCaptureArgument = false;
+        let isUseEffect = isEffectHook(instrValue.property.identifier);
         for (let i = 0; i < instrValue.args.length; i++) {
+          const argumentEffects: Array<FunctionEffect> = [];
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
           if (effects !== null) {
@@ -1200,18 +1202,28 @@ function inferBlock(
              */
             state.reference(
               place,
-              functionEffects,
+              argumentEffects,
               effects[i],
               ValueReason.Other
             );
           } else {
             state.reference(
               place,
-              functionEffects,
+              argumentEffects,
               Effect.ConditionallyMutate,
               ValueReason.Other
             );
           }
+          /*
+           * Join the effects of the argument with the effects of the enclosing function,
+           * unless the we're detecting a global mutation inside a useEffect hook
+           */
+          functionEffects.push(
+            ...argumentEffects.filter(
+              (argEffect) =>
+                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
+            )
+          );
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
