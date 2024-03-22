@@ -327,17 +327,27 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    expect(() => {
-      expect(() =>
+    class Foo extends React.Component {}
+    const caughtErrors = [];
+    function errorHandler(event) {
+      event.preventDefault();
+      caughtErrors.push(event.error);
+    }
+    window.addEventListener('error', errorHandler);
+    try {
+      expect(() => {
         ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
-      ).toThrow();
-    }).toErrorDev([
-      // A failed component renders twice in DEV in concurrent mode
-      'Warning: No `render` method found on the Empty instance: ' +
-        'you may have forgotten to define `render`.',
-      'Warning: No `render` method found on the Empty instance: ' +
-        'you may have forgotten to define `render`.',
-    ]);
+      }).toErrorDev([
+        // A failed component renders twice in DEV in concurrent mode
+        'Warning: No `render` method found on the Empty instance: ' +
+          'you may have forgotten to define `render`.',
+        'Warning: No `render` method found on the Empty instance: ' +
+          'you may have forgotten to define `render`.',
+      ]);
+    } finally {
+      window.removeEventListener('error', errorHandler);
+    }
+    expect(caughtErrors.length).toBe(1);
   });
 
   it('renders a simple stateless component with prop', function() {

@@ -596,9 +596,11 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const root = createRoot(container);
 
     await expect(async () => {
-      expect(() =>
-        ReactDOM.flushSync(async () => root.render(<App />)),
-      ).toThrow(
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.flushSync(async () => root.render(<App />));
+        });
+      }).rejects.toThrow(
         'Maximum update depth exceeded. This can happen when a component repeatedly ' +
           'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
           'the number of nested updates to prevent infinite loops.',

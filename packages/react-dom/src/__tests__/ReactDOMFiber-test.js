@@ -1108,11 +1108,13 @@ describe('ReactDOMFiber', () => {
     // It's an error of type 'NotFoundError' with no message
     container.innerHTML = '<div>MEOW.</div>';
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<div key="2">baz</div>);
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<div key="2">baz</div>);
+        });
       });
-    }).toThrow('The node to be removed is not a child of this node');
+    }).rejects.toThrow('The node to be removed is not a child of this node');
   });
 
   it('should not warn when doing an update to a container manually updated outside of React', async () => {
