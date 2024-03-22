@@ -78,13 +78,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         root.render(<Foo />);
       });
 
-      await act(() => {
-        container.firstChild.dispatchEvent(
-          new MouseEvent('click', {
-            bubbles: true,
-          }),
-        );
-      });
+      container.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
 
       expect(windowOnError.mock.calls).toEqual([
         [
