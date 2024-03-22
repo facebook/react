@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-aab6552d";
+    var ReactVersion = "18.3.0-www-modern-3b05a7da";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -10653,6 +10653,7 @@ if (__DEV__) {
     {
       HooksDispatcher.useOptimistic = useOptimistic;
       HooksDispatcher.useFormState = useFormState;
+      HooksDispatcher.useActionState = useFormState;
     }
 
     var currentResumableState = null;

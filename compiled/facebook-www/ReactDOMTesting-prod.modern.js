@@ -3972,6 +3972,99 @@ function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
 function formStateReducer(oldState, newState) {
   return newState;
 }
+function mountFormState(action, initialStateProp) {
+  if (isHydrating) {
+    var ssrFormState = workInProgressRoot.formState;
+    if (null !== ssrFormState) {
+      a: {
+        if (isHydrating) {
+          if (nextHydratableInstance) {
+            b: {
+              var JSCompiler_inline_result = nextHydratableInstance;
+              for (
+                var inRootOrSingleton = rootOrSingletonContext;
+                8 !== JSCompiler_inline_result.nodeType;
+
+              ) {
+                if (!inRootOrSingleton) {
+                  JSCompiler_inline_result = null;
+                  break b;
+                }
+                JSCompiler_inline_result = getNextHydratableSibling(
+                  JSCompiler_inline_result
+                );
+                if (null === JSCompiler_inline_result) {
+                  JSCompiler_inline_result = null;
+                  break b;
+                }
+              }
+              inRootOrSingleton = JSCompiler_inline_result.data;
+              JSCompiler_inline_result =
+                "F!" === inRootOrSingleton || "F" === inRootOrSingleton
+                  ? JSCompiler_inline_result
+                  : null;
+            }
+            if (JSCompiler_inline_result) {
+              nextHydratableInstance = getNextHydratableSibling(
+                JSCompiler_inline_result
+              );
+              JSCompiler_inline_result = "F!" === JSCompiler_inline_result.data;
+              break a;
+            }
+          }
+          throwOnHydrationMismatch();
+        }
+        JSCompiler_inline_result = !1;
+      }
+      JSCompiler_inline_result && (initialStateProp = ssrFormState[0]);
+    }
+  }
+  ssrFormState = mountWorkInProgressHook();
+  ssrFormState.memoizedState = ssrFormState.baseState = initialStateProp;
+  JSCompiler_inline_result = {
+    pending: null,
+    lanes: 0,
+    dispatch: null,
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: initialStateProp
+  };
+  ssrFormState.queue = JSCompiler_inline_result;
+  ssrFormState = dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    JSCompiler_inline_result
+  );
+  JSCompiler_inline_result.dispatch = ssrFormState;
+  JSCompiler_inline_result = mountStateImpl(!1);
+  var setPendingState = dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    !1,
+    JSCompiler_inline_result.queue
+  );
+  JSCompiler_inline_result = mountWorkInProgressHook();
+  inRootOrSingleton = {
+    state: initialStateProp,
+    dispatch: null,
+    action: action,
+    pending: null
+  };
+  JSCompiler_inline_result.queue = inRootOrSingleton;
+  ssrFormState = dispatchFormState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    inRootOrSingleton,
+    setPendingState,
+    ssrFormState
+  );
+  inRootOrSingleton.dispatch = ssrFormState;
+  JSCompiler_inline_result.memoizedState = action;
+  return [initialStateProp, ssrFormState, !1];
+}
+function updateFormState(action) {
+  var stateHook = updateWorkInProgressHook();
+  return updateFormStateImpl(stateHook, currentHook, action);
+}
 function updateFormStateImpl(stateHook, currentStateHook, action) {
   currentStateHook = updateReducerImpl(
     stateHook,
@@ -4000,6 +4093,18 @@ function updateFormStateImpl(stateHook, currentStateHook, action) {
 }
 function formStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
+}
+function rerenderFormState(action) {
+  var stateHook = updateWorkInProgressHook(),
+    currentStateHook = currentHook;
+  if (null !== currentStateHook)
+    return updateFormStateImpl(stateHook, currentStateHook, action);
+  updateWorkInProgressHook();
+  stateHook = stateHook.memoizedState;
+  currentStateHook = updateWorkInProgressHook();
+  var dispatch = currentStateHook.queue.dispatch;
+  currentStateHook.memoizedState = action;
+  return [stateHook, dispatch, !1];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -4381,6 +4486,7 @@ ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+ContextOnlyDispatcher.useActionState = throwInvalidHookError;
 ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -4558,95 +4664,8 @@ HooksDispatcherOnMount.useEffectEvent = function (callback) {
   };
 };
 HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
-  if (isHydrating) {
-    var ssrFormState = workInProgressRoot.formState;
-    if (null !== ssrFormState) {
-      a: {
-        if (isHydrating) {
-          if (nextHydratableInstance) {
-            b: {
-              var JSCompiler_inline_result = nextHydratableInstance;
-              for (
-                var inRootOrSingleton = rootOrSingletonContext;
-                8 !== JSCompiler_inline_result.nodeType;
-
-              ) {
-                if (!inRootOrSingleton) {
-                  JSCompiler_inline_result = null;
-                  break b;
-                }
-                JSCompiler_inline_result = getNextHydratableSibling(
-                  JSCompiler_inline_result
-                );
-                if (null === JSCompiler_inline_result) {
-                  JSCompiler_inline_result = null;
-                  break b;
-                }
-              }
-              inRootOrSingleton = JSCompiler_inline_result.data;
-              JSCompiler_inline_result =
-                "F!" === inRootOrSingleton || "F" === inRootOrSingleton
-                  ? JSCompiler_inline_result
-                  : null;
-            }
-            if (JSCompiler_inline_result) {
-              nextHydratableInstance = getNextHydratableSibling(
-                JSCompiler_inline_result
-              );
-              JSCompiler_inline_result = "F!" === JSCompiler_inline_result.data;
-              break a;
-            }
-          }
-          throwOnHydrationMismatch();
-        }
-        JSCompiler_inline_result = !1;
-      }
-      JSCompiler_inline_result && (initialStateProp = ssrFormState[0]);
-    }
-  }
-  ssrFormState = mountWorkInProgressHook();
-  ssrFormState.memoizedState = ssrFormState.baseState = initialStateProp;
-  JSCompiler_inline_result = {
-    pending: null,
-    lanes: 0,
-    dispatch: null,
-    lastRenderedReducer: formStateReducer,
-    lastRenderedState: initialStateProp
-  };
-  ssrFormState.queue = JSCompiler_inline_result;
-  ssrFormState = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    JSCompiler_inline_result
-  );
-  JSCompiler_inline_result.dispatch = ssrFormState;
-  JSCompiler_inline_result = mountStateImpl(!1);
-  var setPendingState = dispatchOptimisticSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    !1,
-    JSCompiler_inline_result.queue
-  );
-  JSCompiler_inline_result = mountWorkInProgressHook();
-  inRootOrSingleton = {
-    state: initialStateProp,
-    dispatch: null,
-    action: action,
-    pending: null
-  };
-  JSCompiler_inline_result.queue = inRootOrSingleton;
-  ssrFormState = dispatchFormState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    inRootOrSingleton,
-    setPendingState,
-    ssrFormState
-  );
-  inRootOrSingleton.dispatch = ssrFormState;
-  JSCompiler_inline_result.memoizedState = action;
-  return [initialStateProp, ssrFormState, !1];
-};
+HooksDispatcherOnMount.useFormState = mountFormState;
+HooksDispatcherOnMount.useActionState = mountFormState;
 HooksDispatcherOnMount.useOptimistic = function (passthrough) {
   var hook = mountWorkInProgressHook();
   hook.memoizedState = hook.baseState = passthrough;
@@ -4709,10 +4728,8 @@ HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnUpdate.useFormState = function (action) {
-  var stateHook = updateWorkInProgressHook();
-  return updateFormStateImpl(stateHook, currentHook, action);
-};
+HooksDispatcherOnUpdate.useFormState = updateFormState;
+HooksDispatcherOnUpdate.useActionState = updateFormState;
 HooksDispatcherOnUpdate.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
@@ -4761,18 +4778,8 @@ HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 HooksDispatcherOnRerender.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnRerender.useFormState = function (action) {
-  var stateHook = updateWorkInProgressHook(),
-    currentStateHook = currentHook;
-  if (null !== currentStateHook)
-    return updateFormStateImpl(stateHook, currentStateHook, action);
-  updateWorkInProgressHook();
-  stateHook = stateHook.memoizedState;
-  currentStateHook = updateWorkInProgressHook();
-  var dispatch = currentStateHook.queue.dispatch;
-  currentStateHook.memoizedState = action;
-  return [stateHook, dispatch, !1];
-};
+HooksDispatcherOnRerender.useFormState = rerenderFormState;
+HooksDispatcherOnRerender.useActionState = rerenderFormState;
 HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   if (null !== currentHook)
@@ -17143,7 +17150,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1781 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-db7c3a03",
+  version: "18.3.0-www-modern-b0c6d379",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2151 = {
@@ -17174,7 +17181,7 @@ var internals$jscomp$inline_2151 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-db7c3a03"
+  reconcilerVersion: "18.3.0-www-modern-b0c6d379"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2152 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17583,4 +17590,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-db7c3a03";
+exports.version = "18.3.0-www-modern-b0c6d379";

@@ -10537,6 +10537,7 @@ if (__DEV__) {
     {
       HooksDispatcher.useOptimistic = useOptimistic;
       HooksDispatcher.useFormState = useFormState;
+      HooksDispatcher.useActionState = useFormState;
     }
 
     var currentResumableState = null;

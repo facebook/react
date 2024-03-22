@@ -3166,6 +3166,53 @@ function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
 function formStateReducer(oldState, newState) {
   return newState;
 }
+function mountFormState(action, initialStateProp) {
+  var stateHook = mountWorkInProgressHook();
+  stateHook.memoizedState = stateHook.baseState = initialStateProp;
+  var stateQueue = {
+    pending: null,
+    lanes: 0,
+    dispatch: null,
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: initialStateProp
+  };
+  stateHook.queue = stateQueue;
+  stateHook = dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    stateQueue
+  );
+  stateQueue.dispatch = stateHook;
+  stateQueue = mountStateImpl(!1);
+  var setPendingState = dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    !1,
+    stateQueue.queue
+  );
+  stateQueue = mountWorkInProgressHook();
+  var actionQueue = {
+    state: initialStateProp,
+    dispatch: null,
+    action: action,
+    pending: null
+  };
+  stateQueue.queue = actionQueue;
+  stateHook = dispatchFormState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    actionQueue,
+    setPendingState,
+    stateHook
+  );
+  actionQueue.dispatch = stateHook;
+  stateQueue.memoizedState = action;
+  return [initialStateProp, stateHook, !1];
+}
+function updateFormState(action) {
+  var stateHook = updateWorkInProgressHook();
+  return updateFormStateImpl(stateHook, currentHook, action);
+}
 function updateFormStateImpl(stateHook, currentStateHook, action) {
   currentStateHook = updateReducerImpl(
     stateHook,
@@ -3194,6 +3241,18 @@ function updateFormStateImpl(stateHook, currentStateHook, action) {
 }
 function formStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
+}
+function rerenderFormState(action) {
+  var stateHook = updateWorkInProgressHook(),
+    currentStateHook = currentHook;
+  if (null !== currentStateHook)
+    return updateFormStateImpl(stateHook, currentStateHook, action);
+  updateWorkInProgressHook();
+  stateHook = stateHook.memoizedState;
+  currentStateHook = updateWorkInProgressHook();
+  var dispatch = currentStateHook.queue.dispatch;
+  currentStateHook.memoizedState = action;
+  return [stateHook, dispatch, !1];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -3543,6 +3602,7 @@ ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+ContextOnlyDispatcher.useActionState = throwInvalidHookError;
 ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
@@ -3690,49 +3750,8 @@ HooksDispatcherOnMount.useEffectEvent = function (callback) {
   };
 };
 HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
-  var stateHook = mountWorkInProgressHook();
-  stateHook.memoizedState = stateHook.baseState = initialStateProp;
-  var stateQueue = {
-    pending: null,
-    lanes: 0,
-    dispatch: null,
-    lastRenderedReducer: formStateReducer,
-    lastRenderedState: initialStateProp
-  };
-  stateHook.queue = stateQueue;
-  stateHook = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    stateQueue
-  );
-  stateQueue.dispatch = stateHook;
-  stateQueue = mountStateImpl(!1);
-  var setPendingState = dispatchOptimisticSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    !1,
-    stateQueue.queue
-  );
-  stateQueue = mountWorkInProgressHook();
-  var actionQueue = {
-    state: initialStateProp,
-    dispatch: null,
-    action: action,
-    pending: null
-  };
-  stateQueue.queue = actionQueue;
-  stateHook = dispatchFormState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    actionQueue,
-    setPendingState,
-    stateHook
-  );
-  actionQueue.dispatch = stateHook;
-  stateQueue.memoizedState = action;
-  return [initialStateProp, stateHook, !1];
-};
+HooksDispatcherOnMount.useFormState = mountFormState;
+HooksDispatcherOnMount.useActionState = mountFormState;
 HooksDispatcherOnMount.useOptimistic = function (passthrough) {
   var hook = mountWorkInProgressHook();
   hook.memoizedState = hook.baseState = passthrough;
@@ -3795,10 +3814,8 @@ HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnUpdate.useFormState = function (action) {
-  var stateHook = updateWorkInProgressHook();
-  return updateFormStateImpl(stateHook, currentHook, action);
-};
+HooksDispatcherOnUpdate.useFormState = updateFormState;
+HooksDispatcherOnUpdate.useActionState = updateFormState;
 HooksDispatcherOnUpdate.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
@@ -3847,18 +3864,8 @@ HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 HooksDispatcherOnRerender.useHostTransitionStatus = useHostTransitionStatus;
-HooksDispatcherOnRerender.useFormState = function (action) {
-  var stateHook = updateWorkInProgressHook(),
-    currentStateHook = currentHook;
-  if (null !== currentStateHook)
-    return updateFormStateImpl(stateHook, currentStateHook, action);
-  updateWorkInProgressHook();
-  stateHook = stateHook.memoizedState;
-  currentStateHook = updateWorkInProgressHook();
-  var dispatch = currentStateHook.queue.dispatch;
-  currentStateHook.memoizedState = action;
-  return [stateHook, dispatch, !1];
-};
+HooksDispatcherOnRerender.useFormState = rerenderFormState;
+HooksDispatcherOnRerender.useActionState = rerenderFormState;
 HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   if (null !== currentHook)
@@ -10629,7 +10636,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-b6fe280b",
+    version: "18.3.0-www-classic-4a28a0e2",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1320 = {
@@ -10660,7 +10667,7 @@ var internals$jscomp$inline_1320 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b6fe280b"
+  reconcilerVersion: "18.3.0-www-classic-4a28a0e2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1321 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -2352,6 +2352,13 @@ if (__DEV__) {
       var dispatcher = resolveDispatcher();
       return dispatcher.use(usable);
     }
+    function useActionState(action, initialState, permalink) {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+        return dispatcher.useActionState(action, initialState, permalink);
+      }
+    }
 
     function forwardRef(render) {
       {
@@ -2809,7 +2816,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-9f10bc05";
+    var ReactVersion = "18.3.0-www-modern-55553c83";
 
     // Patch fetch
     var Children = {
@@ -2848,6 +2855,7 @@ if (__DEV__) {
     exports.memo = memo;
     exports.startTransition = startTransition;
     exports.use = use;
+    exports.useActionState = useActionState;
     exports.useCallback = useCallback;
     exports.useDebugValue = useDebugValue;
     exports.useId = useId;

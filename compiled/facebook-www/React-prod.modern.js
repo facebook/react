@@ -571,6 +571,13 @@ exports.unstable_useMemoCache = function (size) {
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
+exports.useActionState = function (action, initialState, permalink) {
+  return ReactCurrentDispatcher.current.useActionState(
+    action,
+    initialState,
+    permalink
+  );
+};
 exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
@@ -625,4 +632,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-77738445";
+exports.version = "18.3.0-www-modern-f4952887";

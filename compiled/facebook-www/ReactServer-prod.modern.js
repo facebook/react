@@ -514,6 +514,13 @@ exports.startTransition = function (scope, options) {
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
+exports.useActionState = function (action, initialState, permalink) {
+  return ReactCurrentDispatcher.current.useActionState(
+    action,
+    initialState,
+    permalink
+  );
+};
 exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
@@ -524,4 +531,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-e9e628b6";
+exports.version = "18.3.0-www-modern-f7a50bfd";

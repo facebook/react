@@ -9927,6 +9927,7 @@ if (__DEV__) {
     {
       ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
       ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+      ContextOnlyDispatcher.useActionState = throwInvalidHookError;
     }
 
     {
@@ -10102,6 +10103,16 @@ if (__DEV__) {
           mountHookTypesDev();
           return mountFormState(action, initialState);
         };
+
+        HooksDispatcherOnMountInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          mountHookTypesDev();
+          return mountFormState(action, initialState);
+        };
       }
 
       {
@@ -10245,6 +10256,13 @@ if (__DEV__) {
         HooksDispatcherOnMountWithHookTypesInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            updateHookTypesDev();
+            return mountFormState(action, initialState);
+          };
+
+        HooksDispatcherOnMountWithHookTypesInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             updateHookTypesDev();
             return mountFormState(action, initialState);
           };
@@ -10395,6 +10413,16 @@ if (__DEV__) {
           updateHookTypesDev();
           return updateFormState(action);
         };
+
+        HooksDispatcherOnUpdateInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          updateHookTypesDev();
+          return updateFormState(action);
+        };
       }
 
       {
@@ -10541,6 +10569,16 @@ if (__DEV__) {
           permalink
         ) {
           currentHookNameInDev = "useFormState";
+          updateHookTypesDev();
+          return rerenderFormState(action);
+        };
+
+        HooksDispatcherOnRerenderInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
           updateHookTypesDev();
           return rerenderFormState(action);
         };
@@ -10715,6 +10753,14 @@ if (__DEV__) {
             mountHookTypesDev();
             return mountFormState(action, initialState);
           };
+
+        InvalidNestedHooksDispatcherOnMountInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            mountHookTypesDev();
+            return mountFormState(action, initialState);
+          };
       }
 
       {
@@ -10885,6 +10931,14 @@ if (__DEV__) {
             updateHookTypesDev();
             return updateFormState(action);
           };
+
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return updateFormState(action);
+          };
       }
 
       {
@@ -11051,6 +11105,14 @@ if (__DEV__) {
         InvalidNestedHooksDispatcherOnRerenderInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return rerenderFormState(action);
+          };
+
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             updateHookTypesDev();
             return rerenderFormState(action);
@@ -26059,7 +26121,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-e1aa4d34";
+    var ReactVersion = "18.3.0-www-classic-b4e20a4e";
 
     // Might add PROFILE later.
 

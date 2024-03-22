@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-0911a114";
+    var ReactVersion = "18.3.0-www-classic-e33483b4";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3154,6 +3154,13 @@ if (__DEV__) {
 
       return dispatcher.useOptimistic(passthrough, reducer);
     }
+    function useActionState(action, initialState, permalink) {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+        return dispatcher.useActionState(action, initialState, permalink);
+      }
+    }
 
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
@@ -3638,6 +3645,7 @@ if (__DEV__) {
     exports.unstable_useCacheRefresh = useCacheRefresh;
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = use;
+    exports.useActionState = useActionState;
     exports.useCallback = useCallback;
     exports.useContext = useContext;
     exports.useDebugValue = useDebugValue;
