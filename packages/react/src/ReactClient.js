@@ -60,6 +60,7 @@ import {
   use,
   useMemoCache,
   useOptimistic,
+  useActionState,
 } from './ReactHooks';
 
 import ReactSharedInternals from './ReactSharedInternalsClient';
@@ -95,6 +96,7 @@ export {
   useLayoutEffect,
   useMemo,
   useOptimistic,
+  useActionState,
   useSyncExternalStore,
   useReducer,
   useRef,

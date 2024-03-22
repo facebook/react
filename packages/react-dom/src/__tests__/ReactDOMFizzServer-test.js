@@ -30,7 +30,7 @@ let SuspenseList;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let use;
-let useFormState;
+let useActionState;
 let PropTypes;
 let textCache;
 let writable;
@@ -89,9 +89,13 @@ describe('ReactDOMFizzServer', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
-    useFormState = ReactDOM.useFormState;
-
     PropTypes = require('prop-types');
+    if (__VARIANT__) {
+      // Remove after API is deleted.
+      useActionState = ReactDOM.useFormState;
+    } else {
+      useActionState = React.useActionState;
+    }
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -6137,8 +6141,8 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState hydrates without a mismatch', async () => {
-    // This is testing an implementation detail: useFormState emits comment
+  it('useActionState hydrates without a mismatch', async () => {
+    // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
     // during hydration.
 
@@ -6148,7 +6152,7 @@ describe('ReactDOMFizzServer', () => {
 
     const childRef = React.createRef(null);
     function Form() {
-      const [state] = useFormState(action, 0);
+      const [state] = useActionState(action, 0);
       const text = `Child: ${state}`;
       return (
         <div id="child" ref={childRef}>
@@ -6191,7 +6195,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it("useFormState hydrates without a mismatch if there's a render phase update", async () => {
+  it("useActionState hydrates without a mismatch if there's a render phase update", async () => {
     async function action(state) {
       return state;
     }
@@ -6205,8 +6209,8 @@ describe('ReactDOMFizzServer', () => {
 
       // Because of the render phase update above, this component is evaluated
       // multiple times (even during SSR), but it should only emit a single
-      // marker per useFormState instance.
-      const [formState] = useFormState(action, 0);
+      // marker per useActionState instance.
+      const [formState] = useActionState(action, 0);
       const text = `${readText('Child')}:${formState}:${localState}`;
       return (
         <div id="child" ref={childRef}>

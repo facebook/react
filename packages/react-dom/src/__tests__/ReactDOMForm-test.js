@@ -41,7 +41,7 @@ describe('ReactDOMForm', () => {
   let startTransition;
   let textCache;
   let useFormStatus;
-  let useFormState;
+  let useActionState;
 
   beforeEach(() => {
     jest.resetModules();
@@ -56,11 +56,17 @@ describe('ReactDOMForm', () => {
     Suspense = React.Suspense;
     startTransition = React.startTransition;
     useFormStatus = ReactDOM.useFormStatus;
-    useFormState = ReactDOM.useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
 
     textCache = new Map();
+
+    if (__VARIANT__) {
+      // Remove after API is deleted.
+      useActionState = ReactDOM.useFormState;
+    } else {
+      useActionState = React.useActionState;
+    }
   });
 
   function resolveText(text) {
@@ -962,7 +968,7 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState updates state asynchronously and queues multiple actions', async () => {
+  test('useActionState updates state asynchronously and queues multiple actions', async () => {
     let actionCounter = 0;
     async function action(state, type) {
       actionCounter++;
@@ -982,7 +988,7 @@ describe('ReactDOMForm', () => {
 
     let dispatch;
     function App() {
-      const [state, _dispatch, isPending] = useFormState(action, 0);
+      const [state, _dispatch, isPending] = useActionState(action, 0);
       dispatch = _dispatch;
       const pending = isPending ? 'Pending ' : '';
       return <Text text={pending + state} />;
@@ -1023,10 +1029,10 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState supports inline actions', async () => {
+  test('useActionState supports inline actions', async () => {
     let increment;
     function App({stepSize}) {
-      const [state, dispatch, isPending] = useFormState(async prevState => {
+      const [state, dispatch, isPending] = useActionState(async prevState => {
         return prevState + stepSize;
       }, 0);
       increment = dispatch;
@@ -1056,9 +1062,9 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: dispatch throws if called during render', async () => {
+  test('useActionState: dispatch throws if called during render', async () => {
     function App() {
-      const [state, dispatch, isPending] = useFormState(async () => {}, 0);
+      const [state, dispatch, isPending] = useActionState(async () => {}, 0);
       dispatch();
       const pending = isPending ? 'Pending ' : '';
       return <Text text={pending + state} />;
@@ -1076,7 +1082,7 @@ describe('ReactDOMForm', () => {
   test('queues multiple actions and runs them in order', async () => {
     let action;
     function App() {
-      const [state, dispatch, isPending] = useFormState(
+      const [state, dispatch, isPending] = useActionState(
         async (s, a) => await getText(a),
         'A',
       );
@@ -1106,10 +1112,10 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: works if action is sync', async () => {
+  test('useActionState: works if action is sync', async () => {
     let increment;
     function App({stepSize}) {
-      const [state, dispatch, isPending] = useFormState(prevState => {
+      const [state, dispatch, isPending] = useActionState(prevState => {
         return prevState + stepSize;
       }, 0);
       increment = dispatch;
@@ -1139,10 +1145,10 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: can mix sync and async actions', async () => {
+  test('useActionState: can mix sync and async actions', async () => {
     let action;
     function App() {
-      const [state, dispatch, isPending] = useFormState((s, a) => a, 'A');
+      const [state, dispatch, isPending] = useActionState((s, a) => a, 'A');
       action = dispatch;
       const pending = isPending ? 'Pending ' : '';
       return <Text text={pending + state} />;
@@ -1168,7 +1174,7 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: error handling (sync action)', async () => {
+  test('useActionState: error handling (sync action)', async () => {
     let resetErrorBoundary;
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1186,7 +1192,7 @@ describe('ReactDOMForm', () => {
 
     let action;
     function App() {
-      const [state, dispatch, isPending] = useFormState((s, a) => {
+      const [state, dispatch, isPending] = useActionState((s, a) => {
         if (a.endsWith('!')) {
           throw new Error(a);
         }
@@ -1233,7 +1239,7 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: error handling (async action)', async () => {
+  test('useActionState: error handling (async action)', async () => {
     let resetErrorBoundary;
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1251,7 +1257,7 @@ describe('ReactDOMForm', () => {
 
     let action;
     function App() {
-      const [state, dispatch, isPending] = useFormState(async (s, a) => {
+      const [state, dispatch, isPending] = useActionState(async (s, a) => {
         const text = await getText(a);
         if (text.endsWith('!')) {
           throw new Error(text);

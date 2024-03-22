@@ -31,7 +31,7 @@ let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactDOMClient;
-let useFormState;
+let useActionState;
 let act;
 
 describe('ReactFlightDOMForm', () => {
@@ -55,7 +55,13 @@ describe('ReactFlightDOMForm', () => {
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');
     act = React.act;
-    useFormState = require('react-dom').useFormState;
+
+    if (__VARIANT__) {
+      // Remove after API is deleted.
+      useActionState = require('react-dom').useFormState;
+    } else {
+      useActionState = require('react').useActionState;
+    }
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -346,7 +352,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it("useFormState's dispatch binds the initial state to the provided action", async () => {
+  it("useActionState's dispatch binds the initial state to the provided action", async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return {
@@ -358,7 +364,7 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(action, initialState);
+      const [state, dispatch, isPending] = useActionState(action, initialState);
       return (
         <form action={dispatch}>
           <span>{isPending ? 'Pending...' : ''}</span>
@@ -395,7 +401,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState can reuse state during MPA form submission', async () => {
+  it('useActionState can reuse state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return prevState + 1;
@@ -403,7 +409,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch, isPending] = useFormState(action, 1);
+      const [count, dispatch, isPending] = useActionState(action, 1);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -486,7 +492,7 @@ describe('ReactFlightDOMForm', () => {
   // @gate enableFormActions
   // @gate enableAsyncActions
   it(
-    'useFormState preserves state if arity is the same, but different ' +
+    'useActionState preserves state if arity is the same, but different ' +
       'arguments are bound (i.e. inline closure)',
     async () => {
       const serverAction = serverExports(
@@ -496,7 +502,7 @@ describe('ReactFlightDOMForm', () => {
       );
 
       function Form({action}) {
-        const [count, dispatch, isPending] = useFormState(action, 1);
+        const [count, dispatch, isPending] = useActionState(action, 1);
         return (
           <form action={dispatch}>
             {isPending ? 'Pending...' : ''}
@@ -605,7 +611,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState does not reuse state if action signatures are different', async () => {
+  it('useActionState does not reuse state if action signatures are different', async () => {
     // This is the same as the previous test, except instead of using bind to
     // configure the server action (i.e. a closure), it swaps the action.
     const increaseBy1 = serverExports(
@@ -621,7 +627,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch, isPending] = useFormState(action, 1);
+      const [count, dispatch, isPending] = useActionState(action, 1);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -693,7 +699,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('when permalink is provided, useFormState compares that instead of the keypath', async () => {
+  it('when permalink is provided, useActionState compares that instead of the keypath', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return prevState + 1;
@@ -701,7 +707,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action, permalink}) {
-      const [count, dispatch, isPending] = useFormState(action, 1, permalink);
+      const [count, dispatch, isPending] = useActionState(action, 1, permalink);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -800,14 +806,14 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState can change the action URL with the `permalink` argument', async () => {
+  it('useActionState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
     });
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(
+      const [state, dispatch, isPending] = useActionState(
         action,
         initialState,
         '/permalink',
@@ -846,7 +852,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState `permalink` is coerced to string', async () => {
+  it('useActionState `permalink` is coerced to string', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
     });
@@ -861,7 +867,7 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(
+      const [state, dispatch, isPending] = useActionState(
         action,
         initialState,
         permalink,

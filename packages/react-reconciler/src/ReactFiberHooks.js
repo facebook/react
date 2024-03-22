@@ -3516,6 +3516,7 @@ if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
   (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useActionState = throwInvalidHookError;
 }
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
@@ -3554,6 +3555,7 @@ if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
+  (HooksDispatcherOnMount: Dispatcher).useActionState = mountFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -3592,6 +3594,7 @@ if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
+  (HooksDispatcherOnUpdate: Dispatcher).useActionState = updateFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3630,6 +3633,7 @@ if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
+  (HooksDispatcherOnRerender: Dispatcher).useActionState = rerenderFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3824,6 +3828,16 @@ if (__DEV__) {
         mountHookTypesDev();
         return mountFormState(action, initialState, permalink);
       };
+    (HooksDispatcherOnMountInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -3991,6 +4005,16 @@ if (__DEV__) {
         permalink?: string,
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
         updateHookTypesDev();
         return mountFormState(action, initialState, permalink);
       };
@@ -4166,6 +4190,16 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateFormState(action, initialState, permalink);
       };
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4335,6 +4369,16 @@ if (__DEV__) {
         permalink?: string,
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
         updateHookTypesDev();
         return rerenderFormState(action, initialState, permalink);
       };
@@ -4528,6 +4572,17 @@ if (__DEV__) {
         permalink?: string,
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
         warnInvalidHookAccess();
         mountHookTypesDev();
         return mountFormState(action, initialState, permalink);
@@ -4730,6 +4785,17 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateFormState(action, initialState, permalink);
       };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4924,6 +4990,17 @@ if (__DEV__) {
         permalink?: string,
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
+      function useActionState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void, boolean] {
+        currentHookNameInDev = 'useActionState';
         warnInvalidHookAccess();
         updateHookTypesDev();
         return rerenderFormState(action, initialState, permalink);

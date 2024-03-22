@@ -106,6 +106,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
       }
+      if (typeof Dispatcher.useActionState === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
+      }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
         Dispatcher.use(
@@ -613,6 +617,75 @@ function useFormState<S, P>(
   return [state, (payload: P) => {}, false];
 }
 
+function useActionState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void, boolean] {
+  const hook = nextHook(); // FormState
+  nextHook(); // PendingState
+  nextHook(); // ActionQueue
+  const stackError = new Error();
+  let value;
+  let debugInfo = null;
+  let error = null;
+
+  if (hook !== null) {
+    const actionResult = hook.memoizedState;
+    if (
+      typeof actionResult === 'object' &&
+      actionResult !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof actionResult.then === 'function'
+    ) {
+      const thenable: Thenable<Awaited<S>> = (actionResult: any);
+      switch (thenable.status) {
+        case 'fulfilled': {
+          value = thenable.value;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          break;
+        }
+        case 'rejected': {
+          const rejectedError = thenable.reason;
+          error = rejectedError;
+          break;
+        }
+        default:
+          // If this was an uncached Promise we have to abandon this attempt
+          // but we can still emit anything up until this point.
+          error = SuspenseException;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          value = thenable;
+      }
+    } else {
+      value = (actionResult: any);
+    }
+  } else {
+    value = initialState;
+  }
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'ActionState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+  });
+
+  if (error !== null) {
+    throw error;
+  }
+
+  // value being a Thenable is equivalent to error being not null
+  // i.e. we only reach this point with Awaited<S>
+  const state = ((value: any): Awaited<S>);
+
+  // TODO: support displaying pending value
+  return [state, (payload: P) => {}, false];
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -635,6 +708,7 @@ const Dispatcher: DispatcherType = {
   useDeferredValue,
   useId,
   useFormState,
+  useActionState,
 };
 
 // create a proxy to throw a custom error

@@ -12,11 +12,13 @@ import type {
   ReactContext,
   StartTransitionOptions,
   Usable,
+  Awaited,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentCache from './ReactCurrentCache';
+import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -226,4 +228,18 @@ export function useOptimistic<S, A>(
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useOptimistic(passthrough, reducer);
+}
+
+export function useActionState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void, boolean] {
+  if (!(enableFormActions && enableAsyncActions)) {
+    throw new Error('Not implemented.');
+  } else {
+    const dispatcher = resolveDispatcher();
+    // $FlowFixMe[not-a-function] This is unstable, thus optional
+    return dispatcher.useActionState(action, initialState, permalink);
+  }
 }

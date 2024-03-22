@@ -56,7 +56,8 @@ export type HookType =
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
-  | 'useFormState';
+  | 'useFormState'
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -410,6 +411,11 @@ export type Dispatcher = {
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
   useFormState?: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
+  useActionState?: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
