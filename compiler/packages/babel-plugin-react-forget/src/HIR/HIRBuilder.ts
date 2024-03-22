@@ -517,7 +517,11 @@ export default class HIRBuilder {
   lookupBreak(label: string | null): BlockId {
     for (let ii = this.#scopes.length - 1; ii >= 0; ii--) {
       const scope = this.#scopes[ii];
-      if (label === null || label === scope.label) {
+      if (
+        (label === null &&
+          (scope.kind === "loop" || scope.kind === "switch")) ||
+        label === scope.label
+      ) {
         return scope.breakBlock;
       }
     }

@@ -8,7 +8,7 @@ function useHook(end) {
     log.push(`${i} @A`);
     bb0: {
       if (i === end) {
-        break;
+        break bb0;
       }
       log.push(`${i} @B`);
     }
@@ -60,3 +60,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) ["0 @A","0 @B","0 @C","1 @A","1 @C"]
