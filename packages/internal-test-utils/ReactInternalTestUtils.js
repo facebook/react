@@ -110,6 +110,14 @@ ${diff(expectedLog, actualLog)}
   throw error;
 }
 
+function aggregateErrors(errors: Array<mixed>): mixed {
+  if (errors.length > 1 && typeof AggregateError === 'function') {
+    // eslint-disable-next-line no-undef
+    return new AggregateError(errors);
+  }
+  return errors[0];
+}
+
 export async function waitForThrow(expectedError: mixed): mixed {
   assertYieldsWereCleared(waitForThrow);
 
@@ -127,19 +135,14 @@ export async function waitForThrow(expectedError: mixed): mixed {
       throw error;
     }
 
-    let hasError = false;
-    let thrownError: mixed = null;
+    const thrownErrors: Array<mixed> = [];
     const errorHandlerDOM = function (event: ErrorEvent) {
-      if (!hasError) {
-        hasError = true;
-        thrownError = event.error;
-      }
+      // Prevent logs from reprinting this error.
+      event.preventDefault();
+      thrownErrors.push(event.error);
     };
     const errorHandlerNode = function (err: mixed) {
-      if (!hasError) {
-        hasError = true;
-        thrownError = err;
-      }
+      thrownErrors.push(err);
     };
     // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
     if (
@@ -155,10 +158,7 @@ export async function waitForThrow(expectedError: mixed): mixed {
     try {
       SchedulerMock.unstable_flushAllWithoutAsserting();
     } catch (x) {
-      if (!hasError) {
-        hasError = true;
-        thrownError = x;
-      }
+      thrownErrors.push(x);
     } finally {
       if (
         typeof window === 'object' &&
@@ -171,7 +171,8 @@ export async function waitForThrow(expectedError: mixed): mixed {
         process.off('uncaughtException', errorHandlerNode);
       }
     }
-    if (hasError) {
+    if (thrownErrors.length > 0) {
+      const thrownError = aggregateErrors(thrownErrors);
       if (expectedError === undefined) {
         // If no expected error was provided, then assume the caller is OK with
         // any error being thrown. We're returning the error so they can do

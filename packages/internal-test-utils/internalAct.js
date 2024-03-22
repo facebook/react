@@ -28,6 +28,14 @@ async function waitForMicrotasks() {
   });
 }
 
+function aggregateErrors(errors: Array<mixed>): mixed {
+  if (errors.length > 1 && typeof AggregateError === 'function') {
+    // eslint-disable-next-line no-undef
+    return new AggregateError(errors);
+  }
+  return errors[0];
+}
+
 export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   if (Scheduler.unstable_flushUntilNextPaint === undefined) {
     throw Error(
@@ -63,21 +71,14 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   // public version of `act`, though we maybe should in the future.
   await waitForMicrotasks();
 
-  let hasError = false;
-  let thrownError: mixed = null;
+  const thrownErrors: Array<mixed> = [];
   const errorHandlerDOM = function (event: ErrorEvent) {
     // Prevent logs from reprinting this error.
     event.preventDefault();
-    if (!hasError) {
-      hasError = true;
-      thrownError = event.error;
-    }
+    thrownErrors.push(event.error);
   };
   const errorHandlerNode = function (err: mixed) {
-    if (!hasError) {
-      hasError = true;
-      thrownError = err;
-    }
+    thrownErrors.push(err);
   };
   // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
   if (
@@ -134,9 +135,9 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       Scheduler.unstable_flushUntilNextPaint();
     } while (true);
 
-    if (hasError) {
+    if (thrownErrors.length > 0) {
       // Rethrow any errors logged by the global error handling.
-      throw thrownError;
+      throw aggregateErrors(thrownErrors);
     }
 
     return result;
