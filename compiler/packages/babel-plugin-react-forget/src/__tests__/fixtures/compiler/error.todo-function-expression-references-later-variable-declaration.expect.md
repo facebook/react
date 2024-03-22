@@ -20,7 +20,7 @@ function Component() {
   1 | function Component() {
   2 |   let callback = () => {
 > 3 |     onClick = () => {};
-    |     ^^^^^^^ [ReactForget] Invariant: [hoisting] Expected value kind to be initialized. read onClick$0_@1 (3:3)
+    |     ^^^^^^^^^^^^^^^^^^ [ReactForget] Todo: Handle non-const declarations for hoisting. variable "onClick" declared with let (3:3)
   4 |   };
   5 |   let onClick;
   6 |

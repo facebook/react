@@ -366,7 +366,12 @@ function lowerStatement(
           ArrowFunctionExpression: withFunctionContext,
           ObjectMethod: withFunctionContext,
           Identifier(id: NodePath<t.Identifier>) {
-            if (!id.isReferencedIdentifier()) {
+            const id2 = id;
+            if (
+              !id2.isReferencedIdentifier() &&
+              // isReferencedIdentifier is broken and returns false for reassignments
+              id.parent.type !== "AssignmentExpression"
+            ) {
               return;
             }
             const binding = id.scope.getBinding(id.node.name);
