@@ -71,9 +71,18 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       // one used to track `act` scopes. Why, you may be wondering? Because
       // that's how it worked before version 18. Yes, it's confusing! We should
       // delete legacy mode!!
+      if (!ReactCurrentActQueue.hasError) {
+        ReactCurrentActQueue.hasError = true;
+        ReactCurrentActQueue.thrownError = error;
+      }
+    }
+    if (ReactCurrentActQueue.hasError) {
       ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
       popActScope(prevActQueue, prevActScopeDepth);
-      throw error;
+      const thrownError = ReactCurrentActQueue.thrownError;
+      ReactCurrentActQueue.hasError = false;
+      ReactCurrentActQueue.thrownError = null;
+      throw thrownError;
     }
 
     if (
@@ -123,7 +132,16 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
                   // `thenable` might not be a real promise, and `flushActQueue`
                   // might throw, so we need to wrap `flushActQueue` in a
                   // try/catch.
-                  reject(error);
+                  if (!ReactCurrentActQueue.hasError) {
+                    ReactCurrentActQueue.hasError = true;
+                    ReactCurrentActQueue.thrownError = error;
+                  }
+                }
+                if (ReactCurrentActQueue.hasError) {
+                  const thrownError = ReactCurrentActQueue.thrownError;
+                  ReactCurrentActQueue.hasError = false;
+                  ReactCurrentActQueue.thrownError = null;
+                  reject(thrownError);
                 }
               } else {
                 resolve(returnValue);
@@ -131,7 +149,14 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
             },
             error => {
               popActScope(prevActQueue, prevActScopeDepth);
-              reject(error);
+              if (ReactCurrentActQueue.hasError) {
+                const thrownError = ReactCurrentActQueue.thrownError;
+                ReactCurrentActQueue.hasError = false;
+                ReactCurrentActQueue.thrownError = null;
+                reject(thrownError);
+              } else {
+                reject(error);
+              }
             },
           );
         },
@@ -183,6 +208,14 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         // to be awaited, regardless of whether the callback is sync or async.
         ReactCurrentActQueue.current = null;
       }
+
+      if (ReactCurrentActQueue.hasError) {
+        const thrownError = ReactCurrentActQueue.thrownError;
+        ReactCurrentActQueue.hasError = false;
+        ReactCurrentActQueue.thrownError = null;
+        throw thrownError;
+      }
+
       return {
         then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
@@ -239,15 +272,24 @@ function recursivelyFlushAsyncActWork<T>(
           queueMacrotask(() =>
             recursivelyFlushAsyncActWork(returnValue, resolve, reject),
           );
+          return;
         } catch (error) {
           // Leave remaining tasks on the queue if something throws.
-          reject(error);
+          if (!ReactCurrentActQueue.hasError) {
+            ReactCurrentActQueue.hasError = true;
+            ReactCurrentActQueue.thrownError = error;
+          }
         }
       } else {
         // The queue is empty. We can finish.
         ReactCurrentActQueue.current = null;
-        resolve(returnValue);
       }
+    }
+    if (ReactCurrentActQueue.hasError) {
+      const thrownError = ReactCurrentActQueue.thrownError;
+      ReactCurrentActQueue.hasError = false;
+      ReactCurrentActQueue.thrownError = null;
+      reject(thrownError);
     } else {
       resolve(returnValue);
     }
@@ -287,7 +329,10 @@ function flushActQueue(queue: Array<RendererTask>) {
       } catch (error) {
         // If something throws, leave the remaining callbacks on the queue.
         queue.splice(0, i + 1);
-        throw error;
+        if (!ReactCurrentActQueue.hasError) {
+          ReactCurrentActQueue.hasError = true;
+          ReactCurrentActQueue.thrownError = error;
+        }
       } finally {
         isFlushing = false;
       }

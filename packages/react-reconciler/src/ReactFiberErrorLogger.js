@@ -16,6 +16,9 @@ import {HostRoot} from 'react-reconciler/src/ReactWorkTags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+const {ReactCurrentActQueue} = ReactSharedInternals;
+
 export function logCapturedError(
   boundary: Fiber,
   errorInfo: CapturedValue<mixed>,
@@ -32,6 +35,15 @@ export function logCapturedError(
     const error = (errorInfo.value: any);
 
     if (boundary.tag === HostRoot) {
+      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+        // For uncaught errors inside act, we track them on the act and then
+        // rethrow them into the test.
+        if (!ReactCurrentActQueue.hasError) {
+          ReactCurrentActQueue.hasError = true;
+          ReactCurrentActQueue.thrownError = error;
+        }
+        return;
+      }
       // For uncaught root errors we report them as uncaught to the browser's
       // onerror callback. This won't have component stacks and the error addendum.
       // So we add those into a separate console.warn.
