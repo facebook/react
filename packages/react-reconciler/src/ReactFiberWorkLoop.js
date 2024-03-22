@@ -277,6 +277,7 @@ import {
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 import {peekEntangledActionLane} from './ReactFiberAsyncAction';
+import {logCapturedError} from './ReactFiberErrorLogger';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -1732,6 +1733,10 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   if (erroredWork === null) {
     // This is a fatal error
     workInProgressRootExitStatus = RootFatalErrored;
+    logCapturedError(
+      root.current,
+      createCapturedValueAtFiber(thrownValue, root.current),
+    );
     return;
   }
 
@@ -2509,7 +2514,7 @@ function throwAndUnwindWorkLoop(
       workInProgressRootRenderLanes,
     );
     if (didFatal) {
-      panicOnRootError(thrownValue);
+      panicOnRootError(root, thrownValue);
       return;
     }
   } catch (error) {
@@ -2521,7 +2526,7 @@ function throwAndUnwindWorkLoop(
       workInProgress = returnFiber;
       throw error;
     } else {
-      panicOnRootError(thrownValue);
+      panicOnRootError(root, thrownValue);
       return;
     }
   }
@@ -2543,12 +2548,16 @@ function throwAndUnwindWorkLoop(
   }
 }
 
-function panicOnRootError(error: mixed) {
+function panicOnRootError(root: FiberRoot, error: mixed) {
   // There's no ancestor that can handle this exception. This should never
   // happen because the root is supposed to capture all errors that weren't
   // caught by an error boundary. This is a fatal error, or panic condition,
   // because we've run out of ways to recover.
   workInProgressRootExitStatus = RootFatalErrored;
+  logCapturedError(
+    root.current,
+    createCapturedValueAtFiber(error, root.current),
+  );
   // Set `workInProgress` to null. This represents advancing to the next
   // sibling, or the parent if there are no siblings. But since the root
   // has no siblings nor a parent, we set it to null. Usually this is
