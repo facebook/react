@@ -967,6 +967,20 @@ function codegenForInit(
   init: ReactiveValue
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === "SequenceExpression") {
+    for (const instr of init.instructions) {
+      if (instr.value.kind === "DeclareContext") {
+        CompilerError.throwTodo({
+          reason: `Support for loops where the index variable is a context variable`,
+          loc: instr.loc,
+          description:
+            instr.value.lvalue.place.identifier.name != null
+              ? `'${instr.value.lvalue.place.identifier.name.value}' is a context variable`
+              : null,
+          suggestions: null,
+        });
+      }
+    }
+
     const body = codegenBlock(
       cx,
       init.instructions.map((instruction) => ({
@@ -983,7 +997,7 @@ function codegenForInit(
         {
           reason: "Expected a variable declaration",
           loc: init.loc,
-          description: null,
+          description: `Got ${instr.type}`,
           suggestions: null,
         }
       );
