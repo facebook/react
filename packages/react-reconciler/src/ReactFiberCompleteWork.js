@@ -38,7 +38,6 @@ import {
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
-  enableFloat,
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
@@ -1051,7 +1050,7 @@ function completeWork(
       return null;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         // The branching here is more complicated than you might expect because
         // a HostHoistable sometimes corresponds to a Resource and sometimes
         // corresponds to an Instance. It can also switch during an update.

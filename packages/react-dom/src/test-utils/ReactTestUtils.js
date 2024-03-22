@@ -21,7 +21,6 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
-import {enableFloat} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -63,7 +62,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostText ||
       node.tag === ClassComponent ||
       node.tag === FunctionComponent ||
-      (enableFloat ? node.tag === HostHoistable : false) ||
+      node.tag === HostHoistable ||
       node.tag === HostSingleton
     ) {
       const publicInst = node.stateNode;

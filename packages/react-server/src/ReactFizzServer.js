@@ -141,7 +141,6 @@ import {
   enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
-  enableFloat,
   enableCache,
   enablePostpone,
   enableRenderableContext,
@@ -3820,12 +3819,8 @@ function flushSegment(
     const id = boundary.rootSegmentID;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id);
 
-    // We are going to flush the fallback so we need to hoist the fallback
-    // state to the parent boundary
-    if (enableFloat) {
-      if (hoistableState) {
-        hoistHoistables(hoistableState, boundary.fallbackState);
-      }
+    if (hoistableState) {
+      hoistHoistables(hoistableState, boundary.fallbackState);
     }
     // Flush the fallback.
     flushSubtree(request, destination, segment, hoistableState);
@@ -3859,10 +3854,8 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
-    if (enableFloat) {
-      if (hoistableState) {
-        hoistHoistables(hoistableState, boundary.contentState);
-      }
+    if (hoistableState) {
+      hoistHoistables(hoistableState, boundary.contentState);
     }
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.renderState);
@@ -3927,14 +3920,11 @@ function flushCompletedBoundary(
   }
   completedSegments.length = 0;
 
-  if (enableFloat) {
-    writeHoistablesForBoundary(
-      destination,
-      boundary.contentState,
-      request.renderState,
-    );
-  }
-
+  writeHoistablesForBoundary(
+    destination,
+    boundary.contentState,
+    request.renderState,
+  );
   return writeCompletedBoundaryInstruction(
     destination,
     request.resumableState,
@@ -3965,15 +3955,11 @@ function flushPartialBoundary(
   }
   completedSegments.splice(0, i);
 
-  if (enableFloat) {
-    return writeHoistablesForBoundary(
-      destination,
-      boundary.contentState,
-      request.renderState,
-    );
-  } else {
-    return true;
-  }
+  return writeHoistablesForBoundary(
+    destination,
+    boundary.contentState,
+    request.renderState,
+  );
 }
 
 function flushPartiallyCompletedSegment(
@@ -4035,10 +4021,7 @@ function flushCompletedQueues(
         // We postponed the root, so we write nothing.
         return;
       } else if (request.pendingRootTasks === 0) {
-        if (enableFloat) {
-          flushPreamble(request, destination, completedRootSegment);
-        }
-
+        flushPreamble(request, destination, completedRootSegment);
         flushSegment(request, destination, completedRootSegment, null);
         request.completedRootSegment = null;
         writeCompletedRoot(destination, request.renderState);
@@ -4047,10 +4030,7 @@ function flushCompletedQueues(
         return;
       }
     }
-    if (enableFloat) {
-      writeHoistables(destination, request.resumableState, request.renderState);
-    }
-
+    writeHoistables(destination, request.resumableState, request.renderState);
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
@@ -4126,12 +4106,10 @@ function flushCompletedQueues(
       // either they have pending task or they're complete.
     ) {
       request.flushScheduled = false;
-      if (enableFloat) {
-        // We write the trailing tags but only if don't have any data to resume.
-        // If we need to resume we'll write the postamble in the resume instead.
-        if (!enablePostpone || request.trackedPostpones === null) {
-          writePostamble(destination, request.resumableState);
-        }
+      // We write the trailing tags but only if don't have any data to resume.
+      // If we need to resume we'll write the postamble in the resume instead.
+      if (!enablePostpone || request.trackedPostpones === null) {
+        writePostamble(destination, request.resumableState);
       }
       completeWriting(destination);
       flushBuffered(destination);

@@ -105,7 +105,6 @@ import {
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enableFloat,
   enableFormActions,
   enableAsyncActions,
   enablePostpone,
@@ -4089,7 +4088,7 @@ function beginWork(
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostHoistable:
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // Fall through

@@ -52,7 +52,6 @@ import {
   enableCache,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableFloat,
   enableLegacyHidden,
   disableStringRefs,
 } from 'shared/ReactFeatureFlags';
@@ -1105,7 +1104,7 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         recursivelyTraverseLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -1509,9 +1508,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (enableFloat && supportsResources
-          ? node.tag === HostHoistable
-          : false) ||
+        (supportsResources ? node.tag === HostHoistable : false) ||
         (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         if (hostSubtreeRoot === null) {
@@ -1733,7 +1730,7 @@ function isHostParent(fiber: Fiber): boolean {
   return (
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
-    (enableFloat && supportsResources ? fiber.tag === HostHoistable : false) ||
+    (supportsResources ? fiber.tag === HostHoistable : false) ||
     (supportsSingletons ? fiber.tag === HostSingleton : false) ||
     fiber.tag === HostPortal
   );
@@ -2011,7 +2008,7 @@ function commitDeletionEffectsOnFiber(
   // that don't modify the stack.
   switch (deletedFiber.tag) {
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         if (!offscreenSubtreeWasHidden) {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
@@ -2604,7 +2601,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         // We cast because we always set the root at the React root and so it cannot be
         // null while we are processing mutation effects
         const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
@@ -2800,7 +2797,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         prepareToCommitHoistables();
 
         const previousHoistableRoot = currentHoistableRoot;
@@ -2845,7 +2842,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostPortal: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
         currentHoistableRoot = getHoistableRoot(
           finishedWork.stateNode.containerInfo,
@@ -4114,7 +4111,7 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
     }
     case HostRoot:
     case HostPortal: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
         const container: Container = fiber.stateNode.containerInfo;
         currentHoistableRoot = getHoistableRoot(container);

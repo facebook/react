@@ -69,8 +69,6 @@ export const consoleManagedByDevToolsDuringStrictMode = false;
 
 export const enableTransitionTracing = false;
 
-export const enableFloat = true;
-
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableDeferRootSchedulingToMicrotask = false;

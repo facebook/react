@@ -36,7 +36,6 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
-  enableFloat,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
@@ -508,14 +507,14 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    if (enableFloat && supportsResources && supportsSingletons) {
+    if (supportsResources && supportsSingletons) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
-    } else if (enableFloat && supportsResources) {
+    } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable

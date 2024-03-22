@@ -319,57 +319,30 @@ describe('rendering React components at document', () => {
         }
       }
 
-      if (gate(flags => flags.enableFloat)) {
-        // with float the title no longer is a hydration mismatch so we get an error on the body mismatch
-        expect(() => {
-          ReactDOM.flushSync(() => {
-            ReactDOMClient.hydrateRoot(
-              testDocument,
-              <Component text="Hello world" />,
-              {
-                onRecoverableError: error => {
-                  Scheduler.log('Log recoverable error: ' + error.message);
-                },
+      // with float the title no longer is a hydration mismatch so we get an error on the body mismatch
+      expect(() => {
+        ReactDOM.flushSync(() => {
+          ReactDOMClient.hydrateRoot(
+            testDocument,
+            <Component text="Hello world" />,
+            {
+              onRecoverableError: error => {
+                Scheduler.log('Log recoverable error: ' + error.message);
               },
-            );
-          });
-        }).toErrorDev(
-          [
-            'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-            'Expected server HTML to contain a matching text node for "Hello world" in <body>',
-          ],
-          {withoutStack: 1},
-        );
-        assertLog([
-          'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-          'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        ]);
-      } else {
-        // getTestDocument() has an extra <meta> that we didn't render.
-        expect(() => {
-          ReactDOM.flushSync(() => {
-            ReactDOMClient.hydrateRoot(
-              testDocument,
-              <Component text="Hello world" />,
-              {
-                onRecoverableError: error => {
-                  Scheduler.log('Log recoverable error: ' + error.message);
-                },
-              },
-            );
-          });
-        }).toErrorDev(
-          [
-            'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-            'Warning: Text content did not match. Server: "test doc" Client: "Hello World"',
-          ],
-          {withoutStack: 1},
-        );
-        assertLog([
-          'Log recoverable error: Text content does not match server-rendered HTML.',
-          'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        ]);
-      }
+            },
+          );
+        });
+      }).toErrorDev(
+        [
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Expected server HTML to contain a matching text node for "Hello world" in <body>',
+        ],
+        {withoutStack: 1},
+      );
+      assertLog([
+        'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+        'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      ]);
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
