@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<66e537022089ccfa9fc66af1a02c3dcf>>
+ * @generated SignedSource<<494aebdeb1b70c20af9f817bd3440522>>
  */
 
 "use strict";
@@ -574,6 +574,15 @@ exports.unstable_useMemoCache = function (size) {
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
+exports.useActionState = function (action, initialState, permalink) {
+  if (enableAsyncActions)
+    return ReactCurrentDispatcher.current.useActionState(
+      action,
+      initialState,
+      permalink
+    );
+  throw Error("Not implemented.");
+};
 exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
@@ -628,4 +637,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-56830a7d";
+exports.version = "18.3.0-canary-7aaa8ba7";

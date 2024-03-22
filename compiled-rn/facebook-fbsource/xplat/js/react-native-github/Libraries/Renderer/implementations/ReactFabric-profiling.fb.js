@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<daf71dbdfea2e4798226aeff5e65404d>>
+ * @generated SignedSource<<c45b8b435078a11d636844fb017e5b43>>
  */
 
 "use strict";
@@ -4871,7 +4871,8 @@ ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 enableAsyncActions &&
   ((ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError),
-  (ContextOnlyDispatcher.useFormState = throwInvalidHookError));
+  (ContextOnlyDispatcher.useFormState = throwInvalidHookError),
+  (ContextOnlyDispatcher.useActionState = throwInvalidHookError));
 enableAsyncActions &&
   (ContextOnlyDispatcher.useOptimistic = throwInvalidHookError);
 var HooksDispatcherOnMount = {
@@ -5014,7 +5015,8 @@ var HooksDispatcherOnMount = {
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnMount.useFormState = mountFormState));
+  (HooksDispatcherOnMount.useFormState = mountFormState),
+  (HooksDispatcherOnMount.useActionState = mountFormState));
 enableAsyncActions && (HooksDispatcherOnMount.useOptimistic = mountOptimistic);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -5058,7 +5060,8 @@ HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnUpdate.useFormState = updateFormState));
+  (HooksDispatcherOnUpdate.useFormState = updateFormState),
+  (HooksDispatcherOnUpdate.useActionState = updateFormState));
 enableAsyncActions &&
   (HooksDispatcherOnUpdate.useOptimistic = updateOptimistic);
 var HooksDispatcherOnRerender = {
@@ -5106,7 +5109,8 @@ HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnRerender.useHostTransitionStatus =
     useHostTransitionStatus),
-  (HooksDispatcherOnRerender.useFormState = rerenderFormState));
+  (HooksDispatcherOnRerender.useFormState = rerenderFormState),
+  (HooksDispatcherOnRerender.useActionState = rerenderFormState));
 enableAsyncActions &&
   (HooksDispatcherOnRerender.useOptimistic = rerenderOptimistic);
 var now = Scheduler.unstable_now,
@@ -11336,7 +11340,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1184 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-adc32acb",
+    version: "18.3.0-canary-5e58d686",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11392,7 +11396,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-adc32acb"
+  reconcilerVersion: "18.3.0-canary-5e58d686"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

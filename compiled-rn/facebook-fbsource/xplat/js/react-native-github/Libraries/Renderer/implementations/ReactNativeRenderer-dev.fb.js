@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<27d37ff5b6d602728d80f08a81faa7e5>>
+ * @generated SignedSource<<57520634ece4baaed30c1815b166e4e0>>
  */
 
 "use strict";
@@ -13871,6 +13871,7 @@ to return true:wantsResponderID|                            |
     if (enableAsyncActions) {
       ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
       ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+      ContextOnlyDispatcher.useActionState = throwInvalidHookError;
     }
 
     if (enableAsyncActions) {
@@ -14046,6 +14047,16 @@ to return true:wantsResponderID|                            |
           mountHookTypesDev();
           return mountFormState(action, initialState);
         };
+
+        HooksDispatcherOnMountInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          mountHookTypesDev();
+          return mountFormState(action, initialState);
+        };
       }
 
       if (enableAsyncActions) {
@@ -14189,6 +14200,13 @@ to return true:wantsResponderID|                            |
         HooksDispatcherOnMountWithHookTypesInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            updateHookTypesDev();
+            return mountFormState(action, initialState);
+          };
+
+        HooksDispatcherOnMountWithHookTypesInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             updateHookTypesDev();
             return mountFormState(action, initialState);
           };
@@ -14339,6 +14357,16 @@ to return true:wantsResponderID|                            |
           updateHookTypesDev();
           return updateFormState(action);
         };
+
+        HooksDispatcherOnUpdateInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          updateHookTypesDev();
+          return updateFormState(action);
+        };
       }
 
       if (enableAsyncActions) {
@@ -14485,6 +14513,16 @@ to return true:wantsResponderID|                            |
           permalink
         ) {
           currentHookNameInDev = "useFormState";
+          updateHookTypesDev();
+          return rerenderFormState(action);
+        };
+
+        HooksDispatcherOnRerenderInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
           updateHookTypesDev();
           return rerenderFormState(action);
         };
@@ -14659,6 +14697,14 @@ to return true:wantsResponderID|                            |
             mountHookTypesDev();
             return mountFormState(action, initialState);
           };
+
+        InvalidNestedHooksDispatcherOnMountInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            mountHookTypesDev();
+            return mountFormState(action, initialState);
+          };
       }
 
       if (enableAsyncActions) {
@@ -14829,6 +14875,14 @@ to return true:wantsResponderID|                            |
             updateHookTypesDev();
             return updateFormState(action);
           };
+
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return updateFormState(action);
+          };
       }
 
       if (enableAsyncActions) {
@@ -14995,6 +15049,14 @@ to return true:wantsResponderID|                            |
         InvalidNestedHooksDispatcherOnRerenderInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return rerenderFormState(action);
+          };
+
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             updateHookTypesDev();
             return rerenderFormState(action);
@@ -30247,7 +30309,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-78cf960c";
+    var ReactVersion = "18.3.0-canary-ce5a79d0";
 
     function createPortal$1(
       children,

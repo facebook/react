@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<af7de104fc236eac212bded7bf6ecd5d>>
+ * @generated SignedSource<<ea56ab92d092677a2d4495d7962df7cc>>
  */
 
 "use strict";
@@ -570,6 +570,15 @@ exports.unstable_useMemoCache = function (size) {
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
+exports.useActionState = function (action, initialState, permalink) {
+  if (enableAsyncActions)
+    return ReactCurrentDispatcher.current.useActionState(
+      action,
+      initialState,
+      permalink
+    );
+  throw Error("Not implemented.");
+};
 exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
@@ -624,7 +633,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-eb44066b";
+exports.version = "18.3.0-canary-a838a519";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

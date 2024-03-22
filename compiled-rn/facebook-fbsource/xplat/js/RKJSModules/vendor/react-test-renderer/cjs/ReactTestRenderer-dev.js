@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5b7fff1847563e0ae235d49afe9f4fed>>
+ * @generated SignedSource<<c9c45acbe6acb3779b76b6f81c4333dc>>
  */
 
 "use strict";
@@ -9643,6 +9643,7 @@ if (__DEV__) {
     {
       ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
       ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+      ContextOnlyDispatcher.useActionState = throwInvalidHookError;
     }
 
     {
@@ -9818,6 +9819,16 @@ if (__DEV__) {
           mountHookTypesDev();
           return mountFormState(action, initialState);
         };
+
+        HooksDispatcherOnMountInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          mountHookTypesDev();
+          return mountFormState(action, initialState);
+        };
       }
 
       {
@@ -9961,6 +9972,13 @@ if (__DEV__) {
         HooksDispatcherOnMountWithHookTypesInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            updateHookTypesDev();
+            return mountFormState(action, initialState);
+          };
+
+        HooksDispatcherOnMountWithHookTypesInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             updateHookTypesDev();
             return mountFormState(action, initialState);
           };
@@ -10111,6 +10129,16 @@ if (__DEV__) {
           updateHookTypesDev();
           return updateFormState(action);
         };
+
+        HooksDispatcherOnUpdateInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
+          updateHookTypesDev();
+          return updateFormState(action);
+        };
       }
 
       {
@@ -10257,6 +10285,16 @@ if (__DEV__) {
           permalink
         ) {
           currentHookNameInDev = "useFormState";
+          updateHookTypesDev();
+          return rerenderFormState(action);
+        };
+
+        HooksDispatcherOnRerenderInDEV.useActionState = function useActionState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useActionState";
           updateHookTypesDev();
           return rerenderFormState(action);
         };
@@ -10431,6 +10469,14 @@ if (__DEV__) {
             mountHookTypesDev();
             return mountFormState(action, initialState);
           };
+
+        InvalidNestedHooksDispatcherOnMountInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            mountHookTypesDev();
+            return mountFormState(action, initialState);
+          };
       }
 
       {
@@ -10601,6 +10647,14 @@ if (__DEV__) {
             updateHookTypesDev();
             return updateFormState(action);
           };
+
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return updateFormState(action);
+          };
       }
 
       {
@@ -10767,6 +10821,14 @@ if (__DEV__) {
         InvalidNestedHooksDispatcherOnRerenderInDEV.useFormState =
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return rerenderFormState(action);
+          };
+
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useActionState =
+          function useActionState(action, initialState, permalink) {
+            currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             updateHookTypesDev();
             return rerenderFormState(action);
@@ -25457,7 +25519,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-af06220a";
+    var ReactVersion = "18.3.0-canary-d1287dcb";
 
     // Might add PROFILE later.
 

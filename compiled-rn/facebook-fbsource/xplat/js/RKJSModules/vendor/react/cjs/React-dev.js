@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ea0358e696426d4e3e4a41698c95dba1>>
+ * @generated SignedSource<<ab1b0d338696a8b20566e682ff010775>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-f6aabfc7";
+    var ReactVersion = "18.3.0-canary-0cb590d3";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3121,6 +3121,15 @@ if (__DEV__) {
 
       return dispatcher.useOptimistic(passthrough, reducer);
     }
+    function useActionState(action, initialState, permalink) {
+      if (!enableAsyncActions) {
+        throw new Error("Not implemented.");
+      } else {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+        return dispatcher.useActionState(action, initialState, permalink);
+      }
+    }
 
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
@@ -3605,6 +3614,7 @@ if (__DEV__) {
     exports.unstable_useCacheRefresh = useCacheRefresh;
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = use;
+    exports.useActionState = useActionState;
     exports.useCallback = useCallback;
     exports.useContext = useContext;
     exports.useDebugValue = useDebugValue;
