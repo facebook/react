@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict
  * @nolint
- * @generated SignedSource<<fbf33f04ca9428c149262f17c8a4b6ab>>
+ * @generated SignedSource<<b35184ab7e1e173fd34278def089e277>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
@@ -127,7 +127,7 @@ export type NativeMethods = $ReadOnly<{|
 |}>;
 
 // This validates that INativeMethods and NativeMethods stay in sync using Flow!
-declare var ensureNativeMethodsAreSynced: NativeMethods;
+declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
