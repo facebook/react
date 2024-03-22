@@ -3434,7 +3434,12 @@ function lowerAssignment(
        */
       const forceTemporaries =
         kind === InstructionKind.Reassign &&
-        elements.some((element) => !element.isIdentifier());
+        (elements.some((element) => !element.isIdentifier()) ||
+          elements.some(
+            (element) =>
+              element.isIdentifier() &&
+              getStoreKind(builder, element) !== "StoreLocal"
+          ));
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
         if (element.node == null) {
