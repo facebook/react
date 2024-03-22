@@ -23,6 +23,7 @@ import {
   eachInstructionValueOperand,
   eachPatternOperand,
   eachTerminalOperand,
+  eachTerminalSuccessor,
   terminalFallthrough,
 } from "../HIR/visitors";
 
@@ -340,8 +341,14 @@ export function leaveSSA(fn: HIRFunction): void {
        * To avoid generating a let binding for the initializer prior to the loop,
        * check to see if the for declares an iterator variable.
        */
-      while (init.id !== initContinuation) {
-        for (const instr of init.instructions) {
+      const queue: Array<BlockId> = [init.id];
+      while (queue.length !== 0) {
+        const blockId = queue.shift()!;
+        if (blockId === initContinuation) {
+          break;
+        }
+        const block = fn.body.blocks.get(blockId)!;
+        for (const instr of block.instructions) {
           if (
             instr.value.kind === "StoreLocal" &&
             instr.value.lvalue.kind !== InstructionKind.Reassign
@@ -362,25 +369,29 @@ export function leaveSSA(fn: HIRFunction): void {
           }
         }
 
-        let next: BlockId | null = null;
-        switch (init.terminal.kind) {
+        switch (block.terminal.kind) {
           case "maybe-throw": {
-            next = init.terminal.continuation;
+            queue.push(block.terminal.continuation);
             break;
           }
           case "goto": {
-            next = init.terminal.block;
+            queue.push(block.terminal.block);
+            break;
+          }
+          case "branch":
+          case "logical":
+          case "optional":
+          case "ternary":
+          case "label": {
+            for (const successor of eachTerminalSuccessor(block.terminal)) {
+              queue.push(successor);
+            }
             break;
           }
           default: {
             break;
           }
         }
-        if (next === null) {
-          break;
-        }
-
-        init = fn.body.blocks.get(next)!;
       }
 
       if (terminal.kind === "for" && terminal.update !== null) {
