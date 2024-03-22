@@ -732,6 +732,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       }
       case "switch": {
         context.visitOperand(terminal.test);
+        const isDefaultOnly =
+          terminal.cases.length === 1 && terminal.cases[0].test == null;
+        if (isDefaultOnly) {
+          const case_ = terminal.cases[0];
+          if (case_.block != null) {
+            this.visitBlock(case_.block, context);
+            break;
+          }
+        }
         const depsInCases = [];
         let foundDefault = false;
         /*
