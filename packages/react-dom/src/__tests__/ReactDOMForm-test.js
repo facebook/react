@@ -1324,7 +1324,7 @@ describe('ReactDOMForm', () => {
 
     let dispatch;
     function App() {
-      const [state, _dispatch, isPending] = useFormState(action, 0);
+      const [state, _dispatch, isPending] = useActionState(action, 0);
       dispatch = _dispatch;
       const pending = isPending ? 'Pending ' : '';
       return <Text text={pending + state} />;
