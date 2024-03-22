@@ -21,13 +21,13 @@ function Component({ foo }) {
 ## Error
 
 ```
+  1 | import { Stringify } from "shared-runtime";
   2 |
-  3 | function Component({ foo }) {
-> 4 |   let bar = foo.bar;
-    |             ^^^ [ReactForget] Invariant: Expected all references to a variable to be consistently local or context references. Identifier <unknown> foo$1 is referenced as a context variable, but was previously referenced as a local variable (4:4)
+> 3 | function Component({ foo }) {
+    |                      ^^^ [ReactForget] Todo: Support destructuring of context variables (3:3)
+  4 |   let bar = foo.bar;
   5 |   return (
   6 |     <Stringify
-  7 |       handler={() => {
 ```
           
       

@@ -56,7 +56,7 @@ function validateContextVariableLValuesImpl(
         }
         case "Destructure": {
           for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-            visit(identifierKinds, lvalue, "local");
+            visit(identifierKinds, lvalue, "destructure");
           }
           break;
         }
@@ -84,23 +84,39 @@ function validateContextVariableLValuesImpl(
   }
 }
 
-type IdentifierKinds = Map<IdentifierId, "local" | "context">;
+type IdentifierKinds = Map<
+  IdentifierId,
+  { place: Place; kind: "local" | "context" | "destructure" }
+>;
 
 function visit(
   identifiers: IdentifierKinds,
   place: Place,
-  kind: "local" | "context"
+  kind: "local" | "context" | "destructure"
 ): void {
-  const prevKind = identifiers.get(place.identifier.id);
-  if (prevKind !== undefined && prevKind !== kind) {
-    CompilerError.invariant(false, {
-      reason: `Expected all references to a variable to be consistently local or context references`,
-      loc: place.loc,
-      description: `Identifier ${printPlace(
-        place
-      )} is referenced as a ${kind} variable, but was previously referenced as a ${prevKind} variable`,
-      suggestions: null,
-    });
+  const prev = identifiers.get(place.identifier.id);
+  if (prev !== undefined) {
+    const wasContext = prev.kind === "context";
+    const isContext = kind === "context";
+    if (wasContext !== isContext) {
+      if (prev.kind === "destructure" || kind === "destructure") {
+        CompilerError.throwTodo({
+          reason: `Support destructuring of context variables`,
+          loc: kind === "destructure" ? place.loc : prev.place.loc,
+          description: null,
+          suggestions: null,
+        });
+      }
+
+      CompilerError.invariant(false, {
+        reason: `Expected all references to a variable to be consistently local or context references`,
+        loc: place.loc,
+        description: `Identifier ${printPlace(
+          place
+        )} is referenced as a ${kind} variable, but was previously referenced as a ${prev} variable`,
+        suggestions: null,
+      });
+    }
   }
-  identifiers.set(place.identifier.id, kind);
+  identifiers.set(place.identifier.id, { place, kind });
 }
