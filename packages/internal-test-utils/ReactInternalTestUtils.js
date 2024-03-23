@@ -13,6 +13,8 @@ import simulateBrowserEventDispatch from './simulateBrowserEventDispatch';
 
 export {act} from './internalAct';
 
+import {thrownErrors, actingUpdatesScopeDepth} from './internalAct';
+
 function assertYieldsWereCleared(caller) {
   const actualYields = SchedulerMock.unstable_clearLog();
   if (actualYields.length !== 0) {
@@ -135,7 +137,6 @@ export async function waitForThrow(expectedError: mixed): mixed {
       throw error;
     }
 
-    const thrownErrors: Array<mixed> = [];
     const errorHandlerDOM = function (event: ErrorEvent) {
       // Prevent logs from reprinting this error.
       event.preventDefault();
@@ -145,34 +146,40 @@ export async function waitForThrow(expectedError: mixed): mixed {
       thrownErrors.push(err);
     };
     // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
-    if (
-      typeof window === 'object' &&
-      typeof window.addEventListener === 'function'
-    ) {
-      // We're in a JS DOM environment.
-      window.addEventListener('error', errorHandlerDOM);
-    } else if (typeof process === 'object') {
-      // Node environment
-      process.on('uncaughtException', errorHandlerNode);
+    if (actingUpdatesScopeDepth === 0) {
+      if (
+        typeof window === 'object' &&
+        typeof window.addEventListener === 'function'
+      ) {
+        // We're in a JS DOM environment.
+        window.addEventListener('error', errorHandlerDOM);
+      } else if (typeof process === 'object') {
+        // Node environment
+        process.on('uncaughtException', errorHandlerNode);
+      }
     }
     try {
       SchedulerMock.unstable_flushAllWithoutAsserting();
     } catch (x) {
       thrownErrors.push(x);
     } finally {
-      if (
-        typeof window === 'object' &&
-        typeof window.addEventListener === 'function'
-      ) {
-        // We're in a JS DOM environment.
-        window.removeEventListener('error', errorHandlerDOM);
-      } else if (typeof process === 'object') {
-        // Node environment
-        process.off('uncaughtException', errorHandlerNode);
+      if (actingUpdatesScopeDepth === 0) {
+        if (
+          typeof window === 'object' &&
+          typeof window.addEventListener === 'function'
+        ) {
+          // We're in a JS DOM environment.
+          window.removeEventListener('error', errorHandlerDOM);
+        } else if (typeof process === 'object') {
+          // Node environment
+          process.off('uncaughtException', errorHandlerNode);
+        }
       }
     }
     if (thrownErrors.length > 0) {
       const thrownError = aggregateErrors(thrownErrors);
+      thrownErrors.length = 0;
+
       if (expectedError === undefined) {
         // If no expected error was provided, then assume the caller is OK with
         // any error being thrown. We're returning the error so they can do

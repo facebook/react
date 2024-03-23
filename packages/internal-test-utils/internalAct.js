@@ -20,7 +20,9 @@ import * as Scheduler from 'scheduler/unstable_mock';
 
 import enqueueTask from './enqueueTask';
 
-let actingUpdatesScopeDepth: number = 0;
+export let actingUpdatesScopeDepth: number = 0;
+
+export const thrownErrors: Array<mixed> = [];
 
 async function waitForMicrotasks() {
   return new Promise(resolve => {
@@ -71,7 +73,6 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   // public version of `act`, though we maybe should in the future.
   await waitForMicrotasks();
 
-  const thrownErrors: Array<mixed> = [];
   const errorHandlerDOM = function (event: ErrorEvent) {
     // Prevent logs from reprinting this error.
     event.preventDefault();
@@ -81,15 +82,17 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
     thrownErrors.push(err);
   };
   // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
-  if (
-    typeof window === 'object' &&
-    typeof window.addEventListener === 'function'
-  ) {
-    // We're in a JS DOM environment.
-    window.addEventListener('error', errorHandlerDOM);
-  } else if (typeof process === 'object') {
-    // Node environment
-    process.on('uncaughtException', errorHandlerNode);
+  if (actingUpdatesScopeDepth === 1) {
+    if (
+      typeof window === 'object' &&
+      typeof window.addEventListener === 'function'
+    ) {
+      // We're in a JS DOM environment.
+      window.addEventListener('error', errorHandlerDOM);
+    } else if (typeof process === 'object') {
+      // Node environment
+      process.on('uncaughtException', errorHandlerNode);
+    }
   }
 
   try {
@@ -137,24 +140,25 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
 
     if (thrownErrors.length > 0) {
       // Rethrow any errors logged by the global error handling.
-      throw aggregateErrors(thrownErrors);
+      const thrownError = aggregateErrors(thrownErrors);
+      thrownErrors.length = 0;
+      throw thrownError;
     }
 
     return result;
   } finally {
-    if (
-      typeof window === 'object' &&
-      typeof window.addEventListener === 'function'
-    ) {
-      // We're in a JS DOM environment.
-      window.removeEventListener('error', errorHandlerDOM);
-    } else if (typeof process === 'object') {
-      // Node environment
-      process.off('uncaughtException', errorHandlerNode);
-    }
-
     const depth = actingUpdatesScopeDepth;
     if (depth === 1) {
+      if (
+        typeof window === 'object' &&
+        typeof window.addEventListener === 'function'
+      ) {
+        // We're in a JS DOM environment.
+        window.removeEventListener('error', errorHandlerDOM);
+      } else if (typeof process === 'object') {
+        // Node environment
+        process.off('uncaughtException', errorHandlerNode);
+      }
       global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
     }
     actingUpdatesScopeDepth = depth - 1;
