@@ -891,14 +891,19 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>loading</p>');
 
     const donePromise = createResolvablePromise();
-    const value = <Posts />;
+
+    const value = (
+      <Suspense fallback={<p>loading posts</p>}>
+        <Posts />
+      </Suspense>
+    );
 
     await act(async () => {
       suspendedChunk.resolve({value, done: false, next: donePromise.promise});
       donePromise.resolve({value, done: true});
     });
 
-    expect(container.innerHTML).toBe('<p>loading</p>');
+    expect(container.innerHTML).toBe('<p>loading posts</p>');
 
     await act(async () => {
       await resolvePostsData('posts');
