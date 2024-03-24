@@ -12,6 +12,7 @@ exemptLabels:
   - "Type: Discussion"
   - "Type: Needs Investigation"
   - "Type: Regression"
+  - "Type: Feature Request"
 # Label to use when marking an issue as stale
 staleLabel: "Resolution: Stale"
 issues:
