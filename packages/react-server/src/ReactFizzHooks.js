@@ -369,8 +369,8 @@ export function useReducer<S, I, A>(
         renderPhaseUpdates.delete(queue);
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         let newState = workInProgressHook.memoizedState;
-        let update: Update<any> = firstRenderPhaseUpdate;
-        do {
+        let update: Update<any> | null = firstRenderPhaseUpdate;
+        while (update !== null) {
           // Process this render phase update. We don't have to check the
           // priority because it will always be the same as the current
           // render's.
@@ -382,9 +382,8 @@ export function useReducer<S, I, A>(
           if (__DEV__) {
             isInHookUserCodeInDev = false;
           }
-          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
-        } while (update !== null);
+        }
 
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         workInProgressHook.memoizedState = newState;
