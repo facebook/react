@@ -1846,7 +1846,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await resolveText('B');
       await waitForPaint(['B']);
 
-      if (gate(flags => flags.alwaysThrottleRetries)) {
+      if (
+        // This behavior only applies if both flags are enabled.
+        gate(
+          flags =>
+            flags.alwaysThrottleDisappearingFallbacks &&
+            flags.alwaysThrottleRetries,
+        )
+      ) {
         // B should not commit yet. Even though it's been a long time since its
         // fallback was shown, it hasn't been long since A appeared. So B's
         // appearance is throttled to reduce jank.
