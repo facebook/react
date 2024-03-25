@@ -254,3 +254,52 @@ function validateShorthandPropertyCollisionInDev(prevStyles, nextStyles) {
     }
   }
 }
+
+export function constructClassNameString(args) {
+  const convertToString = arg => {
+    if (typeof arg === 'string') {
+      return arg;
+    }
+
+    if (typeof arg === 'number') {
+      return arg.toString();
+    }
+
+    if (typeof arg === 'object') {
+      if (Array.isArray(arg)) {
+        return arg
+          .reduce((acc, arg2) => {
+            if (arg2) {
+              const argString = convertToString(arg2);
+              if (argString) {
+                return [...acc, argString];
+              }
+            }
+            return acc;
+          }, [])
+          .join(' ');
+      }
+
+      return Object.entries(arg)
+        .filter(([key, value]) => value)
+        .map(([key]) => key)
+        .join(' ');
+    }
+
+    return '';
+  };
+
+  const className = args
+    .reduce((acc, arg) => {
+      if (arg) {
+        const argString = convertToString(arg);
+        if (argString) {
+          return [...acc, argString];
+        }
+      }
+      return acc;
+    }, [])
+    .join(' ');
+
+  return className;
+}
