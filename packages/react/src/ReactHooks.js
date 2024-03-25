@@ -72,7 +72,10 @@ export function getCacheForType<T>(resourceType: () => T): T {
   return dispatcher.getCacheForType(resourceType);
 }
 
-export function useContext<T>(Context: ReactContext<T>): T {
+export function useContext<T>(
+  Context: ReactContext<T>,
+  filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
+): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     if (Context.$$typeof === REACT_CONSUMER_TYPE) {
@@ -82,7 +85,7 @@ export function useContext<T>(Context: ReactContext<T>): T {
       );
     }
   }
-  return dispatcher.useContext(Context);
+  return dispatcher.useContext(Context, filterCallback);
 }
 
 export function useState<S>(

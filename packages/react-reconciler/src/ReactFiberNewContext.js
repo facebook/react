@@ -211,6 +211,10 @@ export function scheduleContextWorkOnParentPath(
   }
 }
 
+function readContextValue<T>(context: ReactContext<T>): any {
+  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+}
+
 export function propagateContextChange<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
@@ -257,7 +261,15 @@ function propagateContextChange_eager<T>(
       let dependency = list.firstContext;
       while (dependency !== null) {
         // Check if the context matches.
-        if (dependency.context === context) {
+        if (
+          dependency.context === context &&
+          ((typeof dependency.filterCallback === 'function' &&
+            dependency.filterCallback(
+              dependency.memoizedValue,
+              readContextValue(dependency.context),
+            ) !== false) ||
+            typeof dependency.filterCallback !== 'function')
+        ) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
@@ -401,7 +413,15 @@ function propagateContextChanges<T>(
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
-          if (dependency.context === context) {
+          if (
+            dependency.context === context &&
+            ((typeof dependency.filterCallback === 'function' &&
+              dependency.filterCallback(
+                dependency.memoizedValue,
+                readContextValue(dependency.context),
+              ) !== false) ||
+              typeof dependency.filterCallback !== 'function')
+          ) {
             // Match! Schedule an update on this fiber.
 
             // In the lazy implementation, don't mark a dirty flag on the
@@ -694,7 +714,10 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T>(context: ReactContext<T>): T {
+export function readContext<T>(
+  context: ReactContext<T>,
+  filterCallback: any,
+): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
@@ -707,7 +730,11 @@ export function readContext<T>(context: ReactContext<T>): T {
       );
     }
   }
-  return readContextForConsumer(currentlyRenderingFiber, context);
+  return readContextForConsumer(
+    currentlyRenderingFiber,
+    context,
+    filterCallback,
+  );
 }
 
 export function readContextDuringReconciliation<T>(
@@ -724,6 +751,7 @@ export function readContextDuringReconciliation<T>(
 function readContextForConsumer<T>(
   consumer: Fiber | null,
   context: ReactContext<T>,
+  filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
 ): T {
   const value = isPrimaryRenderer
     ? context._currentValue
@@ -736,6 +764,7 @@ function readContextForConsumer<T>(
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
+      filterCallback: filterCallback,
     };
 
     if (lastContextDependency === null) {

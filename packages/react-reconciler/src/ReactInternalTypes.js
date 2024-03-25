@@ -63,6 +63,7 @@ export type ContextDependency<T> = {
   context: ReactContext<T>,
   next: ContextDependency<mixed> | null,
   memoizedValue: T,
+  filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
   ...
 };
 
@@ -369,7 +370,10 @@ export type Dispatcher = {
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
-  useContext<T>(context: ReactContext<T>): T,
+  useContext<T>(
+    context: ReactContext<T>,
+    filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
+  ): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
     create: () => (() => void) | void,
