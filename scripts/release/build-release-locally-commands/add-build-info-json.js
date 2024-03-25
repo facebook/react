@@ -25,11 +25,10 @@ const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
     reactVersion,
   };
 
-  for (let i = 0; i < packages.length; i++) {
-    const packageName = packages[i];
+  await Promise.all(packages.map(async (packageName) => {
     const packagePath = join(packagesDir, packageName);
     const packageJSON = await readJson(join(packagePath, 'package.json'));
-
+  
     // Verify all public packages include "build-info.json" in the files array.
     if (!packageJSON.files.includes('build-info.json')) {
       console.error(
@@ -37,13 +36,13 @@ const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
       );
       process.exit(1);
     }
-
+  
     // Add build info JSON to package.
     if (existsSync(join(packagePath, 'npm'))) {
       const buildInfoJSONPath = join(packagePath, 'npm', 'build-info.json');
-      await writeJson(buildInfoJSONPath, buildInfoJSON, {spaces: 2});
+      await writeJson(buildInfoJSONPath, buildInfoJSON, { spaces: 2 });
     }
-  }
+  }));
 };
 
 module.exports = async params => {
