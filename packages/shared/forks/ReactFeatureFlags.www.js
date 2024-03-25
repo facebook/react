@@ -17,6 +17,7 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
+  enableBigIntSupport,
   enableTrustedTypesIntegration,
   enableLegacyFBSupport,
   enableDebugTracing,
@@ -115,8 +116,6 @@ export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
-
-export const enableBigIntSupport = false;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
