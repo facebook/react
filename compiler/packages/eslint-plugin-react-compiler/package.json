@@ -21,6 +21,7 @@
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-typescript": "^11.1.3",
+    "@types/eslint": "^8.56.6",
     "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
     "eslint": "8.27.0",
