@@ -153,7 +153,6 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableFormActions = true;
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
@@ -7081,22 +7080,19 @@ if (__DEV__) {
 
           warnedProperties[name] = true;
           return true;
-        }
+        } // Actions are special because unlike events they can have other value types.
 
-        {
-          // Actions are special because unlike events they can have other value types.
-          if (typeof value === "function") {
-            if (tagName === "form" && name === "action") {
-              return true;
-            }
+        if (typeof value === "function") {
+          if (tagName === "form" && name === "action") {
+            return true;
+          }
 
-            if (tagName === "input" && name === "formAction") {
-              return true;
-            }
+          if (tagName === "input" && name === "formAction") {
+            return true;
+          }
 
-            if (tagName === "button" && name === "formAction") {
-              return true;
-            }
+          if (tagName === "button" && name === "formAction") {
+            return true;
           }
         } // We can't rely on the event system being injected on the server.
 
@@ -36476,7 +36472,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-0b11d62a";
+    var ReactVersion = "18.3.0-www-classic-af285d7f";
 
     function createPortal$1(
       children,
@@ -40093,16 +40089,13 @@ if (__DEV__) {
           nativeEvent,
           nativeEventTarget
         );
-
-        {
-          extractEvents$1(
-            dispatchQueue,
-            domEventName,
-            targetInst,
-            nativeEvent,
-            nativeEventTarget
-          );
-        }
+        extractEvents$1(
+          dispatchQueue,
+          domEventName,
+          targetInst,
+          nativeEvent,
+          nativeEventTarget
+        );
       }
     } // List of events that need to be individually attached to media elements.
 
@@ -41408,72 +41401,69 @@ if (__DEV__) {
             validateFormActionInDevelopment(tag, key, value, props);
           }
 
-          {
-            if (typeof value === "function") {
-              // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
-              // because we'll preventDefault, but it can happen if a form is manually submitted or
-              // if someone calls stopPropagation before React gets the event.
-              // If CSP is used to block javascript: URLs that's fine too. It just won't show this
-              // error message but the URL will be logged.
-              domElement.setAttribute(
-                key, // eslint-disable-next-line no-script-url
-                "javascript:throw new Error('" +
-                  "A React form was unexpectedly submitted. If you called form.submit() manually, " +
-                  "consider using form.requestSubmit() instead. If you\\'re trying to use " +
-                  "event.stopPropagation() in a submit event handler, consider also calling " +
-                  "event.preventDefault()." +
-                  "')"
-              );
-              break;
-            } else if (typeof prevValue === "function") {
-              // When we're switching off a Server Action that was originally hydrated.
-              // The server control these fields during SSR that are now trailing.
-              // The regular diffing doesn't apply since we compare against the previous props.
-              // Instead, we need to force them to be set to whatever they should be now.
-              // This would be a lot cleaner if we did this whole fork in the per-tag approach.
-              if (key === "formAction") {
-                if (tag !== "input") {
-                  // Setting the name here isn't completely safe for inputs if this is switching
-                  // to become a radio button. In that case we let the tag based override take
-                  // control.
-                  setProp(domElement, tag, "name", props.name, props, null);
-                }
-
-                setProp(
-                  domElement,
-                  tag,
-                  "formEncType",
-                  props.formEncType,
-                  props,
-                  null
-                );
-                setProp(
-                  domElement,
-                  tag,
-                  "formMethod",
-                  props.formMethod,
-                  props,
-                  null
-                );
-                setProp(
-                  domElement,
-                  tag,
-                  "formTarget",
-                  props.formTarget,
-                  props,
-                  null
-                );
-              } else {
-                setProp(domElement, tag, "encType", props.encType, props, null);
-                setProp(domElement, tag, "method", props.method, props, null);
-                setProp(domElement, tag, "target", props.target, props, null);
+          if (typeof value === "function") {
+            // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
+            // because we'll preventDefault, but it can happen if a form is manually submitted or
+            // if someone calls stopPropagation before React gets the event.
+            // If CSP is used to block javascript: URLs that's fine too. It just won't show this
+            // error message but the URL will be logged.
+            domElement.setAttribute(
+              key, // eslint-disable-next-line no-script-url
+              "javascript:throw new Error('" +
+                "A React form was unexpectedly submitted. If you called form.submit() manually, " +
+                "consider using form.requestSubmit() instead. If you\\'re trying to use " +
+                "event.stopPropagation() in a submit event handler, consider also calling " +
+                "event.preventDefault()." +
+                "')"
+            );
+            break;
+          } else if (typeof prevValue === "function") {
+            // When we're switching off a Server Action that was originally hydrated.
+            // The server control these fields during SSR that are now trailing.
+            // The regular diffing doesn't apply since we compare against the previous props.
+            // Instead, we need to force them to be set to whatever they should be now.
+            // This would be a lot cleaner if we did this whole fork in the per-tag approach.
+            if (key === "formAction") {
+              if (tag !== "input") {
+                // Setting the name here isn't completely safe for inputs if this is switching
+                // to become a radio button. In that case we let the tag based override take
+                // control.
+                setProp(domElement, tag, "name", props.name, props, null);
               }
+
+              setProp(
+                domElement,
+                tag,
+                "formEncType",
+                props.formEncType,
+                props,
+                null
+              );
+              setProp(
+                domElement,
+                tag,
+                "formMethod",
+                props.formMethod,
+                props,
+                null
+              );
+              setProp(
+                domElement,
+                tag,
+                "formTarget",
+                props.formTarget,
+                props,
+                null
+              );
+            } else {
+              setProp(domElement, tag, "encType", props.encType, props, null);
+              setProp(domElement, tag, "method", props.method, props, null);
+              setProp(domElement, tag, "target", props.target, props, null);
             }
           }
 
           if (
             value == null ||
-            !enableFormActions ||
             typeof value === "symbol" ||
             typeof value === "boolean"
           ) {
@@ -43653,36 +43643,34 @@ if (__DEV__) {
             continue;
 
           case "action":
-          case "formAction":
-            {
-              var _serverValue4 = domElement.getAttribute(propKey);
+          case "formAction": {
+            var _serverValue4 = domElement.getAttribute(propKey);
 
-              if (typeof value === "function") {
-                extraAttributes.delete(propKey.toLowerCase()); // The server can set these extra properties to implement actions.
-                // So we remove them from the extra attributes warnings.
+            if (typeof value === "function") {
+              extraAttributes.delete(propKey.toLowerCase()); // The server can set these extra properties to implement actions.
+              // So we remove them from the extra attributes warnings.
 
-                if (propKey === "formAction") {
-                  extraAttributes.delete("name");
-                  extraAttributes.delete("formenctype");
-                  extraAttributes.delete("formmethod");
-                  extraAttributes.delete("formtarget");
-                } else {
-                  extraAttributes.delete("enctype");
-                  extraAttributes.delete("method");
-                  extraAttributes.delete("target");
-                } // Ideally we should be able to warn if the server value was not a function
-                // however since the function can return any of these attributes any way it
-                // wants as a custom progressive enhancement, there's nothing to compare to.
-                // We can check if the function has the $FORM_ACTION property on the client
-                // and if it's not, warn, but that's an unnecessary constraint that they
-                // have to have the extra extension that doesn't do anything on the client.
+              if (propKey === "formAction") {
+                extraAttributes.delete("name");
+                extraAttributes.delete("formenctype");
+                extraAttributes.delete("formmethod");
+                extraAttributes.delete("formtarget");
+              } else {
+                extraAttributes.delete("enctype");
+                extraAttributes.delete("method");
+                extraAttributes.delete("target");
+              } // Ideally we should be able to warn if the server value was not a function
+              // however since the function can return any of these attributes any way it
+              // wants as a custom progressive enhancement, there's nothing to compare to.
+              // We can check if the function has the $FORM_ACTION property on the client
+              // and if it's not, warn, but that's an unnecessary constraint that they
+              // have to have the extra extension that doesn't do anything on the client.
 
-                continue;
-              } else if (_serverValue4 === EXPECTED_FORM_ACTION_URL) {
-                extraAttributes.delete(propKey.toLowerCase());
-                warnForPropDifference(propKey, "function", value);
-                continue;
-              }
+              continue;
+            } else if (_serverValue4 === EXPECTED_FORM_ACTION_URL) {
+              extraAttributes.delete(propKey.toLowerCase());
+              warnForPropDifference(propKey, "function", value);
+              continue;
             }
 
             hydrateSanitizedAttribute(
@@ -43693,6 +43681,7 @@ if (__DEV__) {
               extraAttributes
             );
             continue;
+          }
 
           case "xlinkHref":
             hydrateSanitizedAttribute(
@@ -48339,76 +48328,73 @@ if (__DEV__) {
             queuedExplicitHydrationTargets.shift();
           }
         }
-      }
+      } // Check the document if there are any queued form actions.
+      // If there's no ownerDocument, then this is the document.
 
-      {
-        // Check the document if there are any queued form actions.
-        // If there's no ownerDocument, then this is the document.
-        var root = unblocked.ownerDocument || unblocked;
-        var formReplayingQueue = root.$$reactFormReplay;
+      var root = unblocked.ownerDocument || unblocked;
+      var formReplayingQueue = root.$$reactFormReplay;
 
-        if (formReplayingQueue != null) {
-          for (var _i = 0; _i < formReplayingQueue.length; _i += 3) {
-            var form = formReplayingQueue[_i];
-            var submitterOrAction = formReplayingQueue[_i + 1];
-            var formProps = getFiberCurrentPropsFromNode(form);
+      if (formReplayingQueue != null) {
+        for (var _i = 0; _i < formReplayingQueue.length; _i += 3) {
+          var form = formReplayingQueue[_i];
+          var submitterOrAction = formReplayingQueue[_i + 1];
+          var formProps = getFiberCurrentPropsFromNode(form);
 
-            if (typeof submitterOrAction === "function") {
-              // This action has already resolved. We're just waiting to dispatch it.
-              if (!formProps) {
-                // This was not part of this React instance. It might have been recently
-                // unblocking us from dispatching our events. So let's make sure we schedule
-                // a retry.
-                scheduleReplayQueueIfNeeded(formReplayingQueue);
-              }
-
-              continue;
+          if (typeof submitterOrAction === "function") {
+            // This action has already resolved. We're just waiting to dispatch it.
+            if (!formProps) {
+              // This was not part of this React instance. It might have been recently
+              // unblocking us from dispatching our events. So let's make sure we schedule
+              // a retry.
+              scheduleReplayQueueIfNeeded(formReplayingQueue);
             }
 
-            var target = form;
-
-            if (formProps) {
-              // This form belongs to this React instance but the submitter might
-              // not be done yet.
-              var action = null;
-              var submitter = submitterOrAction;
-
-              if (submitter && submitter.hasAttribute("formAction")) {
-                // The submitter is the one that is responsible for the action.
-                target = submitter;
-                var submitterProps = getFiberCurrentPropsFromNode(submitter);
-
-                if (submitterProps) {
-                  // The submitter is part of this instance.
-                  action = submitterProps.formAction;
-                } else {
-                  var blockedOn = findInstanceBlockingTarget(target);
-
-                  if (blockedOn !== null) {
-                    // The submitter is not hydrated yet. We'll wait for it.
-                    continue;
-                  } // The submitter must have been a part of a different React instance.
-                  // Except the form isn't. We don't dispatch actions in this scenario.
-                }
-              } else {
-                action = formProps.action;
-              }
-
-              if (typeof action === "function") {
-                formReplayingQueue[_i + 1] = action;
-              } else {
-                // Something went wrong so let's just delete this action.
-                formReplayingQueue.splice(_i, 3);
-                _i -= 3;
-              } // Schedule a replay in case this unblocked something.
-
-              scheduleReplayQueueIfNeeded(formReplayingQueue);
-              continue;
-            } // Something above this target is still blocked so we can't continue yet.
-            // We're not sure if this target is actually part of this React instance
-            // yet. It could be a different React as a child but at least some parent is.
-            // We must continue for any further queued actions.
+            continue;
           }
+
+          var target = form;
+
+          if (formProps) {
+            // This form belongs to this React instance but the submitter might
+            // not be done yet.
+            var action = null;
+            var submitter = submitterOrAction;
+
+            if (submitter && submitter.hasAttribute("formAction")) {
+              // The submitter is the one that is responsible for the action.
+              target = submitter;
+              var submitterProps = getFiberCurrentPropsFromNode(submitter);
+
+              if (submitterProps) {
+                // The submitter is part of this instance.
+                action = submitterProps.formAction;
+              } else {
+                var blockedOn = findInstanceBlockingTarget(target);
+
+                if (blockedOn !== null) {
+                  // The submitter is not hydrated yet. We'll wait for it.
+                  continue;
+                } // The submitter must have been a part of a different React instance.
+                // Except the form isn't. We don't dispatch actions in this scenario.
+              }
+            } else {
+              action = formProps.action;
+            }
+
+            if (typeof action === "function") {
+              formReplayingQueue[_i + 1] = action;
+            } else {
+              // Something went wrong so let's just delete this action.
+              formReplayingQueue.splice(_i, 3);
+              _i -= 3;
+            } // Schedule a replay in case this unblocked something.
+
+            scheduleReplayQueueIfNeeded(formReplayingQueue);
+            continue;
+          } // Something above this target is still blocked so we can't continue yet.
+          // We're not sure if this target is actually part of this React instance
+          // yet. It could be a different React as a child but at least some parent is.
+          // We must continue for any further queued actions.
         }
       }
     }

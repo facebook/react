@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-3b05a7da";
+    var ReactVersion = "18.3.0-www-modern-3bc7e633";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -1691,22 +1691,19 @@ if (__DEV__) {
 
           warnedProperties[name] = true;
           return true;
-        }
+        } // Actions are special because unlike events they can have other value types.
 
-        {
-          // Actions are special because unlike events they can have other value types.
-          if (typeof value === "function") {
-            if (tagName === "form" && name === "action") {
-              return true;
-            }
+        if (typeof value === "function") {
+          if (tagName === "form" && name === "action") {
+            return true;
+          }
 
-            if (tagName === "input" && name === "formAction") {
-              return true;
-            }
+          if (tagName === "input" && name === "formAction") {
+            return true;
+          }
 
-            if (tagName === "button" && name === "formAction") {
-              return true;
-            }
+          if (tagName === "button" && name === "formAction") {
+            return true;
           }
         } // We can't rely on the event system being injected on the server.
 
