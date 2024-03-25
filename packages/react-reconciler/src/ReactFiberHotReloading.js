@@ -15,7 +15,7 @@ import type {Instance} from './ReactFiberConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
-  flushSync,
+  flushSyncFromReconciler,
   scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
@@ -241,7 +241,7 @@ export const scheduleRefresh: ScheduleRefresh = (
     }
     const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
-    flushSync(() => {
+    flushSyncFromReconciler(() => {
       scheduleFibersWithFamiliesRecursively(
         root.current,
         updatedFamilies,
@@ -263,7 +263,7 @@ export const scheduleRoot: ScheduleRoot = (
       return;
     }
     flushPassiveEffects();
-    flushSync(() => {
+    flushSyncFromReconciler(() => {
       updateContainer(element, root, null, null);
     });
   }

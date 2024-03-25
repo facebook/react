@@ -61,7 +61,8 @@ import {
   scheduleInitialHydrationOnRoot,
   flushRoot,
   batchedUpdates,
-  flushSync,
+  flushSyncFromReconciler,
+  flushSyncWork,
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
@@ -390,7 +391,8 @@ export {
   batchedUpdates,
   deferredUpdates,
   discreteUpdates,
-  flushSync,
+  flushSyncFromReconciler,
+  flushSyncWork,
   isAlreadyRendering,
   flushPassiveEffects,
 };
@@ -423,7 +425,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       break;
     }
     case SuspenseComponent: {
-      flushSync(() => {
+      flushSyncFromReconciler(() => {
         const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
         if (root !== null) {
           scheduleUpdateOnFiber(root, fiber, SyncLane);

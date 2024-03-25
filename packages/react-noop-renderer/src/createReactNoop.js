@@ -32,7 +32,11 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {enableRefAsProp, disableLegacyMode} from 'shared/ReactFeatureFlags';
+import {DiscreteEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+const ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
 
 type Container = {
   rootID: string,
@@ -914,7 +918,25 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         );
       }
     }
-    return NoopRenderer.flushSync(fn);
+    if (disableLegacyMode) {
+      const previousTransition = ReactCurrentBatchConfig.transition;
+      const preivousEventPriority = currentEventPriority;
+      try {
+        ReactCurrentBatchConfig.transition = null;
+        currentEventPriority = DiscreteEventPriority;
+        if (fn) {
+          return fn();
+        } else {
+          return undefined;
+        }
+      } finally {
+        ReactCurrentBatchConfig.transition = previousTransition;
+        currentEventPriority = preivousEventPriority;
+        NoopRenderer.flushSyncWork();
+      }
+    } else {
+      return NoopRenderer.flushSyncWithLegacySupport(fn);
+    }
   }
 
   function onRecoverableError(error) {
@@ -1042,6 +1064,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         getChildrenAsJSX() {
           return getChildrenAsJSX(container);
         },
+        legacy: true,
       };
     },
 

@@ -39,6 +39,7 @@ import {
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -155,6 +156,7 @@ import {
   claimNextTransitionLane,
 } from './ReactFiberLane';
 import {
+  NoEventPriority,
   DiscreteEventPriority,
   DefaultEventPriority,
   getCurrentUpdatePriority,
@@ -643,13 +645,20 @@ export function requestUpdateLane(fiber: Fiber): Lane {
         requestTransitionLane(transition);
   }
 
+  // If there is an eventPriority scoped to React's internals we use it.
+  // The opaque type used for EventPriority matches the Lane so we cast it
+  let updateLane: Lane = (ReactCurrentBatchConfig.eventPriority: any);
+  if (updateLane !== NoLane) {
+    return updateLane;
+  }
+
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
   //
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
+  updateLane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
     return updateLane;
   }
@@ -1501,11 +1510,11 @@ export function discreteUpdates<A, B, C, D, R>(
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
-declare function flushSync<R>(fn: () => R): R;
+declare function flushSyncFromReconciler<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSync(void): void;
+declare function flushSyncFromReconciler(void): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync<R>(fn: (() => R) | void): R | void {
+export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1538,6 +1547,14 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
+    if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+      flushSyncWorkOnAllRoots();
+    }
+  }
+}
+
+export function flushSyncWork() {
+  if (disableLegacyMode) {
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       flushSyncWorkOnAllRoots();
     }
@@ -3191,15 +3208,18 @@ export function flushPassiveEffects(): boolean {
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
+    const prevEventPriority = ReactCurrentBatchConfig.eventPriority;
     const previousPriority = getCurrentUpdatePriority();
 
     try {
       ReactCurrentBatchConfig.transition = null;
+      ReactCurrentBatchConfig.eventPriority = NoEventPriority;
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactCurrentBatchConfig.transition = prevTransition;
+      ReactCurrentBatchConfig.eventPriority = prevEventPriority;
 
       // Once passive effects have run for the tree - giving components a
       // chance to retain cache instances they use - release the pooled

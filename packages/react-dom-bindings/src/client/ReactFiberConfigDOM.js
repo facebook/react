@@ -29,7 +29,10 @@ import type {
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  NoEventPriority,
+  DefaultEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
@@ -94,6 +97,7 @@ import {
   enableTrustedTypesIntegration,
   enableFormActions,
   enableAsyncActions,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -104,10 +108,13 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+import {flushSyncWork as flushSyncWorkOnAllRoots} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher =
   ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+const ReactDOMCurrentEventConfig =
+  ReactDOMSharedInternals.ReactDOMCurrentEventConfig;
 
 export type Type = string;
 export type Props = {
@@ -2112,6 +2119,7 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
 
 const previousDispatcher = ReactDOMCurrentDispatcher.current;
 ReactDOMCurrentDispatcher.current = {
+  flushSyncWork,
   prefetchDNS,
   preconnect,
   preload,
@@ -2120,6 +2128,12 @@ ReactDOMCurrentDispatcher.current = {
   preinitScript,
   preinitModuleScript,
 };
+
+function flushSyncWork() {
+  previousDispatcher.flushSyncWork();
+
+  flushSyncWorkOnAllRoots();
+}
 
 // We expect this to get inlined. It is a function mostly to communicate the special nature of
 // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling

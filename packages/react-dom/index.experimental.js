@@ -13,7 +13,6 @@ export {
   createRoot,
   hydrateRoot,
   findDOMNode,
-  flushSync,
   unstable_batchedUpdates,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus,
@@ -26,6 +25,8 @@ export {
   preinitModule,
   version,
 } from './src/client/ReactDOM';
+
+export {flushSync} from './src/shared/ReactDOMFlushSync';
 
 import type {Awaited} from 'shared/ReactTypes';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';

@@ -8,9 +8,13 @@
  */
 
 import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
+import {NoEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 type BatchConfig = {
   transition: BatchConfigTransition | null,
+  eventPriority: EventPriority,
 };
 /**
  * Keeps track of the current batch's configuration such as how long an update
@@ -18,6 +22,7 @@ type BatchConfig = {
  */
 const ReactCurrentBatchConfig: BatchConfig = {
   transition: null,
+  eventPriority: NoEventPriority,
 };
 
 export default ReactCurrentBatchConfig;

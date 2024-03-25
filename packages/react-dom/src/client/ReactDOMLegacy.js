@@ -35,7 +35,7 @@ import {
   createHydrationContainer,
   findHostInstanceWithNoPortals,
   updateContainer,
-  flushSync,
+  flushSyncFromReconciler,
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
@@ -137,7 +137,7 @@ function legacyCreateRootFromDOMContainer(
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
-    flushSync();
+    flushSyncFromReconciler();
     return root;
   } else {
     // First clear any existing content.
@@ -170,7 +170,7 @@ function legacyCreateRootFromDOMContainer(
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
-    flushSync(() => {
+    flushSyncFromReconciler(() => {
       updateContainer(initialChildren, root, parentComponent, callback);
     });
 
@@ -425,7 +425,7 @@ export function unmountComponentAtNode(container: Container): boolean {
     }
 
     // Unmount should not be batched.
-    flushSync(() => {
+    flushSyncFromReconciler(() => {
       legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
         // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
         container._reactRootContainer = null;
