@@ -148,6 +148,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
   function Text({children = null, text}) {
     Scheduler.log(`Text:${text} render`);
+    React.useInsertionEffect(() => {
+      Scheduler.log(`Text:${text} create insertion`);
+      return () => {
+        Scheduler.log(`Text:${text} destroy insertion`);
+      };
+    }, []);
     React.useLayoutEffect(() => {
       Scheduler.log(`Text:${text} create layout`);
       return () => {
@@ -166,6 +172,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
   function AsyncText({children = null, text}) {
     readText(text);
     Scheduler.log(`AsyncText:${text} render`);
+    React.useInsertionEffect(() => {
+      Scheduler.log(`AsyncText:${text} create insertion`);
+      return () => {
+        Scheduler.log(`AsyncText:${text} destroy insertion`);
+      };
+    }, []);
     React.useLayoutEffect(() => {
       Scheduler.log(`AsyncText:${text} create layout`);
       return () => {
@@ -230,6 +242,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -268,6 +286,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Suspend:Async',
         'Text:Fallback render',
         'Text:Outside render',
+        'Text:Fallback create insertion',
+        'Text:Outside create insertion',
+        'App create insertion',
         'Text:Fallback create layout',
         'Text:Outside create layout',
         'App create layout',
@@ -290,7 +311,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:Before render',
         'AsyncText:Async render',
         'ClassText:Inside:After render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'Text:Inside:Before create insertion',
+        'AsyncText:Async create insertion',
         'Text:Inside:Before create layout',
         'AsyncText:Async create layout',
         'ClassText:Inside:After componentDidMount',
@@ -311,10 +335,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
         'ClassText:Inside:After componentWillUnmount',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -348,6 +376,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -387,6 +421,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'ClassText:Inside:After render',
         'Text:Fallback render',
         'Text:Outside render',
+        'Text:Inside:Before create insertion',
+        'Text:Fallback create insertion',
+        'Text:Outside create insertion',
+        'App create insertion',
         'Text:Inside:Before create layout',
         'ClassText:Inside:After componentDidMount',
         'Text:Fallback create layout',
@@ -412,7 +450,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
         'AsyncText:Async create passive',
@@ -430,10 +470,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
         'ClassText:Inside:After componentWillUnmount',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -449,6 +493,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should not be destroyed or recreated in legacy roots', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -482,6 +532,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:Before render',
         'Text:Inside:After render',
         'Text:Outside render',
+        'Text:Inside:Before create insertion',
+        'Text:Inside:After create insertion',
+        'Text:Outside create insertion',
+        'App create insertion',
         'Text:Inside:Before create layout',
         'Text:Inside:After create layout',
         'Text:Outside create layout',
@@ -514,6 +568,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:After render',
         'Text:Fallback render',
         'Text:Outside render',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -545,7 +600,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
         'AsyncText:Async create passive',
@@ -563,10 +620,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'Text:Inside:After destroy insertion',
         'Text:Inside:After destroy layout',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -580,6 +642,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -612,6 +680,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:Before render',
         'Text:Inside:After render',
         'Text:Outside render',
+        'Text:Inside:Before create insertion',
+        'Text:Inside:After create insertion',
+        'Text:Outside create insertion',
+        'App create insertion',
         'Text:Inside:Before create layout',
         'Text:Inside:After create layout',
         'Text:Outside create layout',
@@ -644,6 +716,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Outside render',
           'Text:Inside:Before destroy layout',
           'Text:Inside:After destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
         ]);
         await waitForAll(['Text:Fallback create passive']);
@@ -665,7 +738,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:Before render',
         'AsyncText:Async render',
         'Text:Inside:After render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'Text:Inside:Before create layout',
         'AsyncText:Async create layout',
         'Text:Inside:After create layout',
@@ -685,10 +760,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'Text:Inside:After destroy insertion',
         'Text:Inside:After destroy layout',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -722,6 +802,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -755,6 +841,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'ClassText:Inside:Before render',
         'ClassText:Inside:After render',
         'ClassText:Outside render',
+        'App create insertion',
         'ClassText:Inside:Before componentDidMount',
         'ClassText:Inside:After componentDidMount',
         'ClassText:Outside componentDidMount',
@@ -807,6 +894,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:Async render',
         'ClassText:Inside:After render',
         'ClassText:Fallback componentWillUnmount',
+        'AsyncText:Async create insertion',
         'ClassText:Inside:Before componentDidMount',
         'AsyncText:Async create layout',
         'ClassText:Inside:After componentDidMount',
@@ -824,8 +912,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
         'ClassText:Inside:Before componentWillUnmount',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
         'ClassText:Inside:After componentWillUnmount',
         'ClassText:Outside componentWillUnmount',
@@ -838,6 +928,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -868,6 +964,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'App render',
         'Text:Outer render',
         'Text:Inner render',
+        'Text:Inner create insertion',
+        'Text:Outer create insertion',
+        'App create insertion',
         'Text:Inner create layout',
         'Text:Outer create layout',
         'App create layout',
@@ -894,6 +993,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback render',
           'Text:Outer destroy layout',
           'Text:Inner destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
         ]);
         await waitForAll(['Text:Fallback create passive']);
@@ -915,7 +1015,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:Async render',
         'Text:Outer render',
         'Text:Inner render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'Text:Inner create layout',
         'Text:Outer create layout',
@@ -935,9 +1037,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'Text:Outer destroy insertion',
         'Text:Outer destroy layout',
+        'Text:Inner destroy insertion',
         'Text:Inner destroy layout',
         'App destroy passive',
         'AsyncText:Async destroy passive',
@@ -952,6 +1058,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       function App({children = null}) {
         Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log('App create layout');
           return () => {
@@ -982,6 +1094,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'App render',
         'Text:Outer render',
         'Text:MemoizedInner render',
+        'Text:MemoizedInner create insertion',
+        'Text:Outer create insertion',
+        'App create insertion',
         'Text:MemoizedInner create layout',
         'Text:Outer create layout',
         'App create layout',
@@ -1009,6 +1124,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback render',
           'Text:Outer destroy layout',
           'Text:MemoizedInner destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
         ]);
         await waitForAll(['Text:Fallback create passive']);
@@ -1029,7 +1145,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'AsyncText:Async render',
         'Text:Outer render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'Text:MemoizedInner create layout',
         'Text:Outer create layout',
@@ -1049,9 +1167,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion',
         'App destroy layout',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'Text:Outer destroy insertion',
         'Text:Outer destroy layout',
+        'Text:MemoizedInner destroy insertion',
         'Text:MemoizedInner destroy layout',
         'App destroy passive',
         'AsyncText:Async destroy passive',
@@ -1082,6 +1204,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Outer render',
         'Text:Inner render',
+        'Text:Outer create insertion',
+        'Text:Inner create insertion',
         'Text:Outer create layout',
         'Text:Inner create layout',
         'Text:Outer create passive',
@@ -1106,6 +1230,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Suspend:InnerAsync_1',
         'Text:InnerFallback render',
         'Text:Inner destroy layout',
+        'Text:InnerFallback create insertion',
         'Text:InnerFallback create layout',
         'Text:InnerFallback create passive',
       ]);
@@ -1134,6 +1259,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:OuterFallback render',
         'Text:Outer destroy layout',
         'Text:InnerFallback destroy layout',
+        'Text:OuterFallback create insertion',
         'Text:OuterFallback create layout',
         'Text:OuterFallback create passive',
       ]);
@@ -1194,7 +1320,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner render',
         'Suspend:InnerAsync_2',
         'Text:InnerFallback render',
+        'Text:OuterFallback destroy insertion',
         'Text:OuterFallback destroy layout',
+        'AsyncText:OuterAsync_1 create insertion',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_1 create layout',
         'Text:InnerFallback create layout',
@@ -1217,7 +1345,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inner render',
         'AsyncText:InnerAsync_2 render',
+        'Text:InnerFallback destroy insertion',
         'Text:InnerFallback destroy layout',
+        'AsyncText:InnerAsync_2 create insertion',
         'Text:Inner create layout',
         'AsyncText:InnerAsync_2 create layout',
         'Text:InnerFallback destroy passive',
@@ -1249,6 +1379,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:OuterAsync_1 destroy layout',
         'Text:Inner destroy layout',
         'AsyncText:InnerAsync_2 destroy layout',
+        'Text:OuterFallback create insertion',
         'Text:OuterFallback create layout',
         'Text:OuterFallback create passive',
       ]);
@@ -1271,6 +1402,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:OuterAsync_2 render',
         'Text:Inner render',
         'AsyncText:InnerAsync_2 render',
+        'Text:OuterFallback destroy insertion',
         'Text:OuterFallback destroy layout',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_2 create layout',
@@ -1310,6 +1442,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Outer render',
         'Text:Inner render',
+        'Text:Outer create insertion',
+        'Text:Inner create insertion',
         'Text:Outer create layout',
         'Text:Inner create layout',
         'Text:Outer create passive',
@@ -1334,6 +1468,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Suspend:InnerAsync_1',
         'Text:InnerFallback render',
         'Text:Inner destroy layout',
+        'Text:InnerFallback create insertion',
         'Text:InnerFallback create layout',
         'Text:InnerFallback create passive',
       ]);
@@ -1361,6 +1496,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:OuterFallback render',
         'Text:Outer destroy layout',
         'Text:InnerFallback destroy layout',
+        'Text:OuterFallback create insertion',
         'Text:OuterFallback create layout',
         'Text:OuterFallback create passive',
       ]);
@@ -1383,7 +1519,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:OuterAsync_1 render',
         'Text:Inner render',
         'AsyncText:InnerAsync_1 render',
+        'Text:OuterFallback destroy insertion',
         'Text:OuterFallback destroy layout',
+        'AsyncText:OuterAsync_1 create insertion',
+        'Text:InnerFallback destroy insertion',
+        'AsyncText:InnerAsync_1 create insertion',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_1 create layout',
         'Text:Inner create layout',
@@ -1433,6 +1573,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inside render',
         'Text:Outside render',
+        'Text:Inside create insertion',
+        'Text:Outside create insertion',
         'Text:Inside create layout',
         'Text:Outside create layout',
         'Text:Inside create passive',
@@ -1457,6 +1599,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Outside render',
           'Text:Outside render',
           'Text:Inside destroy layout',
+          'Text:Fallback:Inside create insertion',
+          'Text:Fallback:Outside create insertion',
           'Text:Fallback:Inside create layout',
           'Text:Fallback:Outside create layout',
         ]);
@@ -1491,6 +1635,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Outside render',
           'Text:Outside render',
           'Text:Fallback:Inside destroy layout',
+          'Text:Fallback:Fallback create insertion',
           'Text:Fallback:Fallback create layout',
         ]);
         await waitForAll(['Text:Fallback:Fallback create passive']);
@@ -1513,8 +1658,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inside render',
         'AsyncText:OutsideAsync render',
+        'Text:Fallback:Inside destroy insertion',
+        'Text:Fallback:Fallback destroy insertion',
         'Text:Fallback:Fallback destroy layout',
+        'Text:Fallback:Outside destroy insertion',
         'Text:Fallback:Outside destroy layout',
+        'AsyncText:OutsideAsync create insertion',
         'Text:Inside create layout',
         'AsyncText:OutsideAsync create layout',
         'Text:Fallback:Inside destroy passive',
@@ -1561,6 +1710,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inside render',
         'Text:Outside render',
+        'Text:Inside create insertion',
+        'Text:Outside create insertion',
         'Text:Inside create layout',
         'Text:Outside create layout',
         'Text:Inside create passive',
@@ -1591,6 +1742,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Fallback:Outside render',
         'Text:Outside render',
         'Text:Inside destroy layout',
+        'Text:Fallback:Fallback create insertion',
+        'Text:Fallback:Outside create insertion',
         'Text:Fallback:Fallback create layout',
         'Text:Fallback:Outside create layout',
         'Text:Fallback:Fallback create passive',
@@ -1612,7 +1765,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Fallback:Inside render',
         'AsyncText:FallbackAsync render',
+        'Text:Fallback:Fallback destroy insertion',
         'Text:Fallback:Fallback destroy layout',
+        'Text:Fallback:Inside create insertion',
+        'AsyncText:FallbackAsync create insertion',
         'Text:Fallback:Inside create layout',
         'AsyncText:FallbackAsync create layout',
         'Text:Fallback:Fallback destroy passive',
@@ -1636,9 +1792,13 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inside render',
         'AsyncText:OutsideAsync render',
+        'Text:Fallback:Inside destroy insertion',
         'Text:Fallback:Inside destroy layout',
+        'AsyncText:FallbackAsync destroy insertion',
         'AsyncText:FallbackAsync destroy layout',
+        'Text:Fallback:Outside destroy insertion',
         'Text:Fallback:Outside destroy layout',
+        'AsyncText:OutsideAsync create insertion',
         'Text:Inside create layout',
         'AsyncText:OutsideAsync create layout',
         'Text:Fallback:Inside destroy passive',
@@ -1682,6 +1842,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Inside render',
         'Text:Outside render',
+        'Text:Inside create insertion',
+        'Text:Outside create insertion',
         'Text:Inside create layout',
         'Text:Outside create layout',
         'Text:Inside create passive',
@@ -1703,6 +1865,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback render',
           'Text:Outside render',
           'Text:Inside destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
         ]);
         await waitForAll(['Text:Fallback create passive']);
@@ -1721,6 +1884,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'Text:Inside render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
         'Text:Inside create layout',
         'Text:Fallback destroy passive',
@@ -1756,6 +1920,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         function App({children = null}) {
           Scheduler.log('App render');
+          React.useInsertionEffect(() => {
+            Scheduler.log('App create insertion');
+            return () => {
+              Scheduler.log('App destroy insertion');
+            };
+          }, []);
           React.useLayoutEffect(() => {
             Scheduler.log('App create layout');
             return () => {
@@ -1787,6 +1957,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInDidMount render',
           'Text:Inside render',
           'Text:Outside render',
+          'Text:Inside create insertion',
+          'Text:Outside create insertion',
+          'App create insertion',
           'ThrowsInDidMount componentDidMount',
           'Text:Inside create layout',
           'Text:Outside create layout',
@@ -1820,6 +1993,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Outside render',
           'ThrowsInDidMount componentWillUnmount',
           'Text:Inside destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
           'Text:Fallback create passive',
         ]);
@@ -1841,7 +2015,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'AsyncText:Async render',
           'ThrowsInDidMount render',
           'Text:Inside render',
+          'Text:Fallback destroy insertion',
           'Text:Fallback destroy layout',
+          'AsyncText:Async create insertion',
           'AsyncText:Async create layout',
 
           // Even though an error was thrown in componentDidMount,
@@ -1854,10 +2030,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'AsyncText:Async create passive',
 
           // Destroy layout and passive effects in the errored tree.
+          'App destroy insertion',
           'App destroy layout',
+          'AsyncText:Async destroy insertion',
           'AsyncText:Async destroy layout',
           'ThrowsInDidMount componentWillUnmount',
+          'Text:Inside destroy insertion',
           'Text:Inside destroy layout',
+          'Text:Outside destroy insertion',
           'Text:Outside destroy layout',
           'AsyncText:Async destroy passive',
           'Text:Inside destroy passive',
@@ -1866,6 +2046,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           // Render fallback
           'ErrorBoundary render: catch',
           'Text:Error render',
+          'Text:Error create insertion',
           'Text:Error create layout',
           'Text:Error create passive',
         ]);
@@ -1890,6 +2071,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         function App({children = null}) {
           Scheduler.log('App render');
+          React.useInsertionEffect(() => {
+            Scheduler.log('App create insertion');
+            return () => {
+              Scheduler.log('App destroy insertion');
+            };
+          }, []);
           React.useLayoutEffect(() => {
             Scheduler.log('App create layout');
             return () => {
@@ -1921,6 +2108,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInWillUnmount render',
           'Text:Inside render',
           'Text:Outside render',
+          'Text:Inside create insertion',
+          'Text:Outside create insertion',
+          'App create insertion',
           'ThrowsInWillUnmount componentDidMount',
           'Text:Inside create layout',
           'Text:Outside create layout',
@@ -1959,12 +2149,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Inside destroy layout',
 
           // Finish the in-progress commit
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
           'Text:Fallback create passive',
 
           // Destroy layout and passive effects in the errored tree.
+          'App destroy insertion',
           'App destroy layout',
+          'Text:Inside destroy insertion',
+          'Text:Fallback destroy insertion',
           'Text:Fallback destroy layout',
+          'Text:Outside destroy insertion',
           'Text:Outside destroy layout',
           'Text:Inside destroy passive',
           'Text:Fallback destroy passive',
@@ -1973,6 +2168,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           // Render fallback
           'ErrorBoundary render: catch',
           'Text:Error render',
+          'Text:Error create insertion',
           'Text:Error create layout',
           'Text:Error create passive',
         ]);
@@ -2030,6 +2226,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInLayoutEffect render',
           'Text:Inside render',
           'Text:Outside render',
+          'Text:Inside create insertion',
+          'Text:Outside create insertion',
           'ThrowsInLayoutEffect useLayoutEffect create',
           'Text:Inside create layout',
           'Text:Outside create layout',
@@ -2063,6 +2261,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Outside render',
           'ThrowsInLayoutEffect useLayoutEffect destroy',
           'Text:Inside destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
           'Text:Fallback create passive',
         ]);
@@ -2085,10 +2284,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInLayoutEffect render',
           'Text:Inside render',
 
+          'Text:Fallback destroy insertion',
           'Text:Fallback destroy layout',
 
           // Even though an error was thrown in useLayoutEffect,
           // subsequent layout effects should still be created.
+          'AsyncText:Async create insertion',
           'AsyncText:Async create layout',
           'ThrowsInLayoutEffect useLayoutEffect create',
           'Text:Inside create layout',
@@ -2099,8 +2300,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
           // Destroy layout and passive effects in the errored tree.
           'App destroy layout',
+          'AsyncText:Async destroy insertion',
           'AsyncText:Async destroy layout',
+          'Text:Inside destroy insertion',
           'Text:Inside destroy layout',
+          'Text:Outside destroy insertion',
           'Text:Outside destroy layout',
           'AsyncText:Async destroy passive',
           'Text:Inside destroy passive',
@@ -2109,6 +2313,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           // Render fallback
           'ErrorBoundary render: catch',
           'Text:Error render',
+          'Text:Error create insertion',
           'Text:Error create layout',
           'Text:Error create passive',
         ]);
@@ -2164,6 +2369,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInLayoutEffectDestroy render',
           'Text:Inside render',
           'Text:Outside render',
+          'Text:Inside create insertion',
+          'Text:Outside create insertion',
           'ThrowsInLayoutEffectDestroy useLayoutEffect create',
           'Text:Inside create layout',
           'Text:Outside create layout',
@@ -2202,12 +2409,16 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Inside destroy layout',
 
           // Finish the in-progress commit
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
           'Text:Fallback create passive',
 
           // Destroy layout and passive effects in the errored tree.
           'App destroy layout',
+          'Text:Inside destroy insertion',
+          'Text:Fallback destroy insertion',
           'Text:Fallback destroy layout',
+          'Text:Outside destroy insertion',
           'Text:Outside destroy layout',
           'Text:Inside destroy passive',
           'Text:Fallback destroy passive',
@@ -2216,6 +2427,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           // Render fallback
           'ErrorBoundary render: catch',
           'Text:Error render',
+          'Text:Error create insertion',
           'Text:Error create layout',
           'Text:Error create passive',
         ]);
@@ -2261,6 +2473,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'Text:Function render',
         'ClassText:Class render',
+        'Text:Function create insertion',
         'Text:Function create layout',
         'ClassText:Class componentDidMount',
         'Text:Function create passive',
@@ -2324,6 +2537,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'AsyncText:Async_2 render',
         'ClassText:Class render',
         'ClassText:Fallback componentWillUnmount',
+        'AsyncText:Async_1 create insertion',
+        'AsyncText:Async_2 create insertion',
         'Text:Function create layout',
         'AsyncText:Async_1 create layout',
         'AsyncText:Async_2 create layout',
@@ -2344,8 +2559,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'Text:Function destroy insertion',
         'Text:Function destroy layout',
+        'AsyncText:Async_1 destroy insertion',
         'AsyncText:Async_1 destroy layout',
+        'AsyncText:Async_2 destroy insertion',
         'AsyncText:Async_2 destroy layout',
         'ClassText:Class componentWillUnmount',
         'Text:Function destroy passive',
@@ -2403,6 +2621,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Function render',
         'Suspender "null" render',
         'ClassText:Class render',
+        'Text:Function create insertion',
         'Text:Function create layout',
         'ClassText:Class componentDidMount',
         'Text:Function create passive',
@@ -2477,10 +2696,103 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'Text:Function destroy insertion',
         'Text:Function destroy layout',
         'ClassText:Class componentWillUnmount',
         'Text:Function destroy passive',
       ]);
+    });
+  });
+
+  describe('insertion effects within a tree that re-suspends in an update', () => {
+    // @gate enableLegacyCache
+    it('should be destroyed in the deleted tree', async () => {
+      function App({children = null}) {
+        Scheduler.log('App render');
+        React.useInsertionEffect(() => {
+          Scheduler.log('App create insertion');
+          return () => {
+            Scheduler.log('App destroy insertion');
+          };
+        }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.log('App create layout');
+          return () => {
+            Scheduler.log('App destroy layout');
+          };
+        }, []);
+        React.useEffect(() => {
+          Scheduler.log('App create passive');
+          return () => {
+            Scheduler.log('App destroy passive');
+          };
+        }, []);
+        return (
+          <>
+            <Suspense fallback={<Text text="Fallback" />}>{children}</Suspense>
+          </>
+        );
+      }
+
+      await act(() => {
+        ReactNoop.render(
+          <App>
+            <Text text="One" />
+          </App>,
+        );
+      });
+      assertLog([
+        'App render',
+        'Text:One render',
+        'Text:One create insertion',
+        'App create insertion',
+        'Text:One create layout',
+        'App create layout',
+        'Text:One create passive',
+        'App create passive',
+      ]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="One" />);
+
+      // Schedule an update that causes React to suspend.
+      await act(async () => {
+        ReactNoop.render(
+          <App>
+            <AsyncText text="Two" ms={1000} />
+          </App>,
+        );
+        await waitFor([
+          'App render',
+          'Suspend:Two',
+          'Text:Fallback render',
+          'Text:One destroy layout',
+          'Text:Fallback create insertion',
+          'Text:Fallback create layout',
+        ]);
+        await waitForAll(['Text:Fallback create passive']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span hidden={true} prop="One" />
+            <span prop="Fallback" />
+          </>,
+        );
+      });
+
+      // Resolving the suspended resource should re-create inner layout effects.
+      await act(async () => {
+        await resolveText('Two');
+      });
+      assertLog([
+        'AsyncText:Two render',
+        'Text:Fallback destroy insertion',
+        'Text:Fallback destroy layout',
+        'Text:One destroy insertion',
+        'AsyncText:Two create insertion',
+        'AsyncText:Two create layout',
+        'Text:Fallback destroy passive',
+        'Text:One destroy passive',
+        'AsyncText:Two create passive',
+      ]);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="Two" />);
     });
   });
 
@@ -2496,6 +2808,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       Scheduler.log(`RefCheckerOuter render`);
 
+      React.useInsertionEffect(() => {
+        Scheduler.log(
+          `RefCheckerOuter create insertion refObject? ${
+            refObject.current != null
+          } refCallback? ${manualRef.current != null}`,
+        );
+        return () => {
+          Scheduler.log(
+            `RefCheckerOuter destroy insertion refObject? ${
+              refObject.current != null
+            } refCallback? ${manualRef.current != null}`,
+          );
+        };
+      }, []);
       React.useLayoutEffect(() => {
         Scheduler.log(
           `RefCheckerOuter create layout refObject? ${
@@ -2525,6 +2851,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     function RefCheckerInner({forwardedRef, text}) {
       Scheduler.log(`RefCheckerInner:${text} render`);
+      React.useInsertionEffect(() => {
+        Scheduler.log(
+          `RefCheckerInner:${text} create insertion ref? ${
+            forwardedRef.current != null
+          }`,
+        );
+        return () => {
+          Scheduler.log(
+            `RefCheckerInner:${text} destroy insertion ref? ${
+              forwardedRef.current != null
+            }`,
+          );
+        };
+      }, []);
       React.useLayoutEffect(() => {
         Scheduler.log(
           `RefCheckerInner:${text} create layout ref? ${
@@ -2571,6 +2911,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject render',
         'ClassComponent:refCallback render',
         'RefCheckerInner:refCallback render',
+        'RefCheckerInner:refObject create insertion ref? false',
+        'RefCheckerInner:refCallback create insertion ref? false',
+        'RefCheckerOuter create insertion refObject? false refCallback? false',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
         'RefCheckerOuter refCallback value? true',
@@ -2594,6 +2937,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'ClassComponent:refCallback render',
         'RefCheckerInner:refCallback render',
         'Text:Fallback render',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2605,7 +2949,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
         'AsyncText:Async create passive',
@@ -2616,10 +2962,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       assertLog([
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'RefCheckerOuter destroy insertion refObject? true refCallback? true',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
+        'RefCheckerInner:refObject destroy insertion ref? false',
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
+        'RefCheckerInner:refCallback destroy insertion ref? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'AsyncText:Async destroy passive',
       ]);
@@ -2647,6 +2997,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerOuter render',
         'RefCheckerInner:refObject render',
         'RefCheckerInner:refCallback render',
+        'RefCheckerInner:refObject create insertion ref? false',
+        'RefCheckerInner:refCallback create insertion ref? false',
+        'RefCheckerOuter create insertion refObject? false refCallback? false',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
         'RefCheckerOuter refCallback value? true',
@@ -2672,6 +3025,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2692,7 +3046,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerOuter render',
         'RefCheckerInner:refObject render',
         'RefCheckerInner:refCallback render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
@@ -2713,10 +3069,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'RefCheckerOuter destroy insertion refObject? true refCallback? true',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
+        'RefCheckerInner:refObject destroy insertion ref? false',
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
+        'RefCheckerInner:refCallback destroy insertion ref? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'AsyncText:Async destroy passive',
       ]);
@@ -2753,6 +3113,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject render',
         'ClassComponent:refCallback render',
         'RefCheckerInner:refCallback render',
+        'RefCheckerInner:refObject create insertion ref? false',
+        'RefCheckerInner:refCallback create insertion ref? false',
+        'RefCheckerOuter create insertion refObject? false refCallback? false',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
         'RefCheckerOuter refCallback value? true',
@@ -2773,6 +3136,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2789,7 +3153,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject render',
         'ClassComponent:refCallback render',
         'RefCheckerInner:refCallback render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
@@ -2804,10 +3170,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'RefCheckerOuter destroy insertion refObject? true refCallback? true',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
+        'RefCheckerInner:refObject destroy insertion ref? false',
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
+        'RefCheckerInner:refCallback destroy insertion ref? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'AsyncText:Async destroy passive',
       ]);
@@ -2850,6 +3220,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject render',
         'FunctionComponent render',
         'RefCheckerInner:refCallback render',
+        'RefCheckerInner:refObject create insertion ref? false',
+        'RefCheckerInner:refCallback create insertion ref? false',
+        'RefCheckerOuter create insertion refObject? false refCallback? false',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
         'RefCheckerOuter refCallback value? true',
@@ -2870,6 +3243,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2886,7 +3260,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'RefCheckerInner:refObject render',
         'FunctionComponent render',
         'RefCheckerInner:refCallback render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'RefCheckerInner:refObject create layout ref? false',
         'RefCheckerInner:refCallback create layout ref? false',
@@ -2901,10 +3277,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'RefCheckerOuter destroy insertion refObject? true refCallback? true',
         'RefCheckerOuter destroy layout refObject? true refCallback? true',
+        'RefCheckerInner:refObject destroy insertion ref? false',
         'RefCheckerInner:refObject destroy layout ref? false',
         'RefCheckerOuter refCallback value? false',
+        'RefCheckerInner:refCallback destroy insertion ref? false',
         'RefCheckerInner:refCallback destroy layout ref? false',
         'AsyncText:Async destroy passive',
       ]);
@@ -2915,6 +3295,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
     it('should not reset for user-managed values', async () => {
       function RefChecker({forwardedRef}) {
         Scheduler.log(`RefChecker render`);
+        React.useInsertionEffect(() => {
+          Scheduler.log(
+            `RefChecker create insertion ref? ${
+              forwardedRef.current === 'test'
+            }`,
+          );
+          return () => {
+            Scheduler.log(
+              `RefChecker destroy insertion ref? ${
+                forwardedRef.current === 'test'
+              }`,
+            );
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log(
             `RefChecker create layout ref? ${forwardedRef.current === 'test'}`,
@@ -2933,6 +3327,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
       function App({children = null}) {
         const ref = React.useRef('test');
         Scheduler.log(`App render`);
+        React.useInsertionEffect(() => {
+          Scheduler.log(`App create insertion ref? ${ref.current === 'test'}`);
+          return () => {
+            Scheduler.log(
+              `App destroy insertion ref? ${ref.current === 'test'}`,
+            );
+          };
+        }, []);
         React.useLayoutEffect(() => {
           Scheduler.log(`App create layout ref? ${ref.current === 'test'}`);
           return () => {
@@ -2954,6 +3356,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'App render',
         'RefChecker render',
+        'RefChecker create insertion ref? true',
+        'App create insertion ref? true',
         'RefChecker create layout ref? true',
         'App create layout ref? true',
       ]);
@@ -2969,6 +3373,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Suspend:Async',
         'Text:Fallback render',
         'RefChecker destroy layout ref? true',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2981,7 +3386,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
       assertLog([
         'AsyncText:Async render',
         'RefChecker render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
+        'AsyncText:Async create insertion',
         'AsyncText:Async create layout',
         'RefChecker create layout ref? true',
         'Text:Fallback destroy passive',
@@ -2993,8 +3400,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ReactNoop.render(null);
       });
       assertLog([
+        'App destroy insertion ref? true',
         'App destroy layout ref? true',
+        'AsyncText:Async destroy insertion',
         'AsyncText:Async destroy layout',
+        'RefChecker destroy insertion ref? true',
         'RefChecker destroy layout ref? true',
         'AsyncText:Async destroy passive',
       ]);
@@ -3019,6 +3429,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         function App({children = null}) {
           Scheduler.log('App render');
+          React.useInsertionEffect(() => {
+            Scheduler.log('App create insertion');
+            return () => {
+              Scheduler.log('App destroy insertion');
+            };
+          }, []);
           React.useLayoutEffect(() => {
             Scheduler.log('App create layout');
             return () => {
@@ -3050,6 +3466,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInRefCallback render',
           'Text:Inside render',
           'Text:Outside render',
+          'Text:Inside create insertion',
+          'Text:Outside create insertion',
+          'App create insertion',
           'ThrowsInRefCallback refCallback ref? true',
           'Text:Inside create layout',
           'Text:Outside create layout',
@@ -3083,6 +3502,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Outside render',
           'ThrowsInRefCallback refCallback ref? false',
           'Text:Inside destroy layout',
+          'Text:Fallback create insertion',
           'Text:Fallback create layout',
           'Text:Fallback create passive',
         ]);
@@ -3107,7 +3527,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
           // Even though an error was thrown in refCallback,
           // subsequent layout effects should still be created.
+          'Text:Fallback destroy insertion',
           'Text:Fallback destroy layout',
+          'AsyncText:Async create insertion',
           'AsyncText:Async create layout',
           'ThrowsInRefCallback refCallback ref? true',
           'Text:Inside create layout',
@@ -3117,10 +3539,14 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'AsyncText:Async create passive',
 
           // Destroy layout and passive effects in the errored tree.
+          'App destroy insertion',
           'App destroy layout',
+          'AsyncText:Async destroy insertion',
           'AsyncText:Async destroy layout',
           'ThrowsInRefCallback refCallback ref? false',
+          'Text:Inside destroy insertion',
           'Text:Inside destroy layout',
+          'Text:Outside destroy insertion',
           'Text:Outside destroy layout',
           'AsyncText:Async destroy passive',
           'Text:Inside destroy passive',
@@ -3129,6 +3555,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           // Render fallback
           'ErrorBoundary render: catch',
           'Text:Error render',
+          'Text:Error create insertion',
           'Text:Error create layout',
           'Text:Error create passive',
         ]);
