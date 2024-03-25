@@ -68,7 +68,7 @@ beforeEach(() => {
   RCTEventEmitter =
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
-  act = React.act;
+  act = require('internal-test-utils').act;
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin =
     require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;

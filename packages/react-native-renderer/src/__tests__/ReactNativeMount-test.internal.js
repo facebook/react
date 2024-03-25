@@ -32,7 +32,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
-    act = React.act;
+    act = require('internal-test-utils').act;
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
