@@ -15,7 +15,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 // Forks can return `false` if this isn't desirable.
 
 export function showErrorDialog(
-  boundary: Fiber,
+  boundary: null | Fiber,
   errorInfo: CapturedValue<mixed>,
 ): boolean {
   return true;

@@ -22,7 +22,7 @@ if (typeof RNImpl.showErrorDialog !== 'function') {
 }
 
 export function showErrorDialog(
-  boundary: Fiber,
+  boundary: null | Fiber,
   errorInfo: CapturedValue<mixed>,
 ): boolean {
   const capturedError = {
