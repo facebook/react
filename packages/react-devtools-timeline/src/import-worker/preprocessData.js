@@ -552,9 +552,13 @@ function processTimelineEvent(
           type: 'thrown-error',
         });
       } else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, phase, laneBitmaskString, promiseName] = name
-          .slice(19)
-          .split('-');
+        const [
+          id,
+          componentName,
+          phase,
+          laneBitmaskString,
+          promiseName,
+        ] = name.slice(19).split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
         const availableDepths = new Array<boolean>(
