@@ -238,12 +238,12 @@ export default {
           // useEffectEvent() return value is always unstable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
+          if (id.type !== 'ArrayPattern' || !isArray(resolved.identifiers)) {
+            return false;
+          }
+
           // Only consider second value in initializing tuple stable.
-          if (
-            id.type === 'ArrayPattern' &&
-            id.elements.length === 2 &&
-            isArray(resolved.identifiers)
-          ) {
+          if (id.elements.length === 2) {
             // Is second tuple value the same reference we're checking?
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
@@ -273,6 +273,11 @@ export default {
               }
               // State variable itself is dynamic.
               return false;
+            }
+          } else if (id.elements.length === 1) {
+            if (id.elements[0] === resolved.identifiers[0]) {
+              // Setter/dispatch was not accessed, so value is stable
+              return true;
             }
           }
         } else if (name === 'useTransition') {
