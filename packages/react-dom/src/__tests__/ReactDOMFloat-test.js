@@ -4261,6 +4261,91 @@ body {
     );
   });
 
+  it('should handle media on image preload', async () => {
+    function App({isClient}) {
+      ReactDOM.preload('/server', {
+        as: 'image',
+        imageSrcSet: '/server',
+        imageSizes: '100vw',
+        media: 'print and (min-width: 768px)',
+      });
+
+      if (isClient) {
+        ReactDOM.preload('/client', {
+          as: 'image',
+          imageSrcSet: '/client',
+          imageSizes: '100vw',
+          media: 'screen and (max-width: 480px)',
+        });
+      }
+
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    root.render(<App isClient={true} />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            media="print and (min-width: 768px)"
+          />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/client"
+            imagesizes="100vw"
+            media="screen and (max-width: 480px)"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   it('should warn if you preload a stylesheet and then render a style tag with the same href', async () => {
     const style = 'body { color: red; }';
     function App() {

@@ -139,6 +139,7 @@ export function preload(href: string, options: PreloadOptions) {
           : undefined,
       imageSizes:
         typeof options.imageSizes === 'string' ? options.imageSizes : undefined,
+      media: typeof options.media === 'string' ? options.media : undefined,
     });
   }
   // We don't error because preload needs to be resilient to being called in a variety of scopes

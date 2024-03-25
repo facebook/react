@@ -16,6 +16,7 @@ export type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  media?: string,
   nonce?: string,
   fetchPriority?: FetchPriorityEnum,
   imageSrcSet?: string,
