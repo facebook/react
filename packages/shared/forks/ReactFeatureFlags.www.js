@@ -27,7 +27,6 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,

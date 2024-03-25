@@ -19,7 +19,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 export const {
-  alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions,
