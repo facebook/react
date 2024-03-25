@@ -121,4 +121,98 @@ describe('ReactTestRenderer', () => {
       expect(root.toJSON().children).toEqual(['dynamic']);
     });
   });
+
+  it('repro for bug with useEffect synchronization', () => {
+    const ListContext = React.createContext(null);
+    const SelectionContext = React.createContext(null);
+
+    function List(props) {
+      const [expanded, setExpanded] = React.useState(new Set());
+      const listContext = React.useMemo(() => {
+        return {
+          onExpanded(id) {
+            setExpanded(prevExpanded => new Set([...prevExpanded, id]));
+          },
+        };
+      }, []);
+      const selectionContext = React.useMemo(() => {
+        return {
+          expanded,
+        };
+      }, [expanded]);
+      return (
+        <ListContext.Provider value={listContext}>
+          <SelectionContext.Provider value={selectionContext}>
+            {props.children}
+          </SelectionContext.Provider>
+        </ListContext.Provider>
+      );
+    }
+
+    function ListItem(props) {
+      const {onExpanded} = React.useContext(ListContext);
+      const selectionContext = React.useContext(SelectionContext);
+      const isExpanded = selectionContext.expanded.has(props.id);
+      const didInitiallyExpand = React.useRef(false);
+      const shouldInitiallyExpand =
+        props.initiallyExpanded && didInitiallyExpand.current === false;
+      const id = props.id;
+
+      React.useEffect(() => {
+        if (shouldInitiallyExpand) {
+          didInitiallyExpand.current = true;
+          onExpanded(id);
+        }
+      }, [shouldInitiallyExpand, onExpanded, id]);
+
+      const expand = React.useCallback(() => {
+        onExpanded(id);
+      }, [id]);
+
+      return isExpanded ? (
+        <div>{props.children}</div>
+      ) : (
+        <div onClick={expand}>Expand</div>
+      );
+    }
+
+    function Component() {
+      return (
+        <List>
+          <ListItem id="1" initiallyExpanded={true}>
+            Item 1
+          </ListItem>
+          <ListItem id="2" initiallyExpanded={true}>
+            Item 2
+          </ListItem>
+          <ListItem id="3" initiallyExpanded={false}>
+            Item 3
+          </ListItem>
+        </List>
+      );
+    }
+
+    let renderer;
+    ReactTestRenderer.act(() => {
+      renderer = ReactTestRenderer.create(<Component />);
+    });
+    const serialized = renderer.toJSON();
+    expect(serialized).toMatchInlineSnapshot(`
+      [
+        <div
+          onClick={[Function]}
+        >
+          Expand
+        </div>,
+        <div>
+          Item 2
+        </div>,
+        <div
+          onClick={[Function]}
+        >
+          Expand
+        </div>,
+      ]
+    `);
+  });
 });
