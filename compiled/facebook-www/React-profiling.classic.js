@@ -87,6 +87,7 @@ assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
@@ -250,6 +251,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   if (null === children) invokeCallback = !0;
   else
     switch (type) {
+      case "bigint":
+        if (!enableBigIntSupport) break;
       case "string":
       case "number":
         invokeCallback = !0;
@@ -644,7 +647,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-07a53cb8";
+exports.version = "18.3.0-www-classic-b4c99f99";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

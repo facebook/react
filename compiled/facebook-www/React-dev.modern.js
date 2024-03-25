@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-5840c08e";
+    var ReactVersion = "18.3.0-www-modern-bbec48f4";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -399,7 +399,8 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
@@ -2315,9 +2316,10 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
-          case "bigint": {
-            break;
-          }
+          case "bigint":
+            if (!enableBigIntSupport) {
+              break;
+            }
 
           // fallthrough for enabled BigInt support
 

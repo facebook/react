@@ -121,6 +121,7 @@ function writeChunkAndReturn(destination, chunk) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
@@ -229,7 +230,12 @@ var unitlessNumbers = new Set(
   ]),
   matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
-  if ("boolean" === typeof text || "number" === typeof text) return "" + text;
+  if (
+    "boolean" === typeof text ||
+    "number" === typeof text ||
+    (enableBigIntSupport && "bigint" === typeof text)
+  )
+    return "" + text;
   text = "" + text;
   var match = matchHtmlRegExp.exec(text);
   if (match) {
@@ -4314,24 +4320,27 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
           "). If you meant to render a collection of children, use an array instead."
       );
     }
-    "string" === typeof node$jscomp$0
-      ? ((childIndex = task.blockedSegment),
+    if ("string" === typeof node$jscomp$0)
+      (childIndex = task.blockedSegment),
         null !== childIndex &&
           (childIndex.lastPushedText = pushTextInstance(
             childIndex.chunks,
             node$jscomp$0,
             request.renderState,
             childIndex.lastPushedText
-          )))
-      : "number" === typeof node$jscomp$0 &&
-        ((childIndex = task.blockedSegment),
+          ));
+    else if (
+      "number" === typeof node$jscomp$0 ||
+      (enableBigIntSupport && "bigint" === typeof node$jscomp$0)
+    )
+      (childIndex = task.blockedSegment),
         null !== childIndex &&
           (childIndex.lastPushedText = pushTextInstance(
             childIndex.chunks,
             "" + node$jscomp$0,
             request.renderState,
             childIndex.lastPushedText
-          )));
+          ));
   }
 }
 function renderChildrenArray(request, task, children, childIndex) {

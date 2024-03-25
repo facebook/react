@@ -125,6 +125,7 @@ if (__DEV__) {
     var disableInputAttributeSyncing =
         dynamicFeatureFlags.disableInputAttributeSyncing,
       disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
+      enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
       enableTrustedTypesIntegration =
         dynamicFeatureFlags.enableTrustedTypesIntegration,
       enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
@@ -165,7 +166,6 @@ if (__DEV__) {
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
-    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -3834,10 +3834,11 @@ if (__DEV__) {
     }
     function getToStringValue(value) {
       switch (typeof value) {
-        case "bigint": {
-          // bigint is assigned as empty string
-          return "";
-        }
+        case "bigint":
+          if (!enableBigIntSupport) {
+            // bigint is assigned as empty string
+            return "";
+          }
 
         // fallthrough for BigInt support
 
@@ -4463,7 +4464,7 @@ if (__DEV__) {
               if (
                 typeof child === "string" ||
                 typeof child === "number" ||
-                enableBigIntSupport
+                (enableBigIntSupport && typeof child === "bigint")
               ) {
                 return;
               }
@@ -11609,7 +11610,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -11744,7 +11745,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -11871,7 +11872,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
@@ -12750,7 +12751,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
@@ -35848,7 +35849,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-a4741cbf";
+    var ReactVersion = "18.3.0-www-classic-316f7f5a";
 
     function createPortal$1(
       children,
@@ -40671,7 +40672,10 @@ if (__DEV__) {
             if (canSetTextContent) {
               setTextContent(domElement, value);
             }
-          } else if (typeof value === "number" || enableBigIntSupport) {
+          } else if (
+            typeof value === "number" ||
+            (enableBigIntSupport && typeof value === "bigint")
+          ) {
             {
               // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
               validateTextNesting("" + value, tag);
@@ -41329,7 +41333,10 @@ if (__DEV__) {
         case "children": {
           if (typeof value === "string") {
             setTextContent(domElement, value);
-          } else if (typeof value === "number" || enableBigIntSupport) {
+          } else if (
+            typeof value === "number" ||
+            (enableBigIntSupport && typeof value === "bigint")
+          ) {
             // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
             setTextContent(domElement, "" + value);
           }
@@ -43506,7 +43513,7 @@ if (__DEV__) {
       if (
         typeof children === "string" ||
         typeof children === "number" ||
-        enableBigIntSupport
+        (enableBigIntSupport && typeof children === "bigint")
       ) {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         if (domElement.textContent !== "" + children) {
@@ -44135,7 +44142,7 @@ if (__DEV__) {
         type === "noscript" ||
         typeof props.children === "string" ||
         typeof props.children === "number" ||
-        enableBigIntSupport ||
+        (enableBigIntSupport && typeof props.children === "bigint") ||
         (typeof props.dangerouslySetInnerHTML === "object" &&
           props.dangerouslySetInnerHTML !== null &&
           props.dangerouslySetInnerHTML.__html != null)

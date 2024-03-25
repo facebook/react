@@ -129,6 +129,7 @@ function murmurhash3_32_gc(key, seed) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
@@ -237,7 +238,12 @@ var unitlessNumbers = new Set(
   ]),
   matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
-  if ("boolean" === typeof text || "number" === typeof text) return "" + text;
+  if (
+    "boolean" === typeof text ||
+    "number" === typeof text ||
+    (enableBigIntSupport && "bigint" === typeof text)
+  )
+    return "" + text;
   text = "" + text;
   var match = matchHtmlRegExp.exec(text);
   if (match) {
@@ -4540,24 +4546,27 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
         )
       );
     }
-    "string" === typeof node$jscomp$0
-      ? ((childIndex = task.blockedSegment),
+    if ("string" === typeof node$jscomp$0)
+      (childIndex = task.blockedSegment),
         null !== childIndex &&
           (childIndex.lastPushedText = pushTextInstance(
             childIndex.chunks,
             node$jscomp$0,
             request.renderState,
             childIndex.lastPushedText
-          )))
-      : "number" === typeof node$jscomp$0 &&
-        ((childIndex = task.blockedSegment),
+          ));
+    else if (
+      "number" === typeof node$jscomp$0 ||
+      (enableBigIntSupport && "bigint" === typeof node$jscomp$0)
+    )
+      (childIndex = task.blockedSegment),
         null !== childIndex &&
           (childIndex.lastPushedText = pushTextInstance(
             childIndex.chunks,
             "" + node$jscomp$0,
             request.renderState,
             childIndex.lastPushedText
-          )));
+          ));
   }
 }
 function renderChildrenArray(request, task, children, childIndex) {
@@ -5727,4 +5736,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-3c68b335";
+exports.version = "18.3.0-www-classic-48572e12";

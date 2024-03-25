@@ -82,6 +82,7 @@ assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
@@ -207,6 +208,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   if (null === children) invokeCallback = !0;
   else
     switch (type) {
+      case "bigint":
+        if (!enableBigIntSupport) break;
       case "string":
       case "number":
         invokeCallback = !0;
@@ -632,4 +635,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-6932c29f";
+exports.version = "18.3.0-www-modern-e00f2544";

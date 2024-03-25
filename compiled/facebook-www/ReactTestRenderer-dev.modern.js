@@ -144,7 +144,6 @@ if (__DEV__) {
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
     var alwaysThrottleRetries = true;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -5773,7 +5772,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -5908,7 +5907,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -6035,7 +6034,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
@@ -6884,7 +6883,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
@@ -26121,7 +26120,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-a232ff0d";
+    var ReactVersion = "18.3.0-www-modern-40ae5516";
 
     // Might add PROFILE later.
 

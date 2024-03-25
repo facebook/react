@@ -62,6 +62,7 @@ function formatProdErrorMessage(code) {
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
@@ -1828,7 +1829,8 @@ function createChildReconciler(shouldTrackSideEffects) {
   function createChild(returnFiber, newChild, lanes) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
-      "number" === typeof newChild
+      "number" === typeof newChild ||
+      (enableBigIntSupport && "bigint" === typeof newChild)
     )
       return (
         (newChild = createFiberFromText(
@@ -1896,7 +1898,8 @@ function createChildReconciler(shouldTrackSideEffects) {
     var key = null !== oldFiber ? oldFiber.key : null;
     if (
       ("string" === typeof newChild && "" !== newChild) ||
-      "number" === typeof newChild
+      "number" === typeof newChild ||
+      (enableBigIntSupport && "bigint" === typeof newChild)
     )
       return null !== key
         ? null
@@ -1948,7 +1951,8 @@ function createChildReconciler(shouldTrackSideEffects) {
   ) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
-      "number" === typeof newChild
+      "number" === typeof newChild ||
+      (enableBigIntSupport && "bigint" === typeof newChild)
     )
       return (
         (existingChildren = existingChildren.get(newIdx) || null),
@@ -2325,7 +2329,8 @@ function createChildReconciler(shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
     return ("string" === typeof newChild && "" !== newChild) ||
-      "number" === typeof newChild
+      "number" === typeof newChild ||
+      (enableBigIntSupport && "bigint" === typeof newChild)
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
@@ -10291,7 +10296,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-258ee101",
+    version: "18.3.0-www-modern-c6c114f4",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1300 = {
@@ -10322,7 +10327,7 @@ var internals$jscomp$inline_1300 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-258ee101"
+  reconcilerVersion: "18.3.0-www-modern-c6c114f4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1301 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

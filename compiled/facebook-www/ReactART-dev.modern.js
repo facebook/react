@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-f907edbd";
+    var ReactVersion = "18.3.0-www-modern-b2ca28f2";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -163,7 +163,8 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
@@ -197,7 +198,6 @@ if (__DEV__) {
     var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
-    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -6630,7 +6630,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -6765,7 +6765,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -6892,7 +6892,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
@@ -7741,7 +7741,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(

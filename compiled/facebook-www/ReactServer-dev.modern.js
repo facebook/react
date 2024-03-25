@@ -82,7 +82,8 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
@@ -2028,9 +2029,10 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
-          case "bigint": {
-            break;
-          }
+          case "bigint":
+            if (!enableBigIntSupport) {
+              break;
+            }
 
           // fallthrough for enabled BigInt support
 
@@ -2816,7 +2818,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-55553c83";
+    var ReactVersion = "18.3.0-www-modern-72047d6a";
 
     // Patch fetch
     var Children = {

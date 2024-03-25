@@ -672,14 +672,14 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
       enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps;
     // On WWW, true is used for a new modern build.
-    var enableBigIntSupport = false; // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -2283,7 +2283,7 @@ if (__DEV__) {
       if (
         typeof text === "boolean" ||
         typeof text === "number" ||
-        enableBigIntSupport
+        (enableBigIntSupport && typeof text === "bigint")
       ) {
         // this shortcircuit helps perf for types that we know will never have
         // special characters, especially given that this function is used often
@@ -3877,7 +3877,8 @@ if (__DEV__) {
             !didWarnInvalidOptionChildren &&
             typeof child !== "string" &&
             typeof child !== "number" &&
-            !enableBigIntSupport
+            ((enableBigIntSupport && typeof child !== "bigint") ||
+              !enableBigIntSupport)
           ) {
             didWarnInvalidOptionChildren = true;
 
@@ -5258,7 +5259,7 @@ if (__DEV__) {
                 " which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes." +
                 " For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop" +
                 " is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.",
-              "",
+              enableBigIntSupport ? ", bigint" : "",
               children.length
             );
           } else if (typeof child === "function" || typeof child === "symbol") {
@@ -5269,7 +5270,7 @@ if (__DEV__) {
               "React expect children of <title> tags to be a string, number%s, or object with a novel `toString` method but found %s instead." +
                 " Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>" +
                 " tags to a single string value.",
-              "",
+              enableBigIntSupport ? ", bigint" : "",
               childType
             );
           } else if (child && child.toString === {}.toString) {
@@ -5279,7 +5280,7 @@ if (__DEV__) {
                   " a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to" +
                   " be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is" +
                   " a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.",
-                ""
+                enableBigIntSupport ? ", bigint" : ""
               );
             } else {
               error(
@@ -5287,7 +5288,7 @@ if (__DEV__) {
                   " a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags" +
                   " to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>" +
                   " is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.",
-                ""
+                enableBigIntSupport ? ", bigint" : ""
               );
             }
           }
@@ -12723,7 +12724,10 @@ if (__DEV__) {
         return;
       }
 
-      if (typeof node === "number" || enableBigIntSupport) {
+      if (
+        typeof node === "number" ||
+        (enableBigIntSupport && typeof node === "bigint")
+      ) {
         var _segment = task.blockedSegment;
 
         if (_segment === null);
