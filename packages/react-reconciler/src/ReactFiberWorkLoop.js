@@ -38,6 +38,7 @@ import {
   useModernStrictMode,
   disableLegacyContext,
   alwaysThrottleRetries,
+  alwaysThrottleDisappearingFallbacks,
   enableInfiniteRenderLoopDetection,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -1128,7 +1129,9 @@ function finishConcurrentRender(
   } else {
     if (
       includesOnlyRetries(lanes) &&
-      (alwaysThrottleRetries || exitStatus === RootSuspended)
+      (alwaysThrottleRetries ||
+        (alwaysThrottleDisappearingFallbacks && exitStatus === RootCompleted) ||
+        exitStatus === RootSuspended)
     ) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
