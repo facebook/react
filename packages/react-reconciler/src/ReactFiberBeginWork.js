@@ -2444,7 +2444,7 @@ function mountSuspensePrimaryChildren(
   const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
     mode,
-    renderLanes,
+    NoLanes,
   );
   primaryChildFragment.return = workInProgress;
   workInProgress.child = primaryChildFragment;
@@ -2522,7 +2522,7 @@ function mountWorkInProgressOffscreenFiber(
 ) {
   // The props argument to `createFiberFromOffscreen` is `any` typed, so we use
   // this wrapper function to constrain it.
-  return createFiberFromOffscreen(offscreenProps, mode, NoLanes, null);
+  return createFiberFromOffscreen(offscreenProps, mode, renderLanes, null);
 }
 
 function updateWorkInProgressOffscreenFiber(
