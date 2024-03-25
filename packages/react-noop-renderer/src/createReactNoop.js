@@ -884,9 +884,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
-    if (children === null) {
-      return null;
-    }
     if (isArray(children)) {
       return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
@@ -895,9 +892,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getPendingChildrenAsJSX(root) {
     const children = childToJSX(getChildren(root), null);
-    if (children === null) {
-      return null;
-    }
     if (isArray(children)) {
       return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
