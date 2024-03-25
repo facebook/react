@@ -46,6 +46,7 @@
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-2"></div>
+      </div>
     </li>
     <li>
       <p>Schedules callbacks in correct order when they use scheduleCallback to schedule themselves</p>
@@ -58,6 +59,7 @@
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-3"></div>
+      </div>
     </li>
     <li>
       <p>Calls timed out callbacks and then any more pending callbacks, defers others if time runs out</p>
@@ -70,6 +72,7 @@
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-4"></div>
+      </div>
     </li>
     <li>
       <p>When some callbacks throw errors, still calls them all within the same frame</p>
@@ -104,6 +107,7 @@
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-8"></div>
+      </div>
     </li>
     <li>
       <p>Can force a specific framerate</p>
@@ -726,6 +730,6 @@ function runTestEleven() {
   scheduleCallback(NormalPriority, loop);
 }
 
-    </script type="text/babel">
+    </script>
   </body>
 </html>
