@@ -21,6 +21,7 @@ export const alwaysThrottleDisappearingFallbacks = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const enableAsyncActions = __VARIANT__;
+export const enableBigIntSupport = __VARIANT__;
 export const enableComponentStackLocations = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
