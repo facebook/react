@@ -24,7 +24,7 @@
     "@types/eslint": "^8.56.6",
     "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
-    "eslint": "8.27.0",
+    "eslint": "8.57.0",
     "hermes-eslint": "^0.17.1",
     "jest": "^29.5.0",
     "rollup": "^3.28.1",
