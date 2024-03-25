@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<494aebdeb1b70c20af9f817bd3440522>>
+ * @generated SignedSource<<0721992af3bf25e5d20c9a6aa4ad6f00>>
  */
 
 "use strict";
@@ -84,6 +84,7 @@ assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableBigIntSupport = dynamicFlagsUntyped.enableBigIntSupport,
   enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
@@ -241,6 +242,8 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   if (null === children) invokeCallback = !0;
   else
     switch (type) {
+      case "bigint":
+        if (!enableBigIntSupport) break;
       case "string":
       case "number":
         invokeCallback = !0;
@@ -637,4 +640,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-7aaa8ba7";
+exports.version = "18.3.0-canary-eb8844c8";

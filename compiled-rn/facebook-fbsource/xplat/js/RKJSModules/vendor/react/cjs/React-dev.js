@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ab1b0d338696a8b20566e682ff010775>>
+ * @generated SignedSource<<8070e8b45dc6482b16ba42c75bf8963b>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-0cb590d3";
+    var ReactVersion = "18.3.0-canary-03d7b9fb";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -495,6 +495,7 @@ if (__DEV__) {
     // the exports object every time a flag is read.
 
     var enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableBigIntSupport = dynamicFlags.enableBigIntSupport,
       enableComponentStackLocations =
         dynamicFlags.enableComponentStackLocations,
       enableRenderableContext = dynamicFlags.enableRenderableContext;
@@ -2326,9 +2327,10 @@ if (__DEV__) {
         invokeCallback = true;
       } else {
         switch (type) {
-          case "bigint": {
-            break;
-          }
+          case "bigint":
+            if (!enableBigIntSupport) {
+              break;
+            }
 
           // fallthrough for enabled BigInt support
 

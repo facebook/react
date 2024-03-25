@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2b6429cad51e0120ddb69dca73efa37d>>
+ * @generated SignedSource<<12552a7a8021ca2d901cc4c6091baa69>>
  */
 
 "use strict";
@@ -2979,6 +2979,7 @@ to return true:wantsResponderID|                            |
       consoleManagedByDevToolsDuringStrictMode =
         dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
       enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableBigIntSupport = dynamicFlags.enableBigIntSupport,
       enableComponentStackLocations =
         dynamicFlags.enableComponentStackLocations,
       enableDeferRootSchedulingToMicrotask =
@@ -2999,7 +3000,6 @@ to return true:wantsResponderID|                            |
     var transitionLaneExpirationMs = 5000;
     var enableLazyContextPropagation = false;
     var enableLegacyHidden = false;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var NoFlags$1 =
       /*                      */
@@ -9337,7 +9337,7 @@ to return true:wantsResponderID|                            |
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -9472,7 +9472,7 @@ to return true:wantsResponderID|                            |
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -9599,7 +9599,7 @@ to return true:wantsResponderID|                            |
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
@@ -10448,7 +10448,7 @@ to return true:wantsResponderID|                            |
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          (enableBigIntSupport && typeof newChild === "bigint")
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
@@ -29869,7 +29869,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-c2c47a0a";
+    var ReactVersion = "18.3.0-canary-cfa61256";
 
     function createPortal$1(
       children,
