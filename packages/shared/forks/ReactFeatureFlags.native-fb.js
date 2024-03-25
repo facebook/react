@@ -46,7 +46,6 @@ export const enableCache = true;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
-export const enableFormActions = true; // Doesn't affect Native
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;

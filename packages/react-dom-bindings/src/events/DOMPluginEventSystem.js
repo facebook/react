@@ -52,7 +52,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -169,17 +168,15 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
-    if (enableFormActions) {
-      FormActionEventPlugin.extractEvents(
-        dispatchQueue,
-        domEventName,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-        targetContainer,
-      );
-    }
+    FormActionEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
   }
 }
 

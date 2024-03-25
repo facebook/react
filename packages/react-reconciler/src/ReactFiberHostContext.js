@@ -24,7 +24,7 @@ import {
 } from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);
 const contextFiberStackCursor: StackCursor<Fiber | null> = createCursor(null);
@@ -110,7 +110,7 @@ function getHostContext(): HostContext {
 }
 
 function pushHostContext(fiber: Fiber): void {
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     const stateHook: Hook | null = fiber.memoizedState;
     if (stateHook !== null) {
       // Only provide context if this fiber has been upgraded by a host
@@ -139,7 +139,7 @@ function popHostContext(fiber: Fiber): void {
     pop(contextFiberStackCursor, fiber);
   }
 
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     if (hostTransitionProviderCursor.current === fiber) {
       // Do not pop unless this Fiber provided the current context. This is mostly
       // a performance optimization, but conveniently it also prevents a potential

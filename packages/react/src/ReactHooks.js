@@ -18,7 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentCache from './ReactCurrentCache';
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -235,7 +235,7 @@ export function useActionState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();

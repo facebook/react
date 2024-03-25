@@ -41,7 +41,6 @@ import {
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
-  enableFormActions,
   enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -811,7 +810,7 @@ export function renderTransitionAwareHostComponentWithHooks(
   workInProgress: Fiber,
   lanes: Lanes,
 ): TransitionStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   }
   return renderWithHooks(
@@ -825,7 +824,7 @@ export function renderTransitionAwareHostComponentWithHooks(
 }
 
 export function TransitionAwareHostComponent(): TransitionStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   }
   const dispatcher = ReactCurrentDispatcher.current;
@@ -2964,11 +2963,6 @@ export function startHostTransition<F>(
   callback: F => mixed,
   formData: F,
 ): void {
-  if (!enableFormActions) {
-    // Not implemented.
-    return;
-  }
-
   if (!enableAsyncActions) {
     // Form actions are enabled, but async actions are not. Call the function,
     // but don't handle any pending or error states.
@@ -3089,7 +3083,7 @@ function rerenderTransition(): [
 }
 
 function useHostTransitionStatus(): TransitionStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   }
   const status: TransitionStatus | null = readContext(HostTransitionContext);
@@ -3512,7 +3506,7 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
   (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
@@ -3551,7 +3545,7 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
@@ -3590,7 +3584,7 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
@@ -3629,7 +3623,7 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
   (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
@@ -3815,7 +3809,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
@@ -3995,7 +3989,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
@@ -4177,7 +4171,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
@@ -4359,7 +4353,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
@@ -4562,7 +4556,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
@@ -4771,7 +4765,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
@@ -4980,7 +4974,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =

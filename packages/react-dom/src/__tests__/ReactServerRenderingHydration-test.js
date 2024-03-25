@@ -817,7 +817,6 @@ describe('ReactDOMServerHydration', () => {
     }
   });
 
-  // @gate enableFormActions
   it('allows rendering extra hidden inputs in a form', async () => {
     const element = document.createElement('div');
     element.innerHTML =
@@ -854,7 +853,6 @@ describe('ReactDOMServerHydration', () => {
     expect(c.current.value).toBe('C');
   });
 
-  // @gate enableFormActions
   it('allows rendering extra hidden inputs immediately before a text instance', async () => {
     const element = document.createElement('div');
     element.innerHTML =

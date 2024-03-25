@@ -31,7 +31,6 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
-export const enableFormActions = true;
 export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing

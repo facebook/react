@@ -19,7 +19,6 @@ import {
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
   enableAsyncActions,
-  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 
 export type RootType = {
@@ -291,7 +290,7 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
-    if (enableAsyncActions && enableFormActions) {
+    if (enableAsyncActions) {
       if (options.formState !== undefined) {
         formState = options.formState;
       }
