@@ -87,16 +87,16 @@ export const enableInfiniteRenderLoopDetection = false;
 //
 // We really need to get rid of this whole module. Any test renderer specific
 // flags should be handled by the Fiber config.
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-export const enableRefAsProp = __NEXT_MAJOR__;
-export const disableStringRefs = __NEXT_MAJOR__;
+// const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
 export const enableReactTestRendererWarning = false;
-export const enableBigIntSupport = __NEXT_MAJOR__;
-export const disableLegacyMode = __NEXT_MAJOR__;
-export const disableLegacyContext = __NEXT_MAJOR__;
-export const enableNewBooleanProps = __NEXT_MAJOR__;
-export const disableModulePatternComponents = __NEXT_MAJOR__;
-export const enableRenderableContext = __NEXT_MAJOR__;
+export const enableBigIntSupport = true;
+export const disableLegacyMode = true;
+export const disableLegacyContext = true;
+export const enableNewBooleanProps = true;
+export const disableModulePatternComponents = true;
+export const enableRenderableContext = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

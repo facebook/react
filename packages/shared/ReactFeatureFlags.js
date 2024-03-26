@@ -127,47 +127,48 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
-// Ready for next major.
+// Already landed in main
 //
-// Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
+// TODO: Audit these flags and decide which ones can be removed from the
+// codebase and which ones need to remain for Meta or RN. Any remaining ones
+// should be moved them into the appropriate section in this file.
 // -----------------------------------------------------------------------------
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
 // Removes legacy style context
-export const disableLegacyContext = __NEXT_MAJOR__;
+export const disableLegacyContext = true;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = __NEXT_MAJOR__;
+export const disableJavaScriptURLs = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = __NEXT_MAJOR__;
+export const useModernStrictMode = true;
 
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = __NEXT_MAJOR__;
+export const disableIEWorkarounds = true;
 
 // Changes the behavior for rendering custom elements in both server rendering
 // and client rendering, mostly to allow JSX attributes to apply to the custom
 // element's object properties instead of only HTML attributes.
 // https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
+export const enableCustomElementPropertySupport = true;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = false;
 
 // Changes Server Components Reconciliation when they have keys
-export const enableServerComponentKeys = __NEXT_MAJOR__;
+export const enableServerComponentKeys = true;
 
-export const enableBigIntSupport = __NEXT_MAJOR__;
+export const enableBigIntSupport = true;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused
@@ -180,8 +181,8 @@ export const enableInfiniteRenderLoopDetection = true;
 
 // Passes `ref` as a normal prop instead of stripping it from the props object
 // during element creation.
-export const enableRefAsProp = __NEXT_MAJOR__;
-export const disableStringRefs = __NEXT_MAJOR__;
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
 
 // Not ready to break experimental yet.
 // Needs more internal cleanup
@@ -191,17 +192,27 @@ export const enableReactTestRendererWarning = false;
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
-export const disableLegacyMode = __NEXT_MAJOR__;
+export const disableLegacyMode = true;
 
 // HTML boolean attributes need a special PropertyInfoRecord.
 // Between support of these attributes in browsers and React supporting them as
 // boolean props library users can use them as `<div someBooleanAttribute="" />`.
 // However, once React considers them as boolean props an empty string will
 // result in false property i.e. break existing usage.
-export const enableNewBooleanProps = __NEXT_MAJOR__;
+export const enableNewBooleanProps = true;
 
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = __NEXT_MAJOR__;
+export const enableRenderableContext = true;
+
+// -----------------------------------------------------------------------------
+// Ready for next major.
+//
+// Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
+
+// This section is currently empty.
+// -----------------------------------------------------------------------------
+//
+// const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -210,7 +221,7 @@ export const enableRenderableContext = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-export const disableModulePatternComponents = __NEXT_MAJOR__;
+export const disableModulePatternComponents = true;
 
 export const enableUseRefAccessWarning = false;
 
