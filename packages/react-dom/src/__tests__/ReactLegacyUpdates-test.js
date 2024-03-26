@@ -398,7 +398,7 @@ describe('ReactLegacyUpdates', () => {
 
       render() {
         numMiddleRenders++;
-        return this.props.children;
+        return React.Children.only(this.props.children);
       }
     }
 
