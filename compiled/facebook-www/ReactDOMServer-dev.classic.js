@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-161b13ab";
+    var ReactVersion = "19.0.0-www-classic-9d94c946";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -763,7 +763,6 @@ if (__DEV__) {
       "tabSize",
       "widows",
       "zIndex",
-      "zoom",
       "fillOpacity", // SVG-related properties
       "floodOpacity",
       "stopOpacity",
@@ -778,7 +777,6 @@ if (__DEV__) {
       "MozLineClamp",
       "msAnimationIterationCount",
       "msFlex",
-      "msZoom",
       "msFlexGrow",
       "msFlexNegative",
       "msFlexOrder",

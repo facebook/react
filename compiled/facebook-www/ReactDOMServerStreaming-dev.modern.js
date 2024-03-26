@@ -760,7 +760,6 @@ if (__DEV__) {
       "tabSize",
       "widows",
       "zIndex",
-      "zoom",
       "fillOpacity", // SVG-related properties
       "floodOpacity",
       "stopOpacity",
@@ -775,7 +774,6 @@ if (__DEV__) {
       "MozLineClamp",
       "msAnimationIterationCount",
       "msFlex",
-      "msZoom",
       "msFlexGrow",
       "msFlexNegative",
       "msFlexOrder",
