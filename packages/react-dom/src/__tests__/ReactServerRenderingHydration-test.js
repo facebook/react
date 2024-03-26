@@ -140,7 +140,7 @@ describe('ReactDOMServerHydration', () => {
         });
       }).toErrorDev(
         [
-          'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'An error occurred during hydration. The server HTML was replaced with client content.',
           'Text content did not match. Server: "x" Client: "y"',
         ],
         {withoutStack: 1},
@@ -225,7 +225,7 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       [
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
         'Warning: Text content did not match. Server: "server" Client: "client"',
       ],
       {withoutStack: 1},
@@ -254,8 +254,9 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
-        '"text-decoration:none;color:black;height:10px" Client: ' +
-        '"text-decoration:none;color:white;height:10px"',
+        '{"text-decoration":"none","color":"black","height":"10px"}' +
+        ' Client: ' +
+        '{"textDecoration":"none","color":"white","height":"10px"}',
     );
   });
 
@@ -303,8 +304,9 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
-        '"text-decoration: none; color: black; height: 10px;" Client: ' +
-        '"text-decoration:none;color:black;height:10px"',
+        '{"text-decoration":"none","color":"black","height":"10px"}' +
+        ' Client: ' +
+        '{"textDecoration":"none","color":"black","height":"10px"}', // note that this is no difference
     );
   });
 
@@ -532,7 +534,7 @@ describe('ReactDOMServerHydration', () => {
       expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(
       [
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
         'Warning: Text content did not match. Server: "server" Client: "client"',
       ],
       {withoutStack: 1},
@@ -558,7 +560,7 @@ describe('ReactDOMServerHydration', () => {
       expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(
       [
-        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'An error occurred during hydration. The server HTML was replaced with client content.',
         'Warning: Did not expect server HTML to contain a <p> in <div>.',
       ],
       {withoutStack: 1},

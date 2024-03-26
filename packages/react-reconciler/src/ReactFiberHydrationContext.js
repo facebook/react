@@ -38,24 +38,13 @@ import {
   getFirstHydratableChildWithinContainer,
   getFirstHydratableChildWithinSuspenseInstance,
   hydrateInstance,
+  diffHydratedPropsForDevWarnings,
+  describeHydratableInstanceForDevWarnings,
   hydrateTextInstance,
+  diffHydratedTextForDevWarnings,
   hydrateSuspenseInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   shouldDeleteUnhydratedTailInstances,
-  didNotMatchHydratedContainerTextInstance,
-  didNotMatchHydratedTextInstance,
-  didNotHydrateInstanceWithinContainer,
-  didNotHydrateInstanceWithinSuspenseInstance,
-  didNotHydrateInstance,
-  didNotFindHydratableInstanceWithinContainer,
-  didNotFindHydratableTextInstanceWithinContainer,
-  didNotFindHydratableSuspenseInstanceWithinContainer,
-  didNotFindHydratableInstanceWithinSuspenseInstance,
-  didNotFindHydratableTextInstanceWithinSuspenseInstance,
-  didNotFindHydratableSuspenseInstanceWithinSuspenseInstance,
-  didNotFindHydratableInstance,
-  didNotFindHydratableTextInstance,
-  didNotFindHydratableSuspenseInstance,
   resolveSingletonInstance,
   canHydrateInstance,
   canHydrateTextInstance,
@@ -141,36 +130,103 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   return true;
 }
 
+function warnForDeletedHydratableInstance(
+  parentType: string,
+  child: HydratableInstance,
+) {
+  if (__DEV__) {
+    const description = describeHydratableInstanceForDevWarnings(child);
+    if (typeof description === 'string') {
+      console.error(
+        'Did not expect server HTML to contain the text node "%s" in <%s>.',
+        description,
+        parentType,
+      );
+    } else {
+      console.error(
+        'Did not expect server HTML to contain a <%s> in <%s>.',
+        description.type,
+        parentType,
+      );
+    }
+  }
+}
+
+function warnForInsertedHydratedElement(parentType: string, tag: string) {
+  if (__DEV__) {
+    console.error(
+      'Expected server HTML to contain a matching <%s> in <%s>.',
+      tag,
+      parentType,
+    );
+  }
+}
+
+function warnForInsertedHydratedText(parentType: string, text: string) {
+  if (__DEV__) {
+    console.error(
+      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      text,
+      parentType,
+    );
+  }
+}
+
+function warnForInsertedHydratedSuspense(parentType: string) {
+  if (__DEV__) {
+    console.error(
+      'Expected server HTML to contain a matching <%s> in <%s>.',
+      'Suspense',
+      parentType,
+    );
+  }
+}
+
+export function errorHydratingContainer(parentContainer: Container): void {
+  if (__DEV__) {
+    // TODO: This gets logged by onRecoverableError, too, so we should be
+    // able to remove it.
+    console.error(
+      'An error occurred during hydration. The server HTML was replaced with client content.',
+    );
+  }
+}
+
 function warnUnhydratedInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
   if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+
     switch (returnFiber.tag) {
       case HostRoot: {
-        didNotHydrateInstanceWithinContainer(
-          returnFiber.stateNode.containerInfo,
-          instance,
-        );
+        const description = describeHydratableInstanceForDevWarnings(instance);
+        if (typeof description === 'string') {
+          console.error(
+            'Did not expect server HTML to contain the text node "%s" in the root.',
+            description,
+          );
+        } else {
+          console.error(
+            'Did not expect server HTML to contain a <%s> in the root.',
+            description.type,
+          );
+        }
         break;
       }
       case HostSingleton:
       case HostComponent: {
-        didNotHydrateInstance(
-          returnFiber.type,
-          returnFiber.memoizedProps,
-          returnFiber.stateNode,
-          instance,
-        );
+        warnForDeletedHydratableInstance(returnFiber.type, instance);
         break;
       }
       case SuspenseComponent: {
         const suspenseState: SuspenseState = returnFiber.memoizedState;
         if (suspenseState.dehydrated !== null)
-          didNotHydrateInstanceWithinSuspenseInstance(
-            suspenseState.dehydrated,
-            instance,
-          );
+          warnForDeletedHydratableInstance('Suspense', instance);
         break;
       }
     }
@@ -186,30 +242,33 @@ function warnNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
       return;
     }
 
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+
     switch (returnFiber.tag) {
       case HostRoot: {
-        const parentContainer = returnFiber.stateNode.containerInfo;
+        // const parentContainer = returnFiber.stateNode.containerInfo;
         switch (fiber.tag) {
           case HostSingleton:
           case HostComponent:
-            const type = fiber.type;
-            const props = fiber.pendingProps;
-            didNotFindHydratableInstanceWithinContainer(
-              parentContainer,
-              type,
-              props,
+            console.error(
+              'Expected server HTML to contain a matching <%s> in the root.',
+              fiber.type,
             );
             break;
           case HostText:
             const text = fiber.pendingProps;
-            didNotFindHydratableTextInstanceWithinContainer(
-              parentContainer,
+            console.error(
+              'Expected server HTML to contain a matching text node for "%s" in the root.',
               text,
             );
             break;
           case SuspenseComponent:
-            didNotFindHydratableSuspenseInstanceWithinContainer(
-              parentContainer,
+            console.error(
+              'Expected server HTML to contain a matching <%s> in the root.',
+              'Suspense',
             );
             break;
         }
@@ -218,71 +277,44 @@ function warnNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
       case HostSingleton:
       case HostComponent: {
         const parentType = returnFiber.type;
-        const parentProps = returnFiber.memoizedProps;
-        const parentInstance = returnFiber.stateNode;
+        // const parentProps = returnFiber.memoizedProps;
+        // const parentInstance = returnFiber.stateNode;
         switch (fiber.tag) {
           case HostSingleton:
           case HostComponent: {
             const type = fiber.type;
-            const props = fiber.pendingProps;
-            didNotFindHydratableInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-              type,
-              props,
-            );
+            warnForInsertedHydratedElement(parentType, type);
             break;
           }
           case HostText: {
             const text = fiber.pendingProps;
-            didNotFindHydratableTextInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-              text,
-            );
+            warnForInsertedHydratedText(parentType, text);
             break;
           }
           case SuspenseComponent: {
-            didNotFindHydratableSuspenseInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-            );
+            warnForInsertedHydratedSuspense(parentType);
             break;
           }
         }
         break;
       }
       case SuspenseComponent: {
-        const suspenseState: SuspenseState = returnFiber.memoizedState;
-        const parentInstance = suspenseState.dehydrated;
-        if (parentInstance !== null)
-          switch (fiber.tag) {
-            case HostSingleton:
-            case HostComponent:
-              const type = fiber.type;
-              const props = fiber.pendingProps;
-              didNotFindHydratableInstanceWithinSuspenseInstance(
-                parentInstance,
-                type,
-                props,
-              );
-              break;
-            case HostText:
-              const text = fiber.pendingProps;
-              didNotFindHydratableTextInstanceWithinSuspenseInstance(
-                parentInstance,
-                text,
-              );
-              break;
-            case SuspenseComponent:
-              didNotFindHydratableSuspenseInstanceWithinSuspenseInstance(
-                parentInstance,
-              );
-              break;
-          }
+        // const suspenseState: SuspenseState = returnFiber.memoizedState;
+        // const parentInstance = suspenseState.dehydrated;
+        switch (fiber.tag) {
+          case HostSingleton:
+          case HostComponent:
+            const type = fiber.type;
+            warnForInsertedHydratedElement('Suspense', type);
+            break;
+          case HostText:
+            const text = fiber.pendingProps;
+            warnForInsertedHydratedText('Suspense', text);
+            break;
+          case SuspenseComponent:
+            warnForInsertedHydratedSuspense('Suspense');
+            break;
+        }
         break;
       }
       default:
@@ -465,6 +497,9 @@ export function tryToClaimNextHydratableFormMarkerInstance(
   return false;
 }
 
+// Temp
+let didWarnInvalidHydration = false;
+
 function prepareToHydrateHostInstance(
   fiber: Fiber,
   hostContext: HostContext,
@@ -477,15 +512,63 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
-  const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  hydrateInstance(
+  if (__DEV__) {
+    const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
+    if (shouldWarnIfMismatchDev) {
+      const differences = diffHydratedPropsForDevWarnings(
+        instance,
+        fiber.type,
+        fiber.memoizedProps,
+        hostContext,
+      );
+      if (differences !== null) {
+        if (differences.children != null && !didWarnInvalidHydration) {
+          didWarnInvalidHydration = true;
+          const serverValue = differences.children;
+          const clientValue = fiber.memoizedProps.children;
+          console.error(
+            'Text content did not match. Server: "%s" Client: "%s"',
+            serverValue,
+            clientValue,
+          );
+        }
+        for (const propName in differences) {
+          if (!differences.hasOwnProperty(propName)) {
+            continue;
+          }
+          if (didWarnInvalidHydration) {
+            break;
+          }
+          didWarnInvalidHydration = true;
+          const serverValue = differences[propName];
+          const clientValue = fiber.memoizedProps[propName];
+          if (propName === 'children') {
+            // Already handled above
+          } else if (clientValue != null) {
+            console.error(
+              'Prop `%s` did not match. Server: %s Client: %s',
+              propName,
+              JSON.stringify(serverValue),
+              JSON.stringify(clientValue),
+            );
+          } else {
+            console.error('Extra attribute from the server: %s', propName);
+          }
+        }
+      }
+    }
+  }
+
+  const didHydrate = hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
     hostContext,
     fiber,
-    shouldWarnIfMismatchDev,
   );
+  if (!didHydrate) {
+    throw new Error('Text content does not match server-rendered HTML.');
+  }
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): void {
@@ -499,45 +582,66 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const textIsDifferent = hydrateTextInstance(
+  let parentProps = null;
+  // We assume that prepareToHydrateHostTextInstance is called in a context where the
+  // hydration parent is the parent host component of this host text.
+  const returnFiber = hydrationParentFiber;
+  if (returnFiber !== null) {
+    switch (returnFiber.tag) {
+      case HostRoot: {
+        if (__DEV__) {
+          if (shouldWarnIfMismatchDev) {
+            const difference = diffHydratedTextForDevWarnings(
+              textInstance,
+              textContent,
+              parentProps,
+            );
+            if (difference !== null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              console.error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                difference,
+                textContent,
+              );
+            }
+          }
+        }
+        break;
+      }
+      case HostSingleton:
+      case HostComponent: {
+        parentProps = returnFiber.memoizedProps;
+        if (__DEV__) {
+          if (shouldWarnIfMismatchDev) {
+            const difference = diffHydratedTextForDevWarnings(
+              textInstance,
+              textContent,
+              parentProps,
+            );
+            if (difference !== null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              console.error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                difference,
+                textContent,
+              );
+            }
+          }
+        }
+        break;
+      }
+    }
+    // TODO: What if it's a SuspenseInstance?
+  }
+
+  const didHydrate = hydrateTextInstance(
     textInstance,
     textContent,
     fiber,
-    shouldWarnIfMismatchDev,
+    parentProps,
   );
-  if (textIsDifferent) {
-    // We assume that prepareToHydrateHostTextInstance is called in a context where the
-    // hydration parent is the parent host component of this host text.
-    const returnFiber = hydrationParentFiber;
-    if (returnFiber !== null) {
-      switch (returnFiber.tag) {
-        case HostRoot: {
-          const parentContainer = returnFiber.stateNode.containerInfo;
-          didNotMatchHydratedContainerTextInstance(
-            parentContainer,
-            textInstance,
-            textContent,
-            shouldWarnIfMismatchDev,
-          );
-          break;
-        }
-        case HostSingleton:
-        case HostComponent: {
-          const parentType = returnFiber.type;
-          const parentProps = returnFiber.memoizedProps;
-          const parentInstance = returnFiber.stateNode;
-          didNotMatchHydratedTextInstance(
-            parentType,
-            parentProps,
-            parentInstance,
-            textInstance,
-            textContent,
-            shouldWarnIfMismatchDev,
-          );
-          break;
-        }
-      }
-    }
+  if (!didHydrate) {
+    throw new Error('Text content does not match server-rendered HTML.');
   }
 }
 

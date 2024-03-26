@@ -269,7 +269,7 @@ describe('ReactDOMOption', () => {
     }).toErrorDev(
       [
         'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
         'Warning: In HTML, <div> cannot be a child of <option>',
       ],
       {withoutStack: 1},

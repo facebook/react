@@ -6481,7 +6481,7 @@ body {
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
         ],
         {withoutStack: 1},
       );
@@ -8271,7 +8271,7 @@ background-color: green;
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
         ],
         {withoutStack: 1},
       );

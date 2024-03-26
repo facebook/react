@@ -164,34 +164,12 @@ export const clearSuspenseBoundaryFromContainer =
   $$$config.clearSuspenseBoundaryFromContainer;
 export const shouldDeleteUnhydratedTailInstances =
   $$$config.shouldDeleteUnhydratedTailInstances;
-export const didNotMatchHydratedContainerTextInstance =
-  $$$config.didNotMatchHydratedContainerTextInstance;
-export const didNotMatchHydratedTextInstance =
-  $$$config.didNotMatchHydratedTextInstance;
-export const didNotHydrateInstanceWithinContainer =
-  $$$config.didNotHydrateInstanceWithinContainer;
-export const didNotHydrateInstanceWithinSuspenseInstance =
-  $$$config.didNotHydrateInstanceWithinSuspenseInstance;
-export const didNotHydrateInstance = $$$config.didNotHydrateInstance;
-export const didNotFindHydratableInstanceWithinContainer =
-  $$$config.didNotFindHydratableInstanceWithinContainer;
-export const didNotFindHydratableTextInstanceWithinContainer =
-  $$$config.didNotFindHydratableTextInstanceWithinContainer;
-export const didNotFindHydratableSuspenseInstanceWithinContainer =
-  $$$config.didNotFindHydratableSuspenseInstanceWithinContainer;
-export const didNotFindHydratableInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableInstanceWithinSuspenseInstance;
-export const didNotFindHydratableTextInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableTextInstanceWithinSuspenseInstance;
-export const didNotFindHydratableSuspenseInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableSuspenseInstanceWithinSuspenseInstance;
-export const didNotFindHydratableInstance =
-  $$$config.didNotFindHydratableInstance;
-export const didNotFindHydratableTextInstance =
-  $$$config.didNotFindHydratableTextInstance;
-export const didNotFindHydratableSuspenseInstance =
-  $$$config.didNotFindHydratableSuspenseInstance;
-export const errorHydratingContainer = $$$config.errorHydratingContainer;
+export const diffHydratedPropsForDevWarnings =
+  $$$config.diffHydratedPropsForDevWarnings;
+export const diffHydratedTextForDevWarnings =
+  $$$config.diffHydratedTextForDevWarnings;
+export const describeHydratableInstanceForDevWarnings =
+  $$$config.describeHydratableInstanceForDevWarnings;
 export const validateHydratableInstance = $$$config.validateHydratableInstance;
 export const validateHydratableTextInstance =
   $$$config.validateHydratableTextInstance;
