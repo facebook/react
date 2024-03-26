@@ -534,7 +534,6 @@ const skipFilter = new Set([
   // bugs
   "bug-reduce-reactive-deps-return-in-scope",
   "bug-reduce-reactive-deps-break-in-scope",
-  "bug-repro-missing-dependency-if-within-while",
 
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",

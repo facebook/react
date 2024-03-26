@@ -16,7 +16,17 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: { a: "a", continue: "skip", b: "b!" } }],
+  params: [{ value: { a: "a", continue: "skip", b: "hello!" } }],
+  sequentialRenders: [
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "skip!", continue: true } },
+  ],
 };
 
 ```
@@ -26,18 +36,10 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    let t0;
-    if ($[1] !== props.value) {
-      t0 = { ...props.value };
-      $[1] = props.value;
-      $[2] = t0;
-    } else {
-      t0 = $[2];
-    }
-    const object = t0;
+  if ($[0] !== props.value) {
+    const object = { ...props.value };
     for (const y in object) {
       if (y === "continue") {
         continue;
@@ -45,19 +47,37 @@ function Component(props) {
 
       x = object[y];
     }
-    $[0] = x;
+    $[0] = props.value;
+    $[1] = x;
   } else {
-    x = $[0];
+    x = $[1];
   }
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: { a: "a", continue: "skip", b: "b!" } }],
+  params: [{ value: { a: "a", continue: "skip", b: "hello!" } }],
+  sequentialRenders: [
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "a", continue: "skip", b: "hello!" } },
+    { value: { a: "skip!", continue: true } },
+    { value: { a: "skip!", continue: true } },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) "b!"
+(kind: ok) "hello!"
+"hello!"
+"skip!"
+"hello!"
+"skip!"
+"hello!"
+"skip!"
+"skip!"

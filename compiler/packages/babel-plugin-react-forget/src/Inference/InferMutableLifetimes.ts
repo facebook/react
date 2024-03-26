@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
 import {
   Effect,
   HIRFunction,
@@ -102,22 +101,30 @@ export function inferMutableLifetimes(
 ): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      let start = Number.MAX_SAFE_INTEGER;
-      let end = phi.id.mutableRange.end as number;
       for (const [_, operand] of phi.operands) {
-        start = Math.min(start, operand.mutableRange.start);
-        end = Math.max(end, operand.mutableRange.end);
+        if (
+          operand.mutableRange.start === 0 &&
+          operand.mutableRange.end === 0
+        ) {
+          // operand's range is uninitialized, skip
+          continue;
+        } else if (
+          phi.id.mutableRange.start === 0 &&
+          phi.id.mutableRange.end === 0
+        ) {
+          // phi's range is uninitialized, take the range from the operand
+          phi.id.mutableRange.start = operand.mutableRange.start;
+          phi.id.mutableRange.end = operand.mutableRange.end;
+        } else {
+          // else join the phi and operand's range
+          phi.id.mutableRange.start = makeInstructionId(
+            Math.min(phi.id.mutableRange.start, operand.mutableRange.start)
+          );
+          phi.id.mutableRange.end = makeInstructionId(
+            Math.max(phi.id.mutableRange.end, operand.mutableRange.end)
+          );
+        }
       }
-      CompilerError.invariant(start !== Number.MAX_SAFE_INTEGER, {
-        reason: "Expected phi to have a start range value",
-        description: null,
-        loc: null,
-        suggestions: null,
-      });
-      phi.id.mutableRange = {
-        start: makeInstructionId(start),
-        end: makeInstructionId(end),
-      };
     }
 
     for (const instr of block.instructions) {
