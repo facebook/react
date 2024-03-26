@@ -453,17 +453,17 @@ describe('ReactDOMServerPartialHydration', () => {
       // Client rendered - suspense comment nodes removed.
       expect(container.innerHTML).toBe('Hello<article>Mismatch</article>');
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'section',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'section',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -561,19 +561,19 @@ describe('ReactDOMServerPartialHydration', () => {
         '<div><article>Mismatch</article></div>',
       );
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'div',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Child (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'div',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in div (at **)\n' +
+              '    in Child (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -681,18 +681,18 @@ describe('ReactDOMServerPartialHydration', () => {
         '<div><div></div><article>Mismatch</article></div>',
       );
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'div',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'div',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in div (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -797,18 +797,18 @@ describe('ReactDOMServerPartialHydration', () => {
         '<div><article>Mismatch</article><div></div></div>',
       );
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'div',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'div',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in div (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -901,17 +901,17 @@ describe('ReactDOMServerPartialHydration', () => {
       // Client rendered - suspense comment nodes removed
       expect(container.innerHTML).toBe('<article><div></div></article>');
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'section',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'section',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -1007,17 +1007,17 @@ describe('ReactDOMServerPartialHydration', () => {
       // Client rendered - suspense comment nodes removed
       expect(container.innerHTML).toBe('<article>Mismatch</article>Hello');
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'section',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'section',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
@@ -1117,17 +1117,17 @@ describe('ReactDOMServerPartialHydration', () => {
         '<article>Mismatch</article><div>Hello</div>',
       );
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'article',
-          'section',
-          '\n' +
-            '    in article (at **)\n' +
-            '    in Component (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in App (at **)',
+        expect(mockError.mock.calls).toEqual([
+          [
+            'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+            'article',
+            'section',
+            '\n' +
+              '    in article (at **)\n' +
+              '    in Component (at **)\n' +
+              '    in Suspense (at **)\n' +
+              '    in App (at **)',
+          ],
         ]);
       }
     } finally {
