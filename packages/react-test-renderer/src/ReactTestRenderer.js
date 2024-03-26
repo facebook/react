@@ -55,6 +55,7 @@ import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   allowConcurrentByDefault,
   enableReactTestRendererWarning,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
 const act = React.act;
@@ -485,7 +486,10 @@ function create(
   }
 
   let createNodeMock = defaultTestOptions.createNodeMock;
-  let isConcurrent = false;
+  const isConcurrentOnly =
+    disableLegacyMode === true &&
+    global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true;
+  let isConcurrent = isConcurrentOnly;
   let isStrictMode = false;
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
@@ -493,8 +497,8 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
-      isConcurrent = true;
+    if (isConcurrentOnly === false) {
+      isConcurrent = options.unstable_isConcurrent;
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;

@@ -13,7 +13,7 @@ let ReactDOM;
 let React;
 let ReactCache;
 let ReactTestRenderer;
-let waitForAll;
+let act;
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -26,32 +26,28 @@ describe('ReactTestRenderer', () => {
     ReactCache = require('react-cache');
     ReactTestRenderer = require('react-test-renderer');
     const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
+    act = InternalTestUtils.act;
   });
 
-  it('should warn if used to render a ReactDOM portal', () => {
+  it('should warn if used to render a ReactDOM portal', async () => {
     const container = document.createElement('div');
-    expect(() => {
-      let error;
-      try {
+    let error;
+
+    await expect(async () => {
+      await act(() => {
         ReactTestRenderer.create(ReactDOM.createPortal('foo', container));
-      } catch (e) {
-        error = e;
-      }
-      // After the update throws, a subsequent render is scheduled to
-      // unmount the whole tree. This update also causes an error, so React
-      // throws an AggregateError.
-      const errors = error.errors;
-      expect(errors.length).toBe(2);
-      expect(errors[0].message.includes('indexOf is not a function')).toBe(
-        true,
-      );
-      expect(errors[1].message.includes('indexOf is not a function')).toBe(
-        true,
-      );
+      }).catch(e => (error = e));
     }).toErrorDev('An invalid container has been provided.', {
       withoutStack: true,
     });
+
+    // After the update throws, a subsequent render is scheduled to
+    // unmount the whole tree. This update also causes an error, so React
+    // throws an AggregateError.
+    const errors = error.errors;
+    expect(errors.length).toBe(2);
+    expect(errors[0].message.includes('indexOf is not a function')).toBe(true);
+    expect(errors[1].message.includes('indexOf is not a function')).toBe(true);
   });
 
   describe('timed out Suspense hidden subtrees should not be observable via toJSON', () => {
@@ -84,16 +80,23 @@ describe('ReactTestRenderer', () => {
         );
       };
 
-      const root = ReactTestRenderer.create(<App text="initial" />);
-      PendingResources.initial('initial');
-      await waitForAll([]);
+      let root;
+      await act(() => {
+        root = ReactTestRenderer.create(<App text="initial" />);
+      });
+      await act(() => {
+        PendingResources.initial('initial');
+      });
       expect(root.toJSON()).toEqual('initial');
 
-      root.update(<App text="dynamic" />);
+      await act(() => {
+        root.update(<App text="dynamic" />);
+      });
       expect(root.toJSON()).toEqual('fallback');
 
-      PendingResources.dynamic('dynamic');
-      await waitForAll([]);
+      await act(() => {
+        PendingResources.dynamic('dynamic');
+      });
       expect(root.toJSON()).toEqual('dynamic');
     });
 
@@ -108,16 +111,23 @@ describe('ReactTestRenderer', () => {
         );
       };
 
-      const root = ReactTestRenderer.create(<App text="initial" />);
-      PendingResources.initial('initial');
-      await waitForAll([]);
+      let root;
+      await act(() => {
+        root = ReactTestRenderer.create(<App text="initial" />);
+      });
+      await act(() => {
+        PendingResources.initial('initial');
+      });
       expect(root.toJSON().children).toEqual(['initial']);
 
-      root.update(<App text="dynamic" />);
+      await act(() => {
+        root.update(<App text="dynamic" />);
+      });
       expect(root.toJSON().children).toEqual(['fallback']);
 
-      PendingResources.dynamic('dynamic');
-      await waitForAll([]);
+      await act(() => {
+        PendingResources.dynamic('dynamic');
+      });
       expect(root.toJSON().children).toEqual(['dynamic']);
     });
   });
