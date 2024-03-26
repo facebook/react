@@ -10,7 +10,6 @@
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
-import {showErrorDialog} from './ReactFiberErrorDialog';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 import {ClassComponent} from './ReactWorkTags';
@@ -28,23 +27,16 @@ export function defaultOnUncaughtError(
   error: mixed,
   errorInfo: {+componentStack?: ?string},
 ): void {
-  const componentStack =
-    errorInfo.componentStack != null ? errorInfo.componentStack : '';
-  const logError = showErrorDialog(null, error, componentStack);
-
-  // Allow injected showErrorDialog() to prevent default console.error logging.
-  // This enables renderers like ReactNative to better manage redbox behavior.
-  if (logError === false) {
-    return;
-  }
+  // Overriding this can silence these warnings e.g. for tests.
+  // See https://github.com/facebook/react/pull/13384
 
   // For uncaught root errors we report them as uncaught to the browser's
   // onerror callback. This won't have component stacks and the error addendum.
   // So we add those into a separate console.warn.
   reportGlobalError(error);
   if (__DEV__) {
-    // TODO: There's no longer a way to silence these warnings e.g. for tests.
-    // See https://github.com/facebook/react/pull/13384
+    const componentStack =
+      errorInfo.componentStack != null ? errorInfo.componentStack : '';
 
     const componentNameMessage = componentName
       ? `An error occurred in the <${componentName}> component:`
@@ -70,19 +62,11 @@ export function defaultOnCaughtError(
   // Overriding this can silence these warnings e.g. for tests.
   // See https://github.com/facebook/react/pull/13384
 
-  const boundary = errorInfo.errorBoundary;
-  const componentStack =
-    errorInfo.componentStack != null ? errorInfo.componentStack : '';
-  const logError = showErrorDialog(boundary, error, componentStack);
-
-  // Allow injected showErrorDialog() to prevent default console.error logging.
-  // This enables renderers like ReactNative to better manage redbox behavior.
-  if (logError === false) {
-    return;
-  }
-
   // Caught by error boundary
   if (__DEV__) {
+    const componentStack =
+      errorInfo.componentStack != null ? errorInfo.componentStack : '';
+
     const componentNameMessage = componentName
       ? `The above error occurred in the <${componentName}> component:`
       : 'The above error occurred in one of your React components:';

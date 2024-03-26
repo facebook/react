@@ -50,6 +50,60 @@ import {
   isChildPublicInstance,
 } from './ReactNativePublicCompat';
 
+// Module provided by RN:
+import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
+if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
+  throw new Error(
+    'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+  );
+}
+
+function nativeOnUncaughtError(
+  error: mixed,
+  errorInfo: {+componentStack?: ?string},
+): void {
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialog.showErrorDialog({
+    errorBoundary: null,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnUncaughtError(error, errorInfo);
+}
+function nativeOnCaughtError(
+  error: mixed,
+  errorInfo: {
+    +componentStack?: ?string,
+    +errorBoundary?: ?React$Component<any, any>,
+  },
+): void {
+  const errorBoundary = errorInfo.errorBoundary;
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialog.showErrorDialog({
+    errorBoundary,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnCaughtError(error, errorInfo);
+}
+
 function render(
   element: Element<ElementType>,
   containerTag: number,
@@ -67,8 +121,8 @@ function render(
       false,
       null,
       '',
-      defaultOnUncaughtError,
-      defaultOnCaughtError,
+      nativeOnUncaughtError,
+      nativeOnCaughtError,
       defaultOnRecoverableError,
       null,
     );
