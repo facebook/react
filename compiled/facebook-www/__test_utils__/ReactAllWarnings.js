@@ -400,6 +400,7 @@ export default [
   "renderToNodeStream is deprecated. Use renderToPipeableStream instead.",
   "root.finishedLanes should not be empty during a commit. This is a bug in React.",
   "sendAccessibilityEvent was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component",
+  "unmountComponentAtNode is no longer supported in React 18. Use root.unmount() instead.",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by React and is not a top-level container. %s",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
   "useFormState is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
