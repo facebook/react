@@ -413,14 +413,14 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     if (disableLegacyContext) {
       if (ctor.childContextTypes) {
         console.error(
-          '%s uses the legacy childContextTypes API which is no longer supported. ' +
+          '%s uses the legacy childContextTypes API which was removed in React 19. ' +
             'Use React.createContext() instead.',
           name,
         );
       }
       if (ctor.contextTypes) {
         console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
             'Use React.createContext() with static contextType instead.',
           name,
         );

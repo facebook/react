@@ -919,8 +919,8 @@ describe('ReactErrorBoundaries', () => {
       ...gate(flags =>
         flags.disableLegacyContext
           ? [
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
+              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
             ]
           : [],
       ),

@@ -181,7 +181,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe(ComponentClass);
     if (gate(flags => flags.enableRefAsProp)) {
       expect(() => expect(element.ref).toBe(ref)).toErrorDev(
-        'Accessing element.ref is no longer supported',
+        'Accessing element.ref was removed in React 19',
         {withoutStack: true},
       );
       const expectation = {foo: '56', ref};

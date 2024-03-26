@@ -30,7 +30,7 @@ ignoreErrors([
   'Warning: Legacy context API',
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
-  'Warning: ReactDOM.render is no longer supported in React 18',
+  'Warning: ReactDOM.render was removed in React 19',
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);

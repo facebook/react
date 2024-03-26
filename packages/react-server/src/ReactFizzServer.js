@@ -1502,7 +1502,7 @@ function renderIndeterminateComponent(
     if (__DEV__) {
       if (disableLegacyContext && Component.contextTypes) {
         console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
             'Use React.createContext() with React.useContext() instead.',
           getComponentNameFromType(Component) || 'Unknown',
         );

@@ -361,7 +361,7 @@ describe('ReactElementClone', () => {
     if (gate(flags => flags.enableRefAsProp)) {
       expect(clone.props.ref).toBe('34');
       expect(() => expect(clone.ref).toBe('34')).toErrorDev(
-        'Accessing element.ref is no longer supported',
+        'Accessing element.ref was removed in React 19',
         {withoutStack: true},
       );
       expect(clone.props).toEqual({foo: 'ef', ref: '34'});

@@ -1193,10 +1193,10 @@ describe('ReactDOMLegacyFiber', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.mock.calls[0][0]).toMatch(
-        'ReactDOM.render is no longer supported in React 18',
+        'ReactDOM.render has not been supported since React 18',
       );
       expect(console.error.mock.calls[1][0]).toMatch(
-        'ReactDOM.render is no longer supported in React 18',
+        'ReactDOM.render has not been supported since React 18',
       );
     }
   });

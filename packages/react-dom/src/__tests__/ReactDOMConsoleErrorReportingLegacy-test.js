@@ -93,7 +93,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Reported because we're in a browser click event:
             expect.objectContaining({
@@ -136,7 +140,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
 
@@ -157,7 +165,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
 
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -196,7 +208,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });
@@ -221,7 +237,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -260,7 +280,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });
@@ -283,7 +307,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -322,7 +350,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });
@@ -350,7 +382,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -389,7 +425,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });
@@ -413,7 +453,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -452,7 +496,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });
@@ -480,7 +528,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([]);
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
           [
             // Formatting
             expect.stringContaining('%o'),
@@ -519,7 +571,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       }
     });

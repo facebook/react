@@ -2159,7 +2159,7 @@ describe('InspectedElement', () => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
       withErrorsOrWarningsIgnored(
-        ['ReactDOM.hydrate is no longer supported in React 18'],
+        ['ReactDOM.hydrate has not been supported since React 18'],
         () => {
           ReactDOM.hydrate(<Example />, container);
         },
