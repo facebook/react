@@ -289,6 +289,59 @@ describe('ReactSuspense', () => {
     expect(container.textContent).toEqual('AB');
   });
 
+  it('pushes out siblings that render faster than throttle', async () => {
+    function Foo() {
+      Scheduler.log('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={290} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={30} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    setTimeout(async () => {
+      // TODO: this is dumb, but AsyncText isn't timer based after the act changes.
+      // Pretend that this is the start of the sibling suspending.
+      // In a real test, the timer would start when we render B.
+      setTimeout(async () => {
+        resolveText('B');
+      }, 30);
+
+      resolveText('A');
+    }, 290);
+
+    // Render an empty shell
+    const root = ReactTestRenderer.create(<Foo />, {
+      isConcurrent: true,
+    });
+
+    await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Now resolve A
+    jest.advanceTimersByTime(290);
+    await waitFor(['A']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // B starts loading. Parent boundary is in throttle.
+    // Still shows parent loading under throttle
+    jest.advanceTimersByTime(10);
+    await waitForAll(['Suspend! [B]', 'Loading more...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // !! B could have finished before the throttle, but we show a fallback.
+    // !! Pushing out the 30ms fetch for B to 300ms.
+    jest.advanceTimersByTime(300);
+    await waitFor(['B']);
+    expect(root).toMatchRenderedOutput('ALoading more...');
+
+    await act(() => {});
+    expect(root).toMatchRenderedOutput('AB');
+  });
+
   it('does not throttle fallback committing for too long', async () => {
     function Foo() {
       Scheduler.log('Foo');
