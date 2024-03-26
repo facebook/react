@@ -144,6 +144,7 @@ if (__DEV__) {
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
     var alwaysThrottleRetries = true;
+    var disableLegacyMode = false;
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -26108,7 +26109,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-4c1f5e46";
+    var ReactVersion = "19.0.0-www-classic-ac0f08bc";
 
     // Might add PROFILE later.
 
@@ -27002,7 +27003,8 @@ if (__DEV__) {
 
     function create(element, options) {
       var createNodeMock = defaultTestOptions.createNodeMock;
-      var isConcurrent = false;
+      var isConcurrentOnly = disableLegacyMode === true;
+      var isConcurrent = isConcurrentOnly;
       var isStrictMode = false;
       var concurrentUpdatesByDefault = null;
 
@@ -27012,8 +27014,8 @@ if (__DEV__) {
           createNodeMock = options.createNodeMock;
         }
 
-        if (options.unstable_isConcurrent === true) {
-          isConcurrent = true;
+        {
+          isConcurrent = options.unstable_isConcurrent;
         }
 
         if (options.unstable_strictMode === true) {
