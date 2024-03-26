@@ -314,32 +314,30 @@ describe('ReactSuspense', () => {
     }, 290);
 
     // Render an empty shell
-    const root = ReactTestRenderer.create(<Foo />, {
-      isConcurrent: true,
-    });
-
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<Foo />);
     await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
-    expect(root).toMatchRenderedOutput('Loading...');
+    expect(container.textContent).toEqual('Loading...');
 
     // Now resolve A
     jest.advanceTimersByTime(290);
     await waitFor(['A']);
-    expect(root).toMatchRenderedOutput('Loading...');
+    expect(container.textContent).toEqual('Loading...');
 
     // B starts loading. Parent boundary is in throttle.
     // Still shows parent loading under throttle
     jest.advanceTimersByTime(10);
     await waitForAll(['Suspend! [B]', 'Loading more...']);
-    expect(root).toMatchRenderedOutput('Loading...');
+    expect(container.textContent).toEqual('Loading...');
 
     // !! B could have finished before the throttle, but we show a fallback.
     // !! Pushing out the 30ms fetch for B to 300ms.
     jest.advanceTimersByTime(300);
     await waitFor(['B']);
-    expect(root).toMatchRenderedOutput('ALoading more...');
+    expect(container.textContent).toEqual('ALoading more...');
 
     await act(() => {});
-    expect(root).toMatchRenderedOutput('AB');
+    expect(container.textContent).toEqual('AB');
   });
 
   it('does not throttle fallback committing for too long', async () => {
