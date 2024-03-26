@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c87024931f160e9769cdcf58bdec1a68>>
+ * @generated SignedSource<<76f5e861be11fcf494a0e765f9e7dd59>>
  */
 
 "use strict";
@@ -2019,13 +2019,14 @@ if (__DEV__) {
           "Please file an issue."
       );
     } // Hydration (when unsupported)
+
+    var supportsHydration = false;
     var isSuspenseInstancePending = shim$1;
     var isSuspenseInstanceFallback = shim$1;
     var getSuspenseInstanceFallbackErrorDetails = shim$1;
     var registerSuspenseInstanceRetry = shim$1;
     var clearSuspenseBoundary = shim$1;
     var clearSuspenseBoundaryFromContainer = shim$1;
-    var errorHydratingContainer = shim$1;
 
     // Renderers that don't support hydration
     // can re-export everything from this module.
@@ -2546,14 +2547,6 @@ if (__DEV__) {
     }
 
     var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
-
-    // This is imported by the event replaying implementation in React DOM. It's
-    // in a separate file to break a circular dependency between the renderer and
-    // the reconciler.
-    function isRootDehydrated(root) {
-      var currentState = root.current.memoizedState;
-      return currentState.isDehydrated;
-    }
 
     var contextStackCursor = createCursor(null);
     var contextFiberStackCursor = createCursor(null);
@@ -21790,27 +21783,7 @@ if (__DEV__) {
       // back to client side render.
       // Before rendering again, save the errors from the previous attempt.
       var errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
-      var wasRootDehydrated = isRootDehydrated(root);
-
-      if (wasRootDehydrated) {
-        // The shell failed to hydrate. Set a flag to force a client rendering
-        // during the next attempt. To do this, we call prepareFreshStack now
-        // to create the root work-in-progress fiber. This is a bit weird in terms
-        // of factoring, because it relies on renderRootSync not calling
-        // prepareFreshStack again in the call below, which happens because the
-        // root and lanes haven't changed.
-        //
-        // TODO: I think what we should do is set ForceClientRender inside
-        // throwException, like we do for nested Suspense boundaries. The reason
-        // it's here instead is so we can switch to the synchronous work loop, too.
-        // Something to consider for a future refactor.
-        var rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
-        rootWorkInProgress.flags |= ForceClientRender;
-
-        {
-          errorHydratingContainer();
-        }
-      }
+      var wasRootDehydrated = supportsHydration;
 
       var exitStatus = renderRootSync(root, errorRetryLanes);
 
@@ -25509,7 +25482,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-ab33cef8";
+    var ReactVersion = "19.0.0-canary-57dfa024";
 
     // Might add PROFILE later.
 
