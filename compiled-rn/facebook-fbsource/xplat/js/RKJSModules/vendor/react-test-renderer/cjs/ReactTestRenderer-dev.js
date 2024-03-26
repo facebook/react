@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3512f830a7f7738685a3f378f1fc8206>>
+ * @generated SignedSource<<270144e142689aae36510575078767a1>>
  */
 
 "use strict";
@@ -17085,9 +17085,7 @@ if (__DEV__) {
             var _wasHydrated3 = popHydrationState();
 
             if (_wasHydrated3) {
-              if (prepareToHydrateHostTextInstance()) {
-                markUpdate(workInProgress);
-              }
+              prepareToHydrateHostTextInstance();
             } else {
               workInProgress.stateNode = createTextInstance(newText);
             }
@@ -25510,7 +25508,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-ce2d02ca";
+    var ReactVersion = "19.0.0-canary-a9ccb423";
 
     // Might add PROFILE later.
 

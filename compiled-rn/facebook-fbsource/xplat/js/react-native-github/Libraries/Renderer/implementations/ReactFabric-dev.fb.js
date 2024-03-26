@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d8580891aa508376928393223024e49>>
+ * @generated SignedSource<<59c12b288a18fed81de38ef7de7f9286>>
  */
 
 "use strict";
@@ -21445,9 +21445,7 @@ to return true:wantsResponderID|                            |
             var _wasHydrated3 = popHydrationState();
 
             if (_wasHydrated3) {
-              if (prepareToHydrateHostTextInstance()) {
-                markUpdate(workInProgress);
-              }
+              prepareToHydrateHostTextInstance();
             } else {
               workInProgress.stateNode = createTextInstance(
                 newText,
@@ -29858,7 +29856,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-42ba9c63";
+    var ReactVersion = "19.0.0-canary-6e1959ee";
 
     function createPortal$1(
       children,

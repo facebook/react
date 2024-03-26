@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<678b4fde4c7c00ef882ad8a25ac7bf72>>
+ * @generated SignedSource<<6e3fd1185eb56142a67b0b83da745c19>>
  */
 
 "use strict";
@@ -897,7 +897,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_266 = {
+var injectedNamesToPlugins$jscomp$inline_265 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -943,32 +943,32 @@ var injectedNamesToPlugins$jscomp$inline_266 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_267 = !1,
-  pluginName$jscomp$inline_268;
-for (pluginName$jscomp$inline_268 in injectedNamesToPlugins$jscomp$inline_266)
+  isOrderingDirty$jscomp$inline_266 = !1,
+  pluginName$jscomp$inline_267;
+for (pluginName$jscomp$inline_267 in injectedNamesToPlugins$jscomp$inline_265)
   if (
-    injectedNamesToPlugins$jscomp$inline_266.hasOwnProperty(
-      pluginName$jscomp$inline_268
+    injectedNamesToPlugins$jscomp$inline_265.hasOwnProperty(
+      pluginName$jscomp$inline_267
     )
   ) {
-    var pluginModule$jscomp$inline_269 =
-      injectedNamesToPlugins$jscomp$inline_266[pluginName$jscomp$inline_268];
+    var pluginModule$jscomp$inline_268 =
+      injectedNamesToPlugins$jscomp$inline_265[pluginName$jscomp$inline_267];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_268) ||
-      namesToPlugins[pluginName$jscomp$inline_268] !==
-        pluginModule$jscomp$inline_269
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_267) ||
+      namesToPlugins[pluginName$jscomp$inline_267] !==
+        pluginModule$jscomp$inline_268
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_268])
+      if (namesToPlugins[pluginName$jscomp$inline_267])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_268 + "`.")
+            (pluginName$jscomp$inline_267 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_268] =
-        pluginModule$jscomp$inline_269;
-      isOrderingDirty$jscomp$inline_267 = !0;
+      namesToPlugins[pluginName$jscomp$inline_267] =
+        pluginModule$jscomp$inline_268;
+      isOrderingDirty$jscomp$inline_266 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_267 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_266 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -11313,10 +11313,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1192 = {
+  devToolsConfig$jscomp$inline_1191 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-ef497dcd",
+    version: "19.0.0-canary-befaa7dd",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11346,10 +11346,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1192.bundleType,
-  version: devToolsConfig$jscomp$inline_1192.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1192.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1192.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1191.bundleType,
+  version: devToolsConfig$jscomp$inline_1191.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1191.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1191.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11365,14 +11365,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1192.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1191.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-ef497dcd"
+  reconcilerVersion: "19.0.0-canary-befaa7dd"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
