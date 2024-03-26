@@ -8945,13 +8945,10 @@ function recoverFromConcurrentError(
   originallyAttemptedLanes,
   errorRetryLanes
 ) {
-  var errorsFromFirstAttempt = workInProgressRootConcurrentErrors,
-    JSCompiler_inline_result;
-  (JSCompiler_inline_result = root.current.memoizedState.isDehydrated) &&
-    (prepareFreshStack(root, errorRetryLanes).flags |= 256);
+  var errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
   errorRetryLanes = renderRootSync(root, errorRetryLanes);
   if (2 !== errorRetryLanes) {
-    if (workInProgressRootDidAttachPingListener && !JSCompiler_inline_result)
+    if (workInProgressRootDidAttachPingListener)
       return (
         (root.errorRecoveryDisabledLanes |= originallyAttemptedLanes),
         (workInProgressRootInterleavedUpdatedLanes |= originallyAttemptedLanes),
@@ -10264,19 +10261,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1112 = {
+  devToolsConfig$jscomp$inline_1108 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-f6a224b8",
+    version: "19.0.0-www-modern-32937d9c",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1317 = {
-  bundleType: devToolsConfig$jscomp$inline_1112.bundleType,
-  version: devToolsConfig$jscomp$inline_1112.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1112.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1112.rendererConfig,
+var internals$jscomp$inline_1313 = {
+  bundleType: devToolsConfig$jscomp$inline_1108.bundleType,
+  version: devToolsConfig$jscomp$inline_1108.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1108.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1108.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10293,26 +10290,26 @@ var internals$jscomp$inline_1317 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1112.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1108.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-f6a224b8"
+  reconcilerVersion: "19.0.0-www-modern-32937d9c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1318 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1314 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1318.isDisabled &&
-    hook$jscomp$inline_1318.supportsFiber
+    !hook$jscomp$inline_1314.isDisabled &&
+    hook$jscomp$inline_1314.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1318.inject(
-        internals$jscomp$inline_1317
+      (rendererID = hook$jscomp$inline_1314.inject(
+        internals$jscomp$inline_1313
       )),
-        (injectedHook = hook$jscomp$inline_1318);
+        (injectedHook = hook$jscomp$inline_1314);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

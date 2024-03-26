@@ -8169,35 +8169,104 @@ if (__DEV__) {
       return true;
     }
 
+    function warnForDeletedHydratableInstance(parentType, child) {
+      {
+        var description = describeHydratableInstanceForDevWarnings(child);
+
+        if (typeof description === "string") {
+          error(
+            'Did not expect server HTML to contain the text node "%s" in <%s>.',
+            description,
+            parentType
+          );
+        } else {
+          error(
+            "Did not expect server HTML to contain a <%s> in <%s>.",
+            description.type,
+            parentType
+          );
+        }
+      }
+    }
+
+    function warnForInsertedHydratedElement(parentType, tag) {
+      {
+        error(
+          "Expected server HTML to contain a matching <%s> in <%s>.",
+          tag,
+          parentType
+        );
+      }
+    }
+
+    function warnForInsertedHydratedText(parentType, text) {
+      {
+        error(
+          'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+          text,
+          parentType
+        );
+      }
+    }
+
+    function warnForInsertedHydratedSuspense(parentType) {
+      {
+        error(
+          "Expected server HTML to contain a matching <%s> in <%s>.",
+          "Suspense",
+          parentType
+        );
+      }
+    }
+
+    function errorHydratingContainer(parentContainer) {
+      {
+        // TODO: This gets logged by onRecoverableError, too, so we should be
+        // able to remove it.
+        error(
+          "An error occurred during hydration. The server HTML was replaced with client content."
+        );
+      }
+    }
+
     function warnUnhydratedInstance(returnFiber, instance) {
       {
+        if (didWarnInvalidHydration) {
+          return;
+        }
+
+        didWarnInvalidHydration = true;
+
         switch (returnFiber.tag) {
           case HostRoot: {
-            didNotHydrateInstanceWithinContainer(
-              returnFiber.stateNode.containerInfo,
-              instance
-            );
+            var description =
+              describeHydratableInstanceForDevWarnings(instance);
+
+            if (typeof description === "string") {
+              error(
+                'Did not expect server HTML to contain the text node "%s" in the root.',
+                description
+              );
+            } else {
+              error(
+                "Did not expect server HTML to contain a <%s> in the root.",
+                description.type
+              );
+            }
+
             break;
           }
 
           case HostSingleton:
           case HostComponent: {
-            didNotHydrateInstance(
-              returnFiber.type,
-              returnFiber.memoizedProps,
-              returnFiber.stateNode,
-              instance
-            );
+            warnForDeletedHydratableInstance(returnFiber.type, instance);
             break;
           }
 
           case SuspenseComponent: {
             var suspenseState = returnFiber.memoizedState;
             if (suspenseState.dehydrated !== null)
-              didNotHydrateInstanceWithinSuspenseInstance(
-                suspenseState.dehydrated,
-                instance
-              );
+              warnForDeletedHydratableInstance("Suspense", instance);
             break;
           }
         }
@@ -8213,26 +8282,41 @@ if (__DEV__) {
           return;
         }
 
+        if (didWarnInvalidHydration) {
+          return;
+        }
+
+        didWarnInvalidHydration = true;
+
         switch (returnFiber.tag) {
           case HostRoot: {
-            var parentContainer = returnFiber.stateNode.containerInfo;
-
+            // const parentContainer = returnFiber.stateNode.containerInfo;
             switch (fiber.tag) {
               case HostSingleton:
               case HostComponent:
-                var type = fiber.type;
-                didNotFindHydratableInstanceWithinContainer(
-                  parentContainer,
-                  type
+                error(
+                  "Expected server HTML to contain a matching <%s> in the root.",
+                  fiber.type
                 );
+
                 break;
 
               case HostText:
                 var text = fiber.pendingProps;
-                didNotFindHydratableTextInstanceWithinContainer(
-                  parentContainer,
+
+                error(
+                  'Expected server HTML to contain a matching text node for "%s" in the root.',
                   text
                 );
+
+                break;
+
+              case SuspenseComponent:
+                error(
+                  "Expected server HTML to contain a matching <%s> in the root.",
+                  "Suspense"
+                );
+
                 break;
             }
 
@@ -8241,31 +8325,25 @@ if (__DEV__) {
 
           case HostSingleton:
           case HostComponent: {
-            var parentType = returnFiber.type;
-            var parentProps = returnFiber.memoizedProps;
-            var parentInstance = returnFiber.stateNode;
+            var parentType = returnFiber.type; // const parentProps = returnFiber.memoizedProps;
+            // const parentInstance = returnFiber.stateNode;
 
             switch (fiber.tag) {
               case HostSingleton:
               case HostComponent: {
-                var _type = fiber.type;
-                didNotFindHydratableInstance(
-                  parentType,
-                  parentProps,
-                  parentInstance,
-                  _type
-                );
+                var type = fiber.type;
+                warnForInsertedHydratedElement(parentType, type);
                 break;
               }
 
               case HostText: {
                 var _text = fiber.pendingProps;
-                didNotFindHydratableTextInstance(
-                  parentType,
-                  parentProps,
-                  parentInstance,
-                  _text
-                );
+                warnForInsertedHydratedText(parentType, _text);
+                break;
+              }
+
+              case SuspenseComponent: {
+                warnForInsertedHydratedSuspense(parentType);
                 break;
               }
             }
@@ -8274,27 +8352,25 @@ if (__DEV__) {
           }
 
           case SuspenseComponent: {
-            var suspenseState = returnFiber.memoizedState;
-            var _parentInstance = suspenseState.dehydrated;
-            if (_parentInstance !== null)
-              switch (fiber.tag) {
-                case HostSingleton:
-                case HostComponent:
-                  var _type2 = fiber.type;
-                  didNotFindHydratableInstanceWithinSuspenseInstance(
-                    _parentInstance,
-                    _type2
-                  );
-                  break;
+            // const suspenseState: SuspenseState = returnFiber.memoizedState;
+            // const parentInstance = suspenseState.dehydrated;
+            switch (fiber.tag) {
+              case HostSingleton:
+              case HostComponent:
+                var _type = fiber.type;
+                warnForInsertedHydratedElement("Suspense", _type);
+                break;
 
-                case HostText:
-                  var _text2 = fiber.pendingProps;
-                  didNotFindHydratableTextInstanceWithinSuspenseInstance(
-                    _parentInstance,
-                    _text2
-                  );
-                  break;
-              }
+              case HostText:
+                var _text2 = fiber.pendingProps;
+                warnForInsertedHydratedText("Suspense", _text2);
+                break;
+
+              case SuspenseComponent:
+                warnForInsertedHydratedSuspense("Suspense");
+                break;
+            }
+
             break;
           }
 
@@ -8489,66 +8565,152 @@ if (__DEV__) {
 
       throwOnHydrationMismatch();
       return false;
-    }
+    } // Temp
+
+    var didWarnInvalidHydration = false;
 
     function prepareToHydrateHostInstance(fiber, hostContext) {
       var instance = fiber.stateNode;
-      var shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-      hydrateInstance(
+
+      {
+        var shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
+
+        if (shouldWarnIfMismatchDev) {
+          var differences = diffHydratedPropsForDevWarnings(
+            instance,
+            fiber.type,
+            fiber.memoizedProps,
+            hostContext
+          );
+
+          if (differences !== null) {
+            if (differences.children != null && !didWarnInvalidHydration) {
+              didWarnInvalidHydration = true;
+              var serverValue = differences.children;
+              var clientValue = fiber.memoizedProps.children;
+
+              error(
+                'Text content did not match. Server: "%s" Client: "%s"',
+                serverValue,
+                clientValue
+              );
+            }
+
+            for (var propName in differences) {
+              if (!differences.hasOwnProperty(propName)) {
+                continue;
+              }
+
+              if (didWarnInvalidHydration) {
+                break;
+              }
+
+              didWarnInvalidHydration = true;
+              var _serverValue = differences[propName];
+              var _clientValue = fiber.memoizedProps[propName];
+
+              if (propName === "children");
+              else if (_clientValue != null) {
+                error(
+                  "Prop `%s` did not match. Server: %s Client: %s",
+                  propName,
+                  JSON.stringify(_serverValue),
+                  JSON.stringify(_clientValue)
+                );
+              } else {
+                error("Extra attribute from the server: %s", propName);
+              }
+            }
+          }
+        }
+      }
+
+      var didHydrate = hydrateInstance(
         instance,
         fiber.type,
         fiber.memoizedProps,
         hostContext,
-        fiber,
-        shouldWarnIfMismatchDev
+        fiber
       );
+
+      if (!didHydrate) {
+        throw new Error("Text content does not match server-rendered HTML.");
+      }
     }
 
     function prepareToHydrateHostTextInstance(fiber) {
       var textInstance = fiber.stateNode;
       var textContent = fiber.memoizedProps;
       var shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-      var textIsDifferent = hydrateTextInstance(
+      var parentProps = null; // We assume that prepareToHydrateHostTextInstance is called in a context where the
+      // hydration parent is the parent host component of this host text.
+
+      var returnFiber = hydrationParentFiber;
+
+      if (returnFiber !== null) {
+        switch (returnFiber.tag) {
+          case HostRoot: {
+            {
+              if (shouldWarnIfMismatchDev) {
+                var difference = diffHydratedTextForDevWarnings(
+                  textInstance,
+                  textContent,
+                  parentProps
+                );
+
+                if (difference !== null && !didWarnInvalidHydration) {
+                  didWarnInvalidHydration = true;
+
+                  error(
+                    'Text content did not match. Server: "%s" Client: "%s"',
+                    difference,
+                    textContent
+                  );
+                }
+              }
+            }
+
+            break;
+          }
+
+          case HostSingleton:
+          case HostComponent: {
+            parentProps = returnFiber.memoizedProps;
+
+            {
+              if (shouldWarnIfMismatchDev) {
+                var _difference = diffHydratedTextForDevWarnings(
+                  textInstance,
+                  textContent,
+                  parentProps
+                );
+
+                if (_difference !== null && !didWarnInvalidHydration) {
+                  didWarnInvalidHydration = true;
+
+                  error(
+                    'Text content did not match. Server: "%s" Client: "%s"',
+                    _difference,
+                    textContent
+                  );
+                }
+              }
+            }
+
+            break;
+          }
+        } // TODO: What if it's a SuspenseInstance?
+      }
+
+      var didHydrate = hydrateTextInstance(
         textInstance,
         textContent,
-        fiber
+        fiber,
+        parentProps
       );
 
-      if (textIsDifferent) {
-        // We assume that prepareToHydrateHostTextInstance is called in a context where the
-        // hydration parent is the parent host component of this host text.
-        var returnFiber = hydrationParentFiber;
-
-        if (returnFiber !== null) {
-          switch (returnFiber.tag) {
-            case HostRoot: {
-              var parentContainer = returnFiber.stateNode.containerInfo;
-              didNotMatchHydratedContainerTextInstance(
-                parentContainer,
-                textInstance,
-                textContent,
-                shouldWarnIfMismatchDev
-              );
-              break;
-            }
-
-            case HostSingleton:
-            case HostComponent: {
-              var parentType = returnFiber.type;
-              var parentProps = returnFiber.memoizedProps;
-              var parentInstance = returnFiber.stateNode;
-              didNotMatchHydratedTextInstance(
-                parentType,
-                parentProps,
-                parentInstance,
-                textInstance,
-                textContent,
-                shouldWarnIfMismatchDev
-              );
-              break;
-            }
-          }
-        }
+      if (!didHydrate) {
+        throw new Error("Text content does not match server-rendered HTML.");
       }
     }
 
@@ -31145,7 +31307,7 @@ if (__DEV__) {
         rootWorkInProgress.flags |= ForceClientRender;
 
         {
-          errorHydratingContainer(root.containerInfo);
+          errorHydratingContainer();
         }
       }
 
@@ -35413,7 +35575,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-fbbbe297";
+    var ReactVersion = "19.0.0-www-modern-795da624";
 
     function createPortal$1(
       children,
@@ -40718,7 +40880,6 @@ if (__DEV__) {
 
     var didWarnControlledToUncontrolled = false;
     var didWarnUncontrolledToControlled = false;
-    var didWarnInvalidHydration = false;
     var didWarnFormActionType = false;
     var didWarnFormActionName = false;
     var didWarnFormActionTarget = false;
@@ -40869,12 +41030,13 @@ if (__DEV__) {
       }
     }
 
-    function warnForPropDifference(propName, serverValue, clientValue) {
+    function warnForPropDifference(
+      propName,
+      serverValue,
+      clientValue,
+      serverDifferences
+    ) {
       {
-        if (didWarnInvalidHydration) {
-          return;
-        }
-
         if (serverValue === clientValue) {
           return;
         }
@@ -40888,30 +41050,22 @@ if (__DEV__) {
           return;
         }
 
-        didWarnInvalidHydration = true;
-
-        error(
-          "Prop `%s` did not match. Server: %s Client: %s",
-          propName,
-          JSON.stringify(normalizedServerValue),
-          JSON.stringify(normalizedClientValue)
-        );
+        serverDifferences[propName] = serverValue;
       }
     }
 
-    function warnForExtraAttributes(attributeNames) {
+    function warnForExtraAttributes(
+      domElement,
+      attributeNames,
+      serverDifferences
+    ) {
       {
-        if (didWarnInvalidHydration) {
-          return;
-        }
-
-        didWarnInvalidHydration = true;
-        var names = [];
-        attributeNames.forEach(function (name) {
-          names.push(name);
+        attributeNames.forEach(function (attributeName) {
+          serverDifferences[attributeName] =
+            attributeName === "style"
+              ? getStylesObjectFromElement(domElement)
+              : domElement.getAttribute(attributeName);
         });
-
-        error("Extra attributes from the server: %s", names);
       }
     }
 
@@ -40974,30 +41128,15 @@ if (__DEV__) {
         .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
     }
 
-    function checkForUnmatchedText(serverText, clientText, shouldWarnDev) {
+    function checkForUnmatchedText(serverText, clientText) {
       var normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
       var normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
 
       if (normalizedServerText === normalizedClientText) {
-        return;
+        return true;
       }
 
-      if (shouldWarnDev) {
-        {
-          if (!didWarnInvalidHydration) {
-            didWarnInvalidHydration = true;
-
-            error(
-              'Text content did not match. Server: "%s" Client: "%s"',
-              normalizedServerText,
-              normalizedClientText
-            );
-          }
-        }
-      } // In concurrent roots, we throw when there's a text mismatch and revert to
-      // client rendering, up to the nearest Suspense boundary.
-
-      throw new Error("Text content does not match server-rendered HTML.");
+      return false;
     }
 
     function noop$1() {}
@@ -42758,19 +42897,70 @@ if (__DEV__) {
       }
     }
 
-    function diffHydratedStyles(domElement, value) {
+    function getPropsFromElement(domElement) {
+      var serverDifferences = {};
+      var attributes = domElement.attributes;
+
+      for (var i = 0; i < attributes.length; i++) {
+        var attr = attributes[i];
+        serverDifferences[attr.name] =
+          attr.name.toLowerCase() === "style"
+            ? getStylesObjectFromElement(domElement)
+            : attr.value;
+      }
+
+      return serverDifferences;
+    }
+
+    function getStylesObjectFromElement(domElement) {
+      var serverValueInObjectForm = {};
+      var style = domElement.style;
+
+      for (var i = 0; i < style.length; i++) {
+        var styleName = style[i]; // TODO: We should use the original prop value here if it is equivalent.
+        // TODO: We could use the original client capitalization if the equivalent
+        // other capitalization exists in the DOM.
+
+        serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
+      }
+
+      return serverValueInObjectForm;
+    }
+
+    function diffHydratedStyles(domElement, value, serverDifferences) {
       if (value != null && typeof value !== "object") {
-        throw new Error(
-          "The `style` prop expects a mapping from style properties to values, " +
-            "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-            "using JSX."
-        );
+        {
+          error(
+            "The `style` prop expects a mapping from style properties to values, " +
+              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+              "using JSX."
+          );
+        }
+
+        return;
       }
 
       if (canDiffStyleForHydrationWarning) {
-        var expectedStyle = createDangerousStringForStyles(value);
+        // First we compare the string form and see if it's equivalent.
+        // This lets us bail out on anything that used to pass in this form.
+        // It also lets us compare anything that's not parsed by this browser.
+        var clientValue = createDangerousStringForStyles(value);
         var serverValue = domElement.getAttribute("style");
-        warnForPropDifference("style", serverValue, expectedStyle);
+
+        if (serverValue === clientValue) {
+          return;
+        }
+
+        var normalizedClientValue =
+          normalizeMarkupForTextOrAttribute(clientValue);
+        var normalizedServerValue =
+          normalizeMarkupForTextOrAttribute(serverValue);
+
+        if (normalizedServerValue === normalizedClientValue) {
+          return;
+        } // Otherwise, we create the object from the DOM for the diff view.
+
+        serverDifferences.style = getStylesObjectFromElement(domElement);
       }
     }
 
@@ -42779,7 +42969,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -42814,7 +43005,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydrateBooleanAttribute(
@@ -42822,7 +43013,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -42854,7 +43046,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydrateOverloadedBooleanAttribute(
@@ -42862,7 +43054,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -42907,7 +43100,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydrateBooleanishAttribute(
@@ -42915,7 +43108,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -42948,7 +43142,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydrateNumericAttribute(
@@ -42956,7 +43150,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -43002,7 +43197,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydratePositiveNumericAttribute(
@@ -43010,7 +43205,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -43056,7 +43252,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function hydrateSanitizedAttribute(
@@ -43064,7 +43260,8 @@ if (__DEV__) {
       propKey,
       attributeName,
       value,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       extraAttributes.delete(attributeName);
       var serverValue = domElement.getAttribute(attributeName);
@@ -43101,7 +43298,7 @@ if (__DEV__) {
         }
       }
 
-      warnForPropDifference(propKey, serverValue, value);
+      warnForPropDifference(propKey, serverValue, value, serverDifferences);
     }
 
     function diffHydratedCustomComponent(
@@ -43109,7 +43306,8 @@ if (__DEV__) {
       tag,
       props,
       hostContext,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       for (var propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
@@ -43136,7 +43334,19 @@ if (__DEV__) {
         } // Validate that the properties correspond to their expected values.
 
         switch (propKey) {
-          case "children": // Checked above already
+          case "children": {
+            if (typeof value === "string" || typeof value === "number") {
+              warnForPropDifference(
+                "children",
+                domElement.textContent,
+                value,
+                serverDifferences
+              );
+            }
+
+            continue;
+          }
+          // Checked above already
 
           case "suppressContentEditableWarning":
           case "suppressHydrationWarning":
@@ -43153,14 +43363,19 @@ if (__DEV__) {
 
             if (nextHtml != null) {
               var expectedHTML = normalizeHTML(domElement, nextHtml);
-              warnForPropDifference(propKey, serverHTML, expectedHTML);
+              warnForPropDifference(
+                propKey,
+                serverHTML,
+                expectedHTML,
+                serverDifferences
+              );
             }
 
             continue;
 
           case "style":
             extraAttributes.delete(propKey);
-            diffHydratedStyles(domElement, value);
+            diffHydratedStyles(domElement, value, serverDifferences);
             continue;
 
           case "offsetParent":
@@ -43193,7 +43408,12 @@ if (__DEV__) {
               "class",
               value
             );
-            warnForPropDifference("className", serverValue, value);
+            warnForPropDifference(
+              "className",
+              serverValue,
+              value,
+              serverDifferences
+            );
             continue;
           }
 
@@ -43220,7 +43440,12 @@ if (__DEV__) {
               value
             );
 
-            warnForPropDifference(propKey, _serverValue, value);
+            warnForPropDifference(
+              propKey,
+              _serverValue,
+              value,
+              serverDifferences
+            );
           }
         }
       }
@@ -43236,7 +43461,8 @@ if (__DEV__) {
       tag,
       props,
       hostContext,
-      extraAttributes
+      extraAttributes,
+      serverDifferences
     ) {
       for (var propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
@@ -43263,7 +43489,19 @@ if (__DEV__) {
         } // Validate that the properties correspond to their expected values.
 
         switch (propKey) {
-          case "children": // Checked above already
+          case "children": {
+            if (typeof value === "string" || typeof value === "number") {
+              warnForPropDifference(
+                "children",
+                domElement.textContent,
+                value,
+                serverDifferences
+              );
+            }
+
+            continue;
+          }
+          // Checked above already
 
           case "suppressContentEditableWarning":
           case "suppressHydrationWarning":
@@ -43285,7 +43523,12 @@ if (__DEV__) {
 
             if (nextHtml != null) {
               var expectedHTML = normalizeHTML(domElement, nextHtml);
-              warnForPropDifference(propKey, serverHTML, expectedHTML);
+
+              if (serverHTML !== expectedHTML) {
+                serverDifferences[propKey] = {
+                  __html: serverHTML
+                };
+              }
             }
 
             continue;
@@ -43296,7 +43539,8 @@ if (__DEV__) {
               propKey,
               "class",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43306,33 +43550,49 @@ if (__DEV__) {
               propKey,
               "tabindex",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
           case "style":
             extraAttributes.delete(propKey);
-            diffHydratedStyles(domElement, value);
+            diffHydratedStyles(domElement, value, serverDifferences);
             continue;
 
           case "multiple": {
             extraAttributes.delete(propKey);
             var serverValue = domElement.multiple;
-            warnForPropDifference(propKey, serverValue, value);
+            warnForPropDifference(
+              propKey,
+              serverValue,
+              value,
+              serverDifferences
+            );
             continue;
           }
 
           case "muted": {
             extraAttributes.delete(propKey);
             var _serverValue2 = domElement.muted;
-            warnForPropDifference(propKey, _serverValue2, value);
+            warnForPropDifference(
+              propKey,
+              _serverValue2,
+              value,
+              serverDifferences
+            );
             continue;
           }
 
           case "autoFocus": {
             extraAttributes.delete("autofocus");
             var _serverValue3 = domElement.autofocus;
-            warnForPropDifference(propKey, _serverValue3, value);
+            warnForPropDifference(
+              propKey,
+              _serverValue3,
+              value,
+              serverDifferences
+            );
             continue;
           }
 
@@ -43369,7 +43629,8 @@ if (__DEV__) {
                   propKey,
                   propKey,
                   null,
-                  extraAttributes
+                  extraAttributes,
+                  serverDifferences
                 );
                 continue;
               }
@@ -43380,7 +43641,8 @@ if (__DEV__) {
               propKey,
               propKey,
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43411,7 +43673,12 @@ if (__DEV__) {
               continue;
             } else if (_serverValue4 === EXPECTED_FORM_ACTION_URL) {
               extraAttributes.delete(propKey.toLowerCase());
-              warnForPropDifference(propKey, "function", value);
+              warnForPropDifference(
+                propKey,
+                "function",
+                value,
+                serverDifferences
+              );
               continue;
             }
 
@@ -43420,7 +43687,8 @@ if (__DEV__) {
               propKey,
               propKey.toLowerCase(),
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43431,7 +43699,8 @@ if (__DEV__) {
               propKey,
               "xlink:href",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43442,7 +43711,8 @@ if (__DEV__) {
               propKey,
               "contenteditable",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43454,7 +43724,8 @@ if (__DEV__) {
               propKey,
               "spellcheck",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43470,7 +43741,8 @@ if (__DEV__) {
               propKey,
               propKey,
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43503,7 +43775,8 @@ if (__DEV__) {
               propKey,
               propKey.toLowerCase(),
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43515,7 +43788,8 @@ if (__DEV__) {
               propKey,
               propKey,
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43529,7 +43803,8 @@ if (__DEV__) {
               propKey,
               propKey,
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43540,7 +43815,8 @@ if (__DEV__) {
               propKey,
               "rowspan",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43551,7 +43827,8 @@ if (__DEV__) {
               propKey,
               propKey,
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
           }
@@ -43562,7 +43839,8 @@ if (__DEV__) {
               propKey,
               "x-height",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43572,7 +43850,8 @@ if (__DEV__) {
               propKey,
               "xlink:actuate",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43582,7 +43861,8 @@ if (__DEV__) {
               propKey,
               "xlink:arcrole",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43592,7 +43872,8 @@ if (__DEV__) {
               propKey,
               "xlink:role",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43602,7 +43883,8 @@ if (__DEV__) {
               propKey,
               "xlink:show",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43612,7 +43894,8 @@ if (__DEV__) {
               propKey,
               "xlink:title",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43622,7 +43905,8 @@ if (__DEV__) {
               propKey,
               "xlink:type",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43632,7 +43916,8 @@ if (__DEV__) {
               propKey,
               "xml:base",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43642,7 +43927,8 @@ if (__DEV__) {
               propKey,
               "xml:lang",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43652,7 +43938,8 @@ if (__DEV__) {
               propKey,
               "xml:space",
               value,
-              extraAttributes
+              extraAttributes,
+              serverDifferences
             );
             continue;
 
@@ -43680,7 +43967,8 @@ if (__DEV__) {
                 propKey,
                 propKey,
                 value,
-                extraAttributes
+                extraAttributes,
+                serverDifferences
               );
               continue;
             }
@@ -43733,20 +44021,19 @@ if (__DEV__) {
             );
 
             if (!isMismatchDueToBadCasing) {
-              warnForPropDifference(propKey, _serverValue5, value);
+              warnForPropDifference(
+                propKey,
+                _serverValue5,
+                value,
+                serverDifferences
+              );
             }
           }
         }
       }
     }
 
-    function diffHydratedProperties(
-      domElement,
-      tag,
-      props,
-      shouldWarnDev,
-      hostContext
-    ) {
+    function hydrateProperties(domElement, tag, props, hostContext) {
       {
         validatePropertiesInDevelopment(tag, props);
       } // TODO: Make sure that we check isMounted before firing any of these events.
@@ -43868,15 +44155,13 @@ if (__DEV__) {
         typeof children === "number" ||
         (enableBigIntSupport && typeof children === "bigint")
       ) {
-        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-        if (domElement.textContent !== "" + children) {
-          if (props.suppressHydrationWarning !== true) {
-            checkForUnmatchedText(
-              domElement.textContent,
-              children,
-              shouldWarnDev
-            );
-          }
+        if (
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+          domElement.textContent !== "" + children &&
+          props.suppressHydrationWarning !== true &&
+          !checkForUnmatchedText(domElement.textContent, children)
+        ) {
+          return false;
         }
       }
 
@@ -43893,12 +44178,17 @@ if (__DEV__) {
         trapClickOnNonInteractiveElement(domElement);
       }
 
-      if (shouldWarnDev) {
+      return true;
+    }
+    function diffHydratedProperties(domElement, tag, props, hostContext) {
+      var serverDifferences = {};
+
+      {
         var extraAttributes = new Set();
         var attributes = domElement.attributes;
 
-        for (var _i = 0; _i < attributes.length; _i++) {
-          var name = attributes[_i].name.toLowerCase();
+        for (var i = 0; i < attributes.length; i++) {
+          var name = attributes[i].name.toLowerCase();
 
           switch (name) {
             // Controlled attributes are not validated
@@ -43915,7 +44205,7 @@ if (__DEV__) {
             default:
               // Intentionally use the original name.
               // See discussion in https://github.com/facebook/react/pull/10676.
-              extraAttributes.add(attributes[_i].name);
+              extraAttributes.add(attributes[i].name);
           }
         }
 
@@ -43925,7 +44215,8 @@ if (__DEV__) {
             tag,
             props,
             hostContext,
-            extraAttributes
+            extraAttributes,
+            serverDifferences
           );
         } else {
           diffHydratedGenericElement(
@@ -43933,7 +44224,8 @@ if (__DEV__) {
             tag,
             props,
             hostContext,
-            extraAttributes
+            extraAttributes,
+            serverDifferences
           );
         }
 
@@ -43941,73 +44233,49 @@ if (__DEV__) {
           extraAttributes.size > 0 &&
           props.suppressHydrationWarning !== true
         ) {
-          warnForExtraAttributes(extraAttributes);
+          warnForExtraAttributes(
+            domElement,
+            extraAttributes,
+            serverDifferences
+          );
         }
       }
+
+      if (Object.keys(serverDifferences).length === 0) {
+        return null;
+      }
+
+      return serverDifferences;
+    }
+    function hydrateText(textNode, text, parentProps) {
+      var isDifferent = textNode.nodeValue !== text;
+
+      if (
+        isDifferent &&
+        (parentProps === null ||
+          parentProps.suppressHydrationWarning !== true) &&
+        !checkForUnmatchedText(textNode.nodeValue, text)
+      ) {
+        return false;
+      }
+
+      return true;
     }
     function diffHydratedText(textNode, text) {
-      var isDifferent = textNode.nodeValue !== text;
-      return isDifferent;
-    }
-    function warnForDeletedHydratableElement(parentNode, child) {
-      {
-        if (didWarnInvalidHydration) {
-          return;
-        }
-
-        didWarnInvalidHydration = true;
-
-        error(
-          "Did not expect server HTML to contain a <%s> in <%s>.",
-          child.nodeName.toLowerCase(),
-          parentNode.nodeName.toLowerCase()
-        );
+      if (textNode.nodeValue === text) {
+        return null;
       }
-    }
-    function warnForDeletedHydratableText(parentNode, child) {
-      {
-        if (didWarnInvalidHydration) {
-          return;
-        }
 
-        didWarnInvalidHydration = true;
+      var normalizedClientText = normalizeMarkupForTextOrAttribute(text);
+      var normalizedServerText = normalizeMarkupForTextOrAttribute(
+        textNode.nodeValue
+      );
 
-        error(
-          'Did not expect server HTML to contain the text node "%s" in <%s>.',
-          child.nodeValue,
-          parentNode.nodeName.toLowerCase()
-        );
+      if (normalizedServerText === normalizedClientText) {
+        return null;
       }
-    }
-    function warnForInsertedHydratedElement(parentNode, tag, props) {
-      {
-        if (didWarnInvalidHydration) {
-          return;
-        }
 
-        didWarnInvalidHydration = true;
-
-        error(
-          "Expected server HTML to contain a matching <%s> in <%s>.",
-          tag,
-          parentNode.nodeName.toLowerCase()
-        );
-      }
-    }
-    function warnForInsertedHydratedText(parentNode, text) {
-      {
-        if (didWarnInvalidHydration) {
-          return;
-        }
-
-        didWarnInvalidHydration = true;
-
-        error(
-          'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-          text,
-          parentNode.nodeName.toLowerCase()
-        );
-      }
+      return textNode.nodeValue;
     }
     function restoreControlledState(domElement, tag, props) {
       switch (tag) {
@@ -45153,6 +45421,23 @@ if (__DEV__) {
     function getFirstHydratableChildWithinSuspenseInstance(parentInstance) {
       return getNextHydratable(parentInstance.nextSibling);
     }
+    function describeHydratableInstanceForDevWarnings(instance) {
+      // Reverse engineer a pseudo react-element from hydratable instnace
+      if (instance.nodeType === ELEMENT_NODE) {
+        // Reverse engineer a set of props that can print for dev warnings
+        return {
+          type: instance.nodeName.toLowerCase(),
+          props: getPropsFromElement(instance)
+        };
+      } else if (instance.nodeType === COMMENT_NODE) {
+        return {
+          type: "Suspense",
+          props: {}
+        };
+      } else {
+        return instance.nodeValue;
+      }
+    }
     function validateHydratableInstance(type, props, hostContext) {
       {
         // TODO: take namespace into account when validating.
@@ -45165,14 +45450,22 @@ if (__DEV__) {
       type,
       props,
       hostContext,
-      internalInstanceHandle,
-      shouldWarnDev
+      internalInstanceHandle
     ) {
       precacheFiberNode(internalInstanceHandle, instance); // TODO: Possibly defer this until the commit phase where all the events
       // get attached.
 
       updateFiberProps(instance, props);
-      diffHydratedProperties(instance, type, props, shouldWarnDev, hostContext);
+      return hydrateProperties(instance, type, props);
+    } // Returns a Map of properties that were different on the server.
+
+    function diffHydratedPropsForDevWarnings(
+      instance,
+      type,
+      props,
+      hostContext
+    ) {
+      return diffHydratedProperties(instance, type, props, hostContext);
     }
     function validateHydratableTextInstance(text, hostContext) {
       {
@@ -45190,10 +45483,21 @@ if (__DEV__) {
       textInstance,
       text,
       internalInstanceHandle,
-      shouldWarnDev
+      parentInstanceProps
     ) {
       precacheFiberNode(internalInstanceHandle, textInstance);
-      return diffHydratedText(textInstance, text);
+      return hydrateText(textInstance, text, parentInstanceProps);
+    } // Returns the server text if it differs from the client.
+
+    function diffHydratedTextForDevWarnings(textInstance, text, parentProps) {
+      if (
+        parentProps === null ||
+        parentProps[SUPPRESS_HYDRATION_WARNING] !== true
+      ) {
+        return diffHydratedText(textInstance, text);
+      }
+
+      return null;
     }
     function hydrateSuspenseInstance(suspenseInstance, internalInstanceHandle) {
       precacheFiberNode(internalInstanceHandle, suspenseInstance);
@@ -45273,139 +45577,6 @@ if (__DEV__) {
     }
     function shouldDeleteUnhydratedTailInstances(parentType) {
       return parentType !== "form" && parentType !== "button";
-    }
-    function didNotMatchHydratedContainerTextInstance(
-      parentContainer,
-      textInstance,
-      text,
-      shouldWarnDev
-    ) {
-      checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
-    }
-    function didNotMatchHydratedTextInstance(
-      parentType,
-      parentProps,
-      parentInstance,
-      textInstance,
-      text,
-      shouldWarnDev
-    ) {
-      if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
-      }
-    }
-    function didNotHydrateInstanceWithinContainer(parentContainer, instance) {
-      {
-        if (instance.nodeType === ELEMENT_NODE) {
-          warnForDeletedHydratableElement(parentContainer, instance);
-        } else if (instance.nodeType === COMMENT_NODE);
-        else {
-          warnForDeletedHydratableText(parentContainer, instance);
-        }
-      }
-    }
-    function didNotHydrateInstanceWithinSuspenseInstance(
-      parentInstance,
-      instance
-    ) {
-      {
-        // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-        var parentNode = parentInstance.parentNode;
-
-        if (parentNode !== null) {
-          if (instance.nodeType === ELEMENT_NODE) {
-            warnForDeletedHydratableElement(parentNode, instance);
-          } else if (instance.nodeType === COMMENT_NODE);
-          else {
-            warnForDeletedHydratableText(parentNode, instance);
-          }
-        }
-      }
-    }
-    function didNotHydrateInstance(
-      parentType,
-      parentProps,
-      parentInstance,
-      instance
-    ) {
-      {
-        if (instance.nodeType === ELEMENT_NODE) {
-          warnForDeletedHydratableElement(parentInstance, instance);
-        } else if (instance.nodeType === COMMENT_NODE);
-        else {
-          warnForDeletedHydratableText(parentInstance, instance);
-        }
-      }
-    }
-    function didNotFindHydratableInstanceWithinContainer(
-      parentContainer,
-      type,
-      props
-    ) {
-      {
-        warnForInsertedHydratedElement(parentContainer, type);
-      }
-    }
-    function didNotFindHydratableTextInstanceWithinContainer(
-      parentContainer,
-      text
-    ) {
-      {
-        warnForInsertedHydratedText(parentContainer, text);
-      }
-    }
-    function didNotFindHydratableInstanceWithinSuspenseInstance(
-      parentInstance,
-      type,
-      props
-    ) {
-      {
-        // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-        var parentNode = parentInstance.parentNode;
-        if (parentNode !== null)
-          warnForInsertedHydratedElement(parentNode, type);
-      }
-    }
-    function didNotFindHydratableTextInstanceWithinSuspenseInstance(
-      parentInstance,
-      text
-    ) {
-      {
-        // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
-        var parentNode = parentInstance.parentNode;
-        if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
-      }
-    }
-    function didNotFindHydratableInstance(
-      parentType,
-      parentProps,
-      parentInstance,
-      type,
-      props
-    ) {
-      {
-        warnForInsertedHydratedElement(parentInstance, type);
-      }
-    }
-    function didNotFindHydratableTextInstance(
-      parentType,
-      parentProps,
-      parentInstance,
-      text
-    ) {
-      {
-        warnForInsertedHydratedText(parentInstance, text);
-      }
-    }
-    function errorHydratingContainer(parentContainer) {
-      {
-        // TODO: This gets logged by onRecoverableError, too, so we should be
-        // able to remove it.
-        error(
-          "An error occurred during hydration. The server HTML was replaced with client content in <%s>.",
-          parentContainer.nodeName.toLowerCase()
-        );
-      }
     } // -------------------
     function requestPostPaintCallback(callback) {
       localRequestAnimationFrame(function () {

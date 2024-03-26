@@ -1601,6 +1601,76 @@ var hydrationParentFiber = null,
 function throwOnHydrationMismatch() {
   throw Error(formatProdErrorMessage(418));
 }
+function prepareToHydrateHostInstance(fiber) {
+  var instance = fiber.stateNode,
+    type = fiber.type,
+    props = fiber.memoizedProps;
+  instance[internalInstanceKey] = fiber;
+  instance[internalPropsKey] = props;
+  switch (type) {
+    case "dialog":
+      listenToNonDelegatedEvent("cancel", instance);
+      listenToNonDelegatedEvent("close", instance);
+      break;
+    case "iframe":
+    case "object":
+    case "embed":
+      listenToNonDelegatedEvent("load", instance);
+      break;
+    case "video":
+    case "audio":
+      for (fiber = 0; fiber < mediaEventTypes.length; fiber++)
+        listenToNonDelegatedEvent(mediaEventTypes[fiber], instance);
+      break;
+    case "source":
+      listenToNonDelegatedEvent("error", instance);
+      break;
+    case "img":
+    case "image":
+    case "link":
+      listenToNonDelegatedEvent("error", instance);
+      listenToNonDelegatedEvent("load", instance);
+      break;
+    case "details":
+      listenToNonDelegatedEvent("toggle", instance);
+      break;
+    case "input":
+      listenToNonDelegatedEvent("invalid", instance);
+      initInput(
+        instance,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+        props.type,
+        props.name,
+        !0
+      );
+      track(instance);
+      break;
+    case "select":
+      listenToNonDelegatedEvent("invalid", instance);
+      break;
+    case "textarea":
+      listenToNonDelegatedEvent("invalid", instance),
+        initTextarea(instance, props.value, props.defaultValue),
+        track(instance);
+  }
+  fiber = props.children;
+  ("string" === typeof fiber ||
+    "number" === typeof fiber ||
+    (enableBigIntSupport && "bigint" === typeof fiber)) &&
+  instance.textContent !== "" + fiber &&
+  !0 !== props.suppressHydrationWarning &&
+  !checkForUnmatchedText(instance.textContent, fiber)
+    ? (instance = !1)
+    : (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+      null != props.onScrollEnd &&
+        listenToNonDelegatedEvent("scrollend", instance),
+      null != props.onClick && (instance.onclick = noop$1),
+      (instance = !0));
+  if (!instance) throw Error(formatProdErrorMessage(425));
+}
 function popToNextHostParent(fiber) {
   for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
     switch (hydrationParentFiber.tag) {
@@ -7597,13 +7667,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
         current = contextStackCursor.current;
         popHydrationState(workInProgress)
-          ? hydrateInstance(
-              workInProgress.stateNode,
-              workInProgress.type,
-              workInProgress.memoizedProps,
-              current,
-              workInProgress
-            )
+          ? prepareToHydrateHostInstance(workInProgress, current)
           : ((current = resolveSingletonInstance(
               currentResource,
               newProps,
@@ -7628,13 +7692,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
         current = contextStackCursor.current;
         if (popHydrationState(workInProgress))
-          hydrateInstance(
-            workInProgress.stateNode,
-            workInProgress.type,
-            workInProgress.memoizedProps,
-            current,
-            workInProgress
-          );
+          prepareToHydrateHostInstance(workInProgress, current);
         else {
           currentResource = getOwnerDocumentFromRootContainer(
             rootInstanceStackCursor.current
@@ -7751,22 +7809,24 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          if (
-            ((current = workInProgress.stateNode),
-            (renderLanes = workInProgress.memoizedProps),
-            (current[internalInstanceKey] = workInProgress),
-            current.nodeValue !== renderLanes &&
-              ((newProps = hydrationParentFiber), null !== newProps))
-          )
-            switch (newProps.tag) {
-              case 3:
-                checkForUnmatchedText(current.nodeValue, renderLanes);
-                break;
+          current = workInProgress.stateNode;
+          renderLanes = workInProgress.memoizedProps;
+          newProps = null;
+          currentResource = hydrationParentFiber;
+          if (null !== currentResource)
+            switch (currentResource.tag) {
               case 27:
               case 5:
-                !0 !== newProps.memoizedProps.suppressHydrationWarning &&
-                  checkForUnmatchedText(current.nodeValue, renderLanes);
+                newProps = currentResource.memoizedProps;
             }
+          current[internalInstanceKey] = workInProgress;
+          current =
+            current.nodeValue === renderLanes ||
+            (null !== newProps && !0 === newProps.suppressHydrationWarning) ||
+            checkForUnmatchedText(current.nodeValue, renderLanes)
+              ? !0
+              : !1;
+          if (!current) throw Error(formatProdErrorMessage(425));
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -13356,14 +13416,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$342;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1514 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1514) {
-      var element$jscomp$inline_1515 = document.createElement("div");
-      element$jscomp$inline_1515.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1514 =
-        "function" === typeof element$jscomp$inline_1515.oninput;
+    var isSupported$jscomp$inline_1505 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1505) {
+      var element$jscomp$inline_1506 = document.createElement("div");
+      element$jscomp$inline_1506.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1505 =
+        "function" === typeof element$jscomp$inline_1506.oninput;
     }
-    JSCompiler_inline_result$jscomp$342 = isSupported$jscomp$inline_1514;
+    JSCompiler_inline_result$jscomp$342 = isSupported$jscomp$inline_1505;
   } else JSCompiler_inline_result$jscomp$342 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$342 &&
@@ -13675,20 +13735,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1555 = 0;
-  i$jscomp$inline_1555 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1555++
+  var i$jscomp$inline_1546 = 0;
+  i$jscomp$inline_1546 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1546++
 ) {
-  var eventName$jscomp$inline_1556 =
-      simpleEventPluginEvents[i$jscomp$inline_1555],
-    domEventName$jscomp$inline_1557 =
-      eventName$jscomp$inline_1556.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1558 =
-      eventName$jscomp$inline_1556[0].toUpperCase() +
-      eventName$jscomp$inline_1556.slice(1);
+  var eventName$jscomp$inline_1547 =
+      simpleEventPluginEvents[i$jscomp$inline_1546],
+    domEventName$jscomp$inline_1548 =
+      eventName$jscomp$inline_1547.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1549 =
+      eventName$jscomp$inline_1547[0].toUpperCase() +
+      eventName$jscomp$inline_1547.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1557,
-    "on" + capitalizedEvent$jscomp$inline_1558
+    domEventName$jscomp$inline_1548,
+    "on" + capitalizedEvent$jscomp$inline_1549
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14536,8 +14596,7 @@ function normalizeMarkupForTextOrAttribute(markup) {
 }
 function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
-  if (normalizeMarkupForTextOrAttribute(serverText) !== clientText)
-    throw Error(formatProdErrorMessage(425));
+  return normalizeMarkupForTextOrAttribute(serverText) === clientText ? !0 : !1;
 }
 function noop$1() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
@@ -15704,75 +15763,6 @@ function getNextHydratable(node) {
   }
   return node;
 }
-function hydrateInstance(
-  instance,
-  type,
-  props,
-  hostContext,
-  internalInstanceHandle
-) {
-  instance[internalInstanceKey] = internalInstanceHandle;
-  instance[internalPropsKey] = props;
-  switch (type) {
-    case "dialog":
-      listenToNonDelegatedEvent("cancel", instance);
-      listenToNonDelegatedEvent("close", instance);
-      break;
-    case "iframe":
-    case "object":
-    case "embed":
-      listenToNonDelegatedEvent("load", instance);
-      break;
-    case "video":
-    case "audio":
-      for (type = 0; type < mediaEventTypes.length; type++)
-        listenToNonDelegatedEvent(mediaEventTypes[type], instance);
-      break;
-    case "source":
-      listenToNonDelegatedEvent("error", instance);
-      break;
-    case "img":
-    case "image":
-    case "link":
-      listenToNonDelegatedEvent("error", instance);
-      listenToNonDelegatedEvent("load", instance);
-      break;
-    case "details":
-      listenToNonDelegatedEvent("toggle", instance);
-      break;
-    case "input":
-      listenToNonDelegatedEvent("invalid", instance);
-      initInput(
-        instance,
-        props.value,
-        props.defaultValue,
-        props.checked,
-        props.defaultChecked,
-        props.type,
-        props.name,
-        !0
-      );
-      track(instance);
-      break;
-    case "select":
-      listenToNonDelegatedEvent("invalid", instance);
-      break;
-    case "textarea":
-      listenToNonDelegatedEvent("invalid", instance),
-        initTextarea(instance, props.value, props.defaultValue),
-        track(instance);
-  }
-  type = props.children;
-  ("string" === typeof type ||
-    "number" === typeof type ||
-    (enableBigIntSupport && "bigint" === typeof type)) &&
-    instance.textContent !== "" + type &&
-    !0 !== props.suppressHydrationWarning &&
-    checkForUnmatchedText(instance.textContent, type);
-  null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
-  null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
-  null != props.onClick && (instance.onclick = noop$1);
-}
 function getParentSuspenseInstance(targetInstance) {
   targetInstance = targetInstance.previousSibling;
   for (var depth = 0; targetInstance; ) {
@@ -16607,17 +16597,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1737 = {
+var devToolsConfig$jscomp$inline_1721 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-321f8c10",
+  version: "19.0.0-www-modern-646a2e2d",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2135 = {
-  bundleType: devToolsConfig$jscomp$inline_1737.bundleType,
-  version: devToolsConfig$jscomp$inline_1737.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1737.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1737.rendererConfig,
+var internals$jscomp$inline_2111 = {
+  bundleType: devToolsConfig$jscomp$inline_1721.bundleType,
+  version: devToolsConfig$jscomp$inline_1721.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1721.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1721.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16634,26 +16624,26 @@ var internals$jscomp$inline_2135 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1737.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1721.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-321f8c10"
+  reconcilerVersion: "19.0.0-www-modern-646a2e2d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2136 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2112 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2136.isDisabled &&
-    hook$jscomp$inline_2136.supportsFiber
+    !hook$jscomp$inline_2112.isDisabled &&
+    hook$jscomp$inline_2112.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2136.inject(
-        internals$jscomp$inline_2135
+      (rendererID = hook$jscomp$inline_2112.inject(
+        internals$jscomp$inline_2111
       )),
-        (injectedHook = hook$jscomp$inline_2136);
+        (injectedHook = hook$jscomp$inline_2112);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16900,4 +16890,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-321f8c10";
+exports.version = "19.0.0-www-modern-646a2e2d";
