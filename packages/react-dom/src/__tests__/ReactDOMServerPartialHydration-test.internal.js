@@ -457,7 +457,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'section',
+            'Suspense',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -905,7 +905,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'section',
+            'Suspense',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -1011,7 +1011,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'section',
+            'Suspense',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -1121,7 +1121,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'section',
+            'Suspense',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
