@@ -79,6 +79,12 @@ describe('ReactFresh', () => {
     return Component;
   }
 
+  function patchSync(version) {
+    const Component = version();
+    ReactFreshRuntime.performReactRefresh();
+    return Component;
+  }
+
   function $RefreshReg$(type, id) {
     ReactFreshRuntime.register(type, id);
   }
@@ -2470,7 +2476,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
 
     // Perform a hot update.
-    await patch(() => {
+    patchSync(() => {
       function Hello() {
         React.useLayoutEffect(() => {
           Scheduler.log('Hello#layout');
@@ -2509,7 +2515,7 @@ describe('ReactFresh', () => {
     expect(el.firstChild.style.color).toBe('red');
 
     // Hot reload while we're offscreen.
-    await patch(() => {
+    patchSync(() => {
       function Hello() {
         React.useLayoutEffect(() => {
           Scheduler.log('Hello#layout');
