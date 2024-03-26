@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<270144e142689aae36510575078767a1>>
+ * @generated SignedSource<<c87024931f160e9769cdcf58bdec1a68>>
  */
 
 "use strict";
@@ -148,6 +148,7 @@ if (__DEV__) {
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
     var alwaysThrottleRetries = true;
+    var disableLegacyMode = false;
     var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var FunctionComponent = 0;
@@ -25508,7 +25509,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-a9ccb423";
+    var ReactVersion = "19.0.0-canary-ab33cef8";
 
     // Might add PROFILE later.
 
@@ -26402,7 +26403,8 @@ if (__DEV__) {
 
     function create(element, options) {
       var createNodeMock = defaultTestOptions.createNodeMock;
-      var isConcurrent = false;
+      var isConcurrentOnly = disableLegacyMode === true;
+      var isConcurrent = isConcurrentOnly;
       var isStrictMode = false;
       var concurrentUpdatesByDefault = null;
 
@@ -26412,8 +26414,8 @@ if (__DEV__) {
           createNodeMock = options.createNodeMock;
         }
 
-        if (options.unstable_isConcurrent === true) {
-          isConcurrent = true;
+        {
+          isConcurrent = options.unstable_isConcurrent;
         }
 
         if (options.unstable_strictMode === true) {

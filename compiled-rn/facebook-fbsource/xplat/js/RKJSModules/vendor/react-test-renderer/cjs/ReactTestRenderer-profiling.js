@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e79f3ae88518b14f6808a7938d5b3e84>>
+ * @generated SignedSource<<b2573824248edd9931bd15024b146aaa>>
  */
 
 "use strict";
@@ -9585,7 +9585,7 @@ var devToolsConfig$jscomp$inline_1065 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-a6321e7c",
+  version: "19.0.0-canary-cdabf445",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1254 = {
@@ -9616,7 +9616,7 @@ var internals$jscomp$inline_1254 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-a6321e7c"
+  reconcilerVersion: "19.0.0-canary-cdabf445"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1255 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9642,7 +9642,7 @@ exports.create = function (element, options) {
     null !== options &&
     ("function" === typeof options.createNodeMock &&
       (createNodeMock = options.createNodeMock),
-    !0 === options.unstable_isConcurrent && (isConcurrent = !0),
+    (isConcurrent = options.unstable_isConcurrent),
     !0 === options.unstable_strictMode && (isStrictMode = !0),
     void 0 !== options.unstable_concurrentUpdatesByDefault &&
       (concurrentUpdatesByDefault =
