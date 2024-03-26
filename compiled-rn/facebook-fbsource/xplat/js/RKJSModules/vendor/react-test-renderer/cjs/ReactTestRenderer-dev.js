@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<21dac50eb838d3086d9a7abc82a7da35>>
+ * @generated SignedSource<<3512f830a7f7738685a3f378f1fc8206>>
  */
 
 "use strict";
@@ -14614,15 +14614,6 @@ if (__DEV__) {
         // This is the first render pass. Attempt to hydrate.
         pushPrimaryTreeSuspenseHandler(workInProgress); // We should never be hydrating at this point because it is the first pass,
 
-        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            null
-          );
-        }
-
         if (isSuspenseInstanceFallback()) {
           // This boundary is in a permanent fallback state. In this case, we'll never
           // get an update and we'll never be able to hydrate the final content. Let's just try the
@@ -25519,7 +25510,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-d06a69d2";
+    var ReactVersion = "19.0.0-canary-ce2d02ca";
 
     // Might add PROFILE later.
 

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<da317cd766c68448262ac7c42c4cada7>>
+ * @generated SignedSource<<0049bc903b79ac30bcede14f8871b302>>
  */
 
 "use strict";
@@ -18996,15 +18996,6 @@ to return true:wantsResponderID|                            |
         // This is the first render pass. Attempt to hydrate.
         pushPrimaryTreeSuspenseHandler(workInProgress); // We should never be hydrating at this point because it is the first pass,
 
-        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            null
-          );
-        }
-
         if (isSuspenseInstanceFallback()) {
           // This boundary is in a permanent fallback state. In this case, we'll never
           // get an update and we'll never be able to hydrate the final content. Let's just try the
@@ -30307,7 +30298,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-97b48a97";
+    var ReactVersion = "19.0.0-canary-99e8da3a";
 
     function createPortal$1(
       children,
