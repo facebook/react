@@ -30,8 +30,6 @@ import type {
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
-// TODO: Remove this deep import when we delete the legacy root API
-import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
@@ -1370,19 +1368,7 @@ export function hydrateInstance(
   // get attached.
   updateFiberProps(instance, props);
 
-  // TODO: Temporary hack to check if we're in a concurrent root. We can delete
-  // when the legacy root API is removed.
-  const isConcurrentMode =
-    ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
-
-  diffHydratedProperties(
-    instance,
-    type,
-    props,
-    isConcurrentMode,
-    shouldWarnDev,
-    hostContext,
-  );
+  diffHydratedProperties(instance, type, props, shouldWarnDev, hostContext);
 }
 
 export function validateHydratableTextInstance(
@@ -1407,12 +1393,7 @@ export function hydrateTextInstance(
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
-  // TODO: Temporary hack to check if we're in a concurrent root. We can delete
-  // when the legacy root API is removed.
-  const isConcurrentMode =
-    ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
-
-  return diffHydratedText(textInstance, text, isConcurrentMode);
+  return diffHydratedText(textInstance, text);
 }
 
 export function hydrateSuspenseInstance(
@@ -1508,15 +1489,9 @@ export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
   text: string,
-  isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
-  checkForUnmatchedText(
-    textInstance.nodeValue,
-    text,
-    isConcurrentMode,
-    shouldWarnDev,
-  );
+  checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
 }
 
 export function didNotMatchHydratedTextInstance(
@@ -1525,16 +1500,10 @@ export function didNotMatchHydratedTextInstance(
   parentInstance: Instance,
   textInstance: TextInstance,
   text: string,
-  isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(
-      textInstance.nodeValue,
-      text,
-      isConcurrentMode,
-      shouldWarnDev,
-    );
+    checkForUnmatchedText(textInstance.nodeValue, text, shouldWarnDev);
   }
 }
 
@@ -1577,17 +1546,14 @@ export function didNotHydrateInstance(
   parentProps: Props,
   parentInstance: Instance,
   instance: HydratableInstance,
-  isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-      if (instance.nodeType === ELEMENT_NODE) {
-        warnForDeletedHydratableElement(parentInstance, (instance: any));
-      } else if (instance.nodeType === COMMENT_NODE) {
-        // TODO: warnForDeletedHydratableSuspenseBoundary
-      } else {
-        warnForDeletedHydratableText(parentInstance, (instance: any));
-      }
+    if (instance.nodeType === ELEMENT_NODE) {
+      warnForDeletedHydratableElement(parentInstance, (instance: any));
+    } else if (instance.nodeType === COMMENT_NODE) {
+      // TODO: warnForDeletedHydratableSuspenseBoundary
+    } else {
+      warnForDeletedHydratableText(parentInstance, (instance: any));
     }
   }
 }
@@ -1658,12 +1624,9 @@ export function didNotFindHydratableInstance(
   parentInstance: Instance,
   type: string,
   props: Props,
-  isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-      warnForInsertedHydratedElement(parentInstance, type, props);
-    }
+    warnForInsertedHydratedElement(parentInstance, type, props);
   }
 }
 
@@ -1672,12 +1635,9 @@ export function didNotFindHydratableTextInstance(
   parentProps: Props,
   parentInstance: Instance,
   text: string,
-  isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-      warnForInsertedHydratedText(parentInstance, text);
-    }
+    warnForInsertedHydratedText(parentInstance, text);
   }
 }
 

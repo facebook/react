@@ -12,7 +12,6 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 
@@ -452,76 +451,4 @@ describe('ReactDOMServerIntegration', () => {
         />,
       ));
   });
-});
-
-describe('ReactDOMServerIntegration (legacy)', () => {
-  function initModules() {
-    // Reset warning cache.
-    jest.resetModules();
-
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
-
-    // Make them available to the helpers.
-    return {
-      ReactDOM,
-      ReactDOMServer,
-    };
-  }
-
-  const {resetModules, expectMarkupMatch} =
-    ReactDOMServerIntegrationUtils(initModules);
-
-  beforeEach(() => {
-    resetModules();
-  });
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore errors reconnecting different element types of children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting more children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-        <div />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting fewer children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting reordered children', () =>
-    expectMarkupMatch(
-      <div suppressHydrationWarning={true}>
-        <div />
-        <span />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-        <div />
-      </div>,
-    ));
 });

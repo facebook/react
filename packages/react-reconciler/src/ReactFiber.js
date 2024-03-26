@@ -849,12 +849,6 @@ export function createFiberFromText(
   return fiber;
 }
 
-export function createFiberFromHostInstanceForDeletion(): Fiber {
-  const fiber = createFiber(HostComponent, null, null, NoMode);
-  fiber.elementType = 'DELETED';
-  return fiber;
-}
-
 export function createFiberFromDehydratedFragment(
   dehydratedNode: SuspenseInstance,
 ): Fiber {

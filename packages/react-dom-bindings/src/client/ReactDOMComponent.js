@@ -330,7 +330,6 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
 export function checkForUnmatchedText(
   serverText: string,
   clientText: string | number | bigint,
-  isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
   const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
@@ -352,7 +351,7 @@ export function checkForUnmatchedText(
     }
   }
 
-  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
+  if (enableClientRenderFallbackOnTextMismatch) {
     // In concurrent roots, we throw when there's a text mismatch and revert to
     // client rendering, up to the nearest Suspense boundary.
     throw new Error('Text content does not match server-rendered HTML.');
@@ -2746,7 +2745,6 @@ export function diffHydratedProperties(
   domElement: Element,
   tag: string,
   props: Object,
-  isConcurrentMode: boolean,
   shouldWarnDev: boolean,
   hostContext: HostContext,
 ): void {
@@ -2865,14 +2863,9 @@ export function diffHydratedProperties(
     // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
     if (domElement.textContent !== '' + children) {
       if (props.suppressHydrationWarning !== true) {
-        checkForUnmatchedText(
-          domElement.textContent,
-          children,
-          isConcurrentMode,
-          shouldWarnDev,
-        );
+        checkForUnmatchedText(domElement.textContent, children, shouldWarnDev);
       }
-      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
+      if (!enableClientRenderFallbackOnTextMismatch) {
         // We really should be patching this in the commit phase but since
         // this only affects legacy mode hydration which is deprecated anyway
         // we can get away with it.
@@ -2941,11 +2934,7 @@ export function diffHydratedProperties(
   }
 }
 
-export function diffHydratedText(
-  textNode: Text,
-  text: string,
-  isConcurrentMode: boolean,
-): boolean {
+export function diffHydratedText(textNode: Text, text: string): boolean {
   const isDifferent = textNode.nodeValue !== text;
   return isDifferent;
 }

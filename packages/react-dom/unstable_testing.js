@@ -11,7 +11,6 @@ export {
   createPortal,
   findDOMNode,
   flushSync,
-  hydrate,
   render,
   unmountComponentAtNode,
   unstable_batchedUpdates,
