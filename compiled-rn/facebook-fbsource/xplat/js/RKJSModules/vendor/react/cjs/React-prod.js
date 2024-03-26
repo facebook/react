@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0721992af3bf25e5d20c9a6aa4ad6f00>>
+ * @generated SignedSource<<ccb8a31f6eb2aabad35c7b0717209352>>
  */
 
 "use strict";
@@ -640,4 +640,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-eb8844c8";
+exports.version = "19.0.0-canary-b3b89a7e";

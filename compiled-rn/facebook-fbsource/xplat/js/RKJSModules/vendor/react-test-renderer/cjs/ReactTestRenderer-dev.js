@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c9c45acbe6acb3779b76b6f81c4333dc>>
+ * @generated SignedSource<<21dac50eb838d3086d9a7abc82a7da35>>
  */
 
 "use strict";
@@ -25519,7 +25519,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-d1287dcb";
+    var ReactVersion = "19.0.0-canary-d06a69d2";
 
     // Might add PROFILE later.
 

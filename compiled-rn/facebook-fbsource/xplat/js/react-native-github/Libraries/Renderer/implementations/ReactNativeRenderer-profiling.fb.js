@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d846fb20fee7854666c856a0f6390694>>
+ * @generated SignedSource<<806703288a397a412dfed9596429714a>>
  */
 
 "use strict";
@@ -11561,7 +11561,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1253 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-651a2bf9",
+    version: "19.0.0-canary-b85de200",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11617,7 +11617,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-651a2bf9"
+  reconcilerVersion: "19.0.0-canary-b85de200"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

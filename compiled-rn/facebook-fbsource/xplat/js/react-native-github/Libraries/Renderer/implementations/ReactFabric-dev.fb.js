@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<21b7fbadb734a6be706327eb8e16459f>>
+ * @generated SignedSource<<36cb08f7e3bb5d5260109e5dc114f41a>>
  */
 
 "use strict";
@@ -29867,7 +29867,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-02de57fb";
+    var ReactVersion = "19.0.0-canary-180a4de1";
 
     function createPortal$1(
       children,

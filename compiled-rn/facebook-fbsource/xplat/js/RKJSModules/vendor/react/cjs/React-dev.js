@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8070e8b45dc6482b16ba42c75bf8963b>>
+ * @generated SignedSource<<389738660a4f2ab62588a2951e5a2988>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-03d7b9fb";
+    var ReactVersion = "19.0.0-canary-4322682e";
 
     // ATTENTION
     // When adding new symbols to this file,

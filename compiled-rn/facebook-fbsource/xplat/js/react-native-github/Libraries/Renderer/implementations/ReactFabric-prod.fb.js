@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<af8b12272023bc2a05fa4218b5208e67>>
+ * @generated SignedSource<<a35e4aeda0beb66dcc7d5f7c67c200b8>>
  */
 
 "use strict";
@@ -10637,7 +10637,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1103 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-47f8e86b",
+    version: "19.0.0-canary-e0d11f5a",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10680,7 +10680,7 @@ var internals$jscomp$inline_1330 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-47f8e86b"
+  reconcilerVersion: "19.0.0-canary-e0d11f5a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1331 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
