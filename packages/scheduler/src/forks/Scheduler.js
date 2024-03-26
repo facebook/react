@@ -72,26 +72,26 @@ if (hasPerformanceNow) {
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
 // 0b111111111111111111111111111111
-var maxSigned31BitInt = 1073741823;
+const maxSigned31BitInt = 1073741823;
 
 // Tasks are stored on a min heap
-var taskQueue: Array<Task> = [];
-var timerQueue: Array<Task> = [];
+const taskQueue: Array<Task> = [];
+const timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.
-var taskIdCounter = 1;
+let taskIdCounter = 1;
 
 // Pausing the scheduler is useful for debugging.
-var isSchedulerPaused = false;
+let isSchedulerPaused = false;
 
-var currentTask = null;
-var currentPriorityLevel = NormalPriority;
+let currentTask = null;
+let currentPriorityLevel = NormalPriority;
 
 // This is set while performing work, to prevent re-entrance.
-var isPerformingWork = false;
+let isPerformingWork = false;
 
-var isHostCallbackScheduled = false;
-var isHostTimeoutScheduled = false;
+let isHostCallbackScheduled = false;
+let isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
 const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
@@ -267,7 +267,7 @@ function unstable_runWithPriority<T>(
       priorityLevel = NormalPriority;
   }
 
-  var previousPriorityLevel = currentPriorityLevel;
+  const previousPriorityLevel = currentPriorityLevel;
   currentPriorityLevel = priorityLevel;
 
   try {
@@ -278,7 +278,7 @@ function unstable_runWithPriority<T>(
 }
 
 function unstable_next<T>(eventHandler: () => T): T {
-  var priorityLevel;
+  let priorityLevel;
   switch (currentPriorityLevel) {
     case ImmediatePriority:
     case UserBlockingPriority:
@@ -292,7 +292,7 @@ function unstable_next<T>(eventHandler: () => T): T {
       break;
   }
 
-  var previousPriorityLevel = currentPriorityLevel;
+  const previousPriorityLevel = currentPriorityLevel;
   currentPriorityLevel = priorityLevel;
 
   try {
@@ -303,12 +303,12 @@ function unstable_next<T>(eventHandler: () => T): T {
 }
 
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
-  var parentPriorityLevel = currentPriorityLevel;
+  const parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
   // $FlowFixMe[missing-this-annot]
   return function () {
     // This is a fork of runWithPriority, inlined for performance.
-    var previousPriorityLevel = currentPriorityLevel;
+    const previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
 
     try {
@@ -324,11 +324,11 @@ function unstable_scheduleCallback(
   callback: Callback,
   options?: {delay: number},
 ): Task {
-  var currentTime = getCurrentTime();
+  const currentTime = getCurrentTime();
 
-  var startTime;
+  let startTime;
   if (typeof options === 'object' && options !== null) {
-    var delay = options.delay;
+    const delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
       startTime = currentTime + delay;
     } else {
@@ -338,7 +338,7 @@ function unstable_scheduleCallback(
     startTime = currentTime;
   }
 
-  var timeout;
+  let timeout;
   switch (priorityLevel) {
     case ImmediatePriority:
       // Times out immediately
@@ -363,9 +363,9 @@ function unstable_scheduleCallback(
       break;
   }
 
-  var expirationTime = startTime + timeout;
+  const expirationTime = startTime + timeout;
 
-  var newTask: Task = {
+  const newTask: Task = {
     id: taskIdCounter++,
     callback,
     priorityLevel,
