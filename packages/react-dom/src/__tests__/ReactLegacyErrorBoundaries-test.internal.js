@@ -12,6 +12,7 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let act;
 
 // TODO: Refactor this test once componentDidCatch setState is deprecated.
 describe('ReactLegacyErrorBoundaries', () => {
@@ -40,6 +41,7 @@ describe('ReactLegacyErrorBoundaries', () => {
     PropTypes = require('prop-types');
     ReactDOM = require('react-dom');
     React = require('react');
+    act = require('internal-test-utils').act;
 
     log = [];
 
@@ -586,63 +588,79 @@ describe('ReactLegacyErrorBoundaries', () => {
   });
 
   // @gate !disableLegacyMode
-  it('does not swallow exceptions on mounting without boundaries', () => {
+  it('does not swallow exceptions on mounting without boundaries', async () => {
     let container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<BrokenRender />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenRender />, container);
+      });
+    }).rejects.toThrow('Hello');
 
     container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<BrokenComponentWillMount />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenComponentWillMount />, container);
+      });
+    }).rejects.toThrow('Hello');
 
     container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<BrokenComponentDidMount />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenComponentDidMount />, container);
+      });
+    }).rejects.toThrow('Hello');
   });
 
   // @gate !disableLegacyMode
-  it('does not swallow exceptions on updating without boundaries', () => {
+  it('does not swallow exceptions on updating without boundaries', async () => {
     let container = document.createElement('div');
     ReactDOM.render(<BrokenComponentWillUpdate />, container);
-    expect(() => {
-      ReactDOM.render(<BrokenComponentWillUpdate />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenComponentWillUpdate />, container);
+      });
+    }).rejects.toThrow('Hello');
 
     container = document.createElement('div');
     ReactDOM.render(<BrokenComponentWillReceiveProps />, container);
-    expect(() => {
-      ReactDOM.render(<BrokenComponentWillReceiveProps />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenComponentWillReceiveProps />, container);
+      });
+    }).rejects.toThrow('Hello');
 
     container = document.createElement('div');
     ReactDOM.render(<BrokenComponentDidUpdate />, container);
-    expect(() => {
-      ReactDOM.render(<BrokenComponentDidUpdate />, container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenComponentDidUpdate />, container);
+      });
+    }).rejects.toThrow('Hello');
   });
 
   // @gate !disableLegacyMode
-  it('does not swallow exceptions on unmounting without boundaries', () => {
+  it('does not swallow exceptions on unmounting without boundaries', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<BrokenComponentWillUnmount />, container);
-    expect(() => {
-      ReactDOM.unmountComponentAtNode(container);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.unmountComponentAtNode(container);
+      });
+    }).rejects.toThrow('Hello');
   });
 
   // @gate !disableLegacyMode
-  it('prevents errors from leaking into other roots', () => {
+  it('prevents errors from leaking into other roots', async () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
     const container3 = document.createElement('div');
 
     ReactDOM.render(<span>Before 1</span>, container1);
-    expect(() => {
-      ReactDOM.render(<BrokenRender />, container2);
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<BrokenRender />, container2);
+      });
+    }).rejects.toThrow('Hello');
     ReactDOM.render(
       <ErrorBoundary>
         <BrokenRender />
@@ -2124,39 +2142,41 @@ describe('ReactLegacyErrorBoundaries', () => {
   });
 
   // @gate !disableLegacyMode
-  it('discards a bad root if the root component fails', () => {
+  it('discards a bad root if the root component fails', async () => {
     const X = null;
     const Y = undefined;
-    let err1;
-    let err2;
 
-    try {
-      const container = document.createElement('div');
-      expect(() => ReactDOM.render(<X />, container)).toErrorDev(
-        'React.createElement: type is invalid -- expected a string ' +
-          '(for built-in components) or a class/function ' +
-          '(for composite components) but got: null.',
-      );
-    } catch (err) {
-      err1 = err;
-    }
-    try {
-      const container = document.createElement('div');
-      expect(() => ReactDOM.render(<Y />, container)).toErrorDev(
-        'React.createElement: type is invalid -- expected a string ' +
-          '(for built-in components) or a class/function ' +
-          '(for composite components) but got: undefined.',
-      );
-    } catch (err) {
-      err2 = err;
-    }
+    await expect(async () => {
+      await expect(async () => {
+        const container = document.createElement('div');
+        await act(() => {
+          ReactDOM.render(<X />, container);
+        });
+      }).rejects.toThrow('got: null');
+    }).toErrorDev(
+      'Warning: React.jsx: type is invalid -- expected a string ' +
+        '(for built-in components) or a class/function ' +
+        '(for composite components) but got: null.',
+      {withoutStack: 1},
+    );
 
-    expect(err1.message).toMatch(/got: null/);
-    expect(err2.message).toMatch(/got: undefined/);
+    await expect(async () => {
+      await expect(async () => {
+        const container = document.createElement('div');
+        await act(() => {
+          ReactDOM.render(<Y />, container);
+        });
+      }).rejects.toThrow('got: undefined');
+    }).toErrorDev(
+      'Warning: React.jsx: type is invalid -- expected a string ' +
+        '(for built-in components) or a class/function ' +
+        '(for composite components) but got: undefined.',
+      {withoutStack: 1},
+    );
   });
 
   // @gate !disableLegacyMode
-  it('renders empty output if error boundary does not handle the error', () => {
+  it('renders empty output if error boundary does not handle the error', async () => {
     const container = document.createElement('div');
     expect(() => {
       ReactDOM.render(
@@ -2191,9 +2211,8 @@ describe('ReactLegacyErrorBoundaries', () => {
   });
 
   // @gate !disableLegacyMode
-  it('passes first error when two errors happen in commit', () => {
+  it('passes first error when two errors happen in commit', async () => {
     const errors = [];
-    let caughtError;
     class Parent extends React.Component {
       render() {
         return <Child />;
@@ -2214,39 +2233,42 @@ describe('ReactLegacyErrorBoundaries', () => {
     }
 
     const container = document.createElement('div');
-    try {
-      // Here, we test the behavior where there is no error boundary and we
-      // delegate to the host root.
-      ReactDOM.render(<Parent />, container);
-    } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
-      caughtError = e;
-    }
+    await expect(async () => {
+      await act(() => {
+        // Here, we test the behavior where there is no error boundary and we
+        // delegate to the host root.
+        ReactDOM.render(<Parent />, container);
+      });
+    }).rejects.toThrow(
+      expect.objectContaining({
+        errors: [
+          expect.objectContaining({message: 'child sad'}),
+          expect.objectContaining({message: 'parent sad'}),
+        ],
+      }),
+    );
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
   });
 
   // @gate !disableLegacyMode
-  it('propagates uncaught error inside unbatched initial mount', () => {
+  it('propagates uncaught error inside unbatched initial mount', async () => {
     function Foo() {
       throw new Error('foo error');
     }
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.unstable_batchedUpdates(() => {
-        ReactDOM.render(<Foo />, container);
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.unstable_batchedUpdates(() => {
+          ReactDOM.render(<Foo />, container);
+        });
       });
-    }).toThrow('foo error');
+    }).rejects.toThrow('foo error');
   });
 
   // @gate !disableLegacyMode
-  it('handles errors that occur in before-mutation commit hook', () => {
+  it('handles errors that occur in before-mutation commit hook', async () => {
     const errors = [];
-    let caughtError;
     class Parent extends React.Component {
       getSnapshotBeforeUpdate() {
         errors.push('parent sad');
@@ -2269,18 +2291,24 @@ describe('ReactLegacyErrorBoundaries', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Parent value={1} />, container);
-    try {
-      ReactDOM.render(<Parent value={2} />, container);
-    } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
-      caughtError = e;
-    }
+    await act(() => {
+      ReactDOM.render(<Parent value={1} />, container);
+    });
+
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<Parent value={2} />, container);
+      });
+    }).rejects.toThrow(
+      expect.objectContaining({
+        errors: [
+          expect.objectContaining({message: 'child sad'}),
+          expect.objectContaining({message: 'parent sad'}),
+        ],
+      }),
+    );
 
     expect(errors).toEqual(['child sad', 'parent sad']);
     // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
   });
 });
