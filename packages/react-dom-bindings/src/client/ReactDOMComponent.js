@@ -68,7 +68,6 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableBigIntSupport,
   enableCustomElementPropertySupport,
-  enableClientRenderFallbackOnTextMismatch,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -351,11 +350,9 @@ export function checkForUnmatchedText(
     }
   }
 
-  if (enableClientRenderFallbackOnTextMismatch) {
-    // In concurrent roots, we throw when there's a text mismatch and revert to
-    // client rendering, up to the nearest Suspense boundary.
-    throw new Error('Text content does not match server-rendered HTML.');
-  }
+  // In concurrent roots, we throw when there's a text mismatch and revert to
+  // client rendering, up to the nearest Suspense boundary.
+  throw new Error('Text content does not match server-rendered HTML.');
 }
 
 function noop() {}
@@ -2864,16 +2861,6 @@ export function diffHydratedProperties(
     if (domElement.textContent !== '' + children) {
       if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(domElement.textContent, children, shouldWarnDev);
-      }
-      if (!enableClientRenderFallbackOnTextMismatch) {
-        // We really should be patching this in the commit phase but since
-        // this only affects legacy mode hydration which is deprecated anyway
-        // we can get away with it.
-        // Host singletons get their children appended and don't use the text
-        // content mechanism.
-        if (tag !== 'body') {
-          domElement.textContent = (children: any);
-        }
       }
     }
   }

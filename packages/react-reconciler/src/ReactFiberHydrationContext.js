@@ -27,7 +27,6 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {enableClientRenderFallbackOnTextMismatch} from 'shared/ReactFeatureFlags';
 
 import {createFiberFromDehydratedFragment} from './ReactFiber';
 import {
@@ -489,7 +488,7 @@ function prepareToHydrateHostInstance(
   );
 }
 
-function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
+function prepareToHydrateHostTextInstance(fiber: Fiber): void {
   if (!supportsHydration) {
     throw new Error(
       'Expected prepareToHydrateHostTextInstance() to never be called. ' +
@@ -500,13 +499,13 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const shouldUpdate = hydrateTextInstance(
+  const textIsDifferent = hydrateTextInstance(
     textInstance,
     textContent,
     fiber,
     shouldWarnIfMismatchDev,
   );
-  if (shouldUpdate) {
+  if (textIsDifferent) {
     // We assume that prepareToHydrateHostTextInstance is called in a context where the
     // hydration parent is the parent host component of this host text.
     const returnFiber = hydrationParentFiber;
@@ -520,11 +519,6 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             shouldWarnIfMismatchDev,
           );
-          if (enableClientRenderFallbackOnTextMismatch) {
-            // In concurrent mode we never update the mismatched text,
-            // even if the error was ignored.
-            return false;
-          }
           break;
         }
         case HostSingleton:
@@ -540,17 +534,11 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             shouldWarnIfMismatchDev,
           );
-          if (enableClientRenderFallbackOnTextMismatch) {
-            // In concurrent mode we never update the mismatched text,
-            // even if the error was ignored.
-            return false;
-          }
           break;
         }
       }
     }
   }
-  return shouldUpdate;
 }
 
 function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
