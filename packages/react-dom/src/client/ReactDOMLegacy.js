@@ -396,6 +396,14 @@ export function unstable_renderSubtreeIntoContainer(
 }
 
 export function unmountComponentAtNode(container: Container): boolean {
+  if (disableLegacyMode) {
+    if (__DEV__) {
+      console.error(
+        'unmountComponentAtNode is no longer supported in React 18. Use root.unmount() instead.',
+      );
+    }
+    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
+  }
   if (!isValidContainerLegacy(container)) {
     throw new Error('Target container is not a DOM element.');
   }
