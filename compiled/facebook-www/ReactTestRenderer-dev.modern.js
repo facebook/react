@@ -26120,7 +26120,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-40ae5516";
+    var ReactVersion = "18.3.0-www-modern-eec8ae64";
 
     // Might add PROFILE later.
 
