@@ -2407,8 +2407,8 @@ describe('ReactDOMFizzServer', () => {
       ]);
     }).toErrorDev(
       [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
           '    in div (at **)\n' +
           '    in App (at **)',
       ],
@@ -2492,7 +2492,7 @@ describe('ReactDOMFizzServer', () => {
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
           '    in div (at **)\n' +
           '    in App (at **)',
       ],
@@ -4419,6 +4419,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -4504,6 +4505,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -6343,7 +6345,7 @@ describe('ReactDOMFizzServer', () => {
         await waitForAll([]);
       }).toErrorDev(
         [
-          'Expected server HTML to contain a matching <span> in the root',
+          'Expected server HTML to contain a matching <span> in <div>',
           'An error occurred during hydration',
         ],
         {withoutStack: 1},

@@ -32,7 +32,7 @@ module.exports = function shouldIgnoreConsoleError(
       if (
         TODO_ignoreHydrationErrors &&
         format.indexOf(
-          'An error occurred during hydration. The server HTML was replaced with client content'
+          'An error occurred during hydration. The server HTML was replaced with client content in'
         ) !== -1
       ) {
         // This also gets logged by onRecoverableError, so we can ignore it.

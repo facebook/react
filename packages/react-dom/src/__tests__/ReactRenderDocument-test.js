@@ -197,8 +197,8 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-          'Expected server HTML to contain a matching <div> in the root.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'Expected server HTML to contain a matching <div> in <div>.',
         ],
         {withoutStack: 1},
       );
@@ -233,7 +233,7 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
           'Expected server HTML to contain a matching <div> in <div>.',
         ],
         {withoutStack: 1},
@@ -265,6 +265,9 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
+      const enableClientRenderFallbackOnTextMismatch = gate(
+        flags => flags.enableClientRenderFallbackOnTextMismatch,
+      );
       expect(() => {
         ReactDOM.flushSync(() => {
           ReactDOMClient.hydrateRoot(
@@ -278,19 +281,25 @@ describe('rendering React components at document', () => {
           );
         });
       }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-          'Warning: Text content did not match.',
-        ],
+        enableClientRenderFallbackOnTextMismatch
+          ? [
+              'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+              'Warning: Text content did not match.',
+            ]
+          : ['Warning: Text content did not match.'],
         {
-          withoutStack: 1,
+          withoutStack: enableClientRenderFallbackOnTextMismatch ? 1 : 0,
         },
       );
 
-      assertLog([
-        'Log recoverable error: Text content does not match server-rendered HTML.',
-        'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-      ]);
+      assertLog(
+        enableClientRenderFallbackOnTextMismatch
+          ? [
+              'Log recoverable error: Text content does not match server-rendered HTML.',
+              'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+            ]
+          : [],
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
@@ -325,7 +334,7 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
           'Expected server HTML to contain a matching text node for "Hello world" in <body>',
         ],
         {withoutStack: 1},

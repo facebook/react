@@ -18,6 +18,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
+let ReactFeatureFlags;
 
 function initModules() {
   jest.resetModules();
@@ -25,6 +26,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   // Make them available to the helpers.
   return {
@@ -841,15 +843,16 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            render === clientRenderOnServerString
+            (render === clientRenderOnServerString &&
+              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
           ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML or hydrated.
+            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering uses JS value with CR.
+            // Client rendering (or hydration without enableClientRenderFallbackOnTextMismatch) uses JS value with CR.
             // Null character stays.
 
             expectNode(
@@ -873,18 +876,19 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            render === clientRenderOnServerString
+            (render === clientRenderOnServerString &&
+              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
           ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML or hydrated.
+            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
           } else if (render === clientRenderOnServerString) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Hydration uses JS value with CR and null character.
+            // Hydration without enableClientRenderFallbackOnTextMismatch uses JS value with CR and null character.
 
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');

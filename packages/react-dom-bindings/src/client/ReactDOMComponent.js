@@ -68,6 +68,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableBigIntSupport,
   enableCustomElementPropertySupport,
+  enableClientRenderFallbackOnTextMismatch,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -80,6 +81,7 @@ import {
 
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
+let didWarnInvalidHydration = false;
 let didWarnFormActionType = false;
 let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
@@ -226,9 +228,11 @@ function warnForPropDifference(
   propName: string,
   serverValue: mixed,
   clientValue: mixed,
-  serverDifferences: {[propName: string]: mixed},
-): void {
+) {
   if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
     if (serverValue === clientValue) {
       return;
     }
@@ -239,23 +243,27 @@ function warnForPropDifference(
     if (normalizedServerValue === normalizedClientValue) {
       return;
     }
-
-    serverDifferences[propName] = serverValue;
+    didWarnInvalidHydration = true;
+    console.error(
+      'Prop `%s` did not match. Server: %s Client: %s',
+      propName,
+      JSON.stringify(normalizedServerValue),
+      JSON.stringify(normalizedClientValue),
+    );
   }
 }
 
-function warnForExtraAttributes(
-  domElement: Element,
-  attributeNames: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
-) {
+function warnForExtraAttributes(attributeNames: Set<string>) {
   if (__DEV__) {
-    attributeNames.forEach(function (attributeName) {
-      serverDifferences[attributeName] =
-        attributeName === 'style'
-          ? getStylesObjectFromElement(domElement)
-          : domElement.getAttribute(attributeName);
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    const names = [];
+    attributeNames.forEach(function (name) {
+      names.push(name);
     });
+    console.error('Extra attributes from the server: %s', names);
   }
 }
 
@@ -319,16 +327,35 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
 }
 
-function checkForUnmatchedText(
+export function checkForUnmatchedText(
   serverText: string,
   clientText: string | number | bigint,
+  shouldWarnDev: boolean,
 ) {
   const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
   const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
   if (normalizedServerText === normalizedClientText) {
-    return true;
+    return;
   }
-  return false;
+
+  if (shouldWarnDev) {
+    if (__DEV__) {
+      if (!didWarnInvalidHydration) {
+        didWarnInvalidHydration = true;
+        console.error(
+          'Text content did not match. Server: "%s" Client: "%s"',
+          normalizedServerText,
+          normalizedClientText,
+        );
+      }
+    }
+  }
+
+  if (enableClientRenderFallbackOnTextMismatch) {
+    // In concurrent roots, we throw when there's a text mismatch and revert to
+    // client rendering, up to the nearest Suspense boundary.
+    throw new Error('Text content does not match server-rendered HTML.');
+  }
 }
 
 function noop() {}
@@ -1829,69 +1856,18 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
-export function getPropsFromElement(domElement: Element): Object {
-  const serverDifferences: {[propName: string]: mixed} = {};
-  const attributes = domElement.attributes;
-  for (let i = 0; i < attributes.length; i++) {
-    const attr = attributes[i];
-    serverDifferences[attr.name] =
-      attr.name.toLowerCase() === 'style'
-        ? getStylesObjectFromElement(domElement)
-        : attr.value;
-  }
-  return serverDifferences;
-}
-
-function getStylesObjectFromElement(domElement: Element): {
-  [styleName: string]: string,
-} {
-  const serverValueInObjectForm: {[prop: string]: string} = {};
-  const style = ((domElement: any): HTMLElement).style;
-  for (let i = 0; i < style.length; i++) {
-    const styleName: string = style[i];
-    // TODO: We should use the original prop value here if it is equivalent.
-    // TODO: We could use the original client capitalization if the equivalent
-    // other capitalization exists in the DOM.
-    serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
-  }
-  return serverValueInObjectForm;
-}
-
-function diffHydratedStyles(
-  domElement: Element,
-  value: mixed,
-  serverDifferences: {[propName: string]: mixed},
-): void {
+function diffHydratedStyles(domElement: Element, value: mixed) {
   if (value != null && typeof value !== 'object') {
-    if (__DEV__) {
-      console.error(
-        'The `style` prop expects a mapping from style properties to values, ' +
-          "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-          'using JSX.',
-      );
-    }
-    return;
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
   }
   if (canDiffStyleForHydrationWarning) {
-    // First we compare the string form and see if it's equivalent.
-    // This lets us bail out on anything that used to pass in this form.
-    // It also lets us compare anything that's not parsed by this browser.
-    const clientValue = createDangerousStringForStyles(value);
+    const expectedStyle = createDangerousStringForStyles(value);
     const serverValue = domElement.getAttribute('style');
-
-    if (serverValue === clientValue) {
-      return;
-    }
-    const normalizedClientValue =
-      normalizeMarkupForTextOrAttribute(clientValue);
-    const normalizedServerValue =
-      normalizeMarkupForTextOrAttribute(serverValue);
-    if (normalizedServerValue === normalizedClientValue) {
-      return;
-    }
-
-    // Otherwise, we create the object from the DOM for the diff view.
-    serverDifferences.style = getStylesObjectFromElement(domElement);
+    warnForPropDifference('style', serverValue, expectedStyle);
   }
 }
 
@@ -1901,7 +1877,6 @@ function hydrateAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -1934,7 +1909,7 @@ function hydrateAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateBooleanAttribute(
@@ -1943,7 +1918,6 @@ function hydrateBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -1971,7 +1945,7 @@ function hydrateBooleanAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateOverloadedBooleanAttribute(
@@ -1980,7 +1954,6 @@ function hydrateOverloadedBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2020,7 +1993,7 @@ function hydrateOverloadedBooleanAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateBooleanishAttribute(
@@ -2029,7 +2002,6 @@ function hydrateBooleanishAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2060,7 +2032,7 @@ function hydrateBooleanishAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateNumericAttribute(
@@ -2069,7 +2041,6 @@ function hydrateNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2111,7 +2082,7 @@ function hydrateNumericAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydratePositiveNumericAttribute(
@@ -2120,7 +2091,6 @@ function hydratePositiveNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2162,7 +2132,7 @@ function hydratePositiveNumericAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateSanitizedAttribute(
@@ -2171,7 +2141,6 @@ function hydrateSanitizedAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2205,7 +2174,7 @@ function hydrateSanitizedAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value, serverDifferences);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function diffHydratedCustomComponent(
@@ -2214,7 +2183,6 @@ function diffHydratedCustomComponent(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2236,18 +2204,7 @@ function diffHydratedCustomComponent(
     }
     // Validate that the properties correspond to their expected values.
     switch (propKey) {
-      case 'children': {
-        if (typeof value === 'string' || typeof value === 'number') {
-          warnForPropDifference(
-            'children',
-            domElement.textContent,
-            value,
-            serverDifferences,
-          );
-        }
-        continue;
-      }
-      // Checked above already
+      case 'children': // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
       case 'defaultValue':
@@ -2261,17 +2218,12 @@ function diffHydratedCustomComponent(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          warnForPropDifference(
-            propKey,
-            serverHTML,
-            expectedHTML,
-            serverDifferences,
-          );
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
         continue;
       case 'style':
         extraAttributes.delete(propKey);
-        diffHydratedStyles(domElement, value, serverDifferences);
+        diffHydratedStyles(domElement, value);
         continue;
       case 'offsetParent':
       case 'offsetTop':
@@ -2301,12 +2253,7 @@ function diffHydratedCustomComponent(
             'class',
             value,
           );
-          warnForPropDifference(
-            'className',
-            serverValue,
-            value,
-            serverDifferences,
-          );
+          warnForPropDifference('className', serverValue, value);
           continue;
         }
       // Fall through
@@ -2328,7 +2275,7 @@ function diffHydratedCustomComponent(
           propKey,
           value,
         );
-        warnForPropDifference(propKey, serverValue, value, serverDifferences);
+        warnForPropDifference(propKey, serverValue, value);
       }
     }
   }
@@ -2347,7 +2294,6 @@ function diffHydratedGenericElement(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
-  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2369,18 +2315,7 @@ function diffHydratedGenericElement(
     }
     // Validate that the properties correspond to their expected values.
     switch (propKey) {
-      case 'children': {
-        if (typeof value === 'string' || typeof value === 'number') {
-          warnForPropDifference(
-            'children',
-            domElement.textContent,
-            value,
-            serverDifferences,
-          );
-        }
-        continue;
-      }
-      // Checked above already
+      case 'children': // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
       case 'value': // Controlled attributes are not validated
@@ -2397,22 +2332,11 @@ function diffHydratedGenericElement(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          if (serverHTML !== expectedHTML) {
-            serverDifferences[propKey] = {
-              __html: serverHTML,
-            };
-          }
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
         continue;
       case 'className':
-        hydrateAttribute(
-          domElement,
-          propKey,
-          'class',
-          value,
-          extraAttributes,
-          serverDifferences,
-        );
+        hydrateAttribute(domElement, propKey, 'class', value, extraAttributes);
         continue;
       case 'tabIndex':
         hydrateAttribute(
@@ -2421,29 +2345,28 @@ function diffHydratedGenericElement(
           'tabindex',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'style':
         extraAttributes.delete(propKey);
-        diffHydratedStyles(domElement, value, serverDifferences);
+        diffHydratedStyles(domElement, value);
         continue;
       case 'multiple': {
         extraAttributes.delete(propKey);
         const serverValue = (domElement: any).multiple;
-        warnForPropDifference(propKey, serverValue, value, serverDifferences);
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'muted': {
         extraAttributes.delete(propKey);
         const serverValue = (domElement: any).muted;
-        warnForPropDifference(propKey, serverValue, value, serverDifferences);
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'autoFocus': {
         extraAttributes.delete('autofocus');
         const serverValue = (domElement: any).autofocus;
-        warnForPropDifference(propKey, serverValue, value, serverDifferences);
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'src':
@@ -2480,7 +2403,6 @@ function diffHydratedGenericElement(
               propKey,
               null,
               extraAttributes,
-              serverDifferences,
             );
             continue;
           }
@@ -2491,7 +2413,6 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'action':
@@ -2520,7 +2441,7 @@ function diffHydratedGenericElement(
           continue;
         } else if (serverValue === EXPECTED_FORM_ACTION_URL) {
           extraAttributes.delete(propKey.toLowerCase());
-          warnForPropDifference(propKey, 'function', value, serverDifferences);
+          warnForPropDifference(propKey, 'function', value);
           continue;
         }
         hydrateSanitizedAttribute(
@@ -2529,7 +2450,6 @@ function diffHydratedGenericElement(
           propKey.toLowerCase(),
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2540,7 +2460,6 @@ function diffHydratedGenericElement(
           'xlink:href',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'contentEditable': {
@@ -2551,7 +2470,6 @@ function diffHydratedGenericElement(
           'contenteditable',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2563,7 +2481,6 @@ function diffHydratedGenericElement(
           'spellcheck',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2579,7 +2496,6 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2612,7 +2528,6 @@ function diffHydratedGenericElement(
           propKey.toLowerCase(),
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2624,7 +2539,6 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2638,7 +2552,6 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2649,7 +2562,6 @@ function diffHydratedGenericElement(
           'rowspan',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2660,7 +2572,6 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       }
@@ -2671,7 +2582,6 @@ function diffHydratedGenericElement(
           'x-height',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkActuate':
@@ -2681,7 +2591,6 @@ function diffHydratedGenericElement(
           'xlink:actuate',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkArcrole':
@@ -2691,7 +2600,6 @@ function diffHydratedGenericElement(
           'xlink:arcrole',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkRole':
@@ -2701,7 +2609,6 @@ function diffHydratedGenericElement(
           'xlink:role',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkShow':
@@ -2711,7 +2618,6 @@ function diffHydratedGenericElement(
           'xlink:show',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkTitle':
@@ -2721,7 +2627,6 @@ function diffHydratedGenericElement(
           'xlink:title',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xlinkType':
@@ -2731,7 +2636,6 @@ function diffHydratedGenericElement(
           'xlink:type',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xmlBase':
@@ -2741,7 +2645,6 @@ function diffHydratedGenericElement(
           'xml:base',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xmlLang':
@@ -2751,7 +2654,6 @@ function diffHydratedGenericElement(
           'xml:lang',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'xmlSpace':
@@ -2761,7 +2663,6 @@ function diffHydratedGenericElement(
           'xml:space',
           value,
           extraAttributes,
-          serverDifferences,
         );
         continue;
       case 'inert':
@@ -2787,7 +2688,6 @@ function diffHydratedGenericElement(
             propKey,
             value,
             extraAttributes,
-            serverDifferences,
           );
           continue;
         }
@@ -2834,19 +2734,20 @@ function diffHydratedGenericElement(
           value,
         );
         if (!isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, value, serverDifferences);
+          warnForPropDifference(propKey, serverValue, value);
         }
       }
     }
   }
 }
 
-export function hydrateProperties(
+export function diffHydratedProperties(
   domElement: Element,
   tag: string,
   props: Object,
+  shouldWarnDev: boolean,
   hostContext: HostContext,
-): boolean {
+): void {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
@@ -2959,13 +2860,21 @@ export function hydrateProperties(
     typeof children === 'number' ||
     (enableBigIntSupport && typeof children === 'bigint')
   ) {
-    if (
-      // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
-      domElement.textContent !== '' + children &&
-      props.suppressHydrationWarning !== true &&
-      !checkForUnmatchedText(domElement.textContent, children)
-    ) {
-      return false;
+    // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+    if (domElement.textContent !== '' + children) {
+      if (props.suppressHydrationWarning !== true) {
+        checkForUnmatchedText(domElement.textContent, children, shouldWarnDev);
+      }
+      if (!enableClientRenderFallbackOnTextMismatch) {
+        // We really should be patching this in the commit phase but since
+        // this only affects legacy mode hydration which is deprecated anyway
+        // we can get away with it.
+        // Host singletons get their children appended and don't use the text
+        // content mechanism.
+        if (tag !== 'body') {
+          domElement.textContent = (children: any);
+        }
+      }
     }
   }
 
@@ -2982,17 +2891,7 @@ export function hydrateProperties(
     trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
   }
 
-  return true;
-}
-
-export function diffHydratedProperties(
-  domElement: Element,
-  tag: string,
-  props: Object,
-  hostContext: HostContext,
-): null | Object {
-  const serverDifferences: {[propName: string]: mixed} = {};
-  if (__DEV__) {
+  if (__DEV__ && shouldWarnDev) {
     const extraAttributes: Set<string> = new Set();
     const attributes = domElement.attributes;
     for (let i = 0; i < attributes.length; i++) {
@@ -3019,7 +2918,6 @@ export function diffHydratedProperties(
         props,
         hostContext,
         extraAttributes,
-        serverDifferences,
       );
     } else {
       diffHydratedGenericElement(
@@ -3028,47 +2926,86 @@ export function diffHydratedProperties(
         props,
         hostContext,
         extraAttributes,
-        serverDifferences,
       );
     }
     if (extraAttributes.size > 0 && props.suppressHydrationWarning !== true) {
-      warnForExtraAttributes(domElement, extraAttributes, serverDifferences);
+      warnForExtraAttributes(extraAttributes);
     }
   }
-  if (Object.keys(serverDifferences).length === 0) {
-    return null;
-  }
-  return serverDifferences;
 }
 
-export function hydrateText(
-  textNode: Text,
-  text: string,
-  parentProps: null | Object,
-): boolean {
+export function diffHydratedText(textNode: Text, text: string): boolean {
   const isDifferent = textNode.nodeValue !== text;
-  if (
-    isDifferent &&
-    (parentProps === null || parentProps.suppressHydrationWarning !== true) &&
-    !checkForUnmatchedText(textNode.nodeValue, text)
-  ) {
-    return false;
-  }
-  return true;
+  return isDifferent;
 }
 
-export function diffHydratedText(textNode: Text, text: string): null | string {
-  if (textNode.nodeValue === text) {
-    return null;
+export function warnForDeletedHydratableElement(
+  parentNode: Element | Document | DocumentFragment,
+  child: Element,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    console.error(
+      'Did not expect server HTML to contain a <%s> in <%s>.',
+      child.nodeName.toLowerCase(),
+      parentNode.nodeName.toLowerCase(),
+    );
   }
-  const normalizedClientText = normalizeMarkupForTextOrAttribute(text);
-  const normalizedServerText = normalizeMarkupForTextOrAttribute(
-    textNode.nodeValue,
-  );
-  if (normalizedServerText === normalizedClientText) {
-    return null;
+}
+
+export function warnForDeletedHydratableText(
+  parentNode: Element | Document | DocumentFragment,
+  child: Text,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    console.error(
+      'Did not expect server HTML to contain the text node "%s" in <%s>.',
+      child.nodeValue,
+      parentNode.nodeName.toLowerCase(),
+    );
   }
-  return textNode.nodeValue;
+}
+
+export function warnForInsertedHydratedElement(
+  parentNode: Element | Document | DocumentFragment,
+  tag: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    console.error(
+      'Expected server HTML to contain a matching <%s> in <%s>.',
+      tag,
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function warnForInsertedHydratedText(
+  parentNode: Element | Document | DocumentFragment,
+  text: string,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    console.error(
+      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      text,
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
 }
 
 export function restoreControlledState(

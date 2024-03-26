@@ -6446,6 +6446,7 @@ body {
       );
     });
 
+    // @gate enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6481,7 +6482,7 @@ body {
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
         ],
         {withoutStack: 1},
       );
@@ -8231,6 +8232,7 @@ background-color: green;
       ]);
     });
 
+    // @gate enableClientRenderFallbackOnTextMismatch || !__DEV__
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -8271,7 +8273,7 @@ background-color: green;
       }).toErrorDev(
         [
           'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
         ],
         {withoutStack: 1},
       );

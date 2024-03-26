@@ -353,7 +353,7 @@ describe('ReactDOMServerPartialHydration', () => {
         expect(lastCall).toEqual([
           'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
           'article',
-          'Suspense',
+          'section',
           '\n' +
             '    in article (at **)\n' +
             '    in Component (at **)\n' +
@@ -457,7 +457,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'Suspense',
+            'section',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -905,7 +905,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'Suspense',
+            'section',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -1011,7 +1011,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'Suspense',
+            'section',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -1121,7 +1121,7 @@ describe('ReactDOMServerPartialHydration', () => {
           [
             'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
             'article',
-            'Suspense',
+            'section',
             '\n' +
               '    in article (at **)\n' +
               '    in Component (at **)\n' +
@@ -1298,9 +1298,7 @@ describe('ReactDOMServerPartialHydration', () => {
           },
         });
       });
-    }).toErrorDev(
-      'Did not expect server HTML to contain a <span> in <Suspense>',
-    );
+    }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
 
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
@@ -1378,7 +1376,7 @@ describe('ReactDOMServerPartialHydration', () => {
         expect(mockError).toHaveBeenCalledWith(
           'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
           'span',
-          'Suspense',
+          'div',
           '\n' +
             '    in Suspense (at **)\n' +
             '    in div (at **)\n' +
@@ -4034,8 +4032,8 @@ describe('ReactDOMServerPartialHydration', () => {
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. ' +
-          'The server HTML was replaced with client content.',
-        'Warning: Expected server HTML to contain a matching <span> in the root.\n' +
+          'The server HTML was replaced with client content in <div>.',
+        'Warning: Expected server HTML to contain a matching <span> in <div>.\n' +
           '    in span (at **)\n' +
           '    in App (at **)',
       ],
@@ -4061,6 +4059,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it("falls back to client rendering when there's a text mismatch (direct text child)", async () => {
     function DirectTextChild({text}) {
       return <div>{text}</div>;
@@ -4081,7 +4080,7 @@ describe('ReactDOMServerPartialHydration', () => {
       [
         'Text content did not match. Server: "good" Client: "bad"',
         'An error occurred during hydration. The server HTML was replaced with ' +
-          'client content.',
+          'client content in <div>.',
       ],
       {withoutStack: 1},
     );
@@ -4092,6 +4091,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ]);
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it("falls back to client rendering when there's a text mismatch (text child with siblings)", async () => {
     function Sibling() {
       return 'Sibling';
@@ -4125,7 +4125,7 @@ describe('ReactDOMServerPartialHydration', () => {
       [
         'Text content did not match. Server: "good" Client: "bad"',
         'An error occurred during hydration. The server HTML was replaced with ' +
-          'client content.',
+          'client content in <div>.',
       ],
       {withoutStack: 1},
     );
