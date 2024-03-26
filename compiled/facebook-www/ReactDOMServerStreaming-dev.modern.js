@@ -678,8 +678,7 @@ if (__DEV__) {
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps;
-    // On WWW, true is used for a new modern build.
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps; // On WWW, true is used for a new modern build.
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;

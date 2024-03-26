@@ -66,8 +66,6 @@ var ReactSharedInternals =
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -7940,39 +7938,22 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          a: {
-            current = workInProgress.stateNode;
-            renderLanes = workInProgress.memoizedProps;
-            current[internalInstanceKey] = workInProgress;
-            if ((newProps = current.nodeValue !== renderLanes))
-              if (
-                ((currentResource = hydrationParentFiber),
-                null !== currentResource)
-              )
-                switch (currentResource.tag) {
-                  case 3:
-                    checkForUnmatchedText(current.nodeValue, renderLanes);
-                    if (enableClientRenderFallbackOnTextMismatch) {
-                      current = !1;
-                      break a;
-                    }
-                    break;
-                  case 27:
-                  case 5:
-                    if (
-                      (!0 !==
-                        currentResource.memoizedProps
-                          .suppressHydrationWarning &&
-                        checkForUnmatchedText(current.nodeValue, renderLanes),
-                      enableClientRenderFallbackOnTextMismatch)
-                    ) {
-                      current = !1;
-                      break a;
-                    }
-                }
-            current = newProps;
-          }
-          current && markUpdate(workInProgress);
+          if (
+            ((current = workInProgress.stateNode),
+            (renderLanes = workInProgress.memoizedProps),
+            (current[internalInstanceKey] = workInProgress),
+            current.nodeValue !== renderLanes &&
+              ((newProps = hydrationParentFiber), null !== newProps))
+          )
+            switch (newProps.tag) {
+              case 3:
+                checkForUnmatchedText(current.nodeValue, renderLanes);
+                break;
+              case 27:
+              case 5:
+                !0 !== newProps.memoizedProps.suppressHydrationWarning &&
+                  checkForUnmatchedText(current.nodeValue, renderLanes);
+            }
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -13006,19 +12987,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$345;
+  var JSCompiler_inline_result$jscomp$344;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1515 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1515) {
-      var element$jscomp$inline_1516 = document.createElement("div");
-      element$jscomp$inline_1516.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1515 =
-        "function" === typeof element$jscomp$inline_1516.oninput;
+    var isSupported$jscomp$inline_1514 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1514) {
+      var element$jscomp$inline_1515 = document.createElement("div");
+      element$jscomp$inline_1515.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1514 =
+        "function" === typeof element$jscomp$inline_1515.oninput;
     }
-    JSCompiler_inline_result$jscomp$345 = isSupported$jscomp$inline_1515;
-  } else JSCompiler_inline_result$jscomp$345 = !1;
+    JSCompiler_inline_result$jscomp$344 = isSupported$jscomp$inline_1514;
+  } else JSCompiler_inline_result$jscomp$344 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$345 &&
+    JSCompiler_inline_result$jscomp$344 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13390,20 +13371,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1556 = 0;
-  i$jscomp$inline_1556 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1556++
+  var i$jscomp$inline_1555 = 0;
+  i$jscomp$inline_1555 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1555++
 ) {
-  var eventName$jscomp$inline_1557 =
-      simpleEventPluginEvents[i$jscomp$inline_1556],
-    domEventName$jscomp$inline_1558 =
-      eventName$jscomp$inline_1557.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1559 =
-      eventName$jscomp$inline_1557[0].toUpperCase() +
-      eventName$jscomp$inline_1557.slice(1);
+  var eventName$jscomp$inline_1556 =
+      simpleEventPluginEvents[i$jscomp$inline_1555],
+    domEventName$jscomp$inline_1557 =
+      eventName$jscomp$inline_1556.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1558 =
+      eventName$jscomp$inline_1556[0].toUpperCase() +
+      eventName$jscomp$inline_1556.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1558,
-    "on" + capitalizedEvent$jscomp$inline_1559
+    domEventName$jscomp$inline_1557,
+    "on" + capitalizedEvent$jscomp$inline_1558
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14251,10 +14232,7 @@ function normalizeMarkupForTextOrAttribute(markup) {
 }
 function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
-  if (
-    normalizeMarkupForTextOrAttribute(serverText) !== clientText &&
-    enableClientRenderFallbackOnTextMismatch
-  )
+  if (normalizeMarkupForTextOrAttribute(serverText) !== clientText)
     throw Error(formatProdErrorMessage(425));
 }
 function noop$2() {}
@@ -15474,8 +15452,8 @@ function hydrateInstance(
       break;
     case "video":
     case "audio":
-      for (hostContext = 0; hostContext < mediaEventTypes.length; hostContext++)
-        listenToNonDelegatedEvent(mediaEventTypes[hostContext], instance);
+      for (type = 0; type < mediaEventTypes.length; type++)
+        listenToNonDelegatedEvent(mediaEventTypes[type], instance);
       break;
     case "source":
       listenToNonDelegatedEvent("error", instance);
@@ -15511,16 +15489,13 @@ function hydrateInstance(
         initTextarea(instance, props.value, props.defaultValue, props.children),
         track(instance);
   }
-  hostContext = props.children;
-  ("string" === typeof hostContext ||
-    "number" === typeof hostContext ||
-    (enableBigIntSupport && "bigint" === typeof hostContext)) &&
-    instance.textContent !== "" + hostContext &&
-    (!0 !== props.suppressHydrationWarning &&
-      checkForUnmatchedText(instance.textContent, hostContext),
-    enableClientRenderFallbackOnTextMismatch ||
-      "body" === type ||
-      (instance.textContent = hostContext));
+  type = props.children;
+  ("string" === typeof type ||
+    "number" === typeof type ||
+    (enableBigIntSupport && "bigint" === typeof type)) &&
+    instance.textContent !== "" + type &&
+    !0 !== props.suppressHydrationWarning &&
+    checkForUnmatchedText(instance.textContent, type);
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
   null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
   null != props.onClick && (instance.onclick = noop$2);
@@ -17116,17 +17091,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1779 = {
+var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-f3967e51",
+  version: "19.0.0-www-classic-d89e0697",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2172 = {
-  bundleType: devToolsConfig$jscomp$inline_1779.bundleType,
-  version: devToolsConfig$jscomp$inline_1779.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1779.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1779.rendererConfig,
+var internals$jscomp$inline_2171 = {
+  bundleType: devToolsConfig$jscomp$inline_1778.bundleType,
+  version: devToolsConfig$jscomp$inline_1778.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1778.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1778.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17142,26 +17117,26 @@ var internals$jscomp$inline_2172 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1779.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1778.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-f3967e51"
+  reconcilerVersion: "19.0.0-www-classic-d89e0697"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2173 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2172 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2173.isDisabled &&
-    hook$jscomp$inline_2173.supportsFiber
+    !hook$jscomp$inline_2172.isDisabled &&
+    hook$jscomp$inline_2172.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2173.inject(
-        internals$jscomp$inline_2172
+      (rendererID = hook$jscomp$inline_2172.inject(
+        internals$jscomp$inline_2171
       )),
-        (injectedHook = hook$jscomp$inline_2173);
+        (injectedHook = hook$jscomp$inline_2172);
     } catch (err) {}
 }
 assign(Internals, {
@@ -17469,4 +17444,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-f3967e51";
+exports.version = "19.0.0-www-classic-d89e0697";

@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-841735f0";
+    var ReactVersion = "19.0.0-www-classic-ae7c23fd";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -20031,9 +20031,7 @@ if (__DEV__) {
             var _wasHydrated3 = popHydrationState();
 
             if (_wasHydrated3) {
-              if (prepareToHydrateHostTextInstance()) {
-                markUpdate(workInProgress);
-              }
+              prepareToHydrateHostTextInstance();
             } else {
               workInProgress.stateNode = createTextInstance(newText);
             }

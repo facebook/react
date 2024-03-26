@@ -83,8 +83,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
-  enableClientRenderFallbackOnTextMismatch =
-    dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   assign = Object.assign,
   ReactSharedInternals =
@@ -8035,39 +8033,22 @@ function completeWork(current, workInProgress, renderLanes) {
           throw Error(formatProdErrorMessage(166));
         current = rootInstanceStackCursor.current;
         if (popHydrationState(workInProgress)) {
-          a: {
-            current = workInProgress.stateNode;
-            renderLanes = workInProgress.memoizedProps;
-            current[internalInstanceKey] = workInProgress;
-            if ((newProps = current.nodeValue !== renderLanes))
-              if (
-                ((currentResource = hydrationParentFiber),
-                null !== currentResource)
-              )
-                switch (currentResource.tag) {
-                  case 3:
-                    checkForUnmatchedText(current.nodeValue, renderLanes);
-                    if (enableClientRenderFallbackOnTextMismatch) {
-                      current = !1;
-                      break a;
-                    }
-                    break;
-                  case 27:
-                  case 5:
-                    if (
-                      (!0 !==
-                        currentResource.memoizedProps
-                          .suppressHydrationWarning &&
-                        checkForUnmatchedText(current.nodeValue, renderLanes),
-                      enableClientRenderFallbackOnTextMismatch)
-                    ) {
-                      current = !1;
-                      break a;
-                    }
-                }
-            current = newProps;
-          }
-          current && markUpdate(workInProgress);
+          if (
+            ((current = workInProgress.stateNode),
+            (renderLanes = workInProgress.memoizedProps),
+            (current[internalInstanceKey] = workInProgress),
+            current.nodeValue !== renderLanes &&
+              ((newProps = hydrationParentFiber), null !== newProps))
+          )
+            switch (newProps.tag) {
+              case 3:
+                checkForUnmatchedText(current.nodeValue, renderLanes);
+                break;
+              case 27:
+              case 5:
+                !0 !== newProps.memoizedProps.suppressHydrationWarning &&
+                  checkForUnmatchedText(current.nodeValue, renderLanes);
+            }
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -14116,19 +14097,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$364;
+  var JSCompiler_inline_result$jscomp$363;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1600 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1600) {
-      var element$jscomp$inline_1601 = document.createElement("div");
-      element$jscomp$inline_1601.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1600 =
-        "function" === typeof element$jscomp$inline_1601.oninput;
+    var isSupported$jscomp$inline_1599 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1599) {
+      var element$jscomp$inline_1600 = document.createElement("div");
+      element$jscomp$inline_1600.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1599 =
+        "function" === typeof element$jscomp$inline_1600.oninput;
     }
-    JSCompiler_inline_result$jscomp$364 = isSupported$jscomp$inline_1600;
-  } else JSCompiler_inline_result$jscomp$364 = !1;
+    JSCompiler_inline_result$jscomp$363 = isSupported$jscomp$inline_1599;
+  } else JSCompiler_inline_result$jscomp$363 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$364 &&
+    JSCompiler_inline_result$jscomp$363 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14437,20 +14418,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1641 = 0;
-  i$jscomp$inline_1641 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1641++
+  var i$jscomp$inline_1640 = 0;
+  i$jscomp$inline_1640 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1640++
 ) {
-  var eventName$jscomp$inline_1642 =
-      simpleEventPluginEvents[i$jscomp$inline_1641],
-    domEventName$jscomp$inline_1643 =
-      eventName$jscomp$inline_1642.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1644 =
-      eventName$jscomp$inline_1642[0].toUpperCase() +
-      eventName$jscomp$inline_1642.slice(1);
+  var eventName$jscomp$inline_1641 =
+      simpleEventPluginEvents[i$jscomp$inline_1640],
+    domEventName$jscomp$inline_1642 =
+      eventName$jscomp$inline_1641.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1643 =
+      eventName$jscomp$inline_1641[0].toUpperCase() +
+      eventName$jscomp$inline_1641.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1643,
-    "on" + capitalizedEvent$jscomp$inline_1644
+    domEventName$jscomp$inline_1642,
+    "on" + capitalizedEvent$jscomp$inline_1643
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15298,10 +15279,7 @@ function normalizeMarkupForTextOrAttribute(markup) {
 }
 function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
-  if (
-    normalizeMarkupForTextOrAttribute(serverText) !== clientText &&
-    enableClientRenderFallbackOnTextMismatch
-  )
+  if (normalizeMarkupForTextOrAttribute(serverText) !== clientText)
     throw Error(formatProdErrorMessage(425));
 }
 function noop$1() {}
@@ -16490,8 +16468,8 @@ function hydrateInstance(
       break;
     case "video":
     case "audio":
-      for (hostContext = 0; hostContext < mediaEventTypes.length; hostContext++)
-        listenToNonDelegatedEvent(mediaEventTypes[hostContext], instance);
+      for (type = 0; type < mediaEventTypes.length; type++)
+        listenToNonDelegatedEvent(mediaEventTypes[type], instance);
       break;
     case "source":
       listenToNonDelegatedEvent("error", instance);
@@ -16527,16 +16505,13 @@ function hydrateInstance(
         initTextarea(instance, props.value, props.defaultValue),
         track(instance);
   }
-  hostContext = props.children;
-  ("string" === typeof hostContext ||
-    "number" === typeof hostContext ||
-    (enableBigIntSupport && "bigint" === typeof hostContext)) &&
-    instance.textContent !== "" + hostContext &&
-    (!0 !== props.suppressHydrationWarning &&
-      checkForUnmatchedText(instance.textContent, hostContext),
-    enableClientRenderFallbackOnTextMismatch ||
-      "body" === type ||
-      (instance.textContent = hostContext));
+  type = props.children;
+  ("string" === typeof type ||
+    "number" === typeof type ||
+    (enableBigIntSupport && "bigint" === typeof type)) &&
+    instance.textContent !== "" + type &&
+    !0 !== props.suppressHydrationWarning &&
+    checkForUnmatchedText(instance.textContent, type);
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
   null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
   null != props.onClick && (instance.onclick = noop$1);
@@ -17375,10 +17350,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1823 = {
+var devToolsConfig$jscomp$inline_1822 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-67e6e1a2",
+  version: "19.0.0-www-modern-0fb5538d",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17396,10 +17371,10 @@ var devToolsConfig$jscomp$inline_1823 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1823.bundleType,
-  version: devToolsConfig$jscomp$inline_1823.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1823.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1823.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1822.bundleType,
+  version: devToolsConfig$jscomp$inline_1822.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1822.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1822.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17416,14 +17391,14 @@ var devToolsConfig$jscomp$inline_1823 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1823.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1822.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-67e6e1a2"
+  reconcilerVersion: "19.0.0-www-modern-0fb5538d"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17669,7 +17644,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-67e6e1a2";
+exports.version = "19.0.0-www-modern-0fb5538d";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

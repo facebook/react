@@ -17580,9 +17580,7 @@ if (__DEV__) {
             var _wasHydrated3 = popHydrationState();
 
             if (_wasHydrated3) {
-              if (prepareToHydrateHostTextInstance()) {
-                markUpdate(workInProgress);
-              }
+              prepareToHydrateHostTextInstance();
             } else {
               workInProgress.stateNode = createTextInstance(newText);
             }
@@ -26110,7 +26108,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-b116d297";
+    var ReactVersion = "19.0.0-www-modern-4c1f5e46";
 
     // Might add PROFILE later.
 

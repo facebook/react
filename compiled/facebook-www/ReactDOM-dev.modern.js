@@ -149,9 +149,7 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
-      enableClientRenderFallbackOnTextMismatch =
-        dynamicFeatureFlags.enableClientRenderFallbackOnTextMismatch; // On WWW, true is used for a new modern build.
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps; // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -8510,9 +8508,13 @@ if (__DEV__) {
       var textInstance = fiber.stateNode;
       var textContent = fiber.memoizedProps;
       var shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-      var shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
+      var textIsDifferent = hydrateTextInstance(
+        textInstance,
+        textContent,
+        fiber
+      );
 
-      if (shouldUpdate) {
+      if (textIsDifferent) {
         // We assume that prepareToHydrateHostTextInstance is called in a context where the
         // hydration parent is the parent host component of this host text.
         var returnFiber = hydrationParentFiber;
@@ -8527,13 +8529,6 @@ if (__DEV__) {
                 textContent,
                 shouldWarnIfMismatchDev
               );
-
-              if (enableClientRenderFallbackOnTextMismatch) {
-                // In concurrent mode we never update the mismatched text,
-                // even if the error was ignored.
-                return false;
-              }
-
               break;
             }
 
@@ -8550,20 +8545,11 @@ if (__DEV__) {
                 textContent,
                 shouldWarnIfMismatchDev
               );
-
-              if (enableClientRenderFallbackOnTextMismatch) {
-                // In concurrent mode we never update the mismatched text,
-                // even if the error was ignored.
-                return false;
-              }
-
               break;
             }
           }
         }
       }
-
-      return shouldUpdate;
     }
 
     function prepareToHydrateHostSuspenseInstance(fiber) {
@@ -25090,9 +25076,7 @@ if (__DEV__) {
             var _wasHydrated3 = popHydrationState(workInProgress);
 
             if (_wasHydrated3) {
-              if (prepareToHydrateHostTextInstance(workInProgress)) {
-                markUpdate(workInProgress);
-              }
+              prepareToHydrateHostTextInstance(workInProgress);
             } else {
               workInProgress.stateNode = createTextInstance(
                 newText,
@@ -35429,7 +35413,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-f82757b9";
+    var ReactVersion = "19.0.0-www-modern-fbbbe297";
 
     function createPortal$1(
       children,
@@ -41010,13 +40994,10 @@ if (__DEV__) {
             );
           }
         }
-      }
+      } // In concurrent roots, we throw when there's a text mismatch and revert to
+      // client rendering, up to the nearest Suspense boundary.
 
-      if (enableClientRenderFallbackOnTextMismatch) {
-        // In concurrent roots, we throw when there's a text mismatch and revert to
-        // client rendering, up to the nearest Suspense boundary.
-        throw new Error("Text content does not match server-rendered HTML.");
-      }
+      throw new Error("Text content does not match server-rendered HTML.");
     }
 
     function noop$1() {}
@@ -43895,17 +43876,6 @@ if (__DEV__) {
               children,
               shouldWarnDev
             );
-          }
-
-          if (!enableClientRenderFallbackOnTextMismatch) {
-            // We really should be patching this in the commit phase but since
-            // this only affects legacy mode hydration which is deprecated anyway
-            // we can get away with it.
-            // Host singletons get their children appended and don't use the text
-            // content mechanism.
-            if (tag !== "body") {
-              domElement.textContent = children;
-            }
           }
         }
       }
