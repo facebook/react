@@ -27,7 +27,6 @@ export const enableReactTestRendererWarning = __TODO_NEXT_RN_MAJOR__;
 export const enableAsyncActions = __TODO_NEXT_RN_MAJOR__;
 export const consoleManagedByDevToolsDuringStrictMode = __TODO_NEXT_RN_MAJOR__;
 export const enableDeferRootSchedulingToMicrotask = __TODO_NEXT_RN_MAJOR__;
-export const alwaysThrottleDisappearingFallbacks = __TODO_NEXT_RN_MAJOR__;
 export const alwaysThrottleRetries = __TODO_NEXT_RN_MAJOR__;
 export const enableInfiniteRenderLoopDetection = __TODO_NEXT_RN_MAJOR__;
 export const enableComponentStackLocations = __TODO_NEXT_RN_MAJOR__;

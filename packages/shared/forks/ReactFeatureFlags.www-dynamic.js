@@ -24,7 +24,6 @@ export const forceConcurrentByDefaultForTesting = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
-export const alwaysThrottleDisappearingFallbacks = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;

@@ -74,7 +74,6 @@ export const enableDeferRootSchedulingToMicrotask = false;
 
 export const enableAsyncActions = true;
 
-export const alwaysThrottleDisappearingFallbacks = true;
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
