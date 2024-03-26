@@ -8,7 +8,9 @@
 import {
   Effect,
   HIRFunction,
+  Identifier,
   InstructionId,
+  InstructionKind,
   makeInstructionId,
   Place,
 } from "../HIR/HIR";
@@ -99,6 +101,15 @@ export function inferMutableLifetimes(
   func: HIRFunction,
   inferMutableRangeForStores: boolean
 ): void {
+  /*
+   * Context variables only appear to mutate where they are assigned, but we need
+   * to force their range to start at their declaration. Track the declaring instruction
+   * id so that the ranges can be extended if/when they are reassigned
+   */
+  const contextVariableDeclarationInstructions = new Map<
+    Identifier,
+    InstructionId
+  >();
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       for (const [_, operand] of phi.operands) {
@@ -145,6 +156,35 @@ export function inferMutableLifetimes(
       }
       for (const operand of eachInstructionOperand(instr)) {
         inferPlace(operand, instr.id, inferMutableRangeForStores);
+      }
+
+      if (
+        instr.value.kind === "DeclareContext" ||
+        (instr.value.kind === "StoreContext" &&
+          instr.value.lvalue.kind !== InstructionKind.Reassign)
+      ) {
+        // Save declarations of context variables
+        contextVariableDeclarationInstructions.set(
+          instr.value.lvalue.place.identifier,
+          instr.id
+        );
+      } else if (instr.value.kind === "StoreContext") {
+        /*
+         * Else this is a reassignment, extend the range from the declaration (if present).
+         * Note that declarations may not be present for context variables that are reassigned
+         * within a function expression before (or without) a read of the same variable
+         */
+        const declaration = contextVariableDeclarationInstructions.get(
+          instr.value.lvalue.place.identifier
+        );
+        if (declaration != null) {
+          const range = instr.value.lvalue.place.identifier.mutableRange;
+          if (range.start === 0) {
+            range.start = declaration;
+          } else {
+            range.start = makeInstructionId(Math.min(range.start, declaration));
+          }
+        }
       }
     }
     for (const operand of eachTerminalOperand(block.terminal)) {

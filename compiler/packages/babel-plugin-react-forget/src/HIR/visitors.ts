@@ -32,8 +32,9 @@ export function* eachInstructionValueLValue(
   value: ReactiveValue
 ): Iterable<Place> {
   switch (value.kind) {
-    case "DeclareLocal":
     case "DeclareContext":
+    case "StoreContext":
+    case "DeclareLocal":
     case "StoreLocal": {
       yield value.lvalue.place;
       break;

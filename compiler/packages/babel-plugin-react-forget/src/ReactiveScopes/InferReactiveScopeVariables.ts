@@ -5,21 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "..";
 import { Environment } from "../HIR";
 import {
+  GeneratedSource,
   HIRFunction,
   Identifier,
   Instruction,
-  makeInstructionId,
   Place,
   ReactiveScope,
+  makeInstructionId,
 } from "../HIR/HIR";
 import {
   doesPatternContainSpreadElement,
-  eachInstructionLValue,
   eachInstructionOperand,
   eachPatternOperand,
-  eachTerminalOperand,
 } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
@@ -81,27 +81,6 @@ import { assertExhaustive } from "../Utils/utils";
  * ```
  */
 export function inferReactiveScopeVariables(fn: HIRFunction): void {
-  // First reset any scopes that may have been created from inner functions
-  for (const [, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      phi.id.scope = null;
-      for (const [, operand] of phi.operands) {
-        operand.scope = null;
-      }
-    }
-    for (const instr of block.instructions) {
-      for (const lvalue of eachInstructionLValue(instr)) {
-        lvalue.identifier.scope = null;
-      }
-      for (const operand of eachInstructionOperand(instr)) {
-        operand.identifier.scope = null;
-      }
-    }
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      operand.identifier.scope = null;
-    }
-  }
-
   /*
    * Represents the set of reactive scopes as disjoint sets of identifiers
    * that mutate together.
@@ -141,7 +120,40 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       );
     }
     identifier.scope = scope;
+    identifier.mutableRange = scope.range;
   });
+
+  let maxInstruction = 0;
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      maxInstruction = makeInstructionId(Math.max(maxInstruction, instr.id));
+    }
+    maxInstruction = makeInstructionId(
+      Math.max(maxInstruction, block.terminal.id)
+    );
+  }
+
+  /*
+   * Validate that all scopes have properly intialized, valid mutable ranges
+   * within the span of instructions for this function, ie from 1 to 1 past
+   * the last instruction id.
+   */
+  for (const [, scope] of scopes) {
+    if (
+      scope.range.start === 0 ||
+      scope.range.end === 0 ||
+      maxInstruction === 0 ||
+      scope.range.end > maxInstruction + 1
+    ) {
+      CompilerError.invariant(false, {
+        reason: `Invalid mutable range for scope`,
+        loc: GeneratedSource,
+        description: `Scope @${scope.id} has range [${scope.range.start}:${
+          scope.range.end
+        }] but the valid range is [1:${maxInstruction + 1}]`,
+      });
+    }
+  }
 }
 
 // Is the operand mutable at this given instruction

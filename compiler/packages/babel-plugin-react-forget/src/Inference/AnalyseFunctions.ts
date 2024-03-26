@@ -16,6 +16,7 @@ import {
   ReactiveScopeDependency,
   isRefValueType,
   isUseRefType,
+  makeInstructionId,
 } from "../HIR";
 import { deadCodeElimination } from "../Optimization";
 import { inferReactiveScopeVariables } from "../ReactiveScopes";
@@ -126,7 +127,6 @@ function infer(
     ) {
       mutations.set(operand.identifier.name.value, operand.effect);
     }
-    operand.identifier.mutableRange.end = operand.identifier.mutableRange.start;
   }
 
   for (const dep of loweredFunc.dependencies) {
@@ -177,6 +177,12 @@ function infer(
       place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
       loweredFunc.dependencies.push(place);
     }
+  }
+
+  for (const operand of loweredFunc.func.context) {
+    operand.identifier.mutableRange.start = makeInstructionId(0);
+    operand.identifier.mutableRange.end = makeInstructionId(0);
+    operand.identifier.scope = null;
   }
 }
 

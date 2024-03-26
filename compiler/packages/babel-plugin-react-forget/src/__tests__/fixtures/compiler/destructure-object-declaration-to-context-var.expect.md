@@ -27,32 +27,31 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import { identity } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(5);
-  const { x: t0 } = props;
+  const $ = useMemoCache(4);
   let x;
-  if ($[0] !== t0 || $[1] !== props.x) {
+  if ($[0] !== props) {
+    const { x: t0 } = props;
     x = t0;
     const foo = () => {
       x = identity(props.x);
     };
 
     foo();
-    $[0] = t0;
-    $[1] = props.x;
-    $[2] = x;
+    $[0] = props;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
-  const t1 = x;
-  let t2;
-  if ($[3] !== t1) {
-    t2 = { x: t1 };
+  const t0 = x;
+  let t1;
+  if ($[2] !== t0) {
+    t1 = { x: t0 };
+    $[2] = t0;
     $[3] = t1;
-    $[4] = t2;
   } else {
-    t2 = $[4];
+    t1 = $[3];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

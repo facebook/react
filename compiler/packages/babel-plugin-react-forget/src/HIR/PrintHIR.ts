@@ -633,10 +633,14 @@ function isMutable(range: MutableRange): boolean {
 }
 
 function printMutableRange(identifier: Identifier): string {
-  const range =
-    identifier.scope !== null
-      ? identifier.scope.range
-      : identifier.mutableRange;
+  const range = identifier.mutableRange;
+  const scopeRange = identifier.scope?.range;
+  if (
+    scopeRange != null &&
+    (scopeRange.start !== range.start || scopeRange.end !== range.end)
+  ) {
+    return `[${range.start}:${range.end}] scope=[${scopeRange.start}:${scopeRange.end}]`;
+  }
   return isMutable(range) ? `[${range.start}:${range.end}]` : "";
 }
 

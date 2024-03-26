@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function hoisting(cond) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
   let items;
   if ($[0] !== cond) {
     items = [];
@@ -35,14 +35,8 @@ function hoisting(cond) {
       const foo = () => {
         items.push(bar());
       };
-      let t0;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = () => true;
-        $[2] = t0;
-      } else {
-        t0 = $[2];
-      }
-      const bar = t0;
+
+      const bar = () => true;
       foo();
     }
     $[0] = cond;
