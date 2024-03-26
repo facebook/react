@@ -65,6 +65,19 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  // @gate __DEV__
+  it('should not warn if enableReactTestRendererWarning is enabled but the RN global is set', () => {
+    global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
+    ReactFeatureFlags.enableReactTestRendererWarning = true;
+    expect(() => {
+      ReactTestRenderer.create(<div />);
+    }).not.toWarnDev(
+      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      {withoutStack: true},
+    );
+    global.IS_REACT_NATIVE_TEST_ENVIRONMENT = false;
+  });
+
   it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;

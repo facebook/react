@@ -129,7 +129,9 @@ beforeEach(() => {
   jest.useFakeTimers();
 
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
-  global._ignoredErrorOrWarningMessages = [];
+  global._ignoredErrorOrWarningMessages = [
+    'react-test-renderer is deprecated.',
+  ];
   function shouldIgnoreConsoleErrorOrWarn(args) {
     let firstArg = args[0];
     if (

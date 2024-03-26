@@ -183,10 +183,8 @@ export const enableInfiniteRenderLoopDetection = true;
 export const enableRefAsProp = __NEXT_MAJOR__;
 export const disableStringRefs = __NEXT_MAJOR__;
 
-// Not ready to break experimental yet.
-// Needs more internal cleanup
 // Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = false;
+export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
