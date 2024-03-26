@@ -51,6 +51,8 @@ function FiberRootNode(
   tag,
   hydrate: any,
   identifierPrefix: any,
+  onUncaughtError: any,
+  onCaughtError: any,
   onRecoverableError: any,
   formState: ReactFormState<any, any> | null,
 ) {
@@ -83,6 +85,8 @@ function FiberRootNode(
   this.hiddenUpdates = createLaneMap(null);
 
   this.identifierPrefix = identifierPrefix;
+  this.onUncaughtError = onUncaughtError;
+  this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
 
   if (enableCache) {
@@ -143,7 +147,21 @@ export function createFiberRoot(
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
-  onRecoverableError: null | ((error: mixed) => void),
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): FiberRoot {
@@ -153,6 +171,8 @@ export function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     formState,
   ): any);

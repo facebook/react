@@ -23,6 +23,9 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
@@ -454,13 +457,6 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
-}
-
 function create(
   element: React$Element<any>,
   options: TestRendererOptions,
@@ -522,7 +518,9 @@ function create(
     isStrictMode,
     concurrentUpdatesByDefault,
     '',
-    onRecoverableError,
+    defaultOnUncaughtError,
+    defaultOnCaughtError,
+    defaultOnRecoverableError,
     null,
   );
 

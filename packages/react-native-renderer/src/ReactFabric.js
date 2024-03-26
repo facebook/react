@@ -20,6 +20,9 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -43,13 +46,6 @@ import {
 } from './ReactNativePublicCompat';
 import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFabric';
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
-}
-
 function render(
   element: Element<ElementType>,
   containerTag: number,
@@ -68,7 +64,9 @@ function render(
       false,
       null,
       '',
-      onRecoverableError,
+      defaultOnUncaughtError,
+      defaultOnCaughtError,
+      defaultOnRecoverableError,
       null,
     );
     roots.set(containerTag, root);

@@ -13,56 +13,130 @@ import type {CapturedValue} from './ReactCapturedValue';
 import {showErrorDialog} from './ReactFiberErrorDialog';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
+import {ClassComponent} from './ReactWorkTags';
+
 import reportGlobalError from 'shared/reportGlobalError';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
+
+// Side-channel since I'm not sure we want to make this part of the public API
+let componentName: null | string = null;
+let errorBoundaryName: null | string = null;
+
+export function defaultOnUncaughtError(
+  error: mixed,
+  errorInfo: {+componentStack?: ?string},
+): void {
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = showErrorDialog(null, error, componentStack);
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  // For uncaught root errors we report them as uncaught to the browser's
+  // onerror callback. This won't have component stacks and the error addendum.
+  // So we add those into a separate console.warn.
+  reportGlobalError(error);
+  if (__DEV__) {
+    // TODO: There's no longer a way to silence these warnings e.g. for tests.
+    // See https://github.com/facebook/react/pull/13384
+
+    const componentNameMessage = componentName
+      ? `An error occurred in the <${componentName}> component:`
+      : 'An error occurred in one of your React components:';
+
+    console['warn'](
+      '%s\n%s\n\n%s',
+      componentNameMessage,
+      componentStack || '',
+      'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+        'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.',
+    );
+  }
+}
+
+export function defaultOnCaughtError(
+  error: mixed,
+  errorInfo: {
+    +componentStack?: ?string,
+    +errorBoundary?: ?React$Component<any, any>,
+  },
+): void {
+  // Overriding this can silence these warnings e.g. for tests.
+  // See https://github.com/facebook/react/pull/13384
+
+  const boundary = errorInfo.errorBoundary;
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = showErrorDialog(boundary, error, componentStack);
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  // Caught by error boundary
+  if (__DEV__) {
+    const componentNameMessage = componentName
+      ? `The above error occurred in the <${componentName}> component:`
+      : 'The above error occurred in one of your React components:';
+
+    // In development, we provide our own message which includes the component stack
+    // in addition to the error.
+    // Don't transform to our wrapper
+    console['error'](
+      '%o\n\n%s\n%s\n\n%s',
+      error,
+      componentNameMessage,
+      componentStack,
+      `React will try to recreate this component tree from scratch ` +
+        `using the error boundary you provided, ${
+          errorBoundaryName || 'Anonymous'
+        }.`,
+    );
+  } else {
+    // In production, we print the error directly.
+    // This will include the message, the JS stack, and anything the browser wants to show.
+    // We pass the error object instead of custom message so that the browser displays the error natively.
+    console['error'](error); // Don't transform to our wrapper
+  }
+}
+
+export function defaultOnRecoverableError(
+  error: mixed,
+  errorInfo: {+digest?: ?string, +componentStack?: ?string},
+) {
+  reportGlobalError(error);
+}
 
 export function logUncaughtError(
   root: FiberRoot,
   errorInfo: CapturedValue<mixed>,
 ): void {
   try {
-    const logError = showErrorDialog(null, errorInfo);
-
-    // Allow injected showErrorDialog() to prevent default console.error logging.
-    // This enables renderers like ReactNative to better manage redbox behavior.
-    if (logError === false) {
-      return;
+    if (__DEV__) {
+      componentName = errorInfo.source
+        ? getComponentNameFromFiber(errorInfo.source)
+        : null;
+      errorBoundaryName = null;
     }
-
     const error = (errorInfo.value: any);
-
     if (__DEV__ && ReactCurrentActQueue.current !== null) {
       // For uncaught errors inside act, we track them on the act and then
       // rethrow them into the test.
       ReactCurrentActQueue.thrownErrors.push(error);
       return;
     }
-    // For uncaught root errors we report them as uncaught to the browser's
-    // onerror callback. This won't have component stacks and the error addendum.
-    // So we add those into a separate console.warn.
-    reportGlobalError(error);
-    if (__DEV__) {
-      const source = errorInfo.source;
-      const stack = errorInfo.stack;
-      const componentStack = stack !== null ? stack : '';
-      // TODO: There's no longer a way to silence these warnings e.g. for tests.
-      // See https://github.com/facebook/react/pull/13384
-
-      const componentName = source ? getComponentNameFromFiber(source) : null;
-      const componentNameMessage = componentName
-        ? `An error occurred in the <${componentName}> component:`
-        : 'An error occurred in one of your React components:';
-
-      console['warn'](
-        '%s\n%s\n\n%s',
-        componentNameMessage,
-        componentStack,
-        'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-          'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.',
-      );
-    }
+    const onUncaughtError = root.onUncaughtError;
+    onUncaughtError(error, {
+      componentStack: errorInfo.stack,
+    });
   } catch (e) {
     // This method must not throw, or React internal state will get messed up.
     // If console.error is overridden, or logCapturedError() shows a dialog that throws,
@@ -80,48 +154,21 @@ export function logCaughtError(
   errorInfo: CapturedValue<mixed>,
 ): void {
   try {
-    const logError = showErrorDialog(boundary, errorInfo);
-
-    // Allow injected showErrorDialog() to prevent default console.error logging.
-    // This enables renderers like ReactNative to better manage redbox behavior.
-    if (logError === false) {
-      return;
-    }
-
-    const error = (errorInfo.value: any);
-    // Caught by error boundary
     if (__DEV__) {
-      const source = errorInfo.source;
-      const stack = errorInfo.stack;
-      const componentStack = stack !== null ? stack : '';
-      // TODO: There's no longer a way to silence these warnings e.g. for tests.
-      // See https://github.com/facebook/react/pull/13384
-
-      const componentName = source ? getComponentNameFromFiber(source) : null;
-      const componentNameMessage = componentName
-        ? `The above error occurred in the <${componentName}> component:`
-        : 'The above error occurred in one of your React components:';
-
-      const errorBoundaryName =
-        getComponentNameFromFiber(boundary) || 'Anonymous';
-
-      // In development, we provide our own message which includes the component stack
-      // in addition to the error.
-      // Don't transform to our wrapper
-      console['error'](
-        '%o\n\n%s\n%s\n\n%s',
-        error,
-        componentNameMessage,
-        componentStack,
-        `React will try to recreate this component tree from scratch ` +
-          `using the error boundary you provided, ${errorBoundaryName}.`,
-      );
-    } else {
-      // In production, we print the error directly.
-      // This will include the message, the JS stack, and anything the browser wants to show.
-      // We pass the error object instead of custom message so that the browser displays the error natively.
-      console['error'](error); // Don't transform to our wrapper
+      componentName = errorInfo.source
+        ? getComponentNameFromFiber(errorInfo.source)
+        : null;
+      errorBoundaryName = getComponentNameFromFiber(boundary);
     }
+    const error = (errorInfo.value: any);
+    const onCaughtError = root.onCaughtError;
+    onCaughtError(error, {
+      componentStack: errorInfo.stack,
+      errorBoundary:
+        boundary.tag === ClassComponent
+          ? boundary.stateNode // This should always be the case as long as we only have class boundaries
+          : null,
+    });
   } catch (e) {
     // This method must not throw, or React internal state will get messed up.
     // If console.error is overridden, or logCapturedError() shows a dialog that throws,

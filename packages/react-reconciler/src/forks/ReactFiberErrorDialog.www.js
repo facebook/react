@@ -7,11 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from '../ReactFiber';
-import type {CapturedValue} from '../ReactCapturedValue';
-
-import {ClassComponent} from '../ReactWorkTags';
-
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
 
@@ -22,16 +17,13 @@ if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== 'function') {
 }
 
 export function showErrorDialog(
-  boundary: null | Fiber,
-  errorInfo: CapturedValue<mixed>,
+  errorBoundary: ?React$Component<any, any>,
+  error: mixed,
+  componentStack: string,
 ): boolean {
-  const capturedError = {
-    componentStack: errorInfo.stack !== null ? errorInfo.stack : '',
-    error: errorInfo.value,
-    errorBoundary:
-      boundary !== null && boundary.tag === ClassComponent
-        ? boundary.stateNode
-        : null,
-  };
-  return ReactFiberErrorDialogWWW.showErrorDialog(capturedError);
+  return ReactFiberErrorDialogWWW.showErrorDialog({
+    errorBoundary,
+    error,
+    componentStack,
+  });
 }

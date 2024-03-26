@@ -20,6 +20,9 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
@@ -47,13 +50,6 @@ import {
   isChildPublicInstance,
 } from './ReactNativePublicCompat';
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
-}
-
 function render(
   element: Element<ElementType>,
   containerTag: number,
@@ -71,7 +67,9 @@ function render(
       false,
       null,
       '',
-      onRecoverableError,
+      defaultOnUncaughtError,
+      defaultOnCaughtError,
+      defaultOnRecoverableError,
       null,
     );
     roots.set(containerTag, root);

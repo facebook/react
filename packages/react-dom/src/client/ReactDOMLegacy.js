@@ -39,6 +39,8 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -124,6 +126,8 @@ function legacyCreateRootFromDOMContainer(
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
       '', // identifierPrefix
+      defaultOnUncaughtError,
+      defaultOnCaughtError,
       noopOnRecoverableError,
       // TODO(luna) Support hydration later
       null,
@@ -158,7 +162,9 @@ function legacyCreateRootFromDOMContainer(
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
       '', // identifierPrefix
-      noopOnRecoverableError, // onRecoverableError
+      defaultOnUncaughtError,
+      defaultOnCaughtError,
+      noopOnRecoverableError,
       null, // transitionCallbacks
     );
     container._reactRootContainer = root;
