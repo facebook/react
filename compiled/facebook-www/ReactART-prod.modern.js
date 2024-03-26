@@ -72,8 +72,6 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks =
-    dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -7710,7 +7708,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       finishedWork.child.flags & 8192 &&
         ((newProps = null !== finishedWork.memoizedState),
         (current = null !== current && null !== current.memoizedState),
-        alwaysThrottleDisappearingFallbacks
+        alwaysThrottleRetries
           ? newProps !== current && (globalMostRecentFallbackTime = now())
           : newProps && !current && (globalMostRecentFallbackTime = now()));
       if (flags & 4) {
@@ -10296,7 +10294,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-c6c114f4",
+    version: "18.3.0-www-modern-9fae8faa",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1300 = {
@@ -10327,7 +10325,7 @@ var internals$jscomp$inline_1300 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-c6c114f4"
+  reconcilerVersion: "18.3.0-www-modern-9fae8faa"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1301 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

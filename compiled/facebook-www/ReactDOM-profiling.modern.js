@@ -68,8 +68,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks =
-    dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -10147,7 +10145,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       finishedWork.child.flags & 8192 &&
         ((root = null !== finishedWork.memoizedState),
         (current = null !== current && null !== current.memoizedState),
-        alwaysThrottleDisappearingFallbacks
+        alwaysThrottleRetries
           ? root !== current && (globalMostRecentFallbackTime = now$1())
           : root && !current && (globalMostRecentFallbackTime = now$1()));
       if (flags & 4) {
@@ -17511,7 +17509,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1860 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-9404d44b",
+  version: "18.3.0-www-modern-0fa2ec75",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17556,7 +17554,7 @@ var devToolsConfig$jscomp$inline_1860 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-9404d44b"
+  reconcilerVersion: "18.3.0-www-modern-0fa2ec75"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17802,7 +17800,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-9404d44b";
+exports.version = "18.3.0-www-modern-0fa2ec75";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

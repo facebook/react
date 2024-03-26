@@ -55,8 +55,6 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks =
-    dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -10340,7 +10338,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       finishedWork.child.flags & 8192 &&
         ((root = null !== finishedWork.memoizedState),
         (current = null !== current && null !== current.memoizedState),
-        alwaysThrottleDisappearingFallbacks
+        alwaysThrottleRetries
           ? root !== current && (globalMostRecentFallbackTime = now$1())
           : root && !current && (globalMostRecentFallbackTime = now$1()));
       if (flags & 4) {
@@ -18001,7 +17999,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1901 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-433eac99",
+  version: "18.3.0-www-classic-a1c3018b",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18045,7 +18043,7 @@ var devToolsConfig$jscomp$inline_1901 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-433eac99"
+  reconcilerVersion: "18.3.0-www-classic-a1c3018b"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18363,7 +18361,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-433eac99";
+exports.version = "18.3.0-www-classic-a1c3018b";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

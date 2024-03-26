@@ -20325,9 +20325,8 @@ if (__DEV__) {
               current !== null && current.memoizedState !== null;
 
             {
-              if (isShowingFallback && !wasShowingFallback) {
-                // Old behavior. Only mark when a fallback appears, not when
-                // it disappears.
+              if (isShowingFallback !== wasShowingFallback) {
+                // A fallback is either appearing or disappearing.
                 markCommitTimeOfFallback();
               }
             }
@@ -26120,7 +26119,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-eec8ae64";
+    var ReactVersion = "18.3.0-www-classic-d61b94d4";
 
     // Might add PROFILE later.
 

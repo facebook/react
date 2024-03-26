@@ -51,8 +51,6 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks =
-    dynamicFeatureFlags.alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -9875,7 +9873,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       finishedWork.child.flags & 8192 &&
         ((root = null !== finishedWork.memoizedState),
         (current = null !== current && null !== current.memoizedState),
-        alwaysThrottleDisappearingFallbacks
+        alwaysThrottleRetries
           ? root !== current && (globalMostRecentFallbackTime = now())
           : root && !current && (globalMostRecentFallbackTime = now()));
       if (flags & 4) {
@@ -17583,7 +17581,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1821 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1f1dfc76",
+  version: "18.3.0-www-classic-87497e23",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2187 = {
@@ -17613,7 +17611,7 @@ var internals$jscomp$inline_2187 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-1f1dfc76"
+  reconcilerVersion: "18.3.0-www-classic-87497e23"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2188 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18095,4 +18093,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-1f1dfc76";
+exports.version = "18.3.0-www-classic-87497e23";
