@@ -684,7 +684,7 @@ describe('ReactLegacyErrorBoundaries', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.mock.calls[0][0]).toContain(
-        'ReactDOM.render is no longer supported',
+        'ReactDOM.render has not been supported since React 18',
       );
       expect(console.error.mock.calls[1][2]).toContain(
         'The above error occurred in the <BrokenRender> component:',
@@ -869,8 +869,8 @@ describe('ReactLegacyErrorBoundaries', () => {
         ...gate(flags =>
           flags.disableLegacyContext
             ? [
-                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
+                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
+                'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
               ]
             : [],
         ),

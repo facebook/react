@@ -151,7 +151,7 @@ export function getLegacyRenderImplementation(): RenderImplementation {
 
   function render(elements) {
     withErrorsOrWarningsIgnored(
-      ['ReactDOM.render is no longer supported in React 18'],
+      ['ReactDOM.render has not been supported since React 18'],
       () => {
         ReactDOM.render(elements, container);
       },
@@ -340,7 +340,7 @@ export function legacyRender(elements, container) {
 
   const ReactDOM = require('react-dom');
   withErrorsOrWarningsIgnored(
-    ['ReactDOM.render is no longer supported in React 18'],
+    ['ReactDOM.render has not been supported since React 18'],
     () => {
       ReactDOM.render(elements, container);
     },
