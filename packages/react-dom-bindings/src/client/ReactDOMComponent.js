@@ -2787,6 +2787,7 @@ function diffHydratedGenericElement(
             propKey,
             value,
             extraAttributes,
+            serverDifferences,
           );
           continue;
         }
