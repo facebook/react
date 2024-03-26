@@ -36318,7 +36318,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-24122d5c";
+    var ReactVersion = "19.0.0-www-modern-f83cf224";
 
     function createPortal$1(
       children,

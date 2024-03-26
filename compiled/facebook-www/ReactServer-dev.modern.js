@@ -2818,7 +2818,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-2cfd7dc7";
+    var ReactVersion = "19.0.0-www-modern-af1ea747";
 
     // Patch fetch
     var Children = {

@@ -17999,7 +17999,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1901 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a1c3018b",
+  version: "19.0.0-www-classic-83630acb",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18043,7 +18043,7 @@ var devToolsConfig$jscomp$inline_1901 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a1c3018b"
+  reconcilerVersion: "19.0.0-www-classic-83630acb"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18361,7 +18361,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-a1c3018b";
+exports.version = "19.0.0-www-classic-83630acb";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
