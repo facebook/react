@@ -497,7 +497,7 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (!isConcurrentOnly) {
+    if (isConcurrentOnly === false) {
       isConcurrent = options.unstable_isConcurrent;
     }
     if (options.unstable_strictMode === true) {

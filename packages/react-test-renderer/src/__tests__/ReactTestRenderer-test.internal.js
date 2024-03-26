@@ -80,12 +80,12 @@ describe('ReactTestRenderer', () => {
       'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       {withoutStack: true},
     );
-    global.IS_REACT_NATIVE_TEST_ENVIRONMENT = false;
   });
 
   describe('root tags', () => {
     let createContainerSpy;
     beforeEach(() => {
+      global.IS_REACT_NATIVE_TEST_ENVIRONMENT = false;
       createContainerSpy = jest.spyOn(Reconciler, 'createContainer');
     });
 
@@ -126,7 +126,6 @@ describe('ReactTestRenderer', () => {
       global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
       ReactTestRenderer.create(<div />);
       expectTag(LegacyRoot);
-      global.IS_REACT_NATIVE_TEST_ENVIRONMENT = false;
     });
   });
 
