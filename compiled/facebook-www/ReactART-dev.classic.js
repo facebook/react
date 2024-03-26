@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-36e84f9d";
+    var ReactVersion = "19.0.0-www-classic-841735f0";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -16851,15 +16851,6 @@ if (__DEV__) {
       if (!didSuspend) {
         // This is the first render pass. Attempt to hydrate.
         pushPrimaryTreeSuspenseHandler(workInProgress); // We should never be hydrating at this point because it is the first pass,
-
-        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            null
-          );
-        }
 
         if (isSuspenseInstanceFallback()) {
           // This boundary is in a permanent fallback state. In this case, we'll never

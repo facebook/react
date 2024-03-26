@@ -14910,15 +14910,6 @@ if (__DEV__) {
         // This is the first render pass. Attempt to hydrate.
         pushPrimaryTreeSuspenseHandler(workInProgress); // We should never be hydrating at this point because it is the first pass,
 
-        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            null
-          );
-        }
-
         if (isSuspenseInstanceFallback()) {
           // This boundary is in a permanent fallback state. In this case, we'll never
           // get an update and we'll never be able to hydrate the final content. Let's just try the
@@ -26119,7 +26110,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-3977f999";
+    var ReactVersion = "19.0.0-www-classic-b116d297";
 
     // Might add PROFILE later.
 
