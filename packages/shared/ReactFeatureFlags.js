@@ -116,8 +116,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
-export const enableRenderableContext = false;
-
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
 /**
@@ -201,6 +199,9 @@ export const disableLegacyMode = __NEXT_MAJOR__;
 // However, once React considers them as boolean props an empty string will
 // result in false property i.e. break existing usage.
 export const enableNewBooleanProps = __NEXT_MAJOR__;
+
+// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
+export const enableRenderableContext = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
