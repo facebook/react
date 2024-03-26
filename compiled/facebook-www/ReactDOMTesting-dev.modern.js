@@ -18059,7 +18059,7 @@ if (__DEV__) {
         {
           if (ctor.childContextTypes) {
             error(
-              "%s uses the legacy childContextTypes API which is no longer supported. " +
+              "%s uses the legacy childContextTypes API which was removed in React 19. " +
                 "Use React.createContext() instead.",
               name
             );
@@ -18067,7 +18067,7 @@ if (__DEV__) {
 
           if (ctor.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with static contextType instead.",
               name
             );
@@ -21295,7 +21295,7 @@ if (__DEV__) {
         {
           if (Component.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with React.useContext() instead.",
               getComponentNameFromType(Component) || "Unknown"
             );
@@ -36316,7 +36316,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-fa53bc70";
+    var ReactVersion = "19.0.0-www-modern-6d858044";
 
     function createPortal$1(
       children,

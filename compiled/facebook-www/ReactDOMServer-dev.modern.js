@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-46a9d3dd";
+    var ReactVersion = "19.0.0-www-modern-139d7d17";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -9305,7 +9305,7 @@ if (__DEV__) {
         {
           if (ctor.childContextTypes) {
             error(
-              "%s uses the legacy childContextTypes API which is no longer supported. " +
+              "%s uses the legacy childContextTypes API which was removed in React 19. " +
                 "Use React.createContext() instead.",
               name
             );
@@ -9313,7 +9313,7 @@ if (__DEV__) {
 
           if (ctor.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with static contextType instead.",
               name
             );
@@ -11979,7 +11979,7 @@ if (__DEV__) {
         {
           if (Component.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with React.useContext() instead.",
               getComponentNameFromType(Component) || "Unknown"
             );

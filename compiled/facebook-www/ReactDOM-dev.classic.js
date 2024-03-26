@@ -35845,7 +35845,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-cec25015";
+    var ReactVersion = "19.0.0-www-classic-7b93bfeb";
 
     function createPortal$1(
       children,
@@ -48494,7 +48494,7 @@ if (__DEV__) {
     function hydrate(element, container, callback) {
       {
         error(
-          "ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot " +
+          "ReactDOM.hydrate has not been supported since React 18. Use hydrateRoot " +
             "instead. Until you switch to the new API, your app will behave as " +
             "if it's running React 17. Learn " +
             "more: https://react.dev/link/switch-to-createroot"
@@ -48530,7 +48530,7 @@ if (__DEV__) {
     function render(element, container, callback) {
       {
         error(
-          "ReactDOM.render is no longer supported in React 18. Use createRoot " +
+          "ReactDOM.render has not been supported since React 18. Use createRoot " +
             "instead. Until you switch to the new API, your app will behave as " +
             "if it's running React 17. Learn " +
             "more: https://react.dev/link/switch-to-createroot"
@@ -48571,8 +48571,8 @@ if (__DEV__) {
     ) {
       {
         error(
-          "ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported " +
-            "in React 18. Consider using a portal instead. Until you switch to " +
+          "ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported " +
+            "since React 18. Consider using a portal instead. Until you switch to " +
             "the createRoot API, your app will behave as if it's running React " +
             "17. Learn more: https://react.dev/link/switch-to-createroot"
         );

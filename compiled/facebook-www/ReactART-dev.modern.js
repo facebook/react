@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-10ce85c5";
+    var ReactVersion = "19.0.0-www-modern-2edfe4d7";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -12791,7 +12791,7 @@ if (__DEV__) {
         {
           if (ctor.childContextTypes) {
             error(
-              "%s uses the legacy childContextTypes API which is no longer supported. " +
+              "%s uses the legacy childContextTypes API which was removed in React 19. " +
                 "Use React.createContext() instead.",
               name
             );
@@ -12799,7 +12799,7 @@ if (__DEV__) {
 
           if (ctor.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with static contextType instead.",
               name
             );
@@ -15818,7 +15818,7 @@ if (__DEV__) {
         {
           if (Component.contextTypes) {
             error(
-              "%s uses the legacy contextTypes API which is no longer supported. " +
+              "%s uses the legacy contextTypes API which was removed in React 19. " +
                 "Use React.createContext() with React.useContext() instead.",
               getComponentNameFromType(Component) || "Unknown"
             );

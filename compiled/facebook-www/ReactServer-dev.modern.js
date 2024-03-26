@@ -1020,7 +1020,7 @@ if (__DEV__) {
           didWarnAboutElementRef[componentName] = true;
 
           error(
-            "Accessing element.ref is no longer supported. ref is now a " +
+            "Accessing element.ref was removed in React 19. ref is now a " +
               "regular prop. It will be removed from the JSX Element " +
               "type in a future release."
           );
@@ -2818,7 +2818,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "19.0.0-www-modern-af1ea747";
+    var ReactVersion = "19.0.0-www-modern-a9a0f417";
 
     // Patch fetch
     var Children = {

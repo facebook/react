@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-classic-e98b6ae2";
+    var ReactVersion = "19.0.0-www-classic-5d26d7ce";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1307,7 +1307,7 @@ if (__DEV__) {
           didWarnAboutElementRef[componentName] = true;
 
           error(
-            "Accessing element.ref is no longer supported. ref is now a " +
+            "Accessing element.ref was removed in React 19. ref is now a " +
               "regular prop. It will be removed from the JSX Element " +
               "type in a future release."
           );
