@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e76d28cbba11aa5c7a3d0b92eb6ca0f0>>
+ * @generated SignedSource<<7fb7b6a99b100686fb7a03fec927ee74>>
  */
 
 "use strict";
@@ -6149,7 +6149,13 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    function describeDiff(rootNode) {
+      return "\n";
+    }
+
     var isHydrating = false; // This flag allows for warning supression when we expect there to be mismatches
+
+    var hydrationDiffRootDEV = null; // Hydration errors that were thrown inside this boundary
 
     var hydrationErrors = null;
 
@@ -6205,6 +6211,35 @@ to return true:wantsResponderID|                            |
         hydrationErrors = [error];
       } else {
         hydrationErrors.push(error);
+      }
+    }
+    function emitPendingHydrationWarnings() {
+      {
+        // If we haven't yet thrown any hydration errors by the time we reach the end we've successfully
+        // hydrated, however, we might still have DEV-only mismatches that we log now.
+        var diffRoot = hydrationDiffRootDEV;
+
+        if (diffRoot !== null) {
+          hydrationDiffRootDEV = null;
+          var diff = describeDiff();
+
+          error(
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. " +
+              "This can happen if a SSR-ed Client Component used:\n" +
+              "\n" +
+              "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+              "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+              "- Date formatting in a user's locale which doesn't match the server.\n" +
+              "- External changing data without sending a snapshot of it along with the HTML.\n" +
+              "- Invalid HTML tag nesting.\n" +
+              "\n" +
+              "It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n" +
+              "\n" +
+              "%s%s",
+            "https://react.dev/link/hydration-mismatch",
+            diff
+          );
+        }
       }
     }
 
@@ -21216,6 +21251,8 @@ to return true:wantsResponderID|                            |
 
           return false;
         } else {
+          emitPendingHydrationWarnings(); // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+
           if ((workInProgress.flags & DidCapture) === NoFlags$1) {
             // This boundary did not suspend so it's now hydrated and unsuspended.
             workInProgress.memoizedState = null;
@@ -21319,8 +21356,9 @@ to return true:wantsResponderID|                            |
             var wasHydrated = popHydrationState();
 
             if (wasHydrated) {
-              // If we hydrated, then we'll need to schedule an update for
+              emitPendingHydrationWarnings(); // If we hydrated, then we'll need to schedule an update for
               // the commit side-effects on the root.
+
               markUpdate(workInProgress);
             } else {
               if (current !== null) {
@@ -29829,7 +29867,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-1559f120";
+    var ReactVersion = "19.0.0-canary-88667624";
 
     function createPortal$1(
       children,
