@@ -886,7 +886,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }).not.toThrow();
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', async () => {
     const root = ReactNoop.createLegacyRoot();
     await expect(async () => {
@@ -1032,7 +1032,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   describe('legacy mode mode', () => {
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('times out immediately', async () => {
       function App() {
         return (
@@ -1055,7 +1055,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Result" />);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('times out immediately when Suspense is in legacy mode', async () => {
       class UpdatingText extends React.Component {
         state = {step: 1};
@@ -1129,7 +1129,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('does not re-render siblings in loose mode', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
@@ -1204,7 +1204,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('suspends inside constructor', async () => {
       class AsyncTextInConstructor extends React.Component {
         constructor(props) {
@@ -1240,7 +1240,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Hi" />);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('does not infinite loop if fallback contains lifecycle method', async () => {
       class Fallback extends React.Component {
         state = {
@@ -1283,7 +1283,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     if (global.__PERSISTENT__) {
-      // @gate enableLegacyCache
+      // @gate enableLegacyCache && !disableLegacyMode
       it('hides/unhides suspended children before layout effects fire (persistent)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1327,7 +1327,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         assertLog(['Hi']);
       });
     } else {
-      // @gate enableLegacyCache
+      // @gate enableLegacyCache && !disableLegacyMode
       it('hides/unhides suspended children before layout effects fire (mutation)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1370,7 +1370,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
     }
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('handles errors in the return path of a component that suspends', async () => {
       // Covers an edge case where an error is thrown inside the complete phase
       // of a component that is in the return path of a component that suspends.
@@ -1405,6 +1405,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
+    // @gate !disableLegacyMode
     it('does not drop mounted effects', async () => {
       const never = {then() {}};
 
@@ -1455,7 +1456,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('does not call lifecycles of a suspended component', async () => {
     class TextWithLifecycle extends React.Component {
       componentDidMount() {
@@ -1523,7 +1524,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('does not call lifecycles of a suspended component (hooks)', async () => {
     function TextWithLifecycle(props) {
       React.useLayoutEffect(() => {
@@ -3885,7 +3886,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     assertLog(['Unmount Child']);
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('should fire effect clean-up when deleting suspended tree (legacy)', async () => {
     const {useEffect} = React;
 
