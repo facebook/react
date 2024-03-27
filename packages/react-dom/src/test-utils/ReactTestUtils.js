@@ -130,7 +130,7 @@ function renderIntoDocument(element) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`renderIntoDocument` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -147,7 +147,7 @@ function isElement(element) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isElement` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -158,7 +158,7 @@ function isElementOfType(inst, convenienceConstructor) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isElementOfType` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -169,7 +169,7 @@ function isDOMComponent(inst) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -180,7 +180,7 @@ function isDOMComponentElement(inst) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isDOMComponentElement` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -191,7 +191,7 @@ function isCompositeComponent(inst) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isCompositeComponent` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -211,7 +211,7 @@ function isCompositeComponentWithType(inst, type) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`isCompositeComponentWithType` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -227,7 +227,7 @@ function findAllInRenderedTree(inst, test) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`findAllInRenderedTree` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -248,7 +248,7 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`scryRenderedDOMComponentsWithClass` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -290,7 +290,7 @@ function findRenderedDOMComponentWithClass(root, className) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`findRenderedDOMComponentWithClass` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -317,7 +317,7 @@ function scryRenderedDOMComponentsWithTag(root, tagName) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`scryRenderedDOMComponentsWithTag` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -340,7 +340,7 @@ function findRenderedDOMComponentWithTag(root, tagName) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`findRenderedDOMComponentWithTag` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -366,7 +366,7 @@ function scryRenderedComponentsWithType(root, componentType) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`scryRenderedComponentsWithType` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -386,7 +386,7 @@ function findRenderedComponentWithType(root, componentType) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`findRenderedComponentWithType` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -421,7 +421,7 @@ function mockComponent(module, mockTagName) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`mockComponent` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -449,7 +449,7 @@ function nativeTouchData(x, y) {
   if (disableDOMTestUtils) {
     throw new Error(
       '`nativeTouchData` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   }
 
@@ -694,7 +694,7 @@ function makeSimulator(eventType) {
     if (disableDOMTestUtils) {
       throw new Error(
         '`Simulate` was removed from `react-dom/test-utils`. ' +
-          'See https://react.dev/warnings/react-test-renderer for more info.',
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
       );
     }
 

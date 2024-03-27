@@ -580,7 +580,7 @@ describe('ReactTestUtils', () => {
     it('throws', async () => {
       expect(ReactTestUtils.Simulate.click).toThrow(
         '`Simulate` was removed from `react-dom/test-utils`. ' +
-          'See https://react.dev/warnings/react-test-renderer for more info.',
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
       );
     });
   });
@@ -629,7 +629,7 @@ describe('ReactTestUtils', () => {
   it('throws on every removed function', async () => {
     expect(ReactTestUtils.isDOMComponent).toThrow(
       '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-test-renderer for more info.',
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   });
 });
