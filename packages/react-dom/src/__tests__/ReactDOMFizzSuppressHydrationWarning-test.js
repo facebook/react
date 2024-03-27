@@ -16,6 +16,7 @@ let Scheduler;
 let React;
 let ReactDOMClient;
 let ReactDOMFizzServer;
+let ReactFeatureFlags;
 let document;
 let writable;
 let container;
@@ -33,6 +34,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -781,6 +783,57 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>Client and server</p>
+      </div>,
+    );
+  });
+
+  // @gate enableClientRenderFallbackOnTextMismatch && !disableElementishSuppressionCheck
+  it('suppresses but does not fix text mismatches with suppressHydrationWarning for element-ish children', async () => {
+    function App({isClient}) {
+      // This is similar to <fbt>.
+      // We don't toString it because you must instead provide a value prop.
+      const obj = {
+        $$typeof: Symbol.for('react.element'),
+        type: props => props.content,
+        ref: null,
+        key: null,
+        props: {
+          suppressHydrationWarning: true,
+          content: isClient ? 'Client Text' : 'Server Text',
+        },
+        toString() {
+          return this.props.content;
+        },
+      };
+
+      return (
+        <div>
+          <span>{obj}</span>
+        </div>
+      );
+    }
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Server Text</span>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        // Don't miss a hydration error. There should be none.
+        Scheduler.log(error.message);
+      },
+    });
+    await waitForAll([]);
+    // The text mismatch should be *silently* fixed. Even in production.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Server Text</span>
       </div>,
     );
   });

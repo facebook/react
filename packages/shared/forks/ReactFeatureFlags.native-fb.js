@@ -14,6 +14,7 @@ import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynami
 // Re-export dynamic flags from the internal module.
 // Intentionally using * because this import is compiled to a `require` call.
 import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+import {disableElementishSuppressionCheck} from 'shared/ReactFeatureFlags';
 const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -93,7 +94,7 @@ export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
-
+export const disableElementishSuppressionCheck = true;
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
 export const enableRefAsProp = false;

@@ -93,6 +93,7 @@ import {
   enableScopeAPI,
   enableTrustedTypesIntegration,
   enableAsyncActions,
+  disableElementishSuppressionCheck,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -1528,13 +1529,32 @@ export function didNotMatchHydratedTextInstance(
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
-  if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(
-      textInstance.nodeValue,
-      text,
-      isConcurrentMode,
-      shouldWarnDev,
-    );
+  if (disableElementishSuppressionCheck) {
+    if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      checkForUnmatchedText(
+        textInstance.nodeValue,
+        text,
+        isConcurrentMode,
+        shouldWarnDev,
+      );
+    }
+  } else {
+    if (
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true &&
+      // TODO: remove this hack.
+      // For elementish text nodes, we need to check their prop through the parent.
+      parentProps.children &&
+      parentProps.children.length === 1 &&
+      parentProps.children.props &&
+      parentProps.children.props[SUPPRESS_HYDRATION_WARNING] !== true
+    ) {
+      checkForUnmatchedText(
+        textInstance.nodeValue,
+        text,
+        isConcurrentMode,
+        shouldWarnDev,
+      );
+    }
   }
 }
 

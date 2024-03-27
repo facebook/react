@@ -40,6 +40,7 @@ export const {
   enableRefAsProp,
   enableNewBooleanProps,
   enableClientRenderFallbackOnTextMismatch,
+  disableElementishSuppressionCheck,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

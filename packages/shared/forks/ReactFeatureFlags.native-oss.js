@@ -105,6 +105,7 @@ export const enableNewBooleanProps = true;
 export const enableTransitionTracing = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;
+export const disableElementishSuppressionCheck = true;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

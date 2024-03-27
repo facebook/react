@@ -40,6 +40,8 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 // those can be fixed.
 export const enableDeferRootSchedulingToMicrotask = true;
 
+export const disableElementishSuppressionCheck = true;
+
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
 //
