@@ -21,6 +21,7 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
+import {disableDOMTestUtils} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -126,6 +127,13 @@ function validateClassInstance(inst, methodName) {
  * @lends ReactTestUtils
  */
 function renderIntoDocument(element) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`renderIntoDocument` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   const div = document.createElement('div');
   // None of our tests actually require attaching the container to the
   // DOM, and doing so creates a mess that we rely on test isolation to
@@ -136,22 +144,57 @@ function renderIntoDocument(element) {
 }
 
 function isElement(element) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isElement` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return React.isValidElement(element);
 }
 
 function isElementOfType(inst, convenienceConstructor) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isElementOfType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return React.isValidElement(inst) && inst.type === convenienceConstructor;
 }
 
 function isDOMComponent(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
 }
 
 function isDOMComponentElement(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isDOMComponentElement` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return !!(inst && React.isValidElement(inst) && !!inst.tagName);
 }
 
 function isCompositeComponent(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isCompositeComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (isDOMComponent(inst)) {
     // Accessing inst.setState warns; just return false as that'll be what
     // this returns when we have DOM nodes as refs directly
@@ -165,6 +208,13 @@ function isCompositeComponent(inst) {
 }
 
 function isCompositeComponentWithType(inst, type) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isCompositeComponentWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (!isCompositeComponent(inst)) {
     return false;
   }
@@ -174,6 +224,13 @@ function isCompositeComponentWithType(inst, type) {
 }
 
 function findAllInRenderedTree(inst, test) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findAllInRenderedTree` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(inst, 'findAllInRenderedTree');
   if (!inst) {
     return [];
@@ -188,6 +245,13 @@ function findAllInRenderedTree(inst, test) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedDOMComponentsWithClass(root, classNames) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedDOMComponentsWithClass` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
   return findAllInRenderedTree(root, function (inst) {
     if (isDOMComponent(inst)) {
@@ -223,6 +287,13 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
  * @return {!ReactDOMComponent} The one match.
  */
 function findRenderedDOMComponentWithClass(root, className) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedDOMComponentWithClass` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedDOMComponentWithClass');
   const all = scryRenderedDOMComponentsWithClass(root, className);
   if (all.length !== 1) {
@@ -243,6 +314,13 @@ function findRenderedDOMComponentWithClass(root, className) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedDOMComponentsWithTag(root, tagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedDOMComponentsWithTag` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
   return findAllInRenderedTree(root, function (inst) {
     return (
@@ -259,6 +337,13 @@ function scryRenderedDOMComponentsWithTag(root, tagName) {
  * @return {!ReactDOMComponent} The one match.
  */
 function findRenderedDOMComponentWithTag(root, tagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedDOMComponentWithTag` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedDOMComponentWithTag');
   const all = scryRenderedDOMComponentsWithTag(root, tagName);
   if (all.length !== 1) {
@@ -278,6 +363,13 @@ function findRenderedDOMComponentWithTag(root, tagName) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedComponentsWithType(root, componentType) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedComponentsWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedComponentsWithType');
   return findAllInRenderedTree(root, function (inst) {
     return isCompositeComponentWithType(inst, componentType);
@@ -291,6 +383,13 @@ function scryRenderedComponentsWithType(root, componentType) {
  * @return {!ReactComponent} The one match.
  */
 function findRenderedComponentWithType(root, componentType) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedComponentWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedComponentWithType');
   const all = scryRenderedComponentsWithType(root, componentType);
   if (all.length !== 1) {
@@ -319,6 +418,13 @@ function findRenderedComponentWithType(root, componentType) {
  * @return {object} the ReactTestUtils object (for chaining)
  */
 function mockComponent(module, mockTagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`mockComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedMockComponent) {
       hasWarnedAboutDeprecatedMockComponent = true;
@@ -340,6 +446,13 @@ function mockComponent(module, mockTagName) {
 }
 
 function nativeTouchData(x, y) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`nativeTouchData` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return {
     touches: [{pageX: x, pageY: y}],
   };
@@ -578,6 +691,13 @@ const directDispatchEventTypes = new Set([
  */
 function makeSimulator(eventType) {
   return function (domNode, eventData) {
+    if (disableDOMTestUtils) {
+      throw new Error(
+        '`Simulate` was removed from `react-dom/test-utils`. ' +
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
+      );
+    }
+
     if (React.isValidElement(domNode)) {
       throw new Error(
         'TestUtils.Simulate expected a DOM node as the first argument but received ' +

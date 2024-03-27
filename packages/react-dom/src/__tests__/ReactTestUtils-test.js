@@ -31,6 +31,7 @@ describe('ReactTestUtils', () => {
     expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
   });
 
+  // @gate !disableDOMTestUtils
   it('gives Jest mocks a passthrough implementation with mockComponent()', async () => {
     class MockedComponent extends React.Component {
       render() {
@@ -60,6 +61,7 @@ describe('ReactTestUtils', () => {
     expect(container.textContent).toBe('Hello');
   });
 
+  // @gate !disableDOMTestUtils
   it('can scryRenderedComponentsWithType', async () => {
     class Child extends React.Component {
       render() {
@@ -88,6 +90,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults.length).toBe(1);
   });
 
+  // @gate !disableDOMTestUtils
   it('can scryRenderedDOMComponentsWithClass with TextComponent', async () => {
     class Wrapper extends React.Component {
       render() {
@@ -112,6 +115,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults.length).toBe(0);
   });
 
+  // @gate !disableDOMTestUtils
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', async () => {
     class Wrapper extends React.Component {
       render() {
@@ -136,6 +140,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults.length).toBe(1);
   });
 
+  // @gate !disableDOMTestUtils
   it('can scryRenderedDOMComponentsWithClass with multiple classes', async () => {
     class Wrapper extends React.Component {
       render() {
@@ -187,6 +192,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults5.length).toBe(0);
   });
 
+  // @gate !disableDOMTestUtils
   it('traverses children in the correct order', async () => {
     class Wrapper extends React.Component {
       render() {
@@ -225,6 +231,7 @@ describe('ReactTestUtils', () => {
     expect(log).toEqual(['orangepurple', 'orange', 'purple']);
   });
 
+  // @gate !disableDOMTestUtils
   it('should support injected wrapper components as DOM components', async () => {
     const injectedDOMComponents = [
       'button',
@@ -291,6 +298,7 @@ describe('ReactTestUtils', () => {
     expect(ReactTestUtils.isDOMComponent(component.bodyRef.current)).toBe(true);
   });
 
+  // @gate !disableDOMTestUtils
   it('can scry with stateless components involved', async () => {
     const Function = () => (
       <div>
@@ -320,6 +328,7 @@ describe('ReactTestUtils', () => {
     expect(hrs.length).toBe(2);
   });
 
+  // @gate !disableDOMTestUtils
   it('provides a clear error when passing invalid objects to scry', () => {
     // This is probably too relaxed but it's existing behavior.
     ReactTestUtils.findAllInRenderedTree(null, 'span');
@@ -377,6 +386,7 @@ describe('ReactTestUtils', () => {
   });
 
   describe('Simulate', () => {
+    // @gate !disableDOMTestUtils
     it('should change the value of an input field', async () => {
       const obj = {
         handler: function (e) {
@@ -399,6 +409,7 @@ describe('ReactTestUtils', () => {
       );
     });
 
+    // @gate !disableDOMTestUtils
     it('should change the value of an input field in a component', async () => {
       class SomeComponent extends React.Component {
         inputRef = React.createRef();
@@ -442,6 +453,7 @@ describe('ReactTestUtils', () => {
       );
     });
 
+    // @gate !disableDOMTestUtils
     it('should not warn when used with extra properties', async () => {
       const CLIENT_X = 100;
 
@@ -468,6 +480,7 @@ describe('ReactTestUtils', () => {
       });
     });
 
+    // @gate !disableDOMTestUtils
     it('should set the type of the event', async () => {
       let event;
       const stub = jest.fn().mockImplementation(e => {
@@ -488,6 +501,7 @@ describe('ReactTestUtils', () => {
       expect(event.nativeEvent.type).toBe('keydown');
     });
 
+    // @gate !disableDOMTestUtils
     it('should work with renderIntoDocument', async () => {
       const onChange = jest.fn();
 
@@ -520,6 +534,7 @@ describe('ReactTestUtils', () => {
       );
     });
 
+    // @gate !disableDOMTestUtils
     it('should have mouse enter simulated by test utils', async () => {
       const idCallOrder = [];
       const recordID = function (id) {
@@ -560,8 +575,17 @@ describe('ReactTestUtils', () => {
       });
       expect(idCallOrder).toEqual([CHILD]);
     });
+
+    // @gate disableDOMTestUtils
+    it('throws', async () => {
+      expect(ReactTestUtils.Simulate.click).toThrow(
+        '`Simulate` was removed from `react-dom/test-utils`. ' +
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
+      );
+    });
   });
 
+  // @gate !disableDOMTestUtils
   it('should call setState callback with no arguments', async () => {
     let mockArgs;
     class Component extends React.Component {
@@ -573,14 +597,12 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component />);
-    });
+    ReactTestUtils.renderIntoDocument(<Component />);
 
     expect(mockArgs.length).toEqual(0);
   });
+
+  // @gate !disableDOMTestUtils
   it('should find rendered component with type in document', async () => {
     class MyComponent extends React.Component {
       render() {
@@ -601,5 +623,13 @@ describe('ReactTestUtils', () => {
     );
 
     expect(renderedComponentType).toBe(instance);
+  });
+
+  // @gate disableDOMTestUtils
+  it('throws on every removed function', async () => {
+    expect(ReactTestUtils.isDOMComponent).toThrow(
+      '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
   });
 });
