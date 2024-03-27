@@ -331,7 +331,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Component',
       // Hydration mismatch is logged
-      'Hydration failed because the server rendered HTML didn\'t match the client.',
+      "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating this Suspense boundary.',
     ]);
 
@@ -1162,7 +1162,7 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     assertLog([
-      'Hydration failed because the server rendered HTML didn\'t match the client.',
+      "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating this Suspense boundary.',
     ]);
 

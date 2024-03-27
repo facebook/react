@@ -100,7 +100,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
 
       if (__DEV__) {
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       } else {
         expect(console.error).not.toBeCalled();
@@ -163,7 +167,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
 
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       } else {
         expect(console.warn).not.toBeCalled();
@@ -308,7 +316,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
 
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       } else {
         expect(console.warn).not.toBeCalled();
@@ -455,7 +467,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
 
         expect(console.error.mock.calls).toEqual([
-          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          [
+            expect.stringContaining(
+              'ReactDOM.render has not been supported since React 18',
+            ),
+          ],
         ]);
       } else {
         expect(console.warn).not.toBeCalled();
