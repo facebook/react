@@ -50,6 +50,8 @@ import {
   isChildPublicInstance,
 } from './ReactNativePublicCompat';
 
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+
 // Module provided by RN:
 import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
@@ -109,6 +111,10 @@ function render(
   containerTag: number,
   callback: ?() => void,
 ): ?ElementRef<ElementType> {
+  if (disableLegacyMode) {
+    throw new Error('render: Unsupported Legacy Mode API.');
+  }
+
   let root = roots.get(containerTag);
 
   if (!root) {

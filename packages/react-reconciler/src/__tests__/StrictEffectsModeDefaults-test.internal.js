@@ -34,6 +34,7 @@ describe('StrictEffectsMode defaults', () => {
     assertLog = InternalTestUtils.assertLog;
   });
 
+  // @gate !disableLegacyMode
   it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
       React.useEffect(() => {
@@ -60,6 +61,7 @@ describe('StrictEffectsMode defaults', () => {
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
   });
 
+  // @gate !disableLegacyMode
   it('should not double invoke class lifecycles in legacy mode', async () => {
     class App extends React.PureComponent {
       componentDidMount() {

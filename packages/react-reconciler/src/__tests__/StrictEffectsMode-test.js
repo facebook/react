@@ -27,6 +27,7 @@ describe('StrictEffectsMode', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
+  // @gate !disableLegacyMode
   it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
       React.useEffect(() => {
@@ -430,6 +431,7 @@ describe('StrictEffectsMode', () => {
     assertLog(['componentWillUnmount']);
   });
 
+  // @gate !disableLegacyMode
   it('should not double invoke class lifecycles in legacy mode', async () => {
     class App extends React.PureComponent {
       componentDidMount() {
