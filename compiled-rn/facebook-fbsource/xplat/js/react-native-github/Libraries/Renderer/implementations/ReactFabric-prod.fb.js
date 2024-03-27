@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<372bfe47b8470c856b9d18cd09af1e2d>>
+ * @generated SignedSource<<831b87dba7ff1bcc6c13121b5a09085a>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_247 = {
+var injectedNamesToPlugins$jscomp$inline_246 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_247 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_248 = !1,
-  pluginName$jscomp$inline_249;
-for (pluginName$jscomp$inline_249 in injectedNamesToPlugins$jscomp$inline_247)
+  isOrderingDirty$jscomp$inline_247 = !1,
+  pluginName$jscomp$inline_248;
+for (pluginName$jscomp$inline_248 in injectedNamesToPlugins$jscomp$inline_246)
   if (
-    injectedNamesToPlugins$jscomp$inline_247.hasOwnProperty(
-      pluginName$jscomp$inline_249
+    injectedNamesToPlugins$jscomp$inline_246.hasOwnProperty(
+      pluginName$jscomp$inline_248
     )
   ) {
-    var pluginModule$jscomp$inline_250 =
-      injectedNamesToPlugins$jscomp$inline_247[pluginName$jscomp$inline_249];
+    var pluginModule$jscomp$inline_249 =
+      injectedNamesToPlugins$jscomp$inline_246[pluginName$jscomp$inline_248];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_249) ||
-      namesToPlugins[pluginName$jscomp$inline_249] !==
-        pluginModule$jscomp$inline_250
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_248) ||
+      namesToPlugins[pluginName$jscomp$inline_248] !==
+        pluginModule$jscomp$inline_249
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_249])
+      if (namesToPlugins[pluginName$jscomp$inline_248])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_249 + "`.")
+            (pluginName$jscomp$inline_248 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_249] =
-        pluginModule$jscomp$inline_250;
-      isOrderingDirty$jscomp$inline_248 = !0;
+      namesToPlugins[pluginName$jscomp$inline_248] =
+        pluginModule$jscomp$inline_249;
+      isOrderingDirty$jscomp$inline_247 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_248 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_247 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -5096,13 +5096,6 @@ function createCapturedValueFromError(value, digest, stack) {
     digest: null != digest ? digest : null
   };
 }
-if (
-  "function" !==
-  typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
-)
-  throw Error(
-    "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
-  );
 var reportGlobalError =
   "function" === typeof reportError
     ? reportError
@@ -5132,53 +5125,62 @@ var reportGlobalError =
         }
         console.error(error);
       };
-function logCapturedError(boundary, errorInfo) {
+function defaultOnRecoverableError(error) {
+  reportGlobalError(error);
+}
+function logUncaughtError(root, errorInfo) {
   try {
-    if (
-      !1 !==
-      ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog({
-        componentStack: null !== errorInfo.stack ? errorInfo.stack : "",
-        error: errorInfo.value,
-        errorBoundary:
-          null !== boundary && 1 === boundary.tag ? boundary.stateNode : null
-      })
-    ) {
-      var error = errorInfo.value;
-      3 === boundary.tag ? reportGlobalError(error) : console.error(error);
-    }
+    var onUncaughtError = root.onUncaughtError;
+    onUncaughtError(errorInfo.value, { componentStack: errorInfo.stack });
   } catch (e) {
     setTimeout(function () {
       throw e;
     });
   }
 }
-function createRootErrorUpdate(fiber, errorInfo, lane) {
+function logCaughtError(root, boundary, errorInfo) {
+  try {
+    var onCaughtError = root.onCaughtError;
+    onCaughtError(errorInfo.value, {
+      componentStack: errorInfo.stack,
+      errorBoundary: 1 === boundary.tag ? boundary.stateNode : null
+    });
+  } catch (e) {
+    setTimeout(function () {
+      throw e;
+    });
+  }
+}
+function createRootErrorUpdate(root, errorInfo, lane) {
   lane = createUpdate(lane);
   lane.tag = 3;
   lane.payload = { element: null };
   lane.callback = function () {
-    logCapturedError(fiber, errorInfo);
+    logUncaughtError(root, errorInfo);
   };
   return lane;
 }
-function createClassErrorUpdate(fiber, errorInfo, lane) {
+function createClassErrorUpdate(lane) {
   lane = createUpdate(lane);
   lane.tag = 3;
+  return lane;
+}
+function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
   var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if ("function" === typeof getDerivedStateFromError) {
     var error = errorInfo.value;
-    lane.payload = function () {
+    update.payload = function () {
       return getDerivedStateFromError(error);
     };
-    lane.callback = function () {
-      logCapturedError(fiber, errorInfo);
+    update.callback = function () {
+      logCaughtError(root, fiber, errorInfo);
     };
   }
   var inst = fiber.stateNode;
   null !== inst &&
     "function" === typeof inst.componentDidCatch &&
-    (lane.callback = function () {
-      logCapturedError(fiber, errorInfo);
+    (update.callback = function () {
+      logCaughtError(root, fiber, errorInfo);
       "function" !== typeof getDerivedStateFromError &&
         (null === legacyErrorBoundariesThatAlreadyFailed
           ? (legacyErrorBoundariesThatAlreadyFailed = new Set([this]))
@@ -5188,7 +5190,6 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
         componentStack: null !== stack ? stack : ""
       });
     });
-  return lane;
 }
 function throwException(
   root,
@@ -5203,31 +5204,32 @@ function throwException(
     "object" === typeof value &&
     "function" === typeof value.then
   ) {
-    var tag = sourceFiber.tag;
+    var wakeable = value;
+    value = sourceFiber.tag;
     0 !== (sourceFiber.mode & 1) ||
-      (0 !== tag && 11 !== tag && 15 !== tag) ||
-      ((tag = sourceFiber.alternate)
-        ? ((sourceFiber.updateQueue = tag.updateQueue),
-          (sourceFiber.memoizedState = tag.memoizedState),
-          (sourceFiber.lanes = tag.lanes))
+      (0 !== value && 11 !== value && 15 !== value) ||
+      ((value = sourceFiber.alternate)
+        ? ((sourceFiber.updateQueue = value.updateQueue),
+          (sourceFiber.memoizedState = value.memoizedState),
+          (sourceFiber.lanes = value.lanes))
         : ((sourceFiber.updateQueue = null),
           (sourceFiber.memoizedState = null)));
-    tag = suspenseHandlerStackCursor.current;
-    if (null !== tag) {
-      switch (tag.tag) {
+    value = suspenseHandlerStackCursor.current;
+    if (null !== value) {
+      switch (value.tag) {
         case 13:
           return (
             sourceFiber.mode & 1 &&
               (null === shellBoundary
                 ? renderDidSuspendDelayIfPossible()
-                : null === tag.alternate &&
+                : null === value.alternate &&
                   0 === workInProgressRootExitStatus &&
                   (workInProgressRootExitStatus = 3)),
-            (tag.flags &= -257),
-            0 === (tag.mode & 1)
-              ? tag === returnFiber
-                ? (tag.flags |= 65536)
-                : ((tag.flags |= 128),
+            (value.flags &= -257),
+            0 === (value.mode & 1)
+              ? value === returnFiber
+                ? (value.flags |= 65536)
+                : ((value.flags |= 128),
                   (sourceFiber.flags |= 131072),
                   (sourceFiber.flags &= -52805),
                   1 === sourceFiber.tag &&
@@ -5237,48 +5239,48 @@ function throwException(
                         (returnFiber.tag = 2),
                         enqueueUpdate(sourceFiber, returnFiber, 2))),
                   (sourceFiber.lanes |= 2))
-              : ((tag.flags |= 65536), (tag.lanes = rootRenderLanes)),
-            value === noopSuspenseyCommitThenable
-              ? (tag.flags |= 16384)
-              : ((returnFiber = tag.updateQueue),
+              : ((value.flags |= 65536), (value.lanes = rootRenderLanes)),
+            wakeable === noopSuspenseyCommitThenable
+              ? (value.flags |= 16384)
+              : ((returnFiber = value.updateQueue),
                 null === returnFiber
-                  ? (tag.updateQueue = new Set([value]))
-                  : returnFiber.add(value),
-                tag.mode & 1 &&
-                  attachPingListener(root, value, rootRenderLanes)),
+                  ? (value.updateQueue = new Set([wakeable]))
+                  : returnFiber.add(wakeable),
+                value.mode & 1 &&
+                  attachPingListener(root, wakeable, rootRenderLanes)),
             !1
           );
         case 22:
-          if (tag.mode & 1)
+          if (value.mode & 1)
             return (
-              (tag.flags |= 65536),
-              value === noopSuspenseyCommitThenable
-                ? (tag.flags |= 16384)
-                : ((returnFiber = tag.updateQueue),
+              (value.flags |= 65536),
+              wakeable === noopSuspenseyCommitThenable
+                ? (value.flags |= 16384)
+                : ((returnFiber = value.updateQueue),
                   null === returnFiber
                     ? ((returnFiber = {
                         transitions: null,
                         markerInstances: null,
-                        retryQueue: new Set([value])
+                        retryQueue: new Set([wakeable])
                       }),
-                      (tag.updateQueue = returnFiber))
+                      (value.updateQueue = returnFiber))
                     : ((sourceFiber = returnFiber.retryQueue),
                       null === sourceFiber
-                        ? (returnFiber.retryQueue = new Set([value]))
-                        : sourceFiber.add(value)),
-                  attachPingListener(root, value, rootRenderLanes)),
+                        ? (returnFiber.retryQueue = new Set([wakeable]))
+                        : sourceFiber.add(wakeable)),
+                  attachPingListener(root, wakeable, rootRenderLanes)),
               !1
             );
       }
       throw Error(
         "Unexpected Suspense handler tag (" +
-          tag.tag +
+          value.tag +
           "). This is a bug in React."
       );
     }
     if (1 === root.tag)
       return (
-        attachPingListener(root, value, rootRenderLanes),
+        attachPingListener(root, wakeable, rootRenderLanes),
         renderDidSuspendDelayIfPossible(),
         !1
       );
@@ -5286,55 +5288,58 @@ function throwException(
       "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition."
     );
   }
-  root = value = createCapturedValueAtFiber(value, sourceFiber);
+  wakeable = value = createCapturedValueAtFiber(value, sourceFiber);
   4 !== workInProgressRootExitStatus && (workInProgressRootExitStatus = 2);
   null === workInProgressRootConcurrentErrors
-    ? (workInProgressRootConcurrentErrors = [root])
-    : workInProgressRootConcurrentErrors.push(root);
+    ? (workInProgressRootConcurrentErrors = [wakeable])
+    : workInProgressRootConcurrentErrors.push(wakeable);
   if (null === returnFiber) return !0;
-  root = returnFiber;
+  wakeable = returnFiber;
   do {
-    switch (root.tag) {
+    switch (wakeable.tag) {
       case 3:
         return (
-          (root.flags |= 65536),
+          (root = value),
+          (wakeable.flags |= 65536),
           (rootRenderLanes &= -rootRenderLanes),
-          (root.lanes |= rootRenderLanes),
-          (rootRenderLanes = createRootErrorUpdate(
+          (wakeable.lanes |= rootRenderLanes),
+          (root = createRootErrorUpdate(
+            wakeable.stateNode,
             root,
-            value,
             rootRenderLanes
           )),
-          enqueueCapturedUpdate(root, rootRenderLanes),
+          enqueueCapturedUpdate(wakeable, root),
           !1
         );
       case 1:
+        returnFiber = value;
+        sourceFiber = wakeable.type;
+        var instance = wakeable.stateNode;
         if (
-          ((returnFiber = value),
-          (sourceFiber = root.type),
-          (tag = root.stateNode),
-          0 === (root.flags & 128) &&
-            ("function" === typeof sourceFiber.getDerivedStateFromError ||
-              (null !== tag &&
-                "function" === typeof tag.componentDidCatch &&
-                (null === legacyErrorBoundariesThatAlreadyFailed ||
-                  !legacyErrorBoundariesThatAlreadyFailed.has(tag)))))
+          0 === (wakeable.flags & 128) &&
+          ("function" === typeof sourceFiber.getDerivedStateFromError ||
+            (null !== instance &&
+              "function" === typeof instance.componentDidCatch &&
+              (null === legacyErrorBoundariesThatAlreadyFailed ||
+                !legacyErrorBoundariesThatAlreadyFailed.has(instance))))
         )
           return (
-            (root.flags |= 65536),
+            (wakeable.flags |= 65536),
             (rootRenderLanes &= -rootRenderLanes),
-            (root.lanes |= rootRenderLanes),
-            (rootRenderLanes = createClassErrorUpdate(
+            (wakeable.lanes |= rootRenderLanes),
+            (rootRenderLanes = createClassErrorUpdate(rootRenderLanes)),
+            initializeClassErrorUpdate(
+              rootRenderLanes,
               root,
-              returnFiber,
-              rootRenderLanes
-            )),
-            enqueueCapturedUpdate(root, rootRenderLanes),
+              wakeable,
+              returnFiber
+            ),
+            enqueueCapturedUpdate(wakeable, rootRenderLanes),
             !1
           );
     }
-    root = root.return;
-  } while (null !== root);
+    wakeable = wakeable.return;
+  } while (null !== wakeable);
   return !1;
 }
 var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
@@ -9433,8 +9438,8 @@ function handleThrow(root, thrownValue) {
   workInProgressThrownValue = thrownValue;
   null === workInProgress &&
     ((workInProgressRootExitStatus = 1),
-    logCapturedError(
-      root.current,
+    logUncaughtError(
+      root,
       createCapturedValueAtFiber(thrownValue, root.current)
     ));
 }
@@ -9696,8 +9701,8 @@ function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
       )
     ) {
       workInProgressRootExitStatus = 1;
-      logCapturedError(
-        root.current,
+      logUncaughtError(
+        root,
         createCapturedValueAtFiber(thrownValue, root.current)
       );
       workInProgress = null;
@@ -9706,8 +9711,8 @@ function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   } catch (error) {
     if (null !== returnFiber) throw ((workInProgress = returnFiber), error);
     workInProgressRootExitStatus = 1;
-    logCapturedError(
-      root.current,
+    logUncaughtError(
+      root,
       createCapturedValueAtFiber(thrownValue, root.current)
     );
     workInProgress = null;
@@ -9937,7 +9942,7 @@ function flushPassiveEffects() {
 }
 function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
-  sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
+  sourceFiber = createRootErrorUpdate(rootFiber.stateNode, sourceFiber, 2);
   rootFiber = enqueueUpdate(rootFiber, sourceFiber, 2);
   null !== rootFiber &&
     (markRootUpdated(rootFiber, 2), ensureRootIsScheduled(rootFiber));
@@ -9964,19 +9969,17 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
               !legacyErrorBoundariesThatAlreadyFailed.has(instance)))
         ) {
           sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
-          sourceFiber = createClassErrorUpdate(
-            nearestMountedAncestor,
-            sourceFiber,
-            2
-          );
-          nearestMountedAncestor = enqueueUpdate(
-            nearestMountedAncestor,
-            sourceFiber,
-            2
-          );
-          null !== nearestMountedAncestor &&
-            (markRootUpdated(nearestMountedAncestor, 2),
-            ensureRootIsScheduled(nearestMountedAncestor));
+          error = createClassErrorUpdate(2);
+          instance = enqueueUpdate(nearestMountedAncestor, error, 2);
+          null !== instance &&
+            (initializeClassErrorUpdate(
+              error,
+              instance,
+              nearestMountedAncestor,
+              sourceFiber
+            ),
+            markRootUpdated(instance, 2),
+            ensureRootIsScheduled(instance));
           break;
         }
       }
@@ -10345,6 +10348,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
+  onUncaughtError,
+  onCaughtError,
   onRecoverableError,
   formState
 ) {
@@ -10376,6 +10381,8 @@ function FiberRootNode(
   this.entanglements = createLaneMap(0);
   this.hiddenUpdates = createLaneMap(null);
   this.identifierPrefix = identifierPrefix;
+  this.onUncaughtError = onUncaughtError;
+  this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
@@ -10588,8 +10595,30 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     (hierarchy.unshift(instance),
     traverseOwnerTreeUp(hierarchy, instance._debugOwner));
 }
-function onRecoverableError(error) {
-  console.error(error);
+if (
+  "function" !==
+  typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
+)
+  throw Error(
+    "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
+  );
+function nativeOnUncaughtError(error, errorInfo) {
+  !1 !==
+    ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog({
+      errorBoundary: null,
+      error: error,
+      componentStack:
+        null != errorInfo.componentStack ? errorInfo.componentStack : ""
+    }) && reportGlobalError(error);
+}
+function nativeOnCaughtError(error, errorInfo) {
+  !1 !==
+    ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog({
+      errorBoundary: errorInfo.errorBoundary,
+      error: error,
+      componentStack:
+        null != errorInfo.componentStack ? errorInfo.componentStack : ""
+    }) && console.error(error);
 }
 batchedUpdatesImpl = function (fn, a) {
   var prevExecutionContext = executionContext;
@@ -10604,10 +10633,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1098 = {
+  devToolsConfig$jscomp$inline_1105 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-b1980c9c",
+    version: "19.0.0-canary-9deee096",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10623,11 +10652,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1335 = {
-  bundleType: devToolsConfig$jscomp$inline_1098.bundleType,
-  version: devToolsConfig$jscomp$inline_1098.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1098.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1098.rendererConfig,
+var internals$jscomp$inline_1342 = {
+  bundleType: devToolsConfig$jscomp$inline_1105.bundleType,
+  version: devToolsConfig$jscomp$inline_1105.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1105.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1105.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10643,26 +10672,26 @@ var internals$jscomp$inline_1335 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1098.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1105.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-b1980c9c"
+  reconcilerVersion: "19.0.0-canary-9deee096"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1336 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1343 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1336.isDisabled &&
-    hook$jscomp$inline_1336.supportsFiber
+    !hook$jscomp$inline_1343.isDisabled &&
+    hook$jscomp$inline_1343.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1336.inject(
-        internals$jscomp$inline_1335
+      (rendererID = hook$jscomp$inline_1343.inject(
+        internals$jscomp$inline_1342
       )),
-        (injectedHook = hook$jscomp$inline_1336);
+        (injectedHook = hook$jscomp$inline_1343);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -10733,7 +10762,9 @@ exports.render = function (element, containerTag, callback, concurrentRoot) {
       root,
       !1,
       "",
-      onRecoverableError,
+      nativeOnUncaughtError,
+      nativeOnCaughtError,
+      defaultOnRecoverableError,
       null
     );
     root = createFiber(3, null, null, 1 === root ? 1 : 0);
