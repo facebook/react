@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ccb8a31f6eb2aabad35c7b0717209352>>
+ * @generated SignedSource<<ac6e1c721cd9e734454c18870d36b509>>
  */
 
 "use strict";
@@ -372,13 +372,36 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-function noop() {}
-var onError =
+var reportGlobalError =
   "function" === typeof reportError
     ? reportError
     : function (error) {
+        if (
+          "object" === typeof window &&
+          "function" === typeof window.ErrorEvent
+        ) {
+          var event = new window.ErrorEvent("error", {
+            bubbles: !0,
+            cancelable: !0,
+            message:
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error),
+            error: error
+          });
+          if (!window.dispatchEvent(event)) return;
+        } else if (
+          "object" === typeof process &&
+          "function" === typeof process.emit
+        ) {
+          process.emit("uncaughtException", error);
+          return;
+        }
         console.error(error);
       };
+function noop() {}
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -532,9 +555,9 @@ exports.startTransition = function (scope) {
         (callbacks.forEach(function (callback) {
           return callback(currentTransition, returnValue);
         }),
-        returnValue.then(noop, onError));
+        returnValue.then(noop, reportGlobalError));
     } catch (error) {
-      onError(error);
+      reportGlobalError(error);
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
     }
@@ -640,4 +663,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-b3b89a7e";
+exports.version = "19.0.0-canary-bd294150";
