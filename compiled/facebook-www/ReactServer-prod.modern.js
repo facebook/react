@@ -306,14 +306,37 @@ function createCacheRoot() {
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentBatchConfig = { transition: null };
+var ReactCurrentBatchConfig = { transition: null },
+  reportGlobalError =
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          if (
+            "object" === typeof window &&
+            "function" === typeof window.ErrorEvent
+          ) {
+            var event = new window.ErrorEvent("error", {
+              bubbles: !0,
+              cancelable: !0,
+              message:
+                "object" === typeof error &&
+                null !== error &&
+                "string" === typeof error.message
+                  ? String(error.message)
+                  : String(error),
+              error: error
+            });
+            if (!window.dispatchEvent(event)) return;
+          } else if (
+            "object" === typeof process &&
+            "function" === typeof process.emit
+          ) {
+            process.emit("uncaughtException", error);
+            return;
+          }
+          console.error(error);
+        };
 function noop() {}
-var onError =
-  "function" === typeof reportError
-    ? reportError
-    : function (error) {
-        console.error(error);
-      };
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -507,9 +530,9 @@ exports.startTransition = function (scope, options) {
       (callbacks.forEach(function (callback) {
         return callback(currentTransition, returnValue);
       }),
-      returnValue.then(noop, onError));
+      returnValue.then(noop, reportGlobalError));
   } catch (error) {
-    onError(error);
+    reportGlobalError(error);
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -534,4 +557,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-91ce1e39";
+exports.version = "19.0.0-www-modern-395ddcb4";

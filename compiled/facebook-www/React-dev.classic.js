@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-classic-5d26d7ce";
+    var ReactVersion = "19.0.0-www-classic-8c9925ed";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -644,7 +644,9 @@ if (__DEV__) {
       // Tracks whether something called `use` during the current batch of work.
       // Determines whether we should yield to microtasks to unwrap already resolved
       // promises without suspending.
-      didUsePromise: false
+      didUsePromise: false,
+      // Track first uncaught error within this act
+      thrownErrors: []
     };
 
     /**
@@ -3164,6 +3166,45 @@ if (__DEV__) {
       }
     }
 
+    var reportGlobalError =
+      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+        ? // emulating an uncaught JavaScript error.
+          reportError
+        : function (error) {
+            if (
+              typeof window === "object" &&
+              typeof window.ErrorEvent === "function"
+            ) {
+              // Browser Polyfill
+              var message =
+                typeof error === "object" &&
+                error !== null &&
+                typeof error.message === "string" // eslint-disable-next-line react-internal/safe-string-coercion
+                  ? String(error.message) // eslint-disable-next-line react-internal/safe-string-coercion
+                  : String(error);
+              var event = new window.ErrorEvent("error", {
+                bubbles: true,
+                cancelable: true,
+                message: message,
+                error: error
+              });
+              var shouldLog = window.dispatchEvent(event);
+
+              if (!shouldLog) {
+                return;
+              }
+            } else if (
+              typeof process === "object" && // $FlowFixMe[method-unbinding]
+              typeof process.emit === "function"
+            ) {
+              // Node Polyfill
+              process.emit("uncaughtException", error);
+              return;
+            } // eslint-disable-next-line react-internal/no-production-logging
+
+            console["error"](error);
+          };
+
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
       // the scope function. This is used to implement async actions.
@@ -3200,10 +3241,10 @@ if (__DEV__) {
             callbacks.forEach(function (callback) {
               return callback(currentTransition, returnValue);
             });
-            returnValue.then(noop, onError);
+            returnValue.then(noop, reportGlobalError);
           }
         } catch (error) {
-          onError(error);
+          reportGlobalError(error);
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
           ReactCurrentBatchConfig.transition = prevTransition;
@@ -3232,18 +3273,7 @@ if (__DEV__) {
       }
     }
 
-    function noop() {} // Use reportError, if it exists. Otherwise console.error. This is the same as
-    // the default for onRecoverableError.
-
-    var onError =
-      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
-        ? // emulating an uncaught JavaScript error.
-          reportError
-        : function (error) {
-            // In older browsers and test environments, fallback to console.error.
-            // eslint-disable-next-line react-internal/no-production-logging
-            console["error"](error);
-          };
+    function noop() {}
 
     var didWarnAboutMessageChannel = false;
     var enqueueTaskImpl = null;
@@ -3292,6 +3322,16 @@ if (__DEV__) {
     var actScopeDepth = 0; // We only warn the first time you neglect to await an async `act` scope.
 
     var didWarnNoAwaitAct = false;
+
+    function aggregateErrors(errors) {
+      if (errors.length > 1 && typeof AggregateError === "function") {
+        // eslint-disable-next-line no-undef
+        return new AggregateError(errors);
+      }
+
+      return errors[0];
+    }
+
     function act(callback) {
       {
         // When ReactCurrentActQueue.current is not null, it signals to React that
@@ -3343,9 +3383,15 @@ if (__DEV__) {
           // one used to track `act` scopes. Why, you may be wondering? Because
           // that's how it worked before version 18. Yes, it's confusing! We should
           // delete legacy mode!!
+          ReactCurrentActQueue.thrownErrors.push(error);
+        }
+
+        if (ReactCurrentActQueue.thrownErrors.length > 0) {
           ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
           popActScope(prevActQueue, prevActScopeDepth);
-          throw error;
+          var thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
+          ReactCurrentActQueue.thrownErrors.length = 0;
+          throw thrownError;
         }
 
         if (
@@ -3400,7 +3446,16 @@ if (__DEV__) {
                       // `thenable` might not be a real promise, and `flushActQueue`
                       // might throw, so we need to wrap `flushActQueue` in a
                       // try/catch.
-                      reject(error);
+                      ReactCurrentActQueue.thrownErrors.push(error);
+                    }
+
+                    if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                      var _thrownError = aggregateErrors(
+                        ReactCurrentActQueue.thrownErrors
+                      );
+
+                      ReactCurrentActQueue.thrownErrors.length = 0;
+                      reject(_thrownError);
                     }
                   } else {
                     resolve(returnValue);
@@ -3408,7 +3463,17 @@ if (__DEV__) {
                 },
                 function (error) {
                   popActScope(prevActQueue, prevActScopeDepth);
-                  reject(error);
+
+                  if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                    var _thrownError2 = aggregateErrors(
+                      ReactCurrentActQueue.thrownErrors
+                    );
+
+                    ReactCurrentActQueue.thrownErrors.length = 0;
+                    reject(_thrownError2);
+                  } else {
+                    reject(error);
+                  }
                 }
               );
             }
@@ -3459,6 +3524,15 @@ if (__DEV__) {
             // to be awaited, regardless of whether the callback is sync or async.
 
             ReactCurrentActQueue.current = null;
+          }
+
+          if (ReactCurrentActQueue.thrownErrors.length > 0) {
+            var _thrownError3 = aggregateErrors(
+              ReactCurrentActQueue.thrownErrors
+            );
+
+            ReactCurrentActQueue.thrownErrors.length = 0;
+            throw _thrownError3;
           }
 
           return {
@@ -3517,15 +3591,21 @@ if (__DEV__) {
                   reject
                 );
               });
+              return;
             } catch (error) {
               // Leave remaining tasks on the queue if something throws.
-              reject(error);
+              ReactCurrentActQueue.thrownErrors.push(error);
             }
           } else {
             // The queue is empty. We can finish.
             ReactCurrentActQueue.current = null;
-            resolve(returnValue);
           }
+        }
+
+        if (ReactCurrentActQueue.thrownErrors.length > 0) {
+          var thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
+          ReactCurrentActQueue.thrownErrors.length = 0;
+          reject(thrownError);
         } else {
           resolve(returnValue);
         }
@@ -3570,7 +3650,7 @@ if (__DEV__) {
           } catch (error) {
             // If something throws, leave the remaining callbacks on the queue.
             queue.splice(0, i + 1);
-            throw error;
+            ReactCurrentActQueue.thrownErrors.push(error);
           } finally {
             isFlushing = false;
           }

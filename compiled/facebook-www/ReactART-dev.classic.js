@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-17944549";
+    var ReactVersion = "19.0.0-www-classic-ca0b9726";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -4686,7 +4686,7 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
+    var ReactCurrentActQueue$4 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
     // there's only a single root, but we do support multi root apps, hence this
     // extra complexity. But this module is optimized for the single root case.
 
@@ -4725,7 +4725,7 @@ if (__DEV__) {
       mightHavePendingSyncWork = true; // At the end of the current event, go through each of the roots and ensure
       // there's a task scheduled for each one at the correct priority.
 
-      if (ReactCurrentActQueue$3.current !== null) {
+      if (ReactCurrentActQueue$4.current !== null) {
         // We're inside an `act` scope.
         if (!didScheduleMicrotask_act) {
           didScheduleMicrotask_act = true;
@@ -4746,9 +4746,9 @@ if (__DEV__) {
         scheduleTaskForRootDuringMicrotask(root, now$1());
       }
 
-      if (ReactCurrentActQueue$3.isBatchingLegacy && root.tag === LegacyRoot) {
+      if (ReactCurrentActQueue$4.isBatchingLegacy && root.tag === LegacyRoot) {
         // Special `act` case: Record whenever a legacy update is scheduled.
-        ReactCurrentActQueue$3.didScheduleLegacyUpdate = true;
+        ReactCurrentActQueue$4.didScheduleLegacyUpdate = true;
       }
     }
     function flushSyncWorkOnAllRoots() {
@@ -4776,7 +4776,6 @@ if (__DEV__) {
       } // There may or may not be synchronous work scheduled. Let's check.
 
       var didPerformSomeWork;
-      var errors = null;
       isFlushingWork = true;
 
       do {
@@ -4798,17 +4797,8 @@ if (__DEV__) {
 
             if (includesSyncLane(nextLanes)) {
               // This root has pending sync work. Flush it now.
-              try {
-                didPerformSomeWork = true;
-                performSyncWorkOnRoot(root, nextLanes);
-              } catch (error) {
-                // Collect errors so we can rethrow them at the end
-                if (errors === null) {
-                  errors = [error];
-                } else {
-                  errors.push(error);
-                }
-              }
+              didPerformSomeWork = true;
+              performSyncWorkOnRoot(root, nextLanes);
             }
           }
 
@@ -4816,32 +4806,7 @@ if (__DEV__) {
         }
       } while (didPerformSomeWork);
 
-      isFlushingWork = false; // If any errors were thrown, rethrow them right before exiting.
-      // TODO: Consider returning these to the caller, to allow them to decide
-      // how/when to rethrow.
-
-      if (errors !== null) {
-        if (errors.length > 1) {
-          if (typeof AggregateError === "function") {
-            // eslint-disable-next-line no-undef
-            throw new AggregateError(errors);
-          } else {
-            for (var i = 1; i < errors.length; i++) {
-              scheduleImmediateTask(throwError.bind(null, errors[i]));
-            }
-
-            var firstError = errors[0];
-            throw firstError;
-          }
-        } else {
-          var error = errors[0];
-          throw error;
-        }
-      }
-    }
-
-    function throwError(error) {
-      throw error;
+      isFlushingWork = false;
     }
 
     function processRootScheduleInMicrotask() {
@@ -4972,7 +4937,7 @@ if (__DEV__) {
           // Scheduler task, rather than an `act` task, cancel it and re-schedule
           // on the `act` queue.
           !(
-            ReactCurrentActQueue$3.current !== null &&
+            ReactCurrentActQueue$4.current !== null &&
             existingCallbackNode !== fakeActCallbackNode$1
           )
         ) {
@@ -5039,11 +5004,11 @@ if (__DEV__) {
     var fakeActCallbackNode$1 = {};
 
     function scheduleCallback$2(priorityLevel, callback) {
-      if (ReactCurrentActQueue$3.current !== null) {
+      if (ReactCurrentActQueue$4.current !== null) {
         // Special case: We're inside an `act` scope (a testing utility).
         // Instead of scheduling work in the host environment, add it to a
         // fake internal queue that's managed by the `act` implementation.
-        ReactCurrentActQueue$3.current.push(callback);
+        ReactCurrentActQueue$4.current.push(callback);
         return fakeActCallbackNode$1;
       } else {
         return scheduleCallback$3(priorityLevel, callback);
@@ -5058,13 +5023,13 @@ if (__DEV__) {
     }
 
     function scheduleImmediateTask(cb) {
-      if (ReactCurrentActQueue$3.current !== null) {
+      if (ReactCurrentActQueue$4.current !== null) {
         // Special case: Inside an `act` scope, we push microtasks to the fake `act`
         // callback queue. This is because we currently support calling `act`
         // without awaiting the result. The plan is to deprecate that, and require
         // that you always await the result so that the microtasks have a chance to
         // run. But it hasn't happened yet.
-        ReactCurrentActQueue$3.current.push(function () {
+        ReactCurrentActQueue$4.current.push(function () {
           cb();
           return null;
         });
@@ -6697,7 +6662,7 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue;
+    var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue;
 
     function getThenablesFromState(state) {
       {
@@ -6752,8 +6717,8 @@ if (__DEV__) {
     function noop() {}
 
     function trackUsedThenable(thenableState, thenable, index) {
-      if (ReactCurrentActQueue$2.current !== null) {
-        ReactCurrentActQueue$2.didUsePromise = true;
+      if (ReactCurrentActQueue$3.current !== null) {
+        ReactCurrentActQueue$3.didUsePromise = true;
       }
 
       var trackedThenables = getThenablesFromState(thenableState);
@@ -14612,6 +14577,46 @@ if (__DEV__) {
       return ReactFiberErrorDialogWWW.showErrorDialog(capturedError);
     }
 
+    var reportGlobalError =
+      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+        ? // emulating an uncaught JavaScript error.
+          reportError
+        : function (error) {
+            if (
+              typeof window === "object" &&
+              typeof window.ErrorEvent === "function"
+            ) {
+              // Browser Polyfill
+              var message =
+                typeof error === "object" &&
+                error !== null &&
+                typeof error.message === "string" // eslint-disable-next-line react-internal/safe-string-coercion
+                  ? String(error.message) // eslint-disable-next-line react-internal/safe-string-coercion
+                  : String(error);
+              var event = new window.ErrorEvent("error", {
+                bubbles: true,
+                cancelable: true,
+                message: message,
+                error: error
+              });
+              var shouldLog = window.dispatchEvent(event);
+
+              if (!shouldLog) {
+                return;
+              }
+            } else if (
+              typeof process === "object" && // $FlowFixMe[method-unbinding]
+              typeof process.emit === "function"
+            ) {
+              // Node Polyfill
+              process.emit("uncaughtException", error);
+              return;
+            } // eslint-disable-next-line react-internal/no-production-logging
+
+            console["error"](error);
+          };
+
+    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue;
     function logCapturedError(boundary, errorInfo) {
       try {
         var logError = showErrorDialog(boundary, errorInfo); // Allow injected showErrorDialog() to prevent default console.error logging.
@@ -14623,43 +14628,73 @@ if (__DEV__) {
 
         var error = errorInfo.value;
 
-        if (true) {
-          var source = errorInfo.source;
-          var stack = errorInfo.stack;
-          var componentStack = stack !== null ? stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
-          // See https://github.com/facebook/react/pull/13384
+        if (boundary.tag === HostRoot) {
+          if (true && ReactCurrentActQueue$2.current !== null) {
+            // For uncaught errors inside act, we track them on the act and then
+            // rethrow them into the test.
+            ReactCurrentActQueue$2.thrownErrors.push(error);
+            return;
+          } // For uncaught root errors we report them as uncaught to the browser's
+          // onerror callback. This won't have component stacks and the error addendum.
+          // So we add those into a separate console.warn.
 
-          var componentName = source ? getComponentNameFromFiber(source) : null;
-          var componentNameMessage = componentName
-            ? "The above error occurred in the <" +
-              componentName +
-              "> component:"
-            : "The above error occurred in one of your React components:";
-          var errorBoundaryMessage;
+          reportGlobalError(error);
 
-          if (boundary.tag === HostRoot) {
-            errorBoundaryMessage =
+          if (true) {
+            var source = errorInfo.source;
+            var stack = errorInfo.stack;
+            var componentStack = stack !== null ? stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
+            // See https://github.com/facebook/react/pull/13384
+
+            var componentName = source
+              ? getComponentNameFromFiber(source)
+              : null;
+            var componentNameMessage = componentName
+              ? "An error occurred in the <" + componentName + "> component:"
+              : "An error occurred in one of your React components:";
+            console["warn"](
+              "%s\n%s\n\n%s",
+              componentNameMessage,
+              componentStack,
               "Consider adding an error boundary to your tree to customize error handling behavior.\n" +
-              "Visit https://react.dev/link/error-boundaries to learn more about error boundaries.";
-          } else {
-            var errorBoundaryName =
-              getComponentNameFromFiber(boundary) || "Anonymous";
-            errorBoundaryMessage =
-              "React will try to recreate this component tree from scratch " +
-              ("using the error boundary you provided, " +
-                errorBoundaryName +
-                ".");
-          } // In development, we provide our own message which includes the component stack
-          // in addition to the error.
+                "Visit https://react.dev/link/error-boundaries to learn more about error boundaries."
+            );
+          }
+        } else {
+          // Caught by error boundary
+          if (true) {
+            var _source = errorInfo.source;
+            var _stack = errorInfo.stack;
 
-          console["error"](
+            var _componentStack = _stack !== null ? _stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
+            // See https://github.com/facebook/react/pull/13384
+
+            var _componentName = _source
+              ? getComponentNameFromFiber(_source)
+              : null;
+
+            var _componentNameMessage = _componentName
+              ? "The above error occurred in the <" +
+                _componentName +
+                "> component:"
+              : "The above error occurred in one of your React components:";
+
+            var errorBoundaryName =
+              getComponentNameFromFiber(boundary) || "Anonymous"; // In development, we provide our own message which includes the component stack
+            // in addition to the error.
             // Don't transform to our wrapper
-            "%o\n\n%s\n%s\n\n%s",
-            error,
-            componentNameMessage,
-            componentStack,
-            errorBoundaryMessage
-          );
+
+            console["error"](
+              "%o\n\n%s\n%s\n\n%s",
+              error,
+              _componentNameMessage,
+              _componentStack,
+              "React will try to recreate this component tree from scratch " +
+                ("using the error boundary you provided, " +
+                  errorBoundaryName +
+                  ".")
+            );
+          }
         }
       } catch (e) {
         // This method must not throw, or React internal state will get messed up.
@@ -14681,10 +14716,8 @@ if (__DEV__) {
       update.payload = {
         element: null
       };
-      var error = errorInfo.value;
 
       update.callback = function () {
-        onUncaughtError(error);
         logCapturedError(fiber, errorInfo);
       };
 
@@ -25829,9 +25862,7 @@ if (__DEV__) {
 
     var entangledRenderLanes = NoLanes; // Whether to root completed, errored, suspended, etc.
 
-    var workInProgressRootExitStatus = RootInProgress; // A fatal error, if one is thrown
-
-    var workInProgressRootFatalError = null; // The work left over by components that were visited during this render. Only
+    var workInProgressRootExitStatus = RootInProgress; // The work left over by components that were visited during this render. Only
     // includes unprocessed updates, not work in bailed out children.
 
     var workInProgressRootSkippedLanes = NoLanes; // Lanes that were updated (in an interleaved event) during this render.
@@ -26024,8 +26055,6 @@ if (__DEV__) {
     function getRenderTargetTime() {
       return workInProgressRootRenderTargetTime;
     }
-    var hasUncaughtError = false;
-    var firstUncaughtError = null;
     var legacyErrorBoundariesThatAlreadyFailed = null;
     var rootDoesHavePassiveEffects = false;
     var rootWithPendingPassiveEffects = null;
@@ -26386,11 +26415,9 @@ if (__DEV__) {
             }
 
             if (exitStatus === RootFatalErrored) {
-              var fatalError = workInProgressRootFatalError;
               prepareFreshStack(root, NoLanes);
               markRootSuspended(root, lanes, NoLane);
-              ensureRootIsScheduled(root);
-              throw fatalError;
+              break;
             } // We now have a consistent tree. The next step is either to commit it,
             // or, if something suspended, wait to commit it after a timeout.
 
@@ -26782,11 +26809,10 @@ if (__DEV__) {
       }
 
       if (exitStatus === RootFatalErrored) {
-        var fatalError = workInProgressRootFatalError;
         prepareFreshStack(root, NoLanes);
         markRootSuspended(root, lanes, NoLane);
         ensureRootIsScheduled(root);
-        throw fatalError;
+        return null;
       }
 
       if (exitStatus === RootDidNotComplete) {
@@ -26930,7 +26956,6 @@ if (__DEV__) {
       workInProgressThrownValue = null;
       workInProgressRootDidAttachPingListener = false;
       workInProgressRootExitStatus = RootInProgress;
-      workInProgressRootFatalError = null;
       workInProgressRootSkippedLanes = NoLanes;
       workInProgressRootInterleavedUpdatedLanes = NoLanes;
       workInProgressRootPingedLanes = NoLanes;
@@ -27033,7 +27058,10 @@ if (__DEV__) {
       if (erroredWork === null) {
         // This is a fatal error
         workInProgressRootExitStatus = RootFatalErrored;
-        workInProgressRootFatalError = thrownValue;
+        logCapturedError(
+          root.current,
+          createCapturedValueAtFiber(thrownValue, root.current)
+        );
         return;
       }
 
@@ -27816,7 +27844,7 @@ if (__DEV__) {
         );
 
         if (didFatal) {
-          panicOnRootError(thrownValue);
+          panicOnRootError(root, thrownValue);
           return;
         }
       } catch (error) {
@@ -27828,7 +27856,7 @@ if (__DEV__) {
           workInProgress = returnFiber;
           throw error;
         } else {
-          panicOnRootError(thrownValue);
+          panicOnRootError(root, thrownValue);
           return;
         }
       }
@@ -27850,13 +27878,16 @@ if (__DEV__) {
       }
     }
 
-    function panicOnRootError(error) {
+    function panicOnRootError(root, error) {
       // There's no ancestor that can handle this exception. This should never
       // happen because the root is supposed to capture all errors that weren't
       // caught by an error boundary. This is a fatal error, or panic condition,
       // because we've run out of ways to recover.
       workInProgressRootExitStatus = RootFatalErrored;
-      workInProgressRootFatalError = error; // Set `workInProgress` to null. This represents advancing to the next
+      logCapturedError(
+        root.current,
+        createCapturedValueAtFiber(error, root.current)
+      ); // Set `workInProgress` to null. This represents advancing to the next
       // sibling, or the parent if there are no siblings. But since the root
       // has no siblings nor a parent, we set it to null. Usually this is
       // handled by `completeUnitOfWork` or `unwindWork`, but since we're
@@ -28297,13 +28328,6 @@ if (__DEV__) {
           );
           onRecoverableError(recoverableError.value, errorInfo);
         }
-      }
-
-      if (hasUncaughtError) {
-        hasUncaughtError = false;
-        var error$1 = firstUncaughtError;
-        firstUncaughtError = null;
-        throw error$1;
       } // If the passive effects are the result of a discrete render, flush them
       // synchronously at the end of the current task so that the result is
       // immediately observable. Otherwise, we assume that they are not
@@ -28585,15 +28609,6 @@ if (__DEV__) {
         legacyErrorBoundariesThatAlreadyFailed.add(instance);
       }
     }
-
-    function prepareToThrowUncaughtError(error) {
-      if (!hasUncaughtError) {
-        hasUncaughtError = true;
-        firstUncaughtError = error;
-      }
-    }
-
-    var onUncaughtError = prepareToThrowUncaughtError;
 
     function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
       var errorInfo = createCapturedValueAtFiber(error, sourceFiber);

@@ -2737,6 +2737,45 @@ if (__DEV__) {
       transition: null
     };
 
+    var reportGlobalError =
+      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+        ? // emulating an uncaught JavaScript error.
+          reportError
+        : function (error) {
+            if (
+              typeof window === "object" &&
+              typeof window.ErrorEvent === "function"
+            ) {
+              // Browser Polyfill
+              var message =
+                typeof error === "object" &&
+                error !== null &&
+                typeof error.message === "string" // eslint-disable-next-line react-internal/safe-string-coercion
+                  ? String(error.message) // eslint-disable-next-line react-internal/safe-string-coercion
+                  : String(error);
+              var event = new window.ErrorEvent("error", {
+                bubbles: true,
+                cancelable: true,
+                message: message,
+                error: error
+              });
+              var shouldLog = window.dispatchEvent(event);
+
+              if (!shouldLog) {
+                return;
+              }
+            } else if (
+              typeof process === "object" && // $FlowFixMe[method-unbinding]
+              typeof process.emit === "function"
+            ) {
+              // Node Polyfill
+              process.emit("uncaughtException", error);
+              return;
+            } // eslint-disable-next-line react-internal/no-production-logging
+
+            console["error"](error);
+          };
+
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
       // the scope function. This is used to implement async actions.
@@ -2773,10 +2812,10 @@ if (__DEV__) {
             callbacks.forEach(function (callback) {
               return callback(currentTransition, returnValue);
             });
-            returnValue.then(noop, onError);
+            returnValue.then(noop, reportGlobalError);
           }
         } catch (error) {
-          onError(error);
+          reportGlobalError(error);
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
           ReactCurrentBatchConfig.transition = prevTransition;
@@ -2805,20 +2844,9 @@ if (__DEV__) {
       }
     }
 
-    function noop() {} // Use reportError, if it exists. Otherwise console.error. This is the same as
-    // the default for onRecoverableError.
+    function noop() {}
 
-    var onError =
-      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
-        ? // emulating an uncaught JavaScript error.
-          reportError
-        : function (error) {
-            // In older browsers and test environments, fallback to console.error.
-            // eslint-disable-next-line react-internal/no-production-logging
-            console["error"](error);
-          };
-
-    var ReactVersion = "19.0.0-www-modern-a9a0f417";
+    var ReactVersion = "19.0.0-www-modern-36d7739e";
 
     // Patch fetch
     var Children = {
