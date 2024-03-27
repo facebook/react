@@ -19,12 +19,6 @@ import type {
 } from './ReactDOMRoot';
 
 import {
-  findDOMNode,
-  render,
-  unstable_renderSubtreeIntoContainer,
-  unmountComponentAtNode,
-} from './ReactDOMLegacy';
-import {
   createRoot as createRootImpl,
   hydrateRoot as hydrateRootImpl,
   isValidContainer,
@@ -169,10 +163,6 @@ export {
   batchedUpdates as unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
-  // Disabled behind disableLegacyReactDOMAPIs
-  findDOMNode,
-  render,
-  unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
