@@ -4423,6 +4423,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate favorSafetyOverHydrationPerf
   it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -4506,6 +4507,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
+  // @gate favorSafetyOverHydrationPerf
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();

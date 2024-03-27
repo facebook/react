@@ -87,6 +87,7 @@ export const disableTextareaChildren = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableUseEffectEventHook = false;
+export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;

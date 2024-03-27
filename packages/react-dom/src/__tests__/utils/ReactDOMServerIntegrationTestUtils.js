@@ -17,10 +17,12 @@ module.exports = function (initModules) {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
+  let ReactFeatureFlags;
 
   function resetModules() {
     ({ReactDOM, ReactDOMClient, ReactDOMServer} = initModules());
     act = require('internal-test-utils').act;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
   }
 
   function shouldUseDocument(reactElement) {
@@ -276,8 +278,10 @@ module.exports = function (initModules) {
     const cleanTextContent =
       (cleanContainer.lastChild && cleanContainer.lastChild.textContent) || '';
 
-    // The only guarantee is that text content has been patched up if needed.
-    expect(hydratedTextContent).toBe(cleanTextContent);
+    if (ReactFeatureFlags.favorSafetyOverHydrationPerf) {
+      // The only guarantee is that text content has been patched up if needed.
+      expect(hydratedTextContent).toBe(cleanTextContent);
+    }
 
     // Abort any further expects. All bets are off at this point.
     throw new BadMarkupExpected();
