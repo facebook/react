@@ -331,7 +331,7 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Component',
       // Hydration mismatch is logged
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Hydration failed because the server rendered HTML didn\'t match the client.',
       'There was an error while hydrating this Suspense boundary.',
     ]);
 
@@ -1152,24 +1152,18 @@ describe('ReactDOMServerPartialHydration', () => {
     await act(() => {
       ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
     });
 
-    await expect(async () => {
-      await act(() => {
-        resolve();
-      });
-    }).toErrorDev([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
-    ]);
+    await act(() => {
+      resolve();
+    });
 
     assertLog([
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating this Suspense boundary. ' +
-        'Switched to client rendering.',
+      'Hydration failed because the server rendered HTML didn\'t match the client.',
+      'There was an error while hydrating this Suspense boundary.',
     ]);
 
     expect(container.innerHTML).toContain('<span>A</span>');
