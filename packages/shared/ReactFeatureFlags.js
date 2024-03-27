@@ -185,7 +185,7 @@ export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
-export const disableLegacyMode = __NEXT_MAJOR__;
+export const disableLegacyMode = true;
 
 // HTML boolean attributes need a special PropertyInfoRecord.
 // Between support of these attributes in browsers and React supporting them as
