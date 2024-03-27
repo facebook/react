@@ -69,6 +69,7 @@ function mountStrictApp(App) {
 }
 
 function mountLegacyApp(App: () => React$Node) {
+  // $FlowFixMe[prop-missing]: These are removed in 19.
   const {render, unmountComponentAtNode} = require('react-dom');
 
   function LegacyRender() {
@@ -77,8 +78,10 @@ function mountLegacyApp(App: () => React$Node) {
 
   const container = createContainer();
 
+  // $FlowFixMe[not-a-function]: These are removed in 19.
   render(createElement(LegacyRender), container);
 
+  // $FlowFixMe: These are removed in 19.
   unmountFunctions.push(() => unmountComponentAtNode(container));
 }
 

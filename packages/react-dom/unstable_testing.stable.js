@@ -10,10 +10,7 @@
 export {
   createPortal,
   flushSync,
-  render,
-  unmountComponentAtNode,
   unstable_batchedUpdates,
-  unstable_renderSubtreeIntoContainer,
   useFormStatus,
   useFormState,
   prefetchDNS,
