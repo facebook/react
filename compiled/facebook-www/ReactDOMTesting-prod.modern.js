@@ -4864,9 +4864,6 @@ function createCapturedValueFromError(value, digest, stack) {
     digest: null != digest ? digest : null
   };
 }
-var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
-if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
-  throw Error(formatProdErrorMessage(320));
 var reportGlobalError =
   "function" === typeof reportError
     ? reportError
@@ -4896,53 +4893,68 @@ var reportGlobalError =
         }
         console.error(error);
       };
-function logCapturedError(boundary, errorInfo) {
+function defaultOnUncaughtError(error) {
+  reportGlobalError(error);
+}
+function defaultOnCaughtError(error) {
+  console.error(error);
+}
+function defaultOnRecoverableError(error) {
+  reportGlobalError(error);
+}
+function logUncaughtError(root, errorInfo) {
   try {
-    if (
-      !1 !==
-      ReactFiberErrorDialogWWW.showErrorDialog({
-        componentStack: null !== errorInfo.stack ? errorInfo.stack : "",
-        error: errorInfo.value,
-        errorBoundary:
-          null !== boundary && 1 === boundary.tag ? boundary.stateNode : null
-      })
-    ) {
-      var error = errorInfo.value;
-      3 === boundary.tag ? reportGlobalError(error) : console.error(error);
-    }
+    var onUncaughtError = root.onUncaughtError;
+    onUncaughtError(errorInfo.value, { componentStack: errorInfo.stack });
   } catch (e) {
     setTimeout(function () {
       throw e;
     });
   }
 }
-function createRootErrorUpdate(fiber, errorInfo, lane) {
+function logCaughtError(root, boundary, errorInfo) {
+  try {
+    var onCaughtError = root.onCaughtError;
+    onCaughtError(errorInfo.value, {
+      componentStack: errorInfo.stack,
+      errorBoundary: 1 === boundary.tag ? boundary.stateNode : null
+    });
+  } catch (e) {
+    setTimeout(function () {
+      throw e;
+    });
+  }
+}
+function createRootErrorUpdate(root, errorInfo, lane) {
   lane = createUpdate(lane);
   lane.tag = 3;
   lane.payload = { element: null };
   lane.callback = function () {
-    logCapturedError(fiber, errorInfo);
+    logUncaughtError(root, errorInfo);
   };
   return lane;
 }
-function createClassErrorUpdate(fiber, errorInfo, lane) {
+function createClassErrorUpdate(lane) {
   lane = createUpdate(lane);
   lane.tag = 3;
+  return lane;
+}
+function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
   var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if ("function" === typeof getDerivedStateFromError) {
     var error = errorInfo.value;
-    lane.payload = function () {
+    update.payload = function () {
       return getDerivedStateFromError(error);
     };
-    lane.callback = function () {
-      logCapturedError(fiber, errorInfo);
+    update.callback = function () {
+      logCaughtError(root, fiber, errorInfo);
     };
   }
   var inst = fiber.stateNode;
   null !== inst &&
     "function" === typeof inst.componentDidCatch &&
-    (lane.callback = function () {
-      logCapturedError(fiber, errorInfo);
+    (update.callback = function () {
+      logCaughtError(root, fiber, errorInfo);
       "function" !== typeof getDerivedStateFromError &&
         (null === legacyErrorBoundariesThatAlreadyFailed
           ? (legacyErrorBoundariesThatAlreadyFailed = new Set([this]))
@@ -4952,7 +4964,6 @@ function createClassErrorUpdate(fiber, errorInfo, lane) {
         componentStack: null !== stack ? stack : ""
       });
     });
-  return lane;
 }
 function markSuspenseBoundaryShouldCapture(
   suspenseBoundary,
@@ -4994,83 +5005,76 @@ function throwException(
     "object" === typeof value &&
     "function" === typeof value.then
   ) {
-    if (enableLazyContextPropagation) {
-      var currentSourceFiber = sourceFiber.alternate;
-      null !== currentSourceFiber &&
-        propagateParentContextChanges(
-          currentSourceFiber,
-          sourceFiber,
-          rootRenderLanes,
-          !0
-        );
-    }
-    currentSourceFiber = sourceFiber.tag;
+    var wakeable = value;
+    enableLazyContextPropagation &&
+      ((value = sourceFiber.alternate),
+      null !== value &&
+        propagateParentContextChanges(value, sourceFiber, rootRenderLanes, !0));
+    value = sourceFiber.tag;
     0 !== (sourceFiber.mode & 1) ||
-      (0 !== currentSourceFiber &&
-        11 !== currentSourceFiber &&
-        15 !== currentSourceFiber) ||
-      ((currentSourceFiber = sourceFiber.alternate)
-        ? ((sourceFiber.updateQueue = currentSourceFiber.updateQueue),
-          (sourceFiber.memoizedState = currentSourceFiber.memoizedState),
-          (sourceFiber.lanes = currentSourceFiber.lanes))
+      (0 !== value && 11 !== value && 15 !== value) ||
+      ((value = sourceFiber.alternate)
+        ? ((sourceFiber.updateQueue = value.updateQueue),
+          (sourceFiber.memoizedState = value.memoizedState),
+          (sourceFiber.lanes = value.lanes))
         : ((sourceFiber.updateQueue = null),
           (sourceFiber.memoizedState = null)));
-    currentSourceFiber = suspenseHandlerStackCursor.current;
-    if (null !== currentSourceFiber) {
-      switch (currentSourceFiber.tag) {
+    value = suspenseHandlerStackCursor.current;
+    if (null !== value) {
+      switch (value.tag) {
         case 13:
           return (
             sourceFiber.mode & 1 &&
               (null === shellBoundary
                 ? renderDidSuspendDelayIfPossible()
-                : null === currentSourceFiber.alternate &&
+                : null === value.alternate &&
                   0 === workInProgressRootExitStatus &&
                   (workInProgressRootExitStatus = 3)),
-            (currentSourceFiber.flags &= -257),
+            (value.flags &= -257),
             markSuspenseBoundaryShouldCapture(
-              currentSourceFiber,
+              value,
               returnFiber,
               sourceFiber,
               root,
               rootRenderLanes
             ),
-            value === noopSuspenseyCommitThenable
-              ? (currentSourceFiber.flags |= 16384)
-              : ((returnFiber = currentSourceFiber.updateQueue),
+            wakeable === noopSuspenseyCommitThenable
+              ? (value.flags |= 16384)
+              : ((returnFiber = value.updateQueue),
                 null === returnFiber
-                  ? (currentSourceFiber.updateQueue = new Set([value]))
-                  : returnFiber.add(value),
-                currentSourceFiber.mode & 1 &&
-                  attachPingListener(root, value, rootRenderLanes)),
+                  ? (value.updateQueue = new Set([wakeable]))
+                  : returnFiber.add(wakeable),
+                value.mode & 1 &&
+                  attachPingListener(root, wakeable, rootRenderLanes)),
             !1
           );
         case 22:
-          if (currentSourceFiber.mode & 1)
+          if (value.mode & 1)
             return (
-              (currentSourceFiber.flags |= 65536),
-              value === noopSuspenseyCommitThenable
-                ? (currentSourceFiber.flags |= 16384)
-                : ((returnFiber = currentSourceFiber.updateQueue),
+              (value.flags |= 65536),
+              wakeable === noopSuspenseyCommitThenable
+                ? (value.flags |= 16384)
+                : ((returnFiber = value.updateQueue),
                   null === returnFiber
                     ? ((returnFiber = {
                         transitions: null,
                         markerInstances: null,
-                        retryQueue: new Set([value])
+                        retryQueue: new Set([wakeable])
                       }),
-                      (currentSourceFiber.updateQueue = returnFiber))
+                      (value.updateQueue = returnFiber))
                     : ((sourceFiber = returnFiber.retryQueue),
                       null === sourceFiber
-                        ? (returnFiber.retryQueue = new Set([value]))
-                        : sourceFiber.add(value)),
-                  attachPingListener(root, value, rootRenderLanes)),
+                        ? (returnFiber.retryQueue = new Set([wakeable]))
+                        : sourceFiber.add(wakeable)),
+                  attachPingListener(root, wakeable, rootRenderLanes)),
               !1
             );
       }
-      throw Error(formatProdErrorMessage(435, currentSourceFiber.tag));
+      throw Error(formatProdErrorMessage(435, value.tag));
     }
     if (1 === root.tag)
       return (
-        attachPingListener(root, value, rootRenderLanes),
+        attachPingListener(root, wakeable, rootRenderLanes),
         renderDidSuspendDelayIfPossible(),
         !1
       );
@@ -5079,14 +5083,12 @@ function throwException(
   if (
     isHydrating &&
     sourceFiber.mode & 1 &&
-    ((currentSourceFiber = suspenseHandlerStackCursor.current),
-    null !== currentSourceFiber)
+    ((wakeable = suspenseHandlerStackCursor.current), null !== wakeable)
   )
     return (
-      0 === (currentSourceFiber.flags & 65536) &&
-        (currentSourceFiber.flags |= 256),
+      0 === (wakeable.flags & 65536) && (wakeable.flags |= 256),
       markSuspenseBoundaryShouldCapture(
-        currentSourceFiber,
+        wakeable,
         returnFiber,
         sourceFiber,
         root,
@@ -5095,57 +5097,58 @@ function throwException(
       queueHydrationError(createCapturedValueAtFiber(value, sourceFiber)),
       !1
     );
-  root = value = createCapturedValueAtFiber(value, sourceFiber);
+  wakeable = value = createCapturedValueAtFiber(value, sourceFiber);
   4 !== workInProgressRootExitStatus && (workInProgressRootExitStatus = 2);
   null === workInProgressRootConcurrentErrors
-    ? (workInProgressRootConcurrentErrors = [root])
-    : workInProgressRootConcurrentErrors.push(root);
+    ? (workInProgressRootConcurrentErrors = [wakeable])
+    : workInProgressRootConcurrentErrors.push(wakeable);
   if (null === returnFiber) return !0;
-  root = returnFiber;
+  wakeable = returnFiber;
   do {
-    switch (root.tag) {
+    switch (wakeable.tag) {
       case 3:
         return (
-          (root.flags |= 65536),
+          (root = value),
+          (wakeable.flags |= 65536),
           (rootRenderLanes &= -rootRenderLanes),
-          (root.lanes |= rootRenderLanes),
-          (rootRenderLanes = createRootErrorUpdate(
+          (wakeable.lanes |= rootRenderLanes),
+          (root = createRootErrorUpdate(
+            wakeable.stateNode,
             root,
-            value,
             rootRenderLanes
           )),
-          enqueueCapturedUpdate(root, rootRenderLanes),
+          enqueueCapturedUpdate(wakeable, root),
           !1
         );
       case 1:
+        returnFiber = value;
+        sourceFiber = wakeable.type;
+        var instance = wakeable.stateNode;
         if (
-          ((returnFiber = value),
-          (sourceFiber = root.type),
-          (currentSourceFiber = root.stateNode),
-          0 === (root.flags & 128) &&
-            ("function" === typeof sourceFiber.getDerivedStateFromError ||
-              (null !== currentSourceFiber &&
-                "function" === typeof currentSourceFiber.componentDidCatch &&
-                (null === legacyErrorBoundariesThatAlreadyFailed ||
-                  !legacyErrorBoundariesThatAlreadyFailed.has(
-                    currentSourceFiber
-                  )))))
+          0 === (wakeable.flags & 128) &&
+          ("function" === typeof sourceFiber.getDerivedStateFromError ||
+            (null !== instance &&
+              "function" === typeof instance.componentDidCatch &&
+              (null === legacyErrorBoundariesThatAlreadyFailed ||
+                !legacyErrorBoundariesThatAlreadyFailed.has(instance))))
         )
           return (
-            (root.flags |= 65536),
+            (wakeable.flags |= 65536),
             (rootRenderLanes &= -rootRenderLanes),
-            (root.lanes |= rootRenderLanes),
-            (rootRenderLanes = createClassErrorUpdate(
+            (wakeable.lanes |= rootRenderLanes),
+            (rootRenderLanes = createClassErrorUpdate(rootRenderLanes)),
+            initializeClassErrorUpdate(
+              rootRenderLanes,
               root,
-              returnFiber,
-              rootRenderLanes
-            )),
-            enqueueCapturedUpdate(root, rootRenderLanes),
+              wakeable,
+              returnFiber
+            ),
+            enqueueCapturedUpdate(wakeable, rootRenderLanes),
             !1
           );
     }
-    root = root.return;
-  } while (null !== root);
+    wakeable = wakeable.return;
+  } while (null !== wakeable);
   return !1;
 }
 function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
@@ -11410,8 +11413,8 @@ function handleThrow(root, thrownValue) {
   workInProgressThrownValue = thrownValue;
   null === workInProgress &&
     ((workInProgressRootExitStatus = 1),
-    logCapturedError(
-      root.current,
+    logUncaughtError(
+      root,
       createCapturedValueAtFiber(thrownValue, root.current)
     ));
 }
@@ -11682,8 +11685,8 @@ function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
       )
     ) {
       workInProgressRootExitStatus = 1;
-      logCapturedError(
-        root.current,
+      logUncaughtError(
+        root,
         createCapturedValueAtFiber(thrownValue, root.current)
       );
       workInProgress = null;
@@ -11692,8 +11695,8 @@ function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   } catch (error) {
     if (null !== returnFiber) throw ((workInProgress = returnFiber), error);
     workInProgressRootExitStatus = 1;
-    logCapturedError(
-      root.current,
+    logUncaughtError(
+      root,
       createCapturedValueAtFiber(thrownValue, root.current)
     );
     workInProgress = null;
@@ -11954,7 +11957,7 @@ function flushPassiveEffectsImpl() {
 }
 function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
-  sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
+  sourceFiber = createRootErrorUpdate(rootFiber.stateNode, sourceFiber, 2);
   rootFiber = enqueueUpdate(rootFiber, sourceFiber, 2);
   null !== rootFiber &&
     (markRootUpdated(rootFiber, 2), ensureRootIsScheduled(rootFiber));
@@ -11981,19 +11984,17 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
               !legacyErrorBoundariesThatAlreadyFailed.has(instance)))
         ) {
           sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
-          sourceFiber = createClassErrorUpdate(
-            nearestMountedAncestor,
-            sourceFiber,
-            2
-          );
-          nearestMountedAncestor = enqueueUpdate(
-            nearestMountedAncestor,
-            sourceFiber,
-            2
-          );
-          null !== nearestMountedAncestor &&
-            (markRootUpdated(nearestMountedAncestor, 2),
-            ensureRootIsScheduled(nearestMountedAncestor));
+          error = createClassErrorUpdate(2);
+          instance = enqueueUpdate(nearestMountedAncestor, error, 2);
+          null !== instance &&
+            (initializeClassErrorUpdate(
+              error,
+              instance,
+              nearestMountedAncestor,
+              sourceFiber
+            ),
+            markRootUpdated(instance, 2),
+            ensureRootIsScheduled(instance));
           break;
         }
       }
@@ -12400,6 +12401,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
+  onUncaughtError,
+  onCaughtError,
   onRecoverableError,
   formState
 ) {
@@ -12431,6 +12434,8 @@ function FiberRootNode(
   this.entanglements = createLaneMap(0);
   this.hiddenUpdates = createLaneMap(null);
   this.identifierPrefix = identifierPrefix;
+  this.onUncaughtError = onUncaughtError;
+  this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
@@ -12456,6 +12461,8 @@ function createFiberRoot(
   isStrictMode,
   concurrentUpdatesByDefaultOverride,
   identifierPrefix,
+  onUncaughtError,
+  onCaughtError,
   onRecoverableError,
   transitionCallbacks,
   formState
@@ -12465,6 +12472,8 @@ function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     formState
   );
@@ -16884,9 +16893,6 @@ function insertStylesheetIntoRoot(root, resource) {
     resource.state.loading |= 4;
   }
 }
-function defaultOnRecoverableError(error) {
-  reportGlobalError(error);
-}
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
 }
@@ -16974,7 +16980,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1715 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-1cfb690a",
+  version: "19.0.0-www-modern-b404b762",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2118 = {
@@ -17005,7 +17011,7 @@ var internals$jscomp$inline_2118 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-1cfb690a"
+  reconcilerVersion: "19.0.0-www-modern-b404b762"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2119 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17020,6 +17026,8 @@ if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         (injectedHook = hook$jscomp$inline_2119);
     } catch (err) {}
 }
+if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
+  throw Error(formatProdErrorMessage(320));
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createComponentSelector = function (component) {
   return { $$typeof: COMPONENT_TYPE, value: component };
@@ -17041,6 +17049,8 @@ exports.createRoot = function (container, options) {
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
     identifierPrefix = "",
+    onUncaughtError = defaultOnUncaughtError,
+    onCaughtError = defaultOnCaughtError,
     onRecoverableError = defaultOnRecoverableError,
     transitionCallbacks = null;
   null !== options &&
@@ -17050,6 +17060,9 @@ exports.createRoot = function (container, options) {
       (concurrentUpdatesByDefaultOverride = !0),
     void 0 !== options.identifierPrefix &&
       (identifierPrefix = options.identifierPrefix),
+    void 0 !== options.onUncaughtError &&
+      (onUncaughtError = options.onUncaughtError),
+    void 0 !== options.onCaughtError && (onCaughtError = options.onCaughtError),
     void 0 !== options.onRecoverableError &&
       (onRecoverableError = options.onRecoverableError),
     void 0 !== options.unstable_transitionCallbacks &&
@@ -17063,6 +17076,8 @@ exports.createRoot = function (container, options) {
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     null
@@ -17205,6 +17220,8 @@ exports.hydrateRoot = function (container, children, options) {
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
     identifierPrefix = "",
+    onUncaughtError = defaultOnUncaughtError,
+    onCaughtError = defaultOnCaughtError,
     onRecoverableError = defaultOnRecoverableError,
     transitionCallbacks = null,
     formState = null;
@@ -17215,6 +17232,9 @@ exports.hydrateRoot = function (container, children, options) {
       (concurrentUpdatesByDefaultOverride = !0),
     void 0 !== options.identifierPrefix &&
       (identifierPrefix = options.identifierPrefix),
+    void 0 !== options.onUncaughtError &&
+      (onUncaughtError = options.onUncaughtError),
+    void 0 !== options.onCaughtError && (onCaughtError = options.onCaughtError),
     void 0 !== options.onRecoverableError &&
       (onRecoverableError = options.onRecoverableError),
     void 0 !== options.unstable_transitionCallbacks &&
@@ -17229,6 +17249,8 @@ exports.hydrateRoot = function (container, children, options) {
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState
@@ -17414,4 +17436,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-1cfb690a";
+exports.version = "19.0.0-www-modern-b404b762";

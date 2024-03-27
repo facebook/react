@@ -19347,26 +19347,6 @@ if (__DEV__) {
       };
     }
 
-    var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
-
-    if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== "function") {
-      throw new Error(
-        "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
-      );
-    }
-
-    function showErrorDialog(boundary, errorInfo) {
-      var capturedError = {
-        componentStack: errorInfo.stack !== null ? errorInfo.stack : "",
-        error: errorInfo.value,
-        errorBoundary:
-          boundary !== null && boundary.tag === ClassComponent
-            ? boundary.stateNode
-            : null
-      };
-      return ReactFiberErrorDialogWWW.showErrorDialog(capturedError);
-    }
-
     var reportGlobalError =
       typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
         ? // emulating an uncaught JavaScript error.
@@ -19406,86 +19386,111 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue;
-    function logCapturedError(boundary, errorInfo) {
-      try {
-        var logError = showErrorDialog(boundary, errorInfo); // Allow injected showErrorDialog() to prevent default console.error logging.
-        // This enables renderers like ReactNative to better manage redbox behavior.
+    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // Side-channel since I'm not sure we want to make this part of the public API
 
-        if (logError === false) {
-          return;
+    var componentName = null;
+    var errorBoundaryName = null;
+    function defaultOnUncaughtError(error, errorInfo) {
+      // Overriding this can silence these warnings e.g. for tests.
+      // See https://github.com/facebook/react/pull/13384
+      // For uncaught root errors we report them as uncaught to the browser's
+      // onerror callback. This won't have component stacks and the error addendum.
+      // So we add those into a separate console.warn.
+      reportGlobalError(error);
+
+      {
+        var componentStack =
+          errorInfo.componentStack != null ? errorInfo.componentStack : "";
+        var componentNameMessage = componentName
+          ? "An error occurred in the <" + componentName + "> component:"
+          : "An error occurred in one of your React components:";
+        console["warn"](
+          "%s\n%s\n\n%s",
+          componentNameMessage,
+          componentStack || "",
+          "Consider adding an error boundary to your tree to customize error handling behavior.\n" +
+            "Visit https://react.dev/link/error-boundaries to learn more about error boundaries."
+        );
+      }
+    }
+    function defaultOnCaughtError(error, errorInfo) {
+      // Overriding this can silence these warnings e.g. for tests.
+      // See https://github.com/facebook/react/pull/13384
+      // Caught by error boundary
+      {
+        var componentStack =
+          errorInfo.componentStack != null ? errorInfo.componentStack : "";
+        var componentNameMessage = componentName
+          ? "The above error occurred in the <" + componentName + "> component:"
+          : "The above error occurred in one of your React components:"; // In development, we provide our own message which includes the component stack
+        // in addition to the error.
+        // Don't transform to our wrapper
+
+        console["error"](
+          "%o\n\n%s\n%s\n\n%s",
+          error,
+          componentNameMessage,
+          componentStack,
+          "React will try to recreate this component tree from scratch " +
+            ("using the error boundary you provided, " +
+              (errorBoundaryName || "Anonymous") +
+              ".")
+        );
+      }
+    }
+    function defaultOnRecoverableError(error, errorInfo) {
+      reportGlobalError(error);
+    }
+    function logUncaughtError(root, errorInfo) {
+      try {
+        if (true) {
+          componentName = errorInfo.source
+            ? getComponentNameFromFiber(errorInfo.source)
+            : null;
+          errorBoundaryName = null;
         }
 
         var error = errorInfo.value;
 
-        if (boundary.tag === HostRoot) {
-          if (true && ReactCurrentActQueue$2.current !== null) {
-            // For uncaught errors inside act, we track them on the act and then
-            // rethrow them into the test.
-            ReactCurrentActQueue$2.thrownErrors.push(error);
-            return;
-          } // For uncaught root errors we report them as uncaught to the browser's
-          // onerror callback. This won't have component stacks and the error addendum.
-          // So we add those into a separate console.warn.
-
-          reportGlobalError(error);
-
-          if (true) {
-            var source = errorInfo.source;
-            var stack = errorInfo.stack;
-            var componentStack = stack !== null ? stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
-            // See https://github.com/facebook/react/pull/13384
-
-            var componentName = source
-              ? getComponentNameFromFiber(source)
-              : null;
-            var componentNameMessage = componentName
-              ? "An error occurred in the <" + componentName + "> component:"
-              : "An error occurred in one of your React components:";
-            console["warn"](
-              "%s\n%s\n\n%s",
-              componentNameMessage,
-              componentStack,
-              "Consider adding an error boundary to your tree to customize error handling behavior.\n" +
-                "Visit https://react.dev/link/error-boundaries to learn more about error boundaries."
-            );
-          }
-        } else {
-          // Caught by error boundary
-          if (true) {
-            var _source = errorInfo.source;
-            var _stack = errorInfo.stack;
-
-            var _componentStack = _stack !== null ? _stack : ""; // TODO: There's no longer a way to silence these warnings e.g. for tests.
-            // See https://github.com/facebook/react/pull/13384
-
-            var _componentName = _source
-              ? getComponentNameFromFiber(_source)
-              : null;
-
-            var _componentNameMessage = _componentName
-              ? "The above error occurred in the <" +
-                _componentName +
-                "> component:"
-              : "The above error occurred in one of your React components:";
-
-            var errorBoundaryName =
-              getComponentNameFromFiber(boundary) || "Anonymous"; // In development, we provide our own message which includes the component stack
-            // in addition to the error.
-            // Don't transform to our wrapper
-
-            console["error"](
-              "%o\n\n%s\n%s\n\n%s",
-              error,
-              _componentNameMessage,
-              _componentStack,
-              "React will try to recreate this component tree from scratch " +
-                ("using the error boundary you provided, " +
-                  errorBoundaryName +
-                  ".")
-            );
-          }
+        if (true && ReactCurrentActQueue$2.current !== null) {
+          // For uncaught errors inside act, we track them on the act and then
+          // rethrow them into the test.
+          ReactCurrentActQueue$2.thrownErrors.push(error);
+          return;
         }
+
+        var onUncaughtError = root.onUncaughtError;
+        onUncaughtError(error, {
+          componentStack: errorInfo.stack
+        });
+      } catch (e) {
+        // This method must not throw, or React internal state will get messed up.
+        // If console.error is overridden, or logCapturedError() shows a dialog that throws,
+        // we want to report this error outside of the normal stack as a last resort.
+        // https://github.com/facebook/react/issues/13188
+        setTimeout(function () {
+          throw e;
+        });
+      }
+    }
+    function logCaughtError(root, boundary, errorInfo) {
+      try {
+        if (true) {
+          componentName = errorInfo.source
+            ? getComponentNameFromFiber(errorInfo.source)
+            : null;
+          errorBoundaryName = getComponentNameFromFiber(boundary);
+        }
+
+        var error = errorInfo.value;
+        var onCaughtError = root.onCaughtError;
+        onCaughtError(error, {
+          componentStack: errorInfo.stack,
+          errorBoundary:
+            boundary.tag === ClassComponent
+              ? boundary.stateNode // This should always be the case as long as we only have class boundaries
+              : null
+        });
       } catch (e) {
         // This method must not throw, or React internal state will get messed up.
         // If console.error is overridden, or logCapturedError() shows a dialog that throws,
@@ -19497,7 +19502,7 @@ if (__DEV__) {
       }
     }
 
-    function createRootErrorUpdate(fiber, errorInfo, lane) {
+    function createRootErrorUpdate(root, errorInfo, lane) {
       var update = createUpdate(lane); // Unmount the root by rendering null.
 
       update.tag = CaptureUpdate; // Caution: React DevTools currently depends on this property
@@ -19508,15 +19513,19 @@ if (__DEV__) {
       };
 
       update.callback = function () {
-        logCapturedError(fiber, errorInfo);
+        logUncaughtError(root, errorInfo);
       };
 
       return update;
     }
 
-    function createClassErrorUpdate(fiber, errorInfo, lane) {
+    function createClassErrorUpdate(lane) {
       var update = createUpdate(lane);
       update.tag = CaptureUpdate;
+      return update;
+    }
+
+    function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
       var getDerivedStateFromError = fiber.type.getDerivedStateFromError;
 
       if (typeof getDerivedStateFromError === "function") {
@@ -19531,7 +19540,7 @@ if (__DEV__) {
             markFailedErrorBoundaryForHotReloading(fiber);
           }
 
-          logCapturedError(fiber, errorInfo);
+          logCaughtError(root, fiber, errorInfo);
         };
       }
 
@@ -19544,7 +19553,7 @@ if (__DEV__) {
             markFailedErrorBoundaryForHotReloading(fiber);
           }
 
-          logCapturedError(fiber, errorInfo);
+          logCaughtError(root, fiber, errorInfo);
 
           if (typeof getDerivedStateFromError !== "function") {
             // To preserve the preexisting retry behavior of error boundaries,
@@ -19577,8 +19586,6 @@ if (__DEV__) {
           }
         };
       }
-
-      return update;
     }
 
     function resetSuspendedComponent(sourceFiber, rootRenderLanes) {
@@ -19983,7 +19990,7 @@ if (__DEV__) {
             var lane = pickArbitraryLane(rootRenderLanes);
             workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
             var update = createRootErrorUpdate(
-              workInProgress,
+              workInProgress.stateNode,
               _errorInfo,
               lane
             );
@@ -20010,12 +20017,14 @@ if (__DEV__) {
 
               workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane); // Schedule the error boundary to re-render using updated state
 
-              var _update = createClassErrorUpdate(
-                workInProgress,
-                errorInfo,
-                _lane
-              );
+              var _update = createClassErrorUpdate(_lane);
 
+              initializeClassErrorUpdate(
+                _update,
+                root,
+                workInProgress,
+                errorInfo
+              );
               enqueueCapturedUpdate(workInProgress, _update);
               return false;
             }
@@ -21111,10 +21120,20 @@ if (__DEV__) {
             var lane = pickArbitraryLane(renderLanes);
             workInProgress.lanes = mergeLanes(workInProgress.lanes, lane); // Schedule the error boundary to re-render using updated state
 
-            var update = createClassErrorUpdate(
+            var root = getWorkInProgressRoot();
+
+            if (root === null) {
+              throw new Error(
+                "Expected a work-in-progress root. This is a bug in React. Please file an issue."
+              );
+            }
+
+            var update = createClassErrorUpdate(lane);
+            initializeClassErrorUpdate(
+              update,
+              root,
               workInProgress,
-              createCapturedValueAtFiber(error$1, workInProgress),
-              lane
+              createCapturedValueAtFiber(error$1, workInProgress)
             );
             enqueueCapturedUpdate(workInProgress, update);
             break;
@@ -33191,8 +33210,8 @@ if (__DEV__) {
       if (erroredWork === null) {
         // This is a fatal error
         workInProgressRootExitStatus = RootFatalErrored;
-        logCapturedError(
-          root.current,
+        logUncaughtError(
+          root,
           createCapturedValueAtFiber(thrownValue, root.current)
         );
         return;
@@ -34008,10 +34027,7 @@ if (__DEV__) {
       // caught by an error boundary. This is a fatal error, or panic condition,
       // because we've run out of ways to recover.
       workInProgressRootExitStatus = RootFatalErrored;
-      logCapturedError(
-        root.current,
-        createCapturedValueAtFiber(error, root.current)
-      ); // Set `workInProgress` to null. This represents advancing to the next
+      logUncaughtError(root, createCapturedValueAtFiber(error, root.current)); // Set `workInProgress` to null. This represents advancing to the next
       // sibling, or the parent if there are no siblings. But since the root
       // has no siblings nor a parent, we set it to null. Usually this is
       // handled by `completeUnitOfWork` or `unwindWork`, but since we're
@@ -34784,7 +34800,11 @@ if (__DEV__) {
 
     function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
       var errorInfo = createCapturedValueAtFiber(error, sourceFiber);
-      var update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane);
+      var update = createRootErrorUpdate(
+        rootFiber.stateNode,
+        errorInfo,
+        SyncLane
+      );
       var root = enqueueUpdate(rootFiber, update, SyncLane);
 
       if (root !== null) {
@@ -34825,10 +34845,11 @@ if (__DEV__) {
               !isAlreadyFailedLegacyErrorBoundary(instance))
           ) {
             var errorInfo = createCapturedValueAtFiber(error$1, sourceFiber);
-            var update = createClassErrorUpdate(fiber, errorInfo, SyncLane);
+            var update = createClassErrorUpdate(SyncLane);
             var root = enqueueUpdate(fiber, update, SyncLane);
 
             if (root !== null) {
+              initializeClassErrorUpdate(update, root, fiber, errorInfo);
               markRootUpdated(root, SyncLane);
               ensureRootIsScheduled(root);
             }
@@ -36641,6 +36662,8 @@ if (__DEV__) {
       tag,
       hydrate,
       identifierPrefix,
+      onUncaughtError,
+      onCaughtError,
       onRecoverableError,
       formState
     ) {
@@ -36669,6 +36692,8 @@ if (__DEV__) {
       this.entanglements = createLaneMap(NoLanes);
       this.hiddenUpdates = createLaneMap(null);
       this.identifierPrefix = identifierPrefix;
+      this.onUncaughtError = onUncaughtError;
+      this.onCaughtError = onCaughtError;
       this.onRecoverableError = onRecoverableError;
 
       {
@@ -36731,6 +36756,8 @@ if (__DEV__) {
       // them through the root constructor. Perhaps we should put them all into a
       // single type, like a DynamicHostConfig that is defined by the renderer.
       identifierPrefix,
+      onUncaughtError,
+      onCaughtError,
       onRecoverableError,
       transitionCallbacks,
       formState
@@ -36741,6 +36768,8 @@ if (__DEV__) {
         tag,
         hydrate,
         identifierPrefix,
+        onUncaughtError,
+        onCaughtError,
         onRecoverableError,
         formState
       );
@@ -36786,7 +36815,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-5757544c";
+    var ReactVersion = "19.0.0-www-modern-48f9be72";
 
     function createPortal$1(
       children,
@@ -36846,6 +36875,8 @@ if (__DEV__) {
       isStrictMode,
       concurrentUpdatesByDefaultOverride,
       identifierPrefix,
+      onUncaughtError,
+      onCaughtError,
       onRecoverableError,
       transitionCallbacks
     ) {
@@ -36860,6 +36891,8 @@ if (__DEV__) {
         isStrictMode,
         concurrentUpdatesByDefaultOverride,
         identifierPrefix,
+        onUncaughtError,
+        onCaughtError,
         onRecoverableError,
         transitionCallbacks,
         null
@@ -36874,6 +36907,8 @@ if (__DEV__) {
       isStrictMode,
       concurrentUpdatesByDefaultOverride,
       identifierPrefix,
+      onUncaughtError,
+      onCaughtError,
       onRecoverableError,
       transitionCallbacks,
       formState
@@ -36888,6 +36923,8 @@ if (__DEV__) {
         isStrictMode,
         concurrentUpdatesByDefaultOverride,
         identifierPrefix,
+        onUncaughtError,
+        onCaughtError,
         onRecoverableError,
         transitionCallbacks,
         formState
@@ -48641,10 +48678,6 @@ if (__DEV__) {
 
     var NotPendingTransition = NotPending;
 
-    function defaultOnRecoverableError(error, errorInfo) {
-      reportGlobalError(error);
-    } // $FlowFixMe[missing-this-annot]
-
     function ReactDOMRoot(internalRoot) {
       this._internalRoot = internalRoot;
     } // $FlowFixMe[prop-missing] found when upgrading Flow
@@ -48722,6 +48755,8 @@ if (__DEV__) {
       var isStrictMode = false;
       var concurrentUpdatesByDefaultOverride = false;
       var identifierPrefix = "";
+      var onUncaughtError = defaultOnUncaughtError;
+      var onCaughtError = defaultOnCaughtError;
       var onRecoverableError = defaultOnRecoverableError;
       var transitionCallbacks = null;
 
@@ -48760,6 +48795,14 @@ if (__DEV__) {
           identifierPrefix = options.identifierPrefix;
         }
 
+        if (options.onUncaughtError !== undefined) {
+          onUncaughtError = options.onUncaughtError;
+        }
+
+        if (options.onCaughtError !== undefined) {
+          onCaughtError = options.onCaughtError;
+        }
+
         if (options.onRecoverableError !== undefined) {
           onRecoverableError = options.onRecoverableError;
         }
@@ -48776,6 +48819,8 @@ if (__DEV__) {
         isStrictMode,
         concurrentUpdatesByDefaultOverride,
         identifierPrefix,
+        onUncaughtError,
+        onCaughtError,
         onRecoverableError,
         transitionCallbacks
       );
@@ -48820,6 +48865,8 @@ if (__DEV__) {
       var isStrictMode = false;
       var concurrentUpdatesByDefaultOverride = false;
       var identifierPrefix = "";
+      var onUncaughtError = defaultOnUncaughtError;
+      var onCaughtError = defaultOnCaughtError;
       var onRecoverableError = defaultOnRecoverableError;
       var transitionCallbacks = null;
       var formState = null;
@@ -48835,6 +48882,14 @@ if (__DEV__) {
 
         if (options.identifierPrefix !== undefined) {
           identifierPrefix = options.identifierPrefix;
+        }
+
+        if (options.onUncaughtError !== undefined) {
+          onUncaughtError = options.onUncaughtError;
+        }
+
+        if (options.onCaughtError !== undefined) {
+          onCaughtError = options.onCaughtError;
         }
 
         if (options.onRecoverableError !== undefined) {
@@ -48861,6 +48916,8 @@ if (__DEV__) {
         isStrictMode,
         concurrentUpdatesByDefaultOverride,
         identifierPrefix,
+        onUncaughtError,
+        onCaughtError,
         onRecoverableError,
         transitionCallbacks,
         formState
@@ -49491,6 +49548,14 @@ if (__DEV__) {
           }
         }
       }
+    }
+
+    var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
+
+    if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== "function") {
+      throw new Error(
+        "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
+      );
     }
 
     function createRoot(container, options) {
