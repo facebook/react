@@ -640,7 +640,8 @@ describe('ReactTestUtils', () => {
     }).toErrorDev(
       [
         '`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. ' +
-          'Import `act` from `react` instead of `react-dom/test-utils`.',
+          'Import `act` from `react` instead of `react-dom/test-utils`. ' +
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
       ],
       {withoutStack: true},
     );
