@@ -338,14 +338,14 @@ export function render(
   if (disableLegacyMode) {
     if (__DEV__) {
       console.error(
-        'ReactDOM.render is no longer supported in React 18. Use createRoot instead.',
+        'ReactDOM.render was removed in React 19. Use createRoot instead.',
       );
     }
     throw new Error('ReactDOM: Unsupported Legacy Mode API.');
   }
   if (__DEV__) {
     console.error(
-      'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
+      'ReactDOM.render has not been supported since React 18. Use createRoot ' +
         'instead. Until you switch to the new API, your app will behave as ' +
         "if it's running React 17. Learn " +
         'more: https://react.dev/link/switch-to-createroot',
@@ -386,15 +386,15 @@ export function unstable_renderSubtreeIntoContainer(
   if (disableLegacyMode) {
     if (__DEV__) {
       console.error(
-        'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported in React 18. Consider using a portal instead.',
+        'ReactDOM.unstable_renderSubtreeIntoContainer() was removed in React 19. Consider using a portal instead.',
       );
     }
     throw new Error('ReactDOM: Unsupported Legacy Mode API.');
   }
   if (__DEV__) {
     console.error(
-      'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
-        'in React 18. Consider using a portal instead. Until you switch to ' +
+      'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported ' +
+        'since React 18. Consider using a portal instead. Until you switch to ' +
         "the createRoot API, your app will behave as if it's running React " +
         '17. Learn more: https://react.dev/link/switch-to-createroot',
     );
