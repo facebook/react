@@ -3816,6 +3816,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   });
 
+  // @gate favorSafetyOverHydrationPerf
   it("falls back to client rendering when there's a text mismatch (direct text child)", async () => {
     function DirectTextChild({text}) {
       return <div>{text}</div>;
@@ -3845,6 +3846,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ]);
   });
 
+  // @gate favorSafetyOverHydrationPerf
   it("falls back to client rendering when there's a text mismatch (text child with siblings)", async () => {
     function Sibling() {
       return 'Sibling';

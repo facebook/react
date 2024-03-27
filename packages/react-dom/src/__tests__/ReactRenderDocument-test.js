@@ -276,6 +276,9 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
+      const favorSafetyOverHydrationPerf = gate(
+        flags => flags.favorSafetyOverHydrationPerf,
+      );
       expect(() => {
         ReactDOM.flushSync(() => {
           ReactDOMClient.hydrateRoot(
@@ -291,19 +294,29 @@ describe('rendering React components at document', () => {
           );
         });
       }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
+        favorSafetyOverHydrationPerf
+          ? [
+              'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
+            ]
+          : [
+              "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+            ],
         {
           withoutStack: 1,
         },
       );
 
-      assertLog([
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
-      ]);
-      expect(testDocument.body.innerHTML).toBe('Hello world');
+      assertLog(
+        favorSafetyOverHydrationPerf
+          ? [
+              "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+              'Log recoverable error: There was an error while hydrating.',
+            ]
+          : [],
+      );
+      expect(testDocument.body.innerHTML).toBe(
+        favorSafetyOverHydrationPerf ? 'Hello world' : 'Goodbye world',
+      );
     });
 
     it('should render w/ no markup to full document', async () => {

@@ -123,6 +123,9 @@ describe('ReactDOMServerHydration', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
+      const favorSafetyOverHydrationPerf = gate(
+        flags => flags.favorSafetyOverHydrationPerf,
+      );
       await expect(async () => {
         root = await act(() => {
           return ReactDOMClient.hydrateRoot(
@@ -139,14 +142,22 @@ describe('ReactDOMServerHydration', () => {
           );
         });
       }).toErrorDev(
-        [
-          'An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
+        favorSafetyOverHydrationPerf
+          ? [
+              'An error occurred during hydration. The server HTML was replaced with client content.',
+            ]
+          : [
+              " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+            ],
         {withoutStack: 1},
       );
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
-      expect(element.innerHTML).not.toEqual(lastMarkup);
+      if (favorSafetyOverHydrationPerf) {
+        expect(element.innerHTML).not.toEqual(lastMarkup);
+      } else {
+        expect(element.innerHTML).toEqual(lastMarkup);
+      }
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
@@ -212,6 +223,9 @@ describe('ReactDOMServerHydration', () => {
     const onFocusAfterHydration = jest.fn();
     element.firstChild.focus = onFocusBeforeHydration;
 
+    const favorSafetyOverHydrationPerf = gate(
+      flags => flags.favorSafetyOverHydrationPerf,
+    );
     await expect(async () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(
@@ -223,9 +237,13 @@ describe('ReactDOMServerHydration', () => {
         );
       });
     }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
+      favorSafetyOverHydrationPerf
+        ? [
+            'An error occurred during hydration. The server HTML was replaced with client content.',
+          ]
+        : [
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+          ],
       {withoutStack: 1},
     );
 
@@ -514,6 +532,9 @@ describe('ReactDOMServerHydration', () => {
     );
     domElement.innerHTML = markup;
 
+    const favorSafetyOverHydrationPerf = gate(
+      flags => flags.favorSafetyOverHydrationPerf,
+    );
     await expect(async () => {
       await act(() => {
         ReactDOMClient.hydrateRoot(
@@ -524,14 +545,22 @@ describe('ReactDOMServerHydration', () => {
           {onRecoverableError: error => {}},
         );
       });
-
-      expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
+      favorSafetyOverHydrationPerf
+        ? [
+            'An error occurred during hydration. The server HTML was replaced with client content.',
+          ]
+        : [
+            " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+          ],
       {withoutStack: 1},
     );
+
+    if (favorSafetyOverHydrationPerf) {
+      expect(domElement.innerHTML).not.toEqual(markup);
+    } else {
+      expect(domElement.innerHTML).toEqual(markup);
+    }
   });
 
   it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', async () => {
