@@ -51,13 +51,11 @@ describe('InvalidEventListeners', () => {
     }
     window.addEventListener('error', handleWindowError);
     try {
-      await act(() => {
-        node.dispatchEvent(
-          new MouseEvent('click', {
-            bubbles: true,
-          }),
-        );
-      });
+      node.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
     } finally {
       window.removeEventListener('error', handleWindowError);
     }

@@ -643,7 +643,7 @@ describe('ReactErrorBoundaries', () => {
       root.render(<BrokenComponentWillUnmount />);
     });
     await expect(async () => {
-      root.unmount();
+      await act(() => root.unmount());
     }).rejects.toThrow('Hello');
   });
 
@@ -2470,7 +2470,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('passes first error when two errors happen in commit', async () => {
+  it('passes an aggregate error when two errors happen in commit', async () => {
     const errors = [];
     let caughtError;
     class Parent extends React.Component {
@@ -2501,15 +2501,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('propagates uncaught error inside unbatched initial mount', async () => {
@@ -2561,15 +2560,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent value={2} />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('should warn if an error boundary with only componentDidCatch does not update state', async () => {

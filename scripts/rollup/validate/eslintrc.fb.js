@@ -40,6 +40,7 @@ module.exports = {
     // FB
     __DEV__: 'readonly',
     // Node.js Server Rendering
+    process: 'readonly',
     setImmediate: 'readonly',
     Buffer: 'readonly',
     // Trusted Types

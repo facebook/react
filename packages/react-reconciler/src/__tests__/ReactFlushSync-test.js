@@ -326,10 +326,12 @@ describe('ReactFlushSync', () => {
 
     let error;
     try {
-      ReactDOM.flushSync(() => {
-        root1.render(<Throws error={aahh} />);
-        root2.render(<Throws error={nooo} />);
-        root3.render(<Text text="aww" />);
+      await act(() => {
+        ReactDOM.flushSync(() => {
+          root1.render(<Throws error={aahh} />);
+          root2.render(<Throws error={nooo} />);
+          root3.render(<Text text="aww" />);
+        });
       });
     } catch (e) {
       error = e;

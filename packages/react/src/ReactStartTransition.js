@@ -15,6 +15,8 @@ import {
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
+import reportGlobalError from 'shared/reportGlobalError';
+
 export function startTransition(
   scope: () => void,
   options?: StartTransitionOptions,
@@ -51,10 +53,10 @@ export function startTransition(
         typeof returnValue.then === 'function'
       ) {
         callbacks.forEach(callback => callback(currentTransition, returnValue));
-        returnValue.then(noop, onError);
+        returnValue.then(noop, reportGlobalError);
       }
     } catch (error) {
-      onError(error);
+      reportGlobalError(error);
     } finally {
       warnAboutTransitionSubscriptions(prevTransition, currentTransition);
       ReactCurrentBatchConfig.transition = prevTransition;
@@ -91,16 +93,3 @@ function warnAboutTransitionSubscriptions(
 }
 
 function noop() {}
-
-// Use reportError, if it exists. Otherwise console.error. This is the same as
-// the default for onRecoverableError.
-const onError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };

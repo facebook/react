@@ -9,7 +9,6 @@ PropTypes = null
 React = null
 ReactDOM = null
 ReactDOMClient = null
-act = null
 
 featureFlags = require 'shared/ReactFeatureFlags'
 
@@ -49,15 +48,24 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'throws if no render function is defined', ->
     class Foo extends React.Component
+    caughtErrors = []
+    errorHandler = (event) ->
+      event.preventDefault()
+      caughtErrors.push(event.error)
+    window.addEventListener 'error', errorHandler;
     expect(->
-      expect(->
-        ReactDOM.flushSync ->
-          root.render React.createElement(Foo)
-      ).toThrow()
+      ReactDOM.flushSync ->
+        root.render React.createElement(Foo)
     ).toErrorDev([
       # A failed component renders twice in DEV in concurrent mode
       'No `render` method found on the Foo instance',
       'No `render` method found on the Foo instance',
+    ])
+    window.removeEventListener 'error', errorHandler;
+    expect(caughtErrors).toEqual([
+      expect.objectContaining(
+        message: expect.stringContaining('is not a function')
+      )
     ])
 
   it 'renders a simple stateless component with prop', ->

@@ -68,6 +68,8 @@ import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
 
+import reportGlobalError from 'shared/reportGlobalError';
+
 type DispatchListener = {
   instance: null | Fiber,
   listener: Function,
@@ -226,9 +228,6 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   ...mediaEventTypes,
 ]);
 
-let hasError: boolean = false;
-let caughtError: mixed = null;
-
 function executeDispatch(
   event: ReactSyntheticEvent,
   listener: Function,
@@ -238,12 +237,7 @@ function executeDispatch(
   try {
     listener(event);
   } catch (error) {
-    if (!hasError) {
-      hasError = true;
-      caughtError = error;
-    } else {
-      // TODO: Make sure this error gets logged somehow.
-    }
+    reportGlobalError(error);
   }
   event.currentTarget = null;
 }
@@ -284,13 +278,6 @@ export function processDispatchQueue(
     const {event, listeners} = dispatchQueue[i];
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
     //  event system doesn't use pooling.
-  }
-  // This would be a good time to rethrow if any of the event handlers threw.
-  if (hasError) {
-    const error = caughtError;
-    hasError = false;
-    caughtError = null;
-    throw error;
   }
 }
 

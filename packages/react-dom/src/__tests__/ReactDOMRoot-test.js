@@ -319,9 +319,11 @@ describe('ReactDOMRoot', () => {
     });
     container.innerHTML = '';
 
-    expect(() => {
-      root.unmount();
-    }).toThrow('The node to be removed is not a child of this node.');
+    await expect(async () => {
+      await act(() => {
+        root.unmount();
+      });
+    }).rejects.toThrow('The node to be removed is not a child of this node.');
   });
 
   it('opts-in to concurrent default updates', async () => {

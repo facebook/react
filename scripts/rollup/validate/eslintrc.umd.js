@@ -57,6 +57,9 @@ module.exports = {
     // Flight
     Promise: 'readonly',
 
+    // Node Feature Detection
+    process: 'readonly',
+
     // Temp
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',

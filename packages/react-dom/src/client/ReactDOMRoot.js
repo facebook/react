@@ -70,17 +70,11 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 
-/* global reportError */
-const defaultOnRecoverableError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
+import reportGlobalError from 'shared/reportGlobalError';
+
+function defaultOnRecoverableError(error: mixed, errorInfo: any) {
+  reportGlobalError(error);
+}
 
 // $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {

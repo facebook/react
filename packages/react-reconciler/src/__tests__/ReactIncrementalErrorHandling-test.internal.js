@@ -387,7 +387,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // The work loop unwound to the nearest error boundary. React will try
     // to render one more time, synchronously. Flush just one unit of work to
     // demonstrate that this render is synchronous.
-    expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
+    Scheduler.unstable_flushNumberOfYields(1);
     assertLog(['Parent', 'BadRender', 'commit']);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -425,10 +425,8 @@ describe('ReactIncrementalErrorHandling', () => {
     // Expire the render midway through
     Scheduler.unstable_advanceTime(10000);
 
-    expect(() => {
-      Scheduler.unstable_flushExpired();
-      ReactNoop.flushSync();
-    }).toThrow('Oops');
+    Scheduler.unstable_flushExpired();
+    ReactNoop.flushSync();
 
     assertLog([
       // The render expired, but we shouldn't throw out the partial work.
@@ -769,15 +767,14 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    }).toThrow('Hello');
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(
+        <RethrowErrorBoundary>
+          <BrokenRender />
+        </RethrowErrorBoundary>,
+      );
+    });
+
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -809,18 +806,17 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
-        );
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    }).toThrow('Hello');
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(
+        <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
+      );
+      ReactNoop.render(
+        <RethrowErrorBoundary>
+          <BrokenRender />
+        </RethrowErrorBoundary>,
+      );
+    });
+
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -1120,14 +1116,15 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildrenAsJSX('e')).toEqual(null);
 
     ReactNoop.renderToRootWithID(<BrokenRender label="a" />, 'a');
+    await waitForThrow('a');
+
     ReactNoop.renderToRootWithID(<span prop="b:6" />, 'b');
     ReactNoop.renderToRootWithID(<BrokenRender label="c" />, 'c');
+    await waitForThrow('c');
+
     ReactNoop.renderToRootWithID(<span prop="d:6" />, 'd');
     ReactNoop.renderToRootWithID(<BrokenRender label="e" />, 'e');
     ReactNoop.renderToRootWithID(<span prop="f:6" />, 'f');
-
-    await waitForThrow('a');
-    await waitForThrow('c');
     await waitForThrow('e');
 
     await waitForAll([]);
@@ -1369,8 +1366,10 @@ describe('ReactIncrementalErrorHandling', () => {
 
     let aggregateError;
     try {
-      ReactNoop.flushSync(() => {
-        inst.setState({fail: true});
+      await act(() => {
+        ReactNoop.flushSync(() => {
+          inst.setState({fail: true});
+        });
       });
     } catch (e) {
       aggregateError = e;
@@ -1387,9 +1386,10 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // React threw both errors as a single AggregateError
     const errors = aggregateError.errors;
-    expect(errors.length).toBe(2);
+    expect(errors.length).toBe(3);
     expect(errors[0].message).toBe('Hello.');
     expect(errors[1].message).toBe('One does not simply unmount me.');
+    expect(errors[2].message).toBe('One does not simply unmount me.');
   });
 
   it('does not interrupt unmounting if detaching a ref throws', async () => {
@@ -1878,6 +1878,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // accident) a render phase triggered from userspace.
 
     spyOnDev(console, 'error').mockImplementation(() => {});
+    spyOnDev(console, 'warn').mockImplementation(() => {});
 
     let numberOfThrows = 0;
 
@@ -1916,12 +1917,13 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(numberOfThrows < 100).toBe(true);
 
     if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][0]).toContain(
         'Cannot update a component (`%s`) while rendering a different component',
       );
-      expect(console.error.mock.calls[1][2]).toContain(
-        'The above error occurred in the <App> component',
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn.mock.calls[0][1]).toContain(
+        'An error occurred in the <App> component',
       );
     }
   });

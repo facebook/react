@@ -886,7 +886,7 @@ describe('ReactLegacyUpdates', () => {
   });
 
   // @gate !disableLegacyMode
-  it('throws in setState if the update callback is not a function', () => {
+  it('throws in setState if the update callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -903,37 +903,52 @@ describe('ReactLegacyUpdates', () => {
     let container = document.createElement('div');
     let component = ReactDOM.render(<A />, container);
 
-    expect(() => {
-      expect(() => component.setState({}, 'no')).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          component.setState({}, 'no');
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: no',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
+    }).toErrorDev(
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+      {withoutStack: 1},
     );
+
     container = document.createElement('div');
     component = ReactDOM.render(<A />, container);
-    expect(() => {
-      expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          component.setState({}, {foo: 'bar'});
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: [object Object].',
+      {withoutStack: 1},
     );
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
     component = ReactDOM.render(<A />, container);
-    expect(() => component.setState({}, new Foo())).toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.setState({}, new Foo());
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
   });
 
   // @gate !disableLegacyMode
-  it('throws in forceUpdate if the update callback is not a function', () => {
+  it('throws in forceUpdate if the update callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -950,30 +965,44 @@ describe('ReactLegacyUpdates', () => {
     let container = document.createElement('div');
     let component = ReactDOM.render(<A />, container);
 
-    expect(() => {
-      expect(() => component.forceUpdate('no')).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          component.forceUpdate('no');
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: no',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
+    }).toErrorDev(
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+      {withoutStack: 1},
     );
     container = document.createElement('div');
     component = ReactDOM.render(<A />, container);
-    expect(() => {
-      expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          component.forceUpdate({foo: 'bar'});
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: [object Object].',
+      {withoutStack: 1},
     );
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
     component = ReactDOM.render(<A />, container);
-    expect(() => component.forceUpdate(new Foo())).toThrowError(
+    await expect(async () => {
+      await act(() => {
+        component.forceUpdate(new Foo());
+      });
+    }).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
@@ -1377,7 +1406,7 @@ describe('ReactLegacyUpdates', () => {
   });
 
   // @gate !disableLegacyMode
-  it('resets the update counter for unrelated updates', () => {
+  it('resets the update counter for unrelated updates', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
 
@@ -1397,9 +1426,11 @@ describe('ReactLegacyUpdates', () => {
     }
 
     let limit = 55;
-    expect(() => {
-      ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
+      });
+    }).rejects.toThrow('Maximum');
 
     // Verify that we don't go over the limit if these updates are unrelated.
     limit -= 10;
@@ -1411,14 +1442,16 @@ describe('ReactLegacyUpdates', () => {
     expect(container.textContent).toBe(limit.toString());
 
     limit += 10;
-    expect(() => {
-      ref.current.setState({step: 0});
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ref.current.setState({step: 0});
+      });
+    }).rejects.toThrow('Maximum');
     expect(ref.current).toBe(null);
   });
 
   // @gate !disableLegacyMode
-  it('does not fall into an infinite update loop', () => {
+  it('does not fall into an infinite update loop', async () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
       componentDidMount() {
@@ -1438,13 +1471,15 @@ describe('ReactLegacyUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<NonTerminating />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      });
+    }).rejects.toThrow('Maximum');
   });
 
   // @gate !disableLegacyMode
-  it('does not fall into an infinite update loop with useLayoutEffect', () => {
+  it('does not fall into an infinite update loop with useLayoutEffect', async () => {
     function NonTerminating() {
       const [step, setStep] = React.useState(0);
       React.useLayoutEffect(() => {
@@ -1454,13 +1489,15 @@ describe('ReactLegacyUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<NonTerminating />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      });
+    }).rejects.toThrow('Maximum');
   });
 
   // @gate !disableLegacyMode
-  it('can recover after falling into an infinite update loop', () => {
+  it('can recover after falling into an infinite update loop', async () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
       componentDidMount() {
@@ -1485,23 +1522,27 @@ describe('ReactLegacyUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<NonTerminating />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      });
+    }).rejects.toThrow('Maximum');
 
     ReactDOM.render(<Terminating />, container);
     expect(container.textContent).toBe('1');
 
-    expect(() => {
-      ReactDOM.render(<NonTerminating />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      });
+    }).rejects.toThrow('Maximum');
 
     ReactDOM.render(<Terminating />, container);
     expect(container.textContent).toBe('1');
   });
 
   // @gate !disableLegacyMode
-  it('does not fall into mutually recursive infinite update loop with same container', () => {
+  it('does not fall into mutually recursive infinite update loop with same container', async () => {
     // Note: this test would fail if there were two or more different roots.
 
     class A extends React.Component {
@@ -1523,13 +1564,15 @@ describe('ReactLegacyUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<A />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<A />, container);
+      });
+    }).rejects.toThrow('Maximum');
   });
 
   // @gate !disableLegacyMode
-  it('does not fall into an infinite error loop', () => {
+  it('does not fall into an infinite error loop', async () => {
     function BadRender() {
       throw new Error('error');
     }
@@ -1557,9 +1600,11 @@ describe('ReactLegacyUpdates', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<NonTerminating />, container);
-    }).toThrow('Maximum');
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      });
+    }).rejects.toThrow('Maximum');
   });
 
   // @gate !disableLegacyMode

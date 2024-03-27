@@ -12,11 +12,12 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
-
+let act;
 describe('ReactDOMLegacyFiber', () => {
   let container;
 
   beforeEach(() => {
+    act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -656,18 +657,20 @@ describe('ReactDOMLegacyFiber', () => {
   });
 
   // @gate !disableLegacyMode
-  it('should unwind namespaces on uncaught errors', () => {
+  it('should unwind namespaces on uncaught errors', async () => {
     function BrokenRender() {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      assertNamespacesMatch(
-        <svg {...expectSVG}>
-          <BrokenRender />
-        </svg>,
-      );
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        assertNamespacesMatch(
+          <svg {...expectSVG}>
+            <BrokenRender />
+          </svg>,
+        );
+      });
+    }).rejects.toThrow('Hello');
     assertNamespacesMatch(<div {...expectHTML} />);
   });
 
@@ -1222,7 +1225,7 @@ describe('ReactDOMLegacyFiber', () => {
   });
 
   // @gate !disableLegacyMode
-  it('should warn when replacing a container which was manually updated outside of React', () => {
+  it('should warn when replacing a container which was manually updated outside of React', async () => {
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1232,18 +1235,20 @@ describe('ReactDOMLegacyFiber', () => {
     // It's an error of type 'NotFoundError' with no message
     container.innerHTML = '<div>MEOW.</div>';
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<div key="2">baz</div>, container),
-      ).toErrorDev(
-        '' +
-          'It looks like the React-rendered content of this container was ' +
-          'removed without using React. This is not supported and will ' +
-          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-          'to empty a container.',
-        {withoutStack: true},
-      );
-    }).toThrowError();
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<div key="2">baz</div>, container);
+        });
+      }).rejects.toThrow('The node to be removed is not a child of this node.');
+    }).toErrorDev(
+      '' +
+        'It looks like the React-rendered content of this container was ' +
+        'removed without using React. This is not supported and will ' +
+        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+        'to empty a container.',
+      {withoutStack: true},
+    );
   });
 
   // @gate !disableLegacyMode

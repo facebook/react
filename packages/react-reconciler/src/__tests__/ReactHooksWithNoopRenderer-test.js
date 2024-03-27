@@ -2077,14 +2077,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      await act(async () => {
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 0', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-      });
+      await expect(async () => {
+        await act(async () => {
+          ReactNoop.render(<Counter count={0} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 0', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+        });
+      }).rejects.toThrow('Oops');
 
       assertLog([
         'Mount A [0]',
@@ -2107,7 +2108,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         useEffect(() => {
           if (props.count === 1) {
             Scheduler.log('Oops!');
-            throw new Error('Oops!');
+            throw new Error('Oops error!');
           }
           Scheduler.log(`Mount B [${props.count}]`);
           return () => {
@@ -2126,22 +2127,27 @@ describe('ReactHooksWithNoopRenderer', () => {
         assertLog(['Mount A [0]', 'Mount B [0]']);
       });
 
-      await act(async () => {
-        // This update will trigger an error
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 1', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-        assertLog(['Unmount A [0]', 'Unmount B [0]', 'Mount A [1]', 'Oops!']);
-        expect(ReactNoop).toMatchRenderedOutput(null);
-      });
-      assertLog([
-        // Clean up effect A runs passively on unmount.
-        // There's no effect B to clean-up, because it never mounted.
-        'Unmount A [1]',
-      ]);
+      await expect(async () => {
+        await act(async () => {
+          // This update will trigger an error
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 1', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
+          ReactNoop.flushPassiveEffects();
+          assertLog([
+            'Unmount A [0]',
+            'Unmount B [0]',
+            'Mount A [1]',
+            'Oops!',
+            // Clean up effect A runs passively on unmount.
+            // There's no effect B to clean-up, because it never mounted.
+            'Unmount A [1]',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput(null);
+        });
+      }).rejects.toThrow('Oops error!');
     });
 
     it('handles errors in destroy on update', async () => {
@@ -2151,7 +2157,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           return () => {
             Scheduler.log('Oops!');
             if (props.count === 0) {
-              throw new Error('Oops!');
+              throw new Error('Oops error!');
             }
           };
         });
@@ -2174,26 +2180,34 @@ describe('ReactHooksWithNoopRenderer', () => {
         assertLog(['Mount A [0]', 'Mount B [0]']);
       });
 
-      await act(async () => {
-        // This update will trigger an error during passive effect unmount
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 1', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+      await expect(async () => {
+        await act(async () => {
+          // This update will trigger an error during passive effect unmount
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 1', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
+          ReactNoop.flushPassiveEffects();
 
-        // This branch enables a feature flag that flushes all passive destroys in a
-        // separate pass before flushing any passive creates.
-        // A result of this two-pass flush is that an error thrown from unmount does
-        // not block the subsequent create functions from being run.
-        assertLog(['Oops!', 'Unmount B [0]', 'Mount A [1]', 'Mount B [1]']);
-      });
+          // This branch enables a feature flag that flushes all passive destroys in a
+          // separate pass before flushing any passive creates.
+          // A result of this two-pass flush is that an error thrown from unmount does
+          // not block the subsequent create functions from being run.
+          assertLog([
+            'Oops!',
+            'Unmount B [0]',
+            'Mount A [1]',
+            'Mount B [1]',
+            // <Counter> gets unmounted because an error is thrown above.
+            // The remaining destroy functions are run later on unmount, since they're passive.
+            // In this case, one of them throws again (because of how the test is written).
+            'Oops!',
+            'Unmount B [1]',
+          ]);
+        });
+      }).rejects.toThrow('Oops error!');
 
-      // <Counter> gets unmounted because an error is thrown above.
-      // The remaining destroy functions are run later on unmount, since they're passive.
-      // In this case, one of them throws again (because of how the test is written).
-      assertLog(['Oops!', 'Unmount B [1]']);
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
@@ -3805,7 +3819,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           await waitForThrow(
             'Rendered more hooks than during the previous render.',
           );
-          assertLog([]);
+          assertLog(['Unmount A']);
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
