@@ -887,8 +887,12 @@ function parseTrimmedStack(rootStack: any, hook: HookLogEntry) {
     primitiveIndex === -1 ||
     rootIndex - primitiveIndex < 2
   ) {
-    // Something went wrong. Give up.
-    return null;
+    if (primitiveIndex === -1) {
+      // Something went wrong. Give up.
+      return [null, null];
+    } else {
+      return [hookStack[primitiveIndex - 1], null];
+    }
   }
   return [
     hookStack[primitiveIndex - 1],
@@ -927,16 +931,17 @@ function buildTree(
   for (let i = 0; i < readHookLog.length; i++) {
     const hook = readHookLog[i];
     const parseResult = parseTrimmedStack(rootStack, hook);
+    const primitiveFrame = parseResult[0];
+    const stack = parseResult[1];
     let displayName = hook.displayName;
-    if (parseResult !== null) {
-      const [primitiveFrame, stack] = parseResult;
-      if (hook.displayName === null) {
-        displayName =
-          parseHookName(primitiveFrame.functionName) ||
-          // Older versions of React do not have sourcemaps.
-          // In those versions there was always a 1:1 mapping between wrapper and dispatcher method.
-          parseHookName(hook.dispatcherMethodName);
-      }
+    if (displayName === null && primitiveFrame !== null) {
+      displayName =
+        parseHookName(primitiveFrame.functionName) ||
+        // Older versions of React do not have sourcemaps.
+        // In those versions there was always a 1:1 mapping between wrapper and dispatcher method.
+        parseHookName(hook.dispatcherMethodName);
+    }
+    if (stack !== null) {
       // Note: The indices 0 <= n < length-1 will contain the names.
       // The indices 1 <= n < length will contain the source locations.
       // That's why we get the name from n - 1 and don't check the source
@@ -1016,7 +1021,6 @@ function buildTree(
       fileName: null,
       columnNumber: null,
     };
-    const stack = parseResult !== null ? parseResult[1] : null;
     if (stack && stack.length >= 1) {
       const stackFrame = stack[0];
       hookSource.lineNumber = stackFrame.lineNumber;
