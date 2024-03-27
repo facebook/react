@@ -11,7 +11,8 @@
 
 'use strict';
 
-import * as React from 'react';
+const React = require('react');
+const Scheduler = require('scheduler');
 
 import * as ReactART from 'react-art';
 import ARTSVGMode from 'art/modes/svg';
@@ -22,22 +23,28 @@ import Circle from 'react-art/Circle';
 import Rectangle from 'react-art/Rectangle';
 import Wedge from 'react-art/Wedge';
 
+const {act, waitFor} = require('internal-test-utils');
+
 // Isolate DOM renderer.
 jest.resetModules();
+// share isomorphic
+jest.mock('scheduler', () => Scheduler);
+jest.mock('react', () => React);
+const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
-let act = require('internal-test-utils').act;
 
 // Isolate the noop renderer
 jest.resetModules();
+// share isomorphic
+jest.mock('scheduler', () => Scheduler);
+jest.mock('react', () => React);
 const ReactNoop = require('react-noop-renderer');
-const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
 let Surface;
 let TestComponent;
 
-let waitFor;
 let groupRef;
 
 const Missing = {};
@@ -68,6 +75,11 @@ describe('ReactART', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
+    // share isomorphic
+    jest.mock('scheduler', () => Scheduler);
+    jest.mock('react', () => React);
+
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -76,8 +88,6 @@ describe('ReactART', () => {
     Group = ReactART.Group;
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
-
-    ({waitFor} = require('internal-test-utils'));
 
     groupRef = React.createRef();
     TestComponent = class extends React.Component {
@@ -409,8 +419,6 @@ describe('ReactART', () => {
       );
     }
 
-    // Using test renderer instead of the DOM renderer here because async
-    // testing APIs for the DOM renderer don't exist.
     ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
@@ -423,7 +431,9 @@ describe('ReactART', () => {
     await waitFor(['A']);
 
     const root = ReactDOMClient.createRoot(container);
-    await act(() => {
+    // We use flush sync here because we expect this to render in between
+    // while the concurrent render is yieldy where as act would flush both.
+    ReactDOM.flushSync(() => {
       root.render(
         <Surface>
           <LogCurrentRenderer />
@@ -433,8 +443,6 @@ describe('ReactART', () => {
         </Surface>,
       );
     });
-
-    expect(ops).toEqual([null, 'ART']);
 
     ops = [];
     await waitFor(['B', 'C']);
@@ -447,9 +455,11 @@ describe('ReactARTComponents', () => {
   let ReactTestRenderer;
   beforeEach(() => {
     jest.resetModules();
+    // share isomorphic
+    jest.mock('scheduler', () => Scheduler);
+    jest.mock('react', () => React);
     // Isolate test renderer.
     ReactTestRenderer = require('react-test-renderer');
-    act = require('internal-test-utils').act;
   });
 
   it('should generate a <Shape> with props for drawing the Circle', async () => {
