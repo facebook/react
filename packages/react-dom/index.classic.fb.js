@@ -20,11 +20,8 @@ Object.assign((Internals: any), {
 
 export {
   createPortal,
-  createRoot,
-  hydrateRoot,
   findDOMNode,
   flushSync,
-  render,
   unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_createEventHandle,
@@ -40,5 +37,7 @@ export {
   preinitModule,
   version,
 } from './src/client/ReactDOM';
+
+export {createRoot, hydrateRoot, render} from './src/client/ReactDOMRootFB';
 
 export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};

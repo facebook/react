@@ -7,12 +7,25 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
+import type {
+  RootType,
+  CreateRootOptions,
+  HydrateRootOptions,
+} from './ReactDOMRoot';
+
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+
 import type {
   Container,
   PublicInstance,
 } from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
+
+import {
+  createRoot as createRootImpl,
+  hydrateRoot as hydrateRootImpl,
+} from './ReactDOMRoot';
 
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
@@ -20,13 +33,11 @@ import {
   getInstanceFromNode,
   isContainerMarkedAsRoot,
   markContainerAsRoot,
-  unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {isValidContainerLegacy} from './ReactDOMRoot';
 import {
   DOCUMENT_NODE,
-  ELEMENT_NODE,
   COMMENT_NODE,
 } from 'react-dom-bindings/src/client/HTMLNodeType';
 
@@ -37,17 +48,102 @@ import {
   updateContainer,
   flushSync,
   getPublicRootInstance,
-  findHostInstance,
-  findHostInstanceWithWarning,
   defaultOnUncaughtError,
   defaultOnCaughtError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
-import getComponentNameFromType from 'shared/getComponentNameFromType';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+import assign from 'shared/assign';
+
+// Provided by www
+const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
+
+if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== 'function') {
+  throw new Error(
+    'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+  );
+}
+
+function wwwOnUncaughtError(
+  error: mixed,
+  errorInfo: {+componentStack?: ?string},
+): void {
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialogWWW.showErrorDialog({
+    errorBoundary: null,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnUncaughtError(error, errorInfo);
+}
+
+function wwwOnCaughtError(
+  error: mixed,
+  errorInfo: {
+    +componentStack?: ?string,
+    +errorBoundary?: ?React$Component<any, any>,
+  },
+): void {
+  const errorBoundary = errorInfo.errorBoundary;
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialogWWW.showErrorDialog({
+    errorBoundary,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnCaughtError(error, errorInfo);
+}
+
+export function createRoot(
+  container: Element | Document | DocumentFragment,
+  options?: CreateRootOptions,
+): RootType {
+  return createRootImpl(
+    container,
+    assign(
+      ({
+        onUncaughtError: wwwOnUncaughtError,
+        onCaughtError: wwwOnCaughtError,
+      }: any),
+      options,
+    ),
+  );
+}
+
+export function hydrateRoot(
+  container: Document | Element,
+  initialChildren: ReactNodeList,
+  options?: HydrateRootOptions,
+): RootType {
+  return hydrateRootImpl(
+    container,
+    initialChildren,
+    assign(
+      ({
+        onUncaughtError: wwwOnUncaughtError,
+        onCaughtError: wwwOnCaughtError,
+      }: any),
+      options,
+    ),
+  );
+}
 
 let topLevelUpdateWarnings;
 
@@ -126,8 +222,8 @@ function legacyCreateRootFromDOMContainer(
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
       '', // identifierPrefix
-      defaultOnUncaughtError,
-      defaultOnCaughtError,
+      wwwOnUncaughtError,
+      wwwOnCaughtError,
       noopOnRecoverableError,
       // TODO(luna) Support hydration later
       null,
@@ -162,8 +258,8 @@ function legacyCreateRootFromDOMContainer(
       false, // isStrictMode
       false, // concurrentUpdatesByDefaultOverride,
       '', // identifierPrefix
-      defaultOnUncaughtError,
-      defaultOnCaughtError,
+      wwwOnUncaughtError,
+      wwwOnCaughtError,
       noopOnRecoverableError,
       null, // transitionCallbacks
     );
@@ -232,38 +328,6 @@ function legacyRenderSubtreeIntoContainer(
     updateContainer(children, root, parentComponent, callback);
   }
   return getPublicRootInstance(root);
-}
-
-export function findDOMNode(
-  componentOrElement: Element | ?React$Component<any, any>,
-): null | Element | Text {
-  if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
-    if (owner !== null && owner.stateNode !== null) {
-      const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
-      if (!warnedAboutRefsInRender) {
-        console.error(
-          '%s is accessing findDOMNode inside its render(). ' +
-            'render() should be a pure function of props and state. It should ' +
-            'never access something that requires stale data from the previous ' +
-            'render, such as refs. Move this logic to componentDidMount and ' +
-            'componentDidUpdate instead.',
-          getComponentNameFromType(owner.type) || 'A component',
-        );
-      }
-      owner.stateNode._warnedAboutRefsInRender = true;
-    }
-  }
-  if (componentOrElement == null) {
-    return null;
-  }
-  if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
-    return (componentOrElement: any);
-  }
-  if (__DEV__) {
-    return findHostInstanceWithWarning(componentOrElement, 'findDOMNode');
-  }
-  return findHostInstance(componentOrElement);
 }
 
 export function render(
@@ -351,82 +415,4 @@ export function unstable_renderSubtreeIntoContainer(
     false,
     callback,
   );
-}
-
-export function unmountComponentAtNode(container: Container): boolean {
-  if (disableLegacyMode) {
-    if (__DEV__) {
-      console.error(
-        'unmountComponentAtNode was removed in React 19. Use root.unmount() instead.',
-      );
-    }
-    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
-  }
-  if (!isValidContainerLegacy(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (__DEV__) {
-    const isModernRoot =
-      isContainerMarkedAsRoot(container) &&
-      container._reactRootContainer === undefined;
-    if (isModernRoot) {
-      console.error(
-        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
-      );
-    }
-  }
-
-  if (container._reactRootContainer) {
-    if (__DEV__) {
-      const rootEl = getReactRootElementInContainer(container);
-      const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
-      if (renderedByDifferentReact) {
-        console.error(
-          "unmountComponentAtNode(): The node you're attempting to unmount " +
-            'was rendered by another copy of React.',
-        );
-      }
-    }
-
-    // Unmount should not be batched.
-    flushSync(() => {
-      legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-        // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
-        container._reactRootContainer = null;
-        unmarkContainerAsRoot(container);
-      });
-    });
-    // If you call unmountComponentAtNode twice in quick succession, you'll
-    // get `true` twice. That's probably fine?
-    return true;
-  } else {
-    if (__DEV__) {
-      const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
-
-      // Check if the container itself is a React root node.
-      const isContainerReactRoot =
-        container.nodeType === ELEMENT_NODE &&
-        isValidContainerLegacy(container.parentNode) &&
-        // $FlowFixMe[prop-missing]
-        // $FlowFixMe[incompatible-use]
-        !!container.parentNode._reactRootContainer;
-
-      if (hasNonRootReactChild) {
-        console.error(
-          "unmountComponentAtNode(): The node you're attempting to unmount " +
-            'was rendered by React and is not a top-level container. %s',
-          isContainerReactRoot
-            ? 'You may have accidentally passed in a React root node instead ' +
-                'of its container.'
-            : 'Instead, have the parent component update its state and ' +
-                'rerender in order to remove this component.',
-        );
-      }
-    }
-
-    return false;
-  }
 }

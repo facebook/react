@@ -93,7 +93,11 @@ describe('ReactFiberHostContext', () => {
       ConcurrentRoot,
       null,
       false,
+      null,
       '',
+      () => {},
+      () => {},
+      () => {},
       null,
     );
     act(() => {

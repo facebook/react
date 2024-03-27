@@ -266,7 +266,10 @@ import {
   createCapturedValueAtFiber,
   type CapturedValue,
 } from './ReactCapturedValue';
-import {createClassErrorUpdate} from './ReactFiberThrow';
+import {
+  createClassErrorUpdate,
+  initializeClassErrorUpdate,
+} from './ReactFiberThrow';
 import is from 'shared/objectIs';
 import {
   getForksAtLevel,
@@ -1179,10 +1182,18 @@ function updateClassComponent(
         const lane = pickArbitraryLane(renderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         // Schedule the error boundary to re-render using updated state
-        const update = createClassErrorUpdate(
+        const root: FiberRoot | null = getWorkInProgressRoot();
+        if (root === null) {
+          throw new Error(
+            'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+          );
+        }
+        const update = createClassErrorUpdate(lane);
+        initializeClassErrorUpdate(
+          update,
+          root,
           workInProgress,
           createCapturedValueAtFiber(error, workInProgress),
-          lane,
         );
         enqueueCapturedUpdate(workInProgress, update);
         break;

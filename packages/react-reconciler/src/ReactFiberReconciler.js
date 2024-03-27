@@ -111,6 +111,11 @@ export {
   observeVisibleRects,
 } from './ReactTestSelectors';
 export {startHostTransition} from './ReactFiberHooks';
+export {
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
+} from './ReactFiberErrorLogger';
 
 type OpaqueRoot = FiberRoot;
 
@@ -249,7 +254,21 @@ export function createContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
@@ -263,6 +282,8 @@ export function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     null,
@@ -279,7 +300,21 @@ export function createHydrationContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -293,6 +328,8 @@ export function createHydrationContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState,

@@ -232,36 +232,6 @@ const forks = Object.freeze({
     }
   },
 
-  // Different dialogs for caught errors.
-  './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
-    bundleType,
-    entry
-  ) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        // Use the www fork which shows an error dialog.
-        return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
-      case RN_OSS_DEV:
-      case RN_OSS_PROD:
-      case RN_OSS_PROFILING:
-      case RN_FB_DEV:
-      case RN_FB_PROD:
-      case RN_FB_PROFILING:
-        switch (entry) {
-          case 'react-native-renderer':
-          case 'react-native-renderer/fabric':
-            // Use the RN fork which plays well with redbox.
-            return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
-          default:
-            return null;
-        }
-      default:
-        return null;
-    }
-  },
-
   './packages/react-reconciler/src/ReactFiberConfig.js': (
     bundleType,
     entry,
