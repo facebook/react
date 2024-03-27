@@ -267,6 +267,7 @@ export default [
   "Select elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled select element and remove one of these props. More info: https://react.dev/link/controlled-components",
   "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
   "Should have found matching lanes. This is a bug in React.",
+  "Should not have matched a non HostText fiber to a Text node. This is a bug in React.",
   "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect().",
   "String refs are no longer supported.",
   "Style property values shouldn't contain a semicolon. Try \"%s: %s\" instead.",
