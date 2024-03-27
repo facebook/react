@@ -632,4 +632,18 @@ describe('ReactTestUtils', () => {
         'See https://react.dev/warnings/react-dom-test-utils for more info.',
     );
   });
+
+  // @gate __DEV__
+  it('warns when using `act`', () => {
+    expect(() => {
+      ReactTestUtils.act(() => {});
+    }).toErrorDev(
+      [
+        '`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. ' +
+          'Import `act` from `react` instead of `react-dom/test-utils`. ' +
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
+      ],
+      {withoutStack: true},
+    );
+  });
 });
