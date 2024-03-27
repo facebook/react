@@ -36,7 +36,7 @@ const ignoredPathsListedInPrettierIgnore = prettierIgnore
   .toString()
   .replace(/\r\n/g, '\n')
   .split('\n')
-  .filter(line => !!line && !line.startsWith('#'));
+  .filter(line => !line && !line.startsWith('#'));
 
 const ignoredPathsListedInPrettierIgnoreInGlobFormat =
   ignoredPathsListedInPrettierIgnore.map(ignoredPath => {
