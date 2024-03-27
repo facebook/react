@@ -921,10 +921,22 @@ if (__DEV__) {
     var getNodeFromInstance = EventInternals[1];
     var getFiberCurrentPropsFromNode = EventInternals[2];
     var enqueueStateRestore = EventInternals[3];
-    var restoreStateIfNeeded = EventInternals[4]; // TODO: Add a warning if this API is accessed with advice to switch to
-    // importing directly from the React package instead.
+    var restoreStateIfNeeded = EventInternals[4];
+    var didWarnAboutUsingAct = false;
 
-    var act = React.act;
+    function act(callback) {
+      if (didWarnAboutUsingAct === false) {
+        didWarnAboutUsingAct = true;
+
+        error(
+          "`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. " +
+            "Import `act` from `react` instead of `react-dom/test-utils`. " +
+            "See https://react.dev/warnings/react-dom-test-utils for more info."
+        );
+      }
+
+      return React.act(callback);
+    }
 
     function Event(suffix) {}
 
