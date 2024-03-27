@@ -39,6 +39,7 @@ export const {
   useModernStrictMode,
   enableRefAsProp,
   enableNewBooleanProps,
+  favorSafetyOverHydrationPerf,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -59,8 +60,6 @@ export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableAsyncActions = true;
-
-export const favorSafetyOverHydrationPerf = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
