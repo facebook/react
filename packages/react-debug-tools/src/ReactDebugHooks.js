@@ -1004,11 +1004,11 @@ function buildTree(
 
     // For the time being, only State and Reducer hooks support runtime overrides.
     const isStateEditable = primitive === 'Reducer' || primitive === 'State';
-
+    const name = displayName || primitive;
     const levelChild: HooksNode = {
       id,
       isStateEditable,
-      name: displayName || 'Unknown',
+      name: name,
       value: hook.value,
       subHooks: [],
       debugInfo: debugInfo,
