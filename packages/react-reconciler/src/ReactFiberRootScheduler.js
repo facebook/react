@@ -185,8 +185,8 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
         if (includesSyncLane(nextLanes)) {
           // This root has pending sync work. Flush it now.
           try {
-            didPerformSomeWork = true;
             performSyncWorkOnRoot(root, nextLanes);
+            didPerformSomeWork = true;
           } catch (error) {
             // Collect errors so we can rethrow them at the end
             if (errors === null) {
