@@ -82,7 +82,10 @@ let hydrationErrors: Array<CapturedValue<mixed>> | null = null;
 let rootOrSingletonContext = false;
 
 // Builds a common ancestor tree from the root down for collecting diffs.
-function buildHydrationDiffNode(fiber: Fiber): HydrationDiffNode {
+function buildHydrationDiffNode(
+  fiber: Fiber,
+  distanceFromLeaf: number,
+): HydrationDiffNode {
   if (fiber.return === null) {
     // We're at the root.
     if (hydrationDiffRootDEV === null) {
@@ -91,27 +94,38 @@ function buildHydrationDiffNode(fiber: Fiber): HydrationDiffNode {
         children: [],
         serverProps: undefined,
         serverTail: [],
+        distanceFromLeaf: distanceFromLeaf,
       };
     } else if (hydrationDiffRootDEV.fiber !== fiber) {
       throw new Error(
         'Saw multiple hydration diff roots in a pass. This is a bug in React.',
       );
+    } else if (hydrationDiffRootDEV.distanceFromLeaf > distanceFromLeaf) {
+      hydrationDiffRootDEV.distanceFromLeaf = distanceFromLeaf;
     }
     return hydrationDiffRootDEV;
   }
-  const siblings = buildHydrationDiffNode(fiber.return).children;
+  const siblings = buildHydrationDiffNode(
+    fiber.return,
+    distanceFromLeaf + 1,
+  ).children;
   // The same node may already exist in the parent. Since we currently always render depth first
   // and rerender if we suspend or terminate early, if a shared ancestor was added we should still
   // be inside of that shared ancestor which means it was the last one to be added. If this changes
   // we may have to scan the whole set.
   if (siblings.length > 0 && siblings[siblings.length - 1].fiber === fiber) {
-    return siblings[siblings.length - 1];
+    const existing = siblings[siblings.length - 1];
+    if (existing.distanceFromLeaf > distanceFromLeaf) {
+      existing.distanceFromLeaf = distanceFromLeaf;
+    }
+    return existing;
   }
   const newNode: HydrationDiffNode = {
     fiber: fiber,
     children: [],
     serverProps: undefined,
     serverTail: [],
+    distanceFromLeaf: distanceFromLeaf,
   };
   siblings.push(newNode);
   return newNode;
@@ -182,7 +196,10 @@ export function errorHydratingContainer(parentContainer: Container): void {
   }
 }
 
-function warnNonHydratedInstance(fiber: Fiber) {
+function warnNonHydratedInstance(
+  fiber: Fiber,
+  rejectedCandidate: null | HydratableInstance,
+) {
   if (__DEV__) {
     if (didSuspendOrErrorDEV) {
       // Inside a boundary that already suspended. We're currently rendering the
@@ -192,13 +209,22 @@ function warnNonHydratedInstance(fiber: Fiber) {
     }
 
     // Add this fiber to the diff tree.
-    const diffNode = buildHydrationDiffNode(fiber);
+    const diffNode = buildHydrationDiffNode(fiber, 0);
     // We use null as a signal that there was no node to match.
     diffNode.serverProps = null;
+    if (rejectedCandidate !== null) {
+      const description =
+        describeHydratableInstanceForDevWarnings(rejectedCandidate);
+      diffNode.serverTail.push(description);
+    }
   }
 }
 
-function tryHydrateInstance(fiber: Fiber, nextInstance: any) {
+function tryHydrateInstance(
+  fiber: Fiber,
+  nextInstance: any,
+  hostContext: HostContext,
+) {
   // fiber is a HostComponent Fiber
   const instance = canHydrateInstance(
     nextInstance,
@@ -208,6 +234,22 @@ function tryHydrateInstance(fiber: Fiber, nextInstance: any) {
   );
   if (instance !== null) {
     fiber.stateNode = (instance: Instance);
+
+    if (__DEV__) {
+      if (!didSuspendOrErrorDEV) {
+        const differences = diffHydratedPropsForDevWarnings(
+          instance,
+          fiber.type,
+          fiber.pendingProps,
+          hostContext,
+        );
+        if (differences !== null) {
+          const diffNode = buildHydrationDiffNode(fiber, 0);
+          diffNode.serverProps = differences;
+        }
+      }
+    }
+
     hydrationParentFiber = fiber;
     nextHydratableInstance = getFirstHydratableChild(instance);
     rootOrSingletonContext = false;
@@ -305,6 +347,22 @@ function claimHydratableSingleton(fiber: Fiber): void {
       currentHostContext,
       false,
     ));
+
+    if (__DEV__) {
+      if (!didSuspendOrErrorDEV) {
+        const differences = diffHydratedPropsForDevWarnings(
+          instance,
+          fiber.type,
+          fiber.pendingProps,
+          currentHostContext,
+        );
+        if (differences !== null) {
+          const diffNode = buildHydrationDiffNode(fiber, 0);
+          diffNode.serverProps = differences;
+        }
+      }
+    }
+
     hydrationParentFiber = fiber;
     rootOrSingletonContext = true;
     nextHydratableInstance = getFirstHydratableChild(instance);
@@ -325,9 +383,12 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   );
 
   const nextInstance = nextHydratableInstance;
-  if (!nextInstance || !tryHydrateInstance(fiber, nextInstance)) {
+  if (
+    !nextInstance ||
+    !tryHydrateInstance(fiber, nextInstance, currentHostContext)
+  ) {
     if (shouldKeepWarning) {
-      warnNonHydratedInstance(fiber);
+      warnNonHydratedInstance(fiber, nextInstance);
     }
     throwOnHydrationMismatch(fiber);
   }
@@ -347,7 +408,7 @@ function tryToClaimNextHydratableTextInstance(fiber: Fiber): void {
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !tryHydrateText(fiber, nextInstance)) {
     if (shouldKeepWarning) {
-      warnNonHydratedInstance(fiber);
+      warnNonHydratedInstance(fiber, nextInstance);
     }
     throwOnHydrationMismatch(fiber);
   }
@@ -359,7 +420,7 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   }
   const nextInstance = nextHydratableInstance;
   if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
-    warnNonHydratedInstance(fiber);
+    warnNonHydratedInstance(fiber, nextInstance);
     throwOnHydrationMismatch(fiber);
   }
 }
@@ -404,22 +465,6 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
-  if (__DEV__) {
-    const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-    if (shouldWarnIfMismatchDev) {
-      const differences = diffHydratedPropsForDevWarnings(
-        instance,
-        fiber.type,
-        fiber.memoizedProps,
-        hostContext,
-      );
-      if (differences !== null) {
-        const diffNode = buildHydrationDiffNode(fiber);
-        diffNode.serverProps = differences;
-      }
-    }
-  }
-
   const didHydrate = hydrateInstance(
     instance,
     fiber.type,
@@ -458,7 +503,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
               parentProps,
             );
             if (difference !== null) {
-              const diffNode = buildHydrationDiffNode(fiber);
+              const diffNode = buildHydrationDiffNode(fiber, 0);
               diffNode.serverProps = difference;
             }
           }
@@ -476,7 +521,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): void {
               parentProps,
             );
             if (difference !== null) {
-              const diffNode = buildHydrationDiffNode(fiber);
+              const diffNode = buildHydrationDiffNode(fiber, 0);
               diffNode.serverProps = difference;
             }
           }
@@ -630,11 +675,17 @@ function warnIfUnhydratedTailNodes(fiber: Fiber) {
   if (__DEV__) {
     let nextInstance = nextHydratableInstance;
     while (nextInstance) {
-      const diffNode = buildHydrationDiffNode(fiber);
+      const diffNode = buildHydrationDiffNode(fiber, 0);
       const description =
         describeHydratableInstanceForDevWarnings(nextInstance);
       diffNode.serverTail.push(description);
-      nextInstance = getNextHydratableSibling(nextInstance);
+      if (description.type === 'Suspense') {
+        const suspenseInstance: SuspenseInstance = (nextInstance: any);
+        nextInstance =
+          getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance);
+      } else {
+        nextInstance = getNextHydratableSibling(nextInstance);
+      }
     }
   }
 }
