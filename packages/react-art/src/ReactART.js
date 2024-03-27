@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,
   updateContainer,
@@ -16,6 +16,7 @@ import {
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import {TYPES, childrenAsString} from './ReactARTInternals';
 
@@ -68,7 +69,7 @@ class Surface extends React.Component {
 
     this._mountNode = createContainer(
       this._surface,
-      LegacyRoot,
+      disableLegacyMode ? ConcurrentRoot : LegacyRoot,
       null,
       false,
       false,
