@@ -725,6 +725,7 @@ function useActionState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherMethodName: 'useActionState',
+    wrapperNames: ['useActionState'],
   });
 
   if (error !== null) {
