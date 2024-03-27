@@ -24,6 +24,15 @@ let hasErrored = false;
 let fatalError = undefined;
 let waitForAll;
 
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
+
 describe('ReactDOM HostSingleton', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -454,7 +463,7 @@ describe('ReactDOM HostSingleton', () => {
       {
         onRecoverableError(error, errorInfo) {
           hydrationErrors.push([
-            error.message,
+            normalizeError(error.message),
             errorInfo.componentStack
               ? errorInfo.componentStack.split('\n')[1].trim()
               : null,
@@ -466,23 +475,16 @@ describe('ReactDOM HostSingleton', () => {
       await waitForAll([]);
     }).toErrorDev(
       [
-        `Warning: Expected server HTML to contain a matching <div> in <body>.
-    in div (at **)
-    in body (at **)
-    in html (at **)`,
         `Warning: An error occurred during hydration. The server HTML was replaced with client content.`,
       ],
       {withoutStack: 1},
     );
     expect(hydrationErrors).toEqual([
       [
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
         'at div',
       ],
-      [
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        null,
-      ],
+      ['There was an error while hydrating.', null],
     ]);
     expect(persistentElements).toEqual([
       document.documentElement,
@@ -546,7 +548,12 @@ describe('ReactDOM HostSingleton', () => {
       },
     );
     expect(hydrationErrors).toEqual([]);
-    await waitForAll([]);
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
+    );
     expect(persistentElements).toEqual([
       document.documentElement,
       document.head,

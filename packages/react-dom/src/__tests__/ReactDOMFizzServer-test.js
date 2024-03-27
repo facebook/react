@@ -47,6 +47,15 @@ let waitForPaint;
 let clientAct;
 let streamingContainer;
 
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
+
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -2391,7 +2400,9 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Log recoverable error: ' + error.message);
+        Scheduler.log(
+          'Log recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
@@ -2399,18 +2410,12 @@ describe('ReactDOMFizzServer', () => {
       // The first paint switches to client rendering due to mismatch
       await waitForPaint([
         'client',
-        'Log recoverable error: Hydration failed because the initial ' +
-          'UI does not match what was rendered on the server.',
-        'Log recoverable error: There was an error while hydrating. ' +
-          'Because the error happened outside of a Suspense boundary, the ' +
-          'entire root will switch to client rendering.',
+        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+        'Log recoverable error: There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
       ],
       {withoutStack: 1},
     );
@@ -2474,7 +2479,9 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Log recoverable error: ' + error.message);
+        Scheduler.log(
+          'Log recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
@@ -2483,18 +2490,12 @@ describe('ReactDOMFizzServer', () => {
       // The first paint switches to client rendering due to mismatch
       await waitForPaint([
         'client',
-        'Log recoverable error: Hydration failed because the initial ' +
-          'UI does not match what was rendered on the server.',
-        'Log recoverable error: There was an error while hydrating. ' +
-          'Because the error happened outside of a Suspense boundary, the ' +
-          'entire root will switch to client rendering.',
+        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+        'Log recoverable error: There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        'Warning: Expected server HTML to contain a matching <div> in the root.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
       ],
       {withoutStack: 1},
     );
@@ -2557,7 +2558,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
@@ -2567,9 +2568,7 @@ describe('ReactDOMFizzServer', () => {
         await waitForAll([
           'Yay!',
           'Hydration error',
-          'There was an error while hydrating. Because the error happened ' +
-            'outside of a Suspense boundary, the entire root will switch ' +
-            'to client rendering.',
+          'There was an error while hydrating.',
         ]);
       }).toErrorDev(
         'An error occurred during hydration. The server HTML was replaced',
@@ -2739,7 +2738,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
@@ -2748,7 +2747,7 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([
         'Yay!',
         'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -3194,7 +3193,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
@@ -3202,8 +3201,7 @@ describe('ReactDOMFizzServer', () => {
       // to client rendering.
       await waitForAll([
         'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched ' +
-          'to client rendering.',
+        'There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -3263,7 +3261,9 @@ describe('ReactDOMFizzServer', () => {
 
     const root = ReactDOMClient.createRoot(container, {
       onRecoverableError(error) {
-        Scheduler.log('Logged a recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged a recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     React.startTransition(() => {
@@ -3339,7 +3339,9 @@ describe('ReactDOMFizzServer', () => {
     isClient = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
@@ -3349,11 +3351,11 @@ describe('ReactDOMFizzServer', () => {
 
       'Logged recoverable error: Hydration error',
       'Logged recoverable error: There was an error while hydrating this ' +
-        'Suspense boundary. Switched to client rendering.',
+        'Suspense boundary.',
 
       'Logged recoverable error: Hydration error',
       'Logged recoverable error: There was an error while hydrating this ' +
-        'Suspense boundary. Switched to client rendering.',
+        'Suspense boundary.',
     ]);
   });
 
@@ -4395,7 +4397,9 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([]);
@@ -4471,7 +4475,9 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp text="replaced" />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([]);
@@ -4486,14 +4492,10 @@ describe('ReactDOMFizzServer', () => {
     // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
     // client-side rendering.
     await clientResolve();
-    await expect(async () => {
-      await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
-      ]);
-    }).toErrorDev(
-      'Warning: Text content did not match. Server: "initial" Client: "replaced',
-    );
+    await waitForAll([
+      "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>A</p>
@@ -4539,12 +4541,14 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App text="replaced" />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
 
       expect(getVisibleChildren(container)).toEqual(
@@ -4556,21 +4560,7 @@ describe('ReactDOMFizzServer', () => {
       );
 
       await waitForAll([]);
-      if (__DEV__) {
-        expect(mockError.mock.calls.length).toBe(1);
-        expect(mockError.mock.calls[0]).toEqual([
-          'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
-          'initial',
-          'replaced',
-          '\n' +
-            '    in h2 (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in App (at **)',
-        ]);
-      } else {
-        expect(mockError.mock.calls.length).toBe(0);
-      }
+      expect(mockError.mock.calls.length).toBe(0);
     } finally {
       console.error = originalConsoleError;
     }
@@ -4626,12 +4616,14 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([
       'Logged recoverable error: uh oh',
-      'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
     ]);
 
     expect(getVisibleChildren(container)).toEqual(
@@ -4713,7 +4705,9 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
@@ -4722,7 +4716,7 @@ describe('ReactDOMFizzServer', () => {
         // onRecoverableError because the UI recovered without surfacing the
         // error to the user.
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
@@ -4830,7 +4824,9 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll(['suspending']);
@@ -4847,7 +4843,7 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([
         'throwing: first error',
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4954,14 +4950,16 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
         'throwing: first error',
         'suspending',
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
@@ -6341,13 +6339,7 @@ describe('ReactDOMFizzServer', () => {
       });
       await expect(async () => {
         await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Expected server HTML to contain a matching <span> in the root',
-          'An error occurred during hydration',
-        ],
-        {withoutStack: 1},
-      );
+      }).toErrorDev(['An error occurred during hydration'], {withoutStack: 1});
       expect(errors.length).toEqual(2);
       expect(getVisibleChildren(container)).toEqual(<span />);
     });

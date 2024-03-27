@@ -6480,7 +6480,6 @@ body {
         await waitForAll([]);
       }).toErrorDev(
         [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
           'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
         ],
         {withoutStack: 1},
@@ -8270,7 +8269,6 @@ background-color: green;
         await waitForAll([]);
       }).toErrorDev(
         [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
           'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
         ],
         {withoutStack: 1},

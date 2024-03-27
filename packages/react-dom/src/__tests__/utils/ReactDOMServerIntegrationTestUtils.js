@@ -53,8 +53,17 @@ module.exports = function (initModules) {
     if (forceHydrate) {
       await act(() => {
         ReactDOMClient.hydrateRoot(domElement, reactElement, {
-          onRecoverableError: () => {
-            // TODO: assert on recoverable error count.
+          onRecoverableError(e) {
+            if (
+              e.message.startsWith(
+                'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+              )
+            ) {
+              // We ignore this extra error because it shouldn't really need to be there if
+              // a hydration mismatch is the cause of it.
+            } else {
+              console.error(e);
+            }
           },
         });
       });

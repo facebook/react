@@ -182,7 +182,8 @@ describe('ReactDOMFizzForm', () => {
         ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
       });
     }).toErrorDev(
-      'Prop `action` did not match. Server: "function" Client: "action"',
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 
@@ -344,7 +345,12 @@ describe('ReactDOMFizzForm', () => {
       await act(async () => {
         root = ReactDOMClient.hydrateRoot(container, <App />);
       });
-    }).toErrorDev(['Prop `formTarget` did not match.']);
+    }).toErrorDev(
+      [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      ],
+      {withoutStack: true},
+    );
     await act(async () => {
       root.render(<App isUpdate={true} />);
     });

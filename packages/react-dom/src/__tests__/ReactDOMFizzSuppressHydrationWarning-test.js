@@ -24,6 +24,15 @@ let hasErrored = false;
 let fatalError = undefined;
 let waitForAll;
 
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
+
 describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -156,7 +165,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         // Don't miss a hydration error. There should be none.
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -196,7 +205,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -237,17 +246,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Expected server HTML to contain a matching <span> in <span>',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -282,7 +290,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     const root = ReactDOMClient.hydrateRoot(container, <App text="Client" />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -326,17 +334,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Did not expect server HTML to contain the text node "Server" in <span>',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -374,17 +381,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Expected server HTML to contain a matching text node for "Client" in <span>.',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -425,17 +431,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Did not expect server HTML to contain the text node "Server" in <span>.',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -474,17 +479,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Expected server HTML to contain a matching text node for "Client" in <span>.',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -527,7 +531,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -564,7 +568,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await waitForAll([]);
@@ -597,17 +601,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Expected server HTML to contain a matching <p> in <div>.',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
@@ -643,17 +646,16 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(error.message);
+        Scheduler.log(normalizeError(error.message));
       },
     });
     await expect(async () => {
       await waitForAll([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+        "Hydration failed because the server rendered HTML didn't match the client.",
+        'There was an error while hydrating.',
       ]);
     }).toErrorDev(
       [
-        'Did not expect server HTML to contain a <p> in <div>.',
         'An error occurred during hydration. The server HTML was replaced with client content.',
       ],
       {withoutStack: 1},
