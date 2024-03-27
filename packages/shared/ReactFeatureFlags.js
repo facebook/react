@@ -137,10 +137,6 @@ const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const disableLegacyContext = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
-// Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = __NEXT_MAJOR__;
-
-// Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
