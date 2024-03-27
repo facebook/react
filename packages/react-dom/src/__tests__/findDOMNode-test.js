@@ -11,11 +11,13 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
+const findDOMNode =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
 const StrictMode = React.StrictMode;
 
 describe('findDOMNode', () => {
   it('findDOMNode should return null if passed null', () => {
-    expect(ReactDOM.findDOMNode(null)).toBe(null);
+    expect(findDOMNode(null)).toBe(null);
   });
 
   // @gate !disableLegacyMode
@@ -32,8 +34,8 @@ describe('findDOMNode', () => {
 
     const container = document.createElement('div');
     const myNode = ReactDOM.render(<MyNode />, container);
-    const myDiv = ReactDOM.findDOMNode(myNode);
-    const mySameDiv = ReactDOM.findDOMNode(myDiv);
+    const myDiv = findDOMNode(myNode);
+    const mySameDiv = findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
     expect(mySameDiv).toBe(myDiv);
   });
@@ -55,19 +57,19 @@ describe('findDOMNode', () => {
     const container = document.createElement('div');
 
     const myNodeA = ReactDOM.render(<MyNode />, container);
-    const a = ReactDOM.findDOMNode(myNodeA);
+    const a = findDOMNode(myNodeA);
     expect(a).toBe(null);
 
     const myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
     expect(myNodeA === myNodeB).toBe(true);
 
-    const b = ReactDOM.findDOMNode(myNodeB);
+    const b = findDOMNode(myNodeB);
     expect(b.tagName).toBe('SPAN');
   });
 
   it('findDOMNode should reject random objects', () => {
     expect(function () {
-      ReactDOM.findDOMNode({foo: 'bar'});
+      findDOMNode({foo: 'bar'});
     }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });
 
@@ -83,7 +85,7 @@ describe('findDOMNode', () => {
     const inst = ReactDOM.render(<Foo />, container);
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(() => ReactDOM.findDOMNode(inst)).toThrowError(
+    expect(() => findDOMNode(inst)).toThrowError(
       'Unable to find node on an unmounted component.',
     );
   });
@@ -92,7 +94,7 @@ describe('findDOMNode', () => {
   it('findDOMNode should not throw an error when called within a component that is not mounted', () => {
     class Bar extends React.Component {
       UNSAFE_componentWillMount() {
-        expect(ReactDOM.findDOMNode(this)).toBeNull();
+        expect(findDOMNode(this)).toBeNull();
       }
 
       render() {
@@ -127,7 +129,7 @@ describe('findDOMNode', () => {
     );
 
     let match;
-    expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
+    expect(() => (match = findDOMNode(parent))).toErrorDev([
       'Warning: findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -160,7 +162,7 @@ describe('findDOMNode', () => {
     );
 
     let match;
-    expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
+    expect(() => (match = findDOMNode(parent))).toErrorDev([
       'Warning: findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +

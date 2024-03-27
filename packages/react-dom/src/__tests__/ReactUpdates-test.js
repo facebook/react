@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let act;
 let Scheduler;
@@ -23,6 +24,8 @@ describe('ReactUpdates', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
@@ -659,7 +662,7 @@ describe('ReactUpdates', () => {
         a = this;
       }
       componentDidUpdate() {
-        expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
+        expect(findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       }
 
@@ -801,7 +804,7 @@ describe('ReactUpdates', () => {
       componentDidMount() {
         instances.push(this);
         if (this.props.depth < this.props.count) {
-          const root = ReactDOMClient.createRoot(ReactDOM.findDOMNode(this));
+          const root = ReactDOMClient.createRoot(findDOMNode(this));
           root.render(
             <MockComponent
               depth={this.props.depth + 1}
@@ -889,12 +892,12 @@ describe('ReactUpdates', () => {
       root.render(<Y ref={current => (y = current)} />);
     });
 
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
+    expect(findDOMNode(x).textContent).toBe('0');
 
     await act(() => {
       y.forceUpdate();
     });
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
+    expect(findDOMNode(x).textContent).toBe('1');
   });
 
   it('should queue updates from during mount', async () => {

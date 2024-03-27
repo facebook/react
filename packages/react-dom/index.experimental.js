@@ -12,7 +12,6 @@ export {
   createPortal,
   createRoot,
   hydrateRoot,
-  findDOMNode,
   flushSync,
   unstable_batchedUpdates,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.

@@ -234,6 +234,8 @@ function legacyRenderSubtreeIntoContainer(
   return getPublicRootInstance(root);
 }
 
+export type FindDOMNodeType = typeof findDOMNode;
+
 export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
