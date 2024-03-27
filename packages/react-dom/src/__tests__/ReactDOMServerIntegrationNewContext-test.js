@@ -338,24 +338,12 @@ describe('ReactDOMServerIntegration', () => {
         </LoggedInUser.Provider>
       );
 
-      let streamAmy;
-      let streamBob;
-      expect(() => {
-        streamAmy = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Amy'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-      expect(() => {
-        streamBob = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Bob'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
+      const streamAmy = ReactDOMServer.renderToStaticNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+      const streamBob = ReactDOMServer.renderToStaticNodeStream(
+        AppWithUser('Bob'),
+      ).setEncoding('utf8');
 
       // Testing by filling the buffer using internal _read() with a small
       // number of bytes to avoid a test case which needs to align to a
@@ -390,14 +378,9 @@ describe('ReactDOMServerIntegration', () => {
       const streamCount = 34;
 
       for (let i = 0; i < streamCount; i++) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
+        streams[i] = ReactDOMServer.renderToStaticNodeStream(
+          NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
+        ).setEncoding('utf8');
       }
 
       // Testing by filling the buffer using internal _read() with a small
@@ -414,14 +397,9 @@ describe('ReactDOMServerIntegration', () => {
 
       // Recreate those same streams.
       for (let i = 0; i < streamCount; i += 2) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
+        streams[i] = ReactDOMServer.renderToStaticNodeStream(
+          NthRender(i),
+        ).setEncoding('utf8');
       }
 
       // Read a bit from all streams again.

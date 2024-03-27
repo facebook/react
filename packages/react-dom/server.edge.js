@@ -18,13 +18,6 @@ export function renderToReadableStream() {
   );
 }
 
-export function renderToNodeStream() {
-  return require('./src/server/react-dom-server.edge').renderToNodeStream.apply(
-    this,
-    arguments,
-  );
-}
-
 export function renderToStaticNodeStream() {
   return require('./src/server/react-dom-server.edge').renderToStaticNodeStream.apply(
     this,
