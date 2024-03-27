@@ -37,6 +37,7 @@ function shouldPreventMouseEvent(
     case 'onMouseUp':
     case 'onMouseUpCapture':
     case 'onMouseEnter':
+    case 'onContextMenu':
       return !!(props.disabled && isInteractive(type));
     default:
       return false;
