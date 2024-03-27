@@ -70,6 +70,8 @@ var ReactSharedInternals =
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
+  favorSafetyOverHydrationPerf =
+    dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -1899,20 +1901,19 @@ function prepareToHydrateHostInstance(fiber) {
         track(instance);
   }
   fiber = props.children;
-  if (
-    !(
-      "string" === typeof fiber ||
-      "number" === typeof fiber ||
-      (enableBigIntSupport && "bigint" === typeof fiber)
-    ) ||
-    instance.textContent === "" + fiber ||
-    !0 === props.suppressHydrationWarning ||
-    checkForUnmatchedText(instance.textContent, fiber)
-  )
-    null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+  ("string" === typeof fiber ||
+    "number" === typeof fiber ||
+    (enableBigIntSupport && "bigint" === typeof fiber)) &&
+  instance.textContent !== "" + fiber &&
+  !0 !== props.suppressHydrationWarning &&
+  !checkForUnmatchedText(instance.textContent, fiber)
+    ? (instance = !1)
+    : (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
-      null != props.onClick && (instance.onclick = noop$2);
+      null != props.onClick && (instance.onclick = noop$2),
+      (instance = !0));
+  !instance && favorSafetyOverHydrationPerf && throwOnHydrationMismatch();
 }
 function popToNextHostParent(fiber) {
   for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -8253,9 +8254,15 @@ function completeWork(current, workInProgress, renderLanes) {
                 newProps = currentResource.memoizedProps;
             }
           current[internalInstanceKey] = workInProgress;
-          current.nodeValue === renderLanes ||
+          current =
+            current.nodeValue === renderLanes ||
             (null !== newProps && !0 === newProps.suppressHydrationWarning) ||
-            checkForUnmatchedText(current.nodeValue, renderLanes);
+            checkForUnmatchedText(current.nodeValue, renderLanes)
+              ? !0
+              : !1;
+          !current &&
+            favorSafetyOverHydrationPerf &&
+            throwOnHydrationMismatch();
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -17849,7 +17856,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1819 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-8bb62b34",
+  version: "19.0.0-www-classic-d747211a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17893,7 +17900,7 @@ var devToolsConfig$jscomp$inline_1819 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-8bb62b34"
+  reconcilerVersion: "19.0.0-www-classic-d747211a"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18329,7 +18336,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-8bb62b34";
+exports.version = "19.0.0-www-classic-d747211a";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

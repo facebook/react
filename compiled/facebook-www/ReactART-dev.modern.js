@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-6f507aaf";
+    var ReactVersion = "19.0.0-www-modern-2f1334bc";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -193,7 +193,7 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableAsyncActions = true;
+    var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 

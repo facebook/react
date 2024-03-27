@@ -80,6 +80,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
+  favorSafetyOverHydrationPerf =
+    dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   assign = Object.assign,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
@@ -1809,20 +1811,19 @@ function prepareToHydrateHostInstance(fiber) {
         track(instance);
   }
   fiber = props.children;
-  if (
-    !(
-      "string" === typeof fiber ||
-      "number" === typeof fiber ||
-      (enableBigIntSupport && "bigint" === typeof fiber)
-    ) ||
-    instance.textContent === "" + fiber ||
-    !0 === props.suppressHydrationWarning ||
-    checkForUnmatchedText(instance.textContent, fiber)
-  )
-    null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+  ("string" === typeof fiber ||
+    "number" === typeof fiber ||
+    (enableBigIntSupport && "bigint" === typeof fiber)) &&
+  instance.textContent !== "" + fiber &&
+  !0 !== props.suppressHydrationWarning &&
+  !checkForUnmatchedText(instance.textContent, fiber)
+    ? (instance = !1)
+    : (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
-      null != props.onClick && (instance.onclick = noop$1);
+      null != props.onClick && (instance.onclick = noop$1),
+      (instance = !0));
+  !instance && favorSafetyOverHydrationPerf && throwOnHydrationMismatch();
 }
 function popToNextHostParent(fiber) {
   for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -7932,9 +7933,15 @@ function completeWork(current, workInProgress, renderLanes) {
                 newProps = currentResource.memoizedProps;
             }
           current[internalInstanceKey] = workInProgress;
-          current.nodeValue === renderLanes ||
+          current =
+            current.nodeValue === renderLanes ||
             (null !== newProps && !0 === newProps.suppressHydrationWarning) ||
-            checkForUnmatchedText(current.nodeValue, renderLanes);
+            checkForUnmatchedText(current.nodeValue, renderLanes)
+              ? !0
+              : !1;
+          !current &&
+            favorSafetyOverHydrationPerf &&
+            throwOnHydrationMismatch();
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -17000,10 +17007,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1717 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-1aaa7f36",
+  version: "19.0.0-www-modern-b2f2b60d",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2120 = {
+var internals$jscomp$inline_2121 = {
   bundleType: devToolsConfig$jscomp$inline_1717.bundleType,
   version: devToolsConfig$jscomp$inline_1717.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1717.rendererPackageName,
@@ -17030,19 +17037,19 @@ var internals$jscomp$inline_2120 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-1aaa7f36"
+  reconcilerVersion: "19.0.0-www-modern-b2f2b60d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2121 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2122 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2121.isDisabled &&
-    hook$jscomp$inline_2121.supportsFiber
+    !hook$jscomp$inline_2122.isDisabled &&
+    hook$jscomp$inline_2122.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2121.inject(
-        internals$jscomp$inline_2120
+      (rendererID = hook$jscomp$inline_2122.inject(
+        internals$jscomp$inline_2121
       )),
-        (injectedHook = hook$jscomp$inline_2121);
+        (injectedHook = hook$jscomp$inline_2122);
     } catch (err) {}
 }
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -17455,4 +17462,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-1aaa7f36";
+exports.version = "19.0.0-www-modern-b2f2b60d";

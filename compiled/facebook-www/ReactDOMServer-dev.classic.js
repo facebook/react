@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-bde4686d";
+    var ReactVersion = "19.0.0-www-classic-78fbee29";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -681,7 +681,8 @@ if (__DEV__) {
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps; // On WWW, false is used for a new modern build.
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps;
+    // On WWW, false is used for a new modern build.
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;

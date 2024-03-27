@@ -154,12 +154,13 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps; // On WWW, false is used for a new modern build.
+      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
+      favorSafetyOverHydrationPerf =
+        dynamicFeatureFlags.favorSafetyOverHydrationPerf; // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableAsyncActions = true;
-    var favorSafetyOverHydrationPerf = false; // Logs additional User Timing API marks for use with an experimental profiling tool.
+    var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
@@ -36344,7 +36345,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-8ebbd24c";
+    var ReactVersion = "19.0.0-www-classic-06295a1e";
 
     function createPortal$1(
       children,
