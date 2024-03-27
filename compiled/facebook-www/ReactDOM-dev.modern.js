@@ -43,7 +43,8 @@ if (__DEV__) {
       Events: null,
       ReactDOMCurrentDispatcher: {
         current: DefaultDispatcher
-      }
+      },
+      findDOMNode: null
     };
 
     // This refers to a WWW module.
@@ -7323,7 +7324,7 @@ if (__DEV__) {
       key._reactInternals = value;
     }
 
-    var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentOwner$3 = ReactSharedInternals.ReactCurrentOwner;
     function getNearestMountedFiber(fiber) {
       var node = fiber;
       var nearestMounted = fiber;
@@ -7384,7 +7385,7 @@ if (__DEV__) {
     }
     function isMounted(component) {
       {
-        var owner = ReactCurrentOwner$2.current;
+        var owner = ReactCurrentOwner$3.current;
 
         if (owner !== null && owner.tag === ClassComponent) {
           var ownerFiber = owner;
@@ -20108,7 +20109,7 @@ if (__DEV__) {
       return null;
     }
 
-    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner; // A special exception that's used to unwind the stack when an update flows
+    var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner; // A special exception that's used to unwind the stack when an update flows
     // into a dehydrated boundary.
 
     var SelectiveHydrationException = new Error(
@@ -20244,7 +20245,7 @@ if (__DEV__) {
       }
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactCurrentOwner$2.current = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
           current,
@@ -20865,7 +20866,7 @@ if (__DEV__) {
       }
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactCurrentOwner$2.current = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
           current,
@@ -21092,7 +21093,7 @@ if (__DEV__) {
 
       var instance = workInProgress.stateNode; // Rerender
 
-      ReactCurrentOwner$1.current = workInProgress;
+      ReactCurrentOwner$2.current = workInProgress;
       var nextChildren;
 
       if (
@@ -21637,7 +21638,7 @@ if (__DEV__) {
         }
 
         setIsRendering(true);
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactCurrentOwner$2.current = workInProgress;
         value = renderWithHooks(
           null,
           workInProgress,
@@ -23237,7 +23238,7 @@ if (__DEV__) {
       var newChildren;
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactCurrentOwner$2.current = workInProgress;
         setIsRendering(true);
         newChildren = render(newValue);
         setIsRendering(false);
@@ -31252,7 +31253,7 @@ if (__DEV__) {
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
       ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
+      ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
       ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig,
       ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
@@ -32532,7 +32533,7 @@ if (__DEV__) {
       // when React is executing user code.
       resetHooksAfterThrow();
       resetCurrentFiber();
-      ReactCurrentOwner.current = null;
+      ReactCurrentOwner$1.current = null;
 
       if (thrownValue === SuspenseException) {
         // This is a special type of exception used for Suspense. For historical
@@ -33222,7 +33223,7 @@ if (__DEV__) {
         workInProgress = next;
       }
 
-      ReactCurrentOwner.current = null;
+      ReactCurrentOwner$1.current = null;
     }
 
     function replaySuspendedUnitOfWork(unitOfWork) {
@@ -33339,7 +33340,7 @@ if (__DEV__) {
         workInProgress = next;
       }
 
-      ReactCurrentOwner.current = null;
+      ReactCurrentOwner$1.current = null;
     }
 
     function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
@@ -33715,7 +33716,7 @@ if (__DEV__) {
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext; // Reset this to null before calling lifecycles
 
-        ReactCurrentOwner.current = null; // The commit phase is broken into several sub-phases. We do a separate pass
+        ReactCurrentOwner$1.current = null; // The commit phase is broken into several sub-phases. We do a separate pass
         // of the effect list for each phase: all mutation effects come before all
         // layout effects, and so on.
         // The first phase a "before mutation" phase. We use this phase to read the
@@ -36191,7 +36192,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-92674784";
+    var ReactVersion = "19.0.0-www-modern-40fa3f34";
 
     function createPortal$1(
       children,
@@ -36220,9 +36221,11 @@ if (__DEV__) {
     // Might add PROFILE later.
 
     var didWarnAboutNestedUpdates;
+    var didWarnAboutFindNodeInStrictMode;
 
     {
       didWarnAboutNestedUpdates = false;
+      didWarnAboutFindNodeInStrictMode = {};
     }
 
     function getContextForSubtree(parentComponent) {
@@ -36242,6 +36245,76 @@ if (__DEV__) {
       }
 
       return parentContext;
+    }
+
+    function findHostInstanceWithWarning(component, methodName) {
+      {
+        var fiber = get(component);
+
+        if (fiber === undefined) {
+          if (typeof component.render === "function") {
+            throw new Error("Unable to find node on an unmounted component.");
+          } else {
+            var keys = Object.keys(component).join(",");
+            throw new Error(
+              "Argument appears to not be a ReactComponent. Keys: " + keys
+            );
+          }
+        }
+
+        var hostFiber = findCurrentHostFiber(fiber);
+
+        if (hostFiber === null) {
+          return null;
+        }
+
+        if (hostFiber.mode & StrictLegacyMode) {
+          var componentName = getComponentNameFromFiber(fiber) || "Component";
+
+          if (!didWarnAboutFindNodeInStrictMode[componentName]) {
+            didWarnAboutFindNodeInStrictMode[componentName] = true;
+            var previousFiber = current;
+
+            try {
+              setCurrentFiber(hostFiber);
+
+              if (fiber.mode & StrictLegacyMode) {
+                error(
+                  "%s is deprecated in StrictMode. " +
+                    "%s was passed an instance of %s which is inside StrictMode. " +
+                    "Instead, add a ref directly to the element you want to reference. " +
+                    "Learn more about using refs safely here: " +
+                    "https://react.dev/link/strict-mode-find-node",
+                  methodName,
+                  methodName,
+                  componentName
+                );
+              } else {
+                error(
+                  "%s is deprecated in StrictMode. " +
+                    "%s was passed an instance of %s which renders StrictMode children. " +
+                    "Instead, add a ref directly to the element you want to reference. " +
+                    "Learn more about using refs safely here: " +
+                    "https://react.dev/link/strict-mode-find-node",
+                  methodName,
+                  methodName,
+                  componentName
+                );
+              }
+            } finally {
+              // Ideally this should reset to previous but this shouldn't be called in
+              // render and there's another warning for that anyway.
+              if (previousFiber) {
+                setCurrentFiber(previousFiber);
+              } else {
+                resetCurrentFiber();
+              }
+            }
+          }
+        }
+
+        return getPublicInstance(hostFiber.stateNode);
+      }
     }
 
     function createContainer(
@@ -48202,6 +48275,44 @@ if (__DEV__) {
       }
     }
 
+    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+    function findDOMNode(componentOrElement) {
+      {
+        var owner = ReactCurrentOwner.current;
+
+        if (owner !== null && owner.stateNode !== null) {
+          var warnedAboutRefsInRender =
+            owner.stateNode._warnedAboutRefsInRender;
+
+          if (!warnedAboutRefsInRender) {
+            error(
+              "%s is accessing findDOMNode inside its render(). " +
+                "render() should be a pure function of props and state. It should " +
+                "never access something that requires stale data from the previous " +
+                "render, such as refs. Move this logic to componentDidMount and " +
+                "componentDidUpdate instead.",
+              getComponentNameFromType(owner.type) || "A component"
+            );
+          }
+
+          owner.stateNode._warnedAboutRefsInRender = true;
+        }
+      }
+
+      if (componentOrElement == null) {
+        return null;
+      }
+
+      if (componentOrElement.nodeType === ELEMENT_NODE) {
+        return componentOrElement;
+      }
+
+      {
+        return findHostInstanceWithWarning(componentOrElement, "findDOMNode");
+      }
+    }
+
     function isValidEventTarget(target) {
       return typeof target.addEventListener === "function";
     }
@@ -48723,7 +48834,9 @@ if (__DEV__) {
       }
 
       return flushSync$1(fn);
-    }
+    } // Expose findDOMNode on internals
+
+    Internals.findDOMNode = findDOMNode;
     // This is an array for better minification.
 
     Internals.Events = [

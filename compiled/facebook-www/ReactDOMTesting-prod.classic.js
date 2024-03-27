@@ -15508,7 +15508,8 @@ var Internals = {
         preinitStyle: noop$1,
         preinitModuleScript: noop$1
       }
-    }
+    },
+    findDOMNode: null
   },
   ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
   eventsEnabled = null,
@@ -17373,6 +17374,21 @@ function legacyRenderSubtreeIntoContainer$1(
     );
   return getPublicRootInstance(root);
 }
+function findDOMNode(componentOrElement) {
+  if (null == componentOrElement) return null;
+  if (1 === componentOrElement.nodeType) return componentOrElement;
+  var fiber = componentOrElement._reactInternals;
+  if (void 0 === fiber) {
+    if ("function" === typeof componentOrElement.render)
+      throw Error(formatProdErrorMessage(188));
+    componentOrElement = Object.keys(componentOrElement).join(",");
+    throw Error(formatProdErrorMessage(268, componentOrElement));
+  }
+  componentOrElement = findCurrentHostFiber(fiber);
+  componentOrElement =
+    null === componentOrElement ? null : componentOrElement.stateNode;
+  return componentOrElement;
+}
 function registerReactDOMEvent(target, domEventName, isCapturePhaseListener) {
   if (
     1 !== target.nodeType &&
@@ -17400,6 +17416,7 @@ function getCrossOriginStringAs(as, input) {
     return "use-credentials" === input ? input : "";
 }
 var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
+Internals.findDOMNode = findDOMNode;
 Internals.Events = [
   getInstanceFromNode,
   getNodeFromInstance,
@@ -17411,7 +17428,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1760 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-4d284a43",
+  version: "19.0.0-www-classic-2327de03",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2168 = {
@@ -17441,7 +17458,7 @@ var internals$jscomp$inline_2168 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-4d284a43"
+  reconcilerVersion: "19.0.0-www-classic-2327de03"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2169 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17716,21 +17733,7 @@ exports.findBoundingRects = function (hostRoot, selectors) {
   }
   return hostRoot;
 };
-exports.findDOMNode = function (componentOrElement) {
-  if (null == componentOrElement) return null;
-  if (1 === componentOrElement.nodeType) return componentOrElement;
-  var fiber = componentOrElement._reactInternals;
-  if (void 0 === fiber) {
-    if ("function" === typeof componentOrElement.render)
-      throw Error(formatProdErrorMessage(188));
-    componentOrElement = Object.keys(componentOrElement).join(",");
-    throw Error(formatProdErrorMessage(268, componentOrElement));
-  }
-  componentOrElement = findCurrentHostFiber(fiber);
-  componentOrElement =
-    null === componentOrElement ? null : componentOrElement.stateNode;
-  return componentOrElement;
-};
+exports.findDOMNode = findDOMNode;
 exports.flushSync = function (fn) {
   return flushSync$1(fn);
 };
@@ -18047,4 +18050,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-4d284a43";
+exports.version = "19.0.0-www-classic-2327de03";

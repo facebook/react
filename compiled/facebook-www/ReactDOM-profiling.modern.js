@@ -34,7 +34,8 @@ var Internals = {
       preinitStyle: noop$3,
       preinitModuleScript: noop$3
     }
-  }
+  },
+  findDOMNode: null
 };
 function formatProdErrorMessage(code) {
   var url = "https://react.dev/errors/" + code;
@@ -1631,6 +1632,10 @@ function findCurrentFiberUsingSlowPath(fiber) {
   }
   if (3 !== a.tag) throw Error(formatProdErrorMessage(188));
   return a.stateNode.current === a ? fiber : alternate;
+}
+function findCurrentHostFiber(parent) {
+  parent = findCurrentFiberUsingSlowPath(parent);
+  return null !== parent ? findCurrentHostFiberImpl(parent) : null;
 }
 function findCurrentHostFiberImpl(node) {
   var tag = node.tag;
@@ -14160,14 +14165,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$362;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1580 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1580) {
-      var element$jscomp$inline_1581 = document.createElement("div");
-      element$jscomp$inline_1581.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1580 =
-        "function" === typeof element$jscomp$inline_1581.oninput;
+    var isSupported$jscomp$inline_1577 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1577) {
+      var element$jscomp$inline_1578 = document.createElement("div");
+      element$jscomp$inline_1578.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1577 =
+        "function" === typeof element$jscomp$inline_1578.oninput;
     }
-    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1580;
+    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1577;
   } else JSCompiler_inline_result$jscomp$362 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$362 &&
@@ -14479,20 +14484,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1621 = 0;
-  i$jscomp$inline_1621 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1621++
+  var i$jscomp$inline_1618 = 0;
+  i$jscomp$inline_1618 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1618++
 ) {
-  var eventName$jscomp$inline_1622 =
-      simpleEventPluginEvents[i$jscomp$inline_1621],
-    domEventName$jscomp$inline_1623 =
-      eventName$jscomp$inline_1622.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1624 =
-      eventName$jscomp$inline_1622[0].toUpperCase() +
-      eventName$jscomp$inline_1622.slice(1);
+  var eventName$jscomp$inline_1619 =
+      simpleEventPluginEvents[i$jscomp$inline_1618],
+    domEventName$jscomp$inline_1620 =
+      eventName$jscomp$inline_1619.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1621 =
+      eventName$jscomp$inline_1619[0].toUpperCase() +
+      eventName$jscomp$inline_1619.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1623,
-    "on" + capitalizedEvent$jscomp$inline_1624
+    domEventName$jscomp$inline_1620,
+    "on" + capitalizedEvent$jscomp$inline_1621
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17323,6 +17328,21 @@ function getCrossOriginStringAs(as, input) {
     return "use-credentials" === input ? input : "";
 }
 var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
+Internals.findDOMNode = function (componentOrElement) {
+  if (null == componentOrElement) return null;
+  if (1 === componentOrElement.nodeType) return componentOrElement;
+  var fiber = componentOrElement._reactInternals;
+  if (void 0 === fiber) {
+    if ("function" === typeof componentOrElement.render)
+      throw Error(formatProdErrorMessage(188));
+    componentOrElement = Object.keys(componentOrElement).join(",");
+    throw Error(formatProdErrorMessage(268, componentOrElement));
+  }
+  componentOrElement = findCurrentHostFiber(fiber);
+  componentOrElement =
+    null === componentOrElement ? null : componentOrElement.stateNode;
+  return componentOrElement;
+};
 Internals.Events = [
   getInstanceFromNode$1,
   getNodeFromInstance,
@@ -17331,10 +17351,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1774 = {
+var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-a33108b9",
+  version: "19.0.0-www-modern-ee7e043a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17352,10 +17372,10 @@ var devToolsConfig$jscomp$inline_1774 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1774.bundleType,
-  version: devToolsConfig$jscomp$inline_1774.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1774.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1774.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1776.bundleType,
+  version: devToolsConfig$jscomp$inline_1776.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1776.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1776.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17367,19 +17387,18 @@ var devToolsConfig$jscomp$inline_1774 = {
   scheduleUpdate: null,
   currentDispatcherRef: ReactSharedInternals.ReactCurrentDispatcher,
   findHostInstanceByFiber: function (fiber) {
-    fiber = findCurrentFiberUsingSlowPath(fiber);
-    fiber = null !== fiber ? findCurrentHostFiberImpl(fiber) : null;
+    fiber = findCurrentHostFiber(fiber);
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1774.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1776.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-a33108b9"
+  reconcilerVersion: "19.0.0-www-modern-ee7e043a"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17668,7 +17687,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-a33108b9";
+exports.version = "19.0.0-www-modern-ee7e043a";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

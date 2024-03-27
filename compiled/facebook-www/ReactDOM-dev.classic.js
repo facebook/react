@@ -36344,7 +36344,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-58243be2";
+    var ReactVersion = "19.0.0-www-classic-8ebbd24c";
 
     function createPortal$1(
       children,
@@ -44349,7 +44349,8 @@ if (__DEV__) {
       Events: null,
       ReactDOMCurrentDispatcher: {
         current: DefaultDispatcher
-      }
+      },
+      findDOMNode: null
     };
 
     var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher; // Unused
@@ -49607,7 +49608,9 @@ if (__DEV__) {
       }
 
       return flushSync$1(fn);
-    }
+    } // Expose findDOMNode on internals
+
+    Internals.findDOMNode = findDOMNode;
     // This is an array for better minification.
 
     Internals.Events = [
