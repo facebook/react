@@ -1763,19 +1763,20 @@ function prepareToHydrateHostInstance(fiber) {
         track(instance);
   }
   fiber = props.children;
-  ("string" === typeof fiber ||
-    "number" === typeof fiber ||
-    (enableBigIntSupport && "bigint" === typeof fiber)) &&
-  instance.textContent !== "" + fiber &&
-  !0 !== props.suppressHydrationWarning &&
-  !checkForUnmatchedText(instance.textContent, fiber)
-    ? (instance = !1)
-    : (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+  if (
+    !(
+      "string" === typeof fiber ||
+      "number" === typeof fiber ||
+      (enableBigIntSupport && "bigint" === typeof fiber)
+    ) ||
+    instance.textContent === "" + fiber ||
+    !0 === props.suppressHydrationWarning ||
+    checkForUnmatchedText(instance.textContent, fiber)
+  )
+    null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
-      null != props.onClick && (instance.onclick = noop$2),
-      (instance = !0));
-  instance || throwOnHydrationMismatch();
+      null != props.onClick && (instance.onclick = noop$2);
 }
 function popToNextHostParent(fiber) {
   for (hydrationParentFiber = fiber.return; hydrationParentFiber; )
@@ -8003,13 +8004,9 @@ function completeWork(current, workInProgress, renderLanes) {
                 newProps = currentResource.memoizedProps;
             }
           current[internalInstanceKey] = workInProgress;
-          current =
-            current.nodeValue === renderLanes ||
+          current.nodeValue === renderLanes ||
             (null !== newProps && !0 === newProps.suppressHydrationWarning) ||
-            checkForUnmatchedText(current.nodeValue, renderLanes)
-              ? !0
-              : !1;
-          current || throwOnHydrationMismatch();
+            checkForUnmatchedText(current.nodeValue, renderLanes);
         } else
           (current =
             getOwnerDocumentFromRootContainer(current).createTextNode(
@@ -17080,10 +17077,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1759 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-828721f2",
+  version: "19.0.0-www-classic-cb8dbb60",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2144 = {
+var internals$jscomp$inline_2143 = {
   bundleType: devToolsConfig$jscomp$inline_1759.bundleType,
   version: devToolsConfig$jscomp$inline_1759.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1759.rendererPackageName,
@@ -17110,19 +17107,19 @@ var internals$jscomp$inline_2144 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-828721f2"
+  reconcilerVersion: "19.0.0-www-classic-cb8dbb60"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2145 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2145.isDisabled &&
-    hook$jscomp$inline_2145.supportsFiber
+    !hook$jscomp$inline_2144.isDisabled &&
+    hook$jscomp$inline_2144.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2145.inject(
-        internals$jscomp$inline_2144
+      (rendererID = hook$jscomp$inline_2144.inject(
+        internals$jscomp$inline_2143
       )),
-        (injectedHook = hook$jscomp$inline_2145);
+        (injectedHook = hook$jscomp$inline_2144);
     } catch (err) {}
 }
 assign(Internals, {
@@ -17430,4 +17427,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-828721f2";
+exports.version = "19.0.0-www-classic-cb8dbb60";

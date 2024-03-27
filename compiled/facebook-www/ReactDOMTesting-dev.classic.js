@@ -150,7 +150,8 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
+    var enableAsyncActions = true;
+    var favorSafetyOverHydrationPerf = false; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
@@ -9349,7 +9350,7 @@ if (__DEV__) {
         fiber
       );
 
-      if (!didHydrate) {
+      if (!didHydrate && favorSafetyOverHydrationPerf) {
         throwOnHydrationMismatch();
       }
     }
@@ -9416,7 +9417,7 @@ if (__DEV__) {
         parentProps
       );
 
-      if (!didHydrate) {
+      if (!didHydrate && favorSafetyOverHydrationPerf) {
         throwOnHydrationMismatch();
       }
     }
@@ -36927,7 +36928,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-009e5152";
+    var ReactVersion = "19.0.0-www-classic-19c3281d";
 
     function createPortal$1(
       children,
