@@ -42,6 +42,7 @@ import {
 } from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
+  batchedUpdates,
   createContainer,
   createHydrationContainer,
   findHostInstanceWithNoPortals,
@@ -416,3 +417,5 @@ export function unstable_renderSubtreeIntoContainer(
     callback,
   );
 }
+
+export {batchedUpdates as unstable_batchedUpdates};

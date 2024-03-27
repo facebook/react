@@ -32,7 +32,7 @@ describe('ReactLegacyUpdates', () => {
     assertLog = InternalTestUtils.assertLog;
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch state when updating state twice', () => {
     let updateCount = 0;
 
@@ -63,7 +63,7 @@ describe('ReactLegacyUpdates', () => {
     expect(updateCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch state when updating two different state keys', () => {
     let updateCount = 0;
 
@@ -97,7 +97,7 @@ describe('ReactLegacyUpdates', () => {
     expect(updateCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch state and props together', () => {
     let updateCount = 0;
 
@@ -131,7 +131,7 @@ describe('ReactLegacyUpdates', () => {
     expect(updateCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch parent/child state updates together', () => {
     let parentUpdateCount = 0;
 
@@ -187,7 +187,7 @@ describe('ReactLegacyUpdates', () => {
     expect(childUpdateCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch child/parent state updates together', () => {
     let parentUpdateCount = 0;
 
@@ -245,7 +245,7 @@ describe('ReactLegacyUpdates', () => {
     expect(childUpdateCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should support chained state updates', () => {
     let updateCount = 0;
 
@@ -286,7 +286,7 @@ describe('ReactLegacyUpdates', () => {
     expect(updateCount).toBe(2);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should batch forceUpdate together', () => {
     let shouldUpdateCount = 0;
     let updateCount = 0;
@@ -548,7 +548,7 @@ describe('ReactLegacyUpdates', () => {
     );
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('should queue mount-ready handlers across different roots', () => {
     // We'll define two components A and B, then update both of them. When A's
     // componentDidUpdate handlers is called, B's DOM should already have been
@@ -849,7 +849,7 @@ describe('ReactLegacyUpdates', () => {
     expect(callbackCount).toBe(1);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('does not call render after a component as been deleted', () => {
     let renderCount = 0;
     let componentB = null;
