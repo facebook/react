@@ -355,6 +355,16 @@ $RefreshReg$(_c3, "A");
 $RefreshReg$(_c4, "B");
 `;
 
+exports[`ReactFreshBabelPlugin registers composed HOCs 1`] = `
+export const A = compose(hoc1, hoc2, hoc3)(_c = () => <h1>Hi</h1>);
+_c2 = A;
+
+var _c, _c2;
+
+$RefreshReg$(_c, "A$compose");
+$RefreshReg$(_c2, "A");
+`;
+
 exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
 import A from './A';
 import Store from './Store';
