@@ -389,7 +389,6 @@ export default [
   "precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.",
   "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
   "react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer",
-  "renderToNodeStream is deprecated. Use renderToPipeableStream instead.",
   "root.finishedLanes should not be empty during a commit. This is a bug in React.",
   "sendAccessibilityEvent was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component",
   "unmountComponentAtNode was removed in React 19. Use root.unmount() instead.",

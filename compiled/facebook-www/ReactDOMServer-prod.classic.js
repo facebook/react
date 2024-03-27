@@ -5714,9 +5714,6 @@ function renderToStringImpl(
   if (!readyToStream) throw Error(formatProdErrorMessage(426));
   return result;
 }
-exports.renderToNodeStream = function () {
-  throw Error(formatProdErrorMessage(207));
-};
 exports.renderToStaticMarkup = function (children, options) {
   return renderToStringImpl(
     children,
@@ -5736,4 +5733,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-9752b79b";
+exports.version = "19.0.0-www-classic-177f53ee";
