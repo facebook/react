@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-173398fa";
+    var ReactVersion = "19.0.0-www-modern-194c6b4a";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2317,6 +2317,7 @@ if (__DEV__) {
         .replace(msPattern, "-ms-");
     }
 
+    // A javascript: URL can contain leading C0 control or \u0020 SPACE,
     // and any newline or tab are filtered out as if they're not part of the URL.
     // https://url.spec.whatwg.org/#url-parsing
     // Tab or newline are defined as \r\n\t:
@@ -2326,22 +2327,17 @@ if (__DEV__) {
     // https://infra.spec.whatwg.org/#c0-control-or-space
 
     /* eslint-disable max-len */
-
     var isJavaScriptProtocol =
       /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
     function sanitizeURL(url) {
       // We should never have symbols here because they get filtered out elsewhere.
       // eslint-disable-next-line react-internal/safe-string-coercion
-      var stringifiedURL = "" + url;
-
-      {
-        if (isJavaScriptProtocol.test(stringifiedURL)) {
-          // Return a different javascript: url that doesn't cause any side-effects and just
-          // throws if ever visited.
-          // eslint-disable-next-line no-script-url
-          return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
-        }
+      if (isJavaScriptProtocol.test("" + url)) {
+        // Return a different javascript: url that doesn't cause any side-effects and just
+        // throws if ever visited.
+        // eslint-disable-next-line no-script-url
+        return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
       }
 
       return url;
