@@ -6004,23 +6004,23 @@ describe('ReactDOMFizzServer', () => {
     expect(reportedServerErrors.length).toBe(1);
     expect(reportedServerErrors[0].message).toBe('Oops!');
 
+    const reportedCaughtErrors = [];
     const reportedClientErrors = [];
     ReactDOMClient.hydrateRoot(container, <App />, {
+      onCaughtError(error) {
+        reportedCaughtErrors.push(error);
+      },
       onRecoverableError(error) {
         reportedClientErrors.push(error);
       },
     });
     await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual('Oops!');
-    expect(reportedClientErrors.length).toBe(1);
-    if (__DEV__) {
-      expect(reportedClientErrors[0].message).toBe('Oops!');
-    } else {
-      expect(reportedClientErrors[0].message).toBe(
-        'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
-      );
-    }
+    // Because this is rethrown on the client, it is not a recoverable error.
+    expect(reportedClientErrors.length).toBe(0);
+    // It is caught by the error boundary.
+    expect(reportedCaughtErrors.length).toBe(1);
+    expect(reportedCaughtErrors[0].message).toBe('Oops!');
   });
 
   it("use a promise that's already been instrumented and resolved", async () => {
