@@ -93,6 +93,7 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
       // to React that the selections are conceptually equal, and we can bail
       // out of rendering.
       if (isEqual !== undefined && isEqual(prevSelection, nextSelection)) {
+        memoizedSnapshot = nextSnapshot;
         return prevSelection;
       }
 
