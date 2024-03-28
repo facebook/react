@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<244937dc229d1c275651498c5cc072e4>>
+ * @generated SignedSource<<1559aa190bc5f176834018f226327de0>>
  */
 
 "use strict";
@@ -9669,6 +9669,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -11343,7 +11345,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1187 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-02645df6",
+    version: "19.0.0-canary-042f4f16",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11399,7 +11401,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-02645df6"
+  reconcilerVersion: "19.0.0-canary-042f4f16"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

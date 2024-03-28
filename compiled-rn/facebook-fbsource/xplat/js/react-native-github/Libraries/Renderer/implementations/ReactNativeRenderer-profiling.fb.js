@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3e69b54c3deb3830ded1e06cc2837e8d>>
+ * @generated SignedSource<<747a3fcb345e723e898836c3648fe48a>>
  */
 
 "use strict";
@@ -9879,6 +9879,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -11560,7 +11562,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1254 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-97d95438",
+    version: "19.0.0-canary-7a0cbc16",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11616,7 +11618,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-97d95438"
+  reconcilerVersion: "19.0.0-canary-7a0cbc16"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

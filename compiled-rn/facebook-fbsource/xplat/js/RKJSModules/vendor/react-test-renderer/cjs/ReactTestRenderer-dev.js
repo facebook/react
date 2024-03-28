@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d0aa2e6a0e8da06520b3955d1e4ff347>>
+ * @generated SignedSource<<398013076b718065eff718ae9cda9bc9>>
  */
 
 "use strict";
@@ -22614,7 +22614,15 @@ if (__DEV__) {
           break;
         }
 
-        case RootErrored:
+        case RootErrored: {
+          // This render errored. Ignore any recoverable errors because we weren't actually
+          // able to recover. Instead, whatever the final errors were is the ones we log.
+          // This ensures that we only log the actual client side error if it's just a plain
+          // error thrown from a component on the server and the client.
+          workInProgressRootRecoverableErrors = null;
+          break;
+        }
+
         case RootSuspended:
         case RootCompleted: {
           break;
@@ -26232,7 +26240,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-7773ba64";
+    var ReactVersion = "19.0.0-canary-32f0e114";
 
     // Might add PROFILE later.
 

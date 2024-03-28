@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa8c8ecbed2d92e2e15f4de2c4919cff>>
+ * @generated SignedSource<<9c81454fac04a284791d0ad56825d16e>>
  */
 
 "use strict";
@@ -26645,7 +26645,15 @@ to return true:wantsResponderID|                            |
           break;
         }
 
-        case RootErrored:
+        case RootErrored: {
+          // This render errored. Ignore any recoverable errors because we weren't actually
+          // able to recover. Instead, whatever the final errors were is the ones we log.
+          // This ensures that we only log the actual client side error if it's just a plain
+          // error thrown from a component on the server and the client.
+          workInProgressRootRecoverableErrors = null;
+          break;
+        }
+
         case RootSuspended:
         case RootCompleted: {
           break;
@@ -30563,7 +30571,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-61da7430";
+    var ReactVersion = "19.0.0-canary-1f40d31c";
 
     function createPortal$1(
       children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<831b87dba7ff1bcc6c13121b5a09085a>>
+ * @generated SignedSource<<d1e551744163659d35d40bd04a925d41>>
  */
 
 "use strict";
@@ -9137,6 +9137,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -10636,7 +10638,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1105 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-9deee096",
+    version: "19.0.0-canary-369e456c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10679,7 +10681,7 @@ var internals$jscomp$inline_1342 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-9deee096"
+  reconcilerVersion: "19.0.0-canary-369e456c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1343 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
