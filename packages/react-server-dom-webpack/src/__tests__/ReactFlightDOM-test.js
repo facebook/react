@@ -864,6 +864,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const [Posts, resolvePostsData] = makeDelayedText();
+    const [Photos, resolvePhotosData] = makeDelayedText();
     const suspendedChunk = createSuspendedChunk(<p>loading</p>);
     const {writable, readable} = getTestStream();
     const {pipe} = ReactServerDOMServer.renderToPipeableStream(
@@ -893,8 +894,9 @@ describe('ReactFlightDOM', () => {
     const donePromise = createResolvablePromise();
 
     const value = (
-      <Suspense fallback={<p>loading posts</p>}>
+      <Suspense fallback={<p>loading posts and photos</p>}>
         <Posts />
+        <Photos />
       </Suspense>
     );
 
@@ -903,13 +905,14 @@ describe('ReactFlightDOM', () => {
       donePromise.resolve({value, done: true});
     });
 
-    expect(container.innerHTML).toBe('<p>loading posts</p>');
+    expect(container.innerHTML).toBe('<p>loading posts and photos</p>');
 
     await act(async () => {
       await resolvePostsData('posts');
+      await resolvePhotosData('photos');
     });
 
-    expect(container.innerHTML).toBe('<div>posts</div>');
+    expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
     expect(reportedErrors).toEqual([]);
   });
 
