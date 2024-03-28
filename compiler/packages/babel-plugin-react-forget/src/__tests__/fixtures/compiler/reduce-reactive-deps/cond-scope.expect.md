@@ -20,14 +20,21 @@
 // return x;
 // ```
 
-function TestReactiveDepsInCondScope(props) {
+import { CONST_FALSE, identity } from "shared-runtime";
+
+function useReactiveDepsInCondScope(props) {
   let x = {};
-  if (foo) {
-    let tmp = bar(props.a.b);
+  if (CONST_FALSE) {
+    let tmp = identity(props.a.b);
     x.a = tmp;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useReactiveDepsInCondScope,
+  params: [{}],
+};
 
 ```
 
@@ -52,15 +59,17 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Some reactive 
 // return x;
 // ```
 
-function TestReactiveDepsInCondScope(props) {
+import { CONST_FALSE, identity } from "shared-runtime";
+
+function useReactiveDepsInCondScope(props) {
   const $ = useMemoCache(4);
   let x;
   if ($[0] !== props) {
     x = {};
-    if (foo) {
+    if (CONST_FALSE) {
       let t0;
       if ($[2] !== props.a.b) {
-        t0 = bar(props.a.b);
+        t0 = identity(props.a.b);
         $[2] = props.a.b;
         $[3] = t0;
       } else {
@@ -77,13 +86,12 @@ function TestReactiveDepsInCondScope(props) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useReactiveDepsInCondScope,
+  params: [{}],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) {}

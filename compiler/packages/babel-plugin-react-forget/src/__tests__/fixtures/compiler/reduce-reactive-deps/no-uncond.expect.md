@@ -3,15 +3,32 @@
 
 ```javascript
 // When an object's properties are only read conditionally, we should
+
+import { identity } from "shared-runtime";
+
 // track the base object as a dependency.
-function TestOnlyConditionalDependencies(props, other) {
+function useOnlyConditionalDependencies({ props, cond }) {
   const x = {};
-  if (foo(other)) {
+  if (identity(cond)) {
     x.b = props.a.b;
     x.c = props.a.b.c;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useOnlyConditionalDependencies,
+  params: [{ props: { a: { b: 2 } }, cond: true }],
+  sequentialRenders: [
+    { props: { a: { b: 2 } }, cond: true },
+    { props: null, cond: false },
+    // check we preserve nullthrows
+    { props: { a: { b: { c: undefined } } }, cond: true },
+    { props: { a: { b: undefined } }, cond: true },
+    { props: { a: { b: { c: undefined } } }, cond: true },
+    { props: undefined, cond: true },
+  ],
+};
 
 ```
 
@@ -19,17 +36,21 @@ function TestOnlyConditionalDependencies(props, other) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // When an object's properties are only read conditionally, we should
+
+import { identity } from "shared-runtime";
+
 // track the base object as a dependency.
-function TestOnlyConditionalDependencies(props, other) {
+function useOnlyConditionalDependencies(t0) {
   const $ = useMemoCache(3);
+  const { props, cond } = t0;
   let x;
-  if ($[0] !== other || $[1] !== props) {
+  if ($[0] !== cond || $[1] !== props) {
     x = {};
-    if (foo(other)) {
+    if (identity(cond)) {
       x.b = props.a.b;
       x.c = props.a.b.c;
     }
-    $[0] = other;
+    $[0] = cond;
     $[1] = props;
     $[2] = x;
   } else {
@@ -38,13 +59,26 @@ function TestOnlyConditionalDependencies(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useOnlyConditionalDependencies,
+  params: [{ props: { a: { b: 2 } }, cond: true }],
+  sequentialRenders: [
+    { props: { a: { b: 2 } }, cond: true },
+    { props: null, cond: false },
+    // check we preserve nullthrows
+    { props: { a: { b: { c: undefined } } }, cond: true },
+    { props: { a: { b: undefined } }, cond: true },
+    { props: { a: { b: { c: undefined } } }, cond: true },
+    { props: undefined, cond: true },
+  ],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) {"b":2}
+{}
+{"b":{}}
+[[ (exception in render) TypeError: Cannot read properties of undefined (reading 'c') ]]
+{"b":{}}
+[[ (exception in render) TypeError: Cannot read properties of undefined (reading 'a') ]]

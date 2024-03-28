@@ -16,11 +16,18 @@
 // return x;
 // ```
 
-function TestReactiveDepsInCondScope(props) {
+import { CONST_FALSE, identity } from "shared-runtime";
+
+function useReactiveDepsInCondScope(props) {
   let x = {};
-  if (foo) {
-    let tmp = bar(props.a.b);
+  if (CONST_FALSE) {
+    let tmp = identity(props.a.b);
     x.a = tmp;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useReactiveDepsInCondScope,
+  params: [{}],
+};

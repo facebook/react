@@ -19,15 +19,22 @@
 //    mutate2(y, props.a.b);
 //  }
 
-function TestJoinCondDepsInUncondScopes(props) {
+import { CONST_TRUE, setProperty } from "shared-runtime";
+
+function useJoinCondDepsInUncondScopes(props) {
   let y = {};
   let x = {};
-  if (foo) {
-    mutate1(x, props.a.b);
+  if (CONST_TRUE) {
+    setProperty(x, props.a.b);
   }
-  mutate2(y, props.a.b);
+  setProperty(y, props.a.b);
   return [x, y];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useJoinCondDepsInUncondScopes,
+  params: [{ a: { b: 3 } }],
+};
 
 ```
 
@@ -51,7 +58,9 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // This tests an 
 //    mutate2(y, props.a.b);
 //  }
 
-function TestJoinCondDepsInUncondScopes(props) {
+import { CONST_TRUE, setProperty } from "shared-runtime";
+
+function useJoinCondDepsInUncondScopes(props) {
   const $ = useMemoCache(8);
   let x;
   let y;
@@ -59,8 +68,8 @@ function TestJoinCondDepsInUncondScopes(props) {
     y = {};
     if ($[3] !== props) {
       x = {};
-      if (foo) {
-        mutate1(x, props.a.b);
+      if (CONST_TRUE) {
+        setProperty(x, props.a.b);
       }
       $[3] = props;
       $[4] = x;
@@ -68,7 +77,7 @@ function TestJoinCondDepsInUncondScopes(props) {
       x = $[4];
     }
 
-    mutate2(y, props.a.b);
+    setProperty(y, props.a.b);
     $[0] = props.a.b;
     $[1] = x;
     $[2] = y;
@@ -88,13 +97,12 @@ function TestJoinCondDepsInUncondScopes(props) {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useJoinCondDepsInUncondScopes,
+  params: [{ a: { b: 3 } }],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) [{"wat0":3},{"wat0":3}]

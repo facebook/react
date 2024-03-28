@@ -4,15 +4,23 @@
 ```javascript
 // When a conditional dependency `props.a.b.c` has no unconditional dependency
 // in its subpath or superpath, we should find the nearest unconditional access
+
+import { identity } from "shared-runtime";
+
 // and promote it to an unconditional dependency.
-function TestPromoteUnconditionalAccessToDependency(props, other) {
+function usePromoteUnconditionalAccessToDependency(props, other) {
   const x = {};
   x.a = props.a.a.a;
-  if (foo(other)) {
+  if (identity(other)) {
     x.c = props.a.b.c;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: usePromoteUnconditionalAccessToDependency,
+  params: [{ a: { a: { a: 3 } } }, false],
+};
 
 ```
 
@@ -21,14 +29,17 @@ function TestPromoteUnconditionalAccessToDependency(props, other) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // When a conditional dependency `props.a.b.c` has no unconditional dependency
 // in its subpath or superpath, we should find the nearest unconditional access
+
+import { identity } from "shared-runtime";
+
 // and promote it to an unconditional dependency.
-function TestPromoteUnconditionalAccessToDependency(props, other) {
+function usePromoteUnconditionalAccessToDependency(props, other) {
   const $ = useMemoCache(3);
   let x;
   if ($[0] !== props.a || $[1] !== other) {
     x = {};
     x.a = props.a.a.a;
-    if (foo(other)) {
+    if (identity(other)) {
       x.c = props.a.b.c;
     }
     $[0] = props.a;
@@ -40,13 +51,12 @@ function TestPromoteUnconditionalAccessToDependency(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: usePromoteUnconditionalAccessToDependency,
+  params: [{ a: { a: { a: 3 } } }, false],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) {"a":3}

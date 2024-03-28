@@ -2,12 +2,19 @@
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 
-function TestCondDepInDirectIfElse(props, other) {
+import { identity } from "shared-runtime";
+
+function useCondDepInDirectIfElse(props, cond) {
   const x = {};
-  if (foo(other)) {
+  if (identity(cond)) {
     x.b = props.a.b;
   } else {
     x.c = props.a.b;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useCondDepInDirectIfElse,
+  params: [{ a: { b: 2 } }, true],
+};

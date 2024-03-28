@@ -6,15 +6,23 @@
 // dependency `props.a.b`, we can access `props.a` while preserving program
 // semantics (with respect to nullthrows).
 // deps: {`props.a`, `props.a.b`} can further reduce to just `props.a`
+
+import { identity } from "shared-runtime";
+
 // ordering of accesses should not matter
-function TestConditionalSubpath1(props, other) {
+function useConditionalSubpath1(props, cond) {
   const x = {};
   x.b = props.a.b;
-  if (foo(other)) {
+  if (identity(cond)) {
     x.a = props.a;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useConditionalSubpath1,
+  params: [{ a: { b: 3 } }, false],
+};
 
 ```
 
@@ -25,18 +33,21 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // When a conditi
 // dependency `props.a.b`, we can access `props.a` while preserving program
 // semantics (with respect to nullthrows).
 // deps: {`props.a`, `props.a.b`} can further reduce to just `props.a`
+
+import { identity } from "shared-runtime";
+
 // ordering of accesses should not matter
-function TestConditionalSubpath1(props, other) {
+function useConditionalSubpath1(props, cond) {
   const $ = useMemoCache(3);
   let x;
-  if ($[0] !== props.a || $[1] !== other) {
+  if ($[0] !== props.a || $[1] !== cond) {
     x = {};
     x.b = props.a.b;
-    if (foo(other)) {
+    if (identity(cond)) {
       x.a = props.a;
     }
     $[0] = props.a;
-    $[1] = other;
+    $[1] = cond;
     $[2] = x;
   } else {
     x = $[2];
@@ -44,13 +55,12 @@ function TestConditionalSubpath1(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useConditionalSubpath1,
+  params: [{ a: { b: 3 } }, false],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) {"b":3}

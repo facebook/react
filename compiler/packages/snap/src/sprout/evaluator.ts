@@ -7,12 +7,11 @@
 
 import { render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
+import React, { MutableRefObject } from "react";
 import util from "util";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { PROJECT_ROOT } from "../constants";
 import { initFbt, toJSON } from "./shared-runtime";
-const React = require("react");
 
 /**
  * Set up the global environment for JSDOM tests.
@@ -31,7 +30,6 @@ initFbt();
 (globalThis as any).placeholderFn = function (..._args: Array<any>) {
   throw new Error("Fixture not implemented!");
 };
-
 export type EvaluatorResult = {
   kind: "ok" | "exception" | "UnexpectedError";
   value: string;
@@ -57,6 +55,45 @@ const ExportSchema = z.object({
   FIXTURE_ENTRYPOINT: EntrypointSchema,
 });
 
+/**
+ * Wraps WrapperTestComponent in an error boundary to simplify re-rendering
+ * when an exception is thrown.
+ * A simpler alternative may be to re-mount test components manually.
+ */
+class WrapperTestComponentWithErrorBoundary extends React.Component<
+  { fn: any; params: Array<any> },
+  { hasError: boolean; error: any }
+> {
+  propsErrorMap: MutableRefObject<Map<any, any>>;
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+    this.propsErrorMap = React.createRef() as MutableRefObject<Map<any, any>>;
+    this.propsErrorMap.current = new Map();
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error };
+  }
+  override componentDidUpdate() {
+    if (this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+  override render() {
+    if (this.state.hasError) {
+      this.propsErrorMap.current!.set(
+        this.props,
+        `[[ (exception in render) ${this.state.error?.toString()} ]]`
+      );
+    }
+    const cachedError = this.propsErrorMap.current!.get(this.props);
+    if (cachedError != null) {
+      return cachedError;
+    }
+    return React.createElement(WrapperTestComponent, this.props);
+  }
+}
+
 function WrapperTestComponent(props: { fn: any; params: Array<any> }) {
   const result = props.fn(...props.params);
   // Hacky solution to determine whether the fixture returned jsx (which
@@ -81,13 +118,16 @@ function renderComponentSequentiallyForEachProps(
   const initialProps = sequentialRenders[0]!;
   const results = [];
   const { rerender, container } = render(
-    React.createElement(WrapperTestComponent, { fn, params: [initialProps] })
+    React.createElement(WrapperTestComponentWithErrorBoundary, {
+      fn,
+      params: [initialProps],
+    })
   );
   results.push(container.innerHTML);
 
   for (let i = 1; i < sequentialRenders.length; i++) {
     rerender(
-      React.createElement(WrapperTestComponent, {
+      React.createElement(WrapperTestComponentWithErrorBoundary, {
         fn,
         params: [sequentialRenders[i]],
       })
@@ -127,7 +167,7 @@ type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
     // Try to run fixture as a react component. This is necessary because not
     // all components are functions (some are ForwardRef or Memo objects).
     const result = render(
-      React.createElement(entrypoint.fn, entrypoint.params[0])
+      React.createElement(entrypoint.fn as any, entrypoint.params[0])
     ).container.innerHTML;
 
     return {
@@ -151,12 +191,14 @@ export function doEval(source: string): EvaluatorResult {
   const originalConsole = globalThis.console;
   const logs: Array<string> = [];
   const mockedLog = (...args: Array<any>) => {
-    // Some hackery: React will use the JS engine to log source location,
-    // which doesn't play well with snapshot files.
     logs.push(
-      `${args.map((arg) =>
-        util.inspect(arg).replaceAll(PROJECT_ROOT, "<project_root>")
-      )}`
+      `${args.map((arg) => {
+        if (arg instanceof Error) {
+          return arg.toString();
+        } else {
+          return util.inspect(arg);
+        }
+      })}`
     );
   };
 
@@ -164,7 +206,22 @@ export function doEval(source: string): EvaluatorResult {
     info: mockedLog,
     log: mockedLog,
     warn: mockedLog,
-    error: mockedLog,
+    error: (...args: Array<any>) => {
+      const stack = new Error().stack?.split("\n", 5) ?? [];
+      for (const stackFrame of stack) {
+        // React warns on exceptions thrown during render, we avoid printing
+        // here to reduce noise in test fixture outputs.
+        if (
+          (stackFrame.includes("at logCapturedError") &&
+            stackFrame.includes("react-dom.development")) ||
+          (stackFrame.includes("at defaultOnRecoverableError") &&
+            stackFrame.includes("react-dom.development"))
+        ) {
+          return;
+        }
+      }
+      mockedLog(...args);
+    },
     table: mockedLog,
     trace: () => {},
   };
@@ -184,6 +241,12 @@ export function doEval(source: string): EvaluatorResult {
         // run in an iife to avoid naming collisions
         (() => {${source}})();
         reachedInvoke = true;
+        if (exports.FIXTURE_ENTRYPOINT?.fn === globalThis.placeholderFn) {
+          return {
+            kind: "exception",
+            value: "Fixture not implemented",
+          };
+        }
         return evaluateFixtureExport(exports);
       } catch (e) {
         if (!reachedInvoke) {

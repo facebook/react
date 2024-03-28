@@ -5,9 +5,11 @@
 // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in the default case.
 
-function TestCondDepInSwitchMissingDefault(props, other) {
+import { identity } from "shared-runtime";
+
+function useCondDepInSwitchMissingDefault(props, other) {
   const x = {};
-  switch (foo(other)) {
+  switch (identity(other)) {
     case 1:
       x.a = props.a.b;
       break;
@@ -18,6 +20,11 @@ function TestCondDepInSwitchMissingDefault(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useCondDepInSwitchMissingDefault,
+  params: [{ a: { b: 2 } }, 3],
+};
+
 ```
 
 ## Code
@@ -26,12 +33,14 @@ function TestCondDepInSwitchMissingDefault(props, other) {
 import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in the default case.
 
-function TestCondDepInSwitchMissingDefault(props, other) {
+import { identity } from "shared-runtime";
+
+function useCondDepInSwitchMissingDefault(props, other) {
   const $ = useMemoCache(3);
   let x;
   if ($[0] !== other || $[1] !== props) {
     x = {};
-    bb1: switch (foo(other)) {
+    bb1: switch (identity(other)) {
       case 1: {
         x.a = props.a.b;
         break bb1;
@@ -49,13 +58,12 @@ function TestCondDepInSwitchMissingDefault(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useCondDepInSwitchMissingDefault,
+  params: [{ a: { b: 2 } }, 3],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) {}

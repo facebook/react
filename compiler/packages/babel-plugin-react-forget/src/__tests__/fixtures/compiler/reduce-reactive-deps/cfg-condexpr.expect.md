@@ -6,10 +6,17 @@
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 
-function TestCondDepInConditionalExpr(props, other) {
-  const x = foo(other) ? bar(props.a.b) : baz(props.a.b);
+import { identity, addOne } from "shared-runtime";
+
+function useCondDepInConditionalExpr(props, cond) {
+  const x = identity(cond) ? addOne(props.a.b) : identity(props.a.b);
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useCondDepInConditionalExpr,
+  params: [{ a: { b: 2 } }, true],
+};
 
 ```
 
@@ -20,12 +27,14 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b shou
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 
-function TestCondDepInConditionalExpr(props, other) {
+import { identity, addOne } from "shared-runtime";
+
+function useCondDepInConditionalExpr(props, cond) {
   const $ = useMemoCache(3);
   let t0;
-  if ($[0] !== other || $[1] !== props.a.b) {
-    t0 = foo(other) ? bar(props.a.b) : baz(props.a.b);
-    $[0] = other;
+  if ($[0] !== cond || $[1] !== props.a.b) {
+    t0 = identity(cond) ? addOne(props.a.b) : identity(props.a.b);
+    $[0] = cond;
     $[1] = props.a.b;
     $[2] = t0;
   } else {
@@ -35,13 +44,12 @@ function TestCondDepInConditionalExpr(props, other) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useCondDepInConditionalExpr,
+  params: [{ a: { b: 2 } }, true],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented!
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/snap/dist/sprout/evaluator.js:54:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) 3
