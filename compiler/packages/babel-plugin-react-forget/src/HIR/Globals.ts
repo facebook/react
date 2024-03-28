@@ -9,7 +9,6 @@ import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
-  BuiltInMixedReadonlyId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -434,7 +433,7 @@ export function installReAnimatedTypes(
       addHook(registry, {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Object", shapeId: BuiltInMixedReadonlyId },
+        returnType: { kind: "Poly" },
         returnValueKind: ValueKind.Frozen,
         noAlias: true,
         calleeEffect: Effect.Read,
