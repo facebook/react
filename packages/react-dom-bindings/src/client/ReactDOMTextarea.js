@@ -74,7 +74,16 @@ export function updateTextarea(
     }
     // TOOO: This should respect disableInputAttributeSyncing flag.
     if (defaultValue == null) {
-      if (node.defaultValue !== newValue) {
+      // Do not sync value and defaultValue if a minLength or maxLength constraint
+      // is set because this causes Chrome to skip validation.
+      // https://github.com/facebook/react/issues/19474
+      if (
+        node.defaultValue !== newValue &&
+        // $FlowFixMe[prop-missing]
+        node.minLength === -1 &&
+        // $FlowFixMe[prop-missing]
+        node.maxLength === -1
+      ) {
         node.defaultValue = newValue;
       }
       return;
