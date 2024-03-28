@@ -17,7 +17,7 @@ const {useRef, useEffect, useMemo, useDebugValue} = React;
 
 // Same as useSyncExternalStore, but supports selector and isEqual arguments.
 export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
-  subscribe: (() => void) => () => void,
+  subscribe: (onStoreChange: () => void) => () => void,
   getSnapshot: () => Snapshot,
   getServerSnapshot: void | null | (() => Snapshot),
   selector: (snapshot: Snapshot) => Selection,
@@ -54,12 +54,45 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
     let hasMemo = false;
     let memoizedSnapshot;
     let memoizedSelection: Selection;
+
+    let lastUsedProps: string[] = [];
+    let hasAccessed = false;
+    const accessedProps: string[] = [];
+
     const memoizedSelector = (nextSnapshot: Snapshot) => {
+      const getProxy = (): Snapshot => {
+        if (
+          !(typeof nextSnapshot === 'object') ||
+          typeof Proxy === 'undefined'
+        ) {
+          return nextSnapshot;
+        }
+
+        const handler = {
+          get: (target: Snapshot, prop: string, receiver: any) => {
+            const propertyName = prop.toString();
+
+            if (accessedProps.indexOf(propertyName) === -1) {
+              accessedProps.push(propertyName);
+            }
+
+            const value = Reflect.get(target, prop, receiver);
+
+            return value;
+          },
+        };
+
+        return (new Proxy(nextSnapshot, handler): any);
+      };
+
       if (!hasMemo) {
         // The first time the hook is called, there is no memoized result.
         hasMemo = true;
         memoizedSnapshot = nextSnapshot;
-        const nextSelection = selector(nextSnapshot);
+        const nextSelection = selector(getProxy());
+        lastUsedProps = accessedProps;
+        hasAccessed = true;
+
         if (isEqual !== undefined) {
           // Even if the selector has changed, the currently rendered selection
           // may be equal to the new selection. We should attempt to reuse the
@@ -77,29 +110,65 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
       }
 
       // We may be able to reuse the previous invocation's result.
-      const prevSnapshot: Snapshot = (memoizedSnapshot: any);
-      const prevSelection: Selection = (memoizedSelection: any);
+      const prevSnapshot = memoizedSnapshot;
+      const prevSelection = memoizedSelection;
+
+      const getChangedSegments = (): string[] | void => {
+        if (
+          prevSnapshot === undefined ||
+          !hasAccessed ||
+          lastUsedProps.length === 0
+        ) {
+          return undefined;
+        }
+
+        const result: string[] = [];
+
+        if (
+          nextSnapshot !== null &&
+          typeof nextSnapshot === 'object' &&
+          prevSnapshot !== null &&
+          typeof prevSnapshot === 'object'
+        ) {
+          for (let i = 0; i < lastUsedProps.length; i++) {
+            const segmentName = lastUsedProps[i];
+
+            if (nextSnapshot[segmentName] !== prevSnapshot[segmentName]) {
+              result.push(segmentName);
+            }
+          }
+        }
+
+        return result;
+      };
 
       if (is(prevSnapshot, nextSnapshot)) {
         // The snapshot is the same as last time. Reuse the previous selection.
         return prevSelection;
       }
 
-      // The snapshot has changed, so we need to compute a new selection.
-      const nextSelection = selector(nextSnapshot);
+      const changedSegments = getChangedSegments();
+      if (changedSegments === undefined || changedSegments.length > 0) {
+        const nextSelection = selector(getProxy());
+        lastUsedProps = accessedProps;
+        hasAccessed = true;
 
-      // If a custom isEqual function is provided, use that to check if the data
-      // has changed. If it hasn't, return the previous selection. That signals
-      // to React that the selections are conceptually equal, and we can bail
-      // out of rendering.
-      if (isEqual !== undefined && isEqual(prevSelection, nextSelection)) {
+        // If a custom isEqual function is provided, use that to check if the data
+        // has changed. If it hasn't, return the previous selection. That signals
+        // to React that the selections are conceptually equal, and we can bail
+        // out of rendering.
+        if (isEqual !== undefined && isEqual(prevSelection, nextSelection)) {
+          return prevSelection;
+        }
+
+        memoizedSnapshot = nextSnapshot;
+        memoizedSelection = nextSelection;
+        return nextSelection;
+      } else {
         return prevSelection;
       }
-
-      memoizedSnapshot = nextSnapshot;
-      memoizedSelection = nextSelection;
-      return nextSelection;
     };
+
     // Assigning this to a constant so that Flow knows it can't change.
     const maybeGetServerSnapshot =
       getServerSnapshot === undefined ? null : getServerSnapshot;
@@ -125,5 +194,6 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
   }, [value]);
 
   useDebugValue(value);
+
   return value;
 }
