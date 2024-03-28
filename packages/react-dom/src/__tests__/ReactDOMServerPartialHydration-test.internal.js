@@ -3782,23 +3782,15 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.appendChild(container);
     container.innerHTML = finalHTML;
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
-          onRecoverableError(error) {
-            Scheduler.log(
-              'Log recoverable error: ' + normalizeError(error.message),
-            );
-          },
-        });
+    await act(() => {
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+        onRecoverableError(error) {
+          Scheduler.log(
+            'Log recoverable error: ' + normalizeError(error.message),
+          );
+        },
       });
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. ' +
-          'The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    });
     assertLog([
       "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
       'Log recoverable error: There was an error while hydrating.',
@@ -3828,21 +3820,13 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = ReactDOMServer.renderToString(
       <DirectTextChild text="good" />,
     );
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
-          onRecoverableError(error) {
-            Scheduler.log(normalizeError(error.message));
-          },
-        });
+    await act(() => {
+      ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
+        onRecoverableError(error) {
+          Scheduler.log(normalizeError(error.message));
+        },
       });
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with ' +
-          'client content.',
-      ],
-      {withoutStack: 1},
-    );
+    });
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating.',
@@ -3867,25 +3851,17 @@ describe('ReactDOMServerPartialHydration', () => {
     container2.innerHTML = ReactDOMServer.renderToString(
       <TextChildWithSibling text="good" />,
     );
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          container2,
-          <TextChildWithSibling text="bad" />,
-          {
-            onRecoverableError(error) {
-              Scheduler.log(normalizeError(error.message));
-            },
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        container2,
+        <TextChildWithSibling text="bad" />,
+        {
+          onRecoverableError(error) {
+            Scheduler.log(normalizeError(error.message));
           },
-        );
-      });
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with ' +
-          'client content.',
-      ],
-      {withoutStack: 1},
-    );
+        },
+      );
+    });
     assertLog([
       "Hydration failed because the server rendered HTML didn't match the client.",
       'There was an error while hydrating.',

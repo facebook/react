@@ -78,10 +78,7 @@ import {
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {
-  getIsHydrating,
-  errorHydratingContainer,
-} from './ReactFiberHydrationContext';
+import {getIsHydrating} from './ReactFiberHydrationContext';
 import {
   NoMode,
   ProfileMode,
@@ -1017,9 +1014,6 @@ function recoverFromConcurrentError(
     // Something to consider for a future refactor.
     const rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
     rootWorkInProgress.flags |= ForceClientRender;
-    if (__DEV__) {
-      errorHydratingContainer(root.containerInfo);
-    }
   }
 
   const exitStatus = renderRootSync(root, errorRetryLanes);
