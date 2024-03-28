@@ -495,6 +495,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
       ) {
         // This version supports React Refresh.
         helpersByRendererID.set(id, ((injected: any): RendererHelpers));
+        hook.renderers.set(id, ((injected: any): RendererHelpers));
       }
       return id;
     };
