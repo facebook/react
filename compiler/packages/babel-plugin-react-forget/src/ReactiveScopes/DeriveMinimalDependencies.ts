@@ -6,7 +6,7 @@
  */
 
 import { CompilerError } from "../CompilerError";
-import { GeneratedSource, Identifier, ReactiveScopeDependency } from "../HIR";
+import { Identifier, ReactiveScopeDependency } from "../HIR";
 import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -182,11 +182,18 @@ export class ReactiveScopeDependencyTree {
     });
 
     for (const [id, root] of this.#roots) {
-      const nodesForRootId = mapNonNull(trees, (tree) => tree.#roots.get(id));
+      const nodesForRootId = mapNonNull(trees, (tree) => {
+        const node = tree.#roots.get(id);
+        if (node != null && isUnconditional(node.accessType)) {
+          return node;
+        } else {
+          return null;
+        }
+      });
       if (nodesForRootId) {
         addSubtreeIntersection(
-          nodesForRootId.map((root) => root.properties),
-          root.properties
+          root.properties,
+          nodesForRootId.map((root) => root.properties)
         );
       }
     }
@@ -470,17 +477,18 @@ function addSubtree(
  *     dependency in at least one branch (otherwise `UnconditionalAccess`)
  *
  * @param otherProperties (read-only) an array of node properties containing
- *         only unconditionally accessed nodes. Each element represents a
- *         subtree of reactive dependencies from a single CFG branch.
- *         otherProperties must represent all reachable branches.
+ *         conditionally and unconditionally accessed nodes. Each element
+ *         represents asubtree of reactive dependencies from a single CFG
+ *         branch.
+ *        otherProperties must represent all reachable branches.
  * @param currProperties (mutable) return by argument properties of a node
  *
  * otherProperties and currProperties must be properties of disjoint nodes
  * that represent the same dependency (identifier + path).
  */
 function addSubtreeIntersection(
-  otherProperties: Array<Map<string, DependencyNode>>,
-  currProperties: Map<string, DependencyNode>
+  currProperties: Map<string, DependencyNode>,
+  otherProperties: Array<Map<string, DependencyNode>>
 ): void {
   CompilerError.invariant(otherProperties.length > 1, {
     reason:
@@ -490,22 +498,6 @@ function addSubtreeIntersection(
     suggestions: null,
   });
 
-  CompilerError.invariant(
-    otherProperties.every((otherNode) => {
-      for (const [_, node] of otherNode) {
-        if (!isUnconditional(node.accessType)) {
-          return false;
-        }
-      }
-      return true;
-    }),
-    {
-      reason:
-        "[DeriveMinimalDependencies] Expected otherProperties to only hold unconditional nodes",
-      loc: GeneratedSource,
-    }
-  );
-
   /*
    * otherProperties here may contain unconditional nodes as the result of
    * recursively merging exhaustively conditional children with unconditionally
@@ -514,9 +506,14 @@ function addSubtreeIntersection(
    */
 
   for (const [propertyName, currNode] of currProperties) {
-    const otherNodes = mapNonNull(otherProperties, (properties) =>
-      properties.get(propertyName)
-    );
+    const otherNodes = mapNonNull(otherProperties, (properties) => {
+      const node = properties.get(propertyName);
+      if (node != null && isUnconditional(node.accessType)) {
+        return node;
+      } else {
+        return null;
+      }
+    });
 
     /*
      * intersection(otherNodes[propertyName]) only exists if each element in
@@ -524,8 +521,8 @@ function addSubtreeIntersection(
      */
     if (otherNodes) {
       addSubtreeIntersection(
-        otherNodes.map((node) => node.properties),
-        currNode.properties
+        currNode.properties,
+        otherNodes.map((node) => node.properties)
       );
 
       const isDep = otherNodes.some((tree) => isDependency(tree.accessType));
