@@ -7,11 +7,12 @@
 
 import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,
   updateContainer,
   injectIntoDevTools,
+  flushSync,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
@@ -68,13 +69,15 @@ class Surface extends React.Component {
 
     this._mountNode = createContainer(
       this._surface,
-      LegacyRoot,
+      ConcurrentRoot,
       null,
       false,
       false,
       '',
     );
-    updateContainer(this.props.children, this._mountNode, this);
+    flushSync(() => {
+      updateContainer(this.props.children, this._mountNode, this);
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -84,7 +87,9 @@ class Surface extends React.Component {
       this._surface.resize(+props.width, +props.height);
     }
 
-    updateContainer(this.props.children, this._mountNode, this);
+    flushSync(() => {
+      updateContainer(this.props.children, this._mountNode, this);
+    });
 
     if (this._surface.render) {
       this._surface.render();
@@ -92,7 +97,9 @@ class Surface extends React.Component {
   }
 
   componentWillUnmount() {
-    updateContainer(null, this._mountNode, this);
+    flushSync(() => {
+      updateContainer(null, this._mountNode, this);
+    });
   }
 
   render() {

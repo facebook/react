@@ -296,6 +296,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during mount', () => {
+      // @gate !disableLegacyMode && !disableLegacyMode
       it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
         assertLog([
@@ -370,6 +371,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during update', () => {
+      // @gate !disableLegacyMode && !disableLegacyMode
       it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={false} textRenderDuration={5} />,

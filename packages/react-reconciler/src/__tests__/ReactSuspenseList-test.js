@@ -272,7 +272,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && !disableLegacyMode
   it('shows content independently in legacy mode regardless of option', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');

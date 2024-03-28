@@ -32,7 +32,7 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {enableRefAsProp, disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 type Container = {
   rootID: string,
@@ -1020,6 +1020,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createLegacyRoot() {
+      if (disableLegacyMode) {
+        throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
+      }
+
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -1119,6 +1123,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+      if (disableLegacyMode) {
+        throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
+      }
       const rootID = DEFAULT_ROOT_ID;
       const container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot);
       const root = roots.get(container.rootID);

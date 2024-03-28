@@ -130,7 +130,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   const resolveText = resolveMostRecentTextCache;
 
-  // @gate experimental || www
+  // @gate www && !disableLegacyMode
   it('regression: false positive for legacy suspense', async () => {
     // Wrapping in memo because regular function components go through the
     // mountIndeterminateComponent path, which acts like there's no `current`

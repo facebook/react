@@ -54,6 +54,7 @@ import {
   enableUseEffectEventHook,
   enableLegacyHidden,
   disableStringRefs,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1164,7 +1165,8 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case OffscreenComponent: {
-      const isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
+      const isModernRoot =
+        disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
         const isHidden = finishedWork.memoizedState !== null;
         const newOffscreenSubtreeIsHidden =
@@ -2255,7 +2257,7 @@ function commitDeletionEffectsOnFiber(
     }
     case OffscreenComponent: {
       safelyDetachRef(deletedFiber, nearestMountedAncestor);
-      if (deletedFiber.mode & ConcurrentMode) {
+      if (disableLegacyMode || deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
         // don't attempt to unmount the effects again.
@@ -2932,7 +2934,7 @@ function commitMutationEffectsOnFiber(
       const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
 
-      if (finishedWork.mode & ConcurrentMode) {
+      if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
         // offscreen subtree was already hidden, so that we don't unmount the
         // effects again.
@@ -2978,7 +2980,10 @@ function commitMutationEffectsOnFiber(
           //   - This Offscreen was not hidden before.
           //   - Ancestor Offscreen was not hidden in previous commit.
           if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
-            if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
+            if (
+              disableLegacyMode ||
+              (finishedWork.mode & ConcurrentMode) !== NoMode
+            ) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
             }
@@ -3676,7 +3681,7 @@ function commitPassiveMountOnFiber(
             committedTransitions,
           );
         } else {
-          if (finishedWork.mode & ConcurrentMode) {
+          if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
             if (enableCache || enableTransitionTracing) {
@@ -3874,7 +3879,7 @@ export function reconnectPassiveEffects(
             includeWorkInProgressEffects,
           );
         } else {
-          if (finishedWork.mode & ConcurrentMode) {
+          if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
             if (enableCache || enableTransitionTracing) {

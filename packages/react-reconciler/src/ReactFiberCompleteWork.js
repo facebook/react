@@ -40,6 +40,7 @@ import {
   enableTransitionTracing,
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -1740,7 +1741,11 @@ function completeWork(
         }
       }
 
-      if (!nextIsHidden || (workInProgress.mode & ConcurrentMode) === NoMode) {
+      if (
+        !nextIsHidden ||
+        (!disableLegacyMode &&
+          (workInProgress.mode & ConcurrentMode) === NoMode)
+      ) {
         bubbleProperties(workInProgress);
       } else {
         // Don't bubble properties for hidden children unless we're rendering

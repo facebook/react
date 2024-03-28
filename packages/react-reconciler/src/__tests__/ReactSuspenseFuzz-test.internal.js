@@ -4,6 +4,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let Random;
+let ReactFeatureFlags;
 
 const SEED = process.env.FUZZ_TEST_SEED || 'default';
 const prettyFormatPkg = require('pretty-format');
@@ -26,6 +27,7 @@ describe('ReactSuspenseFuzz', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     Random = require('random-seed');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
   });
 
   jest.setTimeout(20000);
@@ -163,16 +165,21 @@ describe('ReactSuspenseFuzz', () => {
       resetCache();
 
       // Do it again in legacy mode.
-      const legacyRootThatSuspends = ReactNoop.createLegacyRoot();
-      await act(() => {
-        legacyRootThatSuspends.render(children);
-      });
+      if (!ReactFeatureFlags.disableLegacyMode) {
+        const legacyRootThatSuspends = ReactNoop.createLegacyRoot();
+        await act(() => {
+          legacyRootThatSuspends.render(children);
+        });
+
+        expect(legacyRootThatSuspends.getChildrenAsJSX()).toEqual(
+          expectedOutput,
+        );
+      }
 
       // Now compare the final output. It should be the same.
       expect(concurrentRootThatSuspends.getChildrenAsJSX()).toEqual(
         expectedOutput,
       );
-      expect(legacyRootThatSuspends.getChildrenAsJSX()).toEqual(expectedOutput);
 
       // TODO: There are Scheduler logs in this test file but they were only
       // added for debugging purposes; we don't make any assertions on them.

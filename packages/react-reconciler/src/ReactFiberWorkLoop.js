@@ -39,6 +39,7 @@ import {
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -602,7 +603,7 @@ export function getCurrentTime(): number {
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   } else if (
     (executionContext & RenderContext) !== NoContext &&
@@ -669,7 +670,7 @@ function requestRetryLane(fiber: Fiber) {
 
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   }
 
@@ -824,6 +825,7 @@ export function scheduleUpdateOnFiber(
     if (
       lane === SyncLane &&
       executionContext === NoContext &&
+      !disableLegacyMode &&
       (fiber.mode & ConcurrentMode) === NoMode
     ) {
       if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy) {
@@ -3810,7 +3812,7 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
       return;
     }
 
-    if (!(fiber.mode & ConcurrentMode)) {
+    if (!disableLegacyMode && !(fiber.mode & ConcurrentMode)) {
       return;
     }
 
@@ -3950,7 +3952,7 @@ function shouldForceFlushFallbacksInDEV() {
 
 function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
   if (__DEV__) {
-    if (fiber.mode & ConcurrentMode) {
+    if (disableLegacyMode || fiber.mode & ConcurrentMode) {
       if (!isConcurrentActEnvironment()) {
         // Not in an act environment. No need to warn.
         return;
