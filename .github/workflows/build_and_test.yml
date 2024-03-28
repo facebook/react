@@ -1,0 +1,435 @@
+name: facebook/react/build_and_test
+on:
+  pull_request:
+    branches:
+      - '!builds/facebook-www'
+  workflow_dispatch:
+    inputs:
+      prerelease_commit_sha:
+        required: false
+jobs:
+  yarn_flow:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: node ./scripts/tasks/flow-ci
+  check_generated_fizz_runtime:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Confirm generated inline Fizz runtime is up to date
+      run: |-
+        yarn generate-inline-fizz-runtime
+        git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+  yarn_lint:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: node ./scripts/prettier/index
+    - run: node ./scripts/tasks/eslint
+    - run: "./scripts/circleci/check_license.sh"
+    - run: "./scripts/circleci/check_modules.sh"
+    - run: "./scripts/circleci/test_print_warnings.sh"
+  yarn_test:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    strategy:
+      fail-fast: false
+      matrix:
+        args:
+        - "-r=stable --env=development"
+        - "-r=stable --env=production"
+        - "-r=experimental --env=development"
+        - "-r=experimental --env=production"
+        - "-r=www-classic --env=development --variant=false"
+        - "-r=www-classic --env=production --variant=false"
+        - "-r=www-classic --env=development --variant=true"
+        - "-r=www-classic --env=production --variant=true"
+        - "-r=www-modern --env=development --variant=false"
+        - "-r=www-modern --env=production --variant=false"
+        - "-r=www-modern --env=development --variant=true"
+        - "-r=www-modern --env=production --variant=true"
+        - "-r=stable --env=development --persistent"
+        - "-r=experimental --env=development --persistent"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: yarn test ${{ matrix.args }} --ci
+  yarn_build:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: yarn build
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: yarn-build
+        path: build
+  scrape_warning_messages:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: |-
+        mkdir -p ./build
+        node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: yarn-build
+        path: build
+  process_artifacts_combined:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - scrape_warning_messages
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: echo "$GITHUB_SHA" >> build/COMMIT_SHA
+    - run: tar -zcvf ./build.tgz ./build
+    - run: cp ./build.tgz ./build2.tgz
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: combined-artifacts2
+        path: "./build2.tgz"
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: combined-artifacts
+        path: "./build.tgz"
+  yarn_test_build:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    strategy:
+      fail-fast: false
+      matrix:
+        args:
+        - "-r=stable --env=development"
+        - "-r=stable --env=production"
+        - "-r=experimental --env=development"
+        - "-r=experimental --env=production"
+        - "--project=devtools -r=experimental"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: yarn test --build ${{ matrix.args }} --ci
+  download_base_build_for_sizebot:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/builds/facebook-www'
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Download artifacts for base revision
+      run: |-
+        git fetch origin main
+        cd ./scripts/release && yarn && cd ../../
+        scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+        mv ./build ./base-build
+    - name: Delete extraneous files
+      run: rm -rf ./base-build/node_modules
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: base-build
+        path: "./base-build"
+  sizebot:
+    if: inputs.prerelease_commit_sha == '' && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+    - download_base_build_for_sizebot
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - run: echo "$GITHUB_SHA" >> build/COMMIT_SHA
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: node ./scripts/tasks/danger
+  yarn_lint_build:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: yarn lint-build
+  yarn_check_release_dependencies:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: yarn check-release-dependencies
+  check_error_codes:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Search build artifacts for unminified errors
+      run: |-
+        yarn extract-errors
+        git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+  RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Install dependencies in fixtures/dom
+      run: yarn install --frozen-lockfile --cache-folder `yarn cache dir`
+      working-directory: fixtures/dom
+    - name: Install dependencies in fixtures/dom (retry)
+      run: yarn install --frozen-lockfile --cache-folder `yarn cache dir`
+      working-directory: fixtures/dom
+      if: failure()
+    - name: Run DOM fixture tests
+      run: |-
+        yarn predev
+        yarn test --maxWorkers=2
+      working-directory: fixtures/dom
+      env:
+        RELEASE_CHANNEL: stable
+  build_devtools_and_process_artifacts:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - yarn_build
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: yarn-build
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - run: "./scripts/circleci/pack_and_store_devtools_artifacts.sh"
+      env:
+        RELEASE_CHANNEL: experimental
+    - uses: actions/upload-artifact@v3.1.3
+      with:
+        name: devtools
+        path: "./build/devtools.tgz"
+  run_devtools_e2e_tests:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - build_devtools_and_process_artifacts
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - uses: actions/download-artifact@v3.0.2
+      with:
+        name: devtools
+        path: build
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Playwright install deps
+      run: |-
+        npx playwright install
+        sudo npx playwright install-deps
+    - run: "./scripts/circleci/run_devtools_e2e_tests.js"
+      env:
+        RELEASE_CHANNEL: experimental
