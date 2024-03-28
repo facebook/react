@@ -1,7 +1,8 @@
 'use strict';
 
 var React = require('react');
-var ReactDOM = require('react-dom');
+var ReactDOM = require('react-dom/client');
 var VectorWidget = require('./VectorWidget');
 
-ReactDOM.render(<VectorWidget />, document.getElementById('container'));
+const root = ReactDOM.createRoot(document.getElementById('container'));
+root.render(<VectorWidget />);

@@ -12,6 +12,6 @@
   },
   "scripts": {
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "build": "webpack app.js bundle.js"
+    "build": "webpack"
   }
 }
