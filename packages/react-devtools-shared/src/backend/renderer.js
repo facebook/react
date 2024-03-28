@@ -225,7 +225,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
-      IndeterminateComponent: 2,
+      IndeterminateComponent: 2, // removed in 19.0.0
       LazyComponent: 16,
       LegacyHiddenComponent: 23,
       MemoComponent: 14,
