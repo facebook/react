@@ -145,6 +145,11 @@ export default class Store extends EventEmitter<{
   // and will need to be reconsidered in the future if we add support for reload to React Native.
   _isSynchronousXHRSupported: boolean = false;
 
+  // Can the backend reload the page?
+  // If not, features like reload-and-profile will not work correctly and must
+  // be disabled.
+  _isLocationReloadSupported: boolean = false;
+
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
   // Older backends don't support an explicit bridge protocol,
@@ -252,6 +257,10 @@ export default class Store extends EventEmitter<{
     bridge.addListener(
       'isSynchronousXHRSupported',
       this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.addListener(
+      'isLocationReloadSupported',
+      this.onLocationReloadSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -462,7 +471,8 @@ export default class Store extends EventEmitter<{
     return (
       this._supportsReloadAndProfile &&
       this._isBackendStorageAPISupported &&
-      this._isSynchronousXHRSupported
+      this._isSynchronousXHRSupported &&
+      this._isLocationReloadSupported
     );
   }
 
@@ -1423,6 +1433,10 @@ export default class Store extends EventEmitter<{
       this.onBridgeSynchronousXHRSupported,
     );
     bridge.removeListener(
+      'isLocationReloadSupported',
+      this.onLocationReloadSupported,
+    );
+    bridge.removeListener(
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
     );
@@ -1440,15 +1454,34 @@ export default class Store extends EventEmitter<{
     isBackendStorageAPISupported: boolean,
   ) => void = isBackendStorageAPISupported => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+    this.#maybeSetSupportsReloadAndProfile();
 
     this.emit('supportsReloadAndProfile');
+  };
+
+  onLocationReloadSupported: (isLocationReloadSupported: boolean) => void =
+    isLocationReloadSupported => {
+      this._isLocationReloadSupported = isLocationReloadSupported;
+      this.#maybeSetSupportsReloadAndProfile();
+
+      this.emit('supportsReloadAndProfile');
+    };
+
+  #maybeSetSupportsReloadAndProfile: () => void = () => {
+    if (
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported &&
+      this._isLocationReloadSupported
+    ) {
+      this._supportsReloadAndProfile = true;
+    }
   };
 
   onBridgeSynchronousXHRSupported: (
     isSynchronousXHRSupported: boolean,
   ) => void = isSynchronousXHRSupported => {
     this._isSynchronousXHRSupported = isSynchronousXHRSupported;
-
+    this.#maybeSetSupportsReloadAndProfile();
     this.emit('supportsReloadAndProfile');
   };
 

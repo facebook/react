@@ -43,7 +43,11 @@ import type {
   ComponentFilter,
   BrowserTheme,
 } from 'react-devtools-shared/src/frontend/types';
-import {isSynchronousXHRSupported} from './utils';
+import {
+  isSynchronousXHRSupported,
+  isLocationReloadSupported,
+  isReactNativeEnvironment,
+} from './utils';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -250,6 +254,7 @@ export default class Agent extends EventEmitter<{
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
     bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
+    bridge.send('isLocationReloadSupported', isLocationReloadSupported());
 
     setupHighlighter(bridge, this);
     setupTraceUpdates(this);
@@ -587,6 +592,9 @@ export default class Agent extends EventEmitter<{
         SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
         recordChangeDescriptions ? 'true' : 'false',
       );
+      if (!isReactNativeEnvironment()) {
+        window.location.reload(true);
+      }
 
       // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
       // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
