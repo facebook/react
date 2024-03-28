@@ -327,7 +327,7 @@ export default [
   "Warning: ref.measureLayout must be called with a node handle or a ref to a native component.",
   "We should not be hydrating here. This is a bug in React. Please file a bug.",
   "When calling super() in `%s`, make sure to pass up the same props that your component's constructor was passed.",
-  "You are accessing \"digest\" from the errorInfo object passed to onRecoverableError. This property is deprecated and will be removed in a future version of React. To access the digest of an Error look for this property on the Error instance itself.",
+  "You are accessing \"digest\" from the errorInfo object passed to onRecoverableError. This property is no longer provided as part of errorInfo but can be accessed as a property of the Error instance itself.",
   "You are calling ReactDOM.render() on a container that was previously passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.render(element)?",
   "You are calling ReactDOM.unmountComponentAtNode() on a container that was previously passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?",
   "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.",

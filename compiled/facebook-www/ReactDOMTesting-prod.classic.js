@@ -11992,10 +11992,7 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = {
-          digest: remainingLanes.digest,
-          componentStack: remainingLanes.stack
-        }),
+        (transitions = { componentStack: remainingLanes.stack }),
         renderPriorityLevel(remainingLanes.value, transitions);
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
@@ -13334,14 +13331,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$349;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1525 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1525) {
-      var element$jscomp$inline_1526 = document.createElement("div");
-      element$jscomp$inline_1526.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1525 =
-        "function" === typeof element$jscomp$inline_1526.oninput;
+    var isSupported$jscomp$inline_1524 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1524) {
+      var element$jscomp$inline_1525 = document.createElement("div");
+      element$jscomp$inline_1525.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1524 =
+        "function" === typeof element$jscomp$inline_1525.oninput;
     }
-    JSCompiler_inline_result$jscomp$349 = isSupported$jscomp$inline_1525;
+    JSCompiler_inline_result$jscomp$349 = isSupported$jscomp$inline_1524;
   } else JSCompiler_inline_result$jscomp$349 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$349 &&
@@ -13716,20 +13713,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1566 = 0;
-  i$jscomp$inline_1566 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1566++
+  var i$jscomp$inline_1565 = 0;
+  i$jscomp$inline_1565 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1565++
 ) {
-  var eventName$jscomp$inline_1567 =
-      simpleEventPluginEvents[i$jscomp$inline_1566],
-    domEventName$jscomp$inline_1568 =
-      eventName$jscomp$inline_1567.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1569 =
-      eventName$jscomp$inline_1567[0].toUpperCase() +
-      eventName$jscomp$inline_1567.slice(1);
+  var eventName$jscomp$inline_1566 =
+      simpleEventPluginEvents[i$jscomp$inline_1565],
+    domEventName$jscomp$inline_1567 =
+      eventName$jscomp$inline_1566.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1568 =
+      eventName$jscomp$inline_1566[0].toUpperCase() +
+      eventName$jscomp$inline_1566.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1568,
-    "on" + capitalizedEvent$jscomp$inline_1569
+    domEventName$jscomp$inline_1567,
+    "on" + capitalizedEvent$jscomp$inline_1568
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17434,17 +17431,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1760 = {
+var devToolsConfig$jscomp$inline_1759 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-94cf769c",
+  version: "19.0.0-www-classic-6a1bde1b",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2169 = {
-  bundleType: devToolsConfig$jscomp$inline_1760.bundleType,
-  version: devToolsConfig$jscomp$inline_1760.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1760.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1760.rendererConfig,
+var internals$jscomp$inline_2168 = {
+  bundleType: devToolsConfig$jscomp$inline_1759.bundleType,
+  version: devToolsConfig$jscomp$inline_1759.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1759.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1759.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17460,26 +17457,26 @@ var internals$jscomp$inline_2169 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1760.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1759.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-94cf769c"
+  reconcilerVersion: "19.0.0-www-classic-6a1bde1b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2170 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2169 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2170.isDisabled &&
-    hook$jscomp$inline_2170.supportsFiber
+    !hook$jscomp$inline_2169.isDisabled &&
+    hook$jscomp$inline_2169.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2170.inject(
-        internals$jscomp$inline_2169
+      (rendererID = hook$jscomp$inline_2169.inject(
+        internals$jscomp$inline_2168
       )),
-        (injectedHook = hook$jscomp$inline_2170);
+        (injectedHook = hook$jscomp$inline_2169);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -18059,4 +18056,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-94cf769c";
+exports.version = "19.0.0-www-classic-6a1bde1b";
