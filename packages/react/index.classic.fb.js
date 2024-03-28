@@ -20,7 +20,6 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
   use,
   forwardRef,

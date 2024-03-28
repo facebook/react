@@ -27,7 +27,6 @@ import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
   createElement,
-  createFactory,
   cloneElement,
   isValidElement,
 } from './jsx/ReactJSXElement';
@@ -62,7 +61,6 @@ import {
   useOptimistic,
   useActionState,
 } from './ReactHooks';
-
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -111,8 +109,6 @@ export {
   isValidElement,
   ReactVersion as version,
   ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  // Deprecated behind disableCreateFactory
-  createFactory,
   // Concurrent Mode
   useTransition,
   startTransition,

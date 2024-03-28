@@ -757,49 +757,6 @@ export function createElement(type, config, children) {
   return element;
 }
 
-let didWarnAboutDeprecatedCreateFactory = false;
-
-/**
- * Return a function that produces ReactElements of a given type.
- * See https://reactjs.org/docs/react-api.html#createfactory
- */
-export function createFactory(type) {
-  const factory = createElement.bind(null, type);
-  // Expose the type on the factory and the prototype so that it can be
-  // easily accessed on elements. E.g. `<Foo />.type === Foo`.
-  // This should not be named `constructor` since this may not be the function
-  // that created the element, and it may not even be a constructor.
-  // Legacy hook: remove it
-  factory.type = type;
-
-  if (__DEV__) {
-    if (!didWarnAboutDeprecatedCreateFactory) {
-      didWarnAboutDeprecatedCreateFactory = true;
-      console.warn(
-        'React.createFactory() is deprecated and will be removed in ' +
-          'a future major release. Consider using JSX ' +
-          'or use React.createElement() directly instead.',
-      );
-    }
-    // Legacy hook: remove it
-    Object.defineProperty(factory, 'type', {
-      enumerable: false,
-      get: function () {
-        console.warn(
-          'Factory.type is deprecated. Access the class directly ' +
-            'before passing it to createFactory.',
-        );
-        Object.defineProperty(this, 'type', {
-          value: type,
-        });
-        return type;
-      },
-    });
-  }
-
-  return factory;
-}
-
 export function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
