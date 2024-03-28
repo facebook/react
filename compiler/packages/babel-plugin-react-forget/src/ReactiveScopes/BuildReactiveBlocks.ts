@@ -61,7 +61,10 @@ class Context {
     this.#builders.at(-1)!.startScope(scope);
   }
 
-  append(stmt: ReactiveStatement, label: BlockId | null): void {
+  append(
+    stmt: ReactiveStatement,
+    label: { id: BlockId; implicit: boolean } | null
+  ): void {
     this.#builders.at(-1)!.append(stmt, label);
   }
 
@@ -93,7 +96,10 @@ class Builder {
     this.#stack = [{ kind: "block", block }];
   }
 
-  append(item: ReactiveStatement, label: BlockId | null): void {
+  append(
+    item: ReactiveStatement,
+    label: { id: BlockId; implicit: boolean } | null
+  ): void {
     if (label !== null) {
       CompilerError.invariant(item.kind === "terminal", {
         reason: "Only terminals may have a label",

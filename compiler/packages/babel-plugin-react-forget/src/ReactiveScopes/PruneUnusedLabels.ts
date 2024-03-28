@@ -37,12 +37,12 @@ class Transform extends ReactiveFunctionTransform<Labels> {
     const { terminal } = stmt;
     if (
       (terminal.kind === "break" || terminal.kind === "continue") &&
-      terminal.label !== null
+      terminal.targetKind === "labeled"
     ) {
-      state.add(terminal.label);
+      state.add(terminal.target);
     }
     // Is this terminal reachable via a break/continue to its label?
-    const isReachableLabel = stmt.label !== null && state.has(stmt.label);
+    const isReachableLabel = stmt.label !== null && state.has(stmt.label.id);
     if (stmt.terminal.kind === "label" && !isReachableLabel) {
       // Flatten labeled terminals where the label isn't necessary
       const block = [...stmt.terminal.block];
@@ -51,14 +51,14 @@ class Transform extends ReactiveFunctionTransform<Labels> {
         last !== undefined &&
         last.kind === "terminal" &&
         last.terminal.kind === "break" &&
-        last.terminal.label === null
+        last.terminal.target === null
       ) {
         block.pop();
       }
       return { kind: "replace-many", value: block };
     } else {
-      if (!isReachableLabel) {
-        stmt.label = null;
+      if (!isReachableLabel && stmt.label != null) {
+        stmt.label.implicit = true;
       }
       return { kind: "keep" };
     }

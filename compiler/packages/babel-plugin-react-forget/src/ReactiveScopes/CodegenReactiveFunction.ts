@@ -318,13 +318,13 @@ function codegenBlockNoReset(
         if (statement === null) {
           break;
         }
-        if (item.label !== null) {
+        if (item.label !== null && !item.label.implicit) {
           const block =
             statement.type === "BlockStatement" && statement.body.length === 1
               ? statement.body[0]
               : statement;
           statements.push(
-            t.labeledStatement(t.identifier(codegenLabel(item.label)), block)
+            t.labeledStatement(t.identifier(codegenLabel(item.label.id)), block)
           );
         } else if (statement.type === "BlockStatement") {
           statements.push(...statement.body);
@@ -615,22 +615,22 @@ function codegenTerminal(
 ): t.Statement | null {
   switch (terminal.kind) {
     case "break": {
-      if (terminal.implicit) {
+      if (terminal.targetKind === "implicit") {
         return null;
       }
       return t.breakStatement(
-        terminal.label !== null
-          ? t.identifier(codegenLabel(terminal.label))
+        terminal.targetKind === "labeled"
+          ? t.identifier(codegenLabel(terminal.target))
           : null
       );
     }
     case "continue": {
-      if (terminal.implicit) {
+      if (terminal.targetKind === "implicit") {
         return null;
       }
       return t.continueStatement(
-        terminal.label !== null
-          ? t.identifier(codegenLabel(terminal.label))
+        terminal.targetKind === "labeled"
+          ? t.identifier(codegenLabel(terminal.target))
           : null
       );
     }

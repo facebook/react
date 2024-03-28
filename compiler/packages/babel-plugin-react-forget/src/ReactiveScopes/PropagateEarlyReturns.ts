@@ -238,7 +238,10 @@ class Transform extends ReactiveFunctionTransform<State> {
           },
           {
             kind: "terminal",
-            label: earlyReturnValue.label,
+            label: {
+              id: earlyReturnValue.label,
+              implicit: false,
+            },
             terminal: {
               kind: "label",
               id: makeInstructionId(0),
@@ -316,8 +319,8 @@ class Transform extends ReactiveFunctionTransform<State> {
             terminal: {
               kind: "break",
               id: makeInstructionId(0),
-              implicit: false,
-              label: earlyReturnValue.label,
+              targetKind: "labeled",
+              target: earlyReturnValue.label,
             },
           },
         ],

@@ -135,7 +135,7 @@ function writeReactiveInstruction(
     }
     case "terminal": {
       if (instr.label !== null) {
-        writer.write(`bb${instr.label}: `);
+        writer.write(`bb${instr.label.id}: `);
       }
       writeTerminal(writer, instr.terminal);
       break;
@@ -229,22 +229,17 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case "break": {
       const id = terminal.id !== null ? `[${terminal.id}]` : [];
-      const implicit = terminal.implicit ? "(implicit) " : "";
-      if (terminal.label !== null) {
-        writer.writeLine(`${id} ${implicit}break bb${terminal.label}`);
-      } else {
-        writer.writeLine(`${id} ${implicit}break`);
-      }
+      writer.writeLine(
+        `${id} break bb${terminal.target} (${terminal.targetKind})`
+      );
+
       break;
     }
     case "continue": {
       const id = `[${terminal.id}]`;
-      const implicit = terminal.implicit ? "(implicit) " : "";
-      if (terminal.label !== null) {
-        writer.writeLine(`${id} ${implicit}continue bb${terminal.label}`);
-      } else {
-        writer.writeLine(`${id} ${implicit}continue`);
-      }
+      writer.writeLine(
+        `${id} continue bb${terminal.target} (${terminal.targetKind})`
+      );
       break;
     }
     case "do-while": {

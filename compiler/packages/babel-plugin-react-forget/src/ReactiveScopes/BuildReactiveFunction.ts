@@ -24,6 +24,7 @@ import {
   ReactiveLogicalValue,
   ReactiveSequenceValue,
   ReactiveTerminalStatement,
+  ReactiveTerminalTargetKind,
   ReactiveTernaryValue,
   ReactiveValue,
   Terminal,
@@ -157,7 +158,13 @@ class Driver {
             alternate: alternate,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : {
+                  id: fallthroughId,
+                  implicit: false,
+                },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -193,7 +200,7 @@ class Driver {
             const break_ = this.visitBreak(case_.block, null);
             if (
               index === 0 &&
-              break_.terminal.implicit &&
+              break_.terminal.targetKind === "implicit" &&
               case_.block === terminal.fallthrough &&
               case_.test === null
             ) {
@@ -229,7 +236,13 @@ class Driver {
             cases,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : {
+                  id: fallthroughId,
+                  implicit: false,
+                },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -280,7 +293,13 @@ class Driver {
             loop: loopBody,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : {
+                  id: fallthroughId,
+                  implicit: false,
+                },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -334,7 +353,13 @@ class Driver {
             loop: loopBody,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : {
+                  id: fallthroughId,
+                  implicit: false,
+                },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -421,7 +446,10 @@ class Driver {
             loop: loopBody,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : { id: fallthroughId, implicit: false },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -496,7 +524,10 @@ class Driver {
             loop: loopBody,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : { id: fallthroughId, implicit: false },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -571,7 +602,10 @@ class Driver {
             loop: loopBody,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : { id: fallthroughId, implicit: false },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -651,7 +685,10 @@ class Driver {
             block,
             id: terminal.id,
           },
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : { id: fallthroughId, implicit: false },
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -753,7 +790,10 @@ class Driver {
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
           kind: "terminal",
-          label: fallthroughId,
+          label:
+            fallthroughId == null
+              ? null
+              : { id: fallthroughId, implicit: false },
           terminal: {
             kind: "try",
             block,
@@ -1105,35 +1145,16 @@ class Driver {
         suggestions: null,
       });
     }
-    switch (target.type) {
-      case "implicit": {
-        return {
-          kind: "terminal",
-          terminal: { kind: "break", label: null, id, implicit: true },
-          label: null,
-        };
-      }
-      case "labeled": {
-        return {
-          kind: "terminal",
-          terminal: { kind: "break", label: target.block, id, implicit: false },
-          label: null,
-        };
-      }
-      case "unlabeled": {
-        return {
-          kind: "terminal",
-          terminal: { kind: "break", label: null, id, implicit: false },
-          label: null,
-        };
-      }
-      default: {
-        assertExhaustive(
-          target.type,
-          `Unexpected break target kind '${(target as any).type}'`
-        );
-      }
-    }
+    return {
+      kind: "terminal",
+      terminal: {
+        kind: "break",
+        target: target.block,
+        id,
+        targetKind: target.type,
+      },
+      label: null,
+    };
   }
 
   visitContinue(
@@ -1147,40 +1168,17 @@ class Driver {
       loc: null,
       suggestions: null,
     });
-    switch (target.type) {
-      case "implicit": {
-        return {
-          kind: "terminal",
-          terminal: { kind: "continue", label: null, id, implicit: true },
-          label: null,
-        };
-      }
-      case "labeled": {
-        return {
-          kind: "terminal",
-          terminal: {
-            kind: "continue",
-            label: target.block,
-            id,
-            implicit: false,
-          },
-          label: null,
-        };
-      }
-      case "unlabeled": {
-        return {
-          kind: "terminal",
-          terminal: { kind: "continue", label: null, id, implicit: false },
-          label: null,
-        };
-      }
-      default: {
-        assertExhaustive(
-          target.type,
-          `Unexpected continue target kind '${(target as any).type}'`
-        );
-      }
-    }
+
+    return {
+      kind: "terminal",
+      terminal: {
+        kind: "continue",
+        target: target.block,
+        id,
+        targetKind: target.type,
+      },
+      label: null,
+    };
   }
 }
 
@@ -1323,12 +1321,12 @@ class Context {
    */
   getBreakTarget(
     block: BlockId
-  ): { block: BlockId; type: ControlFlowKind } | null {
+  ): { block: BlockId; type: ReactiveTerminalTargetKind } | null {
     let hasPrecedingLoop = false;
     for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
       const target = this.#controlFlowStack[i]!;
       if (target.block === block) {
-        let type: ControlFlowKind;
+        let type: ReactiveTerminalTargetKind;
         if (target.type === "loop") {
           /*
            * breaking out of a loop requires an explicit break,
@@ -1367,12 +1365,12 @@ class Context {
    */
   getContinueTarget(
     block: BlockId
-  ): { block: BlockId; type: ControlFlowKind } | null {
+  ): { block: BlockId; type: ReactiveTerminalTargetKind } | null {
     let hasPrecedingLoop = false;
     for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
       const target = this.#controlFlowStack[i]!;
       if (target.type == "loop" && target.continueBlock === block) {
-        let type: ControlFlowKind;
+        let type: ReactiveTerminalTargetKind;
         if (hasPrecedingLoop) {
           /*
            * continuing to a loop that is not the innermost loop always requires
@@ -1406,8 +1404,6 @@ class Context {
     return this.#controlFlowStack.map((target) => ({ ...target }));
   }
 }
-
-type ControlFlowKind = "implicit" | "labeled" | "unlabeled";
 
 type ControlFlowTarget =
   | { type: "if"; block: BlockId; id: number }

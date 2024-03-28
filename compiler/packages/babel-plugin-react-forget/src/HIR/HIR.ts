@@ -80,7 +80,10 @@ export type ReactiveTerminalStatement<
 > = {
   kind: "terminal";
   terminal: Tterminal;
-  label: BlockId | null;
+  label: {
+    id: BlockId;
+    implicit: boolean;
+  } | null;
 };
 
 export type ReactiveInstruction = {
@@ -153,17 +156,18 @@ export type ReactiveTerminal =
   | ReactiveLabelTerminal
   | ReactiveTryTerminal;
 
+export type ReactiveTerminalTargetKind = "implicit" | "labeled" | "unlabeled";
 export type ReactiveBreakTerminal = {
   kind: "break";
-  label: BlockId | null;
+  target: BlockId;
   id: InstructionId | null;
-  implicit: boolean;
+  targetKind: ReactiveTerminalTargetKind;
 };
 export type ReactiveContinueTerminal = {
   kind: "continue";
-  label: BlockId | null;
+  target: BlockId;
   id: InstructionId;
-  implicit: boolean;
+  targetKind: ReactiveTerminalTargetKind;
 };
 export type ReactiveReturnTerminal = {
   kind: "return";
