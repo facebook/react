@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9c81454fac04a284791d0ad56825d16e>>
+ * @generated SignedSource<<a65269663102fa977c930ff006dd7573>>
  */
 
 "use strict";
@@ -28415,10 +28415,7 @@ to return true:wantsResponderID|                            |
 
         for (var i = 0; i < recoverableErrors.length; i++) {
           var recoverableError = recoverableErrors[i];
-          var errorInfo = makeErrorInfo(
-            recoverableError.digest,
-            recoverableError.stack
-          );
+          var errorInfo = makeErrorInfo(recoverableError.stack);
           onRecoverableError(recoverableError.value, errorInfo);
         }
       } // If the passive effects are the result of a discrete render, flush them
@@ -28475,26 +28472,35 @@ to return true:wantsResponderID|                            |
       return null;
     }
 
-    function makeErrorInfo(digest, componentStack) {
+    function makeErrorInfo(componentStack) {
       {
         var errorInfo = {
-          componentStack: componentStack,
-          digest: digest
+          componentStack: componentStack
         };
-        Object.defineProperty(errorInfo, "digest", {
-          configurable: false,
-          enumerable: true,
-          get: function () {
-            error(
-              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                " This property is deprecated and will be removed in a future version of React." +
-                " To access the digest of an Error look for this property on the Error instance itself."
-            );
+        return new Proxy(errorInfo, {
+          get: function (target, prop, receiver) {
+            if (prop === "digest") {
+              error(
+                'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+                  " This property is no longer provided as part of errorInfo but can be accessed as a property" +
+                  " of the Error instance itself."
+              );
+            }
 
-            return digest;
+            return Reflect.get(target, prop, receiver);
+          },
+          has: function (target, prop) {
+            if (prop === "digest") {
+              error(
+                'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+                  " This property is no longer provided as part of errorInfo but can be accessed as a property" +
+                  " of the Error instance itself."
+              );
+            }
+
+            return Reflect.has(target, prop);
           }
         });
-        return errorInfo;
       }
     }
 
@@ -30571,7 +30577,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-1f40d31c";
+    var ReactVersion = "19.0.0-canary-9d775306";
 
     function createPortal$1(
       children,

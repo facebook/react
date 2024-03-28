@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1559aa190bc5f176834018f226327de0>>
+ * @generated SignedSource<<0039290ff29d4844481c69218123f3ea>>
  */
 
 "use strict";
@@ -10486,10 +10486,7 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = {
-          digest: remainingLanes.digest,
-          componentStack: remainingLanes.stack
-        }),
+        (transitions = { componentStack: remainingLanes.stack }),
         renderPriorityLevel(remainingLanes.value, transitions);
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
@@ -11342,10 +11339,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1187 = {
+  devToolsConfig$jscomp$inline_1186 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-042f4f16",
+    version: "19.0.0-canary-825ecfa5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11375,10 +11372,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1187.bundleType,
-  version: devToolsConfig$jscomp$inline_1187.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1187.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1187.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1186.bundleType,
+  version: devToolsConfig$jscomp$inline_1186.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1186.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1186.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11394,14 +11391,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1187.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1186.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-042f4f16"
+  reconcilerVersion: "19.0.0-canary-825ecfa5"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

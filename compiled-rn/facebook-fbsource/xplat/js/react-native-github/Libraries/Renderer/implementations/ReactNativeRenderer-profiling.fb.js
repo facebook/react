@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<747a3fcb345e723e898836c3648fe48a>>
+ * @generated SignedSource<<b45327685d0babdbf9d81d5fb2c69fad>>
  */
 
 "use strict";
@@ -10696,10 +10696,7 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = {
-          digest: remainingLanes.digest,
-          componentStack: remainingLanes.stack
-        }),
+        (transitions = { componentStack: remainingLanes.stack }),
         renderPriorityLevel(remainingLanes.value, transitions);
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
@@ -11559,10 +11556,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1254 = {
+  devToolsConfig$jscomp$inline_1253 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-7a0cbc16",
+    version: "19.0.0-canary-bc3b2603",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11592,10 +11589,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1254.bundleType,
-  version: devToolsConfig$jscomp$inline_1254.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1254.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1254.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1253.bundleType,
+  version: devToolsConfig$jscomp$inline_1253.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1253.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1253.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11611,14 +11608,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1254.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1253.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7a0cbc16"
+  reconcilerVersion: "19.0.0-canary-bc3b2603"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
