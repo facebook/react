@@ -416,7 +416,7 @@ if (__DEV__) {
     // A pure JS implementation of a string hashing function. We do not use it for
     // security or obfuscation purposes, only to create compact hashes. So we
     // prioritize speed over collision avoidance. For example, we use this to hash
-    // the component key path used by useFormState for MPA-style submissions.
+    // the component key path used by useActionState for MPA-style submissions.
     //
     // In environments where built-in hashing functions are available, we prefer
     // those instead. Like Node's crypto module, or Bun.hash. Unfortunately this
@@ -9793,12 +9793,12 @@ if (__DEV__) {
 
     var localIdCounter = 0; // Chunks that should be pushed to the stream once the component
     // finishes rendering.
-    // Counts the number of useFormState calls in this component
+    // Counts the number of useActionState calls in this component
 
-    var formStateCounter = 0; // The index of the useFormState hook that matches the one passed in at the
+    var actionStateCounter = 0; // The index of the useActionState hook that matches the one passed in at the
     // root during an MPA navigation, if any.
 
-    var formStateMatchingIndex = -1; // Counts the number of use(thenable) calls in this component
+    var actionStateMatchingIndex = -1; // Counts the number of use(thenable) calls in this component
 
     var thenableIndexCounter = 0;
     var thenableState = null; // Lazily created map of render-phase updates
@@ -9939,8 +9939,8 @@ if (__DEV__) {
       // workInProgressHook = null;
 
       localIdCounter = 0;
-      formStateCounter = 0;
-      formStateMatchingIndex = -1;
+      actionStateCounter = 0;
+      actionStateMatchingIndex = -1;
       thenableIndexCounter = 0;
       thenableState = prevThenableState;
     }
@@ -9954,8 +9954,8 @@ if (__DEV__) {
         // restarting until no more updates are scheduled.
         didScheduleRenderPhaseUpdate = false;
         localIdCounter = 0;
-        formStateCounter = 0;
-        formStateMatchingIndex = -1;
+        actionStateCounter = 0;
+        actionStateMatchingIndex = -1;
         thenableIndexCounter = 0;
         numberOfReRenders += 1; // Start over from the beginning of the list
 
@@ -9978,17 +9978,17 @@ if (__DEV__) {
       var didRenderIdHook = localIdCounter !== 0;
       return didRenderIdHook;
     }
-    function getFormStateCount() {
+    function getActionStateCount() {
       // This should be called immediately after every finishHooks call.
       // Conceptually, it's part of the return value of finishHooks; it's only a
       // separate function to avoid using an array tuple.
-      return formStateCounter;
+      return actionStateCounter;
     }
-    function getFormStateMatchingIndex() {
+    function getActionStateMatchingIndex() {
       // This should be called immediately after every finishHooks call.
       // Conceptually, it's part of the return value of finishHooks; it's only a
       // separate function to avoid using an array tuple.
-      return formStateMatchingIndex;
+      return actionStateMatchingIndex;
     } // Reset the internal hooks state if an error occurs while rendering a component
 
     function resetHooksState() {
@@ -10291,7 +10291,7 @@ if (__DEV__) {
       return [passthrough, unsupportedSetOptimisticState];
     }
 
-    function createPostbackFormStateKey(
+    function createPostbackActionStateKey(
       permalink,
       componentKeyPath,
       hookIndex
@@ -10310,12 +10310,12 @@ if (__DEV__) {
       }
     }
 
-    function useFormState(action, initialState, permalink) {
-      resolveCurrentlyRenderingComponent(); // Count the number of useFormState hooks per component. We also use this to
-      // track the position of this useFormState hook relative to the other ones in
+    function useActionState(action, initialState, permalink) {
+      resolveCurrentlyRenderingComponent(); // Count the number of useActionState hooks per component. We also use this to
+      // track the position of this useActionState hook relative to the other ones in
       // this component, so we can generate a unique key for each one.
 
-      var formStateHookIndex = formStateCounter++;
+      var actionStateHookIndex = actionStateCounter++;
       var request = currentlyRenderingRequest; // $FlowIgnore[prop-missing]
 
       var formAction = action.$$FORM_ACTION;
@@ -10323,7 +10323,7 @@ if (__DEV__) {
       if (typeof formAction === "function") {
         // This is a server action. These have additional features to enable
         // MPA-style form submissions with progressive enhancement.
-        // TODO: If the same permalink is passed to multiple useFormStates, and
+        // TODO: If the same permalink is passed to multiple useActionStates, and
         // they all have the same action signature, Fizz will pass the postback
         // state to all of them. We should probably only pass it to the first one,
         // and/or warn.
@@ -10331,22 +10331,22 @@ if (__DEV__) {
         // get JSON.stringify-ed unnecessarily, and at most once.
         var nextPostbackStateKey = null; // Determine the current form state. If we received state during an MPA form
         // submission, then we will reuse that, if the action identity matches.
-        // Otherwise we'll use the initial state argument. We will emit a comment
+        // Otherwise, we'll use the initial state argument. We will emit a comment
         // marker into the stream that indicates whether the state was reused.
 
         var state = initialState;
         var componentKeyPath = currentlyRenderingKeyPath;
-        var postbackFormState = getFormState(request); // $FlowIgnore[prop-missing]
+        var postbackActionState = getFormState(request); // $FlowIgnore[prop-missing]
 
         var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
 
         if (
-          postbackFormState !== null &&
+          postbackActionState !== null &&
           typeof isSignatureEqual === "function"
         ) {
-          var postbackKey = postbackFormState[1];
-          var postbackReferenceId = postbackFormState[2];
-          var postbackBoundArity = postbackFormState[3];
+          var postbackKey = postbackActionState[1];
+          var postbackReferenceId = postbackActionState[2];
+          var postbackBoundArity = postbackActionState[3];
 
           if (
             isSignatureEqual.call(
@@ -10355,17 +10355,17 @@ if (__DEV__) {
               postbackBoundArity
             )
           ) {
-            nextPostbackStateKey = createPostbackFormStateKey(
+            nextPostbackStateKey = createPostbackActionStateKey(
               permalink,
               componentKeyPath,
-              formStateHookIndex
+              actionStateHookIndex
             );
 
             if (postbackKey === nextPostbackStateKey) {
               // This was a match
-              formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
+              actionStateMatchingIndex = actionStateHookIndex; // Reuse the state that was submitted by the form.
 
-              state = postbackFormState[0];
+              state = postbackActionState[0];
             }
           }
         } // Bind the state to the first argument of the action.
@@ -10394,10 +10394,10 @@ if (__DEV__) {
 
             if (formData) {
               if (nextPostbackStateKey === null) {
-                nextPostbackStateKey = createPostbackFormStateKey(
+                nextPostbackStateKey = createPostbackActionStateKey(
                   permalink,
                   componentKeyPath,
-                  formStateHookIndex
+                  actionStateHookIndex
                 );
               }
 
@@ -10528,8 +10528,8 @@ if (__DEV__) {
 
     {
       HooksDispatcher.useOptimistic = useOptimistic;
-      HooksDispatcher.useFormState = useFormState;
-      HooksDispatcher.useActionState = useFormState;
+      HooksDispatcher.useFormState = useActionState;
+      HooksDispatcher.useActionState = useActionState;
     }
 
     var currentResumableState = null;
@@ -11820,8 +11820,8 @@ if (__DEV__) {
         legacyContext
       );
       var hasId = checkDidRenderIdHook();
-      var formStateCount = getFormStateCount();
-      var formStateMatchingIndex = getFormStateMatchingIndex();
+      var actionStateCount = getActionStateCount();
+      var actionStateMatchingIndex = getActionStateMatchingIndex();
 
       {
         // Support for module components is deprecated and is removed behind a flag.
@@ -11873,8 +11873,8 @@ if (__DEV__) {
           keyPath,
           value,
           hasId,
-          formStateCount,
-          formStateMatchingIndex
+          actionStateCount,
+          actionStateMatchingIndex
         );
       }
 
@@ -11887,24 +11887,24 @@ if (__DEV__) {
       keyPath,
       children,
       hasId,
-      formStateCount,
-      formStateMatchingIndex
+      actionStateCount,
+      actionStateMatchingIndex
     ) {
-      var didEmitFormStateMarkers = false;
+      var didEmitActionStateMarkers = false;
 
-      if (formStateCount !== 0 && request.formState !== null) {
-        // For each useFormState hook, emit a marker that indicates whether we
+      if (actionStateCount !== 0 && request.formState !== null) {
+        // For each useActionState hook, emit a marker that indicates whether we
         // rendered using the form state passed at the root. We only emit these
         // markers if form state is passed at the root.
         var segment = task.blockedSegment;
 
         if (segment === null);
         else {
-          didEmitFormStateMarkers = true;
+          didEmitActionStateMarkers = true;
           var target = segment.chunks;
 
-          for (var i = 0; i < formStateCount; i++) {
-            if (i === formStateMatchingIndex) {
+          for (var i = 0; i < actionStateCount; i++) {
+            if (i === actionStateMatchingIndex) {
               pushFormStateMarkerIsMatching(target);
             } else {
               pushFormStateMarkerIsNotMatching(target);
@@ -11933,8 +11933,8 @@ if (__DEV__) {
         // because renderNode takes care of unwinding the stack.
 
         task.treeContext = prevTreeContext;
-      } else if (didEmitFormStateMarkers) {
-        // If there were formState hooks, we must use the non-destructive path
+      } else if (didEmitActionStateMarkers) {
+        // If there were useActionState hooks, we must use the non-destructive path
         // because this component is not a pure indirection; we emitted markers
         // to the stream.
         renderNode(request, task, children, -1);
@@ -12060,16 +12060,16 @@ if (__DEV__) {
         ref
       );
       var hasId = checkDidRenderIdHook();
-      var formStateCount = getFormStateCount();
-      var formStateMatchingIndex = getFormStateMatchingIndex();
+      var actionStateCount = getActionStateCount();
+      var actionStateMatchingIndex = getActionStateMatchingIndex();
       finishFunctionComponent(
         request,
         task,
         keyPath,
         children,
         hasId,
-        formStateCount,
-        formStateMatchingIndex
+        actionStateCount,
+        actionStateMatchingIndex
       );
       task.componentStack = previousComponentStack;
     }

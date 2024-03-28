@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-407418be";
+    var ReactVersion = "19.0.0-www-classic-3513bb8c";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -10518,10 +10518,10 @@ if (__DEV__) {
       hook.baseState = passthrough;
       var dispatch = hook.queue.dispatch;
       return [passthrough, dispatch];
-    } // useFormState actions run sequentially, because each action receives the
+    } // useActionState actions run sequentially, because each action receives the
     // previous state as an argument. We store pending actions on a queue.
 
-    function dispatchFormState(
+    function dispatchActionState(
       fiber,
       actionQueue,
       setPendingState,
@@ -10542,7 +10542,7 @@ if (__DEV__) {
           next: null // circular
         };
         newLast.next = actionQueue.pending = newLast;
-        runFormStateAction(actionQueue, setPendingState, setState, payload);
+        runActionStateAction(actionQueue, setPendingState, setState, payload);
       } else {
         // There's already an action running. Add to the queue.
         var first = last.next;
@@ -10554,7 +10554,7 @@ if (__DEV__) {
       }
     }
 
-    function runFormStateAction(
+    function runActionStateAction(
       actionQueue,
       setPendingState,
       setState,
@@ -10591,14 +10591,14 @@ if (__DEV__) {
           thenable.then(
             function (nextState) {
               actionQueue.state = nextState;
-              finishRunningFormStateAction(
+              finishRunningActionStateAction(
                 actionQueue,
                 setPendingState,
                 setState
               );
             },
             function () {
-              return finishRunningFormStateAction(
+              return finishRunningActionStateAction(
                 actionQueue,
                 setPendingState,
                 setState
@@ -10610,10 +10610,14 @@ if (__DEV__) {
           setState(returnValue);
           var nextState = returnValue;
           actionQueue.state = nextState;
-          finishRunningFormStateAction(actionQueue, setPendingState, setState);
+          finishRunningActionStateAction(
+            actionQueue,
+            setPendingState,
+            setState
+          );
         }
       } catch (error) {
-        // This is a trick to get the `useFormState` hook to rethrow the error.
+        // This is a trick to get the `useActionState` hook to rethrow the error.
         // When it unwraps the thenable with the `use` algorithm, the error
         // will be thrown.
         var rejectedThenable = {
@@ -10622,7 +10626,7 @@ if (__DEV__) {
           reason: error // $FlowFixMe: Not sure why this doesn't work
         };
         setState(rejectedThenable);
-        finishRunningFormStateAction(actionQueue, setPendingState, setState);
+        finishRunningActionStateAction(actionQueue, setPendingState, setState);
       } finally {
         ReactCurrentBatchConfig$2.transition = prevTransition;
 
@@ -10644,7 +10648,7 @@ if (__DEV__) {
       }
     }
 
-    function finishRunningFormStateAction(
+    function finishRunningActionStateAction(
       actionQueue,
       setPendingState,
       setState
@@ -10664,7 +10668,7 @@ if (__DEV__) {
           var next = first.next;
           last.next = next; // Run the next action.
 
-          runFormStateAction(
+          runActionStateAction(
             actionQueue,
             setPendingState,
             setState,
@@ -10674,11 +10678,11 @@ if (__DEV__) {
       }
     }
 
-    function formStateReducer(oldState, newState) {
+    function actionStateReducer(oldState, newState) {
       return newState;
     }
 
-    function mountFormState(action, initialStateProp, permalink) {
+    function mountActionState(action, initialStateProp, permalink) {
       var initialState = initialStateProp;
       // the `use` algorithm during render.
 
@@ -10690,7 +10694,7 @@ if (__DEV__) {
         pending: null,
         lanes: NoLanes,
         dispatch: null,
-        lastRenderedReducer: formStateReducer,
+        lastRenderedReducer: actionStateReducer,
         lastRenderedState: initialState
       };
       stateHook.queue = stateQueue;
@@ -10722,7 +10726,7 @@ if (__DEV__) {
         pending: null
       };
       actionQueueHook.queue = actionQueue;
-      var dispatch = dispatchFormState.bind(
+      var dispatch = dispatchActionState.bind(
         null,
         currentlyRenderingFiber$1,
         actionQueue,
@@ -10737,13 +10741,13 @@ if (__DEV__) {
       return [initialState, dispatch, false];
     }
 
-    function updateFormState(action, initialState, permalink) {
+    function updateActionState(action, initialState, permalink) {
       var stateHook = updateWorkInProgressHook();
       var currentStateHook = currentHook;
-      return updateFormStateImpl(stateHook, currentStateHook, action);
+      return updateActionStateImpl(stateHook, currentStateHook, action);
     }
 
-    function updateFormStateImpl(
+    function updateActionStateImpl(
       stateHook,
       currentStateHook,
       action,
@@ -10753,7 +10757,7 @@ if (__DEV__) {
       var _updateReducerImpl = updateReducerImpl(
           stateHook,
           currentStateHook,
-          formStateReducer
+          actionStateReducer
         ),
         actionResult = _updateReducerImpl[0];
 
@@ -10776,7 +10780,7 @@ if (__DEV__) {
         currentlyRenderingFiber$1.flags |= Passive$1;
         pushEffect(
           HasEffect | Passive,
-          formStateActionEffect.bind(null, actionQueue, action),
+          actionStateActionEffect.bind(null, actionQueue, action),
           createEffectInstance(),
           null
         );
@@ -10785,12 +10789,12 @@ if (__DEV__) {
       return [state, dispatch, isPending];
     }
 
-    function formStateActionEffect(actionQueue, action) {
+    function actionStateActionEffect(actionQueue, action) {
       actionQueue.action = action;
     }
 
-    function rerenderFormState(action, initialState, permalink) {
-      // Unlike useState, useFormState doesn't support render phase updates.
+    function rerenderActionState(action, initialState, permalink) {
+      // Unlike useState, useActionState doesn't support render phase updates.
       // Also unlike useState, we need to replay all pending updates again in case
       // the passthrough value changed.
       //
@@ -10802,7 +10806,7 @@ if (__DEV__) {
 
       if (currentStateHook !== null) {
         // This is an update. Process the update queue.
-        return updateFormStateImpl(stateHook, currentStateHook, action);
+        return updateActionStateImpl(stateHook, currentStateHook, action);
       }
 
       updateWorkInProgressHook(); // State
@@ -12055,7 +12059,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useFormState";
           mountHookTypesDev();
-          return mountFormState(action, initialState);
+          return mountActionState(action, initialState);
         };
 
         HooksDispatcherOnMountInDEV.useActionState = function useActionState(
@@ -12065,7 +12069,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useActionState";
           mountHookTypesDev();
-          return mountFormState(action, initialState);
+          return mountActionState(action, initialState);
         };
       }
 
@@ -12220,14 +12224,14 @@ if (__DEV__) {
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
             updateHookTypesDev();
-            return mountFormState(action, initialState);
+            return mountActionState(action, initialState);
           };
 
         HooksDispatcherOnMountWithHookTypesInDEV.useActionState =
           function useActionState(action, initialState, permalink) {
             currentHookNameInDev = "useActionState";
             updateHookTypesDev();
-            return mountFormState(action, initialState);
+            return mountActionState(action, initialState);
           };
       }
 
@@ -12384,7 +12388,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
-          return updateFormState(action);
+          return updateActionState(action);
         };
 
         HooksDispatcherOnUpdateInDEV.useActionState = function useActionState(
@@ -12394,7 +12398,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useActionState";
           updateHookTypesDev();
-          return updateFormState(action);
+          return updateActionState(action);
         };
       }
 
@@ -12553,7 +12557,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
-          return rerenderFormState(action);
+          return rerenderActionState(action);
         };
 
         HooksDispatcherOnRerenderInDEV.useActionState = function useActionState(
@@ -12563,7 +12567,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useActionState";
           updateHookTypesDev();
-          return rerenderFormState(action);
+          return rerenderActionState(action);
         };
       }
 
@@ -12744,7 +12748,7 @@ if (__DEV__) {
             currentHookNameInDev = "useFormState";
             warnInvalidHookAccess();
             mountHookTypesDev();
-            return mountFormState(action, initialState);
+            return mountActionState(action, initialState);
           };
 
         InvalidNestedHooksDispatcherOnMountInDEV.useActionState =
@@ -12752,7 +12756,7 @@ if (__DEV__) {
             currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             mountHookTypesDev();
-            return mountFormState(action, initialState);
+            return mountActionState(action, initialState);
           };
       }
 
@@ -12932,7 +12936,7 @@ if (__DEV__) {
             currentHookNameInDev = "useFormState";
             warnInvalidHookAccess();
             updateHookTypesDev();
-            return updateFormState(action);
+            return updateActionState(action);
           };
 
         InvalidNestedHooksDispatcherOnUpdateInDEV.useActionState =
@@ -12940,7 +12944,7 @@ if (__DEV__) {
             currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             updateHookTypesDev();
-            return updateFormState(action);
+            return updateActionState(action);
           };
       }
 
@@ -13120,7 +13124,7 @@ if (__DEV__) {
             currentHookNameInDev = "useFormState";
             warnInvalidHookAccess();
             updateHookTypesDev();
-            return rerenderFormState(action);
+            return rerenderActionState(action);
           };
 
         InvalidNestedHooksDispatcherOnRerenderInDEV.useActionState =
@@ -13128,7 +13132,7 @@ if (__DEV__) {
             currentHookNameInDev = "useActionState";
             warnInvalidHookAccess();
             updateHookTypesDev();
-            return rerenderFormState(action);
+            return rerenderActionState(action);
           };
       }
 

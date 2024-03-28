@@ -2881,8 +2881,8 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   isReRender = !1,
   didScheduleRenderPhaseUpdate = !1,
   localIdCounter = 0,
-  formStateCounter = 0,
-  formStateMatchingIndex = -1,
+  actionStateCounter = 0,
+  actionStateMatchingIndex = -1,
   thenableIndexCounter = 0,
   thenableState = null,
   renderPhaseUpdates = null,
@@ -3020,9 +3020,9 @@ function unsupportedStartTransition() {
 function unsupportedSetOptimisticState() {
   throw Error("Cannot update optimistic state while rendering.");
 }
-function useFormState(action, initialState, permalink) {
+function useActionState(action, initialState, permalink) {
   resolveCurrentlyRenderingComponent();
-  var formStateHookIndex = formStateCounter++,
+  var actionStateHookIndex = actionStateCounter++,
     request = currentlyRenderingRequest;
   if ("function" === typeof action.$$FORM_ACTION) {
     var nextPostbackStateKey = null,
@@ -3037,11 +3037,11 @@ function useFormState(action, initialState, permalink) {
             ? "p" + permalink
             : "k" +
               murmurhash3_32_gc(
-                JSON.stringify([componentKeyPath, null, formStateHookIndex]),
+                JSON.stringify([componentKeyPath, null, actionStateHookIndex]),
                 0
               )),
         postbackKey === nextPostbackStateKey &&
-          ((formStateMatchingIndex = formStateHookIndex),
+          ((actionStateMatchingIndex = actionStateHookIndex),
           (initialState = request[0])));
     }
     var boundAction = action.bind(null, initialState);
@@ -3064,7 +3064,7 @@ function useFormState(action, initialState, permalink) {
                     JSON.stringify([
                       componentKeyPath,
                       null,
-                      formStateHookIndex
+                      actionStateHookIndex
                     ]),
                     0
                   )),
@@ -3190,8 +3190,8 @@ var HooksDispatcher = {
     return [passthrough, unsupportedSetOptimisticState];
   }
 };
-HooksDispatcher.useFormState = useFormState;
-HooksDispatcher.useActionState = useFormState;
+HooksDispatcher.useFormState = useActionState;
+HooksDispatcher.useActionState = useActionState;
 var currentResumableState = null,
   DefaultCacheDispatcher = {
     getCacheSignal: function () {
@@ -3536,14 +3536,14 @@ function renderWithHooks(request, task, keyPath, Component, props, secondArg) {
   currentlyRenderingTask = task;
   currentlyRenderingRequest = request;
   currentlyRenderingKeyPath = keyPath;
-  formStateCounter = localIdCounter = 0;
-  formStateMatchingIndex = -1;
+  actionStateCounter = localIdCounter = 0;
+  actionStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
   for (request = Component(props, secondArg); didScheduleRenderPhaseUpdate; )
     (didScheduleRenderPhaseUpdate = !1),
-      (formStateCounter = localIdCounter = 0),
-      (formStateMatchingIndex = -1),
+      (actionStateCounter = localIdCounter = 0),
+      (actionStateMatchingIndex = -1),
       (thenableIndexCounter = 0),
       (numberOfReRenders += 1),
       (workInProgressHook = null),
@@ -3557,32 +3557,32 @@ function finishFunctionComponent(
   keyPath,
   children,
   hasId,
-  formStateCount,
-  formStateMatchingIndex
+  actionStateCount,
+  actionStateMatchingIndex
 ) {
-  var didEmitFormStateMarkers = !1;
-  if (0 !== formStateCount && null !== request.formState) {
+  var didEmitActionStateMarkers = !1;
+  if (0 !== actionStateCount && null !== request.formState) {
     var segment = task.blockedSegment;
     if (null !== segment) {
-      didEmitFormStateMarkers = !0;
+      didEmitActionStateMarkers = !0;
       segment = segment.chunks;
-      for (var i = 0; i < formStateCount; i++)
-        i === formStateMatchingIndex
+      for (var i = 0; i < actionStateCount; i++)
+        i === actionStateMatchingIndex
           ? segment.push("\x3c!--F!--\x3e")
           : segment.push("\x3c!--F--\x3e");
     }
   }
-  formStateCount = task.keyPath;
+  actionStateCount = task.keyPath;
   task.keyPath = keyPath;
   hasId
     ? ((keyPath = task.treeContext),
       (task.treeContext = pushTreeContext(keyPath, 1, 0)),
       renderNode(request, task, children, -1),
       (task.treeContext = keyPath))
-    : didEmitFormStateMarkers
+    : didEmitActionStateMarkers
     ? renderNode(request, task, children, -1)
     : renderNodeDestructive(request, task, children, -1);
-  task.keyPath = formStateCount;
+  task.keyPath = actionStateCount;
 }
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
@@ -3744,8 +3744,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
           keyPath,
           props,
           0 !== localIdCounter,
-          formStateCounter,
-          formStateMatchingIndex
+          actionStateCounter,
+          actionStateMatchingIndex
         ),
         (task.componentStack = ref);
   else if ("string" === typeof type) {
@@ -3998,8 +3998,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
             keyPath,
             props,
             0 !== localIdCounter,
-            formStateCounter,
-            formStateMatchingIndex
+            actionStateCounter,
+            actionStateMatchingIndex
           );
           task.componentStack = contextType;
           return;
