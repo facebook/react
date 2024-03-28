@@ -78,11 +78,11 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 let localIdCounter: number = 0;
 // Chunks that should be pushed to the stream once the component
 // finishes rendering.
-// Counts the number of useFormState calls in this component
-let formStateCounter: number = 0;
-// The index of the useFormState hook that matches the one passed in at the
+// Counts the number of useActionState calls in this component
+let actionStateCounter: number = 0;
+// The index of the useActionState hook that matches the one passed in at the
 // root during an MPA navigation, if any.
-let formStateMatchingIndex: number = -1;
+let actionStateMatchingIndex: number = -1;
 // Counts the number of use(thenable) calls in this component
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
@@ -223,8 +223,8 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
-  formStateCounter = 0;
-  formStateMatchingIndex = -1;
+  actionStateCounter = 0;
+  actionStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -245,8 +245,8 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
-    formStateCounter = 0;
-    formStateMatchingIndex = -1;
+    actionStateCounter = 0;
+    actionStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
@@ -274,17 +274,17 @@ export function checkDidRenderIdHook(): boolean {
   return didRenderIdHook;
 }
 
-export function getFormStateCount(): number {
+export function getActionStateCount(): number {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
-  return formStateCounter;
+  return actionStateCounter;
 }
-export function getFormStateMatchingIndex(): number {
+export function getActionStateMatchingIndex(): number {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
-  return formStateMatchingIndex;
+  return actionStateMatchingIndex;
 }
 
 // Reset the internal hooks state if an error occurs while rendering a component
@@ -591,7 +591,7 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
-function createPostbackFormStateKey(
+function createPostbackActionStateKey(
   permalink: string | void,
   componentKeyPath: KeyNode | null,
   hookIndex: number,
@@ -610,17 +610,17 @@ function createPostbackFormStateKey(
   }
 }
 
-function useFormState<S, P>(
+function useActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
   resolveCurrentlyRenderingComponent();
 
-  // Count the number of useFormState hooks per component. We also use this to
-  // track the position of this useFormState hook relative to the other ones in
+  // Count the number of useActionState hooks per component. We also use this to
+  // track the position of this useActionState hook relative to the other ones in
   // this component, so we can generate a unique key for each one.
-  const formStateHookIndex = formStateCounter++;
+  const actionStateHookIndex = actionStateCounter++;
   const request: Request = (currentlyRenderingRequest: any);
 
   // $FlowIgnore[prop-missing]
@@ -629,7 +629,7 @@ function useFormState<S, P>(
     // This is a server action. These have additional features to enable
     // MPA-style form submissions with progressive enhancement.
 
-    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // TODO: If the same permalink is passed to multiple useActionStates, and
     // they all have the same action signature, Fizz will pass the postback
     // state to all of them. We should probably only pass it to the first one,
     // and/or warn.
@@ -640,30 +640,33 @@ function useFormState<S, P>(
 
     // Determine the current form state. If we received state during an MPA form
     // submission, then we will reuse that, if the action identity matches.
-    // Otherwise we'll use the initial state argument. We will emit a comment
+    // Otherwise, we'll use the initial state argument. We will emit a comment
     // marker into the stream that indicates whether the state was reused.
     let state = initialState;
     const componentKeyPath = (currentlyRenderingKeyPath: any);
-    const postbackFormState = getFormState(request);
+    const postbackActionState = getFormState(request);
     // $FlowIgnore[prop-missing]
     const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
-    if (postbackFormState !== null && typeof isSignatureEqual === 'function') {
-      const postbackKey = postbackFormState[1];
-      const postbackReferenceId = postbackFormState[2];
-      const postbackBoundArity = postbackFormState[3];
+    if (
+      postbackActionState !== null &&
+      typeof isSignatureEqual === 'function'
+    ) {
+      const postbackKey = postbackActionState[1];
+      const postbackReferenceId = postbackActionState[2];
+      const postbackBoundArity = postbackActionState[3];
       if (
         isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
       ) {
-        nextPostbackStateKey = createPostbackFormStateKey(
+        nextPostbackStateKey = createPostbackActionStateKey(
           permalink,
           componentKeyPath,
-          formStateHookIndex,
+          actionStateHookIndex,
         );
         if (postbackKey === nextPostbackStateKey) {
           // This was a match
-          formStateMatchingIndex = formStateHookIndex;
+          actionStateMatchingIndex = actionStateHookIndex;
           // Reuse the state that was submitted by the form.
-          state = postbackFormState[0];
+          state = postbackActionState[0];
         }
       }
     }
@@ -695,10 +698,10 @@ function useFormState<S, P>(
         const formData = metadata.data;
         if (formData) {
           if (nextPostbackStateKey === null) {
-            nextPostbackStateKey = createPostbackFormStateKey(
+            nextPostbackStateKey = createPostbackActionStateKey(
               permalink,
               componentKeyPath,
-              formStateHookIndex,
+              actionStateHookIndex,
             );
           }
           formData.append('$ACTION_KEY', nextPostbackStateKey);
@@ -818,8 +821,8 @@ if (enableAsyncActions) {
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
-  HooksDispatcher.useFormState = useFormState;
-  HooksDispatcher.useActionState = useFormState;
+  HooksDispatcher.useFormState = useActionState;
+  HooksDispatcher.useActionState = useActionState;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

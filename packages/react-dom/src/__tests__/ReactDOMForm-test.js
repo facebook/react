@@ -1280,7 +1280,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('useFormState works in StrictMode', async () => {
+  test('useActionState works in StrictMode', async () => {
     let actionCounter = 0;
     async function action(state, type) {
       actionCounter++;
