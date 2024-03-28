@@ -3022,10 +3022,7 @@ function commitRootImpl(
     const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      const errorInfo = makeErrorInfo(
-        recoverableError.digest,
-        recoverableError.stack,
-      );
+      const errorInfo = makeErrorInfo(recoverableError.stack);
       onRecoverableError(recoverableError.value, errorInfo);
     }
   }
@@ -3123,28 +3120,35 @@ function commitRootImpl(
   return null;
 }
 
-function makeErrorInfo(digest: ?string, componentStack: ?string) {
+function makeErrorInfo(componentStack: ?string) {
   if (__DEV__) {
     const errorInfo = {
       componentStack,
-      digest,
     };
-    Object.defineProperty(errorInfo, 'digest', {
-      configurable: false,
-      enumerable: true,
-      get() {
-        console.error(
-          'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-            ' This property is deprecated and will be removed in a future version of React.' +
-            ' To access the digest of an Error look for this property on the Error instance itself.',
-        );
-        return digest;
+    return new Proxy(errorInfo, {
+      get(target, prop, receiver) {
+        if (prop === 'digest') {
+          console.error(
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          );
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+      has(target, prop) {
+        if (prop === 'digest') {
+          console.error(
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          );
+        }
+        return Reflect.has(target, prop);
       },
     });
-    return errorInfo;
   } else {
     return {
-      digest,
       componentStack,
     };
   }
