@@ -25,6 +25,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_CLIENT_REFERENCE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -52,8 +53,6 @@ function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
-const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
-
 // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 export default function getComponentNameFromType(type: mixed): string | null {
   if (type == null) {
@@ -61,7 +60,7 @@ export default function getComponentNameFromType(type: mixed): string | null {
     return null;
   }
   if (typeof type === 'function') {
-    if ((type: any).$$typeof === REACT_CLIENT_REFERENCE) {
+    if ((type: any).$$typeof === REACT_CLIENT_REFERENCE_TYPE) {
       // TODO: Create a convention for naming client references with debug info.
       return null;
     }
