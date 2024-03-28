@@ -681,10 +681,10 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         this.visitReactiveValue(context, terminal.id, terminal.init);
         this.visitReactiveValue(context, terminal.id, terminal.test);
         context.enterConditional(() => {
+          this.visitBlock(terminal.loop, context);
           if (terminal.update !== null) {
             this.visitReactiveValue(context, terminal.id, terminal.update);
           }
-          this.visitBlock(terminal.loop, context);
         });
         break;
       }
