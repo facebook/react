@@ -23488,21 +23488,23 @@ if (__DEV__) {
       return executionContext;
     }
     function batchedUpdates(fn, a) {
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
+      {
+        var prevExecutionContext = executionContext;
+        executionContext |= BatchedContext;
 
-      try {
-        return fn(a);
-      } finally {
-        executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
-        // most batchedUpdates-like method.
+        try {
+          return fn(a);
+        } finally {
+          executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
+          // most batchedUpdates-like method.
 
-        if (
-          executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-          !ReactCurrentActQueue.isBatchingLegacy
-        ) {
-          resetRenderTimer();
-          flushSyncWorkOnLegacyRootsOnly();
+          if (
+            executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+            !ReactCurrentActQueue.isBatchingLegacy
+          ) {
+            resetRenderTimer();
+            flushSyncWorkOnLegacyRootsOnly();
+          }
         }
       }
     }
@@ -26837,7 +26839,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-49672ef7";
+    var ReactVersion = "19.0.0-www-modern-22c1f956";
 
     // Might add PROFILE later.
 

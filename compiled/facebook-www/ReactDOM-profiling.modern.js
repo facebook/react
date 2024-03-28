@@ -11569,18 +11569,6 @@ function performSyncWorkOnRoot(root, lanes) {
   ensureRootIsScheduled(root);
   return null;
 }
-function batchedUpdates$1(fn, a) {
-  var prevExecutionContext = executionContext;
-  executionContext |= 1;
-  try {
-    return fn(a);
-  } finally {
-    (executionContext = prevExecutionContext),
-      0 === executionContext &&
-        ((workInProgressRootRenderTargetTime = now$1() + 500),
-        flushSyncWorkAcrossRoots_impl(!0));
-  }
-}
 function flushSync$1(fn) {
   null !== rootWithPendingPassiveEffects &&
     0 === rootWithPendingPassiveEffects.tag &&
@@ -13001,7 +12989,21 @@ function batchedUpdates(fn, a, b) {
   if (isInsideEventHandler) return fn(a, b);
   isInsideEventHandler = !0;
   try {
-    return batchedUpdates$1(fn, a, b);
+    a: {
+      b = executionContext;
+      executionContext |= 1;
+      try {
+        var JSCompiler_inline_result = fn(a);
+        break a;
+      } finally {
+        (executionContext = b),
+          0 === executionContext &&
+            ((workInProgressRootRenderTargetTime = now$1() + 500),
+            flushSyncWorkAcrossRoots_impl(!0));
+      }
+      JSCompiler_inline_result = void 0;
+    }
+    return JSCompiler_inline_result;
   } finally {
     if (
       ((isInsideEventHandler = !1),
@@ -14173,19 +14175,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$362;
+  var JSCompiler_inline_result$jscomp$363;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1576 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1576) {
-      var element$jscomp$inline_1577 = document.createElement("div");
-      element$jscomp$inline_1577.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1576 =
-        "function" === typeof element$jscomp$inline_1577.oninput;
+    var isSupported$jscomp$inline_1580 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1580) {
+      var element$jscomp$inline_1581 = document.createElement("div");
+      element$jscomp$inline_1581.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1580 =
+        "function" === typeof element$jscomp$inline_1581.oninput;
     }
-    JSCompiler_inline_result$jscomp$362 = isSupported$jscomp$inline_1576;
-  } else JSCompiler_inline_result$jscomp$362 = !1;
+    JSCompiler_inline_result$jscomp$363 = isSupported$jscomp$inline_1580;
+  } else JSCompiler_inline_result$jscomp$363 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$362 &&
+    JSCompiler_inline_result$jscomp$363 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14494,20 +14496,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1617 = 0;
-  i$jscomp$inline_1617 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1617++
+  var i$jscomp$inline_1621 = 0;
+  i$jscomp$inline_1621 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1621++
 ) {
-  var eventName$jscomp$inline_1618 =
-      simpleEventPluginEvents[i$jscomp$inline_1617],
-    domEventName$jscomp$inline_1619 =
-      eventName$jscomp$inline_1618.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1620 =
-      eventName$jscomp$inline_1618[0].toUpperCase() +
-      eventName$jscomp$inline_1618.slice(1);
+  var eventName$jscomp$inline_1622 =
+      simpleEventPluginEvents[i$jscomp$inline_1621],
+    domEventName$jscomp$inline_1623 =
+      eventName$jscomp$inline_1622.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1624 =
+      eventName$jscomp$inline_1622[0].toUpperCase() +
+      eventName$jscomp$inline_1622.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1619,
-    "on" + capitalizedEvent$jscomp$inline_1620
+    domEventName$jscomp$inline_1623,
+    "on" + capitalizedEvent$jscomp$inline_1624
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17353,18 +17355,21 @@ Internals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
+function unstable_batchedUpdates(fn, a) {
+  return fn(a);
+}
 Internals.Events = [
   getInstanceFromNode$1,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  batchedUpdates$1
+  unstable_batchedUpdates
 ];
-var devToolsConfig$jscomp$inline_1775 = {
+var devToolsConfig$jscomp$inline_1779 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-88a914d1",
+  version: "19.0.0-www-modern-6ec98dbb",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17382,10 +17387,10 @@ var devToolsConfig$jscomp$inline_1775 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1775.bundleType,
-  version: devToolsConfig$jscomp$inline_1775.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1775.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1775.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1779.bundleType,
+  version: devToolsConfig$jscomp$inline_1779.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1779.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1779.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17401,14 +17406,14 @@ var devToolsConfig$jscomp$inline_1775 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1775.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1779.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-88a914d1"
+  reconcilerVersion: "19.0.0-www-modern-6ec98dbb"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17657,7 +17662,7 @@ exports.preloadModule = function (href, options) {
       });
     } else ReactDOMCurrentDispatcher.current.preloadModule(href);
 };
-exports.unstable_batchedUpdates = batchedUpdates$1;
+exports.unstable_batchedUpdates = unstable_batchedUpdates;
 exports.unstable_createEventHandle = function (type, options) {
   function eventHandle(target, callback) {
     if ("function" !== typeof callback)
@@ -17698,7 +17703,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-88a914d1";
+exports.version = "19.0.0-www-modern-6ec98dbb";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

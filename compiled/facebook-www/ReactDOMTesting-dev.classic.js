@@ -33115,21 +33115,23 @@ if (__DEV__) {
       return executionContext;
     }
     function batchedUpdates$1(fn, a) {
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
+      {
+        var prevExecutionContext = executionContext;
+        executionContext |= BatchedContext;
 
-      try {
-        return fn(a);
-      } finally {
-        executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
-        // most batchedUpdates-like method.
+        try {
+          return fn(a);
+        } finally {
+          executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
+          // most batchedUpdates-like method.
 
-        if (
-          executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-          !ReactCurrentActQueue.isBatchingLegacy
-        ) {
-          resetRenderTimer();
-          flushSyncWorkOnLegacyRootsOnly();
+          if (
+            executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+            !ReactCurrentActQueue.isBatchingLegacy
+          ) {
+            resetRenderTimer();
+            flushSyncWorkOnLegacyRootsOnly();
+          }
         }
       }
     }
@@ -36973,7 +36975,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-8f03a493";
+    var ReactVersion = "19.0.0-www-classic-f2c3cec0";
 
     function createPortal$1(
       children,
@@ -50399,6 +50401,13 @@ if (__DEV__) {
     } // Expose findDOMNode on internals
 
     Internals.findDOMNode = findDOMNode;
+
+    function unstable_batchedUpdates(fn, a) {
+      // batchedUpdates was a legacy mode feature that is a no-op outside of
+      // legacy mode. In 19, we made it an actual no-op, but we're keeping it
+      // for now since there may be libraries that still include it.
+      return fn(a);
+    }
     // This is an array for better minification.
 
     Internals.Events = [
@@ -50407,7 +50416,7 @@ if (__DEV__) {
       getFiberCurrentPropsFromNode,
       enqueueStateRestore,
       restoreStateIfNeeded,
-      batchedUpdates$1
+      unstable_batchedUpdates
     ];
     var foundDevTools = injectIntoDevTools({
       findFiberByHostInstance: getClosestInstanceFromNode,

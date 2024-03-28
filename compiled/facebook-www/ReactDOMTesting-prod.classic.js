@@ -17433,12 +17433,14 @@ Internals.Events = [
   getFiberCurrentPropsFromNode,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  batchedUpdates$1
+  function (fn, a) {
+    return fn(a);
+  }
 ];
 var devToolsConfig$jscomp$inline_1759 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-5470479f",
+  version: "19.0.0-www-classic-d76ce55c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2168 = {
@@ -17468,7 +17470,7 @@ var internals$jscomp$inline_2168 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-5470479f"
+  reconcilerVersion: "19.0.0-www-classic-d76ce55c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2169 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18061,4 +18063,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-5470479f";
+exports.version = "19.0.0-www-classic-d76ce55c";
