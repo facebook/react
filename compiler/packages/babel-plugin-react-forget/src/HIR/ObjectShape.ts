@@ -64,12 +64,11 @@ export function addFunction(
  */
 export function addHook(
   registry: ShapeRegistry,
-  properties: Iterable<[string, BuiltInType | PolyType]>,
   fn: FunctionSignature & { hookKind: HookKind },
   id: string | null = null
 ): FunctionType {
   const shapeId = id ?? createAnonId();
-  addShape(registry, shapeId, properties, fn);
+  addShape(registry, shapeId, [], fn);
   return {
     kind: "Function",
     return: fn.returnType,
@@ -431,7 +430,6 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
 
 export const DefaultMutatingHook = addHook(
   BUILTIN_SHAPES,
-  [],
   {
     positionalParams: [],
     restParam: Effect.ConditionallyMutate,
@@ -445,7 +443,6 @@ export const DefaultMutatingHook = addHook(
 
 export const DefaultNonmutatingHook = addHook(
   BUILTIN_SHAPES,
-  [],
   {
     positionalParams: [],
     restParam: Effect.Freeze,

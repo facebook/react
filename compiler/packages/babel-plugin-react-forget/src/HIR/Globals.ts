@@ -242,7 +242,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
 const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   [
     "useContext",
-    addHook(DEFAULT_SHAPES, [], {
+    addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Read,
       returnType: { kind: "Poly" },
@@ -254,7 +254,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   ],
   [
     "useState",
-    addHook(DEFAULT_SHAPES, [], {
+    addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
       returnType: { kind: "Object", shapeId: BuiltInUseStateId },
@@ -266,7 +266,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   ],
   [
     "useRef",
-    addHook(DEFAULT_SHAPES, [], {
+    addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Capture,
       returnType: { kind: "Object", shapeId: BuiltInUseRefId },
@@ -277,7 +277,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   ],
   [
     "useMemo",
-    addHook(DEFAULT_SHAPES, [], {
+    addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
       returnType: { kind: "Poly" },
@@ -288,7 +288,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   ],
   [
     "useCallback",
-    addHook(DEFAULT_SHAPES, [], {
+    addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
       returnType: { kind: "Poly" },
@@ -301,7 +301,6 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
     "useEffect",
     addHook(
       DEFAULT_SHAPES,
-      [],
       {
         positionalParams: [],
         restParam: Effect.Freeze,
@@ -317,7 +316,6 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
     "useLayoutEffect",
     addHook(
       DEFAULT_SHAPES,
-      [],
       {
         positionalParams: [],
         restParam: Effect.Freeze,
@@ -333,7 +331,6 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
     "useInsertionEffect",
     addHook(
       DEFAULT_SHAPES,
-      [],
       {
         positionalParams: [],
         restParam: Effect.Freeze,

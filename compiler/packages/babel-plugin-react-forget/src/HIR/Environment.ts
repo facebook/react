@@ -455,7 +455,7 @@ export class Environment {
       });
       this.#globals.set(
         hookName,
-        addHook(this.#shapes, [], {
+        addHook(this.#shapes, {
           positionalParams: [],
           restParam: hook.effectKind,
           returnType: hook.transitiveMixedData
