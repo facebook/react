@@ -446,7 +446,7 @@ class Context {
     }
 
     if (this.#checkValidDependency(maybeDependency)) {
-      this.#depsInCurrentConditional.add(maybeDependency, true);
+      this.#depsInCurrentConditional.add(maybeDependency, false);
       /*
        * Add info about this dependency to the existing tree
        * We do not try to join/reduce dependencies here due to missing info

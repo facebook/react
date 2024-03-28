@@ -6,7 +6,7 @@
  */
 
 import { CompilerError } from "../CompilerError";
-import { Identifier, ReactiveScopeDependency } from "../HIR";
+import { GeneratedSource, Identifier, ReactiveScopeDependency } from "../HIR";
 import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -489,6 +489,22 @@ function addSubtreeIntersection(
     loc: null,
     suggestions: null,
   });
+
+  CompilerError.invariant(
+    otherProperties.every((otherNode) => {
+      for (const [_, node] of otherNode) {
+        if (!isUnconditional(node.accessType)) {
+          return false;
+        }
+      }
+      return true;
+    }),
+    {
+      reason:
+        "[DeriveMinimalDependencies] Expected otherProperties to only hold unconditional nodes",
+      loc: GeneratedSource,
+    }
+  );
 
   /*
    * otherProperties here may contain unconditional nodes as the result of
