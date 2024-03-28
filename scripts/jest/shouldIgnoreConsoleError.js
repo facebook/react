@@ -1,10 +1,6 @@
 'use strict';
 
-module.exports = function shouldIgnoreConsoleError(
-  format,
-  args,
-  {TODO_ignoreHydrationErrors} = {TODO_ignoreHydrationErrors: false}
-) {
+module.exports = function shouldIgnoreConsoleError(format, args) {
   if (__DEV__) {
     if (typeof format === 'string') {
       if (

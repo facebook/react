@@ -101,11 +101,7 @@ module.exports = function (initModules) {
       for (let i = 0; i < console.error.mock.calls.length; i++) {
         const args = console.error.mock.calls[i];
         const [format, ...rest] = args;
-        if (
-          !shouldIgnoreConsoleError(format, rest, {
-            TODO_ignoreHydrationErrors: true,
-          })
-        ) {
+        if (!shouldIgnoreConsoleError(format, rest)) {
           filteredWarnings.push(args);
         }
       }
