@@ -439,7 +439,7 @@ export function tryToClaimNextHydratableFormMarkerInstance(
   }
   // Should have found a marker instance. Throw an error to trigger client
   // rendering. We don't bother to check if we're in a concurrent root because
-  // useFormState is a new API, so backwards compat is not an issue.
+  // useActionState is a new API, so backwards compat is not an issue.
   throwOnHydrationMismatch(fiber);
   return false;
 }

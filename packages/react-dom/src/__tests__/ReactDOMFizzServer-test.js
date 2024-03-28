@@ -6187,8 +6187,8 @@ describe('ReactDOMFizzServer', () => {
       // Because of the render phase update above, this component is evaluated
       // multiple times (even during SSR), but it should only emit a single
       // marker per useActionState instance.
-      const [formState] = useActionState(action, 0);
-      const text = `${readText('Child')}:${formState}:${localState}`;
+      const [actionState] = useActionState(action, 0);
+      const text = `${readText('Child')}:${actionState}:${localState}`;
       return (
         <div id="child" ref={childRef}>
           {text}

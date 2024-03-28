@@ -1889,9 +1889,9 @@ function rerenderOptimistic<S, A>(
   return [passthrough, dispatch];
 }
 
-// useFormState actions run sequentially, because each action receives the
+// useActionState actions run sequentially, because each action receives the
 // previous state as an argument. We store pending actions on a queue.
-type FormStateActionQueue<S, P> = {
+type ActionStateQueue<S, P> = {
   // This is the most recent state returned from an action. It's updated as
   // soon as the action finishes running.
   state: Awaited<S>,
@@ -1902,18 +1902,18 @@ type FormStateActionQueue<S, P> = {
   action: (Awaited<S>, P) => S,
   // This is a circular linked list of pending action payloads. It incudes the
   // action that is currently running.
-  pending: FormStateActionQueueNode<P> | null,
+  pending: ActionStateQueueNode<P> | null,
 };
 
-type FormStateActionQueueNode<P> = {
+type ActionStateQueueNode<P> = {
   payload: P,
   // This is never null because it's part of a circular linked list.
-  next: FormStateActionQueueNode<P>,
+  next: ActionStateQueueNode<P>,
 };
 
-function dispatchFormState<S, P>(
+function dispatchActionState<S, P>(
   fiber: Fiber,
-  actionQueue: FormStateActionQueue<S, P>,
+  actionQueue: ActionStateQueue<S, P>,
   setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
   payload: P,
@@ -1925,13 +1925,13 @@ function dispatchFormState<S, P>(
   if (last === null) {
     // There are no pending actions; this is the first one. We can run
     // it immediately.
-    const newLast: FormStateActionQueueNode<P> = {
+    const newLast: ActionStateQueueNode<P> = {
       payload,
       next: (null: any), // circular
     };
     newLast.next = actionQueue.pending = newLast;
 
-    runFormStateAction(
+    runActionStateAction(
       actionQueue,
       (setPendingState: any),
       (setState: any),
@@ -1940,7 +1940,7 @@ function dispatchFormState<S, P>(
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
-    const newLast: FormStateActionQueueNode<P> = {
+    const newLast: ActionStateQueueNode<P> = {
       payload,
       next: first,
     };
@@ -1948,8 +1948,8 @@ function dispatchFormState<S, P>(
   }
 }
 
-function runFormStateAction<S, P>(
-  actionQueue: FormStateActionQueue<S, P>,
+function runActionStateAction<S, P>(
+  actionQueue: ActionStateQueue<S, P>,
   setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
   payload: P,
@@ -1987,14 +1987,14 @@ function runFormStateAction<S, P>(
       thenable.then(
         (nextState: Awaited<S>) => {
           actionQueue.state = nextState;
-          finishRunningFormStateAction(
+          finishRunningActionStateAction(
             actionQueue,
             (setPendingState: any),
             (setState: any),
           );
         },
         () =>
-          finishRunningFormStateAction(
+          finishRunningActionStateAction(
             actionQueue,
             (setPendingState: any),
             (setState: any),
@@ -2007,14 +2007,14 @@ function runFormStateAction<S, P>(
 
       const nextState = ((returnValue: any): Awaited<S>);
       actionQueue.state = nextState;
-      finishRunningFormStateAction(
+      finishRunningActionStateAction(
         actionQueue,
         (setPendingState: any),
         (setState: any),
       );
     }
   } catch (error) {
-    // This is a trick to get the `useFormState` hook to rethrow the error.
+    // This is a trick to get the `useActionState` hook to rethrow the error.
     // When it unwraps the thenable with the `use` algorithm, the error
     // will be thrown.
     const rejectedThenable: S = ({
@@ -2024,7 +2024,7 @@ function runFormStateAction<S, P>(
       // $FlowFixMe: Not sure why this doesn't work
     }: RejectedThenable<Awaited<S>>);
     setState(rejectedThenable);
-    finishRunningFormStateAction(
+    finishRunningActionStateAction(
       actionQueue,
       (setPendingState: any),
       (setState: any),
@@ -2048,8 +2048,8 @@ function runFormStateAction<S, P>(
   }
 }
 
-function finishRunningFormStateAction<S, P>(
-  actionQueue: FormStateActionQueue<S, P>,
+function finishRunningActionStateAction<S, P>(
+  actionQueue: ActionStateQueue<S, P>,
   setPendingState: Dispatch<S | Awaited<S>>,
   setState: Dispatch<S | Awaited<S>>,
 ) {
@@ -2067,7 +2067,7 @@ function finishRunningFormStateAction<S, P>(
       last.next = next;
 
       // Run the next action.
-      runFormStateAction(
+      runActionStateAction(
         actionQueue,
         (setPendingState: any),
         (setState: any),
@@ -2077,11 +2077,11 @@ function finishRunningFormStateAction<S, P>(
   }
 }
 
-function formStateReducer<S>(oldState: S, newState: S): S {
+function actionStateReducer<S>(oldState: S, newState: S): S {
   return newState;
 }
 
-function mountFormState<S, P>(
+function mountActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialStateProp: Awaited<S>,
   permalink?: string,
@@ -2113,7 +2113,7 @@ function mountFormState<S, P>(
     pending: null,
     lanes: NoLanes,
     dispatch: (null: any),
-    lastRenderedReducer: formStateReducer,
+    lastRenderedReducer: actionStateReducer,
     lastRenderedState: initialState,
   };
   stateHook.queue = stateQueue;
@@ -2142,14 +2142,14 @@ function mountFormState<S, P>(
   // but different because the actions are run sequentially, and they run in
   // an event instead of during render.
   const actionQueueHook = mountWorkInProgressHook();
-  const actionQueue: FormStateActionQueue<S, P> = {
+  const actionQueue: ActionStateQueue<S, P> = {
     state: initialState,
     dispatch: (null: any), // circular
     action,
     pending: null,
   };
   actionQueueHook.queue = actionQueue;
-  const dispatch = (dispatchFormState: any).bind(
+  const dispatch = (dispatchActionState: any).bind(
     null,
     currentlyRenderingFiber,
     actionQueue,
@@ -2166,14 +2166,14 @@ function mountFormState<S, P>(
   return [initialState, dispatch, false];
 }
 
-function updateFormState<S, P>(
+function updateActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = ((currentHook: any): Hook);
-  return updateFormStateImpl(
+  return updateActionStateImpl(
     stateHook,
     currentStateHook,
     action,
@@ -2182,7 +2182,7 @@ function updateFormState<S, P>(
   );
 }
 
-function updateFormStateImpl<S, P>(
+function updateActionStateImpl<S, P>(
   stateHook: Hook,
   currentStateHook: Hook,
   action: (Awaited<S>, P) => S,
@@ -2192,7 +2192,7 @@ function updateFormStateImpl<S, P>(
   const [actionResult] = updateReducerImpl<S | Thenable<S>, S | Thenable<S>>(
     stateHook,
     currentStateHook,
-    formStateReducer,
+    actionStateReducer,
   );
 
   const [isPending] = updateState(false);
@@ -2216,7 +2216,7 @@ function updateFormStateImpl<S, P>(
     currentlyRenderingFiber.flags |= PassiveEffect;
     pushEffect(
       HookHasEffect | HookPassive,
-      formStateActionEffect.bind(null, actionQueue, action),
+      actionStateActionEffect.bind(null, actionQueue, action),
       createEffectInstance(),
       null,
     );
@@ -2225,19 +2225,19 @@ function updateFormStateImpl<S, P>(
   return [state, dispatch, isPending];
 }
 
-function formStateActionEffect<S, P>(
-  actionQueue: FormStateActionQueue<S, P>,
+function actionStateActionEffect<S, P>(
+  actionQueue: ActionStateQueue<S, P>,
   action: (Awaited<S>, P) => S,
 ): void {
   actionQueue.action = action;
 }
 
-function rerenderFormState<S, P>(
+function rerenderActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  // Unlike useState, useFormState doesn't support render phase updates.
+  // Unlike useState, useActionState doesn't support render phase updates.
   // Also unlike useState, we need to replay all pending updates again in case
   // the passthrough value changed.
   //
@@ -2249,7 +2249,7 @@ function rerenderFormState<S, P>(
 
   if (currentStateHook !== null) {
     // This is an update. Process the update queue.
-    return updateFormStateImpl(
+    return updateActionStateImpl(
       stateHook,
       currentStateHook,
       action,
@@ -3548,8 +3548,8 @@ if (enableUseEffectEventHook) {
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
-  (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
-  (HooksDispatcherOnMount: Dispatcher).useActionState = mountFormState;
+  (HooksDispatcherOnMount: Dispatcher).useFormState = mountActionState;
+  (HooksDispatcherOnMount: Dispatcher).useActionState = mountActionState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -3587,8 +3587,8 @@ if (enableUseEffectEventHook) {
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
-  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
-  (HooksDispatcherOnUpdate: Dispatcher).useActionState = updateFormState;
+  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateActionState;
+  (HooksDispatcherOnUpdate: Dispatcher).useActionState = updateActionState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3626,8 +3626,8 @@ if (enableUseEffectEventHook) {
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
-  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
-  (HooksDispatcherOnRerender: Dispatcher).useActionState = rerenderFormState;
+  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderActionState;
+  (HooksDispatcherOnRerender: Dispatcher).useActionState = rerenderActionState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3820,7 +3820,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         mountHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnMountInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -3830,7 +3830,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useActionState';
         mountHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4000,7 +4000,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4010,7 +4010,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useActionState';
         updateHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4182,7 +4182,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return updateFormState(action, initialState, permalink);
+        return updateActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4192,7 +4192,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useActionState';
         updateHookTypesDev();
-        return updateFormState(action, initialState, permalink);
+        return updateActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4364,7 +4364,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, permalink);
+        return rerenderActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4374,7 +4374,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useActionState';
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, permalink);
+        return rerenderActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4568,7 +4568,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4579,7 +4579,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useActionState';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountFormState(action, initialState, permalink);
+        return mountActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4777,7 +4777,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateFormState(action, initialState, permalink);
+        return updateActionState(action, initialState, permalink);
       };
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4788,7 +4788,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useActionState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateFormState(action, initialState, permalink);
+        return updateActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4986,7 +4986,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, permalink);
+        return rerenderActionState(action, initialState, permalink);
       };
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
       function useActionState<S, P>(
@@ -4997,7 +4997,7 @@ if (__DEV__) {
         currentHookNameInDev = 'useActionState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, permalink);
+        return rerenderActionState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {

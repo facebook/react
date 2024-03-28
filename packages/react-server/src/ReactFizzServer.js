@@ -106,8 +106,8 @@ import {
   setCurrentResumableState,
   getThenableStateAfterSuspending,
   unwrapThenable,
-  getFormStateCount,
-  getFormStateMatchingIndex,
+  getActionStateCount,
+  getActionStateMatchingIndex,
 } from './ReactFizzHooks';
 import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
@@ -1440,8 +1440,8 @@ function renderIndeterminateComponent(
     legacyContext,
   );
   const hasId = checkDidRenderIdHook();
-  const formStateCount = getFormStateCount();
-  const formStateMatchingIndex = getFormStateMatchingIndex();
+  const actionStateCount = getActionStateCount();
+  const actionStateMatchingIndex = getActionStateMatchingIndex();
 
   if (__DEV__) {
     // Support for module components is deprecated and is removed behind a flag.
@@ -1517,8 +1517,8 @@ function renderIndeterminateComponent(
       keyPath,
       value,
       hasId,
-      formStateCount,
-      formStateMatchingIndex,
+      actionStateCount,
+      actionStateMatchingIndex,
     );
   }
   task.componentStack = previousComponentStack;
@@ -1530,22 +1530,22 @@ function finishFunctionComponent(
   keyPath: KeyNode,
   children: ReactNodeList,
   hasId: boolean,
-  formStateCount: number,
-  formStateMatchingIndex: number,
+  actionStateCount: number,
+  actionStateMatchingIndex: number,
 ) {
-  let didEmitFormStateMarkers = false;
-  if (formStateCount !== 0 && request.formState !== null) {
-    // For each useFormState hook, emit a marker that indicates whether we
+  let didEmitActionStateMarkers = false;
+  if (actionStateCount !== 0 && request.formState !== null) {
+    // For each useActionState hook, emit a marker that indicates whether we
     // rendered using the form state passed at the root. We only emit these
     // markers if form state is passed at the root.
     const segment = task.blockedSegment;
     if (segment === null) {
       // Implies we're in reumable mode.
     } else {
-      didEmitFormStateMarkers = true;
+      didEmitActionStateMarkers = true;
       const target = segment.chunks;
-      for (let i = 0; i < formStateCount; i++) {
-        if (i === formStateMatchingIndex) {
+      for (let i = 0; i < actionStateCount; i++) {
+        if (i === actionStateMatchingIndex) {
           pushFormStateMarkerIsMatching(target);
         } else {
           pushFormStateMarkerIsNotMatching(target);
@@ -1569,8 +1569,8 @@ function finishFunctionComponent(
     // Like the other contexts, this does not need to be in a finally block
     // because renderNode takes care of unwinding the stack.
     task.treeContext = prevTreeContext;
-  } else if (didEmitFormStateMarkers) {
-    // If there were formState hooks, we must use the non-destructive path
+  } else if (didEmitActionStateMarkers) {
+    // If there were useActionState hooks, we must use the non-destructive path
     // because this component is not a pure indirection; we emitted markers
     // to the stream.
     renderNode(request, task, children, -1);
@@ -1690,16 +1690,16 @@ function renderForwardRef(
     ref,
   );
   const hasId = checkDidRenderIdHook();
-  const formStateCount = getFormStateCount();
-  const formStateMatchingIndex = getFormStateMatchingIndex();
+  const actionStateCount = getActionStateCount();
+  const actionStateMatchingIndex = getActionStateMatchingIndex();
   finishFunctionComponent(
     request,
     task,
     keyPath,
     children,
     hasId,
-    formStateCount,
-    formStateMatchingIndex,
+    actionStateCount,
+    actionStateMatchingIndex,
   );
   task.componentStack = previousComponentStack;
 }

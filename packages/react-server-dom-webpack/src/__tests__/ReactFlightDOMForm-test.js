@@ -892,7 +892,7 @@ describe('ReactFlightDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  it('useFormState can return JSX state during MPA form submission', async () => {
+  it('useActionState can return JSX state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return <div>error message</div>;
