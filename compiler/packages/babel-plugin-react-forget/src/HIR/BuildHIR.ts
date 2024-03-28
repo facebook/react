@@ -182,7 +182,7 @@ export function lower(
     lowerStatement(builder, body);
   } else {
     builder.errors.push({
-      reason: `Unexpected function body kind: ${body.type}}. This error is likely caused by a bug in React Forget. Please file an issue`,
+      reason: `Unexpected function body kind: ${body.type}}. This error is likely caused by a bug in React Compiler. Please file an issue`,
       severity: ErrorSeverity.InvalidJS,
       loc: body.node.loc ?? null,
       suggestions: null,
@@ -735,7 +735,7 @@ function lowerStatement(
         if (testExpr.node == null) {
           if (hasDefault) {
             builder.errors.push({
-              reason: `Expected at most one \`default\` branch in SwitchStatement, this code should have failed to parse. This error is likely caused by a bug in React Forget. Please file an issue`,
+              reason: `Expected at most one \`default\` branch in SwitchStatement, this code should have failed to parse. This error is likely caused by a bug in React Compiler. Please file an issue`,
               severity: ErrorSeverity.InvalidJS,
               loc: case_.node.loc ?? null,
               suggestions: null,
@@ -898,7 +898,7 @@ function lowerStatement(
           }
         } else {
           builder.errors.push({
-            reason: `Expected variable declaration to be an identifier if no initializer was provided. This error is likely caused by a bug in React Forget. Please file an issue`,
+            reason: `Expected variable declaration to be an identifier if no initializer was provided. This error is likely caused by a bug in React Compiler. Please file an issue`,
             severity: ErrorSeverity.InvalidJS,
             loc: stmt.node.loc ?? null,
             suggestions: null,
@@ -1547,7 +1547,7 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.errors.push({
-          reason: `Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}. This error is likely caused by a bug in React Forget. Please file an issue`,
+          reason: `Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}. This error is likely caused by a bug in React Compiler. Please file an issue`,
           severity: ErrorSeverity.InvalidJS,
           loc: calleePath.node.loc ?? null,
           suggestions: null,
@@ -1573,7 +1573,7 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.errors.push({
-          reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Forget. Please file an issue`,
+          reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Compiler. Please file an issue`,
           severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
           suggestions: null,
@@ -1639,7 +1639,7 @@ function lowerExpression(
         }
         if (last === null) {
           builder.errors.push({
-            reason: `Expected SequenceExpression to have at least one expression. This error is likely caused by a bug in React Forget. Please file an issue`,
+            reason: `Expected SequenceExpression to have at least one expression. This error is likely caused by a bug in React Compiler. Please file an issue`,
             severity: ErrorSeverity.InvalidJS,
             loc: expr.node.loc ?? null,
             suggestions: null,
@@ -2184,7 +2184,7 @@ function lowerExpression(
 
       if (subexprs.length !== quasis.length - 1) {
         builder.errors.push({
-          reason: `Unexpected quasi and subexpression lengths in TemplateLiteral. This error is likely caused by a bug in React Forget. Please file an issue`,
+          reason: `Unexpected quasi and subexpression lengths in TemplateLiteral. This error is likely caused by a bug in React Compiler. Please file an issue`,
           severity: ErrorSeverity.InvalidJS,
           loc: exprPath.node.loc ?? null,
           suggestions: null,
@@ -2942,7 +2942,7 @@ function lowerJsxElementName(
     const tag = `${namespace}:${name}`;
     if (namespace.indexOf(":") !== -1 || name.indexOf(":") !== -1) {
       builder.errors.push({
-        reason: `Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'. This error is likely caused by a bug in React Forget. Please file an issue`,
+        reason: `Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'. This error is likely caused by a bug in React Compiler. Please file an issue`,
         severity: ErrorSeverity.InvalidJS,
         loc: exprPath.node.loc ?? null,
         suggestions: null,
