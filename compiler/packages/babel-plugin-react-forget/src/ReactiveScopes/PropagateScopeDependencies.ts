@@ -7,6 +7,8 @@
 
 import { CompilerError } from "../CompilerError";
 import {
+  BlockId,
+  GeneratedSource,
   Identifier,
   IdentifierId,
   InstructionId,
@@ -135,8 +137,151 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
 type DeclMap = Map<IdentifierId, Decl>;
 type Decl = {
   id: InstructionId;
-  scope: Stack<ReactiveScope>;
+  scope: Stack<ScopeTraversalState>;
 };
+
+/**
+ * TraversalState and PoisonState is used to track the poisoned state of a scope.
+ *
+ * A scope is poisoned when either of these conditions hold:
+ * - one of its own nested blocks is a jump target (for break/continues)
+ * - it is a outermost scope and contains a throw / return
+ *
+ * When a scope is poisoned, all dependencies (from instructions and inner scopes)
+ * are added as conditionally accessed.
+ */
+type ScopeTraversalState = {
+  value: ReactiveScope;
+  ownBlocks: Stack<BlockId>;
+};
+
+class PoisonState {
+  poisonedBlocks: Set<BlockId> = new Set();
+  poisonedScopes: Set<ScopeId> = new Set();
+  isPoisoned: boolean = false;
+
+  constructor(
+    poisonedBlocks: Set<BlockId>,
+    poisonedScopes: Set<ScopeId>,
+    isPoisoned: boolean
+  ) {
+    this.poisonedBlocks = poisonedBlocks;
+    this.poisonedScopes = poisonedScopes;
+    this.isPoisoned = isPoisoned;
+  }
+
+  clone(): PoisonState {
+    return new PoisonState(
+      new Set(this.poisonedBlocks),
+      new Set(this.poisonedScopes),
+      this.isPoisoned
+    );
+  }
+
+  take(other: PoisonState): PoisonState {
+    const copy = new PoisonState(
+      this.poisonedBlocks,
+      this.poisonedScopes,
+      this.isPoisoned
+    );
+    this.poisonedBlocks = other.poisonedBlocks;
+    this.poisonedScopes = other.poisonedScopes;
+    this.isPoisoned = other.isPoisoned;
+    return copy;
+  }
+
+  merge(
+    others: Array<PoisonState>,
+    currentScope: ScopeTraversalState | null
+  ): void {
+    for (const other of others) {
+      for (const id of other.poisonedBlocks) {
+        this.poisonedBlocks.add(id);
+      }
+      for (const id of other.poisonedScopes) {
+        this.poisonedScopes.add(id);
+      }
+    }
+    this.#invalidate(currentScope);
+  }
+
+  #invalidate(currentScope: ScopeTraversalState | null): void {
+    if (currentScope != null) {
+      if (this.poisonedScopes.has(currentScope.value.id)) {
+        this.isPoisoned = true;
+        return;
+      } else if (
+        currentScope.ownBlocks.find((blockId) =>
+          this.poisonedBlocks.has(blockId)
+        )
+      ) {
+        this.isPoisoned = true;
+        return;
+      }
+    }
+    this.isPoisoned = false;
+  }
+
+  /**
+   * Mark a block or scope as poisoned and update the `isPoisoned` flag.
+   *
+   * @param targetBlock id of the block which ends non-linear control flow.
+   *   For a break/continue instruction, this is the target block.
+   *   Throw and return instructions have no target and will poison the earliest
+   *   active scope
+   */
+  addPoisonTarget(
+    target: BlockId | null,
+    activeScopes: Stack<ScopeTraversalState>
+  ): void {
+    const currentScope = activeScopes.value;
+    if (target == null && currentScope != null) {
+      let cursor = activeScopes;
+      while (true) {
+        const next = cursor.pop();
+        if (next.value == null) {
+          const poisonedScope = cursor.value!.value.id;
+          this.poisonedScopes.add(poisonedScope);
+          if (poisonedScope === currentScope?.value.id) {
+            this.isPoisoned = true;
+          }
+          break;
+        } else {
+          cursor = next;
+        }
+      }
+    } else if (target != null) {
+      this.poisonedBlocks.add(target);
+      if (
+        !this.isPoisoned &&
+        currentScope?.ownBlocks.find((blockId) => blockId === target)
+      ) {
+        this.isPoisoned = true;
+      }
+    }
+  }
+
+  /**
+   * Invoked during traversal when a poisoned scope becomes inactive
+   * @param id
+   * @param currentScope
+   */
+  removeMaybePoisonedScope(
+    id: ScopeId,
+    currentScope: ScopeTraversalState | null
+  ): void {
+    this.poisonedScopes.delete(id);
+    this.#invalidate(currentScope);
+  }
+
+  removeMaybePoisonedBlock(
+    id: BlockId,
+    currentScope: ScopeTraversalState | null
+  ): void {
+    this.poisonedBlocks.delete(id);
+    this.#invalidate(currentScope);
+  }
+}
 
 class Context {
   #temporariesUsedOutsideScope: Set<IdentifierId>;
@@ -163,7 +308,8 @@ class Context {
    */
   #depsInCurrentConditional: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
-  #scopes: Stack<ReactiveScope> = empty();
+  #scopes: Stack<ScopeTraversalState> = empty();
+  poisonState: PoisonState = new PoisonState(new Set(), new Set(), false);
 
   constructor(temporariesUsedOutsideScope: Set<IdentifierId>) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
@@ -173,6 +319,13 @@ class Context {
     // Save context of previous scope
     const prevInConditional = this.#inConditionalWithinScope;
     const previousDependencies = this.#dependencies;
+    const prevDepsInConditional: ReactiveScopeDependencyTree | null = this
+      .isPoisoned
+      ? this.#depsInCurrentConditional
+      : null;
+    if (prevDepsInConditional != null) {
+      this.#depsInCurrentConditional = new ReactiveScopeDependencyTree();
+    }
 
     /*
      * Set context for new scope
@@ -183,12 +336,18 @@ class Context {
     const scopedDependencies = new ReactiveScopeDependencyTree();
     this.#inConditionalWithinScope = false;
     this.#dependencies = scopedDependencies;
-    this.#scopes = this.#scopes.push(scope);
+    this.#scopes = this.#scopes.push({
+      value: scope,
+      ownBlocks: empty(),
+    });
+    this.poisonState.isPoisoned = false;
 
     fn();
 
     // Restore context of previous scope
     this.#scopes = this.#scopes.pop();
+    this.poisonState.removeMaybePoisonedScope(scope.id, this.#scopes.value);
+
     this.#dependencies = previousDependencies;
     this.#inConditionalWithinScope = prevInConditional;
 
@@ -204,9 +363,20 @@ class Context {
      */
     this.#dependencies.addDepsFromInnerScope(
       scopedDependencies,
-      this.#inConditionalWithinScope,
+      this.#inConditionalWithinScope || this.isPoisoned,
       this.#checkValidDependency.bind(this)
     );
+
+    if (prevDepsInConditional != null) {
+      // Outer scope is poisoned
+      prevDepsInConditional.addDepsFromInnerScope(
+        this.#depsInCurrentConditional,
+        true,
+        this.#checkValidDependency.bind(this)
+      );
+      this.#depsInCurrentConditional = prevDepsInConditional;
+    }
+
     return minInnerScopeDependencies;
   }
 
@@ -368,13 +538,13 @@ class Context {
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
       this.#declarations.get(identifier.id);
-    const currentScope = this.#scopes !== null ? this.#scopes.value : null;
+    const currentScope = this.currentScope.value?.value;
     return (
       currentScope != null &&
       currentDeclaration !== undefined &&
       currentDeclaration.id < currentScope.range.start &&
       (currentDeclaration.scope == null ||
-        currentDeclaration.scope.value !== currentScope)
+        currentDeclaration.scope.value?.value !== currentScope)
     );
   }
 
@@ -382,11 +552,15 @@ class Context {
     if (this.#scopes === null) {
       return false;
     }
-    return this.#scopes.contains(scope);
+    return this.#scopes.find((state) => state.value === scope);
   }
 
-  get currentScope(): Stack<ReactiveScope> {
+  get currentScope(): Stack<ScopeTraversalState> {
     return this.#scopes;
+  }
+
+  get isPoisoned(): boolean {
+    return this.poisonState.isPoisoned;
   }
 
   visitOperand(place: Place): void {
@@ -436,22 +610,26 @@ class Context {
       originalDeclaration.scope.value !== null
     ) {
       originalDeclaration.scope.each((scope) => {
-        if (!this.#isScopeActive(scope)) {
-          scope.declarations.set(maybeDependency.identifier.id, {
+        if (!this.#isScopeActive(scope.value)) {
+          scope.value.declarations.set(maybeDependency.identifier.id, {
             identifier: maybeDependency.identifier,
-            scope: originalDeclaration.scope.value!, // checked above
+            scope: originalDeclaration.scope.value!.value,
           });
         }
       });
     }
 
     if (this.#checkValidDependency(maybeDependency)) {
-      this.#depsInCurrentConditional.add(maybeDependency, false);
+      const isPoisoned = this.isPoisoned;
+      this.#depsInCurrentConditional.add(maybeDependency, isPoisoned);
       /*
        * Add info about this dependency to the existing tree
        * We do not try to join/reduce dependencies here due to missing info
        */
-      this.#dependencies.add(maybeDependency, this.#inConditionalWithinScope);
+      this.#dependencies.add(
+        maybeDependency,
+        this.#inConditionalWithinScope || isPoisoned
+      );
     }
   }
 
@@ -460,15 +638,36 @@ class Context {
    * current one as a {@link ReactiveScope.reassignments}
    */
   visitReassignment(place: Place): void {
+    const currentScope = this.currentScope.value?.value;
     if (
-      this.currentScope.value != null &&
-      !Array.from(this.currentScope.value.reassignments).some(
+      currentScope != null &&
+      !Array.from(currentScope.reassignments).some(
         (identifier) => identifier.id === place.identifier.id
       ) &&
       this.#checkValidDependency({ identifier: place.identifier, path: [] })
     ) {
-      this.currentScope.value.reassignments.add(place.identifier);
+      currentScope.reassignments.add(place.identifier);
     }
+  }
+
+  pushLabeledBlock(id: BlockId): void {
+    const currentScope = this.#scopes.value;
+    if (currentScope != null) {
+      currentScope.ownBlocks = currentScope.ownBlocks.push(id);
+    }
+  }
+  popLabeledBlock(id: BlockId): void {
+    const currentScope = this.#scopes.value;
+    if (currentScope != null) {
+      const last = currentScope.ownBlocks.value;
+      currentScope.ownBlocks = currentScope.ownBlocks.pop();
+
+      CompilerError.invariant(last != null && last === id, {
+        reason: "[PropagateScopeDependencies] Misformed block stack",
+        loc: GeneratedSource,
+      });
+    }
+    this.poisonState.removeMaybePoisonedBlock(id, currentScope);
   }
 }
 
@@ -659,10 +858,38 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     }
   }
 
+  enterTerminal(stmt: ReactiveTerminalStatement, context: Context): void {
+    if (stmt.label != null) {
+      context.pushLabeledBlock(stmt.label.id);
+    }
+    const terminal = stmt.terminal;
+    switch (terminal.kind) {
+      case "continue":
+      case "break": {
+        context.poisonState.addPoisonTarget(
+          terminal.target,
+          context.currentScope
+        );
+        break;
+      }
+      case "throw":
+      case "return": {
+        context.poisonState.addPoisonTarget(null, context.currentScope);
+        break;
+      }
+    }
+  }
+  exitTerminal(stmt: ReactiveTerminalStatement, context: Context): void {
+    if (stmt.label != null) {
+      context.popLabeledBlock(stmt.label.id);
+    }
+  }
+
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
     context: Context
   ): void {
+    this.enterTerminal(stmt, context);
     const terminal = stmt.terminal;
     switch (terminal.kind) {
       case "break":
@@ -719,13 +946,23 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       case "if": {
         context.visitOperand(terminal.test);
         const { consequent, alternate } = terminal;
+        /*
+         * Consequent and alternate branches are mutually exclusive,
+         * so we save and restore the poison state here.
+         */
+        const prevPoisonState = context.poisonState.clone();
         const depsInIf = context.enterConditional(() => {
           this.visitBlock(consequent, context);
         });
         if (alternate !== null) {
+          const ifPoisonState = context.poisonState.take(prevPoisonState);
           const depsInElse = context.enterConditional(() => {
             this.visitBlock(alternate, context);
           });
+          context.poisonState.merge(
+            [ifPoisonState],
+            context.currentScope.value
+          );
           context.promoteDepsFromExhaustiveConditionals([depsInIf, depsInElse]);
         }
         break;
@@ -743,6 +980,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         }
         const depsInCases = [];
         let foundDefault = false;
+        /**
+         * Switch branches are mutually exclusive
+         */
+        const prevPoisonState = context.poisonState.clone();
+        const mutExPoisonStates: Array<PoisonState> = [];
         /*
          * This can underestimate unconditional accesses due to the current
          * CFG representation for fallthrough. This is safe. It only
@@ -755,6 +997,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
             foundDefault = true;
           }
           if (block !== undefined) {
+            mutExPoisonStates.push(
+              context.poisonState.take(prevPoisonState.clone())
+            );
             depsInCases.push(
               context.enterConditional(() => {
                 this.visitBlock(block, context);
@@ -765,6 +1010,10 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         if (foundDefault) {
           context.promoteDepsFromExhaustiveConditionals(depsInCases);
         }
+        context.poisonState.merge(
+          mutExPoisonStates,
+          context.currentScope.value
+        );
         break;
       }
       case "label": {
@@ -783,5 +1032,6 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         );
       }
     }
+    this.exitTerminal(stmt, context);
   }
 }

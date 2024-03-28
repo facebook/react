@@ -71,10 +71,10 @@ import { unstable_useMemoCache as useMemoCache } from "react";
  * props.b does *not* influence `a`
  */
 function ComponentA(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(3);
   let a_DEBUG;
   let t0;
-  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
+  if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a_DEBUG = [];
@@ -86,14 +86,12 @@ function ComponentA(props) {
 
       a_DEBUG.push(props.d);
     }
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = props.d;
-    $[3] = a_DEBUG;
-    $[4] = t0;
+    $[0] = props;
+    $[1] = a_DEBUG;
+    $[2] = t0;
   } else {
-    a_DEBUG = $[3];
-    t0 = $[4];
+    a_DEBUG = $[1];
+    t0 = $[2];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;

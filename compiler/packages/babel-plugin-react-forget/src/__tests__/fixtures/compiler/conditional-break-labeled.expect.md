@@ -34,14 +34,9 @@ import { unstable_useMemoCache as useMemoCache } from "react";
  * props.b *does* influence `a`
  */
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(2);
   let a;
-  if (
-    $[0] !== props.a ||
-    $[1] !== props.b ||
-    $[2] !== props.c ||
-    $[3] !== props.d
-  ) {
+  if ($[0] !== props) {
     a = [];
     a.push(props.a);
     bb1: {
@@ -53,13 +48,10 @@ function Component(props) {
     }
 
     a.push(props.d);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = props.c;
-    $[3] = props.d;
-    $[4] = a;
+    $[0] = props;
+    $[1] = a;
   } else {
-    a = $[4];
+    a = $[1];
   }
   return a;
 }

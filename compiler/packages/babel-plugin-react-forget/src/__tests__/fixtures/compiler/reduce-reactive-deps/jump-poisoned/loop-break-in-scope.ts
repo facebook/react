@@ -1,8 +1,8 @@
 function useFoo({ obj, objIsNull }) {
   const x = [];
-  b0: {
+  for (let i = 0; i < 5; i++) {
     if (objIsNull) {
-      break b0;
+      continue;
     }
     x.push(obj.a);
   }
@@ -15,5 +15,9 @@ export const FIXTURE_ENTRYPOINT = {
   sequentialRenders: [
     { obj: null, objIsNull: true },
     { obj: { a: 2 }, objIsNull: false },
+    // check we preserve nullthrows
+    { obj: { a: undefined }, objIsNull: false },
+    { obj: undefined, objIsNull: false },
+    { obj: { a: undefined }, objIsNull: false },
   ],
 };

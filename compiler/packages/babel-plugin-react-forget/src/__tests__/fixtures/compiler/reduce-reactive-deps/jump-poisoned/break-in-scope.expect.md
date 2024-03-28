@@ -4,10 +4,12 @@
 ```javascript
 function useFoo({ obj, objIsNull }) {
   const x = [];
-  if (objIsNull) {
-    return;
+  b0: {
+    if (objIsNull) {
+      break b0;
+    }
+    x.push(obj.a);
   }
-  x.push(obj.b);
   return x;
 }
 
@@ -17,6 +19,10 @@ export const FIXTURE_ENTRYPOINT = {
   sequentialRenders: [
     { obj: null, objIsNull: true },
     { obj: { a: 2 }, objIsNull: false },
+    // check we preserve nullthrows
+    { obj: { a: undefined }, objIsNull: false },
+    { obj: undefined, objIsNull: false },
+    { obj: { a: undefined }, objIsNull: false },
   ],
 };
 
@@ -27,31 +33,23 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function useFoo(t0) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(3);
   const { obj, objIsNull } = t0;
   let x;
-  let t1;
-  if ($[0] !== objIsNull || $[1] !== obj.b) {
-    t1 = Symbol.for("react.early_return_sentinel");
-    bb7: {
-      x = [];
+  if ($[0] !== objIsNull || $[1] !== obj) {
+    x = [];
+    bb1: {
       if (objIsNull) {
-        t1 = undefined;
-        break bb7;
+        break bb1;
       }
 
-      x.push(obj.b);
+      x.push(obj.a);
     }
     $[0] = objIsNull;
-    $[1] = obj.b;
+    $[1] = obj;
     $[2] = x;
-    $[3] = t1;
   } else {
     x = $[2];
-    t1 = $[3];
-  }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
   }
   return x;
 }
@@ -62,8 +60,18 @@ export const FIXTURE_ENTRYPOINT = {
   sequentialRenders: [
     { obj: null, objIsNull: true },
     { obj: { a: 2 }, objIsNull: false },
+    // check we preserve nullthrows
+    { obj: { a: undefined }, objIsNull: false },
+    { obj: undefined, objIsNull: false },
+    { obj: { a: undefined }, objIsNull: false },
   ],
 };
 
 ```
       
+### Eval output
+(kind: ok) []
+[2]
+[null]
+[[ (exception in render) TypeError: Cannot read properties of undefined (reading 'a') ]]
+[null]

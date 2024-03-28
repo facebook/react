@@ -4,9 +4,9 @@
 ```javascript
 function useFoo({ obj, objIsNull }) {
   const x = [];
-  b0: {
+  for (let i = 0; i < 5; i++) {
     if (objIsNull) {
-      break b0;
+      continue;
     }
     x.push(obj.a);
   }
@@ -19,6 +19,10 @@ export const FIXTURE_ENTRYPOINT = {
   sequentialRenders: [
     { obj: null, objIsNull: true },
     { obj: { a: 2 }, objIsNull: false },
+    // check we preserve nullthrows
+    { obj: { a: undefined }, objIsNull: false },
+    { obj: undefined, objIsNull: false },
+    { obj: { a: undefined }, objIsNull: false },
   ],
 };
 
@@ -32,17 +36,17 @@ function useFoo(t0) {
   const $ = useMemoCache(3);
   const { obj, objIsNull } = t0;
   let x;
-  if ($[0] !== objIsNull || $[1] !== obj.a) {
+  if ($[0] !== objIsNull || $[1] !== obj) {
     x = [];
-    bb1: {
+    for (let i = 0; i < 5; i++) {
       if (objIsNull) {
-        break bb1;
+        continue;
       }
 
       x.push(obj.a);
     }
     $[0] = objIsNull;
-    $[1] = obj.a;
+    $[1] = obj;
     $[2] = x;
   } else {
     x = $[2];
@@ -56,8 +60,18 @@ export const FIXTURE_ENTRYPOINT = {
   sequentialRenders: [
     { obj: null, objIsNull: true },
     { obj: { a: 2 }, objIsNull: false },
+    // check we preserve nullthrows
+    { obj: { a: undefined }, objIsNull: false },
+    { obj: undefined, objIsNull: false },
+    { obj: { a: undefined }, objIsNull: false },
   ],
 };
 
 ```
       
+### Eval output
+(kind: ok) []
+[2,2,2,2,2]
+[null,null,null,null,null]
+[[ (exception in render) TypeError: Cannot read properties of undefined (reading 'a') ]]
+[null,null,null,null,null]

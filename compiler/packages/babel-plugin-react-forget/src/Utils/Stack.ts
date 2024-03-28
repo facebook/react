@@ -25,10 +25,13 @@ interface StackInterface<T> {
   pop(): StackInterface<T>;
 
   contains(value: T): boolean;
+  find(fn: (value: T) => boolean): boolean;
 
   each(fn: (value: T) => void): void;
 
   get value(): T | null;
+
+  print(fn: (node: T) => string): string;
 }
 
 export function create<T>(value: T): Stack<T> {
@@ -56,6 +59,10 @@ class Node<T> implements StackInterface<T> {
     return this.#next;
   }
 
+  find(fn: (value: T) => boolean): boolean {
+    return fn(this.#value) ? true : this.#next.find(fn);
+  }
+
   contains(value: T): boolean {
     return (
       value === this.#value ||
@@ -70,6 +77,10 @@ class Node<T> implements StackInterface<T> {
   get value(): T {
     return this.#value;
   }
+
+  print(fn: (node: T) => string): string {
+    return fn(this.#value) + this.#next.print(fn);
+  }
 }
 
 class Empty<T> implements StackInterface<T> {
@@ -79,6 +90,10 @@ class Empty<T> implements StackInterface<T> {
   pop(): Stack<T> {
     return this;
   }
+
+  find(_fn: (value: T) => boolean): boolean {
+    return false;
+  }
   contains(_value: T): boolean {
     return false;
   }
@@ -87,6 +102,9 @@ class Empty<T> implements StackInterface<T> {
   }
   get value(): T | null {
     return null;
+  }
+  print(_: (node: T) => string): string {
+    return "";
   }
 }
 
