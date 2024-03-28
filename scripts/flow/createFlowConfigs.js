@@ -20,7 +20,7 @@ const configTemplate = fs
 
 // stores all forks discovered during config generation
 const allForks = new Set();
-// maps forked file to the base path containing it and it's forks (it's parent)
+// maps forked file to the base path containing it and its forks (its parent)
 const forkedFiles = new Map();
 
 function findForks(file) {
