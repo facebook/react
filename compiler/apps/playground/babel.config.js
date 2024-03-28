@@ -9,15 +9,19 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ["next/babel"],
-    plugins: [
-      [
-        "babel-plugin-react-forget",
-        {
-          gating: null,
-          compilationMode: "infer",
-          panicThreshold: "NONE",
-        },
-      ],
+    overrides: [
+      {
+        test: /^((?!node_modules).)*$/g,
+        plugins: [
+          [
+            "babel-plugin-react-forget",
+            {
+              compilationMode: "infer",
+              panicThreshold: "NONE",
+            },
+          ],
+        ],
+      },
     ],
   };
 };
