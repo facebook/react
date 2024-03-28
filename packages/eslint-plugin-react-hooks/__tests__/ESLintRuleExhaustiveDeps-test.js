@@ -7686,6 +7686,18 @@ const testsFlow = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function Component() {
+          type LocalTypeAlias = string;
+          opaque type LocalOpaqueType = string;
+          useEffect(() => {
+            const foo: LocalTypeAlias = "foo";
+            const bar: LocalOpaqueType = "bar";
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {

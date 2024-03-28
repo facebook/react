@@ -446,8 +446,8 @@ export default {
           if (def.node != null && def.node.init === node.parent) {
             continue;
           }
-          // Ignore Flow type parameters
-          if (def.type === 'TypeParameter') {
+          // Ignore Flow type parameters and local type aliases
+          if (def.type === 'TypeParameter' || def.node.type === 'TypeAlias') {
             continue;
           }
 
