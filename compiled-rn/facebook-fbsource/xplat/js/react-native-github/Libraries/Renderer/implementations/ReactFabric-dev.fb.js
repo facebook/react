@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<524dd707c3c266c4090532051a299e80>>
+ * @generated SignedSource<<b96b1db3ec870619c9c09b3905a87f32>>
  */
 
 "use strict";
@@ -26979,21 +26979,23 @@ to return true:wantsResponderID|                            |
       return executionContext;
     }
     function batchedUpdates(fn, a) {
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
+      {
+        var prevExecutionContext = executionContext;
+        executionContext |= BatchedContext;
 
-      try {
-        return fn(a);
-      } finally {
-        executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
-        // most batchedUpdates-like method.
+        try {
+          return fn(a);
+        } finally {
+          executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
+          // most batchedUpdates-like method.
 
-        if (
-          executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-          !ReactCurrentActQueue.isBatchingLegacy
-        ) {
-          resetRenderTimer();
-          flushSyncWorkOnLegacyRootsOnly();
+          if (
+            executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+            !ReactCurrentActQueue.isBatchingLegacy
+          ) {
+            resetRenderTimer();
+            flushSyncWorkOnLegacyRootsOnly();
+          }
         }
       }
     }
@@ -30581,7 +30583,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-50157059";
+    var ReactVersion = "19.0.0-canary-fb494e93";
 
     function createPortal$1(
       children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3c2cd0dc2c519bacd879ada7f0bbba4>>
+ * @generated SignedSource<<b3f8b9d9ae41ad4e84b986ff88b107f6>>
  */
 
 "use strict";
@@ -22919,21 +22919,23 @@ if (__DEV__) {
       return executionContext;
     }
     function batchedUpdates(fn, a) {
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
+      {
+        var prevExecutionContext = executionContext;
+        executionContext |= BatchedContext;
 
-      try {
-        return fn(a);
-      } finally {
-        executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
-        // most batchedUpdates-like method.
+        try {
+          return fn(a);
+        } finally {
+          executionContext = prevExecutionContext; // If there were legacy sync updates, flush them at the end of the outer
+          // most batchedUpdates-like method.
 
-        if (
-          executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-          !ReactCurrentActQueue.isBatchingLegacy
-        ) {
-          resetRenderTimer();
-          flushSyncWorkOnLegacyRootsOnly();
+          if (
+            executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+            !ReactCurrentActQueue.isBatchingLegacy
+          ) {
+            resetRenderTimer();
+            flushSyncWorkOnLegacyRootsOnly();
+          }
         }
       }
     }
@@ -26250,7 +26252,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-04ac921d";
+    var ReactVersion = "19.0.0-canary-6c021864";
 
     // Might add PROFILE later.
 
