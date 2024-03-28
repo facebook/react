@@ -1447,6 +1447,13 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
+  {name: 'popover', overrideStringValue: 'manual'},
+  {
+    name: 'popoverTarget',
+    read: element => element.popoverTargetElement,
+    tagName: 'button',
+  },
+  {name: 'popoverTargetAction', overrideStringValue: 'show', tagName: 'button'},
   {
     name: 'poster',
     tagName: 'video',

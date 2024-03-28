@@ -8,6 +8,7 @@ exports[`ReactTestUtils Simulate should have locally attached media events 1`] =
   "animationStart",
   "auxClick",
   "beforeInput",
+  "beforeToggle",
   "blur",
   "canPlay",
   "canPlayThrough",

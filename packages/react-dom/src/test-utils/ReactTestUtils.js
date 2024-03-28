@@ -765,6 +765,7 @@ function makeSimulator(eventType) {
 
 // A one-time snapshot with no plans to update. We'll probably want to deprecate Simulate API.
 const simulatedEventTypes = [
+  'beforeToggle',
   'blur',
   'cancel',
   'click',
