@@ -704,6 +704,7 @@ function setProp(
     case 'noValidate':
     case 'open':
     case 'playsInline':
+    case 'popover':
     case 'readOnly':
     case 'required':
     case 'reversed':
@@ -2611,6 +2612,7 @@ function diffHydratedGenericElement(
       case 'noValidate':
       case 'open':
       case 'playsInline':
+      case 'popover':
       case 'readOnly':
       case 'required':
       case 'reversed':

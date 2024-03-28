@@ -226,6 +226,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'noValidate':
           case 'open':
           case 'playsInline':
+          case 'popover':
           case 'readOnly':
           case 'required':
           case 'reversed':
@@ -311,6 +312,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'noValidate':
             case 'open':
             case 'playsInline':
+            case 'popover':
             case 'readOnly':
             case 'required':
             case 'reversed':

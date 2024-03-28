@@ -1319,6 +1319,7 @@ function pushAttribute(
     case 'noValidate':
     case 'open':
     case 'playsInline':
+    case 'popover':
     case 'readOnly':
     case 'required':
     case 'reversed':
