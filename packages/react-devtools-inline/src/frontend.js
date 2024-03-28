@@ -21,6 +21,7 @@ type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   supportsNativeInspection?: boolean,
   supportsProfiling?: boolean,
+  supportsReloadAndProfile?: boolean,
 };
 
 export function createStore(bridge: FrontendBridge, config?: Config): Store {
@@ -29,6 +30,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
     supportsTraceUpdates: true,
     supportsTimeline: true,
     supportsNativeInspection: true,
+    supportsReloadAndProfile: true,
     ...config,
   });
 }
@@ -60,9 +62,11 @@ export function initialize(
   {
     bridge,
     store,
+    reload,
   }: {
     bridge?: FrontendBridge,
     store?: Store,
+    reload?: () => void,
   } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {
@@ -96,6 +100,9 @@ export function initialize(
   };
 
   frontendBridge.addListener('getSavedPreferences', onGetSavedPreferences);
+  if (reload) {
+    frontendBridge.addListener('reloadAppForProfiling', reload);
+  }
 
   const ForwardRef = forwardRef<Props, mixed>((props, ref) => (
     <DevTools ref={ref} bridge={frontendBridge} store={store} {...props} />
