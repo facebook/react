@@ -8,7 +8,7 @@ provide a better debugging support in production. Check out the blog post
   our documentation. This file is append-only, which means an existing code in
   the file will never be changed/removed.
 - [`extract-errors.js`](https://github.com/facebook/react/blob/main/scripts/error-codes/extract-errors.js)
-  is an node script that traverses our codebase and updates `codes.json`. You
+  is a node script that traverses our codebase and updates `codes.json`. You
   can test it by running `yarn extract-errors`. It works by crawling the build
   artifacts directory, so you need to have either run the build script or
   downloaded pre-built artifacts (e.g. with `yarn download build`). It works
