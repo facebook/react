@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b45327685d0babdbf9d81d5fb2c69fad>>
+ * @generated SignedSource<<d630fe2014dc062eb309863c2aa85786>>
  */
 
 "use strict";
@@ -4380,7 +4380,7 @@ function rerenderOptimistic(passthrough, reducer) {
   hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 }
-function dispatchFormState(
+function dispatchActionState(
   fiber,
   actionQueue,
   setPendingState,
@@ -4393,11 +4393,11 @@ function dispatchFormState(
   null === fiber
     ? ((fiber = { payload: payload, next: null }),
       (fiber.next = actionQueue.pending = fiber),
-      runFormStateAction(actionQueue, setPendingState, setState, payload))
+      runActionStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
         { payload: payload, next: fiber.next });
 }
-function runFormStateAction(actionQueue, setPendingState, setState, payload) {
+function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
     prevTransition = ReactCurrentBatchConfig$2.transition,
@@ -4413,14 +4413,14 @@ function runFormStateAction(actionQueue, setPendingState, setState, payload) {
         returnValue.then(
           function (nextState) {
             actionQueue.state = nextState;
-            finishRunningFormStateAction(
+            finishRunningActionStateAction(
               actionQueue,
               setPendingState,
               setState
             );
           },
           function () {
-            return finishRunningFormStateAction(
+            return finishRunningActionStateAction(
               actionQueue,
               setPendingState,
               setState
@@ -4430,15 +4430,19 @@ function runFormStateAction(actionQueue, setPendingState, setState, payload) {
         setState(returnValue))
       : (setState(returnValue),
         (actionQueue.state = returnValue),
-        finishRunningFormStateAction(actionQueue, setPendingState, setState));
+        finishRunningActionStateAction(actionQueue, setPendingState, setState));
   } catch (error) {
     setState({ then: function () {}, status: "rejected", reason: error }),
-      finishRunningFormStateAction(actionQueue, setPendingState, setState);
+      finishRunningActionStateAction(actionQueue, setPendingState, setState);
   } finally {
     ReactCurrentBatchConfig$2.transition = prevTransition;
   }
 }
-function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
+function finishRunningActionStateAction(
+  actionQueue,
+  setPendingState,
+  setState
+) {
   var last = actionQueue.pending;
   if (null !== last) {
     var first = last.next;
@@ -4446,7 +4450,7 @@ function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runFormStateAction(
+        runActionStateAction(
           actionQueue,
           setPendingState,
           setState,
@@ -4454,17 +4458,17 @@ function finishRunningFormStateAction(actionQueue, setPendingState, setState) {
         ));
   }
 }
-function formStateReducer(oldState, newState) {
+function actionStateReducer(oldState, newState) {
   return newState;
 }
-function mountFormState(action, initialStateProp) {
+function mountActionState(action, initialStateProp) {
   var stateHook = mountWorkInProgressHook();
   stateHook.memoizedState = stateHook.baseState = initialStateProp;
   var stateQueue = {
     pending: null,
     lanes: 0,
     dispatch: null,
-    lastRenderedReducer: formStateReducer,
+    lastRenderedReducer: actionStateReducer,
     lastRenderedState: initialStateProp
   };
   stateHook.queue = stateQueue;
@@ -4489,7 +4493,7 @@ function mountFormState(action, initialStateProp) {
     pending: null
   };
   stateQueue.queue = actionQueue;
-  stateHook = dispatchFormState.bind(
+  stateHook = dispatchActionState.bind(
     null,
     currentlyRenderingFiber$1,
     actionQueue,
@@ -4500,15 +4504,15 @@ function mountFormState(action, initialStateProp) {
   stateQueue.memoizedState = action;
   return [initialStateProp, stateHook, !1];
 }
-function updateFormState(action) {
+function updateActionState(action) {
   var stateHook = updateWorkInProgressHook();
-  return updateFormStateImpl(stateHook, currentHook, action);
+  return updateActionStateImpl(stateHook, currentHook, action);
 }
-function updateFormStateImpl(stateHook, currentStateHook, action) {
+function updateActionStateImpl(stateHook, currentStateHook, action) {
   currentStateHook = updateReducerImpl(
     stateHook,
     currentStateHook,
-    formStateReducer
+    actionStateReducer
   )[0];
   stateHook = updateReducer(basicStateReducer)[0];
   currentStateHook =
@@ -4524,20 +4528,20 @@ function updateFormStateImpl(stateHook, currentStateHook, action) {
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
-      formStateActionEffect.bind(null, actionQueue, action),
+      actionStateActionEffect.bind(null, actionQueue, action),
       { destroy: void 0 },
       null
     ));
   return [currentStateHook, dispatch, stateHook];
 }
-function formStateActionEffect(actionQueue, action) {
+function actionStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
 }
-function rerenderFormState(action) {
+function rerenderActionState(action) {
   var stateHook = updateWorkInProgressHook(),
     currentStateHook = currentHook;
   if (null !== currentStateHook)
-    return updateFormStateImpl(stateHook, currentStateHook, action);
+    return updateActionStateImpl(stateHook, currentStateHook, action);
   updateWorkInProgressHook();
   stateHook = stateHook.memoizedState;
   currentStateHook = updateWorkInProgressHook();
@@ -5009,8 +5013,8 @@ var HooksDispatcherOnMount = {
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnMount.useFormState = mountFormState),
-  (HooksDispatcherOnMount.useActionState = mountFormState));
+  (HooksDispatcherOnMount.useFormState = mountActionState),
+  (HooksDispatcherOnMount.useActionState = mountActionState));
 enableAsyncActions && (HooksDispatcherOnMount.useOptimistic = mountOptimistic);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
@@ -5054,8 +5058,8 @@ HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnUpdate.useFormState = updateFormState),
-  (HooksDispatcherOnUpdate.useActionState = updateFormState));
+  (HooksDispatcherOnUpdate.useFormState = updateActionState),
+  (HooksDispatcherOnUpdate.useActionState = updateActionState));
 enableAsyncActions &&
   (HooksDispatcherOnUpdate.useOptimistic = updateOptimistic);
 var HooksDispatcherOnRerender = {
@@ -5103,8 +5107,8 @@ HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 enableAsyncActions &&
   ((HooksDispatcherOnRerender.useHostTransitionStatus =
     useHostTransitionStatus),
-  (HooksDispatcherOnRerender.useFormState = rerenderFormState),
-  (HooksDispatcherOnRerender.useActionState = rerenderFormState));
+  (HooksDispatcherOnRerender.useFormState = rerenderActionState),
+  (HooksDispatcherOnRerender.useActionState = rerenderActionState));
 enableAsyncActions &&
   (HooksDispatcherOnRerender.useOptimistic = rerenderOptimistic);
 var now = Scheduler.unstable_now,
@@ -11559,7 +11563,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1253 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-bc3b2603",
+    version: "19.0.0-canary-c3d7585f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11615,7 +11619,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-bc3b2603"
+  reconcilerVersion: "19.0.0-canary-c3d7585f"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
