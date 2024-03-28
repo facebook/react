@@ -84,7 +84,6 @@ export default [
   "Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release.",
   "An empty string (\"\") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.",
   "An empty string (\"\") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.",
-  "An error occurred during hydration. The server HTML was replaced with client content.",
   "An input can only specify a formAction along with type=\"submit\" or type=\"image\".",
   "An invalid container has been provided. This may indicate that another renderer is being used in addition to the test renderer. (For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) This is not supported.",
   "An optimistic state update occurred outside a transition or action. To fix, move the update to an action, or wrap with startTransition.",

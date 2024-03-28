@@ -9022,16 +9022,6 @@ if (__DEV__) {
       return true;
     }
 
-    function errorHydratingContainer(parentContainer) {
-      {
-        // TODO: This gets logged by onRecoverableError, too, so we should be
-        // able to remove it.
-        error(
-          "An error occurred during hydration. The server HTML was replaced with client content."
-        );
-      }
-    }
-
     function warnNonHydratedInstance(fiber, rejectedCandidate) {
       {
         if (didSuspendOrErrorDEV) {
@@ -32549,10 +32539,6 @@ if (__DEV__) {
         // Something to consider for a future refactor.
         var rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
         rootWorkInProgress.flags |= ForceClientRender;
-
-        {
-          errorHydratingContainer();
-        }
       }
 
       var exitStatus = renderRootSync(root, errorRetryLanes);
@@ -36817,7 +36803,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-e8df89fb";
+    var ReactVersion = "19.0.0-www-modern-0276b2d8";
 
     function createPortal$1(
       children,
