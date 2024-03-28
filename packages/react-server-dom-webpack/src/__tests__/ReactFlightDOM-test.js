@@ -812,6 +812,110 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  it('should handle streaming async server components', async () => {
+    const reportedErrors = [];
+
+    const Row = async ({current, next}) => {
+      const chunk = await next;
+
+      if (chunk.done) {
+        return chunk.value;
+      }
+
+      return (
+        <Suspense fallback={chunk.value}>
+          <Row current={chunk.value} next={chunk.next} />
+        </Suspense>
+      );
+    };
+
+    function createResolvablePromise() {
+      let _resolve, _reject;
+
+      const promise = new Promise((resolve, reject) => {
+        _resolve = resolve;
+        _reject = reject;
+      });
+
+      return {promise, resolve: _resolve, reject: _reject};
+    }
+
+    function createSuspendedChunk(initialValue) {
+      const {promise, resolve, reject} = createResolvablePromise();
+
+      return {
+        row: (
+          <Suspense fallback={initialValue}>
+            <Row current={initialValue} next={promise} />
+          </Suspense>
+        ),
+        resolve,
+        reject,
+      };
+    }
+
+    function makeDelayedText() {
+      const {promise, resolve, reject} = createResolvablePromise();
+      async function DelayedText() {
+        const data = await promise;
+        return <div>{data}</div>;
+      }
+      return [DelayedText, resolve, reject];
+    }
+
+    const [Posts, resolvePostsData] = makeDelayedText();
+    const [Photos, resolvePhotosData] = makeDelayedText();
+    const suspendedChunk = createSuspendedChunk(<p>loading</p>);
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      suspendedChunk.row,
+      webpackMap,
+      {
+        onError(error) {
+          reportedErrors.push(error);
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    await act(() => {
+      root.render(<ClientRoot />);
+    });
+
+    expect(container.innerHTML).toBe('<p>loading</p>');
+
+    const donePromise = createResolvablePromise();
+
+    const value = (
+      <Suspense fallback={<p>loading posts and photos</p>}>
+        <Posts />
+        <Photos />
+      </Suspense>
+    );
+
+    await act(async () => {
+      suspendedChunk.resolve({value, done: false, next: donePromise.promise});
+      donePromise.resolve({value, done: true});
+    });
+
+    expect(container.innerHTML).toBe('<p>loading posts and photos</p>');
+
+    await act(async () => {
+      await resolvePostsData('posts');
+      await resolvePhotosData('photos');
+    });
+
+    expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
+    expect(reportedErrors).toEqual([]);
+  });
+
   it('should preserve state of client components on refetch', async () => {
     // Client
 
