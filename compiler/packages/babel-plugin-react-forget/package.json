@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "yarn snap:ci",
-    "jest": "tsc && ts-node \"$(yarn --silent which jest)\"",
+    "jest": "tsc && ts-node node_modules/.bin/jest",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
