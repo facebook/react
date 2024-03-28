@@ -46,6 +46,10 @@
   font-size: var(--font-size-sans-normal);
   padding: 0.25rem 0.5rem;
 }
+.TabSizeComponents {
+  font-size: var(--font-size-sans-normal);
+  padding: 0.25rem 0.5rem;
+}
 
 .Input {
   width: 0;
@@ -80,9 +84,15 @@
   height: 1rem;
 }
 
+.IconSizeComponents {
+  display: none;
+}
+
 .TabLabelNavigation,
 .TabLabelProfiler,
-.TabLabelSettings {
+.TabLabelSettings,
+.TabLabelComponents
+{
 }
 
 .VRule {

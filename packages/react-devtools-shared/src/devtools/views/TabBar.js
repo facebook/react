@@ -29,7 +29,7 @@ export type Props = {
   id: string,
   selectTab: (tabID: any) => void,
   tabs: Array<TabInfo | null>,
-  type: 'navigation' | 'profiler' | 'settings',
+  type: 'navigation' | 'profiler' | 'settings' | 'components',
 };
 
 export default function TabBar({
@@ -81,6 +81,11 @@ export default function TabBar({
       iconSizeClassName = styles.IconSizeSettings;
       tabLabelClassName = styles.TabLabelSettings;
       tabSizeClassName = styles.TabSizeSettings;
+      break;
+    case 'components':
+      iconSizeClassName = styles.IconSizeComponents;
+      tabLabelClassName = styles.TabLabelComponents;
+      tabSizeClassName = styles.TabSizeComponents;
       break;
     default:
       throw Error(`Unsupported type "${type}"`);

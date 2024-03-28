@@ -1,0 +1,37 @@
+  .Container {
+    width: 100%;
+    overflow: hidden;
+    flex: 1 0 auto;
+  }
+  
+  .Container:focus {
+    outline: none;
+  }
+  
+  .SummaryList {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-monospace-normal);
+    line-height: var(--line-height-data);
+  }
+  
+  .ComponentLine {
+    display: flex;
+    align-items: center;
+    padding-right: 2rem;
+  }
+  
+  .ComponentName {
+    width: calc(100% - 1rem);
+    color: var(--color-component-name);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .InstanceCount {
+    width: 1rem;
+    text-align: right;
+  }
