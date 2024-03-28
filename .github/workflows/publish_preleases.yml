@@ -1,0 +1,60 @@
+name: facebook/react/publish_preleases
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease_commit_sha:
+        required: true
+env:
+  CIRCLE_CI_API_TOKEN: xxxx6989
+  NPM_TOKEN: xxxxJBvP
+jobs:
+  publish_to_canary_channel:
+    if: ${{ inputs.prerelease_commit_sha }}
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:18.0-node
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+      commit_sha: "${{ inputs.prerelease_commit_sha }}"
+      release_channel: stable
+      dist_tag: canary,next
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Run publish script
+      run: |-
+        git fetch origin main
+        cd ./scripts/release && yarn && cd ../../
+        scripts/release/prepare-release-from-ci.js --skipTests -r ${{ env.release_channel }} --commit=${{ env.commit_sha }}
+        cp ./scripts/release/ci-npmrc ~/.npmrc
+        scripts/release/publish.js --ci --tags ${{ env.dist_tag }}
+  publish_to_experimental_channel:
+    if: ${{ inputs.prerelease_commit_sha }}
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:18.0-node
+    needs:
+    - publish_to_canary_channel
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+      commit_sha: "${{ inputs.prerelease_commit_sha }}"
+      release_channel: experimental
+      dist_tag: experimental
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Run publish script
+      run: |-
+        git fetch origin main
+        cd ./scripts/release && yarn && cd ../../
+        scripts/release/prepare-release-from-ci.js --skipTests -r ${{ env.release_channel }} --commit=${{ env.commit_sha }}
+        cp ./scripts/release/ci-npmrc ~/.npmrc
+        scripts/release/publish.js --ci --tags ${{ env.dist_tag }}
