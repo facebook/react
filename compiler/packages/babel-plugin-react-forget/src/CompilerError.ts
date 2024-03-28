@@ -173,7 +173,7 @@ export class CompilerError extends Error {
 
   constructor(...args: any[]) {
     super(...args);
-    this.name = "ReactForgetCompilerError";
+    this.name = "ReactCompilerError";
   }
 
   override get message(): string {

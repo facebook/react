@@ -29,8 +29,8 @@ function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }
 
-function isReactForgetCompilerError(err: Error): err is CompilerError {
-  return err.name === "ReactForgetCompilerError";
+function isReactCompilerError(err: Error): err is CompilerError {
+  return err.name === "ReactCompilerError";
 }
 
 function isReportableDiagnostic(
@@ -131,7 +131,7 @@ const rule: Rule.RuleModule = {
           sourceType: "module",
         });
       } catch (err) {
-        if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
+        if (isReactCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
             if (!isReportableDiagnostic(detail)) {
               continue;
