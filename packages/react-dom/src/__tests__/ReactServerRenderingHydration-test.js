@@ -143,13 +143,11 @@ describe('ReactDOMServerHydration', () => {
         });
       }).toErrorDev(
         favorSafetyOverHydrationPerf
-          ? [
-              'An error occurred during hydration. The server HTML was replaced with client content.',
-            ]
+          ? []
           : [
               " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
             ],
-        {withoutStack: 1},
+        {withoutStack: true},
       );
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -238,13 +236,11 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       favorSafetyOverHydrationPerf
-        ? [
-            'An error occurred during hydration. The server HTML was replaced with client content.',
-          ]
+        ? []
         : [
             "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
           ],
-      {withoutStack: 1},
+      {withoutStack: true},
     );
 
     expect(onFocusBeforeHydration).not.toHaveBeenCalled();
@@ -547,13 +543,11 @@ describe('ReactDOMServerHydration', () => {
       });
     }).toErrorDev(
       favorSafetyOverHydrationPerf
-        ? [
-            'An error occurred during hydration. The server HTML was replaced with client content.',
-          ]
+        ? []
         : [
             " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
           ],
-      {withoutStack: 1},
+      {withoutStack: true},
     );
 
     if (favorSafetyOverHydrationPerf) {
@@ -570,22 +564,15 @@ describe('ReactDOMServerHydration', () => {
     );
     domElement.innerHTML = markup;
 
-    await expect(async () => {
-      await act(() => {
-        ReactDOMClient.hydrateRoot(
-          domElement,
-          <div dangerouslySetInnerHTML={undefined} />,
-          {onRecoverableError: error => {}},
-        );
-      });
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        domElement,
+        <div dangerouslySetInnerHTML={undefined} />,
+        {onRecoverableError: error => {}},
+      );
+    });
 
-      expect(domElement.innerHTML).not.toEqual(markup);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    expect(domElement.innerHTML).not.toEqual(markup);
   });
 
   it('should warn when hydrating read-only properties', async () => {

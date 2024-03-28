@@ -196,22 +196,15 @@ describe('rendering React components at document', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
 
-      expect(() => {
-        ReactDOM.flushSync(() => {
-          ReactDOMClient.hydrateRoot(container, <div>parsnip</div>, {
-            onRecoverableError: error => {
-              Scheduler.log(
-                'Log recoverable error: ' + normalizeError(error.message),
-              );
-            },
-          });
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(container, <div>parsnip</div>, {
+          onRecoverableError: error => {
+            Scheduler.log(
+              'Log recoverable error: ' + normalizeError(error.message),
+            );
+          },
         });
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
-        {withoutStack: 1},
-      );
+      });
 
       assertLog([
         "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
@@ -227,28 +220,21 @@ describe('rendering React components at document', () => {
       const wrapper = document.createElement('div');
       wrapper.textContent = 'potato';
       container.appendChild(wrapper);
-      expect(() => {
-        ReactDOM.flushSync(() => {
-          ReactDOMClient.hydrateRoot(
-            container,
-            <div>
-              <div>parsnip</div>
-            </div>,
-            {
-              onRecoverableError: error => {
-                Scheduler.log(
-                  'Log recoverable error: ' + normalizeError(error.message),
-                );
-              },
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(
+          container,
+          <div>
+            <div>parsnip</div>
+          </div>,
+          {
+            onRecoverableError: error => {
+              Scheduler.log(
+                'Log recoverable error: ' + normalizeError(error.message),
+              );
             },
-          );
-        });
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
-        {withoutStack: 1},
-      );
+          },
+        );
+      });
 
       assertLog([
         "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
@@ -295,15 +281,11 @@ describe('rendering React components at document', () => {
         });
       }).toErrorDev(
         favorSafetyOverHydrationPerf
-          ? [
-              'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-            ]
+          ? []
           : [
               "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
             ],
-        {
-          withoutStack: 1,
-        },
+        {withoutStack: true},
       );
 
       assertLog(
@@ -336,26 +318,19 @@ describe('rendering React components at document', () => {
       }
 
       // with float the title no longer is a hydration mismatch so we get an error on the body mismatch
-      expect(() => {
-        ReactDOM.flushSync(() => {
-          ReactDOMClient.hydrateRoot(
-            testDocument,
-            <Component text="Hello world" />,
-            {
-              onRecoverableError: error => {
-                Scheduler.log(
-                  'Log recoverable error: ' + normalizeError(error.message),
-                );
-              },
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(
+          testDocument,
+          <Component text="Hello world" />,
+          {
+            onRecoverableError: error => {
+              Scheduler.log(
+                'Log recoverable error: ' + normalizeError(error.message),
+              );
             },
-          );
-        });
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
-        {withoutStack: 1},
-      );
+          },
+        );
+      });
       assertLog([
         "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
         'Log recoverable error: There was an error while hydrating.',

@@ -105,7 +105,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
           <RegularFn />
         </span>
       </LegacyProvider>,
-      render === clientRenderOnBadMarkup ? 5 : 3,
+      render === clientRenderOnBadMarkup ? 4 : 3,
     );
     expect(e.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);

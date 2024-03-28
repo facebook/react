@@ -2406,19 +2406,12 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    await expect(async () => {
-      // The first paint switches to client rendering due to mismatch
-      await waitForPaint([
-        'client',
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    // The first paint switches to client rendering due to mismatch
+    await waitForPaint([
+      'client',
+      "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Log recoverable error: There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
@@ -2486,19 +2479,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // The first paint uses the client due to mismatch forcing client render
-    await expect(async () => {
-      // The first paint switches to client rendering due to mismatch
-      await waitForPaint([
-        'client',
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-      ],
-      {withoutStack: 1},
-    );
+    // The first paint switches to client rendering due to mismatch
+    await waitForPaint([
+      'client',
+      "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Log recoverable error: There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
@@ -2564,16 +2550,11 @@ describe('ReactDOMFizzServer', () => {
 
       // An error logged but instead of surfacing it to the UI, we switched
       // to client rendering.
-      await expect(async () => {
-        await waitForAll([
-          'Yay!',
-          'Hydration error',
-          'There was an error while hydrating.',
-        ]);
-      }).toErrorDev(
-        'An error occurred during hydration. The server HTML was replaced',
-        {withoutStack: true},
-      );
+      await waitForAll([
+        'Yay!',
+        'Hydration error',
+        'There was an error while hydrating.',
+      ]);
       expect(getVisibleChildren(container)).toEqual(<span>Yay!</span>);
 
       // The node that's inside the boundary that errored during hydration was
@@ -6339,9 +6320,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error);
         },
       });
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(['An error occurred during hydration'], {withoutStack: 1});
+      await waitForAll([]);
       expect(errors.length).toEqual(2);
       expect(getVisibleChildren(container)).toEqual(<span />);
     });

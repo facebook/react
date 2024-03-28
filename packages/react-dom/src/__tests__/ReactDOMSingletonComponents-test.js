@@ -471,14 +471,7 @@ describe('ReactDOM HostSingleton', () => {
         },
       },
     );
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev(
-      [
-        `Warning: An error occurred during hydration. The server HTML was replaced with client content.`,
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([]);
     expect(hydrationErrors).toEqual([
       [
         "Hydration failed because the server rendered HTML didn't match the client.",

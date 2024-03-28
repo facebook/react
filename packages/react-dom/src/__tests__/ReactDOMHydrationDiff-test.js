@@ -89,7 +89,6 @@ describe('ReactDOMServerHydration', () => {
       if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
                   [
-                    "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
                     "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
                   - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -154,7 +153,6 @@ describe('ReactDOMServerHydration', () => {
       if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -463,7 +461,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -498,7 +495,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -535,7 +531,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -573,7 +568,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -606,28 +600,27 @@ describe('ReactDOMServerHydration', () => {
         }
         if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
           expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-                      [
-                        "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
-                        "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+            [
+              "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
-                      - A server/client branch \`if (typeof window !== 'undefined')\`.
-                      - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-                      - Date formatting in a user's locale which doesn't match the server.
-                      - External changing data without sending a snapshot of it along with the HTML.
-                      - Invalid HTML tag nesting.
+            - A server/client branch \`if (typeof window !== 'undefined')\`.
+            - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
+            - Date formatting in a user's locale which doesn't match the server.
+            - External changing data without sending a snapshot of it along with the HTML.
+            - Invalid HTML tag nesting.
 
-                      It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+            It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
-                      https://react.dev/link/hydration-mismatch
+            https://react.dev/link/hydration-mismatch
 
-                        <Mismatch isClient={true}>
-                          <div className="parent">
-                      +     only
-                      -     
-                      ]",
-                        "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-                      ]
-                  `);
+              <Mismatch isClient={true}>
+                <div className="parent">
+            +     only
+            -     
+            ]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
         } else {
           expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             [
@@ -666,7 +659,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -704,7 +696,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -741,7 +732,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -780,7 +770,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -815,7 +804,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -852,7 +840,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -889,7 +876,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -920,7 +906,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -955,7 +940,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -992,7 +976,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1029,7 +1012,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1074,7 +1056,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1111,7 +1092,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1150,7 +1130,6 @@ describe('ReactDOMServerHydration', () => {
         // TODO: This message doesn't seem to have any useful details.
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1193,7 +1172,6 @@ describe('ReactDOMServerHydration', () => {
         // rendered suspense boundaries this test will likely change again
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1365,7 +1343,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1405,7 +1382,6 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
             "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1468,7 +1444,6 @@ describe('ReactDOMServerHydration', () => {
 
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
           "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
@@ -1531,7 +1506,6 @@ describe('ReactDOMServerHydration', () => {
 
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: An error occurred during hydration. The server HTML was replaced with client content.",
           "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.

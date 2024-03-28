@@ -187,16 +187,6 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   return true;
 }
 
-export function errorHydratingContainer(parentContainer: Container): void {
-  if (__DEV__) {
-    // TODO: This gets logged by onRecoverableError, too, so we should be
-    // able to remove it.
-    console.error(
-      'An error occurred during hydration. The server HTML was replaced with client content.',
-    );
-  }
-}
-
 function warnNonHydratedInstance(
   fiber: Fiber,
   rejectedCandidate: null | HydratableInstance,

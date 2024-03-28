@@ -237,7 +237,7 @@ describe('ReactDOMOption', () => {
     expect(node.selectedIndex).toEqual(2);
   });
 
-  it('generates a warning and hydration error when an invalid nested tag is used as a child', async () => {
+  it('generates a hydration error when an invalid nested tag is used as a child', async () => {
     const ref = React.createRef();
     const children = (
       <select readOnly={true} value="bar">
@@ -266,13 +266,7 @@ describe('ReactDOMOption', () => {
           onRecoverableError: () => {},
         });
       });
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        'Warning: In HTML, <div> cannot be a child of <option>',
-      ],
-      {withoutStack: 1},
-    );
+    }).toErrorDev(['Warning: In HTML, <div> cannot be a child of <option>']);
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');

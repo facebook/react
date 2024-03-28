@@ -6477,14 +6477,7 @@ body {
           },
         },
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
-        {withoutStack: 1},
-      );
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -8267,14 +8260,7 @@ background-color: green;
         },
       );
 
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content.',
-        ],
-        {withoutStack: 1},
-      );
+      await waitForAll([]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>

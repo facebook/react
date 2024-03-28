@@ -249,17 +249,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>
@@ -337,17 +330,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span />
@@ -384,17 +370,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>
@@ -434,17 +413,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>
@@ -482,17 +454,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>
@@ -604,17 +569,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>Client and server</p>
@@ -649,17 +607,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         Scheduler.log(normalizeError(error.message));
       },
     });
-    await expect(async () => {
-      await waitForAll([
-        "Hydration failed because the server rendered HTML didn't match the client.",
-        'There was an error while hydrating.',
-      ]);
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content.',
-      ],
-      {withoutStack: 1},
-    );
+    await waitForAll([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+      'There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>Client and server</p>
