@@ -2765,7 +2765,6 @@ describe('ReactIncremental', () => {
       return realMapSet.apply(this, arguments);
     };
     React = require('react');
-    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -2773,12 +2772,23 @@ describe('ReactIncremental', () => {
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
 
+    await expect(async () => {
+      ReactNoop = require('react-noop-renderer');
+      // ... any other relevant code ...
+    }).toWarnDev(
+      [
+        'Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.',
+      ],
+      {withoutStack: true},
+    );
+
     try {
       await triggerCodePathThatUsesFibersAsMapKeys();
     } finally {
       // eslint-disable-next-line no-extend-native
       Map.prototype.set = realMapSet;
     }
+
     // If we got this far, our feature detection worked.
     // We knew that Map#set() throws for non-extensible objects,
     // so we didn't set them as non-extensible for that reason.
