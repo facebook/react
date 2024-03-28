@@ -36821,7 +36821,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-6f2ccb79";
+    var ReactVersion = "19.0.0-www-modern-e638378b";
 
     function createPortal$1(
       children,
@@ -49323,7 +49323,8 @@ if (__DEV__) {
           imageSizes:
             typeof options.imageSizes === "string"
               ? options.imageSizes
-              : undefined
+              : undefined,
+          media: typeof options.media === "string" ? options.media : undefined
         });
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical

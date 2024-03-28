@@ -17364,7 +17364,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1775 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-e6c62f63",
+  version: "19.0.0-www-modern-88a914d1",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17408,7 +17408,7 @@ var devToolsConfig$jscomp$inline_1775 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-e6c62f63"
+  reconcilerVersion: "19.0.0-www-modern-88a914d1"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17637,7 +17637,8 @@ exports.preload = function (href, options) {
       imageSrcSet:
         "string" === typeof options.imageSrcSet ? options.imageSrcSet : void 0,
       imageSizes:
-        "string" === typeof options.imageSizes ? options.imageSizes : void 0
+        "string" === typeof options.imageSizes ? options.imageSizes : void 0,
+      media: "string" === typeof options.media ? options.media : void 0
     });
   }
 };
@@ -17697,7 +17698,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-e6c62f63";
+exports.version = "19.0.0-www-modern-88a914d1";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

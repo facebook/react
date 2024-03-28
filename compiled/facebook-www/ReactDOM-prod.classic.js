@@ -17109,7 +17109,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1732 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-b3b87115",
+  version: "19.0.0-www-classic-49cd2ee2",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2160 = {
@@ -17139,7 +17139,7 @@ var internals$jscomp$inline_2160 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-b3b87115"
+  reconcilerVersion: "19.0.0-www-classic-49cd2ee2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17480,7 +17480,8 @@ exports.preload = function (href, options) {
       imageSrcSet:
         "string" === typeof options.imageSrcSet ? options.imageSrcSet : void 0,
       imageSizes:
-        "string" === typeof options.imageSizes ? options.imageSizes : void 0
+        "string" === typeof options.imageSizes ? options.imageSizes : void 0,
+      media: "string" === typeof options.media ? options.media : void 0
     });
   }
 };
@@ -17588,4 +17589,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-b3b87115";
+exports.version = "19.0.0-www-classic-49cd2ee2";
