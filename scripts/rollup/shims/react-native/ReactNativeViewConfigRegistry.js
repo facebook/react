@@ -10,7 +10,7 @@
 
 'use strict';
 
-import {type ViewConfig} from './ReactNativeTypes';
+import type {ViewConfig} from './ReactNativeTypes';
 import invariant from 'invariant';
 
 // Event configs

@@ -11,7 +11,7 @@
 'use strict';
 
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {type ViewConfig} from './ReactNativeTypes';
+import type {ViewConfig} from './ReactNativeTypes';
 
 const {register} = ReactNativeViewConfigRegistry;
 
