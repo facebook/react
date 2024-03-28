@@ -248,7 +248,7 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
-  // @gate !disableLegacyMode
+  // @gate !disableLegacyMode && classic
   it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');

@@ -32,7 +32,6 @@ import {
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 
 import {
-  batchedUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   injectIntoDevTools,
@@ -167,9 +166,16 @@ function flushSync<R>(fn: (() => R) | void): R | void {
 // Expose findDOMNode on internals
 Internals.findDOMNode = findDOMNode;
 
+function unstable_batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
+  // batchedUpdates was a legacy mode feature that is a no-op outside of
+  // legacy mode. In 19, we made it an actual no-op, but we're keeping it
+  // for now since there may be libraries that still include it.
+  return fn(a);
+}
+
 export {
   createPortal,
-  batchedUpdates as unstable_batchedUpdates,
+  unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs
@@ -196,7 +202,7 @@ Internals.Events = [
   getFiberCurrentPropsFromNode,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  batchedUpdates,
+  unstable_batchedUpdates,
 ];
 
 const foundDevTools = injectIntoDevTools({
