@@ -823,6 +823,141 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
+  test('useOptimistic rebases pending updates while dropping finished updates on top of passthrough value', async () => {
+    // Just to highlight diff in behavior.
+    // If this test is merged, remove this flag in favor of two separate tests.
+    const wrapFinalSetStateInTransition = false;
+
+    let addItemToCart;
+    function App() {
+      const [isPending, startTransition] = useTransition();
+
+      const [cart, setCart] = useState([]);
+      const savedCartSize = cart.length;
+      const [optimisticCartSize, setOptimisticCartSize] =
+        useOptimistic(savedCartSize);
+
+      addItemToCart = item => {
+        startTransition(async () => {
+          setOptimisticCartSize(n => n + 1);
+          await getText('Adding item ' + item);
+          if (wrapFinalSetStateInTransition) {
+            React.startTransition(() => {
+              setCart(pendingCart => [...pendingCart, item]);
+            });
+          } else {
+            setCart(pendingCart => [...pendingCart, item]);
+          }
+        });
+      };
+
+      return (
+        <>
+          <div>
+            <Text text={'Pending: ' + isPending} />
+          </div>
+          <div>
+            <Text text={'Items in cart: ' + optimisticCartSize} />
+          </div>
+          <ul>
+            {cart.map(item => (
+              <li key={item}>
+                <Text text={'Item ' + item} />
+              </li>
+            ))}
+          </ul>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['Pending: false', 'Items in cart: 0']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 0</div>
+        <ul />
+      </>,
+    );
+
+    // The cart size is incremented even though A hasn't been added yet.
+    await act(() => addItemToCart('A'));
+    assertLog(['Pending: true', 'Items in cart: 1']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 1</div>
+        <ul />
+      </>,
+    );
+
+    // The cart size is incremented even though A hasn't been added yet.
+    await act(() => addItemToCart('B'));
+    assertLog(['Pending: true', 'Items in cart: 2']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 2</div>
+        <ul />
+      </>,
+    );
+
+    // Finish loading A. The optimistic state rebased on top of the new value.
+    await act(() => resolveText('Adding item A'));
+    assertLog(
+      wrapFinalSetStateInTransition
+        ? []
+        : ['Pending: true', 'Items in cart: 3', 'Item A'],
+    );
+    expect(root).toMatchRenderedOutput(
+      wrapFinalSetStateInTransition ? (
+        <>
+          <div>Pending: true</div>
+          <div>Items in cart: 2</div>
+          <ul />
+        </>
+      ) : (
+        <>
+          <div>Pending: true</div>
+          <div>Items in cart: 3</div>
+          <ul>
+            <li>Item A</li>
+          </ul>
+        </>
+      ),
+    );
+
+    // Finish loading B. The optimistic state is reverted.
+    await act(() => resolveText('Adding item B'));
+    assertLog(
+      wrapFinalSetStateInTransition
+        ? ['Pending: false', 'Items in cart: 2', 'Item A', 'Item B']
+        : [
+            'Pending: true',
+            'Items in cart: 4',
+            'Item A',
+            'Item B',
+            'Pending: false',
+            'Items in cart: 2',
+            'Item A',
+            'Item B',
+          ],
+    );
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 2</div>
+        <ul>
+          <li>Item A</li>
+          <li>Item B</li>
+        </ul>
+      </>,
+    );
+  });
+
+  // @gate enableAsyncActions
   test(
     'regression: when there are no pending transitions, useOptimistic should ' +
       'always return the passthrough value',
