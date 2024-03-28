@@ -31,6 +31,7 @@ type BaseSyntheticEvent = {
   relatedTarget?: mixed,
   type: string,
   currentTarget: null | EventTarget,
+  eventPhase?: number,
 };
 
 export type KnownReactSyntheticEvent = BaseSyntheticEvent & {

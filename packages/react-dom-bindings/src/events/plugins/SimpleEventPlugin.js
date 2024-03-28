@@ -46,6 +46,7 @@ import {
 import {
   IS_EVENT_HANDLE_NON_MANAGED_NODE,
   IS_CAPTURE_PHASE,
+  IS_NON_DELEGATED,
 } from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';
@@ -219,6 +220,16 @@ function extractEvents(
         nativeEvent,
         nativeEventTarget,
       );
+      const isAtTarget = event.eventPhase === 2;
+      // native cancel event should only fired on AT_TARGET
+      // https://developer.mozilla.org/en-US/docs/Web/API/Event/eventPhase
+      if (
+        domEventName === 'cancel' &&
+        (eventSystemFlags & IS_NON_DELEGATED) !== 0 &&
+        !isAtTarget
+      ) {
+        return;
+      }
       dispatchQueue.push({event, listeners});
     }
   }

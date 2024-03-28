@@ -1034,9 +1034,6 @@ export function setInitialProperties(
       if (__DEV__) {
         checkControlledValueProps('input', props);
       }
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
 
       let name = null;
       let type = null;
@@ -1091,6 +1088,12 @@ export function setInitialProperties(
             setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
+      }
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
+      if (type === 'file') {
+        listenToNonDelegatedEvent('cancel', domElement);
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
@@ -2909,6 +2912,9 @@ export function hydrateProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      if (props.type === 'file') {
+        listenToNonDelegatedEvent('cancel', domElement);
+      }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateInputProps(domElement, props);
