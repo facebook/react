@@ -21,7 +21,7 @@ function Component(props) {
   2 |   let x;
   3 |   try {
 > 4 |     throw [];
-    |     ^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch (4:4)
+    |     ^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch (4:4)
   5 |   } catch (e) {
   6 |     x.push(e);
   7 |   }

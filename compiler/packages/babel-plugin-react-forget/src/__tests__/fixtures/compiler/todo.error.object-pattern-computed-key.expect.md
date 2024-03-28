@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
   3 | const SCALE = 2;
   4 | function Component(props) {
 > 5 |   const { [props.name]: value } = props;
-    |           ^^^^^^^^^^^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern (5:5)
+    |           ^^^^^^^^^^^^^^^^^^^ Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern (5:5)
   6 |   return value;
   7 | }
   8 |

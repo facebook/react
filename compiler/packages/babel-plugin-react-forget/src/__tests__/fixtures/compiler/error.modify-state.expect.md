@@ -19,7 +19,7 @@ function Foo() {
   3 | function Foo() {
   4 |   let [state, setState] = useState({});
 > 5 |   state.foo = 1;
-    |   ^^^^^ [ReactForget] InvalidReact: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead. (5:5)
+    |   ^^^^^ InvalidReact: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead. (5:5)
   6 |   return state;
   7 | }
   8 |

@@ -19,7 +19,7 @@ function Component() {
   4 |
   5 |   // This is unreachable from a control-flow perspective, but it gets hoisted
 > 6 |   function Foo() {}
-    |   ^^^^^^^^^^^^^^^^^ [ReactForget] Todo: Support functions with unreachable code that may contain hoisted declarations (6:6)
+    |   ^^^^^^^^^^^^^^^^^ Todo: Support functions with unreachable code that may contain hoisted declarations (6:6)
   7 | }
   8 |
 ```

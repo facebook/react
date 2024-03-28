@@ -82,35 +82,35 @@ let moduleLocal = false;
   1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   2 |   let i = 0;
 > 3 |   var x = [];
-    |   ^^^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
+    |   ^^^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
+Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
+Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (23:25)
+Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (23:25)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (26:28)
+Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (26:28)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement (26:28)
+Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement (26:28)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30:32)
+Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30:32)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value (34:34)
+Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value (34:34)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement (36:36)
+Todo: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement (36:36)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38:38)
+Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38:38)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
+Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
+Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
+Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
 
-[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
+Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
 
-[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
+Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
   4 |
   5 |   class Bar {
   6 |     #secretSauce = 42;

@@ -21,7 +21,7 @@ function component(a, b) {
   4 |   // add support for generators in the future.
   5 |   let x = useMemo(function* () {
 > 6 |     yield a;
-    |     ^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerExpression) Handle YieldExpression expressions (6:6)
+    |     ^^^^^^^ Todo: (BuildHIR::lowerExpression) Handle YieldExpression expressions (6:6)
   7 |   }, []);
   8 |   return x;
   9 | }

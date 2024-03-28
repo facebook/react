@@ -23,7 +23,7 @@ function Component(props) {
    7 | // for now.
    8 | function Component(props) {
 >  9 |   const x = useMemo(someHelper, []);
-     |                     ^^^^^^^^^^ [ReactForget] InvalidReact: Expected the first argument of useMemo to be an inline function expression (9:9)
+     |                     ^^^^^^^^^^ InvalidReact: Expected the first argument of useMemo to be an inline function expression (9:9)
   10 |   return x;
   11 | }
   12 |

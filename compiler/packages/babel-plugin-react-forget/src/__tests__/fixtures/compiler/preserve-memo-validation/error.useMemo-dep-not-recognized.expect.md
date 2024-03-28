@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
   11 |   const x = makeArray(props);
   12 |   // react-hooks-deps lint would already fail here
 > 13 |   return useMemo(() => [x[0]], [x[0]]);
-     |                                 ^^^^ [ReactForget] InvalidReact: Expected the dependency list for useMemo to be an array of simple expressions (13:13)
+     |                                 ^^^^ InvalidReact: Expected the dependency list for useMemo to be an array of simple expressions (13:13)
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {

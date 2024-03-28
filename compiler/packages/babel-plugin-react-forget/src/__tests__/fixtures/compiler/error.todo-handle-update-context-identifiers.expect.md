@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
   2 |   let counter = 2;
   3 |   const fn = () => {
 > 4 |     return counter++;
-    |            ^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas. (4:4)
+    |            ^^^^^^^^^ Todo: (BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas. (4:4)
   5 |   };
   6 |
   7 |   return fn();

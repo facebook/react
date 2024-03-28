@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
    8 |       return text.toUpperCase();
    9 |     },
 > 10 |     hasDeps ? null : [text] // should be DCE'd
-     |     ^^^^^^^^^^^^^^^^^^^^^^^ [ReactForget] InvalidReact: Expected the dependency list for useMemo to be an array literal without rest spreads (10:10)
+     |     ^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Expected the dependency list for useMemo to be an array literal without rest spreads (10:10)
   11 |   );
   12 |   return resolvedText;
   13 | }

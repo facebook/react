@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPONT = {
    9 |       <>
   10 |         <div onClick={() => onClick(true)} />
 > 11 |         <div onClick={() => onClick(false)} />
-     |                             ^^^^^^^ [ReactForget] Invariant: [InferReferenceEffects] Context variables are always mutable. (11:11)
+     |                             ^^^^^^^ Invariant: [InferReferenceEffects] Context variables are always mutable. (11:11)
   12 |       </>
   13 |     );
   14 |   };

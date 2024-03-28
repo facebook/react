@@ -25,7 +25,7 @@ function useHook() {
   10 |     console.log("false");
   11 |   }
 > 12 |   useState();
-     |   ^^^^^^^^ [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (12:12)
+     |   ^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (12:12)
   13 | }
   14 |
 ```

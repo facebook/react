@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
   1 | import { identity } from "shared-runtime";
   2 | function useInvalid() {
 > 3 |   const x = identity(x);
-    |   ^^^^^^^^^^^^^^^^^^^^^^ [ReactForget] Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used. Identifier x$1 is undefined (3:3)
+    |   ^^^^^^^^^^^^^^^^^^^^^^ Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used. Identifier x$1 is undefined (3:3)
   4 |   return x;
   5 | }
   6 |

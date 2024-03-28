@@ -22,9 +22,9 @@ function Component(props) {
   4 |   const aliased = setX;
   5 |
 > 6 |   setX(1);
-    |   ^^^^ [ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
+    |   ^^^^ InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
 
-[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
+InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
   7 |   aliased(2);
   8 |
   9 |   return x;

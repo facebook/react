@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
    5 |     x.push(props.a);
    6 |     // oops no memo!
 >  7 |     return x;
-     |            ^ [ReactForget] Todo: Support early return within a reactive scope (7:7)
+     |            ^ Todo: Support early return within a reactive scope (7:7)
    8 |   } else {
    9 |     return foo();
   10 |   }

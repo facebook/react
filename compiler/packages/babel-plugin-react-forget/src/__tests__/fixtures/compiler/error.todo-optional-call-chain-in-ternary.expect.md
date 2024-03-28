@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPONT = {
   3 | function useFoo(props: { value: { x: string; y: string } | null }) {
   4 |   const value = props.value;
 > 5 |   return useNoAlias(value?.x, value?.y) ? {} : null;
-    |                               ^^^^^^^^ [ReactForget] Todo: Unexpected terminal kind 'optional' for ternary test block (5:5)
+    |                               ^^^^^^^^ Todo: Unexpected terminal kind 'optional' for ternary test block (5:5)
   6 | }
   7 |
   8 | export const FIXTURE_ENTRYPONT = {

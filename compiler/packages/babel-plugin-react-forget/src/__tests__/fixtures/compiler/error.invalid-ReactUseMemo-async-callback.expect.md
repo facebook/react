@@ -21,7 +21,7 @@ function component(a, b) {
 > 3 |     await a;
     | ^^^^^^^^^^^^
 > 4 |   }, []);
-    | ^^^^ [ReactForget] InvalidReact: useMemo callbacks may not be async or generator functions (2:4)
+    | ^^^^ InvalidReact: useMemo callbacks may not be async or generator functions (2:4)
   5 |   return x;
   6 | }
   7 |

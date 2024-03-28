@@ -23,7 +23,7 @@ const FancyButton = forwardRef(function (props, ref) {
    6 | const FancyButton = forwardRef(function (props, ref) {
    7 |   if (props.fancy) {
 >  8 |     useCustomHook();
-     |     ^^^^^^^^^^^^^ [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (8:8)
+     |     ^^^^^^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (8:8)
    9 |   }
   10 |   return <button ref={ref}>{props.children}</button>;
   11 | });

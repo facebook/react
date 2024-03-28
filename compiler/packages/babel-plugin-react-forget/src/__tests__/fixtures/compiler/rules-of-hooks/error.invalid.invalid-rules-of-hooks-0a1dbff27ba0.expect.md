@@ -21,7 +21,7 @@ function createHook() {
   4 |   return function useHookWithConditionalHook() {
   5 |     if (cond) {
 > 6 |       useConditionalHook();
-    |       ^^^^^^^^^^^^^^^^^^ [ReactForget] InvalidReact: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning). Cannot call Custom within a function component (6:6)
+    |       ^^^^^^^^^^^^^^^^^^ InvalidReact: Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning). Cannot call Custom within a function component (6:6)
   7 |     }
   8 |   };
   9 | }

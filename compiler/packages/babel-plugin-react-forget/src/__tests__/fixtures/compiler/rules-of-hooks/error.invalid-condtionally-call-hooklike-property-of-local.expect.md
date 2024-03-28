@@ -21,7 +21,7 @@ function Component(props) {
    5 |   if (props.cond) {
    6 |     const foo = local.useFoo;
 >  7 |     foo();
-     |     ^^^ [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (7:7)
+     |     ^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (7:7)
    8 |   }
    9 | }
   10 |

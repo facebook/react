@@ -18,7 +18,7 @@ function Component() {
   1 | function Component() {
   2 |   let callback = () => {
 > 3 |     callback = null;
-    |     ^^^^^^^^^^^^^^^ [ReactForget] Todo: Handle non-const declarations for hoisting. variable "callback" declared with let (3:3)
+    |     ^^^^^^^^^^^^^^^ Todo: Handle non-const declarations for hoisting. variable "callback" declared with let (3:3)
   4 |   };
   5 |   return <div onClick={callback} />;
   6 | }

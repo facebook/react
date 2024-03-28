@@ -93,7 +93,7 @@ export class CompilerErrorDetail {
   }
 
   toString(): string {
-    return `[ReactForget] ${this.printErrorMessage()}`;
+    return this.printErrorMessage();
   }
 }
 

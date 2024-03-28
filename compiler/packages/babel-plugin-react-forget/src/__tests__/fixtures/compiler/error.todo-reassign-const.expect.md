@@ -24,7 +24,7 @@ function Component({ foo }) {
   1 | import { Stringify } from "shared-runtime";
   2 |
 > 3 | function Component({ foo }) {
-    |                      ^^^ [ReactForget] Todo: Support destructuring of context variables (3:3)
+    |                      ^^^ Todo: Support destructuring of context variables (3:3)
   4 |   let bar = foo.bar;
   5 |   return (
   6 |     <Stringify

@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
    5 |   }
    6 |   const result = addOne(2);
 >  7 |   var a = 1;
-     |   ^^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (7:7)
+     |   ^^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (7:7)
    8 |
    9 |   return result; // OK: returns NaN. The code is semantically wrong but technically correct
   10 | }

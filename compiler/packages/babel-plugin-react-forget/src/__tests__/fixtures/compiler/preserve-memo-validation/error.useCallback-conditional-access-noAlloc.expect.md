@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `propB`, but the source dependencies were [propA, propB.x.y]. Detail: inferred less specific property than source
+Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `propB`, but the source dependencies were [propA, propB.x.y]. Detail: inferred less specific property than source
 ```
           
       

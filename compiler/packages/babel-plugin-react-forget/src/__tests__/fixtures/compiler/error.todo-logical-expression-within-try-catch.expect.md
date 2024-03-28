@@ -21,7 +21,7 @@ function Component(props) {
   2 |   let result;
   3 |   try {
 > 4 |     result = props.cond && props.foo;
-    |              ^^^^^ [ReactForget] Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement (4:4)
+    |              ^^^^^ Todo: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement (4:4)
   5 |   } catch (e) {
   6 |     console.log(e);
   7 |   }

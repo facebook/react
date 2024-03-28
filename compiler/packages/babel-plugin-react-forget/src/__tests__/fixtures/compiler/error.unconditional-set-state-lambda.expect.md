@@ -23,7 +23,7 @@ function Component(props) {
    6 |     setX(1);
    7 |   };
 >  8 |   foo();
-     |   ^^^ [ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (8:8)
+     |   ^^^ InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (8:8)
    9 |
   10 |   return [x];
   11 | }

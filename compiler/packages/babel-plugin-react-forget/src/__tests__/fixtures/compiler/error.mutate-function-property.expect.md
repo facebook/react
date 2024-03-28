@@ -18,7 +18,7 @@ export function ViewModeSelector(props) {
   1 | export function ViewModeSelector(props) {
   2 |   const renderIcon = () => <AcceptIcon />;
 > 3 |   renderIcon.displayName = "AcceptIcon";
-    |   ^^^^^^^^^^ [ReactForget] InvalidReact: This mutates a variable that React considers immutable. (3:3)
+    |   ^^^^^^^^^^ InvalidReact: This mutates a variable that React considers immutable. (3:3)
   4 |
   5 |   return <Dropdown checkableIndicator={{ children: renderIcon }} />;
   6 | }

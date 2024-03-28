@@ -22,7 +22,7 @@ function Component(props) {
    5 |
    6 |   // x is Frozen at this point
 >  7 |   x.push(props.p2);
-     |   ^ [ReactForget] InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. (7:7)
+     |   ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. (7:7)
    8 |
    9 |   return <div>{_}</div>;
   10 | }
