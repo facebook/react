@@ -94,7 +94,6 @@ export const disableLegacyMode = __NEXT_MAJOR__;
 export const disableLegacyContext = __NEXT_MAJOR__;
 export const disableDOMTestUtils = __NEXT_MAJOR__;
 export const enableNewBooleanProps = __NEXT_MAJOR__;
-export const disableModulePatternComponents = __NEXT_MAJOR__;
 export const enableRenderableContext = __NEXT_MAJOR__;
 export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 

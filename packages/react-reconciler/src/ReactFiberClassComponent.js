@@ -569,16 +569,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   }
 }
 
-function adoptClassInstance(workInProgress: Fiber, instance: any): void {
-  instance.updater = classComponentUpdater;
-  workInProgress.stateNode = instance;
-  // The instance needs access to the fiber so that it can schedule updates
-  setInstance(instance, workInProgress);
-  if (__DEV__) {
-    instance._reactInternalInstance = fakeInternalInstance;
-  }
-}
-
 function constructClassInstance(
   workInProgress: Fiber,
   ctor: any,
@@ -659,7 +649,13 @@ function constructClassInstance(
     instance.state !== null && instance.state !== undefined
       ? instance.state
       : null);
-  adoptClassInstance(workInProgress, instance);
+  instance.updater = classComponentUpdater;
+  workInProgress.stateNode = instance;
+  // The instance needs access to the fiber so that it can schedule updates
+  setInstance(instance, workInProgress);
+  if (__DEV__) {
+    instance._reactInternalInstance = fakeInternalInstance;
+  }
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
@@ -1230,7 +1226,6 @@ function updateClassInstance(
 }
 
 export {
-  adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,

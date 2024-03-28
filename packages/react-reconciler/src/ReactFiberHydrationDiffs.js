@@ -17,7 +17,6 @@ import {
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
-  IndeterminateComponent,
   ForwardRef,
   SimpleMemoComponent,
   ClassComponent,
@@ -87,7 +86,6 @@ function describeFiberType(fiber: Fiber): null | string {
     case SuspenseListComponent:
       return 'SuspenseList';
     case FunctionComponent:
-    case IndeterminateComponent:
     case SimpleMemoComponent:
       const fn = fiber.type;
       return fn.displayName || fn.name || null;

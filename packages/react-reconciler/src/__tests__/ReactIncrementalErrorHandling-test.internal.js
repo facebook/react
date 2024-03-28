@@ -1754,45 +1754,6 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate !disableModulePatternComponents
-  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', async () => {
-    function Provider() {
-      return {
-        getChildContext() {
-          return {foo: 'bar'};
-        },
-        render() {
-          return 'Hi';
-        },
-      };
-    }
-    Provider.childContextTypes = {
-      x: () => {},
-    };
-    Provider.getDerivedStateFromProps = () => {
-      throw new Error('Oops!');
-    };
-
-    ReactNoop.render(<Provider />);
-    await expect(async () => {
-      await waitForThrow('Oops!');
-    }).toErrorDev([
-      'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
-        'Change Provider to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Provider.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      ...gate(flags =>
-        flags.disableLegacyContext
-          ? [
-              'Warning: Provider uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
-              'Warning: Provider uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
-            ]
-          : [],
-      ),
-    ]);
-  });
-
   it('uncaught errors should be discarded if the render is aborted', async () => {
     const root = ReactNoop.createRoot();
 
