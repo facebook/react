@@ -8832,6 +8832,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -10269,7 +10271,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-e692ec0d",
+    version: "19.0.0-www-modern-8e226e00",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1305 = {
@@ -10300,7 +10302,7 @@ var internals$jscomp$inline_1305 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-e692ec0d"
+  reconcilerVersion: "19.0.0-www-modern-8e226e00"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1306 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -11335,6 +11335,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -17361,7 +17363,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-62492cff",
+  version: "19.0.0-www-modern-7d068e58",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17405,7 +17407,7 @@ var devToolsConfig$jscomp$inline_1776 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-62492cff"
+  reconcilerVersion: "19.0.0-www-modern-7d068e58"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17694,7 +17696,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-62492cff";
+exports.version = "19.0.0-www-modern-7d068e58";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -11200,6 +11200,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               }
               break;
             case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
             case 3:
             case 5:
               break;
@@ -17435,7 +17437,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1760 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-fc252e68",
+  version: "19.0.0-www-classic-94cf769c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2169 = {
@@ -17465,7 +17467,7 @@ var internals$jscomp$inline_2169 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-fc252e68"
+  reconcilerVersion: "19.0.0-www-classic-94cf769c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2170 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18057,4 +18059,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-fc252e68";
+exports.version = "19.0.0-www-classic-94cf769c";

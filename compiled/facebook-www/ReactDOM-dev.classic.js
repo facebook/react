@@ -32137,7 +32137,15 @@ if (__DEV__) {
           break;
         }
 
-        case RootErrored:
+        case RootErrored: {
+          // This render errored. Ignore any recoverable errors because we weren't actually
+          // able to recover. Instead, whatever the final errors were is the ones we log.
+          // This ensures that we only log the actual client side error if it's just a plain
+          // error thrown from a component on the server and the client.
+          workInProgressRootRecoverableErrors = null;
+          break;
+        }
+
         case RootSuspended:
         case RootCompleted: {
           break;
@@ -36331,7 +36339,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-c7ac3967";
+    var ReactVersion = "19.0.0-www-classic-4154e20f";
 
     function createPortal$1(
       children,
