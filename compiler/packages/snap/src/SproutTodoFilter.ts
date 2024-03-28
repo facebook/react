@@ -490,6 +490,7 @@ const skipFilter = new Set([
   "fbt/fbt-preserve-jsxtext",
   "todo.useContext-mutate-context-in-callback",
   "loop-unused-let",
+  "reanimated-no-memo-arg",
 
   // Tested e2e in forget-feedback repo
   "userspace-use-memo-cache",

@@ -9,6 +9,7 @@ import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInMixedReadonlyId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -413,3 +414,76 @@ DEFAULT_GLOBALS.set(
   "globalThis",
   addObject(DEFAULT_SHAPES, "globalThis", TYPED_GLOBALS)
 );
+
+export function installReAnimatedTypes(
+  globals: GlobalRegistry,
+  registry: ShapeRegistry
+): void {
+  // hooks that freeze args and return frozen value
+  const frozenHooks = [
+    "useFrameCallback",
+    "useAnimatedStyle",
+    "useAnimatedProps",
+    "useAnimatedScrollHandler",
+    "useAnimatedReaction",
+    "useWorkletCallback",
+  ];
+  for (const hook of frozenHooks) {
+    globals.set(
+      hook,
+      addHook(registry, {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Object", shapeId: BuiltInMixedReadonlyId },
+        returnValueKind: ValueKind.Frozen,
+        noAlias: true,
+        calleeEffect: Effect.Read,
+        hookKind: "Custom",
+      })
+    );
+  }
+
+  /**
+   * hooks that return a mutable value. ideally these should be modelled as a
+   * ref, but this works for now.
+   */
+  const mutableHooks = ["useSharedValue", "useDerivedValue"];
+  for (const hook of mutableHooks) {
+    globals.set(
+      hook,
+      addHook(registry, {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        returnValueKind: ValueKind.Mutable,
+        noAlias: true,
+        calleeEffect: Effect.Read,
+        hookKind: "Custom",
+      })
+    );
+  }
+
+  // functions that return mutable value
+  const funcs = [
+    "withTiming",
+    "withSpring",
+    "createAnimatedPropAdapter",
+    "withDecay",
+    "withRepeat",
+    "runOnUI",
+    "executeOnUIRuntimeSync",
+  ];
+  for (const fn of funcs) {
+    globals.set(
+      fn,
+      addFunction(registry, [], {
+        positionalParams: [],
+        restParam: Effect.Read,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+        noAlias: true,
+      })
+    );
+  }
+}

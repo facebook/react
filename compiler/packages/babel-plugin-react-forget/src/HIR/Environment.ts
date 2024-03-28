@@ -17,6 +17,7 @@ import {
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
+  installReAnimatedTypes,
 } from "./Globals";
 import {
   BlockId,
@@ -358,6 +359,16 @@ const EnvironmentConfigSchema = z.object({
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 
   /**
+   * The react native re-animated library uses custom Babel transforms that
+   * requires the calls to library API remain unmodified.
+   *
+   * If this flag is turned on, the React compiler will use custom type
+   * definitions for reanimated library to make it's Babel plugin work
+   * with the compiler.
+   */
+  enableCustomTypeDefinitionForReAnimated: z.boolean().default(false),
+
+  /**
    * If specified, this value is used as a pattern for determing which global values should be
    * treated as hooks. The pattern should have a single capture group, which will be used as
    * the hook name for the purposes of resolving hook definitions (for builtin hooks)_.
@@ -467,6 +478,10 @@ export class Environment {
           noAlias: hook.noAlias,
         })
       );
+    }
+
+    if (config.enableCustomTypeDefinitionForReAnimated) {
+      installReAnimatedTypes(this.#globals, this.#shapes);
     }
 
     this.#contextIdentifiers = contextIdentifiers;
