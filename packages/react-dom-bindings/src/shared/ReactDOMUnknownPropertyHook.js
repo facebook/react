@@ -308,6 +308,9 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'inert': {
               break;
             }
+            default: {
+              return true;
+            }
           }
           console.error(
             'Received the string `%s` for the boolean attribute `%s`. ' +
