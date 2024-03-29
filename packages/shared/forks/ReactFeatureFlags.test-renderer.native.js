@@ -13,7 +13,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
-export const enableSchedulingProfiler = false;
+export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
@@ -40,7 +40,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
-export const enableCPUSuspense = false;
+export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
@@ -67,11 +67,12 @@ export const enableTransitionTracing = false;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableFizzExternalRuntime = true;
 export const enableDeferRootSchedulingToMicrotask = false;
 
 export const enableAsyncActions = true;
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries = false;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
