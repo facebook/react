@@ -2647,9 +2647,9 @@ function updateDehydratedSuspenseComponent(
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
       let digest: ?string;
-      let message, stack;
+      let message, stack, componentStack;
       if (__DEV__) {
-        ({digest, message, stack} =
+        ({digest, message, stack, componentStack} =
           getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       } else {
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
@@ -2669,8 +2669,14 @@ function updateDehydratedSuspenseComponent(
               'client rendering.',
           );
         }
+        // Replace the stack with the server stack
+        error.stack = stack || '';
         (error: any).digest = digest;
-        capturedValue = createCapturedValueFromError(error, digest, stack);
+        capturedValue = createCapturedValueFromError(
+          error,
+          digest,
+          componentStack,
+        );
       }
       return retrySuspenseComponentWithoutHydrating(
         current,
