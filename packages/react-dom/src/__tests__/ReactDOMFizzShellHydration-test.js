@@ -314,4 +314,229 @@ describe('ReactDOMFizzShellHydration', () => {
       'RangeError: Maximum call stack size exceeded',
     );
   });
+
+  it('client renders when an error is thrown in an error boundary', async () => {
+    function Throws() {
+      throw new Error('plain error');
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <div>Caught an error: {this.state.error.message}</div>;
+        }
+        return this.props.children;
+      }
+    }
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <Throws />
+        </ErrorBoundary>
+      );
+    }
+
+    // Server render
+    let shellError;
+    try {
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError(error) {
+            Scheduler.log('onError: ' + error.message);
+          },
+        });
+        pipe(writable);
+      });
+    } catch (x) {
+      shellError = x;
+    }
+    expect(shellError).toEqual(
+      expect.objectContaining({message: 'plain error'}),
+    );
+    assertLog(['onError: plain error']);
+
+    function ErroredApp() {
+      return <span>loading</span>;
+    }
+
+    // Reset test environment
+    buffer = '';
+    hasErrored = false;
+    writable = new Stream.PassThrough();
+    writable.setEncoding('utf8');
+    writable.on('data', chunk => {
+      buffer += chunk;
+    });
+    writable.on('error', error => {
+      hasErrored = true;
+      fatalError = error;
+    });
+
+    // The Server errored at the shell. The recommended approach is to render a
+    // fallback loading state, which can then be hydrated with a mismatch.
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ErroredApp />);
+      pipe(writable);
+    });
+
+    expect(container.innerHTML).toBe('<span>loading</span>');
+
+    // Hydration suspends because the data for the shell hasn't loaded yet
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onCaughtError(error) {
+          Scheduler.log('onCaughtError: ' + error.message);
+        },
+        onUncaughtError(error) {
+          Scheduler.log('onUncaughtError: ' + error.message);
+        },
+        onRecoverableError(error) {
+          Scheduler.log('onRecoverableError: ' + error.message);
+        },
+      });
+    });
+
+    assertLog(['onCaughtError: plain error']);
+    expect(container.textContent).toBe('Caught an error: plain error');
+  });
+
+  it('client renders when a client error is thrown in an error boundary', async () => {
+    let isClient = false;
+
+    function Throws() {
+      if (isClient) {
+        throw new Error('plain error');
+      }
+      return <div>Hello world</div>;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <div>Caught an error: {this.state.error.message}</div>;
+        }
+        return this.props.children;
+      }
+    }
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <Throws />
+        </ErrorBoundary>
+      );
+    }
+
+    // Server render
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          Scheduler.log('onError: ' + error.message);
+        },
+      });
+      pipe(writable);
+    });
+    assertLog([]);
+
+    expect(container.innerHTML).toBe('<div>Hello world</div>');
+
+    isClient = true;
+
+    // Hydration suspends because the data for the shell hasn't loaded yet
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onCaughtError(error) {
+          Scheduler.log('onCaughtError: ' + error.message);
+        },
+        onUncaughtError(error) {
+          Scheduler.log('onUncaughtError: ' + error.message);
+        },
+        onRecoverableError(error) {
+          Scheduler.log('onRecoverableError: ' + error.message);
+        },
+      });
+    });
+
+    assertLog(['onCaughtError: plain error']);
+    expect(container.textContent).toBe('Caught an error: plain error');
+  });
+
+  it('client renders when a hydration pass error is thrown in an error boundary', async () => {
+    let isClient = false;
+    let isFirst = true;
+
+    function Throws() {
+      if (isClient && isFirst) {
+        isFirst = false; // simulate a hydration or concurrent error
+        throw new Error('plain error');
+      }
+      return <div>Hello world</div>;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <div>Caught an error: {this.state.error.message}</div>;
+        }
+        return this.props.children;
+      }
+    }
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <Throws />
+        </ErrorBoundary>
+      );
+    }
+
+    // Server render
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          Scheduler.log('onError: ' + error.message);
+        },
+      });
+      pipe(writable);
+    });
+    assertLog([]);
+
+    expect(container.innerHTML).toBe('<div>Hello world</div>');
+
+    isClient = true;
+
+    // Hydration suspends because the data for the shell hasn't loaded yet
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onCaughtError(error) {
+          Scheduler.log('onCaughtError: ' + error.message);
+        },
+        onUncaughtError(error) {
+          Scheduler.log('onUncaughtError: ' + error.message);
+        },
+        onRecoverableError(error) {
+          Scheduler.log('onRecoverableError: ' + error.message);
+        },
+      });
+    });
+
+    assertLog([
+      'onRecoverableError: plain error',
+      'onRecoverableError: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+    expect(container.textContent).toBe('Hello world');
+  });
 });
