@@ -146,12 +146,6 @@ export const useModernStrictMode = __NEXT_MAJOR__;
 // Remove IE and MsApp specific workarounds for innerHTML
 export const disableIEWorkarounds = __NEXT_MAJOR__;
 
-// Changes the behavior for rendering custom elements in both server rendering
-// and client rendering, mostly to allow JSX attributes to apply to the custom
-// element's object properties instead of only HTML attributes.
-// https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
-
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.

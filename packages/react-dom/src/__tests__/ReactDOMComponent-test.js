@@ -3549,15 +3549,11 @@ describe('ReactDOMComponent', () => {
         root.render(<some-custom-element foo={true} />);
       });
       const node = container.firstChild;
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
-      );
+      expect(node.getAttribute('foo')).toBe('');
       await act(() => {
         root.render(<some-custom-element foo={false} />);
       });
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
-      );
+      expect(node.getAttribute('foo')).toBe(null);
       await act(() => {
         root.render(<some-custom-element />);
       });

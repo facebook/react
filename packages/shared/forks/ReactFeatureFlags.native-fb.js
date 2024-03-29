@@ -78,7 +78,6 @@ export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
-export const enableCustomElementPropertySupport = true;
 export const enableNewBooleanProps = true;
 
 export const enableTransitionTracing = false;

@@ -67,7 +67,6 @@ import sanitizeURL from '../shared/sanitizeURL';
 
 import {
   enableBigIntSupport,
-  enableCustomElementPropertySupport,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -870,9 +869,7 @@ function setProp(
     }
     case 'innerText':
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (
@@ -983,9 +980,7 @@ function setPropOnCustomElement(
     }
     case 'innerText': // Properties
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
@@ -993,15 +988,7 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (enableCustomElementPropertySupport) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
-        } else {
-          if (typeof value === 'boolean') {
-            // Special case before the new flag is on
-            value = '' + (value: any);
-          }
-          setValueForAttribute(domElement, key, value);
-        }
+        setValueForPropertyOnCustomComponent(domElement, key, value);
       }
     }
   }
@@ -2293,35 +2280,30 @@ function diffHydratedCustomComponent(
       case 'isContentEditable':
       case 'outerText':
       case 'outerHTML':
-        if (enableCustomElementPropertySupport) {
-          extraAttributes.delete(propKey.toLowerCase());
-          if (__DEV__) {
-            console.error(
-              'Assignment to read-only property will result in a no-op: `%s`',
-              propKey,
-            );
-          }
-          continue;
+        extraAttributes.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error(
+            'Assignment to read-only property will result in a no-op: `%s`',
+            propKey,
+          );
         }
+        continue;
       // Fall through
       case 'className':
-        if (enableCustomElementPropertySupport) {
-          // className is a special cased property on the server to render as an attribute.
-          extraAttributes.delete('class');
-          const serverValue = getValueForAttributeOnCustomComponent(
-            domElement,
-            'class',
-            value,
-          );
-          warnForPropDifference(
-            'className',
-            serverValue,
-            value,
-            serverDifferences,
-          );
-          continue;
-        }
-      // Fall through
+        // className is a special cased property on the server to render as an attribute.
+        extraAttributes.delete('class');
+        const serverValue = getValueForAttributeOnCustomComponent(
+          domElement,
+          'class',
+          value,
+        );
+        warnForPropDifference(
+          'className',
+          serverValue,
+          value,
+          serverDifferences,
+        );
+        continue;
       default: {
         // This is a DEV-only path
         const hostContextDev: HostContextDev = (hostContext: any);
@@ -2335,12 +2317,17 @@ function diffHydratedCustomComponent(
         } else {
           extraAttributes.delete(propKey);
         }
-        const serverValue = getValueForAttributeOnCustomComponent(
+        const valueOnCustomComponent = getValueForAttributeOnCustomComponent(
           domElement,
           propKey,
           value,
         );
-        warnForPropDifference(propKey, serverValue, value, serverDifferences);
+        warnForPropDifference(
+          propKey,
+          valueOnCustomComponent,
+          value,
+          serverDifferences,
+        );
       }
     }
   }

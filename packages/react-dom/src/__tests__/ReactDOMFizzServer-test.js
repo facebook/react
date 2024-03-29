@@ -3603,7 +3603,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // bugfix: https://github.com/facebook/react/issues/27286 affecting enableCustomElementPropertySupport flag
+  // bugfix: https://github.com/facebook/react/issues/27286
   it('can render custom elements with children on ther server', async () => {
     await act(() => {
       renderToPipeableStream(
