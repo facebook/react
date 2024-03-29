@@ -183,13 +183,6 @@ export const disableLegacyMode = __NEXT_MAJOR__;
 
 export const disableDOMTestUtils = __NEXT_MAJOR__;
 
-// HTML boolean attributes need a special PropertyInfoRecord.
-// Between support of these attributes in browsers and React supporting them as
-// boolean props library users can use them as `<div someBooleanAttribute="" />`.
-// However, once React considers them as boolean props an empty string will
-// result in false property i.e. break existing usage.
-export const enableNewBooleanProps = __NEXT_MAJOR__;
-
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = __NEXT_MAJOR__;
 

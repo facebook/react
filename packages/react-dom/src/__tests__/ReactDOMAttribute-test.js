@@ -12,14 +12,12 @@
 describe('ReactDOM unknown attribute', () => {
   let React;
   let ReactDOMClient;
-  let ReactFeatureFlags;
   let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('internal-test-utils').act;
   });
 
@@ -98,15 +96,9 @@ describe('ReactDOM unknown attribute', () => {
         await act(() => {
           root.render(<div inert={true} />);
         });
-      }).toErrorDev(
-        ReactFeatureFlags.enableNewBooleanProps
-          ? []
-          : ['Warning: Received `true` for a non-boolean attribute `inert`.'],
-      );
+      }).toErrorDev([]);
 
-      expect(el.firstChild.getAttribute('inert')).toBe(
-        ReactFeatureFlags.enableNewBooleanProps ? '' : null,
-      );
+      expect(el.firstChild.getAttribute('inert')).toBe(true ? '' : null);
     });
 
     it('warns once for empty strings in new boolean props', async () => {
@@ -117,20 +109,14 @@ describe('ReactDOM unknown attribute', () => {
         await act(() => {
           root.render(<div inert="" />);
         });
-      }).toErrorDev(
-        ReactFeatureFlags.enableNewBooleanProps
-          ? [
-              'Warning: Received an empty string for a boolean attribute `inert`. ' +
-                'This will treat the attribute as if it were false. ' +
-                'Either pass `false` to silence this warning, or ' +
-                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
-            ]
-          : [],
-      );
+      }).toErrorDev([
+        'Warning: Received an empty string for a boolean attribute `inert`. ' +
+          'This will treat the attribute as if it were false. ' +
+          'Either pass `false` to silence this warning, or ' +
+          'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+      ]);
 
-      expect(el.firstChild.getAttribute('inert')).toBe(
-        ReactFeatureFlags.enableNewBooleanProps ? null : '',
-      );
+      expect(el.firstChild.getAttribute('inert')).toBe(true ? null : '');
 
       // The warning is only printed once.
       await act(() => {
