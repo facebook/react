@@ -34,6 +34,7 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
+export const disableModulePatternComponents = true;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;

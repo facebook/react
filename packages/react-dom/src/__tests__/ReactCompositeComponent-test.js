@@ -211,27 +211,63 @@ describe('ReactCompositeComponent', () => {
     });
   });
 
-  it('should not support module pattern components', async () => {
-    function Child({test}) {
-      return {
-        render() {
-          return <div>{test}</div>;
-        },
-      };
-    }
+  if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+    it('should not support module pattern components', async () => {
+      function Child({test}) {
+        return {
+          render() {
+            return <div>{test}</div>;
+          },
+        };
+      }
 
-    const el = document.createElement('div');
-    const root = ReactDOMClient.createRoot(el);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Child test="test" />);
-      });
-    }).rejects.toThrow(
-      'Objects are not valid as a React child (found: object with keys {render}).',
-    );
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+      await expect(async () => {
+        await expect(async () => {
+          await act(() => {
+            root.render(<Child test="test" />);
+          });
+        }).rejects.toThrow(
+          'Objects are not valid as a React child (found: object with keys {render}).',
+        );
+      }).toErrorDev(
+        'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
+          'Change Child to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Child.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
 
-    expect(el.textContent).toBe('');
-  });
+      expect(el.textContent).toBe('');
+    });
+  } else {
+    it('should support module pattern components', () => {
+      function Child({test}) {
+        return {
+          render() {
+            return <div>{test}</div>;
+          },
+        };
+      }
+
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+      expect(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<Child test="test" />);
+        });
+      }).toErrorDev(
+        'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
+          'Change Child to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Child.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
+
+      expect(el.textContent).toBe('test');
+    });
+  }
 
   it('should use default values for undefined props', async () => {
     class Component extends React.Component {

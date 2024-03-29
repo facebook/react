@@ -1864,6 +1864,48 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  // @gate !disableModulePatternComponents
+  // @gate !disableLegacyContext
+  it('does not leak own context into context provider (factory components)', async () => {
+    function Recurse(props, context) {
+      return {
+        getChildContext() {
+          return {n: (context.n || 3) - 1};
+        },
+        render() {
+          Scheduler.log('Recurse ' + JSON.stringify(context));
+          if (context.n === 0) {
+            return null;
+          }
+          return <Recurse />;
+        },
+      };
+    }
+    Recurse.contextTypes = {
+      n: PropTypes.number,
+    };
+    Recurse.childContextTypes = {
+      n: PropTypes.number,
+    };
+
+    ReactNoop.render(<Recurse />);
+    await expect(
+      async () =>
+        await waitForAll([
+          'Recurse {}',
+          'Recurse {"n":2}',
+          'Recurse {"n":1}',
+          'Recurse {"n":0}',
+        ]),
+    ).toErrorDev([
+      'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
+        'Change Recurse to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Recurse.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    ]);
+  });
+
   // @gate www
   // @gate !disableLegacyContext
   it('provides context when reusing work', async () => {
