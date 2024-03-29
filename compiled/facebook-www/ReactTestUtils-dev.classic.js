@@ -98,6 +98,7 @@ if (__DEV__) {
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
+
     var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
 
     var HostComponent = 5;
