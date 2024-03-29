@@ -1230,7 +1230,6 @@ function updateClassInstance(
 }
 
 export {
-  adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
