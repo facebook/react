@@ -9,10 +9,7 @@ import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {
-  enableCustomElementPropertySupport,
-  enableNewBooleanProps,
-} from 'shared/ReactFeatureFlags';
+import {enableNewBooleanProps} from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
 const EVENT_NAME_REGEX = /^on./;
@@ -189,9 +186,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
       }
       case 'innerText': // Properties
       case 'textContent':
-        if (enableCustomElementPropertySupport) {
-          return true;
-        }
+        return true;
     }
 
     switch (typeof value) {

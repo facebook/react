@@ -30,7 +30,6 @@ import {Children} from 'react';
 import {
   enableBigIntSupport,
   enableFilterEmptyStringAttributesDOM,
-  enableCustomElementPropertySupport,
   enableFizzExternalRuntime,
   enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
@@ -3342,11 +3341,9 @@ function pushStartCustomElement(
           // Ignored. These are built-in to React on the client.
           break;
         case 'className':
-          if (enableCustomElementPropertySupport) {
-            // className gets rendered as class on the client, so it should be
-            // rendered as class on the server.
-            attributeName = 'class';
-          }
+          // className gets rendered as class on the client, so it should be
+          // rendered as class on the server.
+          attributeName = 'class';
         // intentional fallthrough
         default:
           if (
@@ -3354,14 +3351,12 @@ function pushStartCustomElement(
             typeof propValue !== 'function' &&
             typeof propValue !== 'symbol'
           ) {
-            if (enableCustomElementPropertySupport) {
-              if (propValue === false) {
-                continue;
-              } else if (propValue === true) {
-                propValue = '';
-              } else if (typeof propValue === 'object') {
-                continue;
-              }
+            if (propValue === false) {
+              continue;
+            } else if (propValue === true) {
+              propValue = '';
+            } else if (typeof propValue === 'object') {
+              continue;
             }
             target.push(
               attributeSeparator,

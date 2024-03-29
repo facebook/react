@@ -593,23 +593,16 @@ describe('ReactDOMServerHydration', () => {
       const jsx = React.createElement('my-custom-element', props);
       const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(jsx);
-      if (gate(flags => flags.enableCustomElementPropertySupport)) {
-        await expect(async () => {
-          await act(() => {
-            ReactDOMClient.hydrateRoot(element, jsx);
-          });
-        }).toErrorDev(
-          `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
-        );
-      } else {
+      await expect(async () => {
         await act(() => {
           ReactDOMClient.hydrateRoot(element, jsx);
         });
-      }
+      }).toErrorDev(
+        `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
+      );
     }
   });
 
-  // @gate enableCustomElementPropertySupport
   it('should not re-assign properties on hydration', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
