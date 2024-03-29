@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-9a163259";
+    var ReactVersion = "19.0.0-www-classic-b8b7775c";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -15149,7 +15149,6 @@ if (__DEV__) {
           }
 
           case ClassComponent:
-            // Capture and retry
             var errorInfo = value;
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;

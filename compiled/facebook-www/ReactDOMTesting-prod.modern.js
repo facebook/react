@@ -5049,10 +5049,10 @@ function throwException(
             ),
             wakeable === noopSuspenseyCommitThenable
               ? (value.flags |= 16384)
-              : ((returnFiber = value.updateQueue),
-                null === returnFiber
+              : ((sourceFiber = value.updateQueue),
+                null === sourceFiber
                   ? (value.updateQueue = new Set([wakeable]))
-                  : returnFiber.add(wakeable),
+                  : sourceFiber.add(wakeable),
                 value.mode & 1 &&
                   attachPingListener(root, wakeable, rootRenderLanes)),
             !1
@@ -5063,18 +5063,18 @@ function throwException(
               (value.flags |= 65536),
               wakeable === noopSuspenseyCommitThenable
                 ? (value.flags |= 16384)
-                : ((returnFiber = value.updateQueue),
-                  null === returnFiber
-                    ? ((returnFiber = {
+                : ((sourceFiber = value.updateQueue),
+                  null === sourceFiber
+                    ? ((sourceFiber = {
                         transitions: null,
                         markerInstances: null,
                         retryQueue: new Set([wakeable])
                       }),
-                      (value.updateQueue = returnFiber))
-                    : ((sourceFiber = returnFiber.retryQueue),
-                      null === sourceFiber
-                        ? (returnFiber.retryQueue = new Set([wakeable]))
-                        : sourceFiber.add(wakeable)),
+                      (value.updateQueue = sourceFiber))
+                    : ((returnFiber = sourceFiber.retryQueue),
+                      null === returnFiber
+                        ? (sourceFiber.retryQueue = new Set([wakeable]))
+                        : returnFiber.add(wakeable)),
                   attachPingListener(root, wakeable, rootRenderLanes)),
               !1
             );
@@ -5130,31 +5130,33 @@ function throwException(
           !1
         );
       case 1:
-        returnFiber = value;
-        sourceFiber = wakeable.type;
-        var instance = wakeable.stateNode;
-        if (
-          0 === (wakeable.flags & 128) &&
-          ("function" === typeof sourceFiber.getDerivedStateFromError ||
-            (null !== instance &&
-              "function" === typeof instance.componentDidCatch &&
-              (null === legacyErrorBoundariesThatAlreadyFailed ||
-                !legacyErrorBoundariesThatAlreadyFailed.has(instance))))
-        )
-          return (
-            (wakeable.flags |= 65536),
-            (rootRenderLanes &= -rootRenderLanes),
-            (wakeable.lanes |= rootRenderLanes),
-            (rootRenderLanes = createClassErrorUpdate(rootRenderLanes)),
-            initializeClassErrorUpdate(
-              rootRenderLanes,
-              root,
-              wakeable,
-              returnFiber
-            ),
-            enqueueCapturedUpdate(wakeable, rootRenderLanes),
-            !1
-          );
+        if (!(isHydrating && sourceFiber.mode & 1)) {
+          returnFiber = value;
+          var ctor = wakeable.type,
+            instance = wakeable.stateNode;
+          if (
+            0 === (wakeable.flags & 128) &&
+            ("function" === typeof ctor.getDerivedStateFromError ||
+              (null !== instance &&
+                "function" === typeof instance.componentDidCatch &&
+                (null === legacyErrorBoundariesThatAlreadyFailed ||
+                  !legacyErrorBoundariesThatAlreadyFailed.has(instance))))
+          )
+            return (
+              (wakeable.flags |= 65536),
+              (rootRenderLanes &= -rootRenderLanes),
+              (wakeable.lanes |= rootRenderLanes),
+              (rootRenderLanes = createClassErrorUpdate(rootRenderLanes)),
+              initializeClassErrorUpdate(
+                rootRenderLanes,
+                root,
+                wakeable,
+                returnFiber
+              ),
+              enqueueCapturedUpdate(wakeable, rootRenderLanes),
+              !1
+            );
+        }
     }
     wakeable = wakeable.return;
   } while (null !== wakeable);
@@ -17009,7 +17011,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1720 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-5be8bd62",
+  version: "19.0.0-www-modern-08ff994a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2126 = {
@@ -17039,7 +17041,7 @@ var internals$jscomp$inline_2126 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-5be8bd62"
+  reconcilerVersion: "19.0.0-www-modern-08ff994a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2127 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17465,4 +17467,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-5be8bd62";
+exports.version = "19.0.0-www-modern-08ff994a";

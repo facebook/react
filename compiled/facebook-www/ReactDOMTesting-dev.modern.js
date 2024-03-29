@@ -19998,7 +19998,14 @@ if (__DEV__) {
           }
 
           case ClassComponent:
-            // Capture and retry
+            if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+              // If we're hydrating and got here, it means that we didn't find a suspense
+              // boundary above so it's a root error. In this case we shouldn't let the
+              // error boundary capture it because it'll just try to hydrate the error state.
+              // Instead we let it bubble to the root and let the recover pass handle it.
+              break;
+            } // Capture and retry
+
             var errorInfo = value;
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
@@ -36823,7 +36830,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-909b8e80";
+    var ReactVersion = "19.0.0-www-modern-980a3fa3";
 
     function createPortal$1(
       children,

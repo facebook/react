@@ -13718,7 +13718,6 @@ if (__DEV__) {
           }
 
           case ClassComponent:
-            // Capture and retry
             var errorInfo = value;
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
@@ -26859,7 +26858,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-4b7162fb";
+    var ReactVersion = "19.0.0-www-classic-8d9aa32f";
 
     // Might add PROFILE later.
 
