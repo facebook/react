@@ -53,6 +53,9 @@ module.exports = {
     reportError: 'readonly',
     AggregateError: 'readonly',
 
+    // Node Feature Detection
+    process: 'readonly',
+
     // Temp
     AsyncLocalStorage: 'readonly',
     async_hooks: 'readonly',

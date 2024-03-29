@@ -310,7 +310,8 @@ describe('ProfilingCache', () => {
   });
 
   // @reactVersion >= 16.9
-  it('should record changed props/state/context/hooks', () => {
+  // @reactVersion <= 18.2
+  it('should record changed props/state/context/hooks for React version [16.9; 18.2] with legacy context', () => {
     let instance = null;
 
     const ModernContext = React.createContext(0);
@@ -411,21 +412,6 @@ describe('ProfilingCache', () => {
         },
       }
     `);
-
-    if (gate(flags => !flags.disableLegacyContext)) {
-      expect(changeDescriptions[1].get(6).context).toEqual(['count']);
-      expect(changeDescriptions[1].get(7).props).toEqual(['count']);
-      expect(changeDescriptions[2].get(6).context).toEqual([]);
-      expect(changeDescriptions[3].get(6).context).toEqual([]);
-      expect(changeDescriptions[4].get(6).context).toEqual([]);
-
-      changeDescriptions[1].get(6).context = null;
-      changeDescriptions[1].get(7).props = [];
-      changeDescriptions[2].get(6).context = null;
-      changeDescriptions[3].get(6).context = null;
-      changeDescriptions[4].get(6).context = null;
-    }
-
     expect(changeDescriptions[1]).toMatchInlineSnapshot(`
       Map {
         5 => {
@@ -451,11 +437,15 @@ describe('ProfilingCache', () => {
           "didHooksChange": false,
           "hooks": [],
           "isFirstMount": false,
-          "props": [],
+          "props": [
+            "count",
+          ],
           "state": null,
         },
         6 => {
-          "context": null,
+          "context": [
+            "count",
+          ],
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -501,7 +491,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": null,
+          "context": [],
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -547,7 +537,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": null,
+          "context": [],
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -594,7 +584,7 @@ describe('ProfilingCache', () => {
           "state": null,
         },
         6 => {
-          "context": null,
+          "context": [],
           "didHooksChange": false,
           "hooks": null,
           "isFirstMount": false,
@@ -613,6 +603,381 @@ describe('ProfilingCache', () => {
         },
       }
     `);
+
+    utils.exportImportHelper(bridge, store);
+
+    const prevChangeDescriptions = [...changeDescriptions];
+
+    changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+      expect(changeDescriptions[commitIndex]).toEqual(
+        prevChangeDescriptions[commitIndex],
+      );
+    }
+  });
+
+  // @reactVersion > 18.2
+  // @gate !disableLegacyContext
+  it('should record changed props/state/context/hooks for React version (18.2; ∞) with legacy context enabled', () => {
+    let instance = null;
+
+    const ModernContext = React.createContext(0);
+
+    class LegacyContextProvider extends React.Component<any, {count: number}> {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      state = {count: 0};
+      getChildContext() {
+        return this.state;
+      }
+      render() {
+        instance = this;
+        return (
+          <ModernContext.Provider value={this.state.count}>
+            <React.Fragment>
+              <ModernContextConsumer />
+              <LegacyContextConsumer />
+            </React.Fragment>
+          </ModernContext.Provider>
+        );
+      }
+    }
+
+    const FunctionComponentWithHooks = ({count}) => {
+      React.useMemo(() => count, [count]);
+      return null;
+    };
+
+    class ModernContextConsumer extends React.Component<any> {
+      static contextType = ModernContext;
+      render() {
+        return <FunctionComponentWithHooks count={this.context} />;
+      }
+    }
+
+    class LegacyContextConsumer extends React.Component<any> {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render() {
+        return <FunctionComponentWithHooks count={this.context.count} />;
+      }
+    }
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => render(<LegacyContextProvider />));
+    expect(instance).not.toBeNull();
+    utils.act(() => (instance: any).setState({count: 1}));
+    utils.act(() => render(<LegacyContextProvider foo={123} />));
+    utils.act(() => render(<LegacyContextProvider bar="abc" />));
+    utils.act(() => render(<LegacyContextProvider />));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+
+    let changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+    expect(changeDescriptions[0]).toEqual(
+      new Map([
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[1]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['count'],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: true,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['count'],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: ['count'],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: ['count'],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[2]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['foo'],
+            state: [],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[3]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['foo', 'bar'],
+            state: [],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[4]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['bar'],
+            state: [],
+          },
+        ],
+      ]),
+    );
 
     utils.exportImportHelper(bridge, store);
 

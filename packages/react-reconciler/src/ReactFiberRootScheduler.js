@@ -166,7 +166,6 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
 
   // There may or may not be synchronous work scheduled. Let's check.
   let didPerformSomeWork;
-  let errors: Array<mixed> | null = null;
   isFlushingWork = true;
   do {
     didPerformSomeWork = false;
@@ -184,48 +183,14 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
         );
         if (includesSyncLane(nextLanes)) {
           // This root has pending sync work. Flush it now.
-          try {
-            didPerformSomeWork = true;
-            performSyncWorkOnRoot(root, nextLanes);
-          } catch (error) {
-            // Collect errors so we can rethrow them at the end
-            if (errors === null) {
-              errors = [error];
-            } else {
-              errors.push(error);
-            }
-          }
+          didPerformSomeWork = true;
+          performSyncWorkOnRoot(root, nextLanes);
         }
       }
       root = root.next;
     }
   } while (didPerformSomeWork);
   isFlushingWork = false;
-
-  // If any errors were thrown, rethrow them right before exiting.
-  // TODO: Consider returning these to the caller, to allow them to decide
-  // how/when to rethrow.
-  if (errors !== null) {
-    if (errors.length > 1) {
-      if (typeof AggregateError === 'function') {
-        // eslint-disable-next-line no-undef
-        throw new AggregateError(errors);
-      } else {
-        for (let i = 1; i < errors.length; i++) {
-          scheduleImmediateTask(throwError.bind(null, errors[i]));
-        }
-        const firstError = errors[0];
-        throw firstError;
-      }
-    } else {
-      const error = errors[0];
-      throw error;
-    }
-  }
-}
-
-function throwError(error: mixed) {
-  throw error;
 }
 
 function processRootScheduleInMicrotask() {

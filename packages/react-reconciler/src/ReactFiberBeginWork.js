@@ -95,7 +95,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
@@ -105,8 +104,6 @@ import {
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enableFloat,
-  enableFormActions,
   enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
@@ -143,7 +140,6 @@ import {
 import {
   NoLane,
   NoLanes,
-  SyncLane,
   OffscreenLane,
   DefaultHydrationLane,
   SomeRetryLane,
@@ -239,7 +235,6 @@ import {
   queueHydrationError,
 } from './ReactFiberHydrationContext';
 import {
-  adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -269,7 +264,10 @@ import {
   createCapturedValueAtFiber,
   type CapturedValue,
 } from './ReactCapturedValue';
-import {createClassErrorUpdate} from './ReactFiberThrow';
+import {
+  createClassErrorUpdate,
+  initializeClassErrorUpdate,
+} from './ReactFiberThrow';
 import is from 'shared/objectIs';
 import {
   getForksAtLevel,
@@ -1182,10 +1180,18 @@ function updateClassComponent(
         const lane = pickArbitraryLane(renderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         // Schedule the error boundary to re-render using updated state
-        const update = createClassErrorUpdate(
+        const root: FiberRoot | null = getWorkInProgressRoot();
+        if (root === null) {
+          throw new Error(
+            'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+          );
+        }
+        const update = createClassErrorUpdate(lane);
+        initializeClassErrorUpdate(
+          update,
+          root,
           workInProgress,
           createCapturedValueAtFiber(error, workInProgress),
-          lane,
         );
         enqueueCapturedUpdate(workInProgress, update);
         break;
@@ -1544,7 +1550,7 @@ function updateHostComponent(
     workInProgress.flags |= ContentReset;
   }
 
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     const memoizedState = workInProgress.memoizedState;
     if (memoizedState !== null) {
       // This fiber has been upgraded to a stateful component. The only way
@@ -1912,88 +1918,27 @@ function mountIndeterminateComponent(
     }
   }
 
-  if (
-    // Run these checks in production only if the flag is off.
-    // Eventually we'll delete this branch altogether.
-    !disableModulePatternComponents &&
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.render === 'function' &&
-    value.$$typeof === undefined
-  ) {
-    if (__DEV__) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
+  // Proceed under the assumption that this is a function component
+  workInProgress.tag = FunctionComponent;
+  if (__DEV__) {
+    if (disableLegacyContext && Component.contextTypes) {
+      console.error(
+        '%s uses the legacy contextTypes API which was removed in React 19. ' +
+          'Use React.createContext() with React.useContext() instead.',
+        getComponentNameFromType(Component) || 'Unknown',
+      );
     }
-
-    // Proceed under the assumption that this is a class instance
-    workInProgress.tag = ClassComponent;
-
-    // Throw out any hooks that were used.
-    workInProgress.memoizedState = null;
-    workInProgress.updateQueue = null;
-
-    // Push context providers early to prevent context stack mismatches.
-    // During mounting we don't know the child context yet as the instance doesn't exist.
-    // We will invalidate the child context in finishClassComponent() right after rendering.
-    let hasContext = false;
-    if (isLegacyContextProvider(Component)) {
-      hasContext = true;
-      pushLegacyContextProvider(workInProgress);
-    } else {
-      hasContext = false;
-    }
-
-    workInProgress.memoizedState =
-      value.state !== null && value.state !== undefined ? value.state : null;
-
-    initializeUpdateQueue(workInProgress);
-
-    adoptClassInstance(workInProgress, value);
-    mountClassInstance(workInProgress, Component, props, renderLanes);
-    return finishClassComponent(
-      null,
-      workInProgress,
-      Component,
-      true,
-      hasContext,
-      renderLanes,
-    );
-  } else {
-    // Proceed under the assumption that this is a function component
-    workInProgress.tag = FunctionComponent;
-    if (__DEV__) {
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
-      }
-    }
-
-    if (getIsHydrating() && hasId) {
-      pushMaterializedTreeId(workInProgress);
-    }
-
-    reconcileChildren(null, workInProgress, value, renderLanes);
-    if (__DEV__) {
-      validateFunctionComponentInDev(workInProgress, Component);
-    }
-    return workInProgress.child;
   }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
+  }
+
+  reconcileChildren(null, workInProgress, value, renderLanes);
+  if (__DEV__) {
+    validateFunctionComponentInDev(workInProgress, Component);
+  }
+  return workInProgress.child;
 }
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
@@ -2745,18 +2690,7 @@ function mountDehydratedSuspenseComponent(
 ): null | Fiber {
   // During the first pass, we'll bail out and not drill into the children.
   // Instead, we'll leave the content in place and try to hydrate it later.
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-    if (__DEV__) {
-      console.error(
-        'Cannot hydrate Suspense in legacy mode. Switch from ' +
-          'ReactDOM.hydrate(element, container) to ' +
-          'ReactDOMClient.hydrateRoot(container, <App />)' +
-          '.render(element) or remove the Suspense components from ' +
-          'the server rendered components.',
-      );
-    }
-    workInProgress.lanes = laneToLanes(SyncLane);
-  } else if (isSuspenseInstanceFallback(suspenseInstance)) {
+  if (isSuspenseInstanceFallback(suspenseInstance)) {
     // This is a client-only boundary. Since we won't get any content from the server
     // for this, we need to schedule that at a higher priority based on when it would
     // have timed out. In theory we could render it in this pass but it would have the
@@ -2795,15 +2729,6 @@ function updateDehydratedSuspenseComponent(
     // We should never be hydrating at this point because it is the first pass,
     // but after we've already committed once.
     warnIfHydrating();
-
-    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-      return retrySuspenseComponentWithoutHydrating(
-        current,
-        workInProgress,
-        renderLanes,
-        null,
-      );
-    }
 
     if (isSuspenseInstanceFallback(suspenseInstance)) {
       // This boundary is in a permanent fallback state. In this case, we'll never
@@ -4089,7 +4014,7 @@ function beginWork(
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostHoistable:
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // Fall through

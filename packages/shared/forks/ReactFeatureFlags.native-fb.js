@@ -9,19 +9,20 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
+import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynamic';
 
-// NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
-// Re-export dynamic flags from the internal module. Intentionally using *
-// because this import is compiled to a `require` call.
-import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
+// Re-export dynamic flags from the internal module.
+// Intentionally using * because this import is compiled to a `require` call.
+import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 export const {
-  alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions,
+  enableBigIntSupport,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection,
@@ -33,7 +34,6 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const disableModulePatternComponents = true;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;
@@ -45,12 +45,10 @@ export const enableCache = true;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
-export const enableFormActions = true; // Doesn't affect Native
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
@@ -65,7 +63,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
-export const enableClientRenderFallbackOnTextMismatch = true;
+export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
@@ -80,12 +78,8 @@ export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
-export const enableCustomElementPropertySupport = true;
-export const enableNewBooleanProps = true;
 
 export const enableTransitionTracing = false;
-
-export const enableFloat = true;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
@@ -103,8 +97,7 @@ export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
-
-export const enableBigIntSupport = false;
+export const disableDOMTestUtils = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

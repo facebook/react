@@ -974,6 +974,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           null,
           false,
           '',
+          NoopRenderer.defaultOnUncaughtError,
+          NoopRenderer.defaultOnCaughtError,
           onRecoverableError,
           null,
         );
@@ -996,6 +998,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
+        NoopRenderer.defaultOnUncaughtError,
+        NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
@@ -1028,6 +1032,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
+        NoopRenderer.defaultOnUncaughtError,
+        NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
         null,
       );

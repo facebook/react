@@ -22,11 +22,9 @@ export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
-export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
@@ -40,12 +38,11 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
-export const enableClientRenderFallbackOnTextMismatch = true;
+export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableRenderableContext = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -60,13 +57,10 @@ export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = false;
-export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
 export const enableTransitionTracing = false;
-
-export const enableFloat = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
@@ -75,7 +69,6 @@ export const enableDeferRootSchedulingToMicrotask = true;
 
 export const enableAsyncActions = true;
 
-export const alwaysThrottleDisappearingFallbacks = true;
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
@@ -95,12 +88,12 @@ export const enableInfiniteRenderLoopDetection = false;
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = __NEXT_MAJOR__;
 export const disableStringRefs = __NEXT_MAJOR__;
-export const enableReactTestRendererWarning = false;
 export const enableBigIntSupport = __NEXT_MAJOR__;
 export const disableLegacyMode = __NEXT_MAJOR__;
 export const disableLegacyContext = __NEXT_MAJOR__;
-export const enableNewBooleanProps = __NEXT_MAJOR__;
-export const disableModulePatternComponents = __NEXT_MAJOR__;
+export const disableDOMTestUtils = __NEXT_MAJOR__;
+export const enableRenderableContext = __NEXT_MAJOR__;
+export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

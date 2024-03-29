@@ -59,6 +59,7 @@ import {
   use,
   useMemoCache,
   useOptimistic,
+  useActionState,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
@@ -93,6 +94,7 @@ export {
   useLayoutEffect,
   useMemo,
   useOptimistic,
+  useActionState,
   useSyncExternalStore,
   useReducer,
   useRef,

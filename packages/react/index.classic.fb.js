@@ -56,6 +56,7 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

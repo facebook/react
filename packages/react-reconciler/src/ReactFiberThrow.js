@@ -59,7 +59,6 @@ import {
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
-  onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
@@ -67,7 +66,7 @@ import {
   renderDidSuspend,
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
-import {logCapturedError} from './ReactFiberErrorLogger';
+import {logUncaughtError, logCaughtError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -86,7 +85,7 @@ import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
 
 function createRootErrorUpdate(
-  fiber: Fiber,
+  root: FiberRoot,
   errorInfo: CapturedValue<mixed>,
   lane: Lane,
 ): Update<mixed> {
@@ -96,21 +95,24 @@ function createRootErrorUpdate(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element: null};
-  const error = errorInfo.value;
   update.callback = () => {
-    onUncaughtError(error);
-    logCapturedError(fiber, errorInfo);
+    logUncaughtError(root, errorInfo);
   };
   return update;
 }
 
-function createClassErrorUpdate(
-  fiber: Fiber,
-  errorInfo: CapturedValue<mixed>,
-  lane: Lane,
-): Update<mixed> {
+function createClassErrorUpdate(lane: Lane): Update<mixed> {
   const update = createUpdate(lane);
   update.tag = CaptureUpdate;
+  return update;
+}
+
+function initializeClassErrorUpdate(
+  update: Update<mixed>,
+  root: FiberRoot,
+  fiber: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): void {
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
@@ -121,7 +123,7 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      logCaughtError(root, fiber, errorInfo);
     };
   }
 
@@ -132,7 +134,7 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      logCaughtError(root, fiber, errorInfo);
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -162,7 +164,6 @@ function createClassErrorUpdate(
       }
     };
   }
-  return update;
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
@@ -564,7 +565,11 @@ function throwException(
         workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
-        const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
+        const update = createRootErrorUpdate(
+          workInProgress.stateNode,
+          errorInfo,
+          lane,
+        );
         enqueueCapturedUpdate(workInProgress, update);
         return false;
       }
@@ -584,11 +589,8 @@ function throwException(
           const lane = pickArbitraryLane(rootRenderLanes);
           workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
           // Schedule the error boundary to re-render using updated state
-          const update = createClassErrorUpdate(
-            workInProgress,
-            errorInfo,
-            lane,
-          );
+          const update = createClassErrorUpdate(lane);
+          initializeClassErrorUpdate(update, root, workInProgress, errorInfo);
           enqueueCapturedUpdate(workInProgress, update);
           return false;
         }
@@ -603,4 +605,9 @@ function throwException(
   return false;
 }
 
-export {throwException, createRootErrorUpdate, createClassErrorUpdate};
+export {
+  throwException,
+  createRootErrorUpdate,
+  createClassErrorUpdate,
+  initializeClassErrorUpdate,
+};

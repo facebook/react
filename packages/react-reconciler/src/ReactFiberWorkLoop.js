@@ -39,6 +39,7 @@ import {
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -70,10 +71,10 @@ import {
   noTimeout,
   afterActiveInstanceBlur,
   getCurrentEventPriority,
-  errorHydratingContainer,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
+  supportsHydration,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -174,6 +175,7 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
+  initializeClassErrorUpdate,
 } from './ReactFiberThrow';
 import {
   commitBeforeMutationEffects,
@@ -274,6 +276,7 @@ import {
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 import {peekEntangledActionLane} from './ReactFiberAsyncAction';
+import {logUncaughtError} from './ReactFiberErrorLogger';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -345,8 +348,6 @@ export let entangledRenderLanes: Lanes = NoLanes;
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
-// A fatal error, if one is thrown
-let workInProgressRootFatalError: mixed = null;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
@@ -561,8 +562,6 @@ export function getRenderTargetTime(): number {
   return workInProgressRootRenderTargetTime;
 }
 
-let hasUncaughtError = false;
-let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
@@ -971,11 +970,9 @@ export function performConcurrentWorkOnRoot(
           }
         }
         if (exitStatus === RootFatalErrored) {
-          const fatalError = workInProgressRootFatalError;
           prepareFreshStack(root, NoLanes);
           markRootSuspended(root, lanes, NoLane);
-          ensureRootIsScheduled(root);
-          throw fatalError;
+          break;
         }
 
         // We now have a consistent tree. The next step is either to commit it,
@@ -1003,7 +1000,7 @@ function recoverFromConcurrentError(
   // Before rendering again, save the errors from the previous attempt.
   const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
 
-  const wasRootDehydrated = isRootDehydrated(root);
+  const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
   if (wasRootDehydrated) {
     // The shell failed to hydrate. Set a flag to force a client rendering
     // during the next attempt. To do this, we call prepareFreshStack now
@@ -1018,9 +1015,6 @@ function recoverFromConcurrentError(
     // Something to consider for a future refactor.
     const rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
     rootWorkInProgress.flags |= ForceClientRender;
-    if (__DEV__) {
-      errorHydratingContainer(root.containerInfo);
-    }
   }
 
   const exitStatus = renderRootSync(root, errorRetryLanes);
@@ -1106,7 +1100,14 @@ function finishConcurrentRender(
       // Commit the placeholder.
       break;
     }
-    case RootErrored:
+    case RootErrored: {
+      // This render errored. Ignore any recoverable errors because we weren't actually
+      // able to recover. Instead, whatever the final errors were is the ones we log.
+      // This ensures that we only log the actual client side error if it's just a plain
+      // error thrown from a component on the server and the client.
+      workInProgressRootRecoverableErrors = null;
+      break;
+    }
     case RootSuspended:
     case RootCompleted: {
       break;
@@ -1388,11 +1389,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   }
 
   if (exitStatus === RootFatalErrored) {
-    const fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, NoLanes);
     markRootSuspended(root, lanes, NoLane);
     ensureRootIsScheduled(root);
-    throw fatalError;
+    return null;
   }
 
   if (exitStatus === RootDidNotComplete) {
@@ -1457,21 +1457,27 @@ export function deferredUpdates<A>(fn: () => A): A {
 }
 
 export function batchedUpdates<A, R>(fn: A => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext |= BatchedContext;
-  try {
+  if (disableLegacyMode) {
+    // batchedUpdates is a no-op now, but there's still some internal react-dom
+    // code calling it, that we can't remove until we remove legacy mode.
     return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (
-      executionContext === NoContext &&
-      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
-    ) {
-      resetRenderTimer();
-      flushSyncWorkOnLegacyRootsOnly();
+  } else {
+    const prevExecutionContext = executionContext;
+    executionContext |= BatchedContext;
+    try {
+      return fn(a);
+    } finally {
+      executionContext = prevExecutionContext;
+      // If there were legacy sync updates, flush them at the end of the outer
+      // most batchedUpdates-like method.
+      if (
+        executionContext === NoContext &&
+        // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+        !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+      ) {
+        resetRenderTimer();
+        flushSyncWorkOnLegacyRootsOnly();
+      }
     }
   }
 }
@@ -1622,7 +1628,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressThrownValue = null;
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
-  workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
@@ -1735,7 +1740,10 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   if (erroredWork === null) {
     // This is a fatal error
     workInProgressRootExitStatus = RootFatalErrored;
-    workInProgressRootFatalError = thrownValue;
+    logUncaughtError(
+      root,
+      createCapturedValueAtFiber(thrownValue, root.current),
+    );
     return;
   }
 
@@ -2513,7 +2521,7 @@ function throwAndUnwindWorkLoop(
       workInProgressRootRenderLanes,
     );
     if (didFatal) {
-      panicOnRootError(thrownValue);
+      panicOnRootError(root, thrownValue);
       return;
     }
   } catch (error) {
@@ -2525,7 +2533,7 @@ function throwAndUnwindWorkLoop(
       workInProgress = returnFiber;
       throw error;
     } else {
-      panicOnRootError(thrownValue);
+      panicOnRootError(root, thrownValue);
       return;
     }
   }
@@ -2547,13 +2555,13 @@ function throwAndUnwindWorkLoop(
   }
 }
 
-function panicOnRootError(error: mixed) {
+function panicOnRootError(root: FiberRoot, error: mixed) {
   // There's no ancestor that can handle this exception. This should never
   // happen because the root is supposed to capture all errors that weren't
   // caught by an error boundary. This is a fatal error, or panic condition,
   // because we've run out of ways to recover.
   workInProgressRootExitStatus = RootFatalErrored;
-  workInProgressRootFatalError = error;
+  logUncaughtError(root, createCapturedValueAtFiber(error, root.current));
   // Set `workInProgress` to null. This represents advancing to the next
   // sibling, or the parent if there are no siblings. But since the root
   // has no siblings nor a parent, we set it to null. Usually this is
@@ -3021,19 +3029,9 @@ function commitRootImpl(
     const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      const errorInfo = makeErrorInfo(
-        recoverableError.digest,
-        recoverableError.stack,
-      );
+      const errorInfo = makeErrorInfo(recoverableError.stack);
       onRecoverableError(recoverableError.value, errorInfo);
     }
-  }
-
-  if (hasUncaughtError) {
-    hasUncaughtError = false;
-    const error = firstUncaughtError;
-    firstUncaughtError = null;
-    throw error;
   }
 
   // If the passive effects are the result of a discrete render, flush them
@@ -3129,28 +3127,35 @@ function commitRootImpl(
   return null;
 }
 
-function makeErrorInfo(digest: ?string, componentStack: ?string) {
+function makeErrorInfo(componentStack: ?string) {
   if (__DEV__) {
     const errorInfo = {
       componentStack,
-      digest,
     };
-    Object.defineProperty(errorInfo, 'digest', {
-      configurable: false,
-      enumerable: true,
-      get() {
-        console.error(
-          'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-            ' This property is deprecated and will be removed in a future version of React.' +
-            ' To access the digest of an Error look for this property on the Error instance itself.',
-        );
-        return digest;
+    return new Proxy(errorInfo, {
+      get(target, prop, receiver) {
+        if (prop === 'digest') {
+          console.error(
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          );
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+      has(target, prop) {
+        if (prop === 'digest') {
+          console.error(
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
+          );
+        }
+        return Reflect.has(target, prop);
       },
     });
-    return errorInfo;
   } else {
     return {
-      digest,
       componentStack,
     };
   }
@@ -3355,21 +3360,17 @@ export function markLegacyErrorBoundaryAsFailed(instance: mixed) {
   }
 }
 
-function prepareToThrowUncaughtError(error: mixed) {
-  if (!hasUncaughtError) {
-    hasUncaughtError = true;
-    firstUncaughtError = error;
-  }
-}
-export const onUncaughtError = prepareToThrowUncaughtError;
-
 function captureCommitPhaseErrorOnRoot(
   rootFiber: Fiber,
   sourceFiber: Fiber,
   error: mixed,
 ) {
   const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
-  const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
+  const update = createRootErrorUpdate(
+    rootFiber.stateNode,
+    errorInfo,
+    (SyncLane: Lane),
+  );
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   if (root !== null) {
     markRootUpdated(root, SyncLane);
@@ -3406,13 +3407,10 @@ export function captureCommitPhaseError(
           !isAlreadyFailedLegacyErrorBoundary(instance))
       ) {
         const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
-        const update = createClassErrorUpdate(
-          fiber,
-          errorInfo,
-          (SyncLane: Lane),
-        );
+        const update = createClassErrorUpdate((SyncLane: Lane));
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         if (root !== null) {
+          initializeClassErrorUpdate(update, root, fiber, errorInfo);
           markRootUpdated(root, SyncLane);
           ensureRootIsScheduled(root);
         }

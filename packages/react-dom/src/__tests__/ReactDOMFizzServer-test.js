@@ -30,7 +30,7 @@ let SuspenseList;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let use;
-let useFormState;
+let useActionState;
 let PropTypes;
 let textCache;
 let writable;
@@ -46,6 +46,15 @@ let assertLog;
 let waitForPaint;
 let clientAct;
 let streamingContainer;
+
+function normalizeError(msg) {
+  // Take the first sentence to make it easier to assert on.
+  const idx = msg.indexOf('.');
+  if (idx > -1) {
+    return msg.slice(0, idx + 1);
+  }
+  return msg;
+}
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -89,9 +98,23 @@ describe('ReactDOMFizzServer', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
-    useFormState = ReactDOM.useFormState;
-
     PropTypes = require('prop-types');
+    if (__VARIANT__) {
+      const originalConsoleError = console.error;
+      console.error = (error, ...args) => {
+        if (
+          typeof error !== 'string' ||
+          error.indexOf('ReactDOM.useFormState has been deprecated') === -1
+        ) {
+          originalConsoleError(error, ...args);
+        }
+      };
+
+      // Remove after API is deleted.
+      useActionState = ReactDOM.useFormState;
+    } else {
+      useActionState = React.useActionState;
+    }
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -2387,29 +2410,18 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Log recoverable error: ' + error.message);
+        Scheduler.log(
+          'Log recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
-    await expect(async () => {
-      // The first paint switches to client rendering due to mismatch
-      await waitForPaint([
-        'client',
-        'Log recoverable error: Hydration failed because the initial ' +
-          'UI does not match what was rendered on the server.',
-        'Log recoverable error: There was an error while hydrating. ' +
-          'Because the error happened outside of a Suspense boundary, the ' +
-          'entire root will switch to client rendering.',
-      ]);
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
-      ],
-      {withoutStack: 1},
-    );
+    // The first paint switches to client rendering due to mismatch
+    await waitForPaint([
+      'client',
+      "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Log recoverable error: There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
@@ -2470,30 +2482,19 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Log recoverable error: ' + error.message);
+        Scheduler.log(
+          'Log recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
     // The first paint uses the client due to mismatch forcing client render
-    await expect(async () => {
-      // The first paint switches to client rendering due to mismatch
-      await waitForPaint([
-        'client',
-        'Log recoverable error: Hydration failed because the initial ' +
-          'UI does not match what was rendered on the server.',
-        'Log recoverable error: There was an error while hydrating. ' +
-          'Because the error happened outside of a Suspense boundary, the ' +
-          'entire root will switch to client rendering.',
-      ]);
-    }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
-      ],
-      {withoutStack: 1},
-    );
+    // The first paint switches to client rendering due to mismatch
+    await waitForPaint([
+      'client',
+      "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Log recoverable error: There was an error while hydrating.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
@@ -2553,24 +2554,17 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
       // An error logged but instead of surfacing it to the UI, we switched
       // to client rendering.
-      await expect(async () => {
-        await waitForAll([
-          'Yay!',
-          'Hydration error',
-          'There was an error while hydrating. Because the error happened ' +
-            'outside of a Suspense boundary, the entire root will switch ' +
-            'to client rendering.',
-        ]);
-      }).toErrorDev(
-        'An error occurred during hydration. The server HTML was replaced',
-        {withoutStack: true},
-      );
+      await waitForAll([
+        'Yay!',
+        'Hydration error',
+        'There was an error while hydrating.',
+      ]);
       expect(getVisibleChildren(container)).toEqual(<span>Yay!</span>);
 
       // The node that's inside the boundary that errored during hydration was
@@ -2735,7 +2729,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
@@ -2744,7 +2738,7 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([
         'Yay!',
         'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -3190,7 +3184,7 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log(error.message);
+          Scheduler.log(normalizeError(error.message));
         },
       });
 
@@ -3198,8 +3192,7 @@ describe('ReactDOMFizzServer', () => {
       // to client rendering.
       await waitForAll([
         'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched ' +
-          'to client rendering.',
+        'There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -3259,7 +3252,9 @@ describe('ReactDOMFizzServer', () => {
 
     const root = ReactDOMClient.createRoot(container, {
       onRecoverableError(error) {
-        Scheduler.log('Logged a recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged a recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     React.startTransition(() => {
@@ -3335,7 +3330,9 @@ describe('ReactDOMFizzServer', () => {
     isClient = true;
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
 
@@ -3345,11 +3342,11 @@ describe('ReactDOMFizzServer', () => {
 
       'Logged recoverable error: Hydration error',
       'Logged recoverable error: There was an error while hydrating this ' +
-        'Suspense boundary. Switched to client rendering.',
+        'Suspense boundary.',
 
       'Logged recoverable error: Hydration error',
       'Logged recoverable error: There was an error while hydrating this ' +
-        'Suspense boundary. Switched to client rendering.',
+        'Suspense boundary.',
     ]);
   });
 
@@ -3576,11 +3573,11 @@ describe('ReactDOMFizzServer', () => {
         onRecoverableError(error, errorInfo) {
           expect(() => {
             expect(error.digest).toBe('a digest');
-            expect(errorInfo.digest).toBe('a digest');
+            expect(errorInfo.digest).toBe(undefined);
           }).toErrorDev(
-            'Warning: You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-              ' This property is deprecated and will be removed in a future version of React.' +
-              ' To access the digest of an Error look for this property on the Error instance itself.',
+            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+              ' of the Error instance itself.',
             {withoutStack: true},
           );
         },
@@ -3616,7 +3613,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // bugfix: https://github.com/facebook/react/issues/27286 affecting enableCustomElementPropertySupport flag
+  // bugfix: https://github.com/facebook/react/issues/27286
   it('can render custom elements with children on ther server', async () => {
     await act(() => {
       renderToPipeableStream(
@@ -4391,7 +4388,9 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([]);
@@ -4415,7 +4414,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableClientRenderFallbackOnTextMismatch
+  // @gate favorSafetyOverHydrationPerf
   it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -4468,7 +4467,9 @@ describe('ReactDOMFizzServer', () => {
     const [ClientApp, clientResolve] = makeApp();
     ReactDOMClient.hydrateRoot(container, <ClientApp text="replaced" />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([]);
@@ -4483,14 +4484,10 @@ describe('ReactDOMFizzServer', () => {
     // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
     // client-side rendering.
     await clientResolve();
-    await expect(async () => {
-      await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
-      ]);
-    }).toErrorDev(
-      'Warning: Text content did not match. Server: "initial" Client: "replaced',
-    );
+    await waitForAll([
+      "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <p>A</p>
@@ -4501,7 +4498,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  // @gate enableClientRenderFallbackOnTextMismatch
+  // @gate favorSafetyOverHydrationPerf
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4537,12 +4534,14 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App text="replaced" />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        "Logged recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
 
       expect(getVisibleChildren(container)).toEqual(
@@ -4554,21 +4553,7 @@ describe('ReactDOMFizzServer', () => {
       );
 
       await waitForAll([]);
-      if (__DEV__) {
-        expect(mockError.mock.calls.length).toBe(1);
-        expect(mockError.mock.calls[0]).toEqual([
-          'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
-          'initial',
-          'replaced',
-          '\n' +
-            '    in h2 (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in App (at **)',
-        ]);
-      } else {
-        expect(mockError.mock.calls.length).toBe(0);
-      }
+      expect(mockError.mock.calls.length).toBe(0);
     } finally {
       console.error = originalConsoleError;
     }
@@ -4624,12 +4609,14 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.log('Logged recoverable error: ' + error.message);
+        Scheduler.log(
+          'Logged recoverable error: ' + normalizeError(error.message),
+        );
       },
     });
     await waitForAll([
       'Logged recoverable error: uh oh',
-      'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
     ]);
 
     expect(getVisibleChildren(container)).toEqual(
@@ -4711,7 +4698,9 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
@@ -4720,7 +4709,7 @@ describe('ReactDOMFizzServer', () => {
         // onRecoverableError because the UI recovered without surfacing the
         // error to the user.
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
@@ -4828,7 +4817,9 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll(['suspending']);
@@ -4845,7 +4836,7 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([
         'throwing: first error',
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
@@ -4952,14 +4943,16 @@ describe('ReactDOMFizzServer', () => {
 
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.log('Logged recoverable error: ' + error.message);
+          Scheduler.log(
+            'Logged recoverable error: ' + normalizeError(error.message),
+          );
         },
       });
       await waitForAll([
         'throwing: first error',
         'suspending',
         'Logged recoverable error: first error',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary.',
       ]);
       expect(mockError.mock.calls).toEqual([]);
       mockError.mockClear();
@@ -5080,7 +5073,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('can emit the preamble even if the head renders asynchronously', async () => {
     function AsyncNoOutput() {
       readText('nooutput');
@@ -5133,7 +5125,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
     const chunks = [];
     writable.on('data', chunk => {
@@ -5734,14 +5725,7 @@ describe('ReactDOMFizzServer', () => {
           ', or object with a novel `toString` method but found an Array with length 2 instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
       ]);
 
-      if (gate(flags => flags.enableFloat)) {
-        expect(getVisibleChildren(document.head)).toEqual(<title />);
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'hello1<!-- -->hello2'}</title>,
-        );
-      }
-
+      expect(getVisibleChildren(document.head)).toEqual(<title />);
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5749,24 +5733,9 @@ describe('ReactDOMFizzServer', () => {
         },
       });
       await waitForAll([]);
-      if (gate(flags => flags.enableFloat)) {
-        expect(errors).toEqual([]);
-        // with float, the title doesn't render on the client or on the server
-        expect(getVisibleChildren(document.head)).toEqual(<title />);
-      } else {
-        expect(errors).toEqual(
-          [
-            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
-              ? 'Text content does not match server-rendered HTML.'
-              : null,
-            'Hydration failed because the initial UI does not match what was rendered on the server.',
-            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-          ].filter(Boolean),
-        );
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{['hello1', 'hello2']}</title>,
-        );
-      }
+      expect(errors).toEqual([]);
+      // with float, the title doesn't render on the client or on the server
+      expect(getVisibleChildren(document.head)).toEqual(<title />);
     });
 
     it('should warn in dev if you pass a React Component as a child to <title>', async () => {
@@ -5784,37 +5753,20 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      if (gate(flags => flags.enableFloat)) {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'React expects the `children` prop of <title> tags to be a string, number' +
-            gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
-            ', or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
-        ]);
-      } else {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'A title element received a React element for children. In the browser title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering',
-        ]);
-      }
-
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
-
+      await expect(async () => {
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+      }).toErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number' +
+          gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
+          ', or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+      ]);
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5823,14 +5775,10 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([]);
       expect(errors).toEqual([]);
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
     });
 
     it('should warn in dev if you pass an object that does not implement toString as a child to <title>', async () => {
@@ -5842,37 +5790,20 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      if (gate(flags => flags.enableFloat)) {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'React expects the `children` prop of <title> tags to be a string, number' +
-            gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
-            ', or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
-        ]);
-      } else {
-        await expect(async () => {
-          await act(() => {
-            const {pipe} = renderToPipeableStream(<App />);
-            pipe(writable);
-          });
-        }).toErrorDev([
-          'A title element received a React element for children. In the browser title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering',
-        ]);
-      }
-
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
-
+      await expect(async () => {
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+      }).toErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number' +
+          gate(flags => (flags.enableBigIntSupport ? ', bigint' : '')) +
+          ', or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+      ]);
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
       const errors = [];
       ReactDOMClient.hydrateRoot(document.head, <App />, {
         onRecoverableError(error) {
@@ -5881,14 +5812,10 @@ describe('ReactDOMFizzServer', () => {
       });
       await waitForAll([]);
       expect(errors).toEqual([]);
-      if (gate(flags => flags.enableFloat)) {
-        // object titles are toStringed when float is on
-        expect(getVisibleChildren(document.head)).toEqual(
-          <title>{'[object Object]'}</title>,
-        );
-      } else {
-        expect(getVisibleChildren(document.head)).toEqual(<title>hello</title>);
-      }
+      // object titles are toStringed when float is on
+      expect(getVisibleChildren(document.head)).toEqual(
+        <title>{'[object Object]'}</title>,
+      );
     });
   });
 
@@ -6087,23 +6014,23 @@ describe('ReactDOMFizzServer', () => {
     expect(reportedServerErrors.length).toBe(1);
     expect(reportedServerErrors[0].message).toBe('Oops!');
 
+    const reportedCaughtErrors = [];
     const reportedClientErrors = [];
     ReactDOMClient.hydrateRoot(container, <App />, {
+      onCaughtError(error) {
+        reportedCaughtErrors.push(error);
+      },
       onRecoverableError(error) {
         reportedClientErrors.push(error);
       },
     });
     await waitForAll([]);
     expect(getVisibleChildren(container)).toEqual('Oops!');
-    expect(reportedClientErrors.length).toBe(1);
-    if (__DEV__) {
-      expect(reportedClientErrors[0].message).toBe('Oops!');
-    } else {
-      expect(reportedClientErrors[0].message).toBe(
-        'The server could not finish this Suspense boundary, likely due to ' +
-          'an error during server rendering. Switched to client rendering.',
-      );
-    }
+    // Because this is rethrown on the client, it is not a recoverable error.
+    expect(reportedClientErrors.length).toBe(0);
+    // It is caught by the error boundary.
+    expect(reportedCaughtErrors.length).toBe(1);
+    expect(reportedCaughtErrors[0].message).toBe('Oops!');
   });
 
   it("use a promise that's already been instrumented and resolved", async () => {
@@ -6201,10 +6128,9 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState hydrates without a mismatch', async () => {
-    // This is testing an implementation detail: useFormState emits comment
+  it('useActionState hydrates without a mismatch', async () => {
+    // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
     // during hydration.
 
@@ -6214,7 +6140,7 @@ describe('ReactDOMFizzServer', () => {
 
     const childRef = React.createRef(null);
     function Form() {
-      const [state] = useFormState(action, 0);
+      const [state] = useActionState(action, 0);
       const text = `Child: ${state}`;
       return (
         <div id="child" ref={childRef}>
@@ -6255,9 +6181,8 @@ describe('ReactDOMFizzServer', () => {
     expect(childRef.current).toBe(child);
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it("useFormState hydrates without a mismatch if there's a render phase update", async () => {
+  it("useActionState hydrates without a mismatch if there's a render phase update", async () => {
     async function action(state) {
       return state;
     }
@@ -6271,9 +6196,9 @@ describe('ReactDOMFizzServer', () => {
 
       // Because of the render phase update above, this component is evaluated
       // multiple times (even during SSR), but it should only emit a single
-      // marker per useFormState instance.
-      const [formState] = useFormState(action, 0);
-      const text = `${readText('Child')}:${formState}:${localState}`;
+      // marker per useActionState instance.
+      const [actionState] = useActionState(action, 0);
+      const text = `${readText('Child')}:${actionState}:${localState}`;
       return (
         <div id="child" ref={childRef}>
           {text}
@@ -6405,15 +6330,7 @@ describe('ReactDOMFizzServer', () => {
           errors.push(error);
         },
       });
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Expected server HTML to contain a matching <span> in <div>',
-          'An error occurred during hydration',
-        ],
-        {withoutStack: 1},
-      );
+      await waitForAll([]);
       expect(errors.length).toEqual(2);
       expect(getVisibleChildren(container)).toEqual(<span />);
     });
@@ -6436,7 +6353,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
   it('warns if script has complex children', async () => {
     function MyScript() {
       return 'bar();';

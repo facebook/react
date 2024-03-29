@@ -254,7 +254,6 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="true">True</option>
         </select>,
-        1,
       );
       expect(e.firstChild.selected).toBe(false);
       expect(e.lastChild.selected).toBe(true);
@@ -269,7 +268,6 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="undefined">Undefined</option>
         </select>,
-        1,
       );
       expect(e.firstChild.selected).toBe(true);
       expect(e.lastChild.selected).toBe(false);

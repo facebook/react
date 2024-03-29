@@ -49,21 +49,21 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   ): boolean;
   declare export function deepFreezeAndThrowOnMutationInDev<T>(obj: T): T;
   declare export function flattenStyle(style: any): any;
-  declare export var RCTEventEmitter: {
+  declare export const RCTEventEmitter: {
     register: (eventEmitter: mixed) => void,
     ...
   };
-  declare export var TextInputState: {
+  declare export const TextInputState: {
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
     ...
   };
-  declare export var ReactFiberErrorDialog: {
+  declare export const ReactFiberErrorDialog: {
     showErrorDialog: (error: __CapturedError) => boolean,
     ...
   };
-  declare export var Platform: {OS: string, ...};
-  declare export var UIManager: {
+  declare export const Platform: {OS: string, ...};
+  declare export const UIManager: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
     createView: (
@@ -123,15 +123,15 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
-  declare export var legacySendAccessibilityEvent: (
+  declare export const legacySendAccessibilityEvent: (
     reactTag: number,
     eventTypeName: string,
   ) => void;
-  declare export var BatchedBridge: {
+  declare export const BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
   };
-  declare export var ReactNativeViewConfigRegistry: {
+  declare export const ReactNativeViewConfigRegistry: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
 
@@ -139,7 +139,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     get: (name: string) => __ReactNativeBaseComponentViewConfig,
     ...
   };
-  declare export var RawEventEmitter: {
+  declare export const RawEventEmitter: {
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
@@ -171,7 +171,7 @@ declare const RN$enableMicrotasksInReact: boolean;
 
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
-declare var nativeFabricUIManager: {
+declare const nativeFabricUIManager: {
   createNode: (
     reactTag: number,
     viewName: string,

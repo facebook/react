@@ -16,6 +16,8 @@ import type {
   ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {
+  ContextDependency,
+  Dependencies,
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
@@ -33,6 +35,7 @@ import {
   REACT_MEMO_CACHE_SENTINEL,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -103,6 +106,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
       }
+      if (typeof Dispatcher.useActionState === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
+      }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
         Dispatcher.use(
@@ -139,6 +146,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
+let currentContextDependency: null | ContextDependency<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -149,8 +157,29 @@ function nextHook(): null | Hook {
 }
 
 function readContext<T>(context: ReactContext<T>): T {
-  // For now we don't expose readContext usage in the hooks debugging info.
-  return context._currentValue;
+  if (currentFiber === null) {
+    // Hook inspection without access to the Fiber tree
+    // e.g. when warming up the primitive stack cache or during `ReactDebugTools.inspectHooks()`.
+    return context._currentValue;
+  } else {
+    if (currentContextDependency === null) {
+      throw new Error(
+        'Context reads do not line up with context dependencies. This is a bug in React Debug Tools.',
+      );
+    }
+
+    // For now we don't expose readContext usage in the hooks debugging info.
+    const value = hasOwnProperty.call(currentContextDependency, 'memoizedValue')
+      ? // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+        ((currentContextDependency.memoizedValue: any): T)
+      : // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
+        // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+        ((currentContextDependency.context._currentValue: any): T);
+    // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+    currentContextDependency = currentContextDependency.next;
+
+    return value;
+  }
 }
 
 const SuspenseException: mixed = new Error(
@@ -218,14 +247,15 @@ function use<T>(usable: Usable<T>): T {
 }
 
 function useContext<T>(context: ReactContext<T>): T {
+  const value = readContext(context);
   hookLog.push({
     displayName: context.displayName || null,
     primitive: 'Context',
     stackError: new Error(),
-    value: context._currentValue,
+    value: value,
     debugInfo: null,
   });
-  return context._currentValue;
+  return value;
 }
 
 function useState<S>(
@@ -587,6 +617,75 @@ function useFormState<S, P>(
   return [state, (payload: P) => {}, false];
 }
 
+function useActionState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void, boolean] {
+  const hook = nextHook(); // FormState
+  nextHook(); // PendingState
+  nextHook(); // ActionQueue
+  const stackError = new Error();
+  let value;
+  let debugInfo = null;
+  let error = null;
+
+  if (hook !== null) {
+    const actionResult = hook.memoizedState;
+    if (
+      typeof actionResult === 'object' &&
+      actionResult !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof actionResult.then === 'function'
+    ) {
+      const thenable: Thenable<Awaited<S>> = (actionResult: any);
+      switch (thenable.status) {
+        case 'fulfilled': {
+          value = thenable.value;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          break;
+        }
+        case 'rejected': {
+          const rejectedError = thenable.reason;
+          error = rejectedError;
+          break;
+        }
+        default:
+          // If this was an uncached Promise we have to abandon this attempt
+          // but we can still emit anything up until this point.
+          error = SuspenseException;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          value = thenable;
+      }
+    } else {
+      value = (actionResult: any);
+    }
+  } else {
+    value = initialState;
+  }
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'ActionState',
+    stackError: stackError,
+    value: value,
+    debugInfo: debugInfo,
+  });
+
+  if (error !== null) {
+    throw error;
+  }
+
+  // value being a Thenable is equivalent to error being not null
+  // i.e. we only reach this point with Awaited<S>
+  const state = ((value: any): Awaited<S>);
+
+  // TODO: support displaying pending value
+  return [state, (payload: P) => {}, false];
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -609,6 +708,7 @@ const Dispatcher: DispatcherType = {
   useDeferredValue,
   useId,
   useFormState,
+  useActionState,
 };
 
 // create a proxy to throw a custom error
@@ -1090,15 +1190,44 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   currentFiber = fiber;
 
+  if (hasOwnProperty.call(currentFiber, 'dependencies')) {
+    // $FlowFixMe[incompatible-use]: Flow thinks hasOwnProperty might have nulled `currentFiber`
+    const dependencies = currentFiber.dependencies;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'dependencies_old')) {
+    const dependencies: Dependencies = (currentFiber: any).dependencies_old;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'dependencies_new')) {
+    const dependencies: Dependencies = (currentFiber: any).dependencies_new;
+    currentContextDependency =
+      dependencies !== null ? dependencies.firstContext : null;
+  } else if (hasOwnProperty.call(currentFiber, 'contextDependencies')) {
+    const contextDependencies = (currentFiber: any).contextDependencies;
+    currentContextDependency =
+      contextDependencies !== null ? contextDependencies.first : null;
+  } else {
+    throw new Error(
+      'Unsupported React version. This is a bug in React Debug Tools.',
+    );
+  }
+
   const type = fiber.type;
   let props = fiber.memoizedProps;
   if (type !== fiber.elementType) {
     props = resolveDefaultProps(type, props);
   }
 
+  // Only used for versions of React without memoized context value in context dependencies.
   const contextMap = new Map<ReactContext<any>, any>();
   try {
-    setupContexts(contextMap, fiber);
+    if (
+      currentContextDependency !== null &&
+      !hasOwnProperty.call(currentContextDependency, 'memoizedValue')
+    ) {
+      setupContexts(contextMap, fiber);
+    }
 
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
@@ -1113,6 +1242,7 @@ export function inspectHooksOfFiber(
   } finally {
     currentFiber = null;
     currentHook = null;
+    currentContextDependency = null;
 
     restoreContexts(contextMap);
   }

@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let PropTypes;
 let act;
@@ -20,6 +21,8 @@ describe('ReactLegacyCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
     act = require('internal-test-utils').act;
@@ -115,7 +118,7 @@ describe('ReactLegacyCompositeComponent', () => {
     await act(() => {
       root.render(<Parent ref={current => (component = current)} />);
     });
-    expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
+    expect(findDOMNode(component).innerHTML).toBe('bar');
   });
 
   // @gate !disableLegacyContext
@@ -661,14 +664,14 @@ describe('ReactLegacyCompositeComponent', () => {
 
     const container = document.createElement('div');
     const comp = ReactDOM.render(<Component flipped={false} />, container);
-    expect(ReactDOM.findDOMNode(comp.static0Ref.current).textContent).toBe('A');
-    expect(ReactDOM.findDOMNode(comp.static1Ref.current).textContent).toBe('B');
+    expect(findDOMNode(comp.static0Ref.current).textContent).toBe('A');
+    expect(findDOMNode(comp.static1Ref.current).textContent).toBe('B');
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
     ReactDOM.render(<Component flipped={true} />, container);
-    expect(ReactDOM.findDOMNode(comp.static0Ref.current).textContent).toBe('B');
-    expect(ReactDOM.findDOMNode(comp.static1Ref.current).textContent).toBe('A');
+    expect(findDOMNode(comp.static0Ref.current).textContent).toBe('B');
+    expect(findDOMNode(comp.static1Ref.current).textContent).toBe('A');
   });
 
   // @gate !disableLegacyMode
@@ -678,12 +681,12 @@ describe('ReactLegacyCompositeComponent', () => {
 
     class Component extends React.Component {
       componentDidMount() {
-        a = ReactDOM.findDOMNode(this);
+        a = findDOMNode(this);
         expect(a).not.toBe(null);
       }
 
       componentWillUnmount() {
-        b = ReactDOM.findDOMNode(this);
+        b = findDOMNode(this);
         expect(b).not.toBe(null);
       }
 

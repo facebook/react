@@ -643,7 +643,7 @@ describe('ReactErrorBoundaries', () => {
       root.render(<BrokenComponentWillUnmount />);
     });
     await expect(async () => {
-      root.unmount();
+      await act(() => root.unmount());
     }).rejects.toThrow('Hello');
   });
 
@@ -876,56 +876,6 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
       );
     });
-    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-  });
-
-  // @gate !disableModulePatternComponents
-  it('renders an error state if module-style context provider throws in componentWillMount', async () => {
-    function BrokenComponentWillMountWithContext() {
-      return {
-        getChildContext() {
-          return {foo: 42};
-        },
-        render() {
-          return <div>{this.props.children}</div>;
-        },
-        UNSAFE_componentWillMount() {
-          throw new Error('Hello');
-        },
-      };
-    }
-    BrokenComponentWillMountWithContext.childContextTypes = {
-      foo: PropTypes.number,
-    };
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <ErrorBoundary>
-            <BrokenComponentWillMountWithContext />
-          </ErrorBoundary>,
-        );
-      });
-    }).toErrorDev([
-      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
-        'returns a class instance. ' +
-        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      ...gate(flags =>
-        flags.disableLegacyContext
-          ? [
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-            ]
-          : [],
-      ),
-    ]);
-
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
@@ -2470,7 +2420,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('passes first error when two errors happen in commit', async () => {
+  it('passes an aggregate error when two errors happen in commit', async () => {
     const errors = [];
     let caughtError;
     class Parent extends React.Component {
@@ -2501,15 +2451,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('propagates uncaught error inside unbatched initial mount', async () => {
@@ -2561,15 +2510,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent value={2} />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('should warn if an error boundary with only componentDidCatch does not update state', async () => {

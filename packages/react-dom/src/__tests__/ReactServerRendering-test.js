@@ -578,39 +578,6 @@ describe('ReactDOMServer', () => {
     });
   });
 
-  describe('renderToNodeStream', () => {
-    it('should generate simple markup', () => {
-      const SuccessfulElement = React.createElement(() => <img />);
-      let response;
-      expect(() => {
-        response = ReactDOMServer.renderToNodeStream(SuccessfulElement);
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-      expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
-    });
-
-    it('should handle errors correctly', () => {
-      const FailingElement = React.createElement(() => {
-        throw new Error('An Error');
-      });
-      let response;
-      expect(() => {
-        response = ReactDOMServer.renderToNodeStream(FailingElement);
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-      return new Promise(resolve => {
-        response.once('error', () => {
-          resolve();
-        });
-        expect(response.read()).toBeNull();
-      });
-    });
-  });
-
   describe('renderToStaticNodeStream', () => {
     it('should generate simple markup', () => {
       const SuccessfulElement = React.createElement(() => <img />);
@@ -632,7 +599,7 @@ describe('ReactDOMServer', () => {
       });
     });
 
-    it('should refer users to new apis when using suspense', async () => {
+    it('should omit text and suspense placeholders', async () => {
       let resolve = null;
       const promise = new Promise(res => {
         resolve = () => {
@@ -648,23 +615,15 @@ describe('ReactDOMServer', () => {
         throw promise;
       }
 
-      let response;
-      expect(() => {
-        response = ReactDOMServer.renderToNodeStream(
-          <div>
-            <React.Suspense fallback={'fallback'}>
-              <Suspender />
-            </React.Suspense>
-          </div>,
-        );
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
+      const response = ReactDOMServer.renderToStaticNodeStream(
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            <Suspender />
+          </React.Suspense>
+        </div>,
       );
       await resolve();
-      expect(response.read().toString()).toEqual(
-        '<div><!--$-->resolved<!-- --><!--/$--></div>',
-      );
+      expect(response.read().toString()).toEqual('<div>resolved</div>');
     });
   });
 
@@ -1126,7 +1085,6 @@ describe('ReactDOMServer', () => {
       expect(output).toBe(`<my-custom-element foo="5"></my-custom-element>`);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('Object properties should not be server rendered for custom elements', () => {
       const output = ReactDOMServer.renderToString(
         <my-custom-element foo={{foo: 'bar'}} />,
@@ -1134,7 +1092,6 @@ describe('ReactDOMServer', () => {
       expect(output).toBe(`<my-custom-element></my-custom-element>`);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('Array properties should not be server rendered for custom elements', () => {
       const output = ReactDOMServer.renderToString(
         <my-custom-element foo={['foo', 'bar']} />,

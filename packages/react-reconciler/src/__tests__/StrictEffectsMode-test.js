@@ -772,4 +772,177 @@ describe('StrictEffectsMode', () => {
       'useEffect unmount',
     ]);
   });
+
+  // @gate __DEV__
+  it('should double invoke effects after a re-suspend', async () => {
+    // Not using Scheduler.log because it silences double render logs.
+    let log = [];
+    let shouldSuspend = true;
+    let resolve;
+    const suspensePromise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Fallback() {
+      log.push('Fallback');
+      return 'Loading';
+    }
+
+    function Parent({prop}) {
+      log.push('Parent rendered');
+
+      React.useEffect(() => {
+        log.push('Parent create');
+        return () => {
+          log.push('Parent destroy');
+        };
+      }, []);
+
+      React.useEffect(() => {
+        log.push('Parent dep create');
+        return () => {
+          log.push('Parent dep destroy');
+        };
+      }, [prop]);
+
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child prop={prop} />
+        </React.Suspense>
+      );
+    }
+
+    function Child({prop}) {
+      const [count, forceUpdate] = React.useState(0);
+      const ref = React.useRef(null);
+      log.push('Child rendered');
+      React.useEffect(() => {
+        log.push('Child create');
+        return () => {
+          log.push('Child destroy');
+          ref.current = true;
+        };
+      }, []);
+      const key = `${prop}-${count}`;
+      React.useEffect(() => {
+        log.push('Child dep create');
+        if (ref.current === true) {
+          ref.current = false;
+          forceUpdate(c => c + 1);
+          log.push('-----------------------after setState');
+          return;
+        }
+
+        return () => {
+          log.push('Child dep destroy');
+        };
+      }, [key]);
+
+      if (shouldSuspend) {
+        log.push('Child suspended');
+        throw suspensePromise;
+      }
+      return null;
+    }
+
+    // Initial mount
+    shouldSuspend = false;
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>,
+      );
+    });
+
+    // Now re-suspend
+    shouldSuspend = true;
+    log = [];
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>,
+      );
+    });
+
+    // while suspended, update
+    log.push('-----------------------after update');
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent prop={'bar'} />
+        </React.StrictMode>,
+      );
+    });
+
+    // Now resolve and commit
+    log.push('-----------------------after suspense');
+
+    await act(() => {
+      resolve();
+      shouldSuspend = false;
+    });
+
+    if (gate(flags => flags.useModernStrictMode)) {
+      expect(log).toEqual([
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        '-----------------------after update',
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        'Parent dep destroy',
+        'Parent dep create',
+        '-----------------------after suspense',
+        'Child rendered',
+        'Child rendered',
+        // !!! Committed, destroy and create effect.
+        // !!! The other effect is not destroyed and created
+        // !!! because the dep didn't change
+        'Child dep destroy',
+        'Child dep create',
+
+        // Double invoke both effects
+        'Child destroy',
+        'Child dep destroy',
+        'Child create',
+        'Child dep create',
+        // Fires setState
+        '-----------------------after setState',
+        'Child rendered',
+        'Child rendered',
+        'Child dep create',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        '-----------------------after update',
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        'Parent dep destroy',
+        'Parent dep create',
+        '-----------------------after suspense',
+        'Child rendered',
+        'Child rendered',
+        'Child dep destroy',
+        'Child dep create',
+      ]);
+    }
+  });
 });

@@ -2586,14 +2586,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 1, ⚠ 1
           [root]
               <ErrorBoundary> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 1, ⚠ 1
           [root]
           →    <ErrorBoundary> ✕
         `);
@@ -2648,14 +2648,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 1, ⚠ 1
           [root]
               <ErrorBoundary> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 1, ⚠ 1
           [root]
           →    <ErrorBoundary> ✕
         `);
@@ -2705,7 +2705,7 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 2, ⚠ 1
           [root]
             ▾ <ErrorBoundary> ✕
                 <Child> ✕
@@ -2713,7 +2713,7 @@ describe('TreeListContext', () => {
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 2, ⚠ 1
           [root]
           →  ▾ <ErrorBoundary> ✕
                  <Child> ✕

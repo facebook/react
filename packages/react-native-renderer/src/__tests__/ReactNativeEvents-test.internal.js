@@ -13,6 +13,7 @@
 let PropTypes;
 let RCTEventEmitter;
 let React;
+let act;
 let ReactNative;
 let ResponderEventPlugin;
 let UIManager;
@@ -67,6 +68,7 @@ beforeEach(() => {
   RCTEventEmitter =
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
+  act = require('internal-test-utils').act;
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin =
     require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
@@ -77,7 +79,7 @@ beforeEach(() => {
       .ReactNativeViewConfigRegistry.register;
 });
 
-it('fails to register the same event name with different types', () => {
+it('fails to register the same event name with different types', async () => {
   const InvalidEvents = createReactNativeComponentClass('InvalidEvents', () => {
     if (!__DEV__) {
       // Simulate a registration error in prod.
@@ -109,15 +111,15 @@ it('fails to register the same event name with different types', () => {
 
   // The first time this renders,
   // we attempt to register the view config and fail.
-  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
-    'Event cannot be both direct and bubbling: topChange',
-  );
+  await expect(
+    async () => await act(() => ReactNative.render(<InvalidEvents />, 1)),
+  ).rejects.toThrow('Event cannot be both direct and bubbling: topChange');
 
   // Continue to re-register the config and
   // fail so that we don't mask the above failure.
-  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
-    'Event cannot be both direct and bubbling: topChange',
-  );
+  await expect(
+    async () => await act(() => ReactNative.render(<InvalidEvents />, 1)),
+  ).rejects.toThrow('Event cannot be both direct and bubbling: topChange');
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {

@@ -17,6 +17,7 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
+  enableBigIntSupport,
   enableTrustedTypesIntegration,
   enableLegacyFBSupport,
   enableDebugTracing,
@@ -26,7 +27,6 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleDisappearingFallbacks,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -38,8 +38,7 @@ export const {
   enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
-  enableNewBooleanProps,
-  enableClientRenderFallbackOnTextMismatch,
+  favorSafetyOverHydrationPerf,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -54,13 +53,10 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
-export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
-export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
-export const enableFormActions = true;
 export const enableAsyncActions = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
@@ -80,13 +76,9 @@ export const enableTaint = false;
 
 export const enablePostpone = false;
 
-export const disableJavaScriptURLs = true;
-
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;
-
-export const disableModulePatternComponents = true;
 
 export const enableCreateEventHandleAPI = true;
 
@@ -118,13 +110,13 @@ export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
 
-export const enableBigIntSupport = false;
-
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
 export const disableLegacyMode = false;
+
+export const disableDOMTestUtils = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

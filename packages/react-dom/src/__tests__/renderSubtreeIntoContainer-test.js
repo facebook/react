@@ -54,7 +54,7 @@ describe('renderSubtreeIntoContainer', () => {
             renderSubtreeIntoContainer(this, <Component />, portal);
           }.bind(this),
         ).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }
@@ -107,7 +107,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Component />, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
 
@@ -115,7 +115,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Component />, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }
@@ -172,7 +172,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Component />, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
 
@@ -180,7 +180,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Component />, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }
@@ -211,7 +211,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <div>hello</div>, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }
@@ -250,7 +250,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Child />, portal);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }
@@ -290,7 +290,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Middle />, portal1);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
       static childContextTypes = {
@@ -306,7 +306,7 @@ describe('renderSubtreeIntoContainer', () => {
         expect(() => {
           renderSubtreeIntoContainer(this, <Child />, portal2);
         }).toErrorDev(
-          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18',
         );
       }
     }

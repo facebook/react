@@ -19,6 +19,7 @@ describe('ReactProfiler DevTools integration', () => {
   let hook;
   let waitForAll;
   let waitFor;
+  let act;
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
@@ -39,6 +40,7 @@ describe('ReactProfiler DevTools integration', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
+    act = InternalTestUtils.act;
 
     AdvanceTime = class extends React.Component {
       static defaultProps = {
@@ -56,7 +58,7 @@ describe('ReactProfiler DevTools integration', () => {
     };
   });
 
-  it('should auto-Profile all fibers if the DevTools hook is detected', () => {
+  it('should auto-Profile all fibers if the DevTools hook is detected', async () => {
     const App = ({multiplier}) => {
       Scheduler.unstable_advanceTime(2);
       return (
@@ -71,7 +73,12 @@ describe('ReactProfiler DevTools integration', () => {
     };
 
     const onRender = jest.fn(() => {});
-    const rendered = ReactTestRenderer.create(<App multiplier={1} />);
+    let rendered;
+    await act(() => {
+      rendered = ReactTestRenderer.create(<App multiplier={1} />, {
+        unstable_isConcurrent: true,
+      });
+    });
 
     expect(hook.onCommitFiberRoot).toHaveBeenCalledTimes(1);
 
@@ -90,7 +97,9 @@ describe('ReactProfiler DevTools integration', () => {
       12,
     );
 
-    rendered.update(<App multiplier={2} />);
+    await act(() => {
+      rendered.update(<App multiplier={2} />);
+    });
 
     // Measure observable timing using the Profiler component.
     // The time spent in App (above the Profiler) won't be included in the durations,
@@ -107,14 +116,18 @@ describe('ReactProfiler DevTools integration', () => {
     );
   });
 
-  it('should reset the fiber stack correctly after an error when profiling host roots', () => {
+  it('should reset the fiber stack correctly after an error when profiling host roots', async () => {
     Scheduler.unstable_advanceTime(20);
 
-    const rendered = ReactTestRenderer.create(
-      <div>
-        <AdvanceTime byAmount={2} />
-      </div>,
-    );
+    let rendered;
+    await act(() => {
+      rendered = ReactTestRenderer.create(
+        <div>
+          <AdvanceTime byAmount={2} />
+        </div>,
+        {unstable_isConcurrent: true},
+      );
+    });
 
     Scheduler.unstable_advanceTime(20);
 
@@ -122,22 +135,26 @@ describe('ReactProfiler DevTools integration', () => {
       throw new Error('Oops!');
     }
 
-    expect(() => {
-      rendered.update(
-        <Throws>
-          <AdvanceTime byAmount={3} />
-        </Throws>,
-      );
-    }).toThrow('Oops!');
+    await expect(async () => {
+      await act(() => {
+        rendered.update(
+          <Throws>
+            <AdvanceTime byAmount={3} />
+          </Throws>,
+        );
+      });
+    }).rejects.toThrow('Oops!');
 
     Scheduler.unstable_advanceTime(20);
 
-    // But this should render correctly, if the profiler's fiber stack has been reset.
-    rendered.update(
-      <div>
-        <AdvanceTime byAmount={7} />
-      </div>,
-    );
+    await act(() => {
+      // But this should render correctly, if the profiler's fiber stack has been reset.
+      rendered.update(
+        <div>
+          <AdvanceTime byAmount={7} />
+        </div>,
+      );
+    });
 
     // Measure unobservable timing required by the DevTools profiler.
     // At this point, the base time should include only the most recent (not failed) render.
@@ -154,7 +171,10 @@ describe('ReactProfiler DevTools integration', () => {
       return text;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    let root;
+    await act(() => {
+      root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    });
 
     // Commit something
     root.update(<Text text="A" />);

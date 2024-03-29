@@ -2121,7 +2121,11 @@ describe('ReactDOMComponent', () => {
 
         componentWillUnmount() {
           // Should not throw
-          expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
+          expect(
+            ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+              this,
+            ).nodeName,
+          ).toBe('SPAN');
         }
       }
 
@@ -3545,15 +3549,11 @@ describe('ReactDOMComponent', () => {
         root.render(<some-custom-element foo={true} />);
       });
       const node = container.firstChild;
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
-      );
+      expect(node.getAttribute('foo')).toBe('');
       await act(() => {
         root.render(<some-custom-element foo={false} />);
       });
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
-      );
+      expect(node.getAttribute('foo')).toBe(null);
       await act(() => {
         root.render(<some-custom-element />);
       });

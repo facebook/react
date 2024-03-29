@@ -46,7 +46,6 @@ import {
   runWithPriority as attemptHydrationAtPriority,
   getCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
-import {enableFormActions} from 'shared/ReactFeatureFlags';
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
@@ -535,72 +534,70 @@ export function retryIfBlockedOn(
     }
   }
 
-  if (enableFormActions) {
-    // Check the document if there are any queued form actions.
-    // If there's no ownerDocument, then this is the document.
-    const root = unblocked.ownerDocument || unblocked;
-    const formReplayingQueue: void | FormReplayingQueue = (root: any)
-      .$$reactFormReplay;
-    if (formReplayingQueue != null) {
-      for (let i = 0; i < formReplayingQueue.length; i += 3) {
-        const form: HTMLFormElement = formReplayingQueue[i];
-        const submitterOrAction:
-          | null
-          | HTMLInputElement
-          | HTMLButtonElement
-          | FormAction = formReplayingQueue[i + 1];
-        const formProps = getFiberCurrentPropsFromNode(form);
-        if (typeof submitterOrAction === 'function') {
-          // This action has already resolved. We're just waiting to dispatch it.
-          if (!formProps) {
-            // This was not part of this React instance. It might have been recently
-            // unblocking us from dispatching our events. So let's make sure we schedule
-            // a retry.
-            scheduleReplayQueueIfNeeded(formReplayingQueue);
-          }
-          continue;
-        }
-        let target: Node = form;
-        if (formProps) {
-          // This form belongs to this React instance but the submitter might
-          // not be done yet.
-          let action: null | FormAction = null;
-          const submitter = submitterOrAction;
-          if (submitter && submitter.hasAttribute('formAction')) {
-            // The submitter is the one that is responsible for the action.
-            target = submitter;
-            const submitterProps = getFiberCurrentPropsFromNode(submitter);
-            if (submitterProps) {
-              // The submitter is part of this instance.
-              action = (submitterProps: any).formAction;
-            } else {
-              const blockedOn = findInstanceBlockingTarget(target);
-              if (blockedOn !== null) {
-                // The submitter is not hydrated yet. We'll wait for it.
-                continue;
-              }
-              // The submitter must have been a part of a different React instance.
-              // Except the form isn't. We don't dispatch actions in this scenario.
-            }
-          } else {
-            action = (formProps: any).action;
-          }
-          if (typeof action === 'function') {
-            formReplayingQueue[i + 1] = action;
-          } else {
-            // Something went wrong so let's just delete this action.
-            formReplayingQueue.splice(i, 3);
-            i -= 3;
-          }
-          // Schedule a replay in case this unblocked something.
+  // Check the document if there are any queued form actions.
+  // If there's no ownerDocument, then this is the document.
+  const root = unblocked.ownerDocument || unblocked;
+  const formReplayingQueue: void | FormReplayingQueue = (root: any)
+    .$$reactFormReplay;
+  if (formReplayingQueue != null) {
+    for (let i = 0; i < formReplayingQueue.length; i += 3) {
+      const form: HTMLFormElement = formReplayingQueue[i];
+      const submitterOrAction:
+        | null
+        | HTMLInputElement
+        | HTMLButtonElement
+        | FormAction = formReplayingQueue[i + 1];
+      const formProps = getFiberCurrentPropsFromNode(form);
+      if (typeof submitterOrAction === 'function') {
+        // This action has already resolved. We're just waiting to dispatch it.
+        if (!formProps) {
+          // This was not part of this React instance. It might have been recently
+          // unblocking us from dispatching our events. So let's make sure we schedule
+          // a retry.
           scheduleReplayQueueIfNeeded(formReplayingQueue);
-          continue;
         }
-        // Something above this target is still blocked so we can't continue yet.
-        // We're not sure if this target is actually part of this React instance
-        // yet. It could be a different React as a child but at least some parent is.
-        // We must continue for any further queued actions.
+        continue;
       }
+      let target: Node = form;
+      if (formProps) {
+        // This form belongs to this React instance but the submitter might
+        // not be done yet.
+        let action: null | FormAction = null;
+        const submitter = submitterOrAction;
+        if (submitter && submitter.hasAttribute('formAction')) {
+          // The submitter is the one that is responsible for the action.
+          target = submitter;
+          const submitterProps = getFiberCurrentPropsFromNode(submitter);
+          if (submitterProps) {
+            // The submitter is part of this instance.
+            action = (submitterProps: any).formAction;
+          } else {
+            const blockedOn = findInstanceBlockingTarget(target);
+            if (blockedOn !== null) {
+              // The submitter is not hydrated yet. We'll wait for it.
+              continue;
+            }
+            // The submitter must have been a part of a different React instance.
+            // Except the form isn't. We don't dispatch actions in this scenario.
+          }
+        } else {
+          action = (formProps: any).action;
+        }
+        if (typeof action === 'function') {
+          formReplayingQueue[i + 1] = action;
+        } else {
+          // Something went wrong so let's just delete this action.
+          formReplayingQueue.splice(i, 3);
+          i -= 3;
+        }
+        // Schedule a replay in case this unblocked something.
+        scheduleReplayQueueIfNeeded(formReplayingQueue);
+        continue;
+      }
+      // Something above this target is still blocked so we can't continue yet.
+      // We're not sure if this target is actually part of this React instance
+      // yet. It could be a different React as a child but at least some parent is.
+      // We must continue for any further queued actions.
     }
   }
 }

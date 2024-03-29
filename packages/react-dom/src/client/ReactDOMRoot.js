@@ -19,7 +19,6 @@ import {
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
   enableAsyncActions,
-  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 
 export type RootType = {
@@ -33,7 +32,21 @@ export type CreateRootOptions = {
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  ) => void,
 };
 
 export type HydrateRootOptions = {
@@ -45,7 +58,21 @@ export type HydrateRootOptions = {
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  ) => void,
   formState?: ReactFormState<any, any> | null,
 };
 
@@ -68,20 +95,11 @@ import {
   updateContainer,
   flushSync,
   isAlreadyRendering,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-
-/* global reportError */
-const defaultOnRecoverableError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
 
 // $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {
@@ -163,6 +181,8 @@ export function createRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
 
@@ -200,6 +220,12 @@ export function createRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
@@ -215,6 +241,8 @@ export function createRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
   );
@@ -269,6 +297,8 @@ export function hydrateRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
   let formState = null;
@@ -285,13 +315,19 @@ export function hydrateRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
-    if (enableAsyncActions && enableFormActions) {
+    if (enableAsyncActions) {
       if (options.formState !== undefined) {
         formState = options.formState;
       }
@@ -307,6 +343,8 @@ export function hydrateRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState,

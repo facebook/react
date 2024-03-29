@@ -36,7 +36,6 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
-  enableFloat,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
@@ -508,14 +507,14 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    if (enableFloat && supportsResources && supportsSingletons) {
+    if (supportsResources && supportsSingletons) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
-    } else if (enableFloat && supportsResources) {
+    } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
@@ -847,12 +846,6 @@ export function createFiberFromText(
 ): Fiber {
   const fiber = createFiber(HostText, content, null, mode);
   fiber.lanes = lanes;
-  return fiber;
-}
-
-export function createFiberFromHostInstanceForDeletion(): Fiber {
-  const fiber = createFiber(HostComponent, null, null, NoMode);
-  fiber.elementType = 'DELETED';
   return fiber;
 }
 

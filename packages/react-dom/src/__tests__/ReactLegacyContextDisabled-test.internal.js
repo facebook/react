@@ -97,11 +97,11 @@ describe('ReactLegacyContextDisabled', () => {
         );
       });
     }).toErrorDev([
-      'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
+      'LegacyProvider uses the legacy childContextTypes API which was removed in React 19. ' +
         'Use React.createContext() instead.',
-      'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
+      'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with static contextType instead.',
-      'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
+      'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with React.useContext() instead.',
     ]);
     expect(container.textContent).toBe('{}undefinedundefined');
@@ -137,11 +137,11 @@ describe('ReactLegacyContextDisabled', () => {
         container,
       );
     }).toErrorDev([
-      'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
+      'LegacyProvider uses the legacy childContextTypes API which was removed in React 19. ' +
         'Use React.createContext() instead.',
-      'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
+      'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with static contextType instead.',
-      'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
+      'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
         'Use React.createContext() with React.useContext() instead.',
     ]);
     expect(text).toBe('<span>{}<!-- -->undefined<!-- -->undefined</span>');

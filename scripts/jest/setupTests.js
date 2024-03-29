@@ -3,6 +3,7 @@
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
+const shouldIgnoreConsoleWarn = require('./shouldIgnoreConsoleWarn');
 const {getTestFlags} = require('./TestFlags');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
@@ -67,7 +68,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const newMethod = function (format, ...args) {
       // Ignore uncaught errors reported by jsdom
       // and React addendums because they're too noisy.
-      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+      if (shouldIgnoreConsoleError(format, args)) {
+        return;
+      }
+
+      // Ignore certain React warnings causing test failures
+      if (methodName === 'warn' && shouldIgnoreConsoleWarn(format)) {
         return;
       }
 
@@ -241,13 +247,30 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectTestToFail = async (callback, error) => {
+  const expectTestToFail = async (callback, errorToThrowIfTestSucceeds) => {
     if (callback.length > 0) {
       throw Error(
         'Gated test helpers do not support the `done` callback. Return a ' +
           'promise instead.'
       );
     }
+
+    // Install a global error event handler. We treat global error events as
+    // test failures, same as Jest's default behavior.
+    //
+    // Becaused we installed our own error event handler, Jest will not report a
+    // test failure. Conceptually it's as if we wrapped the entire test event in
+    // a try-catch.
+    let didError = false;
+    const errorEventHandler = () => {
+      didError = true;
+    };
+    // eslint-disable-next-line no-restricted-globals
+    if (typeof addEventListener === 'function') {
+      // eslint-disable-next-line no-restricted-globals
+      addEventListener('error', errorEventHandler);
+    }
+
     try {
       const maybePromise = callback();
       if (
@@ -262,11 +285,20 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // throws, we won't have captured it.
       flushAllUnexpectedConsoleCalls();
     } catch (testError) {
-      // Failed as expected
-      resetAllUnexpectedConsoleCalls();
-      return;
+      didError = true;
     }
-    throw error;
+    resetAllUnexpectedConsoleCalls();
+    // eslint-disable-next-line no-restricted-globals
+    if (typeof removeEventListener === 'function') {
+      // eslint-disable-next-line no-restricted-globals
+      removeEventListener('error', errorEventHandler);
+    }
+
+    if (!didError) {
+      // The test did not error like we expected it to. Report this to Jest as
+      // a failure.
+      throw errorToThrowIfTestSucceeds;
+    }
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';

@@ -17,6 +17,7 @@ let createReactNativeComponentClass;
 let UIManager;
 let TextInputState;
 let ReactNativePrivateInterface;
+let act;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -31,6 +32,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
+    act = require('internal-test-utils').act;
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
@@ -476,7 +478,7 @@ describe('ReactNative', () => {
     );
   });
 
-  it('should throw for text not inside of a <Text> ancestor', () => {
+  it('should throw for text not inside of a <Text> ancestor', async () => {
     const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTScrollView',
@@ -490,18 +492,24 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
+    await expect(async () => {
+      await act(() => ReactNative.render(<View>this should warn</View>, 11));
+    }).rejects.toThrow(
       'Text strings must be rendered within a <Text> component.',
     );
 
-    expect(() =>
-      ReactNative.render(
-        <Text>
-          <ScrollView>hi hello hi</ScrollView>
-        </Text>,
-        11,
-      ),
-    ).toThrow('Text strings must be rendered within a <Text> component.');
+    await expect(async () => {
+      await act(() =>
+        ReactNative.render(
+          <Text>
+            <ScrollView>hi hello hi</ScrollView>
+          </Text>,
+          11,
+        ),
+      );
+    }).rejects.toThrow(
+      'Text strings must be rendered within a <Text> component.',
+    );
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {

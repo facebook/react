@@ -35,6 +35,8 @@ import type {
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
+
 import {
   enableBinaryFlight,
   enablePostpone,
@@ -54,6 +56,8 @@ import {
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
+
+import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
 import {
   REACT_LAZY_TYPE,
@@ -224,6 +228,7 @@ export type Response = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -689,6 +694,18 @@ function parseModelString(
         const metadata = getOutlinedModel(response, id);
         return createServerReferenceProxy(response, metadata);
       }
+      case 'T': {
+        // Temporary Reference
+        const id = parseInt(value.slice(2), 16);
+        const temporaryReferences = response._tempRefs;
+        if (temporaryReferences == null) {
+          throw new Error(
+            'Missing a temporary reference set but the RSC response returned a temporary reference. ' +
+              'Pass a temporaryReference option with the set that was used with the reply.',
+          );
+        }
+        return readTemporaryReference(temporaryReferences, id);
+      }
       case 'Q': {
         // Map
         const id = parseInt(value.slice(2), 16);
@@ -837,6 +854,7 @@ export function createResponse(
   callServer: void | CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
@@ -853,6 +871,7 @@ export function createResponse(
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
+    _tempRefs: temporaryReferences,
   };
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);

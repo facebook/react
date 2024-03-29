@@ -38,7 +38,6 @@ import {
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
-  enableFloat,
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
@@ -145,6 +144,7 @@ import {
   resetHydrationState,
   getIsHydrating,
   upgradeHydrationErrorsToRecoverable,
+  emitPendingHydrationWarnings,
 } from './ReactFiberHydrationContext';
 import {
   renderHasNotSuspendedYet,
@@ -894,6 +894,7 @@ function completeDehydratedSuspenseBoundary(
       }
       return false;
     } else {
+      emitPendingHydrationWarnings();
       // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
       // state since we're now exiting out of it. popHydrationState doesn't do that for us.
       resetHydrationState();
@@ -1010,6 +1011,7 @@ function completeWork(
         // that weren't hydrated.
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
+          emitPendingHydrationWarnings();
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);
@@ -1051,7 +1053,7 @@ function completeWork(
       return null;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         // The branching here is more complicated than you might expect because
         // a HostHoistable sometimes corresponds to a Resource and sometimes
         // corresponds to an Instance. It can also switch during an update.
@@ -1307,9 +1309,7 @@ function completeWork(
         const currentHostContext = getHostContext();
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
-          if (prepareToHydrateHostTextInstance(workInProgress)) {
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostTextInstance(workInProgress);
         } else {
           workInProgress.stateNode = createTextInstance(
             newText,

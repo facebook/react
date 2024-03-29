@@ -30,8 +30,7 @@ export const enableComponentStackLocations = true;
 // -----------------------------------------------------------------------------
 
 // TODO: Finish rolling out in www
-export const enableClientRenderFallbackOnTextMismatch = true;
-export const enableFormActions = true;
+export const favorSafetyOverHydrationPerf = true;
 export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing
@@ -100,8 +99,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableFloat = true;
-
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
@@ -113,15 +110,11 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
-export const alwaysThrottleDisappearingFallbacks = true;
-
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
-
-export const enableRenderableContext = false;
 
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
@@ -144,10 +137,6 @@ const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const disableLegacyContext = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
-// Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = __NEXT_MAJOR__;
-
-// Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
@@ -156,12 +145,6 @@ export const useModernStrictMode = __NEXT_MAJOR__;
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
 export const disableIEWorkarounds = __NEXT_MAJOR__;
-
-// Changes the behavior for rendering custom elements in both server rendering
-// and client rendering, mostly to allow JSX attributes to apply to the custom
-// element's object properties instead of only HTML attributes.
-// https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
@@ -190,22 +173,18 @@ export const enableInfiniteRenderLoopDetection = true;
 export const enableRefAsProp = __NEXT_MAJOR__;
 export const disableStringRefs = __NEXT_MAJOR__;
 
-// Not ready to break experimental yet.
-// Needs more internal cleanup
 // Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = false;
+export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
 export const disableLegacyMode = __NEXT_MAJOR__;
 
-// HTML boolean attributes need a special PropertyInfoRecord.
-// Between support of these attributes in browsers and React supporting them as
-// boolean props library users can use them as `<div someBooleanAttribute="" />`.
-// However, once React considers them as boolean props an empty string will
-// result in false property i.e. break existing usage.
-export const enableNewBooleanProps = __NEXT_MAJOR__;
+export const disableDOMTestUtils = __NEXT_MAJOR__;
+
+// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
+export const enableRenderableContext = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -213,8 +192,6 @@ export const enableNewBooleanProps = __NEXT_MAJOR__;
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
-
-export const disableModulePatternComponents = __NEXT_MAJOR__;
 
 export const enableUseRefAccessWarning = false;
 

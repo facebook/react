@@ -23,6 +23,9 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
@@ -55,6 +58,7 @@ import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   allowConcurrentByDefault,
   enableReactTestRendererWarning,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
 const act = React.act;
@@ -453,13 +457,6 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
-}
-
 function create(
   element: React$Element<any>,
   options: TestRendererOptions,
@@ -474,7 +471,10 @@ function create(
   unstable_flushSync: typeof flushSync,
 } {
   if (__DEV__) {
-    if (enableReactTestRendererWarning === true) {
+    if (
+      enableReactTestRendererWarning === true &&
+      global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true
+    ) {
       console.warn(
         'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       );
@@ -482,7 +482,10 @@ function create(
   }
 
   let createNodeMock = defaultTestOptions.createNodeMock;
-  let isConcurrent = false;
+  const isConcurrentOnly =
+    disableLegacyMode === true &&
+    global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true;
+  let isConcurrent = isConcurrentOnly;
   let isStrictMode = false;
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
@@ -490,8 +493,8 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
-      isConcurrent = true;
+    if (isConcurrentOnly === false) {
+      isConcurrent = options.unstable_isConcurrent;
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -515,7 +518,9 @@ function create(
     isStrictMode,
     concurrentUpdatesByDefault,
     '',
-    onRecoverableError,
+    defaultOnUncaughtError,
+    defaultOnCaughtError,
+    defaultOnRecoverableError,
     null,
   );
 

@@ -16,16 +16,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
   let NoError;
   let container;
   let windowOnError;
-  let waitForThrow;
+  let Scheduler;
 
   beforeEach(() => {
     jest.resetModules();
     act = require('internal-test-utils').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-
-    const InternalTestUtils = require('internal-test-utils');
-    waitForThrow = InternalTestUtils.waitForThrow;
+    Scheduler = require('scheduler');
 
     ErrorBoundary = class extends React.Component {
       state = {error: null};
@@ -46,6 +44,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
     document.body.appendChild(container);
     windowOnError = jest.fn();
     window.addEventListener('error', windowOnError);
+    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
+    spyOnDevAndProd(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -54,11 +54,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
     jest.restoreAllMocks();
   });
 
+  async function fakeAct(cb) {
+    // We don't use act/waitForThrow here because we want to observe how errors are reported for real.
+    await cb();
+    Scheduler.unstable_flushAll();
+  }
+
   describe('ReactDOMClient.createRoot', () => {
     it('logs errors during event handlers', async () => {
-      const originalError = console.error;
-      console.error = jest.fn();
-
       function Foo() {
         return (
           <button
@@ -75,13 +78,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
         root.render(<Foo />);
       });
 
-      await act(() => {
-        container.firstChild.dispatchEvent(
-          new MouseEvent('click', {
-            bubbles: true,
-          }),
-        );
-      });
+      container.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
 
       expect(windowOnError.mock.calls).toEqual([
         [
@@ -95,58 +96,64 @@ describe('ReactDOMConsoleErrorReporting', () => {
         [
           // Reported because we're in a browser click event:
           expect.objectContaining({
-            detail: expect.objectContaining({
-              message: 'Boom',
-            }),
-            type: 'unhandled exception',
+            message: 'Boom',
           }),
         ],
       ]);
 
       // Check next render doesn't throw.
       windowOnError.mockReset();
-      console.error = originalError;
+      console.error.mockReset();
       await act(() => {
         root.render(<NoError />);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
+      expect(console.error.mock.calls).toEqual([]);
     });
 
     it('logs render errors without an error boundary', async () => {
-      spyOnDevAndProd(console, 'error');
-
       function Foo() {
         throw Error('Boom');
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await fakeAct(() => {
         root.render(<Foo />);
-        await waitForThrow('Boom');
       });
 
       if (__DEV__) {
-        expect(windowOnError.mock.calls).toEqual([]);
-        expect(console.error.mock.calls).toEqual([
+        expect(windowOnError.mock.calls).toEqual([
           [
-            // Formatting
-            expect.stringContaining('%o'),
             expect.objectContaining({
               message: 'Boom',
             }),
+          ],
+        ]);
+        expect(console.error.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.warn.mock.calls).toEqual([
+          [
             // Addendum by React:
-            expect.stringContaining(
-              'The above error occurred in the <Foo> component',
-            ),
+            expect.stringContaining('%s'),
+            expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
-        // The top-level error was caught with try/catch,
-        // so in production we don't see an error event.
-        expect(windowOnError.mock.calls).toEqual([]);
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
         expect(console.error.mock.calls).toEqual([
           [
             // Reported by React with no extra message:
@@ -155,6 +162,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
         ]);
+        expect(console.warn.mock.calls).toEqual([]);
       }
 
       // Check next render doesn't throw.
@@ -241,24 +249,30 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await fakeAct(() => {
         root.render(<Foo />);
-        await waitForThrow('Boom');
       });
 
       if (__DEV__) {
-        expect(windowOnError.mock.calls).toEqual([]);
-        expect(console.error.mock.calls).toEqual([
+        expect(windowOnError.mock.calls).toEqual([
           [
-            // Formatting
-            expect.stringContaining('%o'),
             expect.objectContaining({
               message: 'Boom',
             }),
+          ],
+        ]);
+        expect(console.error.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.warn.mock.calls).toEqual([
+          [
             // Addendum by React:
-            expect.stringContaining(
-              'The above error occurred in the <Foo> component',
-            ),
+            expect.stringContaining('%s'),
+            expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
           ],
@@ -266,7 +280,13 @@ describe('ReactDOMConsoleErrorReporting', () => {
       } else {
         // The top-level error was caught with try/catch,
         // so in production we don't see an error event.
-        expect(windowOnError.mock.calls).toEqual([]);
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
         expect(console.error.mock.calls).toEqual([
           [
             // Reported by React with no extra message:
@@ -275,6 +295,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
         ]);
+        expect(console.warn.mock.calls).toEqual([]);
       }
 
       // Check next render doesn't throw.
@@ -364,32 +385,42 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
+      await fakeAct(() => {
         root.render(<Foo />);
-        await waitForThrow('Boom');
       });
 
       if (__DEV__) {
-        expect(windowOnError.mock.calls).toEqual([]);
-        expect(console.error.mock.calls).toEqual([
+        expect(windowOnError.mock.calls).toEqual([
           [
-            // Formatting
-            expect.stringContaining('%o'),
             expect.objectContaining({
               message: 'Boom',
             }),
+          ],
+        ]);
+        expect(console.error.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.warn.mock.calls).toEqual([
+          [
             // Addendum by React:
-            expect.stringContaining(
-              'The above error occurred in the <Foo> component',
-            ),
+            expect.stringContaining('%s'),
+            expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
           ],
         ]);
       } else {
-        // The top-level error was caught with try/catch,
-        // so in production we don't see an error event.
-        expect(windowOnError.mock.calls).toEqual([]);
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
         expect(console.error.mock.calls).toEqual([
           [
             // Reported by React with no extra message:
@@ -398,6 +429,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
         ]);
+        expect(console.warn.mock.calls).toEqual([]);
       }
 
       // Check next render doesn't throw.

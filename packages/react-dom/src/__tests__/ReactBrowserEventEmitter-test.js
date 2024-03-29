@@ -195,9 +195,7 @@ describe('ReactBrowserEventEmitter', () => {
     });
     window.addEventListener('error', errorHandler);
     try {
-      await act(() => {
-        CHILD.click();
-      });
+      CHILD.click();
       expect(idCallOrder.length).toBe(3);
       expect(idCallOrder[0]).toBe(CHILD);
       expect(idCallOrder[1]).toBe(PARENT);

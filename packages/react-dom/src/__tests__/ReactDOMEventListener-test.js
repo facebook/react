@@ -114,10 +114,18 @@ describe('ReactDOMEventListener', () => {
             this.setState({clicked: true});
           };
           componentDidMount() {
-            expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
+            expect(
+              ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+                this,
+              ),
+            ).toBe(container.firstChild);
           }
           componentDidUpdate() {
-            expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
+            expect(
+              ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+                this,
+              ),
+            ).toBe(container.firstChild);
           }
           render() {
             if (this.state.clicked) {

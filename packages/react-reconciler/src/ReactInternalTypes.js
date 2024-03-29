@@ -56,7 +56,8 @@ export type HookType =
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
-  | 'useFormState';
+  | 'useFormState'
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -259,9 +260,20 @@ type BaseFiberRootProperties = {
   // a reference to.
   identifierPrefix: string,
 
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {+digest?: ?string, +componentStack?: ?string},
   ) => void,
 
   formState: ReactFormState<any, any> | null,
@@ -410,6 +422,11 @@ export type Dispatcher = {
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
   useFormState?: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
+  useActionState?: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,

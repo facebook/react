@@ -119,10 +119,12 @@ describe('ReactFlushSync (AggregateError not available)', () => {
     overrideQueueMicrotask = true;
     let error;
     try {
-      ReactDOM.flushSync(() => {
-        root1.render(<Throws error={aahh} />);
-        root2.render(<Throws error={nooo} />);
-        root3.render(<Text text="aww" />);
+      await act(() => {
+        ReactDOM.flushSync(() => {
+          root1.render(<Throws error={aahh} />);
+          root2.render(<Throws error={nooo} />);
+          root3.render(<Text text="aww" />);
+        });
       });
     } catch (e) {
       error = e;
@@ -140,6 +142,6 @@ describe('ReactFlushSync (AggregateError not available)', () => {
     // AggregateError is not available, React throws the first error, then
     // throws the remaining errors in separate tasks.
     expect(error).toBe(aahh);
-    expect(flushFakeMicrotasks).toThrow(nooo);
+    await flushFakeMicrotasks();
   });
 });

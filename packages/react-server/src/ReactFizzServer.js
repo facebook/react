@@ -106,8 +106,8 @@ import {
   setCurrentResumableState,
   getThenableStateAfterSuspending,
   unwrapThenable,
-  getFormStateCount,
-  getFormStateMatchingIndex,
+  getActionStateCount,
+  getActionStateMatchingIndex,
 } from './ReactFizzHooks';
 import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
@@ -137,11 +137,9 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
-  disableModulePatternComponents,
   enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
-  enableFloat,
   enableCache,
   enablePostpone,
   enableRenderableContext,
@@ -1441,8 +1439,8 @@ function renderIndeterminateComponent(
     legacyContext,
   );
   const hasId = checkDidRenderIdHook();
-  const formStateCount = getFormStateCount();
-  const formStateMatchingIndex = getFormStateMatchingIndex();
+  const actionStateCount = getActionStateCount();
+  const actionStateMatchingIndex = getActionStateMatchingIndex();
 
   if (__DEV__) {
     // Support for module components is deprecated and is removed behind a flag.
@@ -1470,58 +1468,28 @@ function renderIndeterminateComponent(
     }
   }
 
-  if (
-    // Run these checks in production only if the flag is off.
-    // Eventually we'll delete this branch altogether.
-    !disableModulePatternComponents &&
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.render === 'function' &&
-    value.$$typeof === undefined
-  ) {
-    if (__DEV__) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
+  // Proceed under the assumption that this is a function component
+  if (__DEV__) {
+    if (disableLegacyContext && Component.contextTypes) {
+      console.error(
+        '%s uses the legacy contextTypes API which was removed in React 19. ' +
+          'Use React.createContext() with React.useContext() instead.',
+        getComponentNameFromType(Component) || 'Unknown',
+      );
     }
-
-    mountClassInstance(value, Component, props, legacyContext);
-    finishClassComponent(request, task, keyPath, value, Component, props);
-  } else {
-    // Proceed under the assumption that this is a function component
-    if (__DEV__) {
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
-      }
-    }
-    if (__DEV__) {
-      validateFunctionComponentInDev(Component);
-    }
-    finishFunctionComponent(
-      request,
-      task,
-      keyPath,
-      value,
-      hasId,
-      formStateCount,
-      formStateMatchingIndex,
-    );
   }
+  if (__DEV__) {
+    validateFunctionComponentInDev(Component);
+  }
+  finishFunctionComponent(
+    request,
+    task,
+    keyPath,
+    value,
+    hasId,
+    actionStateCount,
+    actionStateMatchingIndex,
+  );
   task.componentStack = previousComponentStack;
 }
 
@@ -1531,22 +1499,22 @@ function finishFunctionComponent(
   keyPath: KeyNode,
   children: ReactNodeList,
   hasId: boolean,
-  formStateCount: number,
-  formStateMatchingIndex: number,
+  actionStateCount: number,
+  actionStateMatchingIndex: number,
 ) {
-  let didEmitFormStateMarkers = false;
-  if (formStateCount !== 0 && request.formState !== null) {
-    // For each useFormState hook, emit a marker that indicates whether we
+  let didEmitActionStateMarkers = false;
+  if (actionStateCount !== 0 && request.formState !== null) {
+    // For each useActionState hook, emit a marker that indicates whether we
     // rendered using the form state passed at the root. We only emit these
     // markers if form state is passed at the root.
     const segment = task.blockedSegment;
     if (segment === null) {
       // Implies we're in reumable mode.
     } else {
-      didEmitFormStateMarkers = true;
+      didEmitActionStateMarkers = true;
       const target = segment.chunks;
-      for (let i = 0; i < formStateCount; i++) {
-        if (i === formStateMatchingIndex) {
+      for (let i = 0; i < actionStateCount; i++) {
+        if (i === actionStateMatchingIndex) {
           pushFormStateMarkerIsMatching(target);
         } else {
           pushFormStateMarkerIsNotMatching(target);
@@ -1570,8 +1538,8 @@ function finishFunctionComponent(
     // Like the other contexts, this does not need to be in a finally block
     // because renderNode takes care of unwinding the stack.
     task.treeContext = prevTreeContext;
-  } else if (didEmitFormStateMarkers) {
-    // If there were formState hooks, we must use the non-destructive path
+  } else if (didEmitActionStateMarkers) {
+    // If there were useActionState hooks, we must use the non-destructive path
     // because this component is not a pure indirection; we emitted markers
     // to the stream.
     renderNode(request, task, children, -1);
@@ -1691,16 +1659,16 @@ function renderForwardRef(
     ref,
   );
   const hasId = checkDidRenderIdHook();
-  const formStateCount = getFormStateCount();
-  const formStateMatchingIndex = getFormStateMatchingIndex();
+  const actionStateCount = getActionStateCount();
+  const actionStateMatchingIndex = getActionStateMatchingIndex();
   finishFunctionComponent(
     request,
     task,
     keyPath,
     children,
     hasId,
-    formStateCount,
-    formStateMatchingIndex,
+    actionStateCount,
+    actionStateMatchingIndex,
   );
   task.componentStack = previousComponentStack;
 }
@@ -3820,12 +3788,8 @@ function flushSegment(
     const id = boundary.rootSegmentID;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id);
 
-    // We are going to flush the fallback so we need to hoist the fallback
-    // state to the parent boundary
-    if (enableFloat) {
-      if (hoistableState) {
-        hoistHoistables(hoistableState, boundary.fallbackState);
-      }
+    if (hoistableState) {
+      hoistHoistables(hoistableState, boundary.fallbackState);
     }
     // Flush the fallback.
     flushSubtree(request, destination, segment, hoistableState);
@@ -3859,10 +3823,8 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
-    if (enableFloat) {
-      if (hoistableState) {
-        hoistHoistables(hoistableState, boundary.contentState);
-      }
+    if (hoistableState) {
+      hoistHoistables(hoistableState, boundary.contentState);
     }
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.renderState);
@@ -3927,14 +3889,11 @@ function flushCompletedBoundary(
   }
   completedSegments.length = 0;
 
-  if (enableFloat) {
-    writeHoistablesForBoundary(
-      destination,
-      boundary.contentState,
-      request.renderState,
-    );
-  }
-
+  writeHoistablesForBoundary(
+    destination,
+    boundary.contentState,
+    request.renderState,
+  );
   return writeCompletedBoundaryInstruction(
     destination,
     request.resumableState,
@@ -3965,15 +3924,11 @@ function flushPartialBoundary(
   }
   completedSegments.splice(0, i);
 
-  if (enableFloat) {
-    return writeHoistablesForBoundary(
-      destination,
-      boundary.contentState,
-      request.renderState,
-    );
-  } else {
-    return true;
-  }
+  return writeHoistablesForBoundary(
+    destination,
+    boundary.contentState,
+    request.renderState,
+  );
 }
 
 function flushPartiallyCompletedSegment(
@@ -4035,10 +3990,7 @@ function flushCompletedQueues(
         // We postponed the root, so we write nothing.
         return;
       } else if (request.pendingRootTasks === 0) {
-        if (enableFloat) {
-          flushPreamble(request, destination, completedRootSegment);
-        }
-
+        flushPreamble(request, destination, completedRootSegment);
         flushSegment(request, destination, completedRootSegment, null);
         request.completedRootSegment = null;
         writeCompletedRoot(destination, request.renderState);
@@ -4047,10 +3999,7 @@ function flushCompletedQueues(
         return;
       }
     }
-    if (enableFloat) {
-      writeHoistables(destination, request.resumableState, request.renderState);
-    }
-
+    writeHoistables(destination, request.resumableState, request.renderState);
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
@@ -4126,12 +4075,10 @@ function flushCompletedQueues(
       // either they have pending task or they're complete.
     ) {
       request.flushScheduled = false;
-      if (enableFloat) {
-        // We write the trailing tags but only if don't have any data to resume.
-        // If we need to resume we'll write the postamble in the resume instead.
-        if (!enablePostpone || request.trackedPostpones === null) {
-          writePostamble(destination, request.resumableState);
-        }
+      // We write the trailing tags but only if don't have any data to resume.
+      // If we need to resume we'll write the postamble in the resume instead.
+      if (!enablePostpone || request.trackedPostpones === null) {
+        writePostamble(destination, request.resumableState);
       }
       completeWriting(destination);
       flushBuffered(destination);
