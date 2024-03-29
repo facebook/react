@@ -31,6 +31,7 @@ export const enableDeferRootSchedulingToMicrotask = __TODO_NEXT_RN_MAJOR__;
 export const alwaysThrottleRetries = __TODO_NEXT_RN_MAJOR__;
 export const enableInfiniteRenderLoopDetection = __TODO_NEXT_RN_MAJOR__;
 export const enableComponentStackLocations = __TODO_NEXT_RN_MAJOR__;
+export const disableModulePatternComponents = __TODO_NEXT_RN_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // These are ready to flip after the next React npm release (or RN switches to

@@ -206,6 +206,8 @@ export const enableRenderableContext = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
+export const disableModulePatternComponents = __NEXT_MAJOR__;
+
 export const enableUseRefAccessWarning = false;
 
 // Enables time slicing for updates that aren't wrapped in startTransition.

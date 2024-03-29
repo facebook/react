@@ -132,7 +132,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate experimental || www
   it('regression: false positive for legacy suspense', async () => {
-    const Child = ({text}) => {
+    // Wrapping in memo because regular function components go through the
+    // mountIndeterminateComponent path, which acts like there's no `current`
+    // fiber even though there is. `memo` is not indeterminate, so it goes
+    // through the update path.
+    const Child = React.memo(({text}) => {
       // If text hasn't resolved, this will throw and exit before the passive
       // static effect flag is added by the useEffect call below.
       readText(text);
@@ -143,7 +147,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       Scheduler.log(text);
       return text;
-    };
+    });
 
     function App() {
       return (

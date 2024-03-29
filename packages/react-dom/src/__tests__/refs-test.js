@@ -11,6 +11,7 @@
 
 let React = require('react');
 let ReactDOMClient = require('react-dom/client');
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let act = require('internal-test-utils').act;
 
 // This is testing if string refs are deleted from `instance.refs`
@@ -23,6 +24,7 @@ describe('reactiverefs', () => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('internal-test-utils').act;
   });
 
@@ -193,6 +195,38 @@ describe('reactiverefs', () => {
   });
 });
 
+if (!ReactFeatureFlags.disableModulePatternComponents) {
+  describe('factory components', () => {
+    it('Should correctly get the ref', async () => {
+      function Comp() {
+        return {
+          elemRef: React.createRef(),
+          render() {
+            return <div ref={this.elemRef} />;
+          },
+        };
+      }
+
+      let inst;
+      await expect(async () => {
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+
+        await act(() => {
+          root.render(<Comp ref={current => (inst = current)} />);
+        });
+      }).toErrorDev(
+        'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
+          'Change Comp to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Comp.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
+      expect(inst.elemRef.current.tagName).toBe('DIV');
+    });
+  });
+}
+
 /**
  * Tests that when a ref hops around children, we can track that correctly.
  */
@@ -202,6 +236,7 @@ describe('ref swapping', () => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('internal-test-utils').act;
 
     RefHopsAround = class extends React.Component {

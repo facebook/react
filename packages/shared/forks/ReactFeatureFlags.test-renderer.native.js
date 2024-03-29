@@ -34,6 +34,7 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
+export const disableModulePatternComponents = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
