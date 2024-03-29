@@ -820,6 +820,7 @@ function encodeErrorForBoundary(
   digest: ?string,
   error: mixed,
   thrownInfo: ThrownInfo,
+  wasAborted: boolean,
 ) {
   boundary.errorDigest = digest;
   if (__DEV__) {
@@ -838,8 +839,10 @@ function encodeErrorForBoundary(
       message = String(error);
       stack = null;
     }
-
-    boundary.errorMessage = message;
+    const prefix = wasAborted
+      ? 'Switched to client rendering because the server rendering aborted due to:\n\n'
+      : 'Switched to client rendering because the server rendering errored:\n\n';
+    boundary.errorMessage = prefix + message;
     boundary.errorStack = stack;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
@@ -1021,7 +1024,7 @@ function renderSuspenseBoundary(
     } else {
       errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
+    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo, false);
 
     untrackBoundary(request, newBoundary);
 
@@ -1165,7 +1168,13 @@ function replaySuspenseBoundary(
     } else {
       errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    encodeErrorForBoundary(resumedBoundary, errorDigest, error, thrownInfo);
+    encodeErrorForBoundary(
+      resumedBoundary,
+      errorDigest,
+      error,
+      thrownInfo,
+      false,
+    );
 
     task.replay.pendingTasks--;
 
@@ -2962,6 +2971,7 @@ function erroredReplay(
     error,
     errorDigest,
     errorInfo,
+    false,
   );
 }
 
@@ -2992,7 +3002,7 @@ function erroredTask(
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, false);
       untrackBoundary(request, boundary);
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -3032,6 +3042,7 @@ function abortRemainingSuspenseBoundary(
   error: mixed,
   errorDigest: ?string,
   errorInfo: ThrownInfo,
+  wasAborted: boolean,
 ): void {
   const resumedBoundary = createSuspenseBoundary(request, new Set());
   resumedBoundary.parentFlushed = true;
@@ -3039,17 +3050,13 @@ function abortRemainingSuspenseBoundary(
   resumedBoundary.rootSegmentID = rootSegmentID;
 
   resumedBoundary.status = CLIENT_RENDERED;
-  let errorMessage = error;
-  if (__DEV__) {
-    const errorPrefix = 'The server did not finish this Suspense boundary: ';
-    if (error && typeof error.message === 'string') {
-      errorMessage = errorPrefix + error.message;
-    } else {
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      errorMessage = errorPrefix + String(error);
-    }
-  }
-  encodeErrorForBoundary(resumedBoundary, errorDigest, errorMessage, errorInfo);
+  encodeErrorForBoundary(
+    resumedBoundary,
+    errorDigest,
+    error,
+    errorInfo,
+    wasAborted,
+  );
 
   if (resumedBoundary.parentFlushed) {
     request.clientRenderedBoundaries.push(resumedBoundary);
@@ -3064,6 +3071,7 @@ function abortRemainingReplayNodes(
   error: mixed,
   errorDigest: ?string,
   errorInfo: ThrownInfo,
+  aborted: boolean,
 ): void {
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
@@ -3076,6 +3084,7 @@ function abortRemainingReplayNodes(
         error,
         errorDigest,
         errorInfo,
+        aborted,
       );
     } else {
       const boundaryNode: ReplaySuspenseBoundary = node;
@@ -3086,6 +3095,7 @@ function abortRemainingReplayNodes(
         error,
         errorDigest,
         errorInfo,
+        aborted,
       );
     }
   }
@@ -3102,7 +3112,7 @@ function abortRemainingReplayNodes(
       );
     } else if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, aborted);
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -3178,6 +3188,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error,
             errorDigest,
             errorInfo,
+            true,
           );
         }
         request.pendingRootTasks--;
@@ -3207,18 +3218,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       } else {
         errorDigest = logRecoverableError(request, error, errorInfo);
       }
-      let errorMessage = error;
-      if (__DEV__) {
-        const errorPrefix =
-          'The server did not finish this Suspense boundary: ';
-        if (error && typeof error.message === 'string') {
-          errorMessage = errorPrefix + error.message;
-        } else {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          errorMessage = errorPrefix + String(error);
-        }
-      }
-      encodeErrorForBoundary(boundary, errorDigest, errorMessage, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
       untrackBoundary(request, boundary);
 
