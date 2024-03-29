@@ -33,6 +33,7 @@ for package in ${packages[@]}; do
     if [ -d $dir/dist ]; then
       package_name=$(basename $dir)
       cp -R $dir/dist/. ./forget-feedback/dist/$package_name
+      cp $dir/package.json ./forget-feedback/dist/$package_name
     fi
   done
 done
