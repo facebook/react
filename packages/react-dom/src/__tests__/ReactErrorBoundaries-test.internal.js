@@ -879,56 +879,6 @@ describe('ReactErrorBoundaries', () => {
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
-  // @gate !disableModulePatternComponents
-  it('renders an error state if module-style context provider throws in componentWillMount', async () => {
-    function BrokenComponentWillMountWithContext() {
-      return {
-        getChildContext() {
-          return {foo: 42};
-        },
-        render() {
-          return <div>{this.props.children}</div>;
-        },
-        UNSAFE_componentWillMount() {
-          throw new Error('Hello');
-        },
-      };
-    }
-    BrokenComponentWillMountWithContext.childContextTypes = {
-      foo: PropTypes.number,
-    };
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <ErrorBoundary>
-            <BrokenComponentWillMountWithContext />
-          </ErrorBoundary>,
-        );
-      });
-    }).toErrorDev([
-      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
-        'returns a class instance. ' +
-        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      ...gate(flags =>
-        flags.disableLegacyContext
-          ? [
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.',
-            ]
-          : [],
-      ),
-    ]);
-
-    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-  });
-
   it('mounts the error message if mounting fails', async () => {
     function renderError(error) {
       return <ErrorMessage message={error.message} />;

@@ -137,7 +137,6 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
-  disableModulePatternComponents,
   enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
@@ -1469,58 +1468,28 @@ function renderIndeterminateComponent(
     }
   }
 
-  if (
-    // Run these checks in production only if the flag is off.
-    // Eventually we'll delete this branch altogether.
-    !disableModulePatternComponents &&
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.render === 'function' &&
-    value.$$typeof === undefined
-  ) {
-    if (__DEV__) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
+  // Proceed under the assumption that this is a function component
+  if (__DEV__) {
+    if (disableLegacyContext && Component.contextTypes) {
+      console.error(
+        '%s uses the legacy contextTypes API which was removed in React 19. ' +
+          'Use React.createContext() with React.useContext() instead.',
+        getComponentNameFromType(Component) || 'Unknown',
+      );
     }
-
-    mountClassInstance(value, Component, props, legacyContext);
-    finishClassComponent(request, task, keyPath, value, Component, props);
-  } else {
-    // Proceed under the assumption that this is a function component
-    if (__DEV__) {
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which was removed in React 19. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
-      }
-    }
-    if (__DEV__) {
-      validateFunctionComponentInDev(Component);
-    }
-    finishFunctionComponent(
-      request,
-      task,
-      keyPath,
-      value,
-      hasId,
-      actionStateCount,
-      actionStateMatchingIndex,
-    );
   }
+  if (__DEV__) {
+    validateFunctionComponentInDev(Component);
+  }
+  finishFunctionComponent(
+    request,
+    task,
+    keyPath,
+    value,
+    hasId,
+    actionStateCount,
+    actionStateMatchingIndex,
+  );
   task.componentStack = previousComponentStack;
 }
 
