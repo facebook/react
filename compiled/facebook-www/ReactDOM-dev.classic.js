@@ -13547,11 +13547,13 @@ if (__DEV__) {
     var didWarnUncachedGetSnapshot;
     var didWarnAboutUseWrappedInTryCatch;
     var didWarnAboutAsyncClientComponent;
+    var didWarnAboutUseFormState;
 
     {
       didWarnAboutMismatchedHooksForComponent = new Set();
       didWarnAboutUseWrappedInTryCatch = new Set();
       didWarnAboutAsyncClientComponent = new Set();
+      didWarnAboutUseFormState = new Set();
     } // The effect "instance" is a shared object that remains the same for the entire
     // lifetime of an effect. In Rust terms, a RefCell. We use it to store the
     // "destroy" function that is returned from an effect, because that is stateful.
@@ -13692,6 +13694,24 @@ if (__DEV__) {
               table
             );
           }
+        }
+      }
+    }
+
+    function warnOnUseFormStateInDev() {
+      {
+        var componentName = getComponentNameFromFiber(
+          currentlyRenderingFiber$1
+        );
+
+        if (!didWarnAboutUseFormState.has(componentName)) {
+          didWarnAboutUseFormState.add(componentName);
+
+          error(
+            "ReactDOM.useFormState has been deprecated and replaced by " +
+              "React.useActionState. Please update %s to use React.useActionState.",
+            componentName
+          );
         }
       }
     }
@@ -16924,6 +16944,7 @@ if (__DEV__) {
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
             updateHookTypesDev();
+            warnOnUseFormStateInDev();
             return mountActionState(action, initialState);
           };
 
@@ -17092,6 +17113,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
+          warnOnUseFormStateInDev();
           return updateActionState(action);
         };
 
@@ -17265,6 +17287,7 @@ if (__DEV__) {
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
+          warnOnUseFormStateInDev();
           return rerenderActionState(action);
         };
 
@@ -36345,7 +36368,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-698b36f3";
+    var ReactVersion = "19.0.0-www-classic-eb2e3f4c";
 
     function createPortal$1(
       children,
