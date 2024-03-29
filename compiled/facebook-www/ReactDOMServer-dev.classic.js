@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-ba16cd90";
+    var ReactVersion = "19.0.0-www-classic-4615f507";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -680,8 +680,7 @@ if (__DEV__) {
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps;
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, false is used for a new modern build.
 
     // $FlowFixMe[method-unbinding]
@@ -1165,9 +1164,9 @@ if (__DEV__) {
       }
     }
 
+    // When adding attributes to the HTML or SVG allowed attribute list, be sure to
     // also add them to this module to ensure casing and incorrect name
     // warnings.
-
     var possibleStandardNames = {
       // HTML
       accept: "accept",
@@ -1242,6 +1241,7 @@ if (__DEV__) {
       id: "id",
       imagesizes: "imageSizes",
       imagesrcset: "imageSrcSet",
+      inert: "inert",
       innerhtml: "innerHTML",
       inputmode: "inputMode",
       integrity: "integrity",
@@ -1661,10 +1661,6 @@ if (__DEV__) {
       zoomandpan: "zoomAndPan"
     };
 
-    if (enableNewBooleanProps) {
-      possibleStandardNames.inert = "inert";
-    }
-
     var warnedProperties = {};
     var EVENT_NAME_REGEX = /^on./;
     var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
@@ -1899,19 +1895,12 @@ if (__DEV__) {
               case "seamless":
               case "itemScope":
               case "capture":
-              case "download": {
+              case "download":
+              case "inert": {
                 // Boolean properties can accept boolean values
                 return true;
               }
               // fallthrough
-
-              case "inert": {
-                if (enableNewBooleanProps) {
-                  // Boolean properties can accept boolean values
-                  return true;
-                }
-              }
-              // fallthrough for new boolean props without the flag on
 
               default: {
                 var prefix = name.toLowerCase().slice(0, 5);
@@ -1990,16 +1979,10 @@ if (__DEV__) {
                 case "reversed":
                 case "scoped":
                 case "seamless":
-                case "itemScope": {
+                case "itemScope":
+                case "inert": {
                   break;
                 }
-
-                case "inert": {
-                  if (enableNewBooleanProps) {
-                    break;
-                  }
-                }
-                // fallthrough for new boolean props without the flag on
 
                 default: {
                   return true;
@@ -3599,38 +3582,36 @@ if (__DEV__) {
           return;
 
         case "inert": {
-          if (enableNewBooleanProps) {
-            {
-              if (
-                value === "" &&
-                !didWarnForNewBooleanPropsWithEmptyValue[name]
-              ) {
-                didWarnForNewBooleanPropsWithEmptyValue[name] = true;
-
-                error(
-                  "Received an empty string for a boolean attribute `%s`. " +
-                    "This will treat the attribute as if it were false. " +
-                    "Either pass `false` to silence this warning, or " +
-                    "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
-                  name
-                );
-              }
-            } // Boolean
-
+          {
             if (
-              value &&
-              typeof value !== "function" &&
-              typeof value !== "symbol"
+              value === "" &&
+              !didWarnForNewBooleanPropsWithEmptyValue[name]
             ) {
-              target.push(
-                attributeSeparator,
-                stringToChunk(name),
-                attributeEmptyString
+              didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+
+              error(
+                "Received an empty string for a boolean attribute `%s`. " +
+                  "This will treat the attribute as if it were false. " +
+                  "Either pass `false` to silence this warning, or " +
+                  "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                name
               );
             }
+          } // Boolean
 
-            return;
+          if (
+            value &&
+            typeof value !== "function" &&
+            typeof value !== "symbol"
+          ) {
+            target.push(
+              attributeSeparator,
+              stringToChunk(name),
+              attributeEmptyString
+            );
           }
+
+          return;
         }
         // fallthrough for new boolean props without the flag on
 

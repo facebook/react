@@ -154,7 +154,6 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-      enableNewBooleanProps = dynamicFeatureFlags.enableNewBooleanProps,
       favorSafetyOverHydrationPerf =
         dynamicFeatureFlags.favorSafetyOverHydrationPerf; // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
@@ -6215,9 +6214,9 @@ if (__DEV__) {
       return aliases.get(name) || name;
     }
 
+    // When adding attributes to the HTML or SVG allowed attribute list, be sure to
     // also add them to this module to ensure casing and incorrect name
     // warnings.
-
     var possibleStandardNames = {
       // HTML
       accept: "accept",
@@ -6292,6 +6291,7 @@ if (__DEV__) {
       id: "id",
       imagesizes: "imageSizes",
       imagesrcset: "imageSrcSet",
+      inert: "inert",
       innerhtml: "innerHTML",
       inputmode: "inputMode",
       integrity: "integrity",
@@ -6710,10 +6710,6 @@ if (__DEV__) {
       z: "z",
       zoomandpan: "zoomAndPan"
     };
-
-    if (enableNewBooleanProps) {
-      possibleStandardNames.inert = "inert";
-    }
 
     var ariaProperties = {
       "aria-current": 0,
@@ -7146,19 +7142,12 @@ if (__DEV__) {
               case "seamless":
               case "itemScope":
               case "capture":
-              case "download": {
+              case "download":
+              case "inert": {
                 // Boolean properties can accept boolean values
                 return true;
               }
               // fallthrough
-
-              case "inert": {
-                if (enableNewBooleanProps) {
-                  // Boolean properties can accept boolean values
-                  return true;
-                }
-              }
-              // fallthrough for new boolean props without the flag on
 
               default: {
                 var prefix = name.toLowerCase().slice(0, 5);
@@ -7237,16 +7226,10 @@ if (__DEV__) {
                 case "reversed":
                 case "scoped":
                 case "seamless":
-                case "itemScope": {
+                case "itemScope":
+                case "inert": {
                   break;
                 }
-
-                case "inert": {
-                  if (enableNewBooleanProps) {
-                    break;
-                  }
-                }
-                // fallthrough for new boolean props without the flag on
 
                 default: {
                   return true;
@@ -36368,7 +36351,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-eb2e3f4c";
+    var ReactVersion = "19.0.0-www-classic-36b47fc1";
 
     function createPortal$1(
       children,
@@ -41512,29 +41495,21 @@ if (__DEV__) {
         }
         // Boolean
 
-        case "inert":
-          if (!enableNewBooleanProps) {
-            setValueForAttribute(domElement, key, value);
-            break;
-          } else {
-            {
-              if (
-                value === "" &&
-                !didWarnForNewBooleanPropsWithEmptyValue[key]
-              ) {
-                didWarnForNewBooleanPropsWithEmptyValue[key] = true;
+        case "inert": {
+          {
+            if (value === "" && !didWarnForNewBooleanPropsWithEmptyValue[key]) {
+              didWarnForNewBooleanPropsWithEmptyValue[key] = true;
 
-                error(
-                  "Received an empty string for a boolean attribute `%s`. " +
-                    "This will treat the attribute as if it were false. " +
-                    "Either pass `false` to silence this warning, or " +
-                    "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
-                  key
-                );
-              }
+              error(
+                "Received an empty string for a boolean attribute `%s`. " +
+                  "This will treat the attribute as if it were false. " +
+                  "Either pass `false` to silence this warning, or " +
+                  "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                key
+              );
             }
           }
-
+        }
         // fallthrough for new boolean props without the flag on
 
         case "allowFullScreen":
@@ -43932,35 +43907,32 @@ if (__DEV__) {
             continue;
 
           case "inert":
-            if (enableNewBooleanProps) {
-              {
-                if (
-                  value === "" &&
-                  !didWarnForNewBooleanPropsWithEmptyValue[propKey]
-                ) {
-                  didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
+            {
+              if (
+                value === "" &&
+                !didWarnForNewBooleanPropsWithEmptyValue[propKey]
+              ) {
+                didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
 
-                  error(
-                    "Received an empty string for a boolean attribute `%s`. " +
-                      "This will treat the attribute as if it were false. " +
-                      "Either pass `false` to silence this warning, or " +
-                      "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
-                    propKey
-                  );
-                }
+                error(
+                  "Received an empty string for a boolean attribute `%s`. " +
+                    "This will treat the attribute as if it were false. " +
+                    "Either pass `false` to silence this warning, or " +
+                    "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                  propKey
+                );
               }
-
-              hydrateBooleanAttribute(
-                domElement,
-                propKey,
-                propKey,
-                value,
-                extraAttributes,
-                serverDifferences
-              );
-              continue;
             }
 
+            hydrateBooleanAttribute(
+              domElement,
+              propKey,
+              propKey,
+              value,
+              extraAttributes,
+              serverDifferences
+            );
+            continue;
           // fallthrough for new boolean props without the flag on
 
           default: {
