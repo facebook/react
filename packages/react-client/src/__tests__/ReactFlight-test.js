@@ -2108,6 +2108,13 @@ describe('ReactFlight', () => {
       throw new Error('err');
     }
 
+    // Assign to `mockConsoleLog` so we can still inspect it when `console.log`
+    // is overridden by the test modules. The original function will be restored
+    // after this test finishes by `jest.restoreAllMocks()`.
+    const mockConsoleLog = spyOnDevAndProd(console, 'log').mockImplementation(
+      () => {},
+    );
+
     let transport;
     expect(() => {
       // Reset the modules so that we get a new overridden console on top of the
@@ -2120,22 +2127,18 @@ describe('ReactFlight', () => {
       transport = ReactNoopFlightServer.render({root: <ServerComponent />});
     }).toErrorDev('err');
 
-    const log = console.log;
-    try {
-      console.log = jest.fn();
-      // The error should not actually get logged because we're not awaiting the root
-      // so it's not thrown but the server log also shouldn't be replayed.
-      await ReactNoopFlightClient.read(transport);
+    mockConsoleLog.mockClear();
 
-      expect(console.log).toHaveBeenCalledTimes(1);
-      expect(console.log.mock.calls[0][0]).toBe('hi');
-      expect(console.log.mock.calls[0][1].prop).toBe(123);
-      const loggedFn = console.log.mock.calls[0][1].fn;
-      expect(typeof loggedFn).toBe('function');
-      expect(loggedFn).not.toBe(foo);
-      expect(loggedFn.toString()).toBe(foo.toString());
-    } finally {
-      console.log = log;
-    }
+    // The error should not actually get logged because we're not awaiting the root
+    // so it's not thrown but the server log also shouldn't be replayed.
+    await ReactNoopFlightClient.read(transport);
+
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    expect(mockConsoleLog.mock.calls[0][1].prop).toBe(123);
+    const loggedFn = mockConsoleLog.mock.calls[0][1].fn;
+    expect(typeof loggedFn).toBe('function');
+    expect(loggedFn).not.toBe(foo);
+    expect(loggedFn.toString()).toBe(foo.toString());
   });
 });

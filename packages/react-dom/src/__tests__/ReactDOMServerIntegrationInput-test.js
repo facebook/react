@@ -48,7 +48,6 @@ desc('ReactDOMServerIntegrationInput', () => {
   });
 
   itRenders('an input with a bigint value and an onChange', async render => {
-    console.log(gate(flags => flags.enableBigIntSupport));
     const e = await render(<input value={5n} onChange={() => {}} />);
     expect(e.value).toBe(
       gate(flags => flags.enableBigIntSupport) ||

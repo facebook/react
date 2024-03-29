@@ -1611,7 +1611,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', async () => {
-      spyOnDevAndProd(console, 'log');
+      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -1921,7 +1921,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work load and error events on <image> element in SVG', async () => {
-      spyOnDevAndProd(console, 'log');
+      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
