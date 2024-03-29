@@ -90,7 +90,6 @@ import {
 } from './ReactTypeOfMode';
 import {
   HostRoot,
-  IndeterminateComponent,
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
@@ -2395,12 +2394,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     startProfilerTimer(unitOfWork);
   }
   switch (unitOfWork.tag) {
-    case IndeterminateComponent: {
-      // Because it suspended with `use`, we can assume it's a
-      // function component.
-      unitOfWork.tag = FunctionComponent;
-      // Fallthrough to the next branch.
-    }
     case SimpleMemoComponent:
     case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
@@ -3823,7 +3816,6 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
 
     const tag = fiber.tag;
     if (
-      tag !== IndeterminateComponent &&
       tag !== HostRoot &&
       tag !== ClassComponent &&
       tag !== FunctionComponent &&
