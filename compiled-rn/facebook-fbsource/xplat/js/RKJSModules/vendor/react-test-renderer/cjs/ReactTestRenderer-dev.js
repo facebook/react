@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bcb9ae48fd24d391c11eab7a159bcc36>>
+ * @generated SignedSource<<1db853e0d856929a31f2401594157de8>>
  */
 
 "use strict";
@@ -138,7 +138,7 @@ if (__DEV__) {
     }
 
     var debugRenderPhaseSideEffectsForStrictMode = false;
-    var enableSchedulingProfiler = false;
+    var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -147,7 +147,6 @@ if (__DEV__) {
     var enableLazyContextPropagation = false;
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
-    var alwaysThrottleRetries = true;
     var disableLegacyMode = false;
     var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
@@ -963,6 +962,7 @@ if (__DEV__) {
 
     var rendererID = null;
     var injectedHook = null;
+    var injectedProfilingHooks = null;
     var hasLoggedError = false;
     var isDevToolsPresent =
       typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined";
@@ -994,7 +994,15 @@ if (__DEV__) {
       }
 
       try {
-        if (enableSchedulingProfiler);
+        if (enableSchedulingProfiler) {
+          // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+          // This gives DevTools a way to feature detect that isn't tied to version number
+          // (since profiling and timeline are controlled by different feature flags).
+          internals = assign({}, internals, {
+            getLaneLabelMap: getLaneLabelMap,
+            injectProfilingHooks: injectProfilingHooks
+          });
+        }
 
         rendererID = hook.inject(internals); // We have successfully injected, so now it is safe to set up hooks.
 
@@ -1129,11 +1137,279 @@ if (__DEV__) {
       }
     } // Profiler API hooks
 
-    function injectProfilingHooks(profilingHooks) {}
+    function injectProfilingHooks(profilingHooks) {
+      injectedProfilingHooks = profilingHooks;
+    }
 
     function getLaneLabelMap() {
       {
-        return null;
+        var map = new Map();
+        var lane = 1;
+
+        for (var index = 0; index < TotalLanes; index++) {
+          var label = getLabelForLane(lane);
+          map.set(lane, label);
+          lane *= 2;
+        }
+
+        return map;
+      }
+    }
+
+    function markCommitStarted(lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markCommitStarted === "function"
+        ) {
+          injectedProfilingHooks.markCommitStarted(lanes);
+        }
+      }
+    }
+    function markCommitStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markCommitStopped === "function"
+        ) {
+          injectedProfilingHooks.markCommitStopped();
+        }
+      }
+    }
+    function markComponentRenderStarted(fiber) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentRenderStarted ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentRenderStarted(fiber);
+        }
+      }
+    }
+    function markComponentRenderStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentRenderStopped ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentRenderStopped();
+        }
+      }
+    }
+    function markComponentPassiveEffectMountStarted(fiber) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentPassiveEffectMountStarted(fiber);
+        }
+      }
+    }
+    function markComponentPassiveEffectMountStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentPassiveEffectMountStopped();
+        }
+      }
+    }
+    function markComponentPassiveEffectUnmountStarted(fiber) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(
+            fiber
+          );
+        }
+      }
+    }
+    function markComponentPassiveEffectUnmountStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentPassiveEffectUnmountStopped();
+        }
+      }
+    }
+    function markComponentLayoutEffectMountStarted(fiber) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentLayoutEffectMountStarted(fiber);
+        }
+      }
+    }
+    function markComponentLayoutEffectMountStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentLayoutEffectMountStopped();
+        }
+      }
+    }
+    function markComponentLayoutEffectUnmountStarted(fiber) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
+        }
+      }
+    }
+    function markComponentLayoutEffectUnmountStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped ===
+            "function"
+        ) {
+          injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
+        }
+      }
+    }
+    function markComponentErrored(fiber, thrownValue, lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentErrored === "function"
+        ) {
+          injectedProfilingHooks.markComponentErrored(
+            fiber,
+            thrownValue,
+            lanes
+          );
+        }
+      }
+    }
+    function markComponentSuspended(fiber, wakeable, lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markComponentSuspended === "function"
+        ) {
+          injectedProfilingHooks.markComponentSuspended(fiber, wakeable, lanes);
+        }
+      }
+    }
+    function markLayoutEffectsStarted(lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markLayoutEffectsStarted === "function"
+        ) {
+          injectedProfilingHooks.markLayoutEffectsStarted(lanes);
+        }
+      }
+    }
+    function markLayoutEffectsStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markLayoutEffectsStopped === "function"
+        ) {
+          injectedProfilingHooks.markLayoutEffectsStopped();
+        }
+      }
+    }
+    function markPassiveEffectsStarted(lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markPassiveEffectsStarted === "function"
+        ) {
+          injectedProfilingHooks.markPassiveEffectsStarted(lanes);
+        }
+      }
+    }
+    function markPassiveEffectsStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markPassiveEffectsStopped === "function"
+        ) {
+          injectedProfilingHooks.markPassiveEffectsStopped();
+        }
+      }
+    }
+    function markRenderStarted(lanes) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markRenderStarted === "function"
+        ) {
+          injectedProfilingHooks.markRenderStarted(lanes);
+        }
+      }
+    }
+    function markRenderYielded() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markRenderYielded === "function"
+        ) {
+          injectedProfilingHooks.markRenderYielded();
+        }
+      }
+    }
+    function markRenderStopped() {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markRenderStopped === "function"
+        ) {
+          injectedProfilingHooks.markRenderStopped();
+        }
+      }
+    }
+    function markRenderScheduled(lane) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markRenderScheduled === "function"
+        ) {
+          injectedProfilingHooks.markRenderScheduled(lane);
+        }
+      }
+    }
+    function markForceUpdateScheduled(fiber, lane) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markForceUpdateScheduled === "function"
+        ) {
+          injectedProfilingHooks.markForceUpdateScheduled(fiber, lane);
+        }
+      }
+    }
+    function markStateUpdateScheduled(fiber, lane) {
+      {
+        if (
+          injectedProfilingHooks !== null &&
+          typeof injectedProfilingHooks.markStateUpdateScheduled === "function"
+        ) {
+          injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
+        }
       }
     }
 
@@ -1296,6 +1572,67 @@ if (__DEV__) {
 
     var UpdateLanes =
       SyncLane | InputContinuousLane | DefaultLane | TransitionLanes; // This function is used for the experimental timeline (react-devtools-timeline)
+    // It should be kept in sync with the Lanes values above.
+
+    function getLabelForLane(lane) {
+      {
+        if (lane & SyncHydrationLane) {
+          return "SyncHydrationLane";
+        }
+
+        if (lane & SyncLane) {
+          return "Sync";
+        }
+
+        if (lane & InputContinuousHydrationLane) {
+          return "InputContinuousHydration";
+        }
+
+        if (lane & InputContinuousLane) {
+          return "InputContinuous";
+        }
+
+        if (lane & DefaultHydrationLane) {
+          return "DefaultHydration";
+        }
+
+        if (lane & DefaultLane) {
+          return "Default";
+        }
+
+        if (lane & TransitionHydrationLane) {
+          return "TransitionHydration";
+        }
+
+        if (lane & TransitionLanes) {
+          return "Transition";
+        }
+
+        if (lane & RetryLanes) {
+          return "Retry";
+        }
+
+        if (lane & SelectiveHydrationLane) {
+          return "SelectiveHydration";
+        }
+
+        if (lane & IdleHydrationLane) {
+          return "IdleHydration";
+        }
+
+        if (lane & IdleLane) {
+          return "Idle";
+        }
+
+        if (lane & OffscreenLane) {
+          return "Offscreen";
+        }
+
+        if (lane & DeferredLane) {
+          return "Deferred";
+        }
+      }
+    }
     var NoTimestamp = -1;
     var nextTransitionLane = TransitionLane1;
     var nextRetryLane = RetryLane1;
@@ -10070,6 +10407,8 @@ if (__DEV__) {
           entangleTransitionUpdate(root, queue, lane);
         }
       }
+
+      markUpdateInDevTools(fiber, lane);
     }
 
     function dispatchSetState(fiber, queue, action) {
@@ -10156,6 +10495,8 @@ if (__DEV__) {
           entangleTransitionUpdate(root, queue, lane);
         }
       }
+
+      markUpdateInDevTools(fiber, lane);
     }
 
     function dispatchOptimisticSetState(
@@ -10237,6 +10578,8 @@ if (__DEV__) {
           // entangleTransitionUpdate here.
         }
       }
+
+      markUpdateInDevTools(fiber, SyncLane);
     }
 
     function isRenderPhaseUpdate(fiber) {
@@ -10282,6 +10625,12 @@ if (__DEV__) {
         // entangle it again, just to be sure.
 
         markRootEntangled(root, newQueueLanes);
+      }
+    }
+
+    function markUpdateInDevTools(fiber, lane, action) {
+      {
+        markStateUpdateScheduled(fiber, lane);
       }
     }
 
@@ -11836,6 +12185,10 @@ if (__DEV__) {
           scheduleUpdateOnFiber(root, fiber, lane);
           entangleTransitions(root, fiber, lane);
         }
+
+        {
+          markStateUpdateScheduled(fiber, lane);
+        }
       },
       enqueueReplaceState: function (inst, payload, callback) {
         var fiber = get(inst);
@@ -11858,6 +12211,10 @@ if (__DEV__) {
           scheduleUpdateOnFiber(root, fiber, lane);
           entangleTransitions(root, fiber, lane);
         }
+
+        {
+          markStateUpdateScheduled(fiber, lane);
+        }
       },
       // $FlowFixMe[missing-local-annot]
       enqueueForceUpdate: function (inst, callback) {
@@ -11879,6 +12236,10 @@ if (__DEV__) {
         if (root !== null) {
           scheduleUpdateOnFiber(root, fiber, lane);
           entangleTransitions(root, fiber, lane);
+        }
+
+        {
+          markForceUpdateScheduled(fiber, lane);
         }
       }
     };
@@ -13591,6 +13952,10 @@ if (__DEV__) {
       prepareToReadContext(workInProgress, renderLanes);
 
       {
+        markComponentRenderStarted(workInProgress);
+      }
+
+      {
         ReactCurrentOwner$1.current = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
@@ -13602,6 +13967,10 @@ if (__DEV__) {
           renderLanes
         );
         setIsRendering(false);
+      }
+
+      {
+        markComponentRenderStopped();
       }
 
       if (current !== null && !didReceiveUpdate) {
@@ -14123,6 +14492,10 @@ if (__DEV__) {
       prepareToReadContext(workInProgress, renderLanes);
 
       {
+        markComponentRenderStarted(workInProgress);
+      }
+
+      {
         ReactCurrentOwner$1.current = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
@@ -14134,6 +14507,10 @@ if (__DEV__) {
           renderLanes
         );
         setIsRendering(false);
+      }
+
+      {
+        markComponentRenderStopped();
       }
 
       if (current !== null && !didReceiveUpdate) {
@@ -14163,6 +14540,10 @@ if (__DEV__) {
       // updateFunctionComponent that reuses the hooks from the previous attempt.
       prepareToReadContext(workInProgress, renderLanes);
 
+      {
+        markComponentRenderStarted(workInProgress);
+      }
+
       var nextChildren = replaySuspendedComponentWithHooks(
         current,
         workInProgress,
@@ -14170,6 +14551,10 @@ if (__DEV__) {
         nextProps,
         secondArg
       );
+
+      {
+        markComponentRenderStopped();
+      }
 
       if (current !== null && !didReceiveUpdate) {
         bailoutHooks(current, workInProgress, renderLanes);
@@ -14353,10 +14738,18 @@ if (__DEV__) {
         }
       } else {
         {
+          markComponentRenderStarted(workInProgress);
+        }
+
+        {
           setIsRendering(true);
           nextChildren = instance.render();
 
           setIsRendering(false);
+        }
+
+        {
+          markComponentRenderStopped();
         }
       } // React DevTools reads this flag.
 
@@ -14686,6 +15079,10 @@ if (__DEV__) {
       var value;
 
       {
+        markComponentRenderStarted(workInProgress);
+      }
+
+      {
         if (
           Component.prototype &&
           typeof Component.prototype.render === "function"
@@ -14723,6 +15120,10 @@ if (__DEV__) {
         );
         setIsRendering(false);
       }
+
+      {
+        markComponentRenderStopped();
+      } // React DevTools reads this flag.
 
       workInProgress.flags |= PerformedWork;
 
@@ -15009,6 +15410,39 @@ if (__DEV__) {
           workInProgress.memoizedState = SUSPENDED_MARKER;
 
           return fallbackFragment;
+        } else if (typeof nextProps.unstable_expectedLoadTime === "number") {
+          // This is a CPU-bound tree. Skip this tree and show a placeholder to
+          // unblock the surrounding content. Then immediately retry after the
+          // initial commit.
+          pushFallbackTreeSuspenseHandler(workInProgress);
+
+          var _fallbackFragment = mountSuspenseFallbackChildren(
+            workInProgress,
+            nextPrimaryChildren,
+            nextFallbackChildren,
+            renderLanes
+          );
+
+          var _primaryChildFragment = workInProgress.child;
+          _primaryChildFragment.memoizedState =
+            mountSuspenseOffscreenState(renderLanes);
+          _primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+            current,
+            didPrimaryChildrenDefer,
+            renderLanes
+          );
+          workInProgress.memoizedState = SUSPENDED_MARKER; // TODO: Transition Tracing is not yet implemented for CPU Suspense.
+          // Since nothing actually suspended, there will nothing to ping this to
+          // get it started back up to attempt the next item. While in terms of
+          // priority this work has the same priority as this current render, it's
+          // not part of the same transition once the transition has committed. If
+          // it's sync, we still want to yield so that it can be painted.
+          // Conceptually, this is really the same as pinging. We can use any
+          // RetryLane even if it's the one currently rendering since we're leaving
+          // it behind on this node.
+
+          workInProgress.lanes = SomeRetryLane;
+          return _fallbackFragment;
         } else {
           pushPrimaryTreeSuspenseHandler(workInProgress);
           return mountSuspensePrimaryChildren(
@@ -16102,6 +16536,10 @@ if (__DEV__) {
       prepareToReadContext(workInProgress, renderLanes);
       var newValue = readContext(context);
 
+      {
+        markComponentRenderStarted(workInProgress);
+      }
+
       var newChildren;
 
       {
@@ -16110,6 +16548,10 @@ if (__DEV__) {
         newChildren = render(newValue);
         setIsRendering(false);
       }
+
+      {
+        markComponentRenderStopped();
+      } // React DevTools reads this flag.
 
       workInProgress.flags |= PerformedWork;
       reconcileChildren(current, workInProgress, newChildren, renderLanes);
@@ -18876,6 +19318,14 @@ if (__DEV__) {
               inst.destroy = undefined;
 
               {
+                if ((flags & Passive) !== NoFlags) {
+                  markComponentPassiveEffectUnmountStarted(finishedWork);
+                } else if ((flags & Layout) !== NoFlags) {
+                  markComponentLayoutEffectUnmountStarted(finishedWork);
+                }
+              }
+
+              {
                 if ((flags & Insertion) !== NoFlags) {
                   setIsRunningInsertionEffect(true);
                 }
@@ -18886,6 +19336,14 @@ if (__DEV__) {
               {
                 if ((flags & Insertion) !== NoFlags) {
                   setIsRunningInsertionEffect(false);
+                }
+              }
+
+              {
+                if ((flags & Passive) !== NoFlags) {
+                  markComponentPassiveEffectUnmountStopped();
+                } else if ((flags & Layout) !== NoFlags) {
+                  markComponentLayoutEffectUnmountStopped();
                 }
               }
             }
@@ -18906,6 +19364,14 @@ if (__DEV__) {
 
         do {
           if ((effect.tag & flags) === flags) {
+            {
+              if ((flags & Passive) !== NoFlags) {
+                markComponentPassiveEffectMountStarted(finishedWork);
+              } else if ((flags & Layout) !== NoFlags) {
+                markComponentLayoutEffectMountStarted(finishedWork);
+              }
+            } // Mount
+
             var create = effect.create;
 
             {
@@ -18921,6 +19387,14 @@ if (__DEV__) {
             {
               if ((flags & Insertion) !== NoFlags) {
                 setIsRunningInsertionEffect(false);
+              }
+            }
+
+            {
+              if ((flags & Passive) !== NoFlags) {
+                markComponentPassiveEffectMountStopped();
+              } else if ((flags & Layout) !== NoFlags) {
+                markComponentLayoutEffectMountStopped();
               }
             }
 
@@ -20042,6 +20516,10 @@ if (__DEV__) {
                         destroy
                       );
                     } else if ((tag & Layout) !== NoFlags) {
+                      {
+                        markComponentLayoutEffectUnmountStarted(deletedFiber);
+                      }
+
                       if (shouldProfile(deletedFiber)) {
                         startLayoutEffectTimer();
                         inst.destroy = undefined;
@@ -20058,6 +20536,10 @@ if (__DEV__) {
                           nearestMountedAncestor,
                           destroy
                         );
+                      }
+
+                      {
+                        markComponentLayoutEffectUnmountStopped();
                       }
                     }
                   }
@@ -20527,8 +21009,9 @@ if (__DEV__) {
               current !== null && current.memoizedState !== null;
 
             {
-              if (isShowingFallback !== wasShowingFallback) {
-                // A fallback is either appearing or disappearing.
+              if (isShowingFallback && !wasShowingFallback) {
+                // Old behavior. Only mark when a fallback appears, not when
+                // it disappears.
                 markCommitTimeOfFallback();
               }
             }
@@ -22667,7 +23150,7 @@ if (__DEV__) {
           workInProgressDeferredLane
         );
       } else {
-        if (includesOnlyRetries(lanes) && alwaysThrottleRetries) {
+        if (includesOnlyRetries(lanes) && exitStatus === RootSuspended) {
           // This render only included retries, no updates. Throttle committing
           // retries so that we don't show too many loading states too quickly.
           var msUntilTimeout =
@@ -23183,6 +23666,34 @@ if (__DEV__) {
         // suspended render.
         stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
       }
+
+      {
+        markComponentRenderStopped();
+
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnError: {
+            markComponentErrored(
+              erroredWork,
+              thrownValue,
+              workInProgressRootRenderLanes
+            );
+            break;
+          }
+
+          case SuspendedOnData:
+          case SuspendedOnImmediate:
+          case SuspendedOnDeprecatedThrowPromise:
+          case SuspendedAndReadyToContinue: {
+            var wakeable = thrownValue;
+            markComponentSuspended(
+              erroredWork,
+              wakeable,
+              workInProgressRootRenderLanes
+            );
+            break;
+          }
+        }
+      }
     }
 
     function shouldRemainOnPreviousScreen() {
@@ -23346,6 +23857,10 @@ if (__DEV__) {
         prepareFreshStack(root, lanes);
       }
 
+      {
+        markRenderStarted(lanes);
+      }
+
       var didSuspendInShell = false;
 
       outer: do {
@@ -23421,6 +23936,10 @@ if (__DEV__) {
         );
       }
 
+      {
+        markRenderStopped();
+      } // Set this to null to indicate there's no in-progress render.
+
       workInProgressRoot = null;
       workInProgressRootRenderLanes = NoLanes; // It's safe to process the queue now that the render phase is complete.
 
@@ -23451,6 +23970,10 @@ if (__DEV__) {
         workInProgressTransitions = getTransitionsForLanes();
         resetRenderTimer();
         prepareFreshStack(root, lanes);
+      }
+
+      {
+        markRenderStarted(lanes);
       }
 
       outer: do {
@@ -23654,8 +24177,18 @@ if (__DEV__) {
       executionContext = prevExecutionContext;
 
       if (workInProgress !== null) {
+        // Still work remaining.
+        {
+          markRenderYielded();
+        }
+
         return RootInProgress;
       } else {
+        // Completed the tree.
+        {
+          markRenderStopped();
+        } // Set this to null to indicate there's no in-progress render.
+
         workInProgressRoot = null;
         workInProgressRootRenderLanes = NoLanes; // It's safe to process the queue now that the render phase is complete.
 
@@ -24085,7 +24618,15 @@ if (__DEV__) {
       var finishedWork = root.finishedWork;
       var lanes = root.finishedLanes;
 
+      {
+        markCommitStarted(lanes);
+      }
+
       if (finishedWork === null) {
+        {
+          markCommitStopped();
+        }
+
         return null;
       } else {
         {
@@ -24202,7 +24743,15 @@ if (__DEV__) {
 
         root.current = finishedWork; // The next phase is the layout phase, where we call effects that read
 
+        {
+          markLayoutEffectsStarted(lanes);
+        }
+
         commitLayoutEffects(finishedWork, root);
+
+        {
+          markLayoutEffectsStopped();
+        } // Tell Scheduler to yield at the end of the frame, so the browser has an
         // opportunity to paint.
 
         requestPaint();
@@ -24323,6 +24872,10 @@ if (__DEV__) {
       } // If layout work was scheduled, flush it now.
 
       flushSyncWorkOnAllRoots();
+
+      {
+        markCommitStopped();
+      }
 
       return null;
     }
@@ -24453,6 +25006,10 @@ if (__DEV__) {
         didScheduleUpdateDuringPassiveEffects = false;
       }
 
+      {
+        markPassiveEffectsStarted(lanes);
+      }
+
       var prevExecutionContext = executionContext;
       executionContext |= CommitContext;
       commitPassiveUnmountEffects(root.current);
@@ -24466,6 +25023,10 @@ if (__DEV__) {
           var fiber = profilerEffects[i];
           commitPassiveEffectDurations(root, fiber);
         }
+      }
+
+      {
+        markPassiveEffectsStopped();
       }
 
       {
@@ -26272,7 +26833,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-bf3f1a01";
+    var ReactVersion = "19.0.0-canary-e5c5e99b";
 
     // Might add PROFILE later.
 
@@ -26338,6 +26899,10 @@ if (__DEV__) {
 
       var current$1 = container.current;
       var lane = requestUpdateLane(current$1);
+
+      {
+        markRenderScheduled(lane);
+      }
 
       var context = getContextForSubtree(parentComponent);
 
