@@ -50,6 +50,35 @@ describe('ReactTestRenderer', () => {
     expect(errors[1].message.includes('indexOf is not a function')).toBe(true);
   });
 
+  test('find element by prop with suspended content', async () => {
+    const neverResolve = new Promise(() => {});
+
+    function TestComp({foo}) {
+      if (foo === 'one') {
+        throw neverResolve;
+      } else {
+        return null;
+      }
+    }
+
+    const tree = await act(() =>
+      ReactTestRenderer.create(
+        <div>
+          <React.Suspense fallback={null}>
+            <TestComp foo="one" />
+          </React.Suspense>
+          <TestComp foo="two" />
+        </div>,
+      ),
+    );
+
+    expect(
+      tree.root.find(item => {
+        return item.props.foo === 'two';
+      }),
+    ).toBeDefined();
+  });
+
   describe('timed out Suspense hidden subtrees should not be observable via toJSON', () => {
     let AsyncText;
     let PendingResources;
