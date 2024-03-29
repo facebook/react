@@ -574,6 +574,13 @@ function throwException(
         return false;
       }
       case ClassComponent:
+        if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+          // If we're hydrating and got here, it means that we didn't find a suspense
+          // boundary above so it's a root error. In this case we shouldn't let the
+          // error boundary capture it because it'll just try to hydrate the error state.
+          // Instead we let it bubble to the root and let the recover pass handle it.
+          break;
+        }
         // Capture and retry
         const errorInfo = value;
         const ctor = workInProgress.type;
