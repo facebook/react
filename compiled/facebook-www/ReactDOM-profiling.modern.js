@@ -6726,8 +6726,7 @@ function beginWork(current, workInProgress, renderLanes) {
       workInProgress.tag = 0;
       isHydrating && Component && pushMaterializedTreeId(workInProgress);
       reconcileChildren(null, workInProgress, current, renderLanes);
-      workInProgress = workInProgress.child;
-      return workInProgress;
+      return workInProgress.child;
     case 16:
       Component = workInProgress.elementType;
       a: {
@@ -17369,7 +17368,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1779 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-6ec98dbb",
+  version: "19.0.0-www-modern-d01064be",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17413,7 +17412,7 @@ var devToolsConfig$jscomp$inline_1779 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-6ec98dbb"
+  reconcilerVersion: "19.0.0-www-modern-d01064be"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17703,7 +17702,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-6ec98dbb";
+exports.version = "19.0.0-www-modern-d01064be";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

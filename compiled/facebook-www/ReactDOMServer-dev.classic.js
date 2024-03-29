@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-537a19a0";
+    var ReactVersion = "19.0.0-www-classic-6c536d2d";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -12069,24 +12069,21 @@ if (__DEV__) {
             didWarnAboutModulePatternComponent[_componentName] = true;
           }
         }
-      }
+      } // Proceed under the assumption that this is a function component
 
       {
-        {
-          validateFunctionComponentInDev(Component);
-        }
-
-        finishFunctionComponent(
-          request,
-          task,
-          keyPath,
-          value,
-          hasId,
-          actionStateCount,
-          actionStateMatchingIndex
-        );
+        validateFunctionComponentInDev(Component);
       }
 
+      finishFunctionComponent(
+        request,
+        task,
+        keyPath,
+        value,
+        hasId,
+        actionStateCount,
+        actionStateMatchingIndex
+      );
       task.componentStack = previousComponentStack;
     }
 
@@ -12184,18 +12181,18 @@ if (__DEV__) {
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName3 =
+          var _componentName2 =
             getComponentNameFromType(Component) || "Unknown";
 
           if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3]
+            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2]
           ) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName3
+              _componentName2
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] =
               true;
           }
         }
@@ -12204,16 +12201,16 @@ if (__DEV__) {
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName4 =
+          var _componentName3 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName4]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName3]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName4
+              _componentName3
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName4] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName3] = true;
           }
         }
       }
