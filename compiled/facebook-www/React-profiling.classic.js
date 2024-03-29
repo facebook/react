@@ -140,44 +140,6 @@ function jsxProd(type, config, maybeKey) {
     props
   );
 }
-function createElement(type, config, children) {
-  var propName,
-    props = {},
-    key = null,
-    ref = null;
-  if (null != config)
-    for (propName in (void 0 === config.ref ||
-      enableRefAsProp ||
-      (ref = config.ref),
-    void 0 !== config.key && (key = "" + config.key),
-    config))
-      hasOwnProperty.call(config, propName) &&
-        "key" !== propName &&
-        (enableRefAsProp || "ref" !== propName) &&
-        "__self" !== propName &&
-        "__source" !== propName &&
-        (props[propName] = config[propName]);
-  var childrenLength = arguments.length - 2;
-  if (1 === childrenLength) props.children = children;
-  else if (1 < childrenLength) {
-    for (var childArray = Array(childrenLength), i = 0; i < childrenLength; i++)
-      childArray[i] = arguments[i + 2];
-    props.children = childArray;
-  }
-  if (type && type.defaultProps)
-    for (propName in ((childrenLength = type.defaultProps), childrenLength))
-      void 0 === props[propName] &&
-        (props[propName] = childrenLength[propName]);
-  return ReactElement(
-    type,
-    key,
-    ref,
-    void 0,
-    void 0,
-    ReactCurrentOwner.current,
-    props
-  );
-}
 function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
@@ -519,11 +481,43 @@ exports.createContext = function (defaultValue) {
       (defaultValue.Consumer = defaultValue));
   return defaultValue;
 };
-exports.createElement = createElement;
-exports.createFactory = function (type) {
-  var factory = createElement.bind(null, type);
-  factory.type = type;
-  return factory;
+exports.createElement = function (type, config, children) {
+  var propName,
+    props = {},
+    key = null,
+    ref = null;
+  if (null != config)
+    for (propName in (void 0 === config.ref ||
+      enableRefAsProp ||
+      (ref = config.ref),
+    void 0 !== config.key && (key = "" + config.key),
+    config))
+      hasOwnProperty.call(config, propName) &&
+        "key" !== propName &&
+        (enableRefAsProp || "ref" !== propName) &&
+        "__self" !== propName &&
+        "__source" !== propName &&
+        (props[propName] = config[propName]);
+  var childrenLength = arguments.length - 2;
+  if (1 === childrenLength) props.children = children;
+  else if (1 < childrenLength) {
+    for (var childArray = Array(childrenLength), i = 0; i < childrenLength; i++)
+      childArray[i] = arguments[i + 2];
+    props.children = childArray;
+  }
+  if (type && type.defaultProps)
+    for (propName in ((childrenLength = type.defaultProps), childrenLength))
+      void 0 === props[propName] &&
+        (props[propName] = childrenLength[propName]);
+  return ReactElement(
+    type,
+    key,
+    ref,
+    void 0,
+    void 0,
+    ReactCurrentOwner.current,
+    props
+  );
 };
 exports.createRef = function () {
   return { current: null };
@@ -670,7 +664,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-classic-15c65c77";
+exports.version = "19.0.0-www-classic-7ee6e970";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

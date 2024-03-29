@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-classic-8c9925ed";
+    var ReactVersion = "19.0.0-www-classic-83a7d6d7";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1858,50 +1858,6 @@ if (__DEV__) {
 
       return element;
     }
-    var didWarnAboutDeprecatedCreateFactory = false;
-    /**
-     * Return a function that produces ReactElements of a given type.
-     * See https://reactjs.org/docs/react-api.html#createfactory
-     */
-
-    function createFactory(type) {
-      var factory = createElement.bind(null, type); // Expose the type on the factory and the prototype so that it can be
-      // easily accessed on elements. E.g. `<Foo />.type === Foo`.
-      // This should not be named `constructor` since this may not be the function
-      // that created the element, and it may not even be a constructor.
-      // Legacy hook: remove it
-
-      factory.type = type;
-
-      {
-        if (!didWarnAboutDeprecatedCreateFactory) {
-          didWarnAboutDeprecatedCreateFactory = true;
-
-          warn(
-            "React.createFactory() is deprecated and will be removed in " +
-              "a future major release. Consider using JSX " +
-              "or use React.createElement() directly instead."
-          );
-        } // Legacy hook: remove it
-
-        Object.defineProperty(factory, "type", {
-          enumerable: false,
-          get: function () {
-            warn(
-              "Factory.type is deprecated. Access the class directly " +
-                "before passing it to createFactory."
-            );
-
-            Object.defineProperty(this, "type", {
-              value: type
-            });
-            return type;
-          }
-        });
-      }
-
-      return factory;
-    }
     function cloneAndReplaceKey(oldElement, newKey) {
       return ReactElement(
         oldElement.type,
@@ -3704,7 +3660,6 @@ if (__DEV__) {
     exports.cloneElement = cloneElement;
     exports.createContext = createContext;
     exports.createElement = createElement;
-    exports.createFactory = createFactory;
     exports.createRef = createRef;
     exports.experimental_useEffectEvent = useEffectEvent;
     exports.forwardRef = forwardRef;
