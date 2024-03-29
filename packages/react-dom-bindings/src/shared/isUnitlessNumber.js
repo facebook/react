@@ -46,6 +46,7 @@ const unitlessNumbers = new Set([
   'tabSize',
   'widows',
   'zIndex',
+  'zoom',
   'fillOpacity', // SVG-related properties
   'floodOpacity',
   'stopOpacity',
@@ -60,6 +61,7 @@ const unitlessNumbers = new Set([
   'MozLineClamp',
   'msAnimationIterationCount',
   'msFlex',
+  'msZoom',
   'msFlexGrow',
   'msFlexNegative',
   'msFlexOrder',
