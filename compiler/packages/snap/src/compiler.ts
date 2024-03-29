@@ -41,6 +41,8 @@ function makePluginOptions(
   let enableUseMemoCachePolyfill = false;
   let panicThreshold: PanicThresholdOptions = "ALL_ERRORS";
   let hookPattern: string | null = null;
+  // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
+  let validatePreserveExistingMemoizationGuarantees = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -113,6 +115,10 @@ function makePluginOptions(
     ignoreUseNoForget = true;
   }
 
+  if (firstLine.includes("@validatePreserveExistingMemoizationGuarantees")) {
+    validatePreserveExistingMemoizationGuarantees = true;
+  }
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -164,6 +170,7 @@ function makePluginOptions(
       enableEmitHookGuards,
       assertValidMutableRanges: true,
       hookPattern,
+      validatePreserveExistingMemoizationGuarantees,
     },
     compilationMode,
     logger: null,
@@ -173,7 +180,7 @@ function makePluginOptions(
     enableUseMemoCachePolyfill,
     eslintSuppressionRules,
     flowSuppressions,
-    ignoreUseNoForget
+    ignoreUseNoForget,
   };
 }
 
@@ -211,18 +218,18 @@ function getEvaluatorPresets(
   presets.push(
     language === "typescript"
       ? [
-        "@babel/preset-typescript",
-        {
-          /**
-           * onlyRemoveTypeImports needs to be set as fbt imports
-           * would otherwise be removed by this pass.
-           * https://github.com/facebook/fbt/issues/49
-           * https://github.com/facebook/sfbt/issues/72
-           * https://dev.to/retyui/how-to-add-support-typescript-for-fbt-an-internationalization-framework-3lo0
-           */
-          onlyRemoveTypeImports: true,
-        },
-      ]
+          "@babel/preset-typescript",
+          {
+            /**
+             * onlyRemoveTypeImports needs to be set as fbt imports
+             * would otherwise be removed by this pass.
+             * https://github.com/facebook/fbt/issues/49
+             * https://github.com/facebook/sfbt/issues/72
+             * https://dev.to/retyui/how-to-add-support-typescript-for-fbt-an-internationalization-framework-3lo0
+             */
+            onlyRemoveTypeImports: true,
+          },
+        ]
       : "@babel/preset-flow"
   );
 

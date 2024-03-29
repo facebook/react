@@ -46,7 +46,7 @@ function Component() {
   let t2;
   if ($[0] !== items) {
     t2 = Symbol.for("react.early_return_sentinel");
-    bb14: {
+    bb15: {
       let t3;
       if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
         t3 = (t4) => {
@@ -72,7 +72,7 @@ function Component() {
           t4 = $[5];
         }
         t2 = t4;
-        break bb14;
+        break bb15;
       }
       let t4;
       if ($[6] === Symbol.for("react.memo_cache_sentinel")) {

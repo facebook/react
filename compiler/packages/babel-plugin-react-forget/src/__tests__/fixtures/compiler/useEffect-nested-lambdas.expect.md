@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+// @enableTransitivelyFreezeFunctionExpressions:false
+
 function Component(props) {
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
@@ -30,9 +32,10 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableTransitivelyFreezeFunctionExpressions:false
+
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(9);
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
   useFreeze(dispatch);
@@ -47,25 +50,42 @@ function Component(props) {
     t0 = $[1];
   }
   const exit = t0;
-
-  useEffect(() => {
-    const cleanup = GlobalEventEmitter.addListener("onInput", () => {
-      if (item.value) {
-        exit();
-      }
-    });
-    return () => cleanup.remove();
-  }, [exit, item]);
+  let t1;
+  if ($[2] !== item.value || $[3] !== exit) {
+    t1 = () => {
+      const cleanup = GlobalEventEmitter.addListener("onInput", () => {
+        if (item.value) {
+          exit();
+        }
+      });
+      return () => cleanup.remove();
+    };
+    $[2] = item.value;
+    $[3] = exit;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  let t2;
+  if ($[5] !== exit || $[6] !== item) {
+    t2 = [exit, item];
+    $[5] = exit;
+    $[6] = item;
+    $[7] = t2;
+  } else {
+    t2 = $[7];
+  }
+  useEffect(t1, t2);
 
   maybeMutate(item);
-  let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <div />;
-    $[2] = t1;
+  let t3;
+  if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
+    t3 = <div />;
+    $[8] = t3;
   } else {
-    t1 = $[2];
+    t3 = $[8];
   }
-  return t1;
+  return t3;
 }
 
 ```

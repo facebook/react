@@ -15,8 +15,18 @@ function Foo(props) {
 ## Code
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Foo(props) {
-  const x = bar(props.a);
+  const $ = useMemoCache(2);
+  let t0;
+  if ($[0] !== props.a) {
+    t0 = bar(props.a);
+    $[0] = props.a;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const x = t0;
   const y = x?.b;
 
   const z = useBar(y);

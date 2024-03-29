@@ -35,7 +35,7 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb11: {
+    bb12: {
       const x = [];
       try {
         throwInput(x);
@@ -43,11 +43,11 @@ function Component(props) {
         const e = t1;
         e.push(null);
         t0 = e;
-        break bb11;
+        break bb12;
       }
 
       t0 = x;
-      break bb11;
+      break bb12;
     }
     $[0] = t0;
   } else {

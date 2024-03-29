@@ -156,7 +156,7 @@ const EnvironmentConfigSchema = z.object({
    * that the memoization was preserved. This can be useful for determining where referential equalities
    * may change under Forget.
    */
-  validatePreserveExistingMemoizationGuarantees: z.boolean().default(false),
+  validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -192,7 +192,7 @@ const EnvironmentConfigSchema = z.object({
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
-  validateNoSetStateInRender: z.boolean().default(false),
+  validateNoSetStateInRender: z.boolean().default(true),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
@@ -214,7 +214,7 @@ const EnvironmentConfigSchema = z.object({
    * in this allowlist. You can enable this validation with no additional allowlisted calls by setting
    * this option to the empty array.
    */
-  validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default([]),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -223,7 +223,7 @@ const EnvironmentConfigSchema = z.object({
    * - Hooks may memoize the result they return, thus the return value is
    *   assumed frozen.
    */
-  enableAssumeHooksFollowRulesOfReact: z.boolean().default(false),
+  enableAssumeHooksFollowRulesOfReact: z.boolean().default(true),
 
   /**
    * When enabled, the compiler assumes that any values are not subsequently
@@ -231,7 +231,7 @@ const EnvironmentConfigSchema = z.object({
    * if a value `x` is referenced inside a function expression passed to `useEffect`,
    * then this flag will assume that `x` is not subusequently modified.
    */
-  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(false),
+  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(true),
 
   /*
    * When enabled, removes *all* memoization from the function: this includes

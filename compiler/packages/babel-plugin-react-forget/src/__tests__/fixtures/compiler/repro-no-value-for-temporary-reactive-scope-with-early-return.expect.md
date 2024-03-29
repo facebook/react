@@ -43,12 +43,12 @@ function Component(props) {
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = Symbol.for("react.early_return_sentinel");
-    bb7: {
+    bb8: {
       const object = makeObject_Primitives();
       const cond = makeObject_Primitives();
       if (!cond) {
         t1 = null;
-        break bb7;
+        break bb8;
       }
 
       t0 = (

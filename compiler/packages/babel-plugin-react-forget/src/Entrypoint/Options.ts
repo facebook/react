@@ -173,7 +173,7 @@ export type Logger = {
 
 export const defaultOptions: PluginOptions = {
   compilationMode: "infer",
-  panicThreshold: "CRITICAL_ERRORS",
+  panicThreshold: "NONE",
   environment: {},
   logger: null,
   gating: null,

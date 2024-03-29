@@ -51,12 +51,12 @@ function Component(props) {
   let t2;
   if ($[0] !== props) {
     t2 = Symbol.for("react.early_return_sentinel");
-    bb10: {
+    bb11: {
       t0 = toJSON(props);
       const propsString = t0;
       if (propsString.length <= 2) {
         t2 = null;
-        break bb10;
+        break bb11;
       }
 
       t1 = identity(propsString);

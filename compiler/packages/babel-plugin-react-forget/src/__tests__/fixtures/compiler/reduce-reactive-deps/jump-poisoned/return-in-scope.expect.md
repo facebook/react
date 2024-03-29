@@ -37,11 +37,11 @@ function useFoo(t0) {
   let t1;
   if ($[0] !== objIsNull || $[1] !== obj) {
     t1 = Symbol.for("react.early_return_sentinel");
-    bb7: {
+    bb8: {
       x = [];
       if (objIsNull) {
         t1 = undefined;
-        break bb7;
+        break bb8;
       }
 
       x.push(obj.b);

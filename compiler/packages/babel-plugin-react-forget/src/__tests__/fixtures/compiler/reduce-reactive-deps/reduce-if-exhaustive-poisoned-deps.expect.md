@@ -38,7 +38,7 @@ function useFoo(t0) {
   let t1;
   if ($[0] !== inputHasABC || $[1] !== input.a || $[2] !== inputHasAB) {
     t1 = Symbol.for("react.early_return_sentinel");
-    bb10: {
+    bb11: {
       x = [];
       if (!inputHasABC) {
         let t2;
@@ -52,7 +52,7 @@ function useFoo(t0) {
         x.push(t2);
         if (!inputHasAB) {
           t1 = null;
-          break bb10;
+          break bb11;
         }
         let t3;
         if ($[7] !== input.a.b) {

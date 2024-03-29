@@ -1,3 +1,5 @@
+// @enableTransitivelyFreezeFunctionExpressions:false
+
 function Component(props) {
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
