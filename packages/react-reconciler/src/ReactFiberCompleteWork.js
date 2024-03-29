@@ -45,7 +45,6 @@ import {
 import {now} from './Scheduler';
 
 import {
-  IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
   HostRoot,
@@ -66,6 +65,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
@@ -949,10 +949,10 @@ function completeWork(
   // for hydration.
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
-    case IndeterminateComponent:
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
+    case IncompleteFunctionComponent:
     case ForwardRef:
     case Fragment:
     case Mode:

@@ -20,6 +20,7 @@ import {
   ClassComponent,
   HostRoot,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   FunctionComponent,
   ForwardRef,
   SimpleMemoComponent,
@@ -261,6 +262,13 @@ function markSuspenseBoundaryShouldCapture(
           const update = createUpdate(SyncLane);
           update.tag = ForceUpdate;
           enqueueUpdate(sourceFiber, update, SyncLane);
+        }
+      } else if (sourceFiber.tag === FunctionComponent) {
+        const currentSourceFiber = sourceFiber.alternate;
+        if (currentSourceFiber === null) {
+          // This is a new mount. Change the tag so it's not mistaken for a
+          // completed function component.
+          sourceFiber.tag = IncompleteFunctionComponent;
         }
       }
 

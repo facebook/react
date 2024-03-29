@@ -58,6 +58,7 @@ export type WorkTagMap = {
   HostSingleton: WorkTag,
   HostText: WorkTag,
   IncompleteClassComponent: WorkTag,
+  IncompleteFunctionComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
   LegacyHiddenComponent: WorkTag,

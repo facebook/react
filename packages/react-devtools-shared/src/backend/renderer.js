@@ -225,7 +225,8 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
-      IndeterminateComponent: 2,
+      IncompleteFunctionComponent: 28,
+      IndeterminateComponent: 2, // removed in 19.0.0
       LazyComponent: 16,
       LegacyHiddenComponent: 23,
       MemoComponent: 14,
@@ -259,6 +260,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 2,
       LazyComponent: 16,
       LegacyHiddenComponent: 24,
@@ -292,6 +294,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 2,
       LazyComponent: 16,
       LegacyHiddenComponent: -1,
@@ -325,6 +328,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
       LazyComponent: -1, // Doesn't exist yet
       LegacyHiddenComponent: -1,
@@ -358,6 +362,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
       LazyComponent: -1, // Doesn't exist yet
       LegacyHiddenComponent: -1,
@@ -391,6 +396,7 @@ export function getInternalReactConstants(version: string): {
     CacheComponent,
     ClassComponent,
     IncompleteClassComponent,
+    IncompleteFunctionComponent,
     FunctionComponent,
     IndeterminateComponent,
     ForwardRef,
@@ -459,6 +465,7 @@ export function getInternalReactConstants(version: string): {
         return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
+      case IncompleteFunctionComponent:
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
@@ -624,6 +631,7 @@ export function attach(
     HostComponent,
     HostText,
     IncompleteClassComponent,
+    IncompleteFunctionComponent,
     IndeterminateComponent,
     LegacyHiddenComponent,
     MemoComponent,
@@ -1061,6 +1069,7 @@ export function attach(
       case ClassComponent:
       case IncompleteClassComponent:
         return ElementTypeClass;
+      case IncompleteFunctionComponent:
       case FunctionComponent:
       case IndeterminateComponent:
         return ElementTypeFunction;
@@ -3059,6 +3068,7 @@ export function attach(
     switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
+      case IncompleteFunctionComponent:
       case IndeterminateComponent:
       case FunctionComponent:
         global.$type = type;
@@ -3193,6 +3203,7 @@ export function attach(
       tag === ClassComponent ||
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
+      tag === IncompleteFunctionComponent ||
       tag === IndeterminateComponent ||
       tag === MemoComponent ||
       tag === ForwardRef ||
@@ -3540,6 +3551,7 @@ export function attach(
       case IndeterminateComponent:
         global.$r = stateNode;
         break;
+      case IncompleteFunctionComponent:
       case FunctionComponent:
         global.$r = {
           hooks,
