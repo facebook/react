@@ -1851,9 +1851,8 @@ if (__DEV__) {
 
           case "innerText": // Properties
 
-          case "textContent": {
+          case "textContent":
             return true;
-          }
         }
 
         switch (typeof value) {
@@ -5602,12 +5601,10 @@ if (__DEV__) {
               // Ignored. These are built-in to React on the client.
               break;
 
-            case "className": {
+            case "className":
               // className gets rendered as class on the client, so it should be
               // rendered as class on the server.
               attributeName = "class";
-            }
-
             // intentional fallthrough
 
             default:
@@ -5616,14 +5613,12 @@ if (__DEV__) {
                 typeof propValue !== "function" &&
                 typeof propValue !== "symbol"
               ) {
-                {
-                  if (propValue === false) {
-                    continue;
-                  } else if (propValue === true) {
-                    propValue = "";
-                  } else if (typeof propValue === "object") {
-                    continue;
-                  }
+                if (propValue === false) {
+                  continue;
+                } else if (propValue === true) {
+                  propValue = "";
+                } else if (typeof propValue === "object") {
+                  continue;
                 }
 
                 target.push(

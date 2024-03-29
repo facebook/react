@@ -3253,15 +3253,13 @@ if (__DEV__) {
               // it would be expected that they end up not having an attribute.
               return expected;
 
-            case "function": {
+            case "function":
               return expected;
-            }
 
-            case "boolean": {
+            case "boolean":
               if (expected === false) {
                 return expected;
               }
-            }
           }
 
           return expected === undefined ? undefined : null;
@@ -3269,10 +3267,8 @@ if (__DEV__) {
 
         var value = node.getAttribute(name);
 
-        {
-          if (value === "" && expected === true) {
-            return true;
-          }
+        if (value === "" && expected === true) {
+          return true;
         }
 
         {
@@ -7105,9 +7101,8 @@ if (__DEV__) {
 
           case "innerText": // Properties
 
-          case "textContent": {
+          case "textContent":
             return true;
-          }
         }
 
         switch (typeof value) {
@@ -36348,7 +36343,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-ad0567f0";
+    var ReactVersion = "19.0.0-www-classic-999c716e";
 
     function createPortal$1(
       children,
@@ -41723,10 +41718,8 @@ if (__DEV__) {
         }
 
         case "innerText":
-        case "textContent": {
+        case "textContent":
           break;
-        }
-
         // Fall through
 
         default: {
@@ -41855,10 +41848,8 @@ if (__DEV__) {
 
         case "innerText": // Properties
 
-        case "textContent": {
+        case "textContent":
           break;
-        }
-
         // Fall through
 
         default: {
@@ -41867,9 +41858,7 @@ if (__DEV__) {
               warnForInvalidEventListener(key, value);
             }
           } else {
-            {
-              setValueForPropertyOnCustomComponent(domElement, key, value);
-            }
+            setValueForPropertyOnCustomComponent(domElement, key, value);
           }
         }
       }
@@ -43365,7 +43354,7 @@ if (__DEV__) {
           case "offsetHeight":
           case "isContentEditable":
           case "outerText":
-          case "outerHTML": {
+          case "outerHTML":
             extraAttributes.delete(propKey.toLowerCase());
 
             {
@@ -43376,11 +43365,9 @@ if (__DEV__) {
             }
 
             continue;
-          }
-
           // Fall through
 
-          case "className": {
+          case "className":
             // className is a special cased property on the server to render as an attribute.
             extraAttributes.delete("class");
             var serverValue = getValueForAttributeOnCustomComponent(
@@ -43395,9 +43382,6 @@ if (__DEV__) {
               serverDifferences
             );
             continue;
-          }
-
-          // Fall through
 
           default: {
             // This is a DEV-only path
@@ -43414,15 +43398,14 @@ if (__DEV__) {
               extraAttributes.delete(propKey);
             }
 
-            var _serverValue = getValueForAttributeOnCustomComponent(
+            var valueOnCustomComponent = getValueForAttributeOnCustomComponent(
               domElement,
               propKey,
               value
             );
-
             warnForPropDifference(
               propKey,
-              _serverValue,
+              valueOnCustomComponent,
               value,
               serverDifferences
             );
@@ -43554,10 +43537,10 @@ if (__DEV__) {
 
           case "muted": {
             extraAttributes.delete(propKey);
-            var _serverValue2 = domElement.muted;
+            var _serverValue = domElement.muted;
             warnForPropDifference(
               propKey,
-              _serverValue2,
+              _serverValue,
               value,
               serverDifferences
             );
@@ -43566,10 +43549,10 @@ if (__DEV__) {
 
           case "autoFocus": {
             extraAttributes.delete("autofocus");
-            var _serverValue3 = domElement.autofocus;
+            var _serverValue2 = domElement.autofocus;
             warnForPropDifference(
               propKey,
-              _serverValue3,
+              _serverValue2,
               value,
               serverDifferences
             );
@@ -43628,7 +43611,7 @@ if (__DEV__) {
 
           case "action":
           case "formAction": {
-            var _serverValue4 = domElement.getAttribute(propKey);
+            var _serverValue3 = domElement.getAttribute(propKey);
 
             if (typeof value === "function") {
               extraAttributes.delete(propKey.toLowerCase()); // The server can set these extra properties to implement actions.
@@ -43651,7 +43634,7 @@ if (__DEV__) {
               // have to have the extra extension that doesn't do anything on the client.
 
               continue;
-            } else if (_serverValue4 === EXPECTED_FORM_ACTION_URL) {
+            } else if (_serverValue3 === EXPECTED_FORM_ACTION_URL) {
               extraAttributes.delete(propKey.toLowerCase());
               warnForPropDifference(
                 propKey,
@@ -43994,7 +43977,7 @@ if (__DEV__) {
               extraAttributes.delete(attributeName);
             }
 
-            var _serverValue5 = getValueForAttribute(
+            var _serverValue4 = getValueForAttribute(
               domElement,
               attributeName,
               value
@@ -44003,7 +43986,7 @@ if (__DEV__) {
             if (!isMismatchDueToBadCasing) {
               warnForPropDifference(
                 propKey,
-                _serverValue5,
+                _serverValue4,
                 value,
                 serverDifferences
               );
