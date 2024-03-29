@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<48687683c293fb45d02204564978a6b7>>
+ * @generated SignedSource<<7eba5ed56d62fd3b39e8d3ac4bd0561c>>
  */
 
 "use strict";
@@ -6733,8 +6733,7 @@ function beginWork(current, workInProgress, renderLanes) {
       workInProgress.flags |= 1;
       workInProgress.tag = 0;
       reconcileChildren(null, workInProgress, current, renderLanes);
-      workInProgress = workInProgress.child;
-      return workInProgress;
+      return workInProgress.child;
     case 16:
       Component = workInProgress.elementType;
       a: {
@@ -11346,7 +11345,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1186 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-b92bb150",
+    version: "19.0.0-canary-270b90fe",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11402,7 +11401,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-b92bb150"
+  reconcilerVersion: "19.0.0-canary-270b90fe"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

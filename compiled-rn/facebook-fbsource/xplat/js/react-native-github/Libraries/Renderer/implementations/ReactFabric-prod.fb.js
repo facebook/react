@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<290dfece63aea68ecb6f52375631b2ff>>
+ * @generated SignedSource<<6caf0298fd44810887edd334677ec6ef>>
  */
 
 "use strict";
@@ -6507,8 +6507,7 @@ function beginWork(current, workInProgress, renderLanes) {
       workInProgress.flags |= 1;
       workInProgress.tag = 0;
       reconcileChildren(null, workInProgress, current, renderLanes);
-      workInProgress = workInProgress.child;
-      return workInProgress;
+      return workInProgress.child;
     case 16:
       Component = workInProgress.elementType;
       a: {
@@ -10639,7 +10638,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1104 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-c845e507",
+    version: "19.0.0-canary-3aaf7c49",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10682,7 +10681,7 @@ var internals$jscomp$inline_1341 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-c845e507"
+  reconcilerVersion: "19.0.0-canary-3aaf7c49"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1342 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

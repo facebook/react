@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b3f8b9d9ae41ad4e84b986ff88b107f6>>
+ * @generated SignedSource<<2123de3808a6ddc6df79e3bd382b5c8a>>
  */
 
 "use strict";
@@ -14729,20 +14729,17 @@ if (__DEV__) {
             didWarnAboutModulePatternComponent[_componentName] = true;
           }
         }
-      }
+      } // Proceed under the assumption that this is a function component
+
+      workInProgress.tag = FunctionComponent;
+
+      reconcileChildren(null, workInProgress, value, renderLanes);
 
       {
-        // Proceed under the assumption that this is a function component
-        workInProgress.tag = FunctionComponent;
-
-        reconcileChildren(null, workInProgress, value, renderLanes);
-
-        {
-          validateFunctionComponentInDev(workInProgress, Component);
-        }
-
-        return workInProgress.child;
+        validateFunctionComponentInDev(workInProgress, Component);
       }
+
+      return workInProgress.child;
     }
 
     function validateFunctionComponentInDev(workInProgress, Component) {
@@ -14781,33 +14778,33 @@ if (__DEV__) {
         }
 
         if (Component.defaultProps !== undefined) {
-          var _componentName3 =
+          var _componentName2 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName3]) {
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName2]) {
             error(
               "%s: Support for defaultProps will be removed from function components " +
                 "in a future major release. Use JavaScript default parameters instead.",
-              _componentName3
+              _componentName2
             );
 
-            didWarnAboutDefaultPropsOnFunctionComponent[_componentName3] = true;
+            didWarnAboutDefaultPropsOnFunctionComponent[_componentName2] = true;
           }
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName4 =
+          var _componentName3 =
             getComponentNameFromType(Component) || "Unknown";
 
           if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4]
+            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3]
           ) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName4
+              _componentName3
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3] =
               true;
           }
         }
@@ -14816,16 +14813,16 @@ if (__DEV__) {
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName5 =
+          var _componentName4 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName5]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName4]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName5
+              _componentName4
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName5] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName4] = true;
           }
         }
       }
@@ -26252,7 +26249,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-6c021864";
+    var ReactVersion = "19.0.0-canary-5cab92f5";
 
     // Might add PROFILE later.
 

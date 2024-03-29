@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a770edfebf8c3b9defa939442fec4e9f>>
+ * @generated SignedSource<<d6ee8310e3b8ca455c7eec67ecf555a2>>
  */
 
 "use strict";
@@ -5027,8 +5027,7 @@ function beginWork(current, workInProgress, renderLanes) {
       workInProgress.flags |= 1;
       workInProgress.tag = 0;
       reconcileChildren(null, workInProgress, current, renderLanes);
-      workInProgress = workInProgress.child;
-      return workInProgress;
+      return workInProgress.child;
     case 16:
       Component = workInProgress.elementType;
       a: {
@@ -9612,7 +9611,7 @@ var devToolsConfig$jscomp$inline_1052 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-a4b56d0a",
+  version: "19.0.0-canary-3d347368",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1238 = {
@@ -9643,7 +9642,7 @@ var internals$jscomp$inline_1238 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-a4b56d0a"
+  reconcilerVersion: "19.0.0-canary-3d347368"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
