@@ -178,10 +178,12 @@ let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot: void | true;
 let didWarnAboutUseWrappedInTryCatch;
 let didWarnAboutAsyncClientComponent;
+let didWarnAboutUseFormState;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set<string | null>();
   didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
   didWarnAboutAsyncClientComponent = new Set<string | null>();
+  didWarnAboutUseFormState = new Set<string | null>();
 }
 
 export type Hook = {
@@ -382,6 +384,21 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
           table,
         );
       }
+    }
+  }
+}
+
+function warnOnUseFormStateInDev(): void {
+  if (__DEV__) {
+    const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
+    if (!didWarnAboutUseFormState.has(componentName)) {
+      didWarnAboutUseFormState.add(componentName);
+
+      console.error(
+        'ReactDOM.useFormState has been deprecated and replaced by ' +
+          'React.useActionState. Please update %s to use React.useActionState.',
+        componentName,
+      );
     }
   }
 }
@@ -4000,6 +4017,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
+        warnOnUseFormStateInDev();
         return mountActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useActionState =
@@ -4182,6 +4200,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
+        warnOnUseFormStateInDev();
         return updateActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
@@ -4364,6 +4383,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
+        warnOnUseFormStateInDev();
         return rerenderActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =

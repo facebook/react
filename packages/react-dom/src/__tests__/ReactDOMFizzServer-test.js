@@ -100,6 +100,16 @@ describe('ReactDOMFizzServer', () => {
     }
     PropTypes = require('prop-types');
     if (__VARIANT__) {
+      const originalConsoleError = console.error;
+      console.error = (error, ...args) => {
+        if (
+          typeof error !== 'string' ||
+          error.indexOf('ReactDOM.useFormState has been deprecated') === -1
+        ) {
+          originalConsoleError(error, ...args);
+        }
+      };
+
       // Remove after API is deleted.
       useActionState = ReactDOM.useFormState;
     } else {
