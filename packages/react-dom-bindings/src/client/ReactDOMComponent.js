@@ -1748,7 +1748,7 @@ export function updateProperties(
               domElement,
               tag,
               propKey,
-              null,
+              undefined,
               nextProps,
               lastProp,
             );
