@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import {enableNewBooleanProps} from 'shared/ReactFeatureFlags';
 
 // When adding attributes to the HTML or SVG allowed attribute list, be sure to
 // also add them to this module to ensure casing and incorrect name
@@ -83,6 +82,7 @@ const possibleStandardNames = {
   id: 'id',
   imagesizes: 'imageSizes',
   imagesrcset: 'imageSrcSet',
+  inert: 'inert',
   innerhtml: 'innerHTML',
   inputmode: 'inputMode',
   integrity: 'integrity',
@@ -502,9 +502,5 @@ const possibleStandardNames = {
   z: 'z',
   zoomandpan: 'zoomAndPan',
 };
-
-if (enableNewBooleanProps) {
-  possibleStandardNames.inert = 'inert';
-}
 
 export default possibleStandardNames;

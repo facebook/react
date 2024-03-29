@@ -30,7 +30,6 @@ export const enableUseDeferredValueInitialArg = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
 export const useModernStrictMode = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;
-export const enableNewBooleanProps = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const retryLaneExpirationMs = 5000;

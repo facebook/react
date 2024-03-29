@@ -38,7 +38,6 @@ export const {
   enableRenderableContext,
   useModernStrictMode,
   enableRefAsProp,
-  enableNewBooleanProps,
   favorSafetyOverHydrationPerf,
 } = dynamicFeatureFlags;
 

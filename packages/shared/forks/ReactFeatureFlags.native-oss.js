@@ -99,7 +99,6 @@ export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
-export const enableNewBooleanProps = true;
 export const enableTransitionTracing = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;

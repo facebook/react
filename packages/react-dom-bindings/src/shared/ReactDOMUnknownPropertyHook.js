@@ -9,7 +9,6 @@ import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {enableNewBooleanProps} from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
 const EVENT_NAME_REGEX = /^on./;
@@ -228,18 +227,12 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'seamless':
           case 'itemScope':
           case 'capture':
-          case 'download': {
+          case 'download':
+          case 'inert': {
             // Boolean properties can accept boolean values
             return true;
           }
           // fallthrough
-          case 'inert': {
-            if (enableNewBooleanProps) {
-              // Boolean properties can accept boolean values
-              return true;
-            }
-          }
-          // fallthrough for new boolean props without the flag on
           default: {
             const prefix = name.toLowerCase().slice(0, 5);
             if (prefix === 'data-' || prefix === 'aria-') {
@@ -311,17 +304,9 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'reversed':
             case 'scoped':
             case 'seamless':
-            case 'itemScope': {
-              break;
-            }
+            case 'itemScope':
             case 'inert': {
-              if (enableNewBooleanProps) {
-                break;
-              }
-            }
-            // fallthrough for new boolean props without the flag on
-            default: {
-              return true;
+              break;
             }
           }
           console.error(
