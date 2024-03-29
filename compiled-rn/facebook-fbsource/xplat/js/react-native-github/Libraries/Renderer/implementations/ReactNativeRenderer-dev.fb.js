@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cf66f3f917e3c7a41bc8a26d1175d766>>
+ * @generated SignedSource<<671deef2ff146cb90557b5929b5a868f>>
  */
 
 "use strict";
@@ -17717,7 +17717,6 @@ to return true:wantsResponderID|                            |
           }
 
           case ClassComponent:
-            // Capture and retry
             var errorInfo = value;
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
@@ -31043,7 +31042,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-09379a47";
+    var ReactVersion = "19.0.0-canary-5f8abb5a";
 
     function createPortal$1(
       children,

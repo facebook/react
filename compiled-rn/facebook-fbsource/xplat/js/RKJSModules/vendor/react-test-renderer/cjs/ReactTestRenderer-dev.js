@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1db853e0d856929a31f2401594157de8>>
+ * @generated SignedSource<<9224411efbfa8776e575f8317a5cebc6>>
  */
 
 "use strict";
@@ -13796,7 +13796,6 @@ if (__DEV__) {
           }
 
           case ClassComponent:
-            // Capture and retry
             var errorInfo = value;
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
@@ -26833,7 +26832,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-e5c5e99b";
+    var ReactVersion = "19.0.0-canary-74c595da";
 
     // Might add PROFILE later.
 
