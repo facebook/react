@@ -5757,6 +5757,7 @@ if (__DEV__) {
       "tabSize",
       "widows",
       "zIndex",
+      "zoom",
       "fillOpacity", // SVG-related properties
       "floodOpacity",
       "stopOpacity",
@@ -5771,6 +5772,7 @@ if (__DEV__) {
       "MozLineClamp",
       "msAnimationIterationCount",
       "msFlex",
+      "msZoom",
       "msFlexGrow",
       "msFlexNegative",
       "msFlexOrder",
@@ -36815,7 +36817,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-2478b45e";
+    var ReactVersion = "19.0.0-www-modern-6e9457ea";
 
     function createPortal$1(
       children,
