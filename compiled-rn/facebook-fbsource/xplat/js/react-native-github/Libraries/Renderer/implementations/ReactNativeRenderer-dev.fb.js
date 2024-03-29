@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a9d8887935e3fc32f3bf95aea2bbf91d>>
+ * @generated SignedSource<<cf66f3f917e3c7a41bc8a26d1175d766>>
  */
 
 "use strict";
@@ -11706,11 +11706,13 @@ to return true:wantsResponderID|                            |
     var didWarnUncachedGetSnapshot;
     var didWarnAboutUseWrappedInTryCatch;
     var didWarnAboutAsyncClientComponent;
+    var didWarnAboutUseFormState;
 
     {
       didWarnAboutMismatchedHooksForComponent = new Set();
       didWarnAboutUseWrappedInTryCatch = new Set();
       didWarnAboutAsyncClientComponent = new Set();
+      didWarnAboutUseFormState = new Set();
     } // The effect "instance" is a shared object that remains the same for the entire
     // lifetime of an effect. In Rust terms, a RefCell. We use it to store the
     // "destroy" function that is returned from an effect, because that is stateful.
@@ -11849,6 +11851,24 @@ to return true:wantsResponderID|                            |
               table
             );
           }
+        }
+      }
+    }
+
+    function warnOnUseFormStateInDev() {
+      {
+        var componentName = getComponentNameFromFiber(
+          currentlyRenderingFiber$1
+        );
+
+        if (!didWarnAboutUseFormState.has(componentName)) {
+          didWarnAboutUseFormState.add(componentName);
+
+          error(
+            "ReactDOM.useFormState has been deprecated and replaced by " +
+              "React.useActionState. Please update %s to use React.useActionState.",
+            componentName
+          );
         }
       }
     }
@@ -14851,6 +14871,7 @@ to return true:wantsResponderID|                            |
           function useFormState(action, initialState, permalink) {
             currentHookNameInDev = "useFormState";
             updateHookTypesDev();
+            warnOnUseFormStateInDev();
             return mountActionState(action, initialState);
           };
 
@@ -15005,6 +15026,7 @@ to return true:wantsResponderID|                            |
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
+          warnOnUseFormStateInDev();
           return updateActionState(action);
         };
 
@@ -15164,6 +15186,7 @@ to return true:wantsResponderID|                            |
         ) {
           currentHookNameInDev = "useFormState";
           updateHookTypesDev();
+          warnOnUseFormStateInDev();
           return rerenderActionState(action);
         };
 
@@ -31020,7 +31043,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-ebdc2fa2";
+    var ReactVersion = "19.0.0-canary-09379a47";
 
     function createPortal$1(
       children,
