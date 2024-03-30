@@ -1353,7 +1353,7 @@ function renderModelDestructive(
           writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
           // The element's props are marked as "never outlined" so that they are inlined into
           // the same row as the element itself.
-          writtenObjects.set(value.props, NEVER_OUTLINED);
+          writtenObjects.set((value: any).props, NEVER_OUTLINED);
         }
 
         const element: React$Element<any> = (value: any);
