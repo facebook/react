@@ -1150,7 +1150,7 @@ describe('context legacy', () => {
 
     if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {
       it('does not disable logs for class double render', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1179,7 +1179,7 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double ctor', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1211,7 +1211,7 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double getDerivedStateFromProps', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1244,7 +1244,7 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double shouldComponentUpdate', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1285,7 +1285,7 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class state updaters', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let inst;
         let count = 0;
@@ -1323,7 +1323,7 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for function double render', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         function Foo() {
@@ -1350,7 +1350,7 @@ describe('context legacy', () => {
       });
     } else {
       it('disable logs for class double render', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1379,7 +1379,7 @@ describe('context legacy', () => {
       });
 
       it('disables logs for class double ctor', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1411,7 +1411,7 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class double getDerivedStateFromProps', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1444,7 +1444,7 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class double shouldComponentUpdate', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         class Foo extends React.Component {
@@ -1484,7 +1484,7 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class state updaters', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let inst;
         let count = 0;
@@ -1522,7 +1522,7 @@ describe('context legacy', () => {
       });
 
       it('disable logs for function double render', async () => {
-        spyOnDevAndProd(console, 'log');
+        spyOnDevAndProd(console, 'log').mockImplementation(() => {});
 
         let count = 0;
         function Foo() {
