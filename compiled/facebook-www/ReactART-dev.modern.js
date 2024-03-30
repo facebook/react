@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-c4adbf64";
+    var ReactVersion = "19.0.0-www-modern-78997ebd";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -17257,7 +17257,7 @@ if (__DEV__) {
           // get an update and we'll never be able to hydrate the final content. Let's just try the
           // client side render instead.
           var digest;
-          var message, stack;
+          var message, stack, componentStack;
 
           {
             var _getSuspenseInstanceF =
@@ -17266,6 +17266,7 @@ if (__DEV__) {
             digest = _getSuspenseInstanceF.digest;
             message = _getSuspenseInstanceF.message;
             stack = _getSuspenseInstanceF.stack;
+            componentStack = _getSuspenseInstanceF.componentStack;
           }
 
           var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
@@ -17279,13 +17280,18 @@ if (__DEV__) {
             } else {
               error = new Error(
                 "The server could not finish this Suspense boundary, likely " +
-                  "due to an error during server rendering. Switched to " +
-                  "client rendering."
+                  "due to an error during server rendering. " +
+                  "Switched to client rendering."
               );
-            }
+            } // Replace the stack with the server stack
 
+            error.stack = stack || "";
             error.digest = digest;
-            capturedValue = createCapturedValueFromError(error, digest, stack);
+            capturedValue = createCapturedValueFromError(
+              error,
+              digest,
+              componentStack
+            );
           }
 
           return retrySuspenseComponentWithoutHydrating(

@@ -5069,6 +5069,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     else if ((pushPrimaryTreeSuspenseHandler(workInProgress), shim$2()))
       (JSCompiler_temp = shim$2().digest),
         (nextProps = Error(formatProdErrorMessage(419))),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -10616,7 +10617,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-03341623",
+    version: "19.0.0-www-classic-859a948c",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1324 = {
@@ -10647,7 +10648,7 @@ var internals$jscomp$inline_1324 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-03341623"
+  reconcilerVersion: "19.0.0-www-classic-859a948c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1325 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

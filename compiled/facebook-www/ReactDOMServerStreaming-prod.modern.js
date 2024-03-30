@@ -5096,8 +5096,6 @@ function flushCompletedQueues(request, destination) {
         renderState$jscomp$1 = request.renderState,
         id = boundary.rootSegmentID,
         errorDigest = boundary.errorDigest,
-        errorMessage = boundary.errorMessage,
-        errorComponentStack = boundary.errorComponentStack,
         scriptFormat = 0 === resumableState$jscomp$0.streamingFormat;
       scriptFormat
         ? ((renderState$jscomp$0.buffer +=
@@ -5105,14 +5103,14 @@ function flushCompletedQueues(request, destination) {
           0 === (resumableState$jscomp$0.instructions & 4)
             ? ((resumableState$jscomp$0.instructions |= 4),
               (renderState$jscomp$0.buffer +=
-                '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("'))
+                '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};;$RX("'))
             : (renderState$jscomp$0.buffer += '$RX("'))
         : (renderState$jscomp$0.buffer += '<template data-rxi="" data-bid="');
       renderState$jscomp$0.buffer += renderState$jscomp$1.boundaryPrefix;
       var chunk$jscomp$1 = id.toString(16);
       renderState$jscomp$0.buffer += chunk$jscomp$1;
       scriptFormat && (renderState$jscomp$0.buffer += '"');
-      if (errorDigest || errorMessage || errorComponentStack)
+      if (errorDigest)
         if (scriptFormat) {
           renderState$jscomp$0.buffer += ",";
           var chunk$jscomp$2 = escapeJSStringsForInstructionScripts(
@@ -5124,34 +5122,10 @@ function flushCompletedQueues(request, destination) {
           var chunk$jscomp$3 = escapeTextForBrowser(errorDigest || "");
           renderState$jscomp$0.buffer += chunk$jscomp$3;
         }
-      if (errorMessage || errorComponentStack)
-        if (scriptFormat) {
-          renderState$jscomp$0.buffer += ",";
-          var chunk$jscomp$4 = escapeJSStringsForInstructionScripts(
-            errorMessage || ""
-          );
-          renderState$jscomp$0.buffer += chunk$jscomp$4;
-        } else {
-          renderState$jscomp$0.buffer += '" data-msg="';
-          var chunk$jscomp$5 = escapeTextForBrowser(errorMessage || "");
-          renderState$jscomp$0.buffer += chunk$jscomp$5;
-        }
-      if (errorComponentStack)
-        if (scriptFormat) {
-          renderState$jscomp$0.buffer += ",";
-          var chunk$jscomp$6 =
-            escapeJSStringsForInstructionScripts(errorComponentStack);
-          renderState$jscomp$0.buffer += chunk$jscomp$6;
-        } else {
-          renderState$jscomp$0.buffer += '" data-stck="';
-          var chunk$jscomp$7 = escapeTextForBrowser(errorComponentStack);
-          renderState$jscomp$0.buffer += chunk$jscomp$7;
-        }
-      if (
-        scriptFormat
-          ? !writeChunkAndReturn(renderState$jscomp$0, ")\x3c/script>")
-          : !writeChunkAndReturn(renderState$jscomp$0, '"></template>')
-      ) {
+      var JSCompiler_inline_result = scriptFormat
+        ? writeChunkAndReturn(renderState$jscomp$0, ")\x3c/script>")
+        : writeChunkAndReturn(renderState$jscomp$0, '"></template>');
+      if (!JSCompiler_inline_result) {
         request.destination = null;
         i++;
         clientRenderedBoundaries.splice(0, i);
@@ -5178,31 +5152,31 @@ function flushCompletedQueues(request, destination) {
         boundary = destination;
         var completedSegments = boundary$46.completedSegments;
         for (
-          resumableState$jscomp$0 = 0;
-          resumableState$jscomp$0 < completedSegments.length;
-          resumableState$jscomp$0++
+          JSCompiler_inline_result = 0;
+          JSCompiler_inline_result < completedSegments.length;
+          JSCompiler_inline_result++
         )
           if (
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
               boundary$46,
-              completedSegments[resumableState$jscomp$0]
+              completedSegments[JSCompiler_inline_result]
             )
           ) {
-            resumableState$jscomp$0++;
-            completedSegments.splice(0, resumableState$jscomp$0);
-            var JSCompiler_inline_result = !1;
+            JSCompiler_inline_result++;
+            completedSegments.splice(0, JSCompiler_inline_result);
+            var JSCompiler_inline_result$jscomp$0 = !1;
             break a;
           }
-        completedSegments.splice(0, resumableState$jscomp$0);
-        JSCompiler_inline_result = writeHoistablesForBoundary(
+        completedSegments.splice(0, JSCompiler_inline_result);
+        JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
           boundary,
           boundary$46.contentState,
           clientRenderedBoundaries.renderState
         );
       }
-      if (!JSCompiler_inline_result) {
+      if (!JSCompiler_inline_result$jscomp$0) {
         request.destination = null;
         i++;
         partialBoundaries.splice(0, i);

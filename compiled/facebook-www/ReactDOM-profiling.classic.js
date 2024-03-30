@@ -6285,6 +6285,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       if (JSCompiler_temp) var digest = JSCompiler_temp.dgst;
       JSCompiler_temp = digest;
       nextProps = Error(formatProdErrorMessage(419));
+      nextProps.stack = "";
       nextProps.digest = JSCompiler_temp;
       JSCompiler_temp = createCapturedValueFromError(
         nextProps,
@@ -17857,7 +17858,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1818 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-329e17e1",
+  version: "19.0.0-www-classic-25c06000",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17901,7 +17902,7 @@ var devToolsConfig$jscomp$inline_1818 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-329e17e1"
+  reconcilerVersion: "19.0.0-www-classic-25c06000"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18338,7 +18339,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-329e17e1";
+exports.version = "19.0.0-www-classic-25c06000";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -22741,7 +22741,7 @@ if (__DEV__) {
           // get an update and we'll never be able to hydrate the final content. Let's just try the
           // client side render instead.
           var digest;
-          var message, stack;
+          var message, stack, componentStack;
 
           {
             var _getSuspenseInstanceF =
@@ -22750,6 +22750,7 @@ if (__DEV__) {
             digest = _getSuspenseInstanceF.digest;
             message = _getSuspenseInstanceF.message;
             stack = _getSuspenseInstanceF.stack;
+            componentStack = _getSuspenseInstanceF.componentStack;
           }
 
           var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
@@ -22763,13 +22764,18 @@ if (__DEV__) {
             } else {
               error = new Error(
                 "The server could not finish this Suspense boundary, likely " +
-                  "due to an error during server rendering. Switched to " +
-                  "client rendering."
+                  "due to an error during server rendering. " +
+                  "Switched to client rendering."
               );
-            }
+            } // Replace the stack with the server stack
 
+            error.stack = stack || "";
             error.digest = digest;
-            capturedValue = createCapturedValueFromError(error, digest, stack);
+            capturedValue = createCapturedValueFromError(
+              error,
+              digest,
+              componentStack
+            );
           }
 
           return retrySuspenseComponentWithoutHydrating(
@@ -36982,7 +36988,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-0f7004dd";
+    var ReactVersion = "19.0.0-www-classic-32ee8c0d";
 
     function createPortal$1(
       children,
@@ -45941,7 +45947,7 @@ if (__DEV__) {
     }
     function getSuspenseInstanceFallbackErrorDetails(instance) {
       var dataset = instance.nextSibling && instance.nextSibling.dataset;
-      var digest, message, stack;
+      var digest, message, stack, componentStack;
 
       if (dataset) {
         digest = dataset.dgst;
@@ -45949,6 +45955,7 @@ if (__DEV__) {
         {
           message = dataset.msg;
           stack = dataset.stck;
+          componentStack = dataset.cstck;
         }
       }
 
@@ -45956,7 +45963,8 @@ if (__DEV__) {
         return {
           message: message,
           digest: digest,
-          stack: stack
+          stack: stack,
+          componentStack: componentStack
         };
       }
     }

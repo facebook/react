@@ -6149,6 +6149,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       if (JSCompiler_temp) var digest = JSCompiler_temp.dgst;
       JSCompiler_temp = digest;
       nextProps = Error(formatProdErrorMessage(419));
+      nextProps.stack = "";
       nextProps.digest = JSCompiler_temp;
       JSCompiler_temp = createCapturedValueFromError(
         nextProps,
@@ -17436,7 +17437,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1759 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-4e93399a",
+  version: "19.0.0-www-classic-30ee2b55",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2168 = {
@@ -17466,7 +17467,7 @@ var internals$jscomp$inline_2168 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-4e93399a"
+  reconcilerVersion: "19.0.0-www-classic-30ee2b55"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2169 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18059,4 +18060,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-4e93399a";
+exports.version = "19.0.0-www-classic-30ee2b55";

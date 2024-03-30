@@ -2328,7 +2328,7 @@ if (__DEV__) {
     // The build script is at scripts/rollup/generate-inline-fizz-runtime.js.
     // Run `yarn generate-inline-fizz-runtime` to generate.
     var clientRenderBoundary =
-      '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};';
+      '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};';
     var completeBoundary =
       '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};';
     var completeBoundaryWithStyles =
@@ -6068,6 +6068,8 @@ if (__DEV__) {
       stringToPrecomputedChunk(' data-msg="');
     var clientRenderedSuspenseBoundaryError1C =
       stringToPrecomputedChunk(' data-stck="');
+    var clientRenderedSuspenseBoundaryError1D =
+      stringToPrecomputedChunk(' data-cstck="');
     var clientRenderedSuspenseBoundaryError2 =
       stringToPrecomputedChunk("></template>");
     function writeStartCompletedSuspenseBoundary(destination, renderState) {
@@ -6090,7 +6092,8 @@ if (__DEV__) {
       destination,
       renderState,
       errorDigest,
-      errorMesssage,
+      errorMessage,
+      errorStack,
       errorComponentStack
     ) {
       var result;
@@ -6113,11 +6116,23 @@ if (__DEV__) {
       }
 
       {
-        if (errorMesssage) {
+        if (errorMessage) {
           writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
           writeChunk(
             destination,
-            stringToChunk(escapeTextForBrowser(errorMesssage))
+            stringToChunk(escapeTextForBrowser(errorMessage))
+          );
+          writeChunk(
+            destination,
+            clientRenderedSuspenseBoundaryErrorAttrInterstitial
+          );
+        }
+
+        if (errorStack) {
+          writeChunk(destination, clientRenderedSuspenseBoundaryError1C);
+          writeChunk(
+            destination,
+            stringToChunk(escapeTextForBrowser(errorStack))
           );
           writeChunk(
             destination,
@@ -6126,7 +6141,7 @@ if (__DEV__) {
         }
 
         if (errorComponentStack) {
-          writeChunk(destination, clientRenderedSuspenseBoundaryError1C);
+          writeChunk(destination, clientRenderedSuspenseBoundaryError1D);
           writeChunk(
             destination,
             stringToChunk(escapeTextForBrowser(errorComponentStack))
@@ -6479,6 +6494,7 @@ if (__DEV__) {
     var clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
     var clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
     var clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
+    var clientRenderData5 = stringToPrecomputedChunk('" data-cstck="');
     var clientRenderDataEnd = dataElementQuotedEnd;
     function writeClientRenderBoundaryInstruction(
       destination,
@@ -6487,6 +6503,7 @@ if (__DEV__) {
       id,
       errorDigest,
       errorMessage,
+      errorStack,
       errorComponentStack
     ) {
       var scriptFormat =
@@ -6520,7 +6537,7 @@ if (__DEV__) {
         writeChunk(destination, clientRenderScript1A);
       }
 
-      if (errorDigest || errorMessage || errorComponentStack) {
+      if (errorDigest || errorMessage || errorStack || errorComponentStack) {
         if (scriptFormat) {
           // ,"JSONString"
           writeChunk(destination, clientRenderErrorScriptArgInterstitial);
@@ -6540,7 +6557,7 @@ if (__DEV__) {
         }
       }
 
-      if (errorMessage || errorComponentStack) {
+      if (errorMessage || errorStack || errorComponentStack) {
         if (scriptFormat) {
           // ,"JSONString"
           writeChunk(destination, clientRenderErrorScriptArgInterstitial);
@@ -6560,6 +6577,26 @@ if (__DEV__) {
         }
       }
 
+      if (errorStack || errorComponentStack) {
+        // ,"JSONString"
+        if (scriptFormat) {
+          writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+          writeChunk(
+            destination,
+            stringToChunk(
+              escapeJSStringsForInstructionScripts(errorStack || "")
+            )
+          );
+        } else {
+          // " data-stck="HTMLString
+          writeChunk(destination, clientRenderData4);
+          writeChunk(
+            destination,
+            stringToChunk(escapeTextForBrowser(errorStack || ""))
+          );
+        }
+      }
+
       if (errorComponentStack) {
         // ,"JSONString"
         if (scriptFormat) {
@@ -6571,8 +6608,8 @@ if (__DEV__) {
             )
           );
         } else {
-          // " data-stck="HTMLString
-          writeChunk(destination, clientRenderData4);
+          // " data-cstck="HTMLString
+          writeChunk(destination, clientRenderData5);
           writeChunk(
             destination,
             stringToChunk(escapeTextForBrowser(errorComponentStack))
@@ -11074,7 +11111,7 @@ if (__DEV__) {
     }
 
     function createSuspenseBoundary(request, fallbackAbortableTasks) {
-      return {
+      var boundary = {
         status: PENDING,
         rootSegmentID: -1,
         parentFlushed: false,
@@ -11088,6 +11125,15 @@ if (__DEV__) {
         trackedContentKeyPath: null,
         trackedFallbackNode: null
       };
+
+      {
+        // DEV-only fields for hidden class
+        boundary.errorMessage = null;
+        boundary.errorStack = null;
+        boundary.errorComponentStack = null;
+      }
+
+      return boundary;
     }
 
     function createRenderTask(
@@ -11271,23 +11317,37 @@ if (__DEV__) {
       }
     }
 
-    function encodeErrorForBoundary(boundary, digest, error, thrownInfo) {
+    function encodeErrorForBoundary(
+      boundary,
+      digest,
+      error,
+      thrownInfo,
+      wasAborted
+    ) {
       boundary.errorDigest = digest;
 
       {
-        var message; // In dev we additionally encode the error message and component stack on the boundary
+        var message, stack; // In dev we additionally encode the error message and component stack on the boundary
 
         if (error instanceof Error) {
           // eslint-disable-next-line react-internal/safe-string-coercion
-          message = String(error.message);
+          message = String(error.message); // eslint-disable-next-line react-internal/safe-string-coercion
+
+          stack = String(error.stack);
         } else if (typeof error === "object" && error !== null) {
           message = describeObjectForErrorMessage(error);
+          stack = null;
         } else {
           // eslint-disable-next-line react-internal/safe-string-coercion
           message = String(error);
+          stack = null;
         }
 
-        boundary.errorMessage = message;
+        var prefix = wasAborted
+          ? "Switched to client rendering because the server rendering aborted due to:\n\n"
+          : "Switched to client rendering because the server rendering errored:\n\n";
+        boundary.errorMessage = prefix + message;
+        boundary.errorStack = stack;
         boundary.errorComponentStack = thrownInfo.componentStack;
       }
     }
@@ -11440,7 +11500,13 @@ if (__DEV__) {
           errorDigest = logRecoverableError(request, error, thrownInfo);
         }
 
-        encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
+        encodeErrorForBoundary(
+          newBoundary,
+          errorDigest,
+          error,
+          thrownInfo,
+          false
+        );
         untrackBoundary(request, newBoundary); // We don't need to decrement any task numbers because we didn't spawn any new task.
         // We don't need to schedule any task because we know the parent has written yet.
         // We do need to fallthrough to create the fallback though.
@@ -11574,7 +11640,13 @@ if (__DEV__) {
           errorDigest = logRecoverableError(request, error, thrownInfo);
         }
 
-        encodeErrorForBoundary(resumedBoundary, errorDigest, error, thrownInfo);
+        encodeErrorForBoundary(
+          resumedBoundary,
+          errorDigest,
+          error,
+          thrownInfo,
+          false
+        );
         task.replay.pendingTasks--; // The parent already flushed in the prerender so we need to schedule this to be emitted.
 
         request.clientRenderedBoundaries.push(resumedBoundary); // We don't need to decrement any task numbers because we didn't spawn any new task.
@@ -13092,7 +13164,8 @@ if (__DEV__) {
         resumeSlots,
         error,
         errorDigest,
-        errorInfo
+        errorInfo,
+        false
       );
     }
 
@@ -13111,7 +13184,13 @@ if (__DEV__) {
 
         if (boundary.status !== CLIENT_RENDERED) {
           boundary.status = CLIENT_RENDERED;
-          encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+          encodeErrorForBoundary(
+            boundary,
+            errorDigest,
+            error,
+            errorInfo,
+            false
+          );
           untrackBoundary(request, boundary); // Regardless of what happens next, this boundary won't be displayed,
           // so we can flush it, if the parent already flushed.
 
@@ -13151,31 +13230,20 @@ if (__DEV__) {
       rootSegmentID,
       error,
       errorDigest,
-      errorInfo
+      errorInfo,
+      wasAborted
     ) {
       var resumedBoundary = createSuspenseBoundary(request, new Set());
       resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
 
       resumedBoundary.rootSegmentID = rootSegmentID;
       resumedBoundary.status = CLIENT_RENDERED;
-      var errorMessage = error;
-
-      {
-        var errorPrefix = "The server did not finish this Suspense boundary: ";
-
-        if (error && typeof error.message === "string") {
-          errorMessage = errorPrefix + error.message;
-        } else {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          errorMessage = errorPrefix + String(error);
-        }
-      }
-
       encodeErrorForBoundary(
         resumedBoundary,
         errorDigest,
-        errorMessage,
-        errorInfo
+        error,
+        errorInfo,
+        wasAborted
       );
 
       if (resumedBoundary.parentFlushed) {
@@ -13190,7 +13258,8 @@ if (__DEV__) {
       slots,
       error,
       errorDigest,
-      errorInfo
+      errorInfo,
+      aborted
     ) {
       for (var i = 0; i < nodes.length; i++) {
         var node = nodes[i];
@@ -13203,7 +13272,8 @@ if (__DEV__) {
             node[3],
             error,
             errorDigest,
-            errorInfo
+            errorInfo,
+            aborted
           );
         } else {
           var boundaryNode = node;
@@ -13213,7 +13283,8 @@ if (__DEV__) {
             rootSegmentID,
             error,
             errorDigest,
-            errorInfo
+            errorInfo,
+            aborted
           );
         }
       } // Empty the set, since we've cleared it now.
@@ -13230,7 +13301,13 @@ if (__DEV__) {
           );
         } else if (boundary.status !== CLIENT_RENDERED) {
           boundary.status = CLIENT_RENDERED;
-          encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+          encodeErrorForBoundary(
+            boundary,
+            errorDigest,
+            error,
+            errorInfo,
+            aborted
+          );
 
           if (boundary.parentFlushed) {
             request.clientRenderedBoundaries.push(boundary);
@@ -13290,7 +13367,8 @@ if (__DEV__) {
                 replay.slots,
                 error,
                 errorDigest,
-                errorInfo
+                errorInfo,
+                true
               );
             }
 
@@ -13316,25 +13394,12 @@ if (__DEV__) {
             _errorDigest = logRecoverableError(request, error, _errorInfo);
           }
 
-          var errorMessage = error;
-
-          {
-            var errorPrefix =
-              "The server did not finish this Suspense boundary: ";
-
-            if (error && typeof error.message === "string") {
-              errorMessage = errorPrefix + error.message;
-            } else {
-              // eslint-disable-next-line react-internal/safe-string-coercion
-              errorMessage = errorPrefix + String(error);
-            }
-          }
-
           encodeErrorForBoundary(
             boundary,
             _errorDigest,
-            errorMessage,
-            _errorInfo
+            error,
+            _errorInfo,
+            true
           );
           untrackBoundary(request, boundary);
 
@@ -13826,13 +13891,16 @@ if (__DEV__) {
       if (boundary.status === CLIENT_RENDERED) {
         // Emit a client rendered suspense boundary wrapper.
         // We never queue the inner boundary so we'll never emit its content or partial segments.
-        writeStartClientRenderedSuspenseBoundary(
-          destination,
-          request.renderState,
-          boundary.errorDigest,
-          boundary.errorMessage,
-          boundary.errorComponentStack
-        ); // Flush the fallback.
+        {
+          writeStartClientRenderedSuspenseBoundary(
+            destination,
+            request.renderState,
+            boundary.errorDigest,
+            boundary.errorMessage,
+            boundary.errorStack,
+            boundary.errorComponentStack
+          );
+        } // Flush the fallback.
 
         flushSubtree(request, destination, segment, hoistableState);
         return writeEndClientRenderedSuspenseBoundary(destination);
@@ -13900,15 +13968,18 @@ if (__DEV__) {
     }
 
     function flushClientRenderedBoundary(request, destination, boundary) {
-      return writeClientRenderBoundaryInstruction(
-        destination,
-        request.resumableState,
-        request.renderState,
-        boundary.rootSegmentID,
-        boundary.errorDigest,
-        boundary.errorMessage,
-        boundary.errorComponentStack
-      );
+      {
+        return writeClientRenderBoundaryInstruction(
+          destination,
+          request.resumableState,
+          request.renderState,
+          boundary.rootSegmentID,
+          boundary.errorDigest,
+          boundary.errorMessage,
+          boundary.errorStack,
+          boundary.errorComponentStack
+        );
+      }
     }
 
     function flushSegmentContainer(
