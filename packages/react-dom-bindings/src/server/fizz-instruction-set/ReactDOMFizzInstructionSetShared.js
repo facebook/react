@@ -19,6 +19,7 @@ export function clientRenderBoundary(
   suspenseBoundaryID,
   errorDigest,
   errorMsg,
+  errorStack,
   errorComponentStack,
 ) {
   // Find the fallback's first element.
@@ -36,7 +37,8 @@ export function clientRenderBoundary(
   const dataset = suspenseIdNode.dataset;
   if (errorDigest) dataset['dgst'] = errorDigest;
   if (errorMsg) dataset['msg'] = errorMsg;
-  if (errorComponentStack) dataset['stck'] = errorComponentStack;
+  if (errorStack) dataset['stck'] = errorStack;
+  if (errorComponentStack) dataset['cstck'] = errorComponentStack;
   // Tell React to retry it if the parent already hydrated.
   if (suspenseNode['_reactRetry']) {
     suspenseNode['_reactRetry']();

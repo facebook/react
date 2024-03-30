@@ -796,7 +796,8 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          theError.message,
+          'Switched to client rendering because the server rendering errored:\n\n' +
+            theError.message,
           expectedDigest,
           componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
@@ -919,7 +920,8 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          theError.message,
+          'Switched to client rendering because the server rendering errored:\n\n' +
+            theError.message,
           expectedDigest,
           componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
@@ -1002,7 +1004,8 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          theError.message,
+          'Switched to client rendering because the server rendering errored:\n\n' +
+            theError.message,
           expectedDigest,
           componentStack([
             'Erroring',
@@ -1088,7 +1091,8 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          theError.message,
+          'Switched to client rendering because the server rendering errored:\n\n' +
+            theError.message,
           expectedDigest,
           componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
@@ -1414,13 +1418,15 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'The render was aborted by the server without a reason.',
           expectedDigest,
           // We get the stack of the task when it was aborted which is why we see `h1`
           componentStack(['h1', 'Suspense', 'div', 'App']),
         ],
         [
-          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'The render was aborted by the server without a reason.',
           expectedDigest,
           componentStack(['Suspense', 'main', 'div', 'App']),
         ],
@@ -2155,7 +2161,8 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          theError.message,
+          'Switched to client rendering because the server rendering errored:\n\n' +
+            theError.message,
           expectedDigest,
           componentStack([
             'AsyncText',
@@ -3441,12 +3448,14 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          'The server did not finish this Suspense boundary: foobar',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'foobar',
           'a digest',
           componentStack(['Suspense', 'p', 'div', 'App']),
         ],
         [
-          'The server did not finish this Suspense boundary: foobar',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'foobar',
           'a digest',
           componentStack(['Suspense', 'span', 'div', 'App']),
         ],
@@ -3522,12 +3531,14 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          'The server did not finish this Suspense boundary: uh oh',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'uh oh',
           'a digest',
           componentStack(['Suspense', 'p', 'div', 'App']),
         ],
         [
-          'The server did not finish this Suspense boundary: uh oh',
+          'Switched to client rendering because the server rendering aborted due to:\n\n' +
+            'uh oh',
           'a digest',
           componentStack(['Suspense', 'span', 'div', 'App']),
         ],
@@ -4001,7 +4012,8 @@ describe('ReactDOMFizzServer', () => {
         errors,
         [
           [
-            theError.message,
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              theError.message,
             expectedDigest,
             componentStack(['Erroring', 'Suspense', 'div', 'App']),
           ],
@@ -6782,7 +6794,14 @@ describe('ReactDOMFizzServer', () => {
 
     expect(recoverableErrors).toEqual(
       __DEV__
-        ? ['server error', 'replay error', 'server error']
+        ? [
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'server error',
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'replay error',
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'server error',
+          ]
         : [
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
@@ -6941,8 +6960,10 @@ describe('ReactDOMFizzServer', () => {
     expect(recoverableErrors).toEqual(
       __DEV__
         ? [
-            'The server did not finish this Suspense boundary: aborted',
-            'The server did not finish this Suspense boundary: aborted',
+            'Switched to client rendering because the server rendering aborted due to:\n\n' +
+              'aborted',
+            'Switched to client rendering because the server rendering aborted due to:\n\n' +
+              'aborted',
           ]
         : [
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
@@ -7113,8 +7134,10 @@ describe('ReactDOMFizzServer', () => {
       // It surfaced in two different suspense boundaries.
       __DEV__
         ? [
-            'The server did not finish this Suspense boundary: replay error',
-            'The server did not finish this Suspense boundary: replay error',
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'replay error',
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'replay error',
           ]
         : [
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
@@ -7240,7 +7263,10 @@ describe('ReactDOMFizzServer', () => {
 
     expect(recoverableErrors).toEqual(
       __DEV__
-        ? ['server error']
+        ? [
+            'Switched to client rendering because the server rendering errored:\n\n' +
+              'server error',
+          ]
         : [
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
           ],

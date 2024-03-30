@@ -203,9 +203,6 @@ const CLIENT_RENDERED = 4; // if it errors or infinitely suspends
 type SuspenseBoundary = {
   status: 0 | 1 | 4 | 5,
   rootSegmentID: number,
-  errorDigest: ?string, // the error hash if it errors
-  errorMessage?: string, // the error string if it errors
-  errorComponentStack?: string, // the error component stack if it errors
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
@@ -215,6 +212,11 @@ type SuspenseBoundary = {
   fallbackState: HoistableState,
   trackedContentKeyPath: null | KeyNode, // used to track the path for replay nodes
   trackedFallbackNode: null | ReplayNode, // used to track the fallback for replay nodes
+  errorDigest: ?string, // the error hash if it errors
+  // DEV-only fields
+  errorMessage?: null | string, // the error string if it errors
+  errorStack?: null | string, // the error stack if it errors
+  errorComponentStack?: null | string, // the error component stack if it errors
 };
 
 type RenderTask = {
@@ -601,7 +603,7 @@ function createSuspenseBoundary(
   request: Request,
   fallbackAbortableTasks: Set<Task>,
 ): SuspenseBoundary {
-  return {
+  const boundary: SuspenseBoundary = {
     status: PENDING,
     rootSegmentID: -1,
     parentFlushed: false,
@@ -615,6 +617,13 @@ function createSuspenseBoundary(
     trackedContentKeyPath: null,
     trackedFallbackNode: null,
   };
+  if (__DEV__) {
+    // DEV-only fields for hidden class
+    boundary.errorMessage = null;
+    boundary.errorStack = null;
+    boundary.errorComponentStack = null;
+  }
+  return boundary;
 }
 
 function createRenderTask(
@@ -811,22 +820,30 @@ function encodeErrorForBoundary(
   digest: ?string,
   error: mixed,
   thrownInfo: ThrownInfo,
+  wasAborted: boolean,
 ) {
   boundary.errorDigest = digest;
   if (__DEV__) {
-    let message;
+    let message, stack;
     // In dev we additionally encode the error message and component stack on the boundary
     if (error instanceof Error) {
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error.message);
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      stack = String(error.stack);
     } else if (typeof error === 'object' && error !== null) {
       message = describeObjectForErrorMessage(error);
+      stack = null;
     } else {
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error);
+      stack = null;
     }
-
-    boundary.errorMessage = message;
+    const prefix = wasAborted
+      ? 'Switched to client rendering because the server rendering aborted due to:\n\n'
+      : 'Switched to client rendering because the server rendering errored:\n\n';
+    boundary.errorMessage = prefix + message;
+    boundary.errorStack = stack;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }
@@ -1007,7 +1024,7 @@ function renderSuspenseBoundary(
     } else {
       errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
+    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo, false);
 
     untrackBoundary(request, newBoundary);
 
@@ -1151,7 +1168,13 @@ function replaySuspenseBoundary(
     } else {
       errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    encodeErrorForBoundary(resumedBoundary, errorDigest, error, thrownInfo);
+    encodeErrorForBoundary(
+      resumedBoundary,
+      errorDigest,
+      error,
+      thrownInfo,
+      false,
+    );
 
     task.replay.pendingTasks--;
 
@@ -2978,6 +3001,7 @@ function erroredReplay(
     error,
     errorDigest,
     errorInfo,
+    false,
   );
 }
 
@@ -3008,7 +3032,7 @@ function erroredTask(
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, false);
       untrackBoundary(request, boundary);
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -3048,6 +3072,7 @@ function abortRemainingSuspenseBoundary(
   error: mixed,
   errorDigest: ?string,
   errorInfo: ThrownInfo,
+  wasAborted: boolean,
 ): void {
   const resumedBoundary = createSuspenseBoundary(request, new Set());
   resumedBoundary.parentFlushed = true;
@@ -3055,17 +3080,13 @@ function abortRemainingSuspenseBoundary(
   resumedBoundary.rootSegmentID = rootSegmentID;
 
   resumedBoundary.status = CLIENT_RENDERED;
-  let errorMessage = error;
-  if (__DEV__) {
-    const errorPrefix = 'The server did not finish this Suspense boundary: ';
-    if (error && typeof error.message === 'string') {
-      errorMessage = errorPrefix + error.message;
-    } else {
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      errorMessage = errorPrefix + String(error);
-    }
-  }
-  encodeErrorForBoundary(resumedBoundary, errorDigest, errorMessage, errorInfo);
+  encodeErrorForBoundary(
+    resumedBoundary,
+    errorDigest,
+    error,
+    errorInfo,
+    wasAborted,
+  );
 
   if (resumedBoundary.parentFlushed) {
     request.clientRenderedBoundaries.push(resumedBoundary);
@@ -3080,6 +3101,7 @@ function abortRemainingReplayNodes(
   error: mixed,
   errorDigest: ?string,
   errorInfo: ThrownInfo,
+  aborted: boolean,
 ): void {
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
@@ -3092,6 +3114,7 @@ function abortRemainingReplayNodes(
         error,
         errorDigest,
         errorInfo,
+        aborted,
       );
     } else {
       const boundaryNode: ReplaySuspenseBoundary = node;
@@ -3102,6 +3125,7 @@ function abortRemainingReplayNodes(
         error,
         errorDigest,
         errorInfo,
+        aborted,
       );
     }
   }
@@ -3118,7 +3142,7 @@ function abortRemainingReplayNodes(
       );
     } else if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, aborted);
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -3194,6 +3218,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error,
             errorDigest,
             errorInfo,
+            true,
           );
         }
         request.pendingRootTasks--;
@@ -3223,18 +3248,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       } else {
         errorDigest = logRecoverableError(request, error, errorInfo);
       }
-      let errorMessage = error;
-      if (__DEV__) {
-        const errorPrefix =
-          'The server did not finish this Suspense boundary: ';
-        if (error && typeof error.message === 'string') {
-          errorMessage = errorPrefix + error.message;
-        } else {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          errorMessage = errorPrefix + String(error);
-        }
-      }
-      encodeErrorForBoundary(boundary, errorDigest, errorMessage, errorInfo);
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
       untrackBoundary(request, boundary);
 
@@ -3757,13 +3771,25 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
-    writeStartClientRenderedSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.errorDigest,
-      boundary.errorMessage,
-      boundary.errorComponentStack,
-    );
+    if (__DEV__) {
+      writeStartClientRenderedSuspenseBoundary(
+        destination,
+        request.renderState,
+        boundary.errorDigest,
+        boundary.errorMessage,
+        boundary.errorStack,
+        boundary.errorComponentStack,
+      );
+    } else {
+      writeStartClientRenderedSuspenseBoundary(
+        destination,
+        request.renderState,
+        boundary.errorDigest,
+        null,
+        null,
+        null,
+      );
+    }
     // Flush the fallback.
     flushSubtree(request, destination, segment, hoistableState);
 
@@ -3849,15 +3875,29 @@ function flushClientRenderedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
-  return writeClientRenderBoundaryInstruction(
-    destination,
-    request.resumableState,
-    request.renderState,
-    boundary.rootSegmentID,
-    boundary.errorDigest,
-    boundary.errorMessage,
-    boundary.errorComponentStack,
-  );
+  if (__DEV__) {
+    return writeClientRenderBoundaryInstruction(
+      destination,
+      request.resumableState,
+      request.renderState,
+      boundary.rootSegmentID,
+      boundary.errorDigest,
+      boundary.errorMessage,
+      boundary.errorStack,
+      boundary.errorComponentStack,
+    );
+  } else {
+    return writeClientRenderBoundaryInstruction(
+      destination,
+      request.resumableState,
+      request.renderState,
+      boundary.rootSegmentID,
+      boundary.errorDigest,
+      null,
+      null,
+      null,
+    );
+  }
 }
 
 function flushSegmentContainer(

@@ -2735,9 +2735,9 @@ function updateDehydratedSuspenseComponent(
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
       let digest: ?string;
-      let message, stack;
+      let message, stack, componentStack;
       if (__DEV__) {
-        ({digest, message, stack} =
+        ({digest, message, stack, componentStack} =
           getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       } else {
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
@@ -2747,18 +2747,24 @@ function updateDehydratedSuspenseComponent(
       // TODO: Figure out a better signal than encoding a magic digest value.
       if (!enablePostpone || digest !== 'POSTPONE') {
         let error;
-        if (message) {
+        if (__DEV__ && message) {
           // eslint-disable-next-line react-internal/prod-error-codes
           error = new Error(message);
         } else {
           error = new Error(
             'The server could not finish this Suspense boundary, likely ' +
-              'due to an error during server rendering. Switched to ' +
-              'client rendering.',
+              'due to an error during server rendering. ' +
+              'Switched to client rendering.',
           );
         }
+        // Replace the stack with the server stack
+        error.stack = (__DEV__ && stack) || '';
         (error: any).digest = digest;
-        capturedValue = createCapturedValueFromError(error, digest, stack);
+        capturedValue = createCapturedValueFromError(
+          error,
+          digest,
+          componentStack,
+        );
       }
       return retrySuspenseComponentWithoutHydrating(
         current,

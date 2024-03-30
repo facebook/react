@@ -3801,6 +3801,8 @@ const clientRenderedSuspenseBoundaryError1B =
   stringToPrecomputedChunk(' data-msg="');
 const clientRenderedSuspenseBoundaryError1C =
   stringToPrecomputedChunk(' data-stck="');
+const clientRenderedSuspenseBoundaryError1D =
+  stringToPrecomputedChunk(' data-cstck="');
 const clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk('></template>');
 
@@ -3843,7 +3845,8 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
   errorDigest: ?string,
-  errorMesssage: ?string,
+  errorMessage: ?string,
+  errorStack: ?string,
   errorComponentStack: ?string,
 ): boolean {
   let result;
@@ -3861,19 +3864,27 @@ export function writeStartClientRenderedSuspenseBoundary(
     );
   }
   if (__DEV__) {
-    if (errorMesssage) {
+    if (errorMessage) {
       writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
       writeChunk(
         destination,
-        stringToChunk(escapeTextForBrowser(errorMesssage)),
+        stringToChunk(escapeTextForBrowser(errorMessage)),
       );
       writeChunk(
         destination,
         clientRenderedSuspenseBoundaryErrorAttrInterstitial,
       );
     }
-    if (errorComponentStack) {
+    if (errorStack) {
       writeChunk(destination, clientRenderedSuspenseBoundaryError1C);
+      writeChunk(destination, stringToChunk(escapeTextForBrowser(errorStack)));
+      writeChunk(
+        destination,
+        clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+      );
+    }
+    if (errorComponentStack) {
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1D);
       writeChunk(
         destination,
         stringToChunk(escapeTextForBrowser(errorComponentStack)),
@@ -4236,6 +4247,7 @@ const clientRenderData1 = stringToPrecomputedChunk(
 const clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
 const clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
 const clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
+const clientRenderData5 = stringToPrecomputedChunk('" data-cstck="');
 const clientRenderDataEnd = dataElementQuotedEnd;
 
 export function writeClientRenderBoundaryInstruction(
@@ -4244,8 +4256,9 @@ export function writeClientRenderBoundaryInstruction(
   renderState: RenderState,
   id: number,
   errorDigest: ?string,
-  errorMessage?: string,
-  errorComponentStack?: string,
+  errorMessage: ?string,
+  errorStack: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   const scriptFormat =
     !enableFizzExternalRuntime ||
@@ -4276,7 +4289,7 @@ export function writeClientRenderBoundaryInstruction(
     writeChunk(destination, clientRenderScript1A);
   }
 
-  if (errorDigest || errorMessage || errorComponentStack) {
+  if (errorDigest || errorMessage || errorStack || errorComponentStack) {
     if (scriptFormat) {
       // ,"JSONString"
       writeChunk(destination, clientRenderErrorScriptArgInterstitial);
@@ -4293,7 +4306,7 @@ export function writeClientRenderBoundaryInstruction(
       );
     }
   }
-  if (errorMessage || errorComponentStack) {
+  if (errorMessage || errorStack || errorComponentStack) {
     if (scriptFormat) {
       // ,"JSONString"
       writeChunk(destination, clientRenderErrorScriptArgInterstitial);
@@ -4310,6 +4323,23 @@ export function writeClientRenderBoundaryInstruction(
       );
     }
   }
+  if (errorStack || errorComponentStack) {
+    // ,"JSONString"
+    if (scriptFormat) {
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorStack || '')),
+      );
+    } else {
+      // " data-stck="HTMLString
+      writeChunk(destination, clientRenderData4);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorStack || '')),
+      );
+    }
+  }
   if (errorComponentStack) {
     // ,"JSONString"
     if (scriptFormat) {
@@ -4321,8 +4351,8 @@ export function writeClientRenderBoundaryInstruction(
         ),
       );
     } else {
-      // " data-stck="HTMLString
-      writeChunk(destination, clientRenderData4);
+      // " data-cstck="HTMLString
+      writeChunk(destination, clientRenderData5);
       writeChunk(
         destination,
         stringToChunk(escapeTextForBrowser(errorComponentStack)),

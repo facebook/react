@@ -1226,15 +1226,21 @@ export function isSuspenseInstanceFallback(
 
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-): {digest: ?string, message?: string, stack?: string} {
+): {
+  digest: ?string,
+  message?: string,
+  stack?: string,
+  componentStack?: string,
+} {
   const dataset =
     instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
-  let digest, message, stack;
+  let digest, message, stack, componentStack;
   if (dataset) {
     digest = dataset.dgst;
     if (__DEV__) {
       message = dataset.msg;
       stack = dataset.stck;
+      componentStack = dataset.cstck;
     }
   }
   if (__DEV__) {
@@ -1242,6 +1248,7 @@ export function getSuspenseInstanceFallbackErrorDetails(
       message,
       digest,
       stack,
+      componentStack,
     };
   } else {
     // Object gets DCE'd if constructed in tail position and matches callsite destructuring

@@ -2108,7 +2108,8 @@ describe('ReactDOMServerPartialHydration', () => {
     });
     if (__DEV__) {
       await waitForAll([
-        'The server did not finish this Suspense boundary: The server used' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used' +
           ' "renderToString" which does not support Suspense.',
       ]);
     } else {
@@ -2177,7 +2178,8 @@ describe('ReactDOMServerPartialHydration', () => {
     });
     if (__DEV__) {
       await waitForAll([
-        'The server did not finish this Suspense boundary: The server used' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used' +
           ' "renderToString" which does not support Suspense.',
       ]);
     } else {
@@ -2251,7 +2253,8 @@ describe('ReactDOMServerPartialHydration', () => {
     });
     if (__DEV__) {
       await waitForAll([
-        'The server did not finish this Suspense boundary: The server used' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used' +
           ' "renderToString" which does not support Suspense.',
       ]);
     } else {
@@ -2571,7 +2574,8 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     if (__DEV__) {
       await waitForAll([
-        'The server did not finish this Suspense boundary: The server used' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used' +
           ' "renderToString" which does not support Suspense.',
       ]);
     } else {
@@ -2641,7 +2645,8 @@ describe('ReactDOMServerPartialHydration', () => {
     });
     if (__DEV__) {
       await waitForAll([
-        'The server did not finish this Suspense boundary: The server used' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used' +
           ' "renderToString" which does not support Suspense.',
       ]);
     } else {

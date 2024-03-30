@@ -674,7 +674,8 @@ describe('ReactDOMServerHydration', () => {
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(
-        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used "renderToString" ' +
           'which does not support Suspense. If you intended for this Suspense boundary to render ' +
           'the fallback content on the server consider throwing an Error somewhere within the ' +
           'Suspense boundary. If you intended to have the server wait for the suspended component ' +
@@ -719,7 +720,8 @@ describe('ReactDOMServerHydration', () => {
     expect(errors.length).toBe(1);
     if (__DEV__) {
       expect(errors[0]).toBe(
-        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+          'The server used "renderToString" ' +
           'which does not support Suspense. If you intended for this Suspense boundary to render ' +
           'the fallback content on the server consider throwing an Error somewhere within the ' +
           'Suspense boundary. If you intended to have the server wait for the suspended component ' +
