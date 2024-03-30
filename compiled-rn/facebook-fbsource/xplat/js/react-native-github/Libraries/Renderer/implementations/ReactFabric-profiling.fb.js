@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7eba5ed56d62fd3b39e8d3ac4bd0561c>>
+ * @generated SignedSource<<9dbe74e43cd78023236dba5059713bf8>>
  */
 
 "use strict";
@@ -6215,6 +6215,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(
           "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
         )),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -11345,7 +11346,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1186 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-270b90fe",
+    version: "19.0.0-canary-feeb7459",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11401,7 +11402,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-270b90fe"
+  reconcilerVersion: "19.0.0-canary-feeb7459"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

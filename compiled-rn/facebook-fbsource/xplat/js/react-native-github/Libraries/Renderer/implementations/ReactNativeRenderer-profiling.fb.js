@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e1902f82cf3871cb88745e438768098>>
+ * @generated SignedSource<<2fd9d14d7cf1c89a35f0ee934ecc3eda>>
  */
 
 "use strict";
@@ -6280,6 +6280,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(
           "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
         )),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -11562,7 +11563,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1253 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-0502e2a7",
+    version: "19.0.0-canary-7e371444",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11618,7 +11619,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-0502e2a7"
+  reconcilerVersion: "19.0.0-canary-7e371444"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

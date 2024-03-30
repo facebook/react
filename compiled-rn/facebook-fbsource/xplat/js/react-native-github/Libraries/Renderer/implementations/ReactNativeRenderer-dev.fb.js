@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<671deef2ff146cb90557b5929b5a868f>>
+ * @generated SignedSource<<29c94384161e3a1a33fb8ae6d6155a35>>
  */
 
 "use strict";
@@ -19756,7 +19756,7 @@ to return true:wantsResponderID|                            |
           // get an update and we'll never be able to hydrate the final content. Let's just try the
           // client side render instead.
           var digest;
-          var message, stack;
+          var message, stack, componentStack;
 
           {
             var _getSuspenseInstanceF =
@@ -19765,6 +19765,7 @@ to return true:wantsResponderID|                            |
             digest = _getSuspenseInstanceF.digest;
             message = _getSuspenseInstanceF.message;
             stack = _getSuspenseInstanceF.stack;
+            componentStack = _getSuspenseInstanceF.componentStack;
           }
 
           var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
@@ -19778,13 +19779,18 @@ to return true:wantsResponderID|                            |
             } else {
               error = new Error(
                 "The server could not finish this Suspense boundary, likely " +
-                  "due to an error during server rendering. Switched to " +
-                  "client rendering."
+                  "due to an error during server rendering. " +
+                  "Switched to client rendering."
               );
-            }
+            } // Replace the stack with the server stack
 
+            error.stack = stack || "";
             error.digest = digest;
-            capturedValue = createCapturedValueFromError(error, digest, stack);
+            capturedValue = createCapturedValueFromError(
+              error,
+              digest,
+              componentStack
+            );
           }
 
           return retrySuspenseComponentWithoutHydrating(
@@ -31042,7 +31048,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-5f8abb5a";
+    var ReactVersion = "19.0.0-canary-366999b3";
 
     function createPortal$1(
       children,

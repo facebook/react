@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<81674d0a8c35b33e23ad87b78ab22d08>>
+ * @generated SignedSource<<0102d8d01b7c7efdce15387c6fa804bc>>
  */
 
 "use strict";
@@ -4633,6 +4633,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(
           "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
         )),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -9837,7 +9838,7 @@ var devToolsConfig$jscomp$inline_1086 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-8fc8d975",
+  version: "19.0.0-canary-8b0c34a5",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9881,7 +9882,7 @@ var devToolsConfig$jscomp$inline_1086 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-8fc8d975"
+  reconcilerVersion: "19.0.0-canary-8b0c34a5"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

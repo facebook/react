@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<389fe4c4dd5a3dc2a002349defa47aea>>
+ * @generated SignedSource<<7ea0ba771a3dafe13783264b14f1cffd>>
  */
 
 "use strict";
@@ -4462,6 +4462,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(
           "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
         )),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -9219,7 +9220,7 @@ var devToolsConfig$jscomp$inline_1002 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-dd31caf0",
+  version: "19.0.0-canary-0ee8586e",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1190 = {
@@ -9250,7 +9251,7 @@ var internals$jscomp$inline_1190 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-dd31caf0"
+  reconcilerVersion: "19.0.0-canary-0ee8586e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1191 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

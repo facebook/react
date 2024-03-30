@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<01cbfec88e8a21340f3c759d699dada0>>
+ * @generated SignedSource<<6b9cf5f3bb5fc8873d7404b36e5c3753>>
  */
 
 "use strict";
@@ -6074,6 +6074,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(
           "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
         )),
+        (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
         (JSCompiler_temp = createCapturedValueFromError(
           nextProps,
@@ -10854,7 +10855,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1171 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-bbd4ca50",
+    version: "19.0.0-canary-2d04f3bb",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10897,7 +10898,7 @@ var internals$jscomp$inline_1422 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-bbd4ca50"
+  reconcilerVersion: "19.0.0-canary-2d04f3bb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1423 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
