@@ -585,18 +585,6 @@ function createModelResolver<T>(
   return value => {
     parentObject[key] = value;
 
-    // If this is a tuple that's representing a react element, and the props
-    // were resolved (4th item, key '3'), the props of `blocked.value` must be
-    // updated.
-    if (
-      Array.isArray(parentObject) &&
-      key === '3' &&
-      blocked.value &&
-      blocked.value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      blocked.value.props = value;
-    }
-
     // If this is the root object for a model reference, where `blocked.value`
     // is a stale `null`, the resolved value can be used directly.
     if (key === '' && blocked.value === null) {
