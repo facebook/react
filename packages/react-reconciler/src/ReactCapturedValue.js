@@ -17,7 +17,6 @@ export type CapturedValue<T> = {
   +value: T,
   source: Fiber | null,
   stack: string | null,
-  digest: string | null,
 };
 
 export function createCapturedValueAtFiber<T>(
@@ -43,14 +42,12 @@ export function createCapturedValueAtFiber<T>(
     value,
     source,
     stack,
-    digest: null,
   };
 }
 
 export function createCapturedValueFromError(
   value: Error,
-  digest: ?string,
-  stack: ?string,
+  stack: null | string,
 ): CapturedValue<Error> {
   if (typeof stack === 'string') {
     CapturedStacks.set(value, stack);
@@ -58,7 +55,6 @@ export function createCapturedValueFromError(
   return {
     value,
     source: null,
-    stack: stack != null ? stack : null,
-    digest: digest != null ? digest : null,
+    stack: stack,
   };
 }

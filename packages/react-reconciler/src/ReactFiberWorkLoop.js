@@ -3128,37 +3128,21 @@ function commitRootImpl(
 }
 
 function makeErrorInfo(componentStack: ?string) {
+  const errorInfo = {
+    componentStack,
+  };
   if (__DEV__) {
-    const errorInfo = {
-      componentStack,
-    };
-    return new Proxy(errorInfo, {
-      get(target, prop, receiver) {
-        if (prop === 'digest') {
-          console.error(
-            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
-              ' of the Error instance itself.',
-          );
-        }
-        return Reflect.get(target, prop, receiver);
-      },
-      has(target, prop) {
-        if (prop === 'digest') {
-          console.error(
-            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
-              ' of the Error instance itself.',
-          );
-        }
-        return Reflect.has(target, prop);
+    Object.defineProperty((errorInfo: any), 'digest', {
+      get() {
+        console.error(
+          'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+            ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+            ' of the Error instance itself.',
+        );
       },
     });
-  } else {
-    return {
-      componentStack,
-    };
   }
+  return errorInfo;
 }
 
 function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {

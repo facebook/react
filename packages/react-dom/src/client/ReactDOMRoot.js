@@ -45,7 +45,7 @@ export type CreateRootOptions = {
   ) => void,
   onRecoverableError?: (
     error: mixed,
-    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
 };
 
@@ -71,7 +71,7 @@ export type HydrateRootOptions = {
   ) => void,
   onRecoverableError?: (
     error: mixed,
-    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
   formState?: ReactFormState<any, any> | null,
 };
