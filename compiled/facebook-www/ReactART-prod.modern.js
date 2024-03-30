@@ -3756,16 +3756,11 @@ function createCapturedValueAtFiber(value, source) {
       ((stack = getStackByFiberInDevAndProd(source)),
       CapturedStacks.set(value, stack));
   } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack, digest: null };
+  return { value: value, source: source, stack: stack };
 }
-function createCapturedValueFromError(value, digest, stack) {
+function createCapturedValueFromError(value, stack) {
   "string" === typeof stack && CapturedStacks.set(value, stack);
-  return {
-    value: value,
-    source: null,
-    stack: null != stack ? stack : null,
-    digest: null != digest ? digest : null
-  };
+  return { value: value, source: null, stack: stack };
 }
 "function" === typeof reportError
   ? reportError
@@ -4766,7 +4761,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         ? (pushPrimaryTreeSuspenseHandler(workInProgress),
           (workInProgress.flags &= -257),
           (JSCompiler_temp = createCapturedValueFromError(
-            Error(formatProdErrorMessage(422))
+            Error(formatProdErrorMessage(422)),
+            null
           )),
           (workInProgress = retrySuspenseComponentWithoutHydrating(
             current,
@@ -4820,11 +4816,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps = Error(formatProdErrorMessage(419))),
         (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
-        (JSCompiler_temp = createCapturedValueFromError(
-          nextProps,
-          JSCompiler_temp,
-          void 0
-        )),
+        (JSCompiler_temp = createCapturedValueFromError(nextProps, null)),
         (workInProgress = retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
@@ -9553,8 +9545,9 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = { componentStack: remainingLanes.stack }),
-        renderPriorityLevel(remainingLanes.value, transitions);
+        renderPriorityLevel(remainingLanes.value, {
+          componentStack: remainingLanes.stack
+        });
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
     flushPassiveEffects();
@@ -10267,19 +10260,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1099 = {
+  devToolsConfig$jscomp$inline_1096 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-323b75ff",
+    version: "19.0.0-www-modern-9f895342",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1304 = {
-  bundleType: devToolsConfig$jscomp$inline_1099.bundleType,
-  version: devToolsConfig$jscomp$inline_1099.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1099.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1099.rendererConfig,
+var internals$jscomp$inline_1301 = {
+  bundleType: devToolsConfig$jscomp$inline_1096.bundleType,
+  version: devToolsConfig$jscomp$inline_1096.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1096.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1096.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10296,26 +10289,26 @@ var internals$jscomp$inline_1304 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1099.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1096.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-323b75ff"
+  reconcilerVersion: "19.0.0-www-modern-9f895342"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1305 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1302 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1305.isDisabled &&
-    hook$jscomp$inline_1305.supportsFiber
+    !hook$jscomp$inline_1302.isDisabled &&
+    hook$jscomp$inline_1302.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1305.inject(
-        internals$jscomp$inline_1304
+      (rendererID = hook$jscomp$inline_1302.inject(
+        internals$jscomp$inline_1301
       )),
-        (injectedHook = hook$jscomp$inline_1305);
+        (injectedHook = hook$jscomp$inline_1302);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
