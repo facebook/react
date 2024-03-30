@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4c8833d67d5c40def402e9b24fc93313>>
+ * @generated SignedSource<<450ce571f0c96cb1643d074e993d3573>>
  */
 
 "use strict";
@@ -13195,11 +13195,10 @@ if (__DEV__) {
       return {
         value: value,
         source: source,
-        stack: stack,
-        digest: null
+        stack: stack
       };
     }
-    function createCapturedValueFromError(value, digest, stack) {
+    function createCapturedValueFromError(value, stack) {
       if (typeof stack === "string") {
         CapturedStacks.set(value, stack);
       }
@@ -13207,8 +13206,7 @@ if (__DEV__) {
       return {
         value: value,
         source: null,
-        stack: stack != null ? stack : null,
-        digest: digest != null ? digest : null
+        stack: stack
       };
     }
 
@@ -15825,7 +15823,9 @@ if (__DEV__) {
           // get an update and we'll never be able to hydrate the final content. Let's just try the
           // client side render instead.
           var digest;
-          var message, stack, componentStack;
+          var message;
+          var stack = null;
+          var componentStack = null;
 
           {
             var _getSuspenseInstanceF =
@@ -15857,8 +15857,7 @@ if (__DEV__) {
             error.digest = digest;
             capturedValue = createCapturedValueFromError(
               error,
-              digest,
-              componentStack
+              componentStack === undefined ? null : componentStack
             );
           }
 
@@ -15973,7 +15972,8 @@ if (__DEV__) {
             new Error(
               "There was an error while hydrating this Suspense boundary. " +
                 "Switched to client rendering."
-            )
+            ),
+            null
           );
 
           return retrySuspenseComponentWithoutHydrating(
@@ -24886,35 +24886,23 @@ if (__DEV__) {
     }
 
     function makeErrorInfo(componentStack) {
+      var errorInfo = {
+        componentStack: componentStack
+      };
+
       {
-        var errorInfo = {
-          componentStack: componentStack
-        };
-        return new Proxy(errorInfo, {
-          get: function (target, prop, receiver) {
-            if (prop === "digest") {
-              error(
-                'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                  " This property is no longer provided as part of errorInfo but can be accessed as a property" +
-                  " of the Error instance itself."
-              );
-            }
-
-            return Reflect.get(target, prop, receiver);
-          },
-          has: function (target, prop) {
-            if (prop === "digest") {
-              error(
-                'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                  " This property is no longer provided as part of errorInfo but can be accessed as a property" +
-                  " of the Error instance itself."
-              );
-            }
-
-            return Reflect.has(target, prop);
+        Object.defineProperty(errorInfo, "digest", {
+          get: function () {
+            error(
+              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+                " This property is no longer provided as part of errorInfo but can be accessed as a property" +
+                " of the Error instance itself."
+            );
           }
         });
       }
+
+      return errorInfo;
     }
 
     function releaseRootPooledCache(root, remainingLanes) {
@@ -26838,7 +26826,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-90c44db1";
+    var ReactVersion = "19.0.0-canary-a7826ac0";
 
     // Might add PROFILE later.
 

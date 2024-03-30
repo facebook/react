@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6f0e7861f6743b3815fa3d44454d6dbd>>
+ * @generated SignedSource<<24c748cb5ad6fedf32c95c0a70ca3378>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_246 = {
+var injectedNamesToPlugins$jscomp$inline_245 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_246 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_247 = !1,
-  pluginName$jscomp$inline_248;
-for (pluginName$jscomp$inline_248 in injectedNamesToPlugins$jscomp$inline_246)
+  isOrderingDirty$jscomp$inline_246 = !1,
+  pluginName$jscomp$inline_247;
+for (pluginName$jscomp$inline_247 in injectedNamesToPlugins$jscomp$inline_245)
   if (
-    injectedNamesToPlugins$jscomp$inline_246.hasOwnProperty(
-      pluginName$jscomp$inline_248
+    injectedNamesToPlugins$jscomp$inline_245.hasOwnProperty(
+      pluginName$jscomp$inline_247
     )
   ) {
-    var pluginModule$jscomp$inline_249 =
-      injectedNamesToPlugins$jscomp$inline_246[pluginName$jscomp$inline_248];
+    var pluginModule$jscomp$inline_248 =
+      injectedNamesToPlugins$jscomp$inline_245[pluginName$jscomp$inline_247];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_248) ||
-      namesToPlugins[pluginName$jscomp$inline_248] !==
-        pluginModule$jscomp$inline_249
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_247) ||
+      namesToPlugins[pluginName$jscomp$inline_247] !==
+        pluginModule$jscomp$inline_248
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_248])
+      if (namesToPlugins[pluginName$jscomp$inline_247])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_248 + "`.")
+            (pluginName$jscomp$inline_247 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_248] =
-        pluginModule$jscomp$inline_249;
-      isOrderingDirty$jscomp$inline_247 = !0;
+      namesToPlugins[pluginName$jscomp$inline_247] =
+        pluginModule$jscomp$inline_248;
+      isOrderingDirty$jscomp$inline_246 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_247 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_246 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -5089,16 +5089,11 @@ function createCapturedValueAtFiber(value, source) {
       ((stack = getStackByFiberInDevAndProd(source)),
       CapturedStacks.set(value, stack));
   } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack, digest: null };
+  return { value: value, source: source, stack: stack };
 }
-function createCapturedValueFromError(value, digest, stack) {
+function createCapturedValueFromError(value, stack) {
   "string" === typeof stack && CapturedStacks.set(value, stack);
-  return {
-    value: value,
-    source: null,
-    stack: null != stack ? stack : null,
-    digest: null != digest ? digest : null
-  };
+  return { value: value, source: null, stack: stack };
 }
 var reportGlobalError =
   "function" === typeof reportError
@@ -5955,7 +5950,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           (JSCompiler_temp = createCapturedValueFromError(
             Error(
               "There was an error while hydrating this Suspense boundary. Switched to client rendering."
-            )
+            ),
+            null
           )),
           (workInProgress = retrySuspenseComponentWithoutHydrating(
             current,
@@ -6011,11 +6007,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         )),
         (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
-        (JSCompiler_temp = createCapturedValueFromError(
-          nextProps,
-          JSCompiler_temp,
-          void 0
-        )),
+        (JSCompiler_temp = createCapturedValueFromError(nextProps, null)),
         (workInProgress = retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
@@ -9869,8 +9861,9 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = { componentStack: remainingLanes.stack }),
-        renderPriorityLevel(remainingLanes.value, transitions);
+        renderPriorityLevel(remainingLanes.value, {
+          componentStack: remainingLanes.stack
+        });
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
     flushPassiveEffects();
@@ -10636,10 +10629,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1104 = {
+  devToolsConfig$jscomp$inline_1101 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-1065157b",
+    version: "19.0.0-canary-743ed8be",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10655,11 +10648,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1341 = {
-  bundleType: devToolsConfig$jscomp$inline_1104.bundleType,
-  version: devToolsConfig$jscomp$inline_1104.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1104.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1104.rendererConfig,
+var internals$jscomp$inline_1338 = {
+  bundleType: devToolsConfig$jscomp$inline_1101.bundleType,
+  version: devToolsConfig$jscomp$inline_1101.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1101.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1101.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10675,26 +10668,26 @@ var internals$jscomp$inline_1341 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1104.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1101.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-1065157b"
+  reconcilerVersion: "19.0.0-canary-743ed8be"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1342 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1342.isDisabled &&
-    hook$jscomp$inline_1342.supportsFiber
+    !hook$jscomp$inline_1339.isDisabled &&
+    hook$jscomp$inline_1339.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1342.inject(
-        internals$jscomp$inline_1341
+      (rendererID = hook$jscomp$inline_1339.inject(
+        internals$jscomp$inline_1338
       )),
-        (injectedHook = hook$jscomp$inline_1342);
+        (injectedHook = hook$jscomp$inline_1339);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

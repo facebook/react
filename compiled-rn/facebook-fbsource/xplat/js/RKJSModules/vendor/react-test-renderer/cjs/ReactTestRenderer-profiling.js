@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0102d8d01b7c7efdce15387c6fa804bc>>
+ * @generated SignedSource<<1e162bfd81c2744b7c22ac7c96c87f91>>
  */
 
 "use strict";
@@ -3694,16 +3694,11 @@ function createCapturedValueAtFiber(value, source) {
       ((stack = getStackByFiberInDevAndProd(source)),
       CapturedStacks.set(value, stack));
   } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack, digest: null };
+  return { value: value, source: source, stack: stack };
 }
-function createCapturedValueFromError(value, digest, stack) {
+function createCapturedValueFromError(value, stack) {
   "string" === typeof stack && CapturedStacks.set(value, stack);
-  return {
-    value: value,
-    source: null,
-    stack: null != stack ? stack : null,
-    digest: null != digest ? digest : null
-  };
+  return { value: value, source: null, stack: stack };
 }
 var reportGlobalError =
   "function" === typeof reportError
@@ -4579,7 +4574,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           (JSCompiler_temp = createCapturedValueFromError(
             Error(
               "There was an error while hydrating this Suspense boundary. Switched to client rendering."
-            )
+            ),
+            null
           )),
           (workInProgress = retrySuspenseComponentWithoutHydrating(
             current,
@@ -4635,11 +4631,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         )),
         (nextProps.stack = ""),
         (nextProps.digest = JSCompiler_temp),
-        (JSCompiler_temp = createCapturedValueFromError(
-          nextProps,
-          JSCompiler_temp,
-          void 0
-        )),
+        (JSCompiler_temp = createCapturedValueFromError(nextProps, null)),
         (workInProgress = retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
@@ -8866,8 +8858,9 @@ function commitRootImpl(
       finishedWork++
     )
       (remainingLanes = recoverableErrors[finishedWork]),
-        (transitions = { componentStack: remainingLanes.stack }),
-        renderPriorityLevel(remainingLanes.value, transitions);
+        renderPriorityLevel(remainingLanes.value, {
+          componentStack: remainingLanes.stack
+        });
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
     flushPassiveEffects();
@@ -9833,12 +9826,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1086 = {
+var devToolsConfig$jscomp$inline_1083 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-8b0c34a5",
+  version: "19.0.0-canary-841877f9",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9855,10 +9848,10 @@ var devToolsConfig$jscomp$inline_1086 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1086.bundleType,
-  version: devToolsConfig$jscomp$inline_1086.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1086.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1086.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1083.bundleType,
+  version: devToolsConfig$jscomp$inline_1083.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1083.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1083.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9875,14 +9868,14 @@ var devToolsConfig$jscomp$inline_1086 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1086.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1083.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-8b0c34a5"
+  reconcilerVersion: "19.0.0-canary-841877f9"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
