@@ -160,7 +160,7 @@ export function createFiberRoot(
   ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,

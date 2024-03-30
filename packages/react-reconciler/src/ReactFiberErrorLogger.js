@@ -94,7 +94,7 @@ export function defaultOnCaughtError(
 
 export function defaultOnRecoverableError(
   error: mixed,
-  errorInfo: {+digest?: ?string, +componentStack?: ?string},
+  errorInfo: {+componentStack?: ?string},
 ) {
   reportGlobalError(error);
 }

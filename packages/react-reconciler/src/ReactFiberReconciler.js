@@ -267,7 +267,7 @@ export function createContainer(
   ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
@@ -313,7 +313,7 @@ export function createHydrationContainer(
   ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {+digest?: ?string, +componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,

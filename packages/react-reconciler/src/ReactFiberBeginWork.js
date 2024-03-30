@@ -2735,7 +2735,9 @@ function updateDehydratedSuspenseComponent(
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
       let digest: ?string;
-      let message, stack, componentStack;
+      let message;
+      let stack = null;
+      let componentStack = null;
       if (__DEV__) {
         ({digest, message, stack, componentStack} =
           getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
@@ -2762,8 +2764,7 @@ function updateDehydratedSuspenseComponent(
         (error: any).digest = digest;
         capturedValue = createCapturedValueFromError(
           error,
-          digest,
-          componentStack,
+          componentStack === undefined ? null : componentStack,
         );
       }
       return retrySuspenseComponentWithoutHydrating(
@@ -2906,6 +2907,7 @@ function updateDehydratedSuspenseComponent(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',
         ),
+        null,
       );
       return retrySuspenseComponentWithoutHydrating(
         current,
