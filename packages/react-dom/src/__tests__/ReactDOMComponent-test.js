@@ -17,6 +17,8 @@ describe('ReactDOMComponent', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   let act;
+  let assertLog;
+  let Scheduler;
 
   beforeEach(() => {
     jest.resetModules();
@@ -24,7 +26,9 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
   });
 
   afterEach(() => {
@@ -1611,7 +1615,6 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', async () => {
-      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -1620,7 +1623,7 @@ describe('ReactDOMComponent', () => {
             <source
               src="http://example.org/video"
               type="video/mp4"
-              onError={e => console.log('onError called')}
+              onError={e => Scheduler.log('onError called')}
             />
           </video>,
         );
@@ -1631,8 +1634,7 @@ describe('ReactDOMComponent', () => {
       container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
 
       if (__DEV__) {
-        expect(console.log).toHaveBeenCalledTimes(1);
-        expect(console.log.mock.calls[0][0]).toContain('onError called');
+        assertLog(['onError called']);
       }
     });
 
@@ -1921,7 +1923,6 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work load and error events on <image> element in SVG', async () => {
-      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       await act(() => {
@@ -1929,8 +1930,8 @@ describe('ReactDOMComponent', () => {
           <svg>
             <image
               xlinkHref="http://example.org/image"
-              onError={e => console.log('onError called')}
-              onLoad={e => console.log('onLoad called')}
+              onError={e => Scheduler.log('onError called')}
+              onLoad={e => Scheduler.log('onLoad called')}
             />
           </svg>,
         );
@@ -1946,9 +1947,7 @@ describe('ReactDOMComponent', () => {
       container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
 
       if (__DEV__) {
-        expect(console.log).toHaveBeenCalledTimes(2);
-        expect(console.log.mock.calls[0][0]).toContain('onError called');
-        expect(console.log.mock.calls[1][0]).toContain('onLoad called');
+        assertLog(['onError called', 'onLoad called']);
       }
     });
 
