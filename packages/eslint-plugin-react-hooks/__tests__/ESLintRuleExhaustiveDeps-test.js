@@ -5564,7 +5564,7 @@ const tests = {
 
                   const handleNext = useCallback((value) => {
                     setState(value);
-                  });
+                  }, []);
 
                   useEffect(() => {
                     return Store.subscribe(handleNext);
@@ -5739,7 +5739,7 @@ const tests = {
                   }
                   const handleNext2 = useCallback(() => {
                     console.log('hello');
-                  });
+                  }, []);
                   let handleNext3 = function() {
                     console.log('hello');
                   };
@@ -5791,7 +5791,7 @@ const tests = {
                   };
                   let handleNext3 = useCallback(function() {
                     console.log('hello');
-                  });
+                  }, []);
                   useEffect(() => {
                     handleNext1();
                     return Store.subscribe(() => handleNext1());
@@ -5859,7 +5859,7 @@ const tests = {
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
                     console.log('hello');
-                  });
+                  }, []);
                   function handleNext2() {
                     console.log('hello');
                   }
@@ -5888,7 +5888,7 @@ const tests = {
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
                     console.log('hello');
-                  });
+                  }, []);
                   function handleNext2() {
                     console.log('hello');
                   }
@@ -5954,7 +5954,7 @@ const tests = {
                 function MyComponent(props) {
                   let handleNext = useCallback(() => {
                     console.log('hello');
-                  });
+                  }, []);
                   if (props.foo) {
                     handleNext = () => {
                       console.log('hello');
