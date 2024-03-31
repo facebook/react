@@ -2129,7 +2129,6 @@ describe('ReactFlight', () => {
     }).toErrorDev('err');
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
-    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
     expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
     expect(mockConsoleLog.mock.calls[0][1].prop).toBe(123);
     mockConsoleLog.mockClear();
