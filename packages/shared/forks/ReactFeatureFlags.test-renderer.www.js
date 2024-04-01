@@ -20,7 +20,6 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
-export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableBinaryFlight = true;
 export const enableTaint = true;
