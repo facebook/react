@@ -232,13 +232,6 @@ const EnvironmentConfigSchema = z.object({
   enableTransitivelyFreezeFunctionExpressions: z.boolean().default(true),
 
   /*
-   * When enabled, removes *all* memoization from the function: this includes
-   * removing manually added useMemo/useCallback as well as not adding Forget's
-   * usual useMemoCache-based memoization.
-   */
-  disableAllMemoization: z.boolean().default(false),
-
-  /*
    * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
    * to values that Forget assumes are immutable (for Forget compiled code).
    * For example:

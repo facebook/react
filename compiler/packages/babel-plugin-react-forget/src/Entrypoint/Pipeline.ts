@@ -55,7 +55,6 @@ import {
   promoteUsedTemporaries,
   propagateEarlyReturns,
   propagateScopeDependencies,
-  pruneAllReactiveScopes,
   pruneHoistedContexts,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
@@ -268,15 +267,6 @@ function* runWithEnvironment(
     name: "BuildReactiveBlocks",
     value: reactiveFunction,
   });
-
-  if (env.config.disableAllMemoization) {
-    pruneAllReactiveScopes(reactiveFunction);
-    yield log({
-      kind: "reactive",
-      name: "PruneAllReactiveScopes",
-      value: reactiveFunction,
-    });
-  }
 
   flattenReactiveLoops(reactiveFunction);
   yield log({
