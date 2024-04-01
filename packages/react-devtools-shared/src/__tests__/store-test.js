@@ -1575,7 +1575,6 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
-        <React.unstable_Cache />
         <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
         <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
