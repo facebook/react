@@ -29,7 +29,6 @@ export {
   cache,
   startTransition,
   unstable_Activity,
-  unstable_Cache,
   unstable_TracingMarker,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,

@@ -23,7 +23,6 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -83,10 +82,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    case REACT_CACHE_TYPE:
-      if (enableCache) {
-        return 'Cache';
-      }
     // Fall through
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
