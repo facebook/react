@@ -31,7 +31,6 @@ export {
   unstable_DebugTracingMode,
   unstable_Activity,
   unstable_postpone,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_useCacheRefresh,

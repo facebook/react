@@ -434,6 +434,5 @@ export type Dispatcher = {
 };
 
 export type CacheDispatcher = {
-  getCacheSignal: () => AbortSignal,
   getCacheForType: <T>(resourceType: () => T) => T,
 };

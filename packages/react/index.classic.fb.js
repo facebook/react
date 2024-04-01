@@ -34,7 +34,6 @@ export {
   unstable_LegacyHidden,
   unstable_Scope,
   unstable_SuspenseList,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
   unstable_useMemoCache,
