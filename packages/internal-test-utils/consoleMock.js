@@ -15,8 +15,6 @@ const unexpectedErrorCallStacks = [];
 const unexpectedWarnCallStacks = [];
 const unexpectedLogCallStacks = [];
 
-// TODO: Consider consolidating this with `yieldValue`. In both cases, tests
-// should not be allowed to exit without asserting on the entire log.
 const patchConsoleMethod = (methodName, unexpectedConsoleCallStacks) => {
   const newMethod = function (format, ...args) {
     // Ignore uncaught errors reported by jsdom
