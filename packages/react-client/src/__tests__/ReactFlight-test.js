@@ -2108,6 +2108,7 @@ describe('ReactFlight', () => {
       throw new Error('err');
     }
 
+    // These tests are specifically testing console.log.
     // Assign to `mockConsoleLog` so we can still inspect it when `console.log`
     // is overridden by the test modules. The original function will be restored
     // after this test finishes by `jest.restoreAllMocks()`.
@@ -2127,6 +2128,9 @@ describe('ReactFlight', () => {
       transport = ReactNoopFlightServer.render({root: <ServerComponent />});
     }).toErrorDev('err');
 
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    expect(mockConsoleLog.mock.calls[0][1].prop).toBe(123);
     mockConsoleLog.mockClear();
 
     // The error should not actually get logged because we're not awaiting the root
