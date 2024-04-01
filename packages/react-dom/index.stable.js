@@ -13,8 +13,6 @@ export {
   createRoot,
   hydrateRoot,
   flushSync,
-  render,
-  unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
   useFormStatus,
