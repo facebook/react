@@ -776,8 +776,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     super();
     this.env = env;
     this.options = {
-      memoizeJsxElements:
-        this.env.config.memoizeJsxElements && !this.env.config.enableForest,
+      memoizeJsxElements: !this.env.config.enableForest,
       forceMemoizePrimitives: this.env.config.enableForest,
     };
   }

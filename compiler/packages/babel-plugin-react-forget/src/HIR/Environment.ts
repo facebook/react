@@ -161,13 +161,6 @@ const EnvironmentConfigSchema = z.object({
   // 🌲
   enableForest: z.boolean().default(false),
 
-  /*
-   * Enable memoization of JSX elements in addition to other types of values. When disabled,
-   * other types (objects, arrays, call expressions, etc) are memoized, but not known JSX
-   * values.
-   */
-  memoizeJsxElements: z.boolean().default(true),
-
   /**
    * Enable use of type annotations in the source to drive type inference. By default
    * Forget attemps to infer types using only information that is guaranteed correct

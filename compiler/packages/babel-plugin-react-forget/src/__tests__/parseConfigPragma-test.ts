@@ -13,18 +13,18 @@ describe("parseConfigPragma()", () => {
 
     // Validate defaults first to make sure that the parser is getting the value from the pragma,
     // and not just missing it and getting the default value
-    expect(defaultConfig.enableForest).toBe(false);
+    expect(defaultConfig.enableUseTypeAnnotations).toBe(false);
     expect(defaultConfig.validateRefAccessDuringRender).toBe(false);
-    expect(defaultConfig.memoizeJsxElements).toBe(true);
+    expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
     const config = parseConfigPragma(
-      "@enableForest @validateRefAccessDuringRender:true @memoizeJsxElements:false"
+      "@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false"
     );
     expect(config).toEqual({
       ...defaultConfig,
-      enableForest: true,
+      enableUseTypeAnnotations: true,
       validateRefAccessDuringRender: true,
-      memoizeJsxElements: false,
+      validateNoSetStateInRender: false,
     });
   });
 });
