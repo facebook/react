@@ -35,9 +35,6 @@ describe('ReactStrictMode', () => {
   });
 
   it('should appear in the client component stack', async () => {
-    // TODO REMOVE AFTER TESTING THIS FAILS ON PR
-    console.log('hit');
-
     function Foo() {
       return <div ariaTypo="" />;
     }
