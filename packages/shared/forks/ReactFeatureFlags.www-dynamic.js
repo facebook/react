@@ -13,7 +13,6 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const disableInputAttributeSyncing = __VARIANT__;
 export const disableIEWorkarounds = __VARIANT__;
 export const enableBigIntSupport = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
