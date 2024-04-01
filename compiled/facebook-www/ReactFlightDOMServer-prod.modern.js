@@ -793,7 +793,7 @@ function renderModelDestructive(
                 ? ((request = outlineModel(request, value)),
                   serializeByValueID(request))
                 : serializeByValueID(parentPropertyName);
-        } else parent.set(value, -1);
+        } else parent.set(value, -1), parent.set(value.props, -2);
         parent = value.props;
         enableRefAsProp
           ? ((parentPropertyName = parent.ref),
@@ -838,11 +838,15 @@ function renderModelDestructive(
     }
     if (void 0 !== parentPropertyName)
       if (modelRoot === value) modelRoot = null;
-      else
-        return -1 === parentPropertyName
-          ? ((request = outlineModel(request, value)),
-            serializeByValueID(request))
-          : serializeByValueID(parentPropertyName);
+      else {
+        if (-1 === parentPropertyName)
+          return (
+            (request = outlineModel(request, value)),
+            serializeByValueID(request)
+          );
+        if (-2 !== parentPropertyName)
+          return serializeByValueID(parentPropertyName);
+      }
     else parent.set(value, -1);
     if (isArrayImpl(value)) return renderFragment(request, task, value);
     if (value instanceof Map) {

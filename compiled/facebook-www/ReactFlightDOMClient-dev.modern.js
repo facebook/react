@@ -673,7 +673,13 @@ if (__DEV__) {
       }
 
       return function (value) {
-        parentObject[key] = value;
+        parentObject[key] = value; // If this is the root object for a model reference, where `blocked.value`
+        // is a stale `null`, the resolved value can be used directly.
+
+        if (key === "" && blocked.value === null) {
+          blocked.value = value;
+        }
+
         blocked.deps--;
 
         if (blocked.deps === 0) {

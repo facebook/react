@@ -1194,10 +1194,14 @@ if (__DEV__) {
     var ObjectPrototype = Object.prototype;
     var stringify = JSON.stringify; // Serializable values
     // Thenable<ReactClientValue>
+    // task status
 
     var PENDING = 0;
     var COMPLETED = 1;
-    var ERRORED = 4;
+    var ERRORED = 4; // object reference status
+
+    var SEEN_BUT_NOT_YET_OUTLINED = -1;
+    var NEVER_OUTLINED = -2;
     var ReactCurrentCache = ReactSharedServerInternals.ReactCurrentCache;
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -1968,8 +1972,7 @@ if (__DEV__) {
           var existingId = writtenObjects.get(key);
 
           if (existingId === undefined) {
-            // Mark all object keys as seen so that they're always outlined.
-            writtenObjects.set(key, -1);
+            writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
           }
         }
       }
@@ -1989,8 +1992,7 @@ if (__DEV__) {
           var existingId = writtenObjects.get(key);
 
           if (existingId === undefined) {
-            // Mark all object keys as seen so that they're always outlined.
-            writtenObjects.set(key, -1);
+            writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
           }
         }
       }
@@ -2114,8 +2116,7 @@ if (__DEV__) {
                 // This is the ID we're currently emitting so we need to write it
                 // once but if we discover it again, we refer to it by id.
                 modelRoot = null;
-              } else if (_existingId === -1) {
-                // Seen but not yet outlined.
+              } else if (_existingId === SEEN_BUT_NOT_YET_OUTLINED) {
                 // TODO: If we throw here we can treat this as suspending which causes an outline
                 // but that is able to reuse the same task if we're already in one but then that
                 // will be a lazy future value rather than guaranteed to exist but maybe that's good.
@@ -2134,7 +2135,10 @@ if (__DEV__) {
             } else {
               // This is the first time we've seen this object. We may never see it again
               // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-              _writtenObjects.set(value, -1);
+              _writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED); // The element's props are marked as "never outlined" so that they are inlined into
+              // the same row as the element itself.
+
+              _writtenObjects.set(value.props, NEVER_OUTLINED);
             }
 
             var element = value;
@@ -2257,12 +2261,11 @@ if (__DEV__) {
             // This is the ID we're currently emitting so we need to write it
             // once but if we discover it again, we refer to it by id.
             modelRoot = null;
-          } else if (existingId === -1) {
-            // Seen but not yet outlined.
+          } else if (existingId === SEEN_BUT_NOT_YET_OUTLINED) {
             var _newId = outlineModel(request, value);
 
             return serializeByValueID(_newId);
-          } else {
+          } else if (existingId !== NEVER_OUTLINED) {
             // We've already emitted this as an outlined object, so we can
             // just refer to that by its existing ID.
             return serializeByValueID(existingId);
@@ -2270,7 +2273,7 @@ if (__DEV__) {
         } else {
           // This is the first time we've seen this object. We may never see it again
           // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-          writtenObjects.set(value, -1);
+          writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
         }
 
         if (isArray(value)) {
@@ -2643,7 +2646,7 @@ if (__DEV__) {
           return serializeInfinitePromise();
         }
 
-        if (existingId !== undefined && existingId !== -1) {
+        if (existingId !== undefined && existingId >= 0) {
           // We've already emitted this as a real object, so we can
           // just refer to that by its existing ID.
           return serializeByValueID(existingId);

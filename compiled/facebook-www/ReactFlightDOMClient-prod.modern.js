@@ -202,6 +202,7 @@ function createModelResolver(chunk, parentObject, key, cyclic) {
     };
   return function (value) {
     parentObject[key] = value;
+    "" === key && null === blocked.value && (blocked.value = value);
     blocked.deps--;
     0 === blocked.deps &&
       "blocked" === chunk.status &&
