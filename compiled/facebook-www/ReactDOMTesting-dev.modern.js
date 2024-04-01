@@ -140,7 +140,6 @@ if (__DEV__) {
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
       favorSafetyOverHydrationPerf =
         dynamicFeatureFlags.favorSafetyOverHydrationPerf; // On WWW, true is used for a new modern build.
@@ -35193,7 +35192,7 @@ if (__DEV__) {
 
     function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
       {
-        if (useModernStrictMode && root.tag !== LegacyRoot) {
+        if (root.tag !== LegacyRoot) {
           var doubleInvokeEffects = true;
 
           if (
@@ -36824,7 +36823,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-7dd44759";
+    var ReactVersion = "19.0.0-www-modern-7122cb9c";
 
     function createPortal$1(
       children,

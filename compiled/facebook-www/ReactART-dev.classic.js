@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-9d9116a9";
+    var ReactVersion = "19.0.0-www-classic-910568aa";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -187,7 +187,6 @@ if (__DEV__) {
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
@@ -28991,7 +28990,7 @@ if (__DEV__) {
 
     function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
       {
-        if (useModernStrictMode && root.tag !== LegacyRoot) {
+        if (root.tag !== LegacyRoot) {
           var doubleInvokeEffects = true;
 
           if (
