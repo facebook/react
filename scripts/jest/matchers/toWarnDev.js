@@ -178,7 +178,9 @@ const createMatcherFor = (consoleMethod, matcherName) =>
           };
         }
 
-        if (typeof withoutStack === 'number') {
+        if (consoleMethod === 'log') {
+          // We don't expect any console.log calls to have a stack.
+        } else if (typeof withoutStack === 'number') {
           // We're expecting a particular number of warnings without stacks.
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
@@ -309,4 +311,5 @@ const createMatcherFor = (consoleMethod, matcherName) =>
 module.exports = {
   toWarnDev: createMatcherFor('warn', 'toWarnDev'),
   toErrorDev: createMatcherFor('error', 'toErrorDev'),
+  toLogDev: createMatcherFor('log', 'toLogDev'),
 };
