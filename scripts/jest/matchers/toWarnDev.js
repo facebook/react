@@ -2,7 +2,7 @@
 
 const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
-const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
+const shouldIgnoreConsoleError = require('internal-test-utils/shouldIgnoreConsoleError');
 
 function normalizeCodeLocInfo(str) {
   if (typeof str !== 'string') {

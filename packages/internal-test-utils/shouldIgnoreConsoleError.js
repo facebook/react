@@ -19,10 +19,10 @@ module.exports = function shouldIgnoreConsoleError(format, args) {
         format.indexOf('ReactDOM.render was removed in React 19') !== -1 ||
         format.indexOf('ReactDOM.hydrate was removed in React 19') !== -1 ||
         format.indexOf(
-          'ReactDOM.render has not been supported since React 18'
+          'ReactDOM.render has not been supported since React 18',
         ) !== -1 ||
         format.indexOf(
-          'ReactDOM.hydrate has not been supported since React 18'
+          'ReactDOM.hydrate has not been supported since React 18',
         ) !== -1
       ) {
         // We haven't finished migrating our tests to use createRoot.
