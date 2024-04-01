@@ -28,7 +28,6 @@ import {
   isHostSingletonType,
 } from './ReactFiberConfig';
 import {
-  enableCache,
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
@@ -66,7 +65,6 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-  CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';

@@ -28,7 +28,6 @@ import {
 
 import {
   enableTransitionTracing,
-  enableCache,
   enableRenderableContext,
 } from './ReactFeatureFlags';
 
