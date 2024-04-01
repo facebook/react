@@ -181,53 +181,51 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         if (consoleMethod === 'log') {
           // We don't expect any console.log calls to have a stack.
         } else if (typeof withoutStack === 'number') {
-          if (typeof withoutStack === 'number') {
-            // We're expecting a particular number of warnings without stacks.
-            if (withoutStack !== warningsWithoutComponentStack.length) {
-              return {
-                message: () =>
-                  `Expected ${withoutStack} warnings without a component stack but received ${warningsWithoutComponentStack.length}:\n` +
-                  warningsWithoutComponentStack.map(warning =>
-                    this.utils.printReceived(warning)
-                  ),
-                pass: false,
-              };
-            }
-          } else if (withoutStack === true) {
-            // We're expecting that all warnings won't have the stack.
-            // If some warnings have it, it's an error.
-            if (warningsWithComponentStack.length > 0) {
-              return {
-                message: () =>
-                  `Received warning unexpectedly includes a component stack:\n  ${this.utils.printReceived(
-                    warningsWithComponentStack[0]
-                  )}\nIf this warning intentionally includes the component stack, remove ` +
-                  `{withoutStack: true} from the ${matcherName}() call. If you have a mix of ` +
-                  `warnings with and without stack in one ${matcherName}() call, pass ` +
-                  `{withoutStack: N} where N is the number of warnings without stacks.`,
-                pass: false,
-              };
-            }
-          } else if (withoutStack === false || withoutStack === undefined) {
-            // We're expecting that all warnings *do* have the stack (default).
-            // If some warnings don't have it, it's an error.
-            if (warningsWithoutComponentStack.length > 0) {
-              return {
-                message: () =>
-                  `Received warning unexpectedly does not include a component stack:\n  ${this.utils.printReceived(
-                    warningsWithoutComponentStack[0]
-                  )}\nIf this warning intentionally omits the component stack, add ` +
-                  `{withoutStack: true} to the ${matcherName} call.`,
-                pass: false,
-              };
-            }
-          } else {
-            throw Error(
-              `The second argument for ${matcherName}(), when specified, must be an object. It may have a ` +
-                `property called "withoutStack" whose value may be undefined, boolean, or a number. ` +
-                `Instead received ${typeof withoutStack}.`
-            );
+          // We're expecting a particular number of warnings without stacks.
+          if (withoutStack !== warningsWithoutComponentStack.length) {
+            return {
+              message: () =>
+                `Expected ${withoutStack} warnings without a component stack but received ${warningsWithoutComponentStack.length}:\n` +
+                warningsWithoutComponentStack.map(warning =>
+                  this.utils.printReceived(warning)
+                ),
+              pass: false,
+            };
           }
+        } else if (withoutStack === true) {
+          // We're expecting that all warnings won't have the stack.
+          // If some warnings have it, it's an error.
+          if (warningsWithComponentStack.length > 0) {
+            return {
+              message: () =>
+                `Received warning unexpectedly includes a component stack:\n  ${this.utils.printReceived(
+                  warningsWithComponentStack[0]
+                )}\nIf this warning intentionally includes the component stack, remove ` +
+                `{withoutStack: true} from the ${matcherName}() call. If you have a mix of ` +
+                `warnings with and without stack in one ${matcherName}() call, pass ` +
+                `{withoutStack: N} where N is the number of warnings without stacks.`,
+              pass: false,
+            };
+          }
+        } else if (withoutStack === false || withoutStack === undefined) {
+          // We're expecting that all warnings *do* have the stack (default).
+          // If some warnings don't have it, it's an error.
+          if (warningsWithoutComponentStack.length > 0) {
+            return {
+              message: () =>
+                `Received warning unexpectedly does not include a component stack:\n  ${this.utils.printReceived(
+                  warningsWithoutComponentStack[0]
+                )}\nIf this warning intentionally omits the component stack, add ` +
+                `{withoutStack: true} to the ${matcherName} call.`,
+              pass: false,
+            };
+          }
+        } else {
+          throw Error(
+            `The second argument for ${matcherName}(), when specified, must be an object. It may have a ` +
+              `property called "withoutStack" whose value may be undefined, boolean, or a number. ` +
+              `Instead received ${typeof withoutStack}.`
+          );
         }
 
         if (lastWarningWithMismatchingFormat !== null) {
