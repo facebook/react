@@ -116,18 +116,19 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
             .join('\n')}`
       );
 
+      const type = methodName === 'log' ? 'log' : 'warning';
       const message =
         `Expected test not to call ${chalk.bold(
           `console.${methodName}()`
         )}.\n\n` +
-        'If the warning is expected, test for it explicitly by:\n' +
+        `If the ${type} is expected, test for it explicitly by:\n` +
         `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
         `matcher, or...\n` +
         `2. Mock it out using ${chalk.bold(
           'spyOnDev'
         )}(console, '${methodName}') or ${chalk.bold(
           'spyOnProd'
-        )}(console, '${methodName}'), and test that the warning occurs.`;
+        )}(console, '${methodName}'), and test that the ${type} occurs.`;
 
       throw new Error(`${message}\n\n${messages.join('\n\n')}`);
     }
@@ -135,9 +136,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   const unexpectedErrorCallStacks = [];
   const unexpectedWarnCallStacks = [];
+  const unexpectedLogCallStacks = [];
 
   const errorMethod = patchConsoleMethod('error', unexpectedErrorCallStacks);
   const warnMethod = patchConsoleMethod('warn', unexpectedWarnCallStacks);
+  let logMethod;
+
+  // Only assert console.log isn't called in CI so you can debug tests in DEV.
+  // The matchers will still work in DEV, so you can assert locally.
+  if (process.env.CI) {
+    logMethod = patchConsoleMethod('log', unexpectedLogCallStacks);
+  }
 
   const flushAllUnexpectedConsoleCalls = () => {
     flushUnexpectedConsoleCalls(
@@ -152,6 +161,15 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       'toWarnDev',
       unexpectedWarnCallStacks
     );
+    if (logMethod) {
+      flushUnexpectedConsoleCalls(
+        logMethod,
+        'log',
+        'toLogDev',
+        unexpectedLogCallStacks
+      );
+      unexpectedLogCallStacks.length = 0;
+    }
     unexpectedErrorCallStacks.length = 0;
     unexpectedWarnCallStacks.length = 0;
   };
@@ -159,6 +177,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   const resetAllUnexpectedConsoleCalls = () => {
     unexpectedErrorCallStacks.length = 0;
     unexpectedWarnCallStacks.length = 0;
+    if (logMethod) {
+      unexpectedLogCallStacks.length = 0;
+    }
   };
 
   beforeEach(resetAllUnexpectedConsoleCalls);
