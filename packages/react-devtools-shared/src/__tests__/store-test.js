@@ -1602,7 +1602,6 @@ describe('Store', () => {
             <Baz> [withFoo][withBar]
             <Baz> [Memo][withFoo][withBar]
             <Baz> [ForwardRef][withFoo][withBar]
-            <Cache>
             <memoRefOverride>
             <forwardRefOverride>
     `);
