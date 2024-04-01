@@ -9,6 +9,7 @@ import { visitReactiveFunction } from ".";
 import { CompilerError, Effect } from "..";
 import {
   Environment,
+  GeneratedSource,
   InstructionKind,
   ReactiveFunction,
   ReactiveScope,
@@ -245,6 +246,7 @@ class Transform extends ReactiveFunctionTransform<State> {
             terminal: {
               kind: "label",
               id: makeInstructionId(0),
+              loc: GeneratedSource,
               block: instructions,
             },
           },
@@ -319,6 +321,7 @@ class Transform extends ReactiveFunctionTransform<State> {
             terminal: {
               kind: "break",
               id: makeInstructionId(0),
+              loc,
               targetKind: "labeled",
               target: earlyReturnValue.label,
             },

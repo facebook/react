@@ -156,28 +156,46 @@ export type ReactiveTerminal =
   | ReactiveLabelTerminal
   | ReactiveTryTerminal;
 
+function _staticInvariantReactiveTerminalHasLocation(
+  terminal: ReactiveTerminal
+): SourceLocation {
+  // If this fails, it is because a variant of ReactiveTerminal is missing a .loc - add it!
+  return terminal.loc;
+}
+
+function _staticInvariantReactiveTerminalHasInstructionId(
+  terminal: ReactiveTerminal
+): InstructionId {
+  // If this fails, it is because a variant of ReactiveTerminal is missing a .id - add it!
+  return terminal.id;
+}
+
 export type ReactiveTerminalTargetKind = "implicit" | "labeled" | "unlabeled";
 export type ReactiveBreakTerminal = {
   kind: "break";
   target: BlockId;
-  id: InstructionId | null;
+  id: InstructionId;
   targetKind: ReactiveTerminalTargetKind;
+  loc: SourceLocation;
 };
 export type ReactiveContinueTerminal = {
   kind: "continue";
   target: BlockId;
   id: InstructionId;
   targetKind: ReactiveTerminalTargetKind;
+  loc: SourceLocation;
 };
 export type ReactiveReturnTerminal = {
   kind: "return";
   value: Place;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveThrowTerminal = {
   kind: "throw";
   value: Place;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveSwitchTerminal = {
   kind: "switch";
@@ -187,18 +205,21 @@ export type ReactiveSwitchTerminal = {
     block: ReactiveBlock | void;
   }>;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveDoWhileTerminal = {
   kind: "do-while";
   loop: ReactiveBlock;
   test: ReactiveValue;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveWhileTerminal = {
   kind: "while";
   test: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveForTerminal = {
   kind: "for";
@@ -207,18 +228,21 @@ export type ReactiveForTerminal = {
   update: ReactiveValue | null;
   loop: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveForOfTerminal = {
   kind: "for-of";
   init: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveForInTerminal = {
   kind: "for-in";
   init: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveIfTerminal = {
   kind: "if";
@@ -226,11 +250,13 @@ export type ReactiveIfTerminal = {
   consequent: ReactiveBlock;
   alternate: ReactiveBlock | null;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveLabelTerminal = {
   kind: "label";
   block: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 export type ReactiveTryTerminal = {
   kind: "try";
@@ -238,6 +264,7 @@ export type ReactiveTryTerminal = {
   handlerBinding: Place | null;
   handler: ReactiveBlock;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 // A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph

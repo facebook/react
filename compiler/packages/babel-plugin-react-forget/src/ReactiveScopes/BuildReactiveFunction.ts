@@ -88,7 +88,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "return",
-            // loc: terminal.loc,
+            loc: terminal.loc,
             value: terminal.value,
             id: terminal.id,
           },
@@ -101,6 +101,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "throw",
+            loc: terminal.loc,
             value: terminal.value,
             id: terminal.id,
           },
@@ -126,10 +127,10 @@ class Driver {
 
         let consequent: ReactiveBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
-          const break_ = this.visitBreak(terminal.consequent, null);
-          if (break_ !== null) {
-            consequent = [break_];
-          }
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'if' where the consequent is already scheduled`,
+            loc: terminal.loc,
+          });
         } else {
           consequent = this.traverseBlock(
             this.cx.ir.blocks.get(terminal.consequent)!
@@ -139,10 +140,10 @@ class Driver {
         let alternate: ReactiveBlock | null = null;
         if (alternateId !== null) {
           if (this.cx.isScheduled(alternateId)) {
-            const break_ = this.visitBreak(alternateId, null);
-            if (break_ !== null) {
-              alternate = [break_];
-            }
+            CompilerError.invariant(false, {
+              reason: `Unexpected 'if' where the alternate is already scheduled`,
+              loc: terminal.loc,
+            });
           } else {
             alternate = this.traverseBlock(this.cx.ir.blocks.get(alternateId)!);
           }
@@ -153,6 +154,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "if",
+            loc: terminal.loc,
             test: terminal.test,
             consequent: consequent ?? this.emptyBlock(),
             alternate: alternate,
@@ -186,36 +188,16 @@ class Driver {
           test: Place | null;
           block: ReactiveBlock;
         }> = [];
-        [...terminal.cases].reverse().forEach((case_, index) => {
+        [...terminal.cases].reverse().forEach((case_, _index) => {
           const test = case_.test;
 
           let consequent: ReactiveBlock;
           if (this.cx.isScheduled(case_.block)) {
-            /*
-             * cases which are empty or contain only a `break` may point to blocks
-             * that are already scheduled. emit as follows:
-             * - if the block is for another case branch, don't emit a break and fall-through
-             * - else, emit an explicit break.
-             */
-            const break_ = this.visitBreak(case_.block, null);
-            if (
-              index === 0 &&
-              break_.terminal.targetKind === "implicit" &&
-              case_.block === terminal.fallthrough &&
-              case_.test === null
-            ) {
-              /*
-               * If the last case statement (first in reverse order) is a default that
-               * jumps to the fallthrough, then we would emit a useless `default: {}`,
-               * so instead skip this case.
-               */
-              return;
-            }
-            const block = [];
-            if (break_ !== null) {
-              block.push(break_);
-            }
-            consequent = block;
+            CompilerError.invariant(case_.block === terminal.fallthrough, {
+              reason: `Unexpected 'switch' where a case is already scheduled and block is not the fallthrough`,
+              loc: terminal.loc,
+            });
+            return;
           } else {
             consequent = this.traverseBlock(
               this.cx.ir.blocks.get(case_.block)!
@@ -232,6 +214,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "switch",
+            loc: terminal.loc,
             test: terminal.test,
             cases,
             id: terminal.id,
@@ -269,14 +252,10 @@ class Driver {
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, null);
-          CompilerError.invariant(break_ !== null, {
-            reason: "If loop body is already scheduled it must be a break",
-            description: null,
-            loc: null,
-            suggestions: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'do-while' where the loop is already scheduled`,
+            loc: terminal.loc,
           });
-          loopBody = [break_];
         }
 
         const testValue = this.visitValueBlock(
@@ -289,6 +268,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "do-while",
+            loc: terminal.loc,
             test: testValue,
             loop: loopBody,
             id: terminal.id,
@@ -333,14 +313,10 @@ class Driver {
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, null);
-          CompilerError.invariant(break_ !== null, {
-            reason: "If loop body is already scheduled it must be a break",
-            description: null,
-            loc: null,
-            suggestions: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'while' where the loop is already scheduled`,
+            loc: terminal.loc,
           });
-          loopBody = [break_];
         }
 
         this.cx.unscheduleAll(scheduleIds);
@@ -348,7 +324,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "while",
-            // loc: terminal.loc,
+            loc: terminal.loc,
             test: testValue,
             loop: loopBody,
             id: terminal.id,
@@ -425,14 +401,10 @@ class Driver {
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, null);
-          CompilerError.invariant(break_ !== null, {
-            reason: "If loop body is already scheduled it must be a break",
-            description: null,
-            loc: null,
-            suggestions: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'for' where the loop is already scheduled`,
+            loc: terminal.loc,
           });
-          loopBody = [break_];
         }
 
         this.cx.unscheduleAll(scheduleIds);
@@ -440,6 +412,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "for",
+            loc: terminal.loc,
             init: initValue,
             test: testValue,
             update: updateValue,
@@ -505,14 +478,10 @@ class Driver {
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, null);
-          CompilerError.invariant(break_ !== null, {
-            reason: "If loop body is already scheduled it must be a break",
-            description: null,
-            loc: null,
-            suggestions: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'for-of' where the loop is already scheduled`,
+            loc: terminal.loc,
           });
-          loopBody = [break_];
         }
 
         this.cx.unscheduleAll(scheduleIds);
@@ -520,6 +489,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "for-of",
+            loc: terminal.loc,
             init: initValue,
             loop: loopBody,
             id: terminal.id,
@@ -583,14 +553,10 @@ class Driver {
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, null);
-          CompilerError.invariant(break_ !== null, {
-            reason: "If loop body is already scheduled it must be a break",
-            description: null,
-            loc: null,
-            suggestions: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'for-in' where the loop is already scheduled`,
+            loc: terminal.loc,
           });
-          loopBody = [break_];
         }
 
         this.cx.unscheduleAll(scheduleIds);
@@ -598,6 +564,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "for-in",
+            loc: terminal.loc,
             init: initValue,
             loop: loopBody,
             id: terminal.id,
@@ -615,7 +582,11 @@ class Driver {
       case "branch": {
         let consequent: ReactiveBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
-          const break_ = this.visitBreak(terminal.consequent, null);
+          const break_ = this.visitBreak(
+            terminal.consequent,
+            terminal.id,
+            terminal.loc
+          );
           if (break_ !== null) {
             consequent = [break_];
           }
@@ -627,10 +598,10 @@ class Driver {
 
         let alternate: ReactiveBlock | null = null;
         if (this.cx.isScheduled(terminal.alternate)) {
-          const break_ = this.visitBreak(terminal.alternate, null);
-          if (break_ !== null) {
-            alternate = [break_];
-          }
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'branch' where the alternate is already scheduled`,
+            loc: terminal.loc,
+          });
         } else {
           alternate = this.traverseBlock(
             this.cx.ir.blocks.get(terminal.alternate)!
@@ -641,6 +612,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "if",
+            loc: terminal.loc,
             test: terminal.test,
             consequent: consequent ?? this.emptyBlock(),
             alternate: alternate,
@@ -664,15 +636,10 @@ class Driver {
 
         let block: ReactiveBlock;
         if (this.cx.isScheduled(terminal.block)) {
-          const break_ = this.visitBreak(terminal.block, null);
-          CompilerError.invariant(break_ !== null, {
-            reason:
-              "Expected a break target for a label whose body is already scheduled",
-            description: null,
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'label' where the block is already scheduled`,
             loc: terminal.loc,
-            suggestions: null,
           });
-          block = [break_];
         } else {
           block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
         }
@@ -682,6 +649,7 @@ class Driver {
           kind: "terminal",
           terminal: {
             kind: "label",
+            loc: terminal.loc,
             block,
             id: terminal.id,
           },
@@ -730,14 +698,22 @@ class Driver {
       case "goto": {
         switch (terminal.variant) {
           case GotoVariant.Break: {
-            const break_ = this.visitBreak(terminal.block, terminal.id);
+            const break_ = this.visitBreak(
+              terminal.block,
+              terminal.id,
+              terminal.loc
+            );
             if (break_ !== null) {
               blockValue.push(break_);
             }
             break;
           }
           case GotoVariant.Continue: {
-            const continue_ = this.visitContinue(terminal.block, terminal.id);
+            const continue_ = this.visitContinue(
+              terminal.block,
+              terminal.id,
+              terminal.loc
+            );
             if (continue_ !== null) {
               blockValue.push(continue_);
             }
@@ -796,6 +772,7 @@ class Driver {
               : { id: fallthroughId, implicit: false },
           terminal: {
             kind: "try",
+            loc: terminal.loc,
             block,
             handlerBinding: terminal.handlerBinding,
             handler,
@@ -1134,7 +1111,8 @@ class Driver {
 
   visitBreak(
     block: BlockId,
-    id: InstructionId | null
+    id: InstructionId,
+    loc: SourceLocation
   ): ReactiveTerminalStatement<ReactiveBreakTerminal> {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
@@ -1149,6 +1127,7 @@ class Driver {
       kind: "terminal",
       terminal: {
         kind: "break",
+        loc,
         target: target.block,
         id,
         targetKind: target.type,
@@ -1159,7 +1138,8 @@ class Driver {
 
   visitContinue(
     block: BlockId,
-    id: InstructionId
+    id: InstructionId,
+    loc: SourceLocation
   ): ReactiveTerminalStatement<ReactiveContinueTerminal> {
     const target = this.cx.getContinueTarget(block);
     CompilerError.invariant(target !== null, {
@@ -1173,6 +1153,7 @@ class Driver {
       kind: "terminal",
       terminal: {
         kind: "continue",
+        loc,
         target: target.block,
         id,
         targetKind: target.type,
