@@ -586,6 +586,7 @@ describe('ReactTestUtils', () => {
   });
 
   // @gate !disableDOMTestUtils
+  // @gate !disableLegacyMode
   it('should call setState callback with no arguments', async () => {
     let mockArgs;
     class Component extends React.Component {
