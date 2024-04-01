@@ -160,8 +160,6 @@ const EnvironmentConfigSchema = z.object({
 
   // 🌲
   enableForest: z.boolean().default(false),
-  // <🌲>
-  enableForestJsx: z.boolean().default(false),
 
   /*
    * Enable memoization of JSX elements in addition to other types of values. When disabled,
