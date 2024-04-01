@@ -22,6 +22,7 @@ import {
   eachPatternOperand,
 } from "../HIR/visitors";
 import DisjointSet from "../Utils/DisjointSet";
+import { logHIRFunction } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 
 /*
@@ -145,6 +146,8 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       maxInstruction === 0 ||
       scope.range.end > maxInstruction + 1
     ) {
+      // Make it easier to debug why the error occurred
+      logHIRFunction("InferReactiveScopeVariables (invalid scope)", fn);
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
         loc: GeneratedSource,

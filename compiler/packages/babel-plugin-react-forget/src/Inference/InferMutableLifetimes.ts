@@ -112,28 +112,22 @@ export function inferMutableLifetimes(
   >();
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      for (const [_, operand] of phi.operands) {
-        if (
-          operand.mutableRange.start === 0 &&
-          operand.mutableRange.end === 0
-        ) {
-          // operand's range is uninitialized, skip
-          continue;
-        } else if (
-          phi.id.mutableRange.start === 0 &&
-          phi.id.mutableRange.end === 0
-        ) {
-          // phi's range is uninitialized, take the range from the operand
-          phi.id.mutableRange.start = operand.mutableRange.start;
-          phi.id.mutableRange.end = operand.mutableRange.end;
-        } else {
-          // else join the phi and operand's range
-          phi.id.mutableRange.start = makeInstructionId(
-            Math.min(phi.id.mutableRange.start, operand.mutableRange.start)
-          );
-          phi.id.mutableRange.end = makeInstructionId(
-            Math.max(phi.id.mutableRange.end, operand.mutableRange.end)
-          );
+      const isPhiMutatedAfterCreation: boolean =
+        phi.id.mutableRange.end >
+        (block.instructions.at(0)?.id ?? block.terminal.id);
+      if (
+        inferMutableRangeForStores &&
+        isPhiMutatedAfterCreation &&
+        phi.id.mutableRange.start === 0
+      ) {
+        for (const [, operand] of phi.operands) {
+          if (phi.id.mutableRange.start === 0) {
+            phi.id.mutableRange.start = operand.mutableRange.start;
+          } else {
+            phi.id.mutableRange.start = makeInstructionId(
+              Math.min(phi.id.mutableRange.start, operand.mutableRange.start)
+            );
+          }
         }
       }
     }

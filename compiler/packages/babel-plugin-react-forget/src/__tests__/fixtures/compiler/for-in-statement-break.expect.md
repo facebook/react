@@ -29,19 +29,21 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   let x;
+  let t0;
   if ($[0] !== props.value) {
-    const object = { ...props.value };
-    for (const y in object) {
-      if (y === "break") {
-        break;
-      }
-
-      x = object[y];
-    }
+    t0 = { ...props.value };
     $[0] = props.value;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
+  }
+  const object = t0;
+  for (const y in object) {
+    if (y === "break") {
+      break;
+    }
+
+    x = object[y];
   }
   return x;
 }
