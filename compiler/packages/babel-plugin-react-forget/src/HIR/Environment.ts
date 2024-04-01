@@ -273,16 +273,6 @@ const EnvironmentConfigSchema = z.object({
    */
   enableEmitInstrumentForget: InstrumentationSchema.nullish(),
 
-  /**
-   * Enable support for reactive scopes that contain an early return.
-   * This is relatively infrequent, as reactive scopes generally span
-   * up to but excluding return statements.
-   *
-   * When disabled, the compiler will error (bailout) on any functions which
-   * would create a reactive scope that contains a return statement.
-   */
-  enableEarlyReturnInReactiveScopes: z.boolean().default(true),
-
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
 

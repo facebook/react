@@ -6,7 +6,7 @@
  */
 
 import { visitReactiveFunction } from ".";
-import { CompilerError, Effect } from "..";
+import { Effect } from "..";
 import {
   Environment,
   GeneratedSource,
@@ -266,14 +266,6 @@ class Transform extends ReactiveFunctionTransform<State> {
     state: State
   ): Transformed<ReactiveStatement> {
     if (state.withinReactiveScope && stmt.terminal.kind === "return") {
-      if (!this.env.config.enableEarlyReturnInReactiveScopes) {
-        CompilerError.throwTodo({
-          reason: `Support early return within a reactive scope`,
-          loc: stmt.terminal.value.loc,
-          description: null,
-          suggestions: null,
-        });
-      }
       const loc = stmt.terminal.value.loc;
       let earlyReturnValue: ReactiveScope["earlyReturnValue"];
       if (state.earlyReturnValue !== null) {
