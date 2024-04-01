@@ -243,10 +243,15 @@ export type ReactClientValue =
 
 type ReactClientObject = {+[key: string]: ReactClientValue};
 
+// task status
 const PENDING = 0;
 const COMPLETED = 1;
 const ABORTED = 3;
 const ERRORED = 4;
+
+// object reference status
+const SEEN_BUT_NOT_YET_OUTLINED = -1;
+const NEVER_OUTLINED = -2;
 
 type Task = {
   id: number,
@@ -280,7 +285,7 @@ export type Request = {
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
-  writtenObjects: WeakMap<Reference, number>, // -1 means "seen" but not outlined.
+  writtenObjects: WeakMap<Reference, number>,
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
@@ -1125,8 +1130,7 @@ function serializeMap(
       const writtenObjects = request.writtenObjects;
       const existingId = writtenObjects.get(key);
       if (existingId === undefined) {
-        // Mark all object keys as seen so that they're always outlined.
-        writtenObjects.set(key, -1);
+        writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
       }
     }
   }
@@ -1142,8 +1146,7 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
       const writtenObjects = request.writtenObjects;
       const existingId = writtenObjects.get(key);
       if (existingId === undefined) {
-        // Mark all object keys as seen so that they're always outlined.
-        writtenObjects.set(key, -1);
+        writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
       }
     }
   }
@@ -1328,8 +1331,7 @@ function renderModelDestructive(
             // This is the ID we're currently emitting so we need to write it
             // once but if we discover it again, we refer to it by id.
             modelRoot = null;
-          } else if (existingId === -1) {
-            // Seen but not yet outlined.
+          } else if (existingId === SEEN_BUT_NOT_YET_OUTLINED) {
             // TODO: If we throw here we can treat this as suspending which causes an outline
             // but that is able to reuse the same task if we're already in one but then that
             // will be a lazy future value rather than guaranteed to exist but maybe that's good.
@@ -1348,7 +1350,10 @@ function renderModelDestructive(
         } else {
           // This is the first time we've seen this object. We may never see it again
           // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-          writtenObjects.set(value, -1);
+          writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
+          // The element's props are marked as "never outlined" so that they are inlined into
+          // the same row as the element itself.
+          writtenObjects.set((value: any).props, NEVER_OUTLINED);
         }
 
         const element: React$Element<any> = (value: any);
@@ -1477,11 +1482,10 @@ function renderModelDestructive(
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
-      } else if (existingId === -1) {
-        // Seen but not yet outlined.
+      } else if (existingId === SEEN_BUT_NOT_YET_OUTLINED) {
         const newId = outlineModel(request, (value: any));
         return serializeByValueID(newId);
-      } else {
+      } else if (existingId !== NEVER_OUTLINED) {
         // We've already emitted this as an outlined object, so we can
         // just refer to that by its existing ID.
         return serializeByValueID(existingId);
@@ -1489,7 +1493,7 @@ function renderModelDestructive(
     } else {
       // This is the first time we've seen this object. We may never see it again
       // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-      writtenObjects.set(value, -1);
+      writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
     }
 
     if (isArray(value)) {
@@ -2007,7 +2011,7 @@ function renderConsoleValue(
       return serializeInfinitePromise();
     }
 
-    if (existingId !== undefined && existingId !== -1) {
+    if (existingId !== undefined && existingId >= 0) {
       // We've already emitted this as a real object, so we can
       // just refer to that by its existing ID.
       return serializeByValueID(existingId);
