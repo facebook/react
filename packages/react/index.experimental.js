@@ -28,7 +28,6 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_Activity,
   unstable_postpone,
