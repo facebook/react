@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development && next dev",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build && node ./scripts/downloadFonts.js",
     "vercel-build": "yarn workspaces run build",
     "start": "next start",
