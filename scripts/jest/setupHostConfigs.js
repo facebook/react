@@ -14,11 +14,6 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .js
 
   if (isFBBundle) {
-    if (__EXPERIMENTAL__) {
-      // We can't currently use the true modern entry point because too many tests fail.
-      // TODO: Fix tests to not use ReactDOM.render or gate them. Then we can remove this.
-      return resolvedEntry;
-    }
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
