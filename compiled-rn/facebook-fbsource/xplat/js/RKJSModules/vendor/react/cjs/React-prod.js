@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4d62414ddfd6f7eb3ca9d918bf686921>>
+ * @generated SignedSource<<a0c5e9721f01c57ba5fae0bcf2a88296>>
  */
 
 "use strict";
@@ -571,18 +571,6 @@ exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
-exports.unstable_getCacheSignal = function () {
-  var dispatcher = ReactCurrentCache.current;
-  return dispatcher
-    ? dispatcher.getCacheSignal()
-    : ((dispatcher = new AbortController()),
-      dispatcher.abort(
-        Error(
-          "This CacheSignal was requested outside React which means that it is immediately aborted."
-        )
-      ),
-      dispatcher.signal);
-};
 exports.unstable_useCacheRefresh = function () {
   return ReactCurrentDispatcher.current.useCacheRefresh();
 };
@@ -655,4 +643,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-6446e904";
+exports.version = "19.0.0-canary-d7125c20";

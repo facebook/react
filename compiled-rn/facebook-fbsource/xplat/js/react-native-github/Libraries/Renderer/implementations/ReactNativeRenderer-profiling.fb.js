@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e20efb6f8a0e902b2692d1672db6f725>>
+ * @generated SignedSource<<a4ffc3ecf420512b1b429e01e59a39cb>>
  */
 
 "use strict";
@@ -9706,9 +9706,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      return readContext(CacheContext).controller.signal;
-    },
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -11544,7 +11541,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1243 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-f494fd51",
+    version: "19.0.0-canary-9643b497",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11600,7 +11597,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-f494fd51"
+  reconcilerVersion: "19.0.0-canary-9643b497"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

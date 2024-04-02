@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5e46c43de7b093e049773ab4bc4628fb>>
+ * @generated SignedSource<<b4fc5df79fb17a2da678b5f79de50f7e>>
  */
 
 "use strict";
@@ -26481,11 +26481,6 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function getCacheSignal() {
-      var cache = readContext(CacheContext);
-      return cache.controller.signal;
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -26499,7 +26494,6 @@ to return true:wantsResponderID|                            |
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 
@@ -31019,7 +31013,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-e3c7b66e";
+    var ReactVersion = "19.0.0-canary-753ddd75";
 
     function createPortal$1(
       children,

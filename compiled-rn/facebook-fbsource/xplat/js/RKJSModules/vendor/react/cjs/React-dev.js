@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f6c84bf1921e7e8ae7d4eac966e4e55f>>
+ * @generated SignedSource<<81a3185ee1038a29c67be8ea0fa5da53>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-c952bafb";
+    var ReactVersion = "19.0.0-canary-45dc54bd";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2944,27 +2944,6 @@ if (__DEV__) {
       return dispatcher;
     }
 
-    function getCacheSignal() {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If we have no cache to associate with this call, then we don't know
-        // its lifetime. We abort early since that's safer than letting it live
-        // for ever. Unlike just caching which can be a functional noop outside
-        // of React, these should generally always be associated with some React
-        // render but we're not limiting quite as much as making it a Hook.
-        // It's safer than erroring early at runtime.
-        var controller = new AbortController();
-        var reason = new Error(
-          "This CacheSignal was requested outside React which means that it is " +
-            "immediately aborted."
-        );
-        controller.abort(reason);
-        return controller.signal;
-      }
-
-      return dispatcher.getCacheSignal();
-    }
     function getCacheForType(resourceType) {
       var dispatcher = ReactCurrentCache.current;
 
@@ -3640,7 +3619,6 @@ if (__DEV__) {
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_getCacheForType = getCacheForType;
-    exports.unstable_getCacheSignal = getCacheSignal;
     exports.unstable_useCacheRefresh = useCacheRefresh;
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = use;

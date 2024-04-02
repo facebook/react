@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7ac197948521e47e5a2da9b0dae35269>>
+ * @generated SignedSource<<e4701c4b1e7e4760d099380352d197f6>>
  */
 
 "use strict";
@@ -7405,9 +7405,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      return readContext(CacheContext).controller.signal;
-    },
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -9201,7 +9198,7 @@ var devToolsConfig$jscomp$inline_992 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-b78d8890",
+  version: "19.0.0-canary-88ad4c2a",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1180 = {
@@ -9232,7 +9229,7 @@ var internals$jscomp$inline_1180 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-b78d8890"
+  reconcilerVersion: "19.0.0-canary-88ad4c2a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1181 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

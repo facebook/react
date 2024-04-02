@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a70ea58db09502275f7ba43d5cdee6ae>>
+ * @generated SignedSource<<ad89a1ac37c132044f425e22b31f19c8>>
  */
 
 "use strict";
@@ -7877,9 +7877,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      return readContext(CacheContext).controller.signal;
-    },
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -9819,7 +9816,7 @@ var devToolsConfig$jscomp$inline_1076 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-4e13c867",
+  version: "19.0.0-canary-153a5857",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9863,7 +9860,7 @@ var devToolsConfig$jscomp$inline_1076 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-4e13c867"
+  reconcilerVersion: "19.0.0-canary-153a5857"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

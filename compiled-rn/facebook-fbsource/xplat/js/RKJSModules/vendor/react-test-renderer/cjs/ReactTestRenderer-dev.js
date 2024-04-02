@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<42436c5e972cb03b026adac4f26b9197>>
+ * @generated SignedSource<<9f9d8986c9c03351ab1c1fe7b1b2c49a>>
  */
 
 "use strict";
@@ -22505,11 +22505,6 @@ if (__DEV__) {
       }
     }
 
-    function getCacheSignal() {
-      var cache = readContext(CacheContext);
-      return cache.controller.signal;
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -22523,7 +22518,6 @@ if (__DEV__) {
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 
@@ -26809,7 +26803,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-4a355ff9";
+    var ReactVersion = "19.0.0-canary-b7882942";
 
     // Might add PROFILE later.
 

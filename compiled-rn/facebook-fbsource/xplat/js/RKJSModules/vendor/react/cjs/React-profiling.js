@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<849c048328a890d86bad5a8956d27c43>>
+ * @generated SignedSource<<b5c3bd06cefe8e8c6b930dcaaef5f86a>>
  */
 
 "use strict";
@@ -573,18 +573,6 @@ exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
-exports.unstable_getCacheSignal = function () {
-  var dispatcher = ReactCurrentCache.current;
-  return dispatcher
-    ? dispatcher.getCacheSignal()
-    : ((dispatcher = new AbortController()),
-      dispatcher.abort(
-        Error(
-          "This CacheSignal was requested outside React which means that it is immediately aborted."
-        )
-      ),
-      dispatcher.signal);
-};
 exports.unstable_useCacheRefresh = function () {
   return ReactCurrentDispatcher.current.useCacheRefresh();
 };
@@ -657,7 +645,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-2f767b28";
+exports.version = "19.0.0-canary-e9e47b60";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
