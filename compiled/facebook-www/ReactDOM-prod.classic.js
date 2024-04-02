@@ -84,7 +84,6 @@ var ReactSharedInternals =
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -116,8 +115,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -12126,13 +12123,6 @@ function createFiberFromTypeAndProps(
           (pendingProps.lanes = lanes),
           pendingProps
         );
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing)
           return (
@@ -13055,19 +13045,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$346;
+  var JSCompiler_inline_result$jscomp$345;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1494 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1494) {
-      var element$jscomp$inline_1495 = document.createElement("div");
-      element$jscomp$inline_1495.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1494 =
-        "function" === typeof element$jscomp$inline_1495.oninput;
+    var isSupported$jscomp$inline_1487 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1487) {
+      var element$jscomp$inline_1488 = document.createElement("div");
+      element$jscomp$inline_1488.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1487 =
+        "function" === typeof element$jscomp$inline_1488.oninput;
     }
-    JSCompiler_inline_result$jscomp$346 = isSupported$jscomp$inline_1494;
-  } else JSCompiler_inline_result$jscomp$346 = !1;
+    JSCompiler_inline_result$jscomp$345 = isSupported$jscomp$inline_1487;
+  } else JSCompiler_inline_result$jscomp$345 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$346 &&
+    JSCompiler_inline_result$jscomp$345 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13439,20 +13429,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1535 = 0;
-  i$jscomp$inline_1535 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1535++
+  var i$jscomp$inline_1528 = 0;
+  i$jscomp$inline_1528 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1528++
 ) {
-  var eventName$jscomp$inline_1536 =
-      simpleEventPluginEvents[i$jscomp$inline_1535],
-    domEventName$jscomp$inline_1537 =
-      eventName$jscomp$inline_1536.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1538 =
-      eventName$jscomp$inline_1536[0].toUpperCase() +
-      eventName$jscomp$inline_1536.slice(1);
+  var eventName$jscomp$inline_1529 =
+      simpleEventPluginEvents[i$jscomp$inline_1528],
+    domEventName$jscomp$inline_1530 =
+      eventName$jscomp$inline_1529.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1531 =
+      eventName$jscomp$inline_1529[0].toUpperCase() +
+      eventName$jscomp$inline_1529.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1537,
-    "on" + capitalizedEvent$jscomp$inline_1538
+    domEventName$jscomp$inline_1530,
+    "on" + capitalizedEvent$jscomp$inline_1531
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17098,17 +17088,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1729 = {
+var devToolsConfig$jscomp$inline_1722 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-2725496a",
+  version: "19.0.0-www-classic-cdbeb08c",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2157 = {
-  bundleType: devToolsConfig$jscomp$inline_1729.bundleType,
-  version: devToolsConfig$jscomp$inline_1729.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1729.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1729.rendererConfig,
+var internals$jscomp$inline_2150 = {
+  bundleType: devToolsConfig$jscomp$inline_1722.bundleType,
+  version: devToolsConfig$jscomp$inline_1722.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1722.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1722.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17124,26 +17114,26 @@ var internals$jscomp$inline_2157 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1729.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1722.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-2725496a"
+  reconcilerVersion: "19.0.0-www-classic-cdbeb08c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2158 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2151 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2158.isDisabled &&
-    hook$jscomp$inline_2158.supportsFiber
+    !hook$jscomp$inline_2151.isDisabled &&
+    hook$jscomp$inline_2151.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2158.inject(
-        internals$jscomp$inline_2157
+      (rendererID = hook$jscomp$inline_2151.inject(
+        internals$jscomp$inline_2150
       )),
-        (injectedHook = hook$jscomp$inline_2158);
+        (injectedHook = hook$jscomp$inline_2151);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17581,4 +17571,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-2725496a";
+exports.version = "19.0.0-www-classic-cdbeb08c";

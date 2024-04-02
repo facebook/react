@@ -54,7 +54,6 @@ var React = require("react"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
@@ -2649,8 +2648,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }

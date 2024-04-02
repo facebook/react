@@ -103,7 +103,6 @@ var ReactSharedInternals =
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -9928,13 +9927,6 @@ function createFiberFromTypeAndProps(
           (pendingProps.lanes = lanes),
           pendingProps
         );
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing)
           return (
@@ -10260,19 +10252,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1096 = {
+  devToolsConfig$jscomp$inline_1089 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-9f895342",
+    version: "19.0.0-www-modern-d9e4c872",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1301 = {
-  bundleType: devToolsConfig$jscomp$inline_1096.bundleType,
-  version: devToolsConfig$jscomp$inline_1096.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1096.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1096.rendererConfig,
+var internals$jscomp$inline_1294 = {
+  bundleType: devToolsConfig$jscomp$inline_1089.bundleType,
+  version: devToolsConfig$jscomp$inline_1089.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1089.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1089.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10289,26 +10281,26 @@ var internals$jscomp$inline_1301 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1096.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1089.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-9f895342"
+  reconcilerVersion: "19.0.0-www-modern-d9e4c872"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1302 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1295 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1302.isDisabled &&
-    hook$jscomp$inline_1302.supportsFiber
+    !hook$jscomp$inline_1295.isDisabled &&
+    hook$jscomp$inline_1295.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1302.inject(
-        internals$jscomp$inline_1301
+      (rendererID = hook$jscomp$inline_1295.inject(
+        internals$jscomp$inline_1294
       )),
-        (injectedHook = hook$jscomp$inline_1302);
+        (injectedHook = hook$jscomp$inline_1295);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

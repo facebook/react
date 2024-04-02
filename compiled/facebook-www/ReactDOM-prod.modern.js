@@ -122,7 +122,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -11928,13 +11927,6 @@ function createFiberFromTypeAndProps(
           (pendingProps.lanes = lanes),
           pendingProps
         );
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing)
           return (
@@ -13425,19 +13417,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$341;
+  var JSCompiler_inline_result$jscomp$340;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1491 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1491) {
-      var element$jscomp$inline_1492 = document.createElement("div");
-      element$jscomp$inline_1492.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1491 =
-        "function" === typeof element$jscomp$inline_1492.oninput;
+    var isSupported$jscomp$inline_1484 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1484) {
+      var element$jscomp$inline_1485 = document.createElement("div");
+      element$jscomp$inline_1485.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1484 =
+        "function" === typeof element$jscomp$inline_1485.oninput;
     }
-    JSCompiler_inline_result$jscomp$341 = isSupported$jscomp$inline_1491;
-  } else JSCompiler_inline_result$jscomp$341 = !1;
+    JSCompiler_inline_result$jscomp$340 = isSupported$jscomp$inline_1484;
+  } else JSCompiler_inline_result$jscomp$340 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$341 &&
+    JSCompiler_inline_result$jscomp$340 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13746,20 +13738,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1532 = 0;
-  i$jscomp$inline_1532 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1532++
+  var i$jscomp$inline_1525 = 0;
+  i$jscomp$inline_1525 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1525++
 ) {
-  var eventName$jscomp$inline_1533 =
-      simpleEventPluginEvents[i$jscomp$inline_1532],
-    domEventName$jscomp$inline_1534 =
-      eventName$jscomp$inline_1533.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1535 =
-      eventName$jscomp$inline_1533[0].toUpperCase() +
-      eventName$jscomp$inline_1533.slice(1);
+  var eventName$jscomp$inline_1526 =
+      simpleEventPluginEvents[i$jscomp$inline_1525],
+    domEventName$jscomp$inline_1527 =
+      eventName$jscomp$inline_1526.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1528 =
+      eventName$jscomp$inline_1526[0].toUpperCase() +
+      eventName$jscomp$inline_1526.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1534,
-    "on" + capitalizedEvent$jscomp$inline_1535
+    domEventName$jscomp$inline_1527,
+    "on" + capitalizedEvent$jscomp$inline_1528
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16612,17 +16604,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   unstable_batchedUpdates
 ];
-var devToolsConfig$jscomp$inline_1690 = {
+var devToolsConfig$jscomp$inline_1683 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-25698d97",
+  version: "19.0.0-www-modern-9a30fef2",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2119 = {
-  bundleType: devToolsConfig$jscomp$inline_1690.bundleType,
-  version: devToolsConfig$jscomp$inline_1690.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1690.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1690.rendererConfig,
+var internals$jscomp$inline_2112 = {
+  bundleType: devToolsConfig$jscomp$inline_1683.bundleType,
+  version: devToolsConfig$jscomp$inline_1683.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1683.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1683.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16638,26 +16630,26 @@ var internals$jscomp$inline_2119 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1690.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1683.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-25698d97"
+  reconcilerVersion: "19.0.0-www-modern-9a30fef2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2120 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2113 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2120.isDisabled &&
-    hook$jscomp$inline_2120.supportsFiber
+    !hook$jscomp$inline_2113.isDisabled &&
+    hook$jscomp$inline_2113.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2120.inject(
-        internals$jscomp$inline_2119
+      (rendererID = hook$jscomp$inline_2113.inject(
+        internals$jscomp$inline_2112
       )),
-        (injectedHook = hook$jscomp$inline_2120);
+        (injectedHook = hook$jscomp$inline_2113);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -16948,4 +16940,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-25698d97";
+exports.version = "19.0.0-www-modern-9a30fef2";

@@ -69,7 +69,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
@@ -2789,8 +2788,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) return "TracingMarker";
   }
@@ -5645,4 +5642,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-dbd32851";
+exports.version = "19.0.0-www-modern-f4a18795";

@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-classic-83a7d6d7";
+    var ReactVersion = "19.0.0-www-classic-da16f573";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -48,7 +48,6 @@ if (__DEV__) {
     var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
@@ -536,11 +535,6 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
-
         // Fall through
 
         case REACT_TRACING_MARKER_TYPE:
@@ -723,7 +717,6 @@ if (__DEV__) {
         type === REACT_LEGACY_HIDDEN_TYPE ||
         type === REACT_OFFSCREEN_TYPE ||
         type === REACT_SCOPE_TYPE ||
-        type === REACT_CACHE_TYPE ||
         (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
       ) {
         return true;
@@ -3671,7 +3664,6 @@ if (__DEV__) {
     exports.memo = memo;
     exports.startTransition = startTransition;
     exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-    exports.unstable_Cache = REACT_CACHE_TYPE;
     exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
     exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
     exports.unstable_Scope = REACT_SCOPE_TYPE;

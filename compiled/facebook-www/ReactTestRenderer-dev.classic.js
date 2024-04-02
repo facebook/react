@@ -199,7 +199,6 @@ if (__DEV__) {
     var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -276,10 +275,6 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
       }
 
       if (typeof type === "object") {
@@ -26500,12 +26495,6 @@ if (__DEV__) {
 
           // Fall through
 
-          case REACT_CACHE_TYPE: {
-            return createFiberFromCache(pendingProps, mode, lanes, key);
-          }
-
-          // Fall through
-
           case REACT_TRACING_MARKER_TYPE:
 
           // Fall through
@@ -26692,12 +26681,6 @@ if (__DEV__) {
       fiber.stateNode = primaryChildInstance;
       return fiber;
     }
-    function createFiberFromCache(pendingProps, mode, lanes, key) {
-      var fiber = createFiber(CacheComponent, pendingProps, key, mode);
-      fiber.elementType = REACT_CACHE_TYPE;
-      fiber.lanes = lanes;
-      return fiber;
-    }
     function createFiberFromText(content, mode, lanes) {
       var fiber = createFiber(HostText, content, null, mode);
       fiber.lanes = lanes;
@@ -26852,7 +26835,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-646acce4";
+    var ReactVersion = "19.0.0-www-classic-2ceb9886";
 
     // Might add PROFILE later.
 

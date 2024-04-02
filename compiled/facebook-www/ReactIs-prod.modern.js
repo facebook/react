@@ -28,7 +28,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -140,7 +139,6 @@ exports.isValidElementType = function (type) {
     type === REACT_LEGACY_HIDDEN_TYPE ||
     type === REACT_OFFSCREEN_TYPE ||
     type === REACT_SCOPE_TYPE ||
-    type === REACT_CACHE_TYPE ||
     (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
     ("object" === typeof type &&
       null !== type &&

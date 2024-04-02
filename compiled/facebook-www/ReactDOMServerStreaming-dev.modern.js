@@ -102,7 +102,6 @@ if (__DEV__) {
     var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -8509,11 +8508,6 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
-
         // Fall through
 
         case REACT_TRACING_MARKER_TYPE:
