@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-62398be5";
+    var ReactVersion = "19.0.0-www-modern-55690e70";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -30724,6 +30724,8 @@ if (__DEV__) {
       var _proto4 = Surface.prototype;
 
       _proto4.componentDidMount = function componentDidMount() {
+        var _this = this;
+
         var _this$props = this.props,
           height = _this$props.height,
           width = _this$props.width;
@@ -30735,14 +30737,20 @@ if (__DEV__) {
           false,
           false,
           ""
-        );
-        updateContainer(this.props.children, this._mountNode, this);
+        ); // We synchronously flush updates coming from above so that they commit together
+        // and so that refs resolve before the parent life cycles.
+
+        flushSync(function () {
+          updateContainer(_this.props.children, _this._mountNode, _this);
+        });
       };
 
       _proto4.componentDidUpdate = function componentDidUpdate(
         prevProps,
         prevState
       ) {
+        var _this2 = this;
+
         var props = this.props;
 
         if (
@@ -30750,9 +30758,12 @@ if (__DEV__) {
           props.width !== prevProps.width
         ) {
           this._surface.resize(+props.width, +props.height);
-        }
+        } // We synchronously flush updates coming from above so that they commit together
+        // and so that refs resolve before the parent life cycles.
 
-        updateContainer(this.props.children, this._mountNode, this);
+        flushSync(function () {
+          updateContainer(_this2.props.children, _this2._mountNode, _this2);
+        });
 
         if (this._surface.render) {
           this._surface.render();
@@ -30760,11 +30771,17 @@ if (__DEV__) {
       };
 
       _proto4.componentWillUnmount = function componentWillUnmount() {
-        updateContainer(null, this._mountNode, this);
+        var _this3 = this;
+
+        // We synchronously flush updates coming from above so that they commit together
+        // and so that refs resolve before the parent life cycles.
+        flushSync(function () {
+          updateContainer(null, _this3._mountNode, _this3);
+        });
       };
 
       _proto4.render = function render() {
-        var _this = this;
+        var _this4 = this;
 
         // This is going to be a placeholder because we don't know what it will
         // actually resolve to because ART may render canvas, vml or svg tags here.
@@ -30775,7 +30792,7 @@ if (__DEV__) {
         var Tag = Mode$1.Surface.tagName;
         return /*#__PURE__*/ React.createElement(Tag, {
           ref: function (ref) {
-            return (_this._tagRef = ref);
+            return (_this4._tagRef = ref);
           },
           accessKey: props.accessKey,
           className: props.className,
@@ -30794,25 +30811,25 @@ if (__DEV__) {
       _inheritsLoose(Text, _React$Component2);
 
       function Text(props) {
-        var _this2;
+        var _this5;
 
-        _this2 = _React$Component2.call(this, props) || this; // We allow reading these props. Ideally we could expose the Text node as
+        _this5 = _React$Component2.call(this, props) || this; // We allow reading these props. Ideally we could expose the Text node as
         // ref directly.
 
         ["height", "width", "x", "y"].forEach(function (key) {
-          Object.defineProperty(_assertThisInitialized(_this2), key, {
+          Object.defineProperty(_assertThisInitialized(_this5), key, {
             get: function () {
               return this._text ? this._text[key] : undefined;
             }
           });
         });
-        return _this2;
+        return _this5;
       }
 
       var _proto5 = Text.prototype;
 
       _proto5.render = function render() {
-        var _this3 = this;
+        var _this6 = this;
 
         // This means you can't have children that render into strings...
         var T = TYPES.TEXT;
@@ -30820,7 +30837,7 @@ if (__DEV__) {
           T,
           _extends({}, this.props, {
             ref: function (t) {
-              return (_this3._text = t);
+              return (_this6._text = t);
             }
           }),
           childrenAsString(this.props.children)
