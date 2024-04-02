@@ -43,26 +43,6 @@ function resolveDispatcher() {
   return ((dispatcher: any): Dispatcher);
 }
 
-export function getCacheSignal(): AbortSignal {
-  const dispatcher = ReactCurrentCache.current;
-  if (!dispatcher) {
-    // If we have no cache to associate with this call, then we don't know
-    // its lifetime. We abort early since that's safer than letting it live
-    // for ever. Unlike just caching which can be a functional noop outside
-    // of React, these should generally always be associated with some React
-    // render but we're not limiting quite as much as making it a Hook.
-    // It's safer than erroring early at runtime.
-    const controller = new AbortController();
-    const reason = new Error(
-      'This CacheSignal was requested outside React which means that it is ' +
-        'immediately aborted.',
-    );
-    controller.abort(reason);
-    return controller.signal;
-  }
-  return dispatcher.getCacheSignal();
-}
-
 export function getCacheForType<T>(resourceType: () => T): T {
   const dispatcher = ReactCurrentCache.current;
   if (!dispatcher) {

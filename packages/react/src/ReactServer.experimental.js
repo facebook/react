@@ -35,7 +35,6 @@ import {
   useDebugValue,
   useMemo,
   useActionState,
-  getCacheSignal,
   getCacheForType,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
@@ -78,7 +77,6 @@ export {
   startTransition,
   REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as unstable_SuspenseList,
-  getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,
   useId,
