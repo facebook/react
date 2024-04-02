@@ -1476,6 +1476,9 @@ function completeWork(
       bubbleProperties(workInProgress);
       return null;
     case IncompleteClassComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       // Same as class component case. I put it down here so that the tags are
       // sequential to ensure this switch is compiled to a jump table.
       const Component = workInProgress.type;
