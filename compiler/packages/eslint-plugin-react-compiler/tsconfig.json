@@ -18,7 +18,8 @@
     "target": "ES2015",
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "removeComments": true
   },
   "exclude": ["node_modules", "./src/types/*"],
   "include": ["src/**/*.ts"]
