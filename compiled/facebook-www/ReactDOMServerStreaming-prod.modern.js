@@ -534,6 +534,7 @@ function pushAttribute(target, name, value) {
         "symbol" !== typeof value &&
         target.push(" ", name, '="', escapeTextForBrowser(value), '"');
       break;
+    case "inert":
     case "allowFullScreen":
     case "async":
     case "autoPlay":
@@ -613,12 +614,6 @@ function pushAttribute(target, name, value) {
       break;
     case "xmlSpace":
       pushStringAttribute(target, "xml:space", value);
-      break;
-    case "inert":
-      value &&
-        "function" !== typeof value &&
-        "symbol" !== typeof value &&
-        target.push(" ", name, '=""');
       break;
     default:
       if (

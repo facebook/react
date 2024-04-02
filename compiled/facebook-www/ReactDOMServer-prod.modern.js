@@ -559,6 +559,7 @@ function pushAttribute(target, name, value) {
         "symbol" !== typeof value &&
         target.push(" ", name, '="', escapeTextForBrowser(value), '"');
       break;
+    case "inert":
     case "allowFullScreen":
     case "async":
     case "autoPlay":
@@ -638,12 +639,6 @@ function pushAttribute(target, name, value) {
       break;
     case "xmlSpace":
       pushStringAttribute(target, "xml:space", value);
-      break;
-    case "inert":
-      value &&
-        "function" !== typeof value &&
-        "symbol" !== typeof value &&
-        target.push(" ", name, '=""');
       break;
     default:
       if (
@@ -5642,4 +5637,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-f4a18795";
+exports.version = "19.0.0-www-modern-a46dd917";

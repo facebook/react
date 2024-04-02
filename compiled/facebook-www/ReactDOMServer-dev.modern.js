@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-e7985491";
+    var ReactVersion = "19.0.0-www-modern-07eca2b1";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -3440,6 +3440,26 @@ if (__DEV__) {
           return;
         }
 
+        case "inert": {
+          {
+            if (
+              value === "" &&
+              !didWarnForNewBooleanPropsWithEmptyValue[name]
+            ) {
+              didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+
+              error(
+                "Received an empty string for a boolean attribute `%s`. " +
+                  "This will treat the attribute as if it were false. " +
+                  "Either pass `false` to silence this warning, or " +
+                  "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
+                name
+              );
+            }
+          }
+        }
+        // Fallthrough for boolean props that don't have a warning for empty strings.
+
         case "allowFullScreen":
         case "async":
         case "autoPlay":
@@ -3579,40 +3599,6 @@ if (__DEV__) {
         case "xmlSpace":
           pushStringAttribute(target, "xml:space", value);
           return;
-
-        case "inert": {
-          {
-            if (
-              value === "" &&
-              !didWarnForNewBooleanPropsWithEmptyValue[name]
-            ) {
-              didWarnForNewBooleanPropsWithEmptyValue[name] = true;
-
-              error(
-                "Received an empty string for a boolean attribute `%s`. " +
-                  "This will treat the attribute as if it were false. " +
-                  "Either pass `false` to silence this warning, or " +
-                  "pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
-                name
-              );
-            }
-          } // Boolean
-
-          if (
-            value &&
-            typeof value !== "function" &&
-            typeof value !== "symbol"
-          ) {
-            target.push(
-              attributeSeparator,
-              stringToChunk(name),
-              attributeEmptyString
-            );
-          }
-
-          return;
-        }
-        // fallthrough for new boolean props without the flag on
 
         default:
           if (

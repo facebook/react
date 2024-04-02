@@ -36752,7 +36752,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-5a6baa32";
+    var ReactVersion = "19.0.0-www-modern-49fe0719";
 
     function createPortal$1(
       children,
@@ -42789,7 +42789,7 @@ if (__DEV__) {
             }
           }
         }
-        // fallthrough for new boolean props without the flag on
+        // Fallthrough for boolean props that don't have a warning for empty strings.
 
         case "allowFullScreen":
         case "async":
@@ -45209,7 +45209,6 @@ if (__DEV__) {
               serverDifferences
             );
             continue;
-          // fallthrough for new boolean props without the flag on
 
           default: {
             if (
