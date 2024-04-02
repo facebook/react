@@ -505,7 +505,7 @@ function throwException(
         // No boundary was found. Unless this is a sync update, this is OK.
         // We can suspend and wait for more data to arrive.
 
-        if (root.tag === ConcurrentRoot) {
+        if (disableLegacyMode || root.tag === ConcurrentRoot) {
           // In a concurrent root, suspending without a Suspense boundary is
           // allowed. It will suspend indefinitely without committing.
           //

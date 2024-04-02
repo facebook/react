@@ -12,7 +12,10 @@ import type {Lane} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
-import {enableDeferRootSchedulingToMicrotask} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyMode,
+  enableDeferRootSchedulingToMicrotask,
+} from 'shared/ReactFeatureFlags';
 import {
   NoLane,
   NoLanes,
@@ -131,6 +134,7 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
 
   if (
     __DEV__ &&
+    !disableLegacyMode &&
     ReactCurrentActQueue.isBatchingLegacy &&
     root.tag === LegacyRoot
   ) {
@@ -148,7 +152,9 @@ export function flushSyncWorkOnAllRoots() {
 export function flushSyncWorkOnLegacyRootsOnly() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
-  flushSyncWorkAcrossRoots_impl(true);
+  if (!disableLegacyMode) {
+    flushSyncWorkAcrossRoots_impl(true);
+  }
 }
 
 function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
@@ -171,7 +177,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
     didPerformSomeWork = false;
     let root = firstScheduledRoot;
     while (root !== null) {
-      if (onlyLegacy && root.tag !== LegacyRoot) {
+      if (onlyLegacy && (disableLegacyMode || root.tag !== LegacyRoot)) {
         // Skip non-legacy roots.
       } else {
         const workInProgressRoot = getWorkInProgressRoot();

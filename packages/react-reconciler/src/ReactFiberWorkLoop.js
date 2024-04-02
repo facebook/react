@@ -1368,7 +1368,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   }
 
   let exitStatus = renderRootSync(root, lanes);
-  if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+  if (
+    (disableLegacyMode || root.tag !== LegacyRoot) &&
+    exitStatus === RootErrored
+  ) {
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
@@ -1516,6 +1519,7 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
   // next event, not at the end of the previous one.
   if (
     rootWithPendingPassiveEffects !== null &&
+    !disableLegacyMode &&
     rootWithPendingPassiveEffects.tag === LegacyRoot &&
     (executionContext & (RenderContext | CommitContext)) === NoContext
   ) {
@@ -3036,7 +3040,10 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
+  if (
+    includesSyncLane(pendingPassiveEffectsLanes) &&
+    (disableLegacyMode || root.tag !== LegacyRoot)
+  ) {
     flushPassiveEffects();
   }
 
@@ -3717,11 +3724,11 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode && root.tag !== LegacyRoot) {
+    if (useModernStrictMode && (disableLegacyMode || root.tag !== LegacyRoot)) {
       let doubleInvokeEffects = true;
 
       if (
-        root.tag === ConcurrentRoot &&
+        (disableLegacyMode || root.tag === ConcurrentRoot) &&
         !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
       ) {
         doubleInvokeEffects = false;
@@ -3992,7 +3999,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
 function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
   if (__DEV__) {
     if (
-      root.tag !== LegacyRoot &&
+      (disableLegacyMode || root.tag !== LegacyRoot) &&
       isConcurrentActEnvironment() &&
       ReactCurrentActQueue.current === null
     ) {
