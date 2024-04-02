@@ -35,7 +35,7 @@ export { pruneUnusedScopes } from "./PruneUnusedScopes";
 export { renameVariables } from "./RenameVariables";
 export {
   ReactiveFunctionTransform,
-  Transformed,
   eachReactiveValueOperand,
   visitReactiveFunction,
+  type Transformed,
 } from "./visitors";

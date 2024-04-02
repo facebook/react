@@ -9,8 +9,8 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import MonacoEditor, { type Monaco, loader } from "@monaco-editor/react";
-import { CompilerErrorDetail } from "babel-plugin-react-forget";
+import MonacoEditor, { loader, type Monaco } from "@monaco-editor/react";
+import { CompilerErrorDetail } from "babel-plugin-react-forget/src";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import * as monaco from "monaco-editor";
@@ -22,7 +22,7 @@ import { monacoOptions } from "./monacoOptions";
 // @ts-ignore
 import React$Types from "../../node_modules/@types/react/index.d.ts";
 
-loader.config({ monaco});
+loader.config({ monaco });
 
 type Props = {
   errors: CompilerErrorDetail[];
@@ -79,7 +79,7 @@ export default function Input({ errors }: Props) {
       allowSyntheticDefaultImports: true,
     };
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions(
-      tscOptions
+      tscOptions,
     );
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       ...tscOptions,

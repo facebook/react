@@ -188,7 +188,7 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
   if (obj == null || typeof obj !== "object") {
     return defaultOptions;
   }
-  let parsedOptions: Partial<PluginOptions> = Object.create(null);
+  const parsedOptions = Object.create(null);
   for (const [key, value] of Object.entries(obj)) {
     if (isCompilerFlag(key)) {
       parsedOptions[key] = value;
@@ -197,6 +197,6 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
   return { ...defaultOptions, ...parsedOptions };
 }
 
-function isCompilerFlag(s: string): s is keyof typeof defaultOptions {
+function isCompilerFlag(s: string): s is keyof PluginOptions {
   return Object.prototype.hasOwnProperty.call(defaultOptions, s);
 }

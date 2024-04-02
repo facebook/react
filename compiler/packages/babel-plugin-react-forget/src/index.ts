@@ -12,23 +12,23 @@ export {
   ErrorSeverity,
 } from "./CompilerError";
 export {
-  CompilerPipelineValue,
-  PluginOptions,
   compileFn as compile,
   compileProgram,
   parsePluginOptions,
   run,
+  type CompilerPipelineValue,
+  type PluginOptions,
 } from "./Entrypoint";
 export {
   Effect,
-  EnvironmentConfig,
-  ExternalFunction,
-  Hook,
-  SourceLocation,
   ValueKind,
   parseConfigPragma,
   printHIR,
   validateEnvironmentConfig,
+  type EnvironmentConfig,
+  type ExternalFunction,
+  type Hook,
+  type SourceLocation,
 } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 

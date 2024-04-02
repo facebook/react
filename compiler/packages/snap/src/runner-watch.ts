@@ -19,7 +19,10 @@ export function watchSrc(
   const createProgram = ts.createSemanticDiagnosticsBuilderProgram;
   const host = ts.createWatchCompilerHost(
     configPath,
-    {},
+    ts.convertCompilerOptionsFromJson(
+      { module: "commonjs", outDir: "dist" },
+      "."
+    ).options,
     ts.sys,
     createProgram,
     () => {}, // we manually report errors in afterProgramCreate

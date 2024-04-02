@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "yarn snap:ci",
-    "jest": "tsc && ts-node node_modules/.bin/jest",
+    "jest": "yarn build && ts-node node_modules/.bin/jest",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
@@ -44,8 +44,8 @@
     "@types/invariant": "^2.2.35",
     "@types/jest": "^29.0.3",
     "@types/node": "^18.7.18",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "babel-jest": "^29.0.3",
     "babel-plugin-fbt": "^1.0.0",
     "babel-plugin-fbt-runtime": "^1.0.0",
@@ -61,8 +61,7 @@
     "rimraf": "^3.0.2",
     "rollup-plugin-license": "^3.2.0",
     "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.0"
+    "ts-node": "^10.9.2"
   },
   "resolutions": {
     "./**/@babel/parser": "7.7.4",

@@ -29,6 +29,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "concurrently": "^7.4.0"
+    "concurrently": "^7.4.0",
+    "typescript": "^5.4.3",
+    "@tsconfig/strictest": "^2.0.5"
   }
 }

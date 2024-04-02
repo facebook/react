@@ -12,11 +12,11 @@ export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
 export {
   Environment,
-  EnvironmentConfig,
-  ExternalFunction,
-  Hook,
   parseConfigPragma,
   validateEnvironmentConfig,
+  type EnvironmentConfig,
+  type ExternalFunction,
+  type Hook,
 } from "./Environment";
 export * from "./HIR";
 export {

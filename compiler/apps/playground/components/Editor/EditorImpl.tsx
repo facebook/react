@@ -13,14 +13,14 @@ import {
   CompilerErrorDetail,
   Effect,
   ErrorSeverity,
-  Hook,
   parseConfigPragma,
   printHIR,
   printReactiveFunction,
   run,
   ValueKind,
-} from "babel-plugin-react-forget";
-import { ReactFunctionType } from "babel-plugin-react-forget/dist/HIR/Environment";
+  type Hook,
+} from "babel-plugin-react-forget/src";
+import { type ReactFunctionType } from "babel-plugin-react-forget/src/HIR/Environment";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";

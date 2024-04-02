@@ -1,9 +1,12 @@
 {
-  "extends": "@tsconfig/node18-strictest/tsconfig.json",
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "declaration": true,
     "outDir": "dist",
     "jsx": "react-jsxdev",
+    "lib": ["ES2022"],
 
     // weaken strictness from preset
     "importsNotUsedAsValues": "remove",
@@ -17,9 +20,4 @@
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"],
-  "references": [
-    {
-      "path": "../babel-plugin-react-forget"
-    }
-  ]
 }

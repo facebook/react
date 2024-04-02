@@ -1,6 +1,8 @@
 {
-  "extends": "@tsconfig/node18-strictest/tsconfig.json",
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
+    "module": "ES2015",
+    "moduleResolution": "Bundler",
     "rootDir": "../",
     "noEmit": true,
     "jsx": "react-jsxdev",

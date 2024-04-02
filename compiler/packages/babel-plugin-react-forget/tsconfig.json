@@ -1,7 +1,8 @@
 {
-  "extends": "@tsconfig/node18-strictest/tsconfig.json",
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "NodeNext",
+    "module": "ES2015",
+    "moduleResolution": "Bundler",
     "declaration": true,
     "declarationDir": "./dist",
     "declarationMap": false,
@@ -26,5 +27,14 @@
   ],
   "include": [
     "src/**/*.ts"
-  ]
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    // these options are overrides used only by ts-node
+    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
+    }
+  }
 }

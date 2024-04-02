@@ -10,12 +10,15 @@
  */
 
 import { Monaco } from "@monaco-editor/react";
-import { CompilerErrorDetail, ErrorSeverity } from "babel-plugin-react-forget";
+import {
+  CompilerErrorDetail,
+  ErrorSeverity,
+} from "babel-plugin-react-forget/src";
 import { MarkerSeverity, type editor } from "monaco-editor";
 
 function mapForgetSeverityToMonaco(
   level: ErrorSeverity,
-  monaco: Monaco
+  monaco: Monaco,
 ): MarkerSeverity {
   switch (level) {
     case ErrorSeverity.Todo:
@@ -27,7 +30,7 @@ function mapForgetSeverityToMonaco(
 
 function mapForgetDiagnosticToMonacoMarker(
   detail: CompilerErrorDetail,
-  monaco: Monaco
+  monaco: Monaco,
 ): editor.IMarkerData | null {
   if (detail.loc == null || typeof detail.loc === "symbol") {
     return null;
@@ -71,7 +74,7 @@ export function renderForgetMarkers({
           marker.startLineNumber,
           marker.startColumn,
           marker.endLineNumber,
-          marker.endColumn
+          marker.endColumn,
         ),
         options: {
           isWholeLine: true,
@@ -84,7 +87,7 @@ export function renderForgetMarkers({
     monaco.editor.setModelMarkers(model, "owner", []);
     decorations = model.deltaDecorations(
       model.getAllDecorations().map((d) => d.id),
-      []
+      [],
     );
   }
 }
