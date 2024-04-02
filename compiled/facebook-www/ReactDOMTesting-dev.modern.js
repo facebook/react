@@ -31239,11 +31239,6 @@ if (__DEV__) {
       }
     }
 
-    function getCacheSignal() {
-      var cache = readContext(CacheContext);
-      return cache.controller.signal;
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -31257,7 +31252,6 @@ if (__DEV__) {
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 
@@ -36751,7 +36745,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-db9e220d";
+    var ReactVersion = "19.0.0-www-modern-cfc7c1e7";
 
     function createPortal$1(
       children,

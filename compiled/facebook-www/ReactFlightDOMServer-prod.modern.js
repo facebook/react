@@ -305,26 +305,17 @@ function use(usable) {
   }
   throw Error("An unsupported type was passed to use(): " + String(usable));
 }
-function createSignal() {
-  return new AbortController().signal;
-}
-function resolveCache() {
-  var request = currentRequest ? currentRequest : null;
-  return request ? request.cache : new Map();
-}
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      var cache = resolveCache(),
-        entry = cache.get(createSignal);
-      void 0 === entry &&
-        ((entry = createSignal()), cache.set(createSignal, entry));
-      return entry;
-    },
     getCacheForType: function (resourceType) {
-      var cache = resolveCache(),
-        entry = cache.get(resourceType);
+      var JSCompiler_inline_result = (JSCompiler_inline_result = currentRequest
+        ? currentRequest
+        : null)
+        ? JSCompiler_inline_result.cache
+        : new Map();
+      var entry = JSCompiler_inline_result.get(resourceType);
       void 0 === entry &&
-        ((entry = resourceType()), cache.set(resourceType, entry));
+        ((entry = resourceType()),
+        JSCompiler_inline_result.set(resourceType, entry));
       return entry;
     }
   },

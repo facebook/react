@@ -707,10 +707,6 @@ if (__DEV__) {
       }
     }
 
-    function createSignal() {
-      return new AbortController().signal;
-    }
-
     function resolveCache() {
       var request = resolveRequest();
 
@@ -722,17 +718,6 @@ if (__DEV__) {
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: function () {
-        var cache = resolveCache();
-        var entry = cache.get(createSignal);
-
-        if (entry === undefined) {
-          entry = createSignal();
-          cache.set(createSignal, entry);
-        }
-
-        return entry;
-      },
       getCacheForType: function (resourceType) {
         var cache = resolveCache();
         var entry = cache.get(resourceType);

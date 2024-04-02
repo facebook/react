@@ -574,18 +574,6 @@ exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
-exports.unstable_getCacheSignal = function () {
-  var dispatcher = ReactCurrentCache.current;
-  return dispatcher
-    ? dispatcher.getCacheSignal()
-    : ((dispatcher = new AbortController()),
-      dispatcher.abort(
-        Error(
-          "This CacheSignal was requested outside React which means that it is immediately aborted."
-        )
-      ),
-      dispatcher.signal);
-};
 exports.unstable_useCacheRefresh = function () {
   return ReactCurrentDispatcher.current.useCacheRefresh();
 };
@@ -656,4 +644,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-modern-763d5ed6";
+exports.version = "19.0.0-www-modern-f4b5ac1e";

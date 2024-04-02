@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-f04454d4";
+    var ReactVersion = "19.0.0-www-modern-5ccfe516";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2976,27 +2976,6 @@ if (__DEV__) {
       return dispatcher;
     }
 
-    function getCacheSignal() {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If we have no cache to associate with this call, then we don't know
-        // its lifetime. We abort early since that's safer than letting it live
-        // for ever. Unlike just caching which can be a functional noop outside
-        // of React, these should generally always be associated with some React
-        // render but we're not limiting quite as much as making it a Hook.
-        // It's safer than erroring early at runtime.
-        var controller = new AbortController();
-        var reason = new Error(
-          "This CacheSignal was requested outside React which means that it is " +
-            "immediately aborted."
-        );
-        controller.abort(reason);
-        return controller.signal;
-      }
-
-      return dispatcher.getCacheSignal();
-    }
     function getCacheForType(resourceType) {
       var dispatcher = ReactCurrentCache.current;
 
@@ -3669,7 +3648,6 @@ if (__DEV__) {
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_getCacheForType = getCacheForType;
-    exports.unstable_getCacheSignal = getCacheSignal;
     exports.unstable_useCacheRefresh = useCacheRefresh;
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = use;

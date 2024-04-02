@@ -3183,9 +3183,6 @@ HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
 var currentResumableState = null,
   DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      throw Error("Not implemented.");
-    },
     getCacheForType: function () {
       throw Error("Not implemented.");
     }

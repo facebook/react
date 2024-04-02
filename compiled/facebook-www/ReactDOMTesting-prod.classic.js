@@ -10731,9 +10731,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      return readContext(CacheContext).controller.signal;
-    },
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -17399,7 +17396,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1749 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-059aefad",
+  version: "19.0.0-www-classic-1a554f4a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2158 = {
@@ -17429,7 +17426,7 @@ var internals$jscomp$inline_2158 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-059aefad"
+  reconcilerVersion: "19.0.0-www-classic-1a554f4a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2159 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18022,4 +18019,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-059aefad";
+exports.version = "19.0.0-www-classic-1a554f4a";

@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-e1b06834";
+    var ReactVersion = "19.0.0-www-classic-a2ba8df5";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -10729,16 +10729,11 @@ if (__DEV__) {
       currentResumableState = resumableState;
     }
 
-    function getCacheSignal() {
-      throw new Error("Not implemented.");
-    }
-
     function getCacheForType(resourceType) {
       throw new Error("Not implemented.");
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 

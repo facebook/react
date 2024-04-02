@@ -8583,9 +8583,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      return readContext(CacheContext).controller.signal;
-    },
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -10257,7 +10254,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-d9e4c872",
+    version: "19.0.0-www-modern-ee94f26b",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1294 = {
@@ -10288,7 +10285,7 @@ var internals$jscomp$inline_1294 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-d9e4c872"
+  reconcilerVersion: "19.0.0-www-modern-ee94f26b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1295 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

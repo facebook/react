@@ -3292,9 +3292,6 @@ HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
 var currentResumableState = null,
   DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      throw Error(formatProdErrorMessage(248));
-    },
     getCacheForType: function () {
       throw Error(formatProdErrorMessage(248));
     }
@@ -5637,4 +5634,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-a46dd917";
+exports.version = "19.0.0-www-modern-e9074a7c";

@@ -22591,11 +22591,6 @@ if (__DEV__) {
       }
     }
 
-    function getCacheSignal() {
-      var cache = readContext(CacheContext);
-      return cache.controller.signal;
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -22609,7 +22604,6 @@ if (__DEV__) {
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 
@@ -26835,7 +26829,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-2ceb9886";
+    var ReactVersion = "19.0.0-www-modern-2fc232e4";
 
     // Might add PROFILE later.
 

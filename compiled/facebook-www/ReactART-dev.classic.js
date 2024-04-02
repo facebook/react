@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-9edd2970";
+    var ReactVersion = "19.0.0-www-classic-cbebd2c1";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -25722,11 +25722,6 @@ if (__DEV__) {
       }
     }
 
-    function getCacheSignal() {
-      var cache = readContext(CacheContext);
-      return cache.controller.signal;
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -25740,7 +25735,6 @@ if (__DEV__) {
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 

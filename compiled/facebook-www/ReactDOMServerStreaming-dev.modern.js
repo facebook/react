@@ -10532,16 +10532,11 @@ if (__DEV__) {
       currentResumableState = resumableState;
     }
 
-    function getCacheSignal() {
-      throw new Error("Not implemented.");
-    }
-
     function getCacheForType(resourceType) {
       throw new Error("Not implemented.");
     }
 
     var DefaultCacheDispatcher = {
-      getCacheSignal: getCacheSignal,
       getCacheForType: getCacheForType
     };
 
