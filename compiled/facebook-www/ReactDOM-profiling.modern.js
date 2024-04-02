@@ -15897,14 +15897,14 @@ function setInitialProperties(domElement, tag, props) {
         for (defaultChecked in props)
           props.hasOwnProperty(defaultChecked) &&
             ((propKey = props[defaultChecked]),
-            null != propKey &&
+            void 0 !== propKey &&
               setPropOnCustomElement(
                 domElement,
                 tag,
                 defaultChecked,
                 propKey,
                 props,
-                null
+                void 0
               ));
         return;
       }
@@ -16202,13 +16202,13 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         for (var propKey$270 in lastProps)
           (propKey$244 = lastProps[propKey$270]),
             lastProps.hasOwnProperty(propKey$270) &&
-              null != propKey$244 &&
+              void 0 !== propKey$244 &&
               !nextProps.hasOwnProperty(propKey$270) &&
               setPropOnCustomElement(
                 domElement,
                 tag,
                 propKey$270,
-                null,
+                void 0,
                 nextProps,
                 propKey$244
               );
@@ -16217,7 +16217,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
             (propKey = lastProps[defaultChecked]),
             !nextProps.hasOwnProperty(defaultChecked) ||
               propKey$244 === propKey ||
-              (null == propKey$244 && null == propKey) ||
+              (void 0 === propKey$244 && void 0 === propKey) ||
               setPropOnCustomElement(
                 domElement,
                 tag,
@@ -17330,7 +17330,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1769 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-932b5800",
+  version: "19.0.0-www-modern-7a481094",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17374,7 +17374,7 @@ var devToolsConfig$jscomp$inline_1769 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-932b5800"
+  reconcilerVersion: "19.0.0-www-modern-7a481094"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17664,7 +17664,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-932b5800";
+exports.version = "19.0.0-www-modern-7a481094";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

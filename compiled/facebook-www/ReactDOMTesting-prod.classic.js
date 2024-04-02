@@ -15117,14 +15117,14 @@ function setInitialProperties(domElement, tag, props) {
         for (defaultChecked in props)
           props.hasOwnProperty(defaultChecked) &&
             ((propKey = props[defaultChecked]),
-            null != propKey &&
+            void 0 !== propKey &&
               setPropOnCustomElement(
                 domElement,
                 tag,
                 defaultChecked,
                 propKey,
                 props,
-                null
+                void 0
               ));
         return;
       }
@@ -15422,13 +15422,13 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         for (var propKey$245 in lastProps)
           (propKey$219 = lastProps[propKey$245]),
             lastProps.hasOwnProperty(propKey$245) &&
-              null != propKey$219 &&
+              void 0 !== propKey$219 &&
               !nextProps.hasOwnProperty(propKey$245) &&
               setPropOnCustomElement(
                 domElement,
                 tag,
                 propKey$245,
-                null,
+                void 0,
                 nextProps,
                 propKey$219
               );
@@ -15437,7 +15437,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
             (propKey = lastProps[defaultChecked]),
             !nextProps.hasOwnProperty(defaultChecked) ||
               propKey$219 === propKey ||
-              (null == propKey$219 && null == propKey) ||
+              (void 0 === propKey$219 && void 0 === propKey) ||
               setPropOnCustomElement(
                 domElement,
                 tag,
@@ -17399,7 +17399,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1749 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-eacb2476",
+  version: "19.0.0-www-classic-059aefad",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2158 = {
@@ -17429,7 +17429,7 @@ var internals$jscomp$inline_2158 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-eacb2476"
+  reconcilerVersion: "19.0.0-www-classic-059aefad"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2159 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18022,4 +18022,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-eacb2476";
+exports.version = "19.0.0-www-classic-059aefad";

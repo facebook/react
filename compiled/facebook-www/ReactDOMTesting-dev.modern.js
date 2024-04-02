@@ -36751,7 +36751,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-29038110";
+    var ReactVersion = "19.0.0-www-modern-db9e220d";
 
     function createPortal$1(
       children,
@@ -43498,7 +43498,7 @@ if (__DEV__) {
 
               var _propValue5 = props[_propKey5];
 
-              if (_propValue5 == null) {
+              if (_propValue5 === undefined) {
                 continue;
               }
 
@@ -43508,7 +43508,7 @@ if (__DEV__) {
                 _propKey5,
                 _propValue5,
                 props,
-                null
+                undefined
               );
             }
 
@@ -44042,14 +44042,14 @@ if (__DEV__) {
 
               if (
                 lastProps.hasOwnProperty(_propKey16) &&
-                _lastProp10 != null &&
+                _lastProp10 !== undefined &&
                 !nextProps.hasOwnProperty(_propKey16)
               ) {
                 setPropOnCustomElement(
                   domElement,
                   tag,
                   _propKey16,
-                  null,
+                  undefined,
                   nextProps,
                   _lastProp10
                 );
@@ -44063,7 +44063,7 @@ if (__DEV__) {
               if (
                 nextProps.hasOwnProperty(_propKey17) &&
                 _nextProp5 !== _lastProp11 &&
-                (_nextProp5 != null || _lastProp11 != null)
+                (_nextProp5 !== undefined || _lastProp11 !== undefined)
               ) {
                 setPropOnCustomElement(
                   domElement,
