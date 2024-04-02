@@ -34,7 +34,6 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   DebugTracingMode,
   NoMode,
@@ -1052,10 +1051,11 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps =
-    workInProgress.type === workInProgress.elementType
-      ? unresolvedOldProps
-      : resolveDefaultProps(workInProgress.type, unresolvedOldProps);
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1223,6 +1223,34 @@ function updateClassInstance(
   instance.context = nextContext;
 
   return shouldUpdate;
+}
+
+export function resolveClassComponentProps(
+  Component: any,
+  baseProps: Object,
+  // Only resolve default props if this is a lazy component. Otherwise, they
+  // would have already been resolved by the JSX runtime.
+  // TODO: We're going to remove default prop resolution from the JSX runtime
+  // and keep it only for class components. As part of that change, we should
+  // remove this extra check.
+  alreadyResolvedDefaultProps: boolean,
+): Object {
+  let newProps = baseProps;
+
+  // Resolve default props. Taken from old JSX runtime, where this used to live.
+  const defaultProps = Component.defaultProps;
+  if (defaultProps && !alreadyResolvedDefaultProps) {
+    newProps = assign({}, newProps, baseProps);
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  // TODO: Remove ref from props object
+
+  return newProps;
 }
 
 export {

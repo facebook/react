@@ -104,7 +104,7 @@ import {
   setCurrentFiber as setCurrentDebugFiberInDEV,
   getCurrentFiber as getCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveClassComponentProps} from './ReactFiberClassComponent';
 import {
   isCurrentUpdateNested,
   getCommitTime,
@@ -471,7 +471,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
             if (
-              finishedWork.type === finishedWork.elementType &&
+              !finishedWork.type.defaultProps &&
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
@@ -497,9 +497,11 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
             }
           }
           const snapshot = instance.getSnapshotBeforeUpdate(
-            finishedWork.elementType === finishedWork.type
-              ? prevProps
-              : resolveDefaultProps(finishedWork.type, prevProps),
+            resolveClassComponentProps(
+              finishedWork.type,
+              prevProps,
+              finishedWork.elementType === finishedWork.type,
+            ),
             prevState,
           );
           if (__DEV__) {
@@ -806,10 +808,7 @@ function commitClassLayoutLifecycles(
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
-      if (
-        finishedWork.type === finishedWork.elementType &&
-        !didWarnAboutReassigningProps
-      ) {
+      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +
@@ -848,19 +847,17 @@ function commitClassLayoutLifecycles(
       }
     }
   } else {
-    const prevProps =
-      finishedWork.elementType === finishedWork.type
-        ? current.memoizedProps
-        : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+    const prevProps = resolveClassComponentProps(
+      finishedWork.type,
+      current.memoizedProps,
+      finishedWork.elementType === finishedWork.type,
+    );
     const prevState = current.memoizedState;
     // We could update instance props and state here,
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
-      if (
-        finishedWork.type === finishedWork.elementType &&
-        !didWarnAboutReassigningProps
-      ) {
+      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +
@@ -917,10 +914,7 @@ function commitClassCallbacks(finishedWork: Fiber) {
   if (updateQueue !== null) {
     const instance = finishedWork.stateNode;
     if (__DEV__) {
-      if (
-        finishedWork.type === finishedWork.elementType &&
-        !didWarnAboutReassigningProps
-      ) {
+      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +
