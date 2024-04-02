@@ -40,6 +40,9 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 // those can be fixed.
 export const enableDeferRootSchedulingToMicrotask = true;
 
+// TODO: Land at Meta before removing.
+export const disableDefaultPropsExceptForClasses = true;
+
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
 //
