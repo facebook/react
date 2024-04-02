@@ -27,8 +27,6 @@ const files = glob.sync("**/*.{js,ts,tsx,jsx}", {
     "packages/js-fuzzer/**",
     "**/tests/fixtures/**",
     "**/__tests__/fixtures/**",
-    // Special case where we need to preserve a jest directive
-    "packages/forest-runtime/src/__tests__/DOM-test.ts",
   ],
 });
 
