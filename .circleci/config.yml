@@ -387,13 +387,10 @@ jobs:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
-    parameters:
-      args:
-        type: string
     steps:
       - checkout
       - setup_node_modules
-      - run: yarn test <<parameters.args>> --ci
+      - run: yarn jest --ci --shard=$(expr $CIRCLE_NODE_INDEX + 1)/$CIRCLE_NODE_TOTAL
 
   yarn_test_build:
     docker: *docker
@@ -482,28 +479,6 @@ workflows:
             branches:
               ignore:
                 - builds/facebook-www
-          matrix:
-            parameters:
-              args:
-                # Intentionally passing these as strings instead of creating a
-                # separate parameter per CLI argument, since it's easier to
-                # control/see which combinations we want to run.
-                - "-r=stable --env=development"
-                - "-r=stable --env=production"
-                - "-r=experimental --env=development"
-                - "-r=experimental --env=production"
-                - "-r=www-classic --env=development --variant=false"
-                - "-r=www-classic --env=production --variant=false"
-                - "-r=www-classic --env=development --variant=true"
-                - "-r=www-classic --env=production --variant=true"
-                - "-r=www-modern --env=development --variant=false"
-                - "-r=www-modern --env=production --variant=false"
-                - "-r=www-modern --env=development --variant=true"
-                - "-r=www-modern --env=production --variant=true"
-
-                # TODO: Test more persistent configurations?
-                - '-r=stable --env=development --persistent'
-                - '-r=experimental --env=development --persistent'
       - yarn_build:
           filters:
             branches:
