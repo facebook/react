@@ -49,8 +49,6 @@ function formatProdErrorMessage(code) {
   );
 }
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
-  disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTrustedTypesIntegration =
@@ -997,22 +995,14 @@ function updateInput(
         (element.value = "" + getToStringValue(value));
   else
     ("submit" !== type && "reset" !== type) || element.removeAttribute("value");
-  disableInputAttributeSyncing
-    ? null != defaultValue
-      ? setDefaultValue(element, type, getToStringValue(defaultValue))
-      : null != lastDefaultValue && element.removeAttribute("value")
-    : null != value
+  null != value
     ? setDefaultValue(element, type, getToStringValue(value))
     : null != defaultValue
     ? setDefaultValue(element, type, getToStringValue(defaultValue))
     : null != lastDefaultValue && element.removeAttribute("value");
-  disableInputAttributeSyncing
-    ? null == defaultChecked
-      ? element.removeAttribute("checked")
-      : (element.defaultChecked = !!defaultChecked)
-    : null == checked &&
-      null != defaultChecked &&
-      (element.defaultChecked = !!defaultChecked);
+  null == checked &&
+    null != defaultChecked &&
+    (element.defaultChecked = !!defaultChecked);
   null != checked &&
     (element.checked =
       checked && "function" !== typeof checked && "symbol" !== typeof checked);
@@ -1040,30 +1030,23 @@ function initInput(
     (element.type = type);
   if (null != value || null != defaultValue) {
     if (
-      (type = "submit" === type || "reset" === type) &&
-      (void 0 === value || null === value)
+      !(
+        ("submit" !== type && "reset" !== type) ||
+        (void 0 !== value && null !== value)
+      )
     )
       return;
-    var defaultValueStr =
-        null != defaultValue ? "" + getToStringValue(defaultValue) : "",
-      initialValue =
-        null != value ? "" + getToStringValue(value) : defaultValueStr;
-    isHydrating ||
-      (disableInputAttributeSyncing
-        ? null == value ||
-          (!type && "" + getToStringValue(value) === element.value) ||
-          (element.value = "" + getToStringValue(value))
-        : initialValue !== element.value && (element.value = initialValue));
-    disableInputAttributeSyncing
-      ? null != defaultValue && (element.defaultValue = defaultValueStr)
-      : (element.defaultValue = initialValue);
+    defaultValue =
+      null != defaultValue ? "" + getToStringValue(defaultValue) : "";
+    value = null != value ? "" + getToStringValue(value) : defaultValue;
+    isHydrating || value === element.value || (element.value = value);
+    element.defaultValue = value;
   }
-  value = null != checked ? checked : defaultChecked;
-  value = "function" !== typeof value && "symbol" !== typeof value && !!value;
-  element.checked = isHydrating ? element.checked : !!value;
-  disableInputAttributeSyncing
-    ? null != defaultChecked && (element.defaultChecked = !!defaultChecked)
-    : (element.defaultChecked = !!value);
+  checked = null != checked ? checked : defaultChecked;
+  checked =
+    "function" !== typeof checked && "symbol" !== typeof checked && !!checked;
+  element.checked = isHydrating ? element.checked : !!checked;
+  element.defaultChecked = !!checked;
   null != name &&
     "function" !== typeof name &&
     "symbol" !== typeof name &&
@@ -14314,9 +14297,8 @@ function dispatchEventForPluginEventSystem(
         "focusout" === domEventName &&
           targetInst &&
           "number" === reactName.type &&
-          (disableInputAttributeSyncing ||
-            (null != targetInst.memoizedProps.value &&
-              setDefaultValue(reactName, "number", reactName.value)));
+          null != targetInst.memoizedProps.value &&
+          setDefaultValue(reactName, "number", reactName.value);
       }
       handleEventFunc = targetInst ? getNodeFromInstance(targetInst) : window;
       switch (domEventName) {
@@ -16607,7 +16589,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1683 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-9a30fef2",
+  version: "19.0.0-www-modern-301c795b",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2112 = {
@@ -16637,7 +16619,7 @@ var internals$jscomp$inline_2112 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-9a30fef2"
+  reconcilerVersion: "19.0.0-www-modern-301c795b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2113 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16940,4 +16922,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-9a30fef2";
+exports.version = "19.0.0-www-modern-301c795b";

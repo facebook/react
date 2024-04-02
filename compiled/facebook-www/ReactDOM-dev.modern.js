@@ -118,9 +118,7 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var disableInputAttributeSyncing =
-        dynamicFeatureFlags.disableInputAttributeSyncing,
-      disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
+    var disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
       enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
       enableTrustedTypesIntegration =
         dynamicFeatureFlags.enableTrustedTypesIntegration,
@@ -154,7 +152,7 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
+    var enableAsyncActions = true;
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
@@ -3979,16 +3977,7 @@ if (__DEV__) {
         node.removeAttribute("value");
       }
 
-      if (disableInputAttributeSyncing) {
-        // When not syncing the value attribute, React only assigns a new value
-        // whenever the defaultValue React prop has changed. When not present,
-        // React does nothing
-        if (defaultValue != null) {
-          setDefaultValue(node, type, getToStringValue(defaultValue));
-        } else if (lastDefaultValue != null) {
-          node.removeAttribute("value");
-        }
-      } else {
+      {
         // When syncing the value attribute, the value comes from a cascade of
         // properties:
         //  1. The value React property
@@ -4003,16 +3992,7 @@ if (__DEV__) {
         }
       }
 
-      if (disableInputAttributeSyncing) {
-        // When not syncing the checked attribute, the attribute is directly
-        // controllable from the defaultValue React property. It needs to be
-        // updated as new props come in.
-        if (defaultChecked == null) {
-          node.removeAttribute("checked");
-        } else {
-          node.defaultChecked = !!defaultChecked;
-        }
-      } else {
+      {
         // When syncing the checked attribute, it only changes when it needs
         // to be removed, such as transitioning from a checkbox into a text input
         if (checked == null && defaultChecked != null) {
@@ -4086,26 +4066,7 @@ if (__DEV__) {
         // from being lost during SSR hydration.
 
         if (!isHydrating) {
-          if (disableInputAttributeSyncing) {
-            // When not syncing the value attribute, the value property points
-            // directly to the React prop. Only assign it if it exists.
-            if (value != null) {
-              // Always assign on buttons so that it is possible to assign an
-              // empty string to clear button text.
-              //
-              // Otherwise, do not re-assign the value property if is empty. This
-              // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
-              // prematurely marking required inputs as invalid. Equality is compared
-              // to the current value in case the browser provided value is not an
-              // empty string.
-              if (
-                isButton ||
-                toString(getToStringValue(value)) !== node.value
-              ) {
-                node.value = toString(getToStringValue(value));
-              }
-            }
-          } else {
+          {
             // When syncing the value attribute, the value property should use
             // the wrapperState._initialValue property. This uses:
             //
@@ -4118,13 +4079,7 @@ if (__DEV__) {
           }
         }
 
-        if (disableInputAttributeSyncing) {
-          // When not syncing the value attribute, assign the value attribute
-          // directly from the defaultValue React property (when present)
-          if (defaultValue != null) {
-            node.defaultValue = defaultValueStr;
-          }
-        } else {
+        {
           // Otherwise, the value attribute is synchronized to the property,
           // so we assign defaultValue to the same thing as the value property
           // assignment step above.
@@ -4151,15 +4106,7 @@ if (__DEV__) {
         node.checked = !!initialChecked;
       }
 
-      if (disableInputAttributeSyncing) {
-        // Only assign the checked attribute if it is defined. This saves
-        // a DOM write when controlling the checked attribute isn't needed
-        // (text inputs, submit/reset)
-        if (defaultChecked != null) {
-          node.defaultChecked = !node.defaultChecked;
-          node.defaultChecked = !!defaultChecked;
-        }
-      } else {
+      {
         // When syncing the checked attribute, both the checked property and
         // attribute are assigned at the same time using defaultChecked. This uses:
         //
@@ -36181,7 +36128,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-7dc0b27f";
+    var ReactVersion = "19.0.0-www-modern-e4bc2307";
 
     function createPortal$1(
       children,
@@ -39412,7 +39359,7 @@ if (__DEV__) {
         return;
       }
 
-      if (!disableInputAttributeSyncing) {
+      {
         var isControlled = props.value != null;
 
         if (isControlled) {
