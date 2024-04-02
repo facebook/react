@@ -1,0 +1,269 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/constant-propagation-for.js
+---
+Input:
+function foo() {
+  let y = 0;
+  for (const x = 100; x < 10; x) {
+    y = y + 1;
+  }
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "ForStatement",
+            "init": {
+              "type": "VariableDeclaration",
+              "kind": "const",
+              "declarations": [
+                {
+                  "type": "VariableDeclarator",
+                  "id": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      43,
+                      44
+                    ]
+                  },
+                  "init": {
+                    "type": "NumericLiteral",
+                    "value": 100.0,
+                    "loc": null,
+                    "range": [
+                      47,
+                      50
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    43,
+                    50
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                37,
+                50
+              ]
+            },
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  52,
+                  53
+                ]
+              },
+              "operator": "<",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 10.0,
+                "loc": null,
+                "range": [
+                  56,
+                  58
+                ]
+              },
+              "loc": null,
+              "range": [
+                52,
+                58
+              ]
+            },
+            "update": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                60,
+                61
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "y",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        69,
+                        70
+                      ]
+                    },
+                    "right": {
+                      "type": "BinaryExpression",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "y",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          73,
+                          74
+                        ]
+                      },
+                      "operator": "+",
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          77,
+                          78
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        73,
+                        78
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      69,
+                      78
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    69,
+                    79
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                63,
+                83
+              ]
+            },
+            "loc": null,
+            "range": [
+              32,
+              83
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                93,
+                94
+              ]
+            },
+            "loc": null,
+            "range": [
+              86,
+              95
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          97
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        97
+      ],
+      "loc": null,
+      "range": [
+        0,
+        97
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    97
+  ]
+}

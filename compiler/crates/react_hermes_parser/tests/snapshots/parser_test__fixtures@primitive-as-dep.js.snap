@@ -1,0 +1,190 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/primitive-as-dep.js
+---
+Input:
+// props.b + 1 is an non-allocating expression, which means Forget can
+// emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
+// separately from props.b)
+// Correctness:
+//   y depends on either props.b or props.b + 1
+function PrimitiveAsDep(props) {
+  let y = foo(props.b + 1);
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "PrimitiveAsDep",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          245,
+          259
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            260,
+            265
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    275,
+                    276
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      279,
+                      282
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "BinaryExpression",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            283,
+                            288
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "b",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            289,
+                            290
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          283,
+                          290
+                        ]
+                      },
+                      "operator": "+",
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          293,
+                          294
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        283,
+                        294
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    279,
+                    295
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  275,
+                  295
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              271,
+              296
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                306,
+                307
+              ]
+            },
+            "loc": null,
+            "range": [
+              299,
+              308
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          267,
+          310
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        236,
+        310
+      ],
+      "loc": null,
+      "range": [
+        236,
+        310
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    236,
+    310
+  ]
+}

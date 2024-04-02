@@ -62,7 +62,7 @@ new_dep = { version = "x.y.z" }
 Then reference it from your crate as follows:
 
 ```
-// crates/forget_foo/Cargo.toml
+// crates/react_foo/Cargo.toml
 [dependencies]
 ...
 new_dep = { workspace = true }
@@ -77,7 +77,7 @@ passes depend on each other in the sense that they often must run in a certain o
 so they can generally be split into crates of similar types of passes, so that those crates can compile in parallel.
 
 As a rule of thumb, add crates at roughly the granularity of our existing top-level folds. If you have some one-off utility code that
-doesn't fit neatly in a crate, add it to `forget_utils` rather than add a one-off crate for it.
+doesn't fit neatly in a crate, add it to `react_utils` rather than add a one-off crate for it.
 
 ## Running Tests
 
@@ -87,15 +87,15 @@ Run all tests with the following from the root directory:
 cargo test
 ```
 
-The majority of our tests will (should) live in the `forget_fixtures` crate, which is a test-only crate that runs compilation end-to-end with snapshot
+The majority of our tests will (should) live in the `react_fixtures` crate, which is a test-only crate that runs compilation end-to-end with snapshot
 tests. To run just these tests use:
 
 ```
 # quiet version
-cargo test -p forget_fixtures
+cargo test -p react_fixtures
 
 # without suppressing stdout/stderr output
-cargo test -p forget_fixtures -- --nocapture
+cargo test -p react_fixtures -- --nocapture
 ```
 
 Another hint is that VSCode will show a "Run test" option if you hover over a test in the source code, this lets you run a single test easily.

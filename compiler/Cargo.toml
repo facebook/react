@@ -13,18 +13,18 @@ repository  = "https://github.com/facebook/react-forget"
 
 [workspace.dependencies]
 # workspace crates
-forget_build_hir = { path = "crates/forget_build_hir" }
-forget_diagnostics = { path = "crates/forget_diagnostics" }
-forget_estree = { path = "crates/forget_estree" }
-forget_estree_codegen = { path = "crates/forget_estree_codegen" }
-forget_fixtures = { path = "crates/forget_fixtures" }
-forget_hermes_parser = { path = "crates/forget_hermes_parser" }
-forget_hir = { path = "crates/forget_hir" }
-forget_optimization = { path = "crates/forget_optimization" }
-forget_reactive_ir = { path = "crates/forget_reactive_ir" }
-forget_semantic_analysis = { path = "crates/forget_semantic_analysis" }
-forget_ssa = { path = "crates/forget_ssa" }
-forget_utils = { path = "crates/forget_utils" }
+react_build_hir = { path = "crates/react_build_hir" }
+react_diagnostics = { path = "crates/react_diagnostics" }
+react_estree = { path = "crates/react_estree" }
+react_estree_codegen = { path = "crates/react_estree_codegen" }
+react_fixtures = { path = "crates/react_fixtures" }
+react_hermes_parser = { path = "crates/react_hermes_parser" }
+react_hir = { path = "crates/react_hir" }
+react_optimization = { path = "crates/react_optimization" }
+react_reactive_ir = { path = "crates/react_reactive_ir" }
+react_semantic_analysis = { path = "crates/react_semantic_analysis" }
+react_ssa = { path = "crates/react_ssa" }
+react_utils = { path = "crates/react_utils" }
 
 # dependencies
 indexmap = { version = "2.0.0", features = ["serde"] }

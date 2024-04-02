@@ -1,0 +1,350 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/inadvertent-mutability-readonly-class.js
+---
+Input:
+function Component(props) {
+  const env = useRelayEnvironment();
+  // Note: this is a class has no mutable methods, ie it always treats `this` as readonly
+  const mutator = new Mutator(env);
+
+  useOtherHook();
+
+  // `x` should be independently memoizeable, since foo(x, mutator) cannot mutate
+  // the mutator.
+  const x = {};
+  foo(x, mutator);
+  return x;
+}
+
+class Mutator {}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "env",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    39
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRelayEnvironment",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      42,
+                      61
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    42,
+                    63
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  63
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              64
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "mutator",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    163,
+                    170
+                  ]
+                },
+                "init": {
+                  "type": "NewExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "Mutator",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      177,
+                      184
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "env",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        185,
+                        188
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    173,
+                    189
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  163,
+                  189
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              157,
+              190
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useOtherHook",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  194,
+                  206
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                194,
+                208
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              194,
+              209
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    319,
+                    320
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [],
+                  "loc": null,
+                  "range": [
+                    323,
+                    325
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  319,
+                  325
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              313,
+              326
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  329,
+                  332
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    333,
+                    334
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "mutator",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    336,
+                    343
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                329,
+                344
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              329,
+              345
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                355,
+                356
+              ]
+            },
+            "loc": null,
+            "range": [
+              348,
+              357
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          359
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        359
+      ],
+      "loc": null,
+      "range": [
+        0,
+        359
+      ]
+    },
+    {
+      "type": "ClassDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Mutator",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          367,
+          374
+        ]
+      },
+      "superClass": null,
+      "body": {
+        "type": "ClassBody",
+        "body": [],
+        "loc": null,
+        "range": [
+          375,
+          377
+        ]
+      },
+      "loc": null,
+      "range": [
+        361,
+        377
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    377
+  ]
+}

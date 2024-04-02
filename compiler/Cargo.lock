@@ -196,161 +196,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "forget_build_hir"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_estree",
- "forget_hir",
- "forget_semantic_analysis",
- "indexmap",
- "thiserror",
-]
-
-[[package]]
-name = "forget_diagnostics"
-version = "0.1.0"
-dependencies = [
- "forget_estree",
- "miette",
- "static_assertions",
- "thiserror",
-]
-
-[[package]]
-name = "forget_estree"
-version = "0.1.0"
-dependencies = [
- "forget_estree_codegen",
- "insta",
- "serde",
- "serde_json",
- "static_assertions",
-]
-
-[[package]]
-name = "forget_estree_codegen"
-version = "0.1.0"
-dependencies = [
- "indexmap",
- "prettyplease",
- "quote",
- "serde",
- "serde_json",
- "syn 2.0.23",
-]
-
-[[package]]
-name = "forget_fixtures"
-version = "0.1.0"
-dependencies = [
- "forget_build_hir",
- "forget_estree",
- "forget_hermes_parser",
- "forget_hir",
- "forget_optimization",
- "forget_semantic_analysis",
- "forget_ssa",
- "insta",
- "miette",
-]
-
-[[package]]
-name = "forget_hermes_parser"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_estree",
- "forget_estree_codegen",
- "hermes",
- "insta",
- "juno_support",
- "serde_json",
-]
-
-[[package]]
-name = "forget_hir"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_estree",
- "forget_semantic_analysis",
- "forget_utils",
- "indexmap",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "forget_napi"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_estree",
- "forget_hermes_parser",
- "forget_semantic_analysis",
- "napi",
- "napi-build",
- "napi-derive",
- "serde_json",
-]
-
-[[package]]
-name = "forget_optimization"
-version = "0.1.0"
-dependencies = [
- "forget_build_hir",
- "forget_diagnostics",
- "forget_estree",
- "forget_hir",
- "forget_ssa",
- "forget_utils",
- "indexmap",
- "miette",
- "thiserror",
-]
-
-[[package]]
-name = "forget_reactive_ir"
-version = "0.1.0"
-dependencies = [
- "forget_hir",
-]
-
-[[package]]
-name = "forget_semantic_analysis"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_estree",
- "forget_hermes_parser",
- "forget_utils",
- "indexmap",
- "insta",
- "miette",
- "serde_json",
-]
-
-[[package]]
-name = "forget_ssa"
-version = "0.1.0"
-dependencies = [
- "forget_diagnostics",
- "forget_hir",
- "forget_utils",
- "indexmap",
- "miette",
- "thiserror",
-]
-
-[[package]]
-name = "forget_utils"
-version = "0.1.0"
-dependencies = [
- "stacker",
-]
-
-[[package]]
 name = "form_urlencoded"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -736,6 +581,161 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "573015e8ab27661678357f27dc26460738fd2b6c86e46f386fde94cb5d913105"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "react_build_hir"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "react_diagnostics",
+ "react_estree",
+ "react_hir",
+ "react_semantic_analysis",
+ "thiserror",
+]
+
+[[package]]
+name = "react_diagnostics"
+version = "0.1.0"
+dependencies = [
+ "miette",
+ "react_estree",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "react_estree"
+version = "0.1.0"
+dependencies = [
+ "insta",
+ "react_estree_codegen",
+ "serde",
+ "serde_json",
+ "static_assertions",
+]
+
+[[package]]
+name = "react_estree_codegen"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "prettyplease",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.23",
+]
+
+[[package]]
+name = "react_fixtures"
+version = "0.1.0"
+dependencies = [
+ "insta",
+ "miette",
+ "react_build_hir",
+ "react_estree",
+ "react_hermes_parser",
+ "react_hir",
+ "react_optimization",
+ "react_semantic_analysis",
+ "react_ssa",
+]
+
+[[package]]
+name = "react_hermes_parser"
+version = "0.1.0"
+dependencies = [
+ "hermes",
+ "insta",
+ "juno_support",
+ "react_diagnostics",
+ "react_estree",
+ "react_estree_codegen",
+ "serde_json",
+]
+
+[[package]]
+name = "react_hir"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "react_diagnostics",
+ "react_estree",
+ "react_semantic_analysis",
+ "react_utils",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "react_napi"
+version = "0.1.0"
+dependencies = [
+ "napi",
+ "napi-build",
+ "napi-derive",
+ "react_diagnostics",
+ "react_estree",
+ "react_hermes_parser",
+ "react_semantic_analysis",
+ "serde_json",
+]
+
+[[package]]
+name = "react_optimization"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "miette",
+ "react_build_hir",
+ "react_diagnostics",
+ "react_estree",
+ "react_hir",
+ "react_ssa",
+ "react_utils",
+ "thiserror",
+]
+
+[[package]]
+name = "react_reactive_ir"
+version = "0.1.0"
+dependencies = [
+ "react_hir",
+]
+
+[[package]]
+name = "react_semantic_analysis"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "insta",
+ "miette",
+ "react_diagnostics",
+ "react_estree",
+ "react_hermes_parser",
+ "react_utils",
+ "serde_json",
+]
+
+[[package]]
+name = "react_ssa"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "miette",
+ "react_diagnostics",
+ "react_hir",
+ "react_utils",
+ "thiserror",
+]
+
+[[package]]
+name = "react_utils"
+version = "0.1.0"
+dependencies = [
+ "stacker",
 ]
 
 [[package]]

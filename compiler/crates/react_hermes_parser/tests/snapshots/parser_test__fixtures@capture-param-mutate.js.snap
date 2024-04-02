@@ -1,0 +1,1381 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capture-param-mutate.js
+---
+Input:
+function getNativeLogFunction(level) {
+  return function () {
+    let str;
+    if (arguments.length === 1 && typeof arguments[0] === "string") {
+      str = arguments[0];
+    } else {
+      str = Array.prototype.map
+        .call(arguments, function (arg) {
+          return inspect(arg, {
+            depth: 10,
+          });
+        })
+        .join(", ");
+    }
+    const firstArg = arguments[0];
+    let logLevel = level;
+    if (
+      typeof firstArg === "string" &&
+      firstArg.slice(0, 9) === "Warning: " &&
+      logLevel >= LOG_LEVELS.error
+    ) {
+      logLevel = LOG_LEVELS.warn;
+    }
+    if (global.__inspectorLog) {
+      global.__inspectorLog(
+        INSPECTOR_LEVELS[logLevel],
+        str,
+        [].slice.call(arguments),
+        INSPECTOR_FRAMES_TO_SKIP
+      );
+    }
+    if (groupStack.length) {
+      str = groupFormat("", str);
+    }
+    global.nativeLoggingHook(str, logLevel);
+  };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "getNativeLogFunction",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          29
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "level",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            30,
+            35
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "FunctionExpression",
+              "id": null,
+              "params": [],
+              "body": {
+                "type": "BlockStatement",
+                "body": [
+                  {
+                    "type": "VariableDeclaration",
+                    "kind": "let",
+                    "declarations": [
+                      {
+                        "type": "VariableDeclarator",
+                        "id": {
+                          "type": "Identifier",
+                          "name": "str",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            70,
+                            73
+                          ]
+                        },
+                        "init": null,
+                        "loc": null,
+                        "range": [
+                          70,
+                          73
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      66,
+                      74
+                    ]
+                  },
+                  {
+                    "type": "IfStatement",
+                    "test": {
+                      "type": "LogicalExpression",
+                      "operator": "&&",
+                      "left": {
+                        "type": "BinaryExpression",
+                        "left": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "arguments",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              83,
+                              92
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "length",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              93,
+                              99
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            83,
+                            99
+                          ]
+                        },
+                        "operator": "===",
+                        "right": {
+                          "type": "NumericLiteral",
+                          "value": 1.0,
+                          "loc": null,
+                          "range": [
+                            104,
+                            105
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          83,
+                          105
+                        ]
+                      },
+                      "right": {
+                        "type": "BinaryExpression",
+                        "left": {
+                          "type": "UnaryExpression",
+                          "operator": "typeof",
+                          "prefix": true,
+                          "argument": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "arguments",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                116,
+                                125
+                              ]
+                            },
+                            "property": {
+                              "type": "NumericLiteral",
+                              "value": 0.0,
+                              "loc": null,
+                              "range": [
+                                126,
+                                127
+                              ]
+                            },
+                            "computed": true,
+                            "loc": null,
+                            "range": [
+                              116,
+                              128
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            109,
+                            128
+                          ]
+                        },
+                        "operator": "===",
+                        "right": {
+                          "type": "StringLiteral",
+                          "value": "string",
+                          "loc": null,
+                          "range": [
+                            133,
+                            141
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          109,
+                          141
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        83,
+                        141
+                      ]
+                    },
+                    "consequent": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "str",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                151,
+                                154
+                              ]
+                            },
+                            "right": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "arguments",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  157,
+                                  166
+                                ]
+                              },
+                              "property": {
+                                "type": "NumericLiteral",
+                                "value": 0.0,
+                                "loc": null,
+                                "range": [
+                                  167,
+                                  168
+                                ]
+                              },
+                              "computed": true,
+                              "loc": null,
+                              "range": [
+                                157,
+                                169
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              151,
+                              169
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            151,
+                            170
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        143,
+                        176
+                      ]
+                    },
+                    "alternate": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "str",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                190,
+                                193
+                              ]
+                            },
+                            "right": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "MemberExpression",
+                                      "object": {
+                                        "type": "MemberExpression",
+                                        "object": {
+                                          "type": "Identifier",
+                                          "name": "Array",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            196,
+                                            201
+                                          ]
+                                        },
+                                        "property": {
+                                          "type": "Identifier",
+                                          "name": "prototype",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            202,
+                                            211
+                                          ]
+                                        },
+                                        "computed": false,
+                                        "loc": null,
+                                        "range": [
+                                          196,
+                                          211
+                                        ]
+                                      },
+                                      "property": {
+                                        "type": "Identifier",
+                                        "name": "map",
+                                        "typeAnnotation": null,
+                                        "loc": null,
+                                        "range": [
+                                          212,
+                                          215
+                                        ]
+                                      },
+                                      "computed": false,
+                                      "loc": null,
+                                      "range": [
+                                        196,
+                                        215
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "call",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        225,
+                                        229
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      196,
+                                      229
+                                    ]
+                                  },
+                                  "arguments": [
+                                    {
+                                      "type": "Identifier",
+                                      "name": "arguments",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        230,
+                                        239
+                                      ]
+                                    },
+                                    {
+                                      "type": "FunctionExpression",
+                                      "id": null,
+                                      "params": [
+                                        {
+                                          "type": "Identifier",
+                                          "name": "arg",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            251,
+                                            254
+                                          ]
+                                        }
+                                      ],
+                                      "body": {
+                                        "type": "BlockStatement",
+                                        "body": [
+                                          {
+                                            "type": "ReturnStatement",
+                                            "argument": {
+                                              "type": "CallExpression",
+                                              "callee": {
+                                                "type": "Identifier",
+                                                "name": "inspect",
+                                                "typeAnnotation": null,
+                                                "loc": null,
+                                                "range": [
+                                                  275,
+                                                  282
+                                                ]
+                                              },
+                                              "arguments": [
+                                                {
+                                                  "type": "Identifier",
+                                                  "name": "arg",
+                                                  "typeAnnotation": null,
+                                                  "loc": null,
+                                                  "range": [
+                                                    283,
+                                                    286
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "ObjectExpression",
+                                                  "properties": [
+                                                    {
+                                                      "type": "Property",
+                                                      "key": {
+                                                        "type": "Identifier",
+                                                        "name": "depth",
+                                                        "typeAnnotation": null,
+                                                        "loc": null,
+                                                        "range": [
+                                                          302,
+                                                          307
+                                                        ]
+                                                      },
+                                                      "value": {
+                                                        "type": "NumericLiteral",
+                                                        "value": 10.0,
+                                                        "loc": null,
+                                                        "range": [
+                                                          309,
+                                                          311
+                                                        ]
+                                                      },
+                                                      "kind": "init",
+                                                      "method": false,
+                                                      "shorthand": false,
+                                                      "computed": false,
+                                                      "loc": null,
+                                                      "range": [
+                                                        302,
+                                                        311
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "loc": null,
+                                                  "range": [
+                                                    288,
+                                                    324
+                                                  ]
+                                                }
+                                              ],
+                                              "loc": null,
+                                              "range": [
+                                                275,
+                                                325
+                                              ]
+                                            },
+                                            "loc": null,
+                                            "range": [
+                                              268,
+                                              326
+                                            ]
+                                          }
+                                        ],
+                                        "loc": null,
+                                        "range": [
+                                          256,
+                                          336
+                                        ]
+                                      },
+                                      "generator": false,
+                                      "async": false,
+                                      "loc": null,
+                                      "range": [
+                                        241,
+                                        336
+                                      ],
+                                      "loc": null,
+                                      "range": [
+                                        241,
+                                        336
+                                      ]
+                                    }
+                                  ],
+                                  "loc": null,
+                                  "range": [
+                                    196,
+                                    337
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "join",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    347,
+                                    351
+                                  ]
+                                },
+                                "computed": false,
+                                "loc": null,
+                                "range": [
+                                  196,
+                                  351
+                                ]
+                              },
+                              "arguments": [
+                                {
+                                  "type": "StringLiteral",
+                                  "value": ", ",
+                                  "loc": null,
+                                  "range": [
+                                    352,
+                                    356
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                196,
+                                357
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              190,
+                              357
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            190,
+                            358
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        182,
+                        364
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      79,
+                      364
+                    ]
+                  },
+                  {
+                    "type": "VariableDeclaration",
+                    "kind": "const",
+                    "declarations": [
+                      {
+                        "type": "VariableDeclarator",
+                        "id": {
+                          "type": "Identifier",
+                          "name": "firstArg",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            375,
+                            383
+                          ]
+                        },
+                        "init": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "arguments",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              386,
+                              395
+                            ]
+                          },
+                          "property": {
+                            "type": "NumericLiteral",
+                            "value": 0.0,
+                            "loc": null,
+                            "range": [
+                              396,
+                              397
+                            ]
+                          },
+                          "computed": true,
+                          "loc": null,
+                          "range": [
+                            386,
+                            398
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          375,
+                          398
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      369,
+                      399
+                    ]
+                  },
+                  {
+                    "type": "VariableDeclaration",
+                    "kind": "let",
+                    "declarations": [
+                      {
+                        "type": "VariableDeclarator",
+                        "id": {
+                          "type": "Identifier",
+                          "name": "logLevel",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            408,
+                            416
+                          ]
+                        },
+                        "init": {
+                          "type": "Identifier",
+                          "name": "level",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            419,
+                            424
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          408,
+                          424
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      404,
+                      425
+                    ]
+                  },
+                  {
+                    "type": "IfStatement",
+                    "test": {
+                      "type": "LogicalExpression",
+                      "operator": "&&",
+                      "left": {
+                        "type": "LogicalExpression",
+                        "operator": "&&",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "left": {
+                            "type": "UnaryExpression",
+                            "operator": "typeof",
+                            "prefix": true,
+                            "argument": {
+                              "type": "Identifier",
+                              "name": "firstArg",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                448,
+                                456
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              441,
+                              456
+                            ]
+                          },
+                          "operator": "===",
+                          "right": {
+                            "type": "StringLiteral",
+                            "value": "string",
+                            "loc": null,
+                            "range": [
+                              461,
+                              469
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            441,
+                            469
+                          ]
+                        },
+                        "right": {
+                          "type": "BinaryExpression",
+                          "left": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "firstArg",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  479,
+                                  487
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "slice",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  488,
+                                  493
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                479,
+                                493
+                              ]
+                            },
+                            "arguments": [
+                              {
+                                "type": "NumericLiteral",
+                                "value": 0.0,
+                                "loc": null,
+                                "range": [
+                                  494,
+                                  495
+                                ]
+                              },
+                              {
+                                "type": "NumericLiteral",
+                                "value": 9.0,
+                                "loc": null,
+                                "range": [
+                                  497,
+                                  498
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              479,
+                              499
+                            ]
+                          },
+                          "operator": "===",
+                          "right": {
+                            "type": "StringLiteral",
+                            "value": "Warning: ",
+                            "loc": null,
+                            "range": [
+                              504,
+                              515
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            479,
+                            515
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          441,
+                          515
+                        ]
+                      },
+                      "right": {
+                        "type": "BinaryExpression",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "logLevel",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            525,
+                            533
+                          ]
+                        },
+                        "operator": ">=",
+                        "right": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "LOG_LEVELS",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              537,
+                              547
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "error",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              548,
+                              553
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            537,
+                            553
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          525,
+                          553
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        441,
+                        553
+                      ]
+                    },
+                    "consequent": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "logLevel",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                568,
+                                576
+                              ]
+                            },
+                            "right": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "LOG_LEVELS",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  579,
+                                  589
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "warn",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  590,
+                                  594
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                579,
+                                594
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              568,
+                              594
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            568,
+                            595
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        560,
+                        601
+                      ]
+                    },
+                    "alternate": null,
+                    "loc": null,
+                    "range": [
+                      430,
+                      601
+                    ]
+                  },
+                  {
+                    "type": "IfStatement",
+                    "test": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "global",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          610,
+                          616
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "__inspectorLog",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          617,
+                          631
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        610,
+                        631
+                      ]
+                    },
+                    "consequent": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "global",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  641,
+                                  647
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "__inspectorLog",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  648,
+                                  662
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                641,
+                                662
+                              ]
+                            },
+                            "arguments": [
+                              {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "INSPECTOR_LEVELS",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    672,
+                                    688
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "logLevel",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    689,
+                                    697
+                                  ]
+                                },
+                                "computed": true,
+                                "loc": null,
+                                "range": [
+                                  672,
+                                  698
+                                ]
+                              },
+                              {
+                                "type": "Identifier",
+                                "name": "str",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  708,
+                                  711
+                                ]
+                              },
+                              {
+                                "type": "CallExpression",
+                                "callee": {
+                                  "type": "MemberExpression",
+                                  "object": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "ArrayExpression",
+                                      "elements": [],
+                                      "loc": null,
+                                      "range": [
+                                        721,
+                                        723
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "slice",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        724,
+                                        729
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      721,
+                                      729
+                                    ]
+                                  },
+                                  "property": {
+                                    "type": "Identifier",
+                                    "name": "call",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      730,
+                                      734
+                                    ]
+                                  },
+                                  "computed": false,
+                                  "loc": null,
+                                  "range": [
+                                    721,
+                                    734
+                                  ]
+                                },
+                                "arguments": [
+                                  {
+                                    "type": "Identifier",
+                                    "name": "arguments",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      735,
+                                      744
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  721,
+                                  745
+                                ]
+                              },
+                              {
+                                "type": "Identifier",
+                                "name": "INSPECTOR_FRAMES_TO_SKIP",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  755,
+                                  779
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              641,
+                              787
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            641,
+                            788
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        633,
+                        794
+                      ]
+                    },
+                    "alternate": null,
+                    "loc": null,
+                    "range": [
+                      606,
+                      794
+                    ]
+                  },
+                  {
+                    "type": "IfStatement",
+                    "test": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "groupStack",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          803,
+                          813
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "length",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          814,
+                          820
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        803,
+                        820
+                      ]
+                    },
+                    "consequent": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "str",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                830,
+                                833
+                              ]
+                            },
+                            "right": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "Identifier",
+                                "name": "groupFormat",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  836,
+                                  847
+                                ]
+                              },
+                              "arguments": [
+                                {
+                                  "type": "StringLiteral",
+                                  "value": "",
+                                  "loc": null,
+                                  "range": [
+                                    848,
+                                    850
+                                  ]
+                                },
+                                {
+                                  "type": "Identifier",
+                                  "name": "str",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    852,
+                                    855
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                836,
+                                856
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              830,
+                              856
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            830,
+                            857
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        822,
+                        863
+                      ]
+                    },
+                    "alternate": null,
+                    "loc": null,
+                    "range": [
+                      799,
+                      863
+                    ]
+                  },
+                  {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "global",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            868,
+                            874
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "nativeLoggingHook",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            875,
+                            892
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          868,
+                          892
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "Identifier",
+                          "name": "str",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            893,
+                            896
+                          ]
+                        },
+                        {
+                          "type": "Identifier",
+                          "name": "logLevel",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            898,
+                            906
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        868,
+                        907
+                      ]
+                    },
+                    "directive": null,
+                    "loc": null,
+                    "range": [
+                      868,
+                      908
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  60,
+                  912
+                ]
+              },
+              "generator": false,
+              "async": false,
+              "loc": null,
+              "range": [
+                48,
+                912
+              ],
+              "loc": null,
+              "range": [
+                48,
+                912
+              ]
+            },
+            "loc": null,
+            "range": [
+              41,
+              913
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          37,
+          915
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        915
+      ],
+      "loc": null,
+      "range": [
+        0,
+        915
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    915
+  ]
+}

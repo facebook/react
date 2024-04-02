@@ -1,0 +1,207 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/type-field-load.js
+---
+Input:
+function component() {
+  let x = { t: 1 };
+  let p = x.t;
+  return p;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    29,
+                    30
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "t",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          35,
+                          36
+                        ]
+                      },
+                      "value": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          38,
+                          39
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": false,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        35,
+                        39
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    33,
+                    41
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  41
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              42
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "p",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    49,
+                    50
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      53,
+                      54
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "t",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      55,
+                      56
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    53,
+                    56
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  49,
+                  56
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              45,
+              57
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "p",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                67,
+                68
+              ]
+            },
+            "loc": null,
+            "range": [
+              60,
+              69
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          71
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        71
+      ],
+      "loc": null,
+      "range": [
+        0,
+        71
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    71
+  ]
+}

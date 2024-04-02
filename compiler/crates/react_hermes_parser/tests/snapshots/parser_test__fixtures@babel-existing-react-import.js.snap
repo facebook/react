@@ -1,0 +1,718 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/babel-existing-react-import.js
+---
+Input:
+import { useState, useMemo } from "react";
+
+function Component(props) {
+  const [x] = useState(0);
+  const expensiveNumber = useMemo(() => calculateExpensiveNumber(x), [x]);
+
+  return <div>{expensiveNumber}</div>;
+}
+
+function Component2(props) {
+  const [x] = useState(0);
+  const expensiveNumber = useMemo(() => calculateExpensiveNumber(x), [x]);
+
+  return <div>{expensiveNumber}</div>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportSpecifier",
+          "imported": {
+            "type": "Identifier",
+            "name": "useState",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              9,
+              17
+            ]
+          },
+          "local": {
+            "type": "Identifier",
+            "name": "useState",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              9,
+              17
+            ]
+          },
+          "loc": null,
+          "range": [
+            9,
+            17
+          ]
+        },
+        {
+          "type": "ImportSpecifier",
+          "imported": {
+            "type": "Identifier",
+            "name": "useMemo",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              19,
+              26
+            ]
+          },
+          "local": {
+            "type": "Identifier",
+            "name": "useMemo",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              19,
+              26
+            ]
+          },
+          "loc": null,
+          "range": [
+            19,
+            26
+          ]
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "value": "react",
+        "loc": null,
+        "range": [
+          34,
+          41
+        ]
+      },
+      "loc": null,
+      "range": [
+        0,
+        42
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          53,
+          62
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            63,
+            68
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        81,
+                        82
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    80,
+                    83
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      86,
+                      94
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        95,
+                        96
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    86,
+                    97
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  80,
+                  97
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              74,
+              98
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "expensiveNumber",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    107,
+                    122
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      125,
+                      132
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "Identifier",
+                          "name": "calculateExpensiveNumber",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            139,
+                            163
+                          ]
+                        },
+                        "arguments": [
+                          {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              164,
+                              165
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          139,
+                          166
+                        ]
+                      },
+                      "generator": true,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        133,
+                        166
+                      ],
+                      "expression": true,
+                      "loc": null,
+                      "range": [
+                        133,
+                        166
+                      ]
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "Identifier",
+                          "name": "x",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            169,
+                            170
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        168,
+                        171
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    125,
+                    172
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  107,
+                  172
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              101,
+              173
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    185,
+                    188
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  184,
+                  189
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "expensiveNumber",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      190,
+                      205
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    189,
+                    206
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    208,
+                    211
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  206,
+                  212
+                ]
+              },
+              "loc": null,
+              "range": [
+                184,
+                212
+              ]
+            },
+            "loc": null,
+            "range": [
+              177,
+              213
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          70,
+          215
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        44,
+        215
+      ],
+      "loc": null,
+      "range": [
+        44,
+        215
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component2",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          226,
+          236
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            237,
+            242
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        255,
+                        256
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    254,
+                    257
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      260,
+                      268
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        269,
+                        270
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    260,
+                    271
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  254,
+                  271
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              248,
+              272
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "expensiveNumber",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    281,
+                    296
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      299,
+                      306
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "Identifier",
+                          "name": "calculateExpensiveNumber",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            313,
+                            337
+                          ]
+                        },
+                        "arguments": [
+                          {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              338,
+                              339
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          313,
+                          340
+                        ]
+                      },
+                      "generator": true,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        307,
+                        340
+                      ],
+                      "expression": true,
+                      "loc": null,
+                      "range": [
+                        307,
+                        340
+                      ]
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "Identifier",
+                          "name": "x",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            343,
+                            344
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        342,
+                        345
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    299,
+                    346
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  281,
+                  346
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              275,
+              347
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    359,
+                    362
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  358,
+                  363
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "expensiveNumber",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      364,
+                      379
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    363,
+                    380
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    382,
+                    385
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  380,
+                  386
+                ]
+              },
+              "loc": null,
+              "range": [
+                358,
+                386
+              ]
+            },
+            "loc": null,
+            "range": [
+              351,
+              387
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          244,
+          389
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        217,
+        389
+      ],
+      "loc": null,
+      "range": [
+        217,
+        389
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    389
+  ]
+}

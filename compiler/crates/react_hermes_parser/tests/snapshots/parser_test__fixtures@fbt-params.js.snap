@@ -1,0 +1,367 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/fbt-params.js
+---
+Input:
+import fbt from "fbt";
+
+function Component(props) {
+  return (
+    <fbt desc={"Dialog to show to user"}>
+      Hello <fbt:param name="user name">{props.name}</fbt:param>
+    </fbt>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportDefaultSpecifier",
+          "local": {
+            "type": "Identifier",
+            "name": "fbt",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              7,
+              10
+            ]
+          },
+          "loc": null,
+          "range": [
+            7,
+            10
+          ]
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "value": "fbt",
+        "loc": null,
+        "range": [
+          16,
+          21
+        ]
+      },
+      "loc": null,
+      "range": [
+        0,
+        22
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          33,
+          42
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            43,
+            48
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "fbt",
+                  "loc": null,
+                  "range": [
+                    68,
+                    71
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "desc",
+                      "loc": null,
+                      "range": [
+                        72,
+                        76
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "StringLiteral",
+                        "value": "Dialog to show to user",
+                        "loc": null,
+                        "range": [
+                          78,
+                          102
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        77,
+                        103
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      72,
+                      103
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  67,
+                  104
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      Hello ",
+                  "raw": "\n      Hello ",
+                  "loc": null,
+                  "range": [
+                    104,
+                    117
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "name": "fbt",
+                        "loc": null,
+                        "range": [
+                          118,
+                          121
+                        ]
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "param",
+                        "loc": null,
+                        "range": [
+                          122,
+                          127
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        118,
+                        127
+                      ]
+                    },
+                    "attributes": [
+                      {
+                        "type": "JSXAttribute",
+                        "name": {
+                          "type": "JSXIdentifier",
+                          "name": "name",
+                          "loc": null,
+                          "range": [
+                            128,
+                            132
+                          ]
+                        },
+                        "value": {
+                          "type": "JSXStringLiteral",
+                          "value": "user name",
+                          "raw": "\"user name\"",
+                          "loc": null,
+                          "range": [
+                            133,
+                            144
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          128,
+                          144
+                        ]
+                      }
+                    ],
+                    "selfClosing": false,
+                    "loc": null,
+                    "range": [
+                      117,
+                      145
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            146,
+                            151
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "name",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            152,
+                            156
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          146,
+                          156
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        145,
+                        157
+                      ]
+                    }
+                  ],
+                  "closingElement": {
+                    "type": "JSXClosingElement",
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "name": "fbt",
+                        "loc": null,
+                        "range": [
+                          159,
+                          162
+                        ]
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "param",
+                        "loc": null,
+                        "range": [
+                          163,
+                          168
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        159,
+                        168
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      157,
+                      169
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    117,
+                    169
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    169,
+                    174
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "fbt",
+                  "loc": null,
+                  "range": [
+                    176,
+                    179
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  174,
+                  180
+                ]
+              },
+              "loc": null,
+              "range": [
+                67,
+                180
+              ]
+            },
+            "loc": null,
+            "range": [
+              54,
+              185
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          50,
+          187
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        24,
+        187
+      ],
+      "loc": null,
+      "range": [
+        24,
+        187
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    187
+  ]
+}

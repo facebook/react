@@ -1,0 +1,206 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-access-ref-during-render.js
+---
+Input:
+// @debug
+function Component(props) {
+  const ref = useRef(null);
+  const value = ref.current;
+  return value;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          19,
+          28
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            29,
+            34
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    46,
+                    49
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      52,
+                      58
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        59,
+                        63
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    52,
+                    64
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  46,
+                  64
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              40,
+              65
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    79
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "ref",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      82,
+                      85
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "current",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      86,
+                      93
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    82,
+                    93
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  74,
+                  93
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              68,
+              94
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "value",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                104,
+                109
+              ]
+            },
+            "loc": null,
+            "range": [
+              97,
+              110
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          36,
+          112
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        10,
+        112
+      ],
+      "loc": null,
+      "range": [
+        10,
+        112
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    10,
+    112
+  ]
+}

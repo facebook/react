@@ -1,0 +1,205 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/for-return.js
+---
+Input:
+function Component(props) {
+  for (let i = 0; i < props.count; i++) {
+    return;
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ForStatement",
+            "init": {
+              "type": "VariableDeclaration",
+              "kind": "let",
+              "declarations": [
+                {
+                  "type": "VariableDeclarator",
+                  "id": {
+                    "type": "Identifier",
+                    "name": "i",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      39,
+                      40
+                    ]
+                  },
+                  "init": {
+                    "type": "NumericLiteral",
+                    "value": 0.0,
+                    "loc": null,
+                    "range": [
+                      43,
+                      44
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    39,
+                    44
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                35,
+                44
+              ]
+            },
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "i",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  46,
+                  47
+                ]
+              },
+              "operator": "<",
+              "right": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    50,
+                    55
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "count",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    56,
+                    61
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  50,
+                  61
+                ]
+              },
+              "loc": null,
+              "range": [
+                46,
+                61
+              ]
+            },
+            "update": {
+              "type": "UpdateExpression",
+              "operator": "++",
+              "argument": {
+                "type": "Identifier",
+                "name": "i",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  63,
+                  64
+                ]
+              },
+              "prefix": false,
+              "loc": null,
+              "range": [
+                63,
+                66
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    81
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                68,
+                85
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              85
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          87
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        87
+      ],
+      "loc": null,
+      "range": [
+        0,
+        87
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    87
+  ]
+}

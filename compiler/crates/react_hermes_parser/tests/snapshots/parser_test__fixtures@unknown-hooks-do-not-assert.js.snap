@@ -1,0 +1,214 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/unknown-hooks-do-not-assert.js
+---
+Input:
+// Forget currently bails out when it detects a potential mutation (Effect.Mutate)
+// to an immutable value. This should not apply to unknown / untyped hooks.
+
+// Default feature flags:
+// enableAssumeHooksFollowRulesOfReact=false
+// enableTreatHooksAsFunctions=true
+function Component(props) {
+  const x = useUnknownHook1(props);
+  const y = useUnknownHook2(x);
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          276,
+          285
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            286,
+            291
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    303,
+                    304
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useUnknownHook1",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      307,
+                      322
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        323,
+                        328
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    307,
+                    329
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  303,
+                  329
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              297,
+              330
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    339,
+                    340
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useUnknownHook2",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      343,
+                      358
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        359,
+                        360
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    343,
+                    361
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  339,
+                  361
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              333,
+              362
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                372,
+                373
+              ]
+            },
+            "loc": null,
+            "range": [
+              365,
+              374
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          293,
+          376
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        267,
+        376
+      ],
+      "loc": null,
+      "range": [
+        267,
+        376
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    267,
+    376
+  ]
+}

@@ -1,0 +1,297 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-fragment.js
+---
+Input:
+function Foo(props) {
+  return (
+    <>
+      Hello {props.greeting}{" "}
+      <div>
+        <>Text</>
+      </div>
+    </>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            18
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXFragment",
+              "openingFragment": {
+                "type": "JSXOpeningFragment",
+                "loc": null,
+                "range": [
+                  37,
+                  39
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      Hello ",
+                  "raw": "\n      Hello ",
+                  "loc": null,
+                  "range": [
+                    39,
+                    52
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        53,
+                        58
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "greeting",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        59,
+                        67
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      53,
+                      67
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    52,
+                    68
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "StringLiteral",
+                    "value": " ",
+                    "loc": null,
+                    "range": [
+                      69,
+                      72
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    68,
+                    73
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    73,
+                    80
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "div",
+                      "loc": null,
+                      "range": [
+                        81,
+                        84
+                      ]
+                    },
+                    "attributes": [],
+                    "selfClosing": false,
+                    "loc": null,
+                    "range": [
+                      80,
+                      85
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "JSXText",
+                      "value": "\n        ",
+                      "raw": "\n        ",
+                      "loc": null,
+                      "range": [
+                        85,
+                        94
+                      ]
+                    },
+                    {
+                      "type": "JSXFragment",
+                      "openingFragment": {
+                        "type": "JSXOpeningFragment",
+                        "loc": null,
+                        "range": [
+                          94,
+                          96
+                        ]
+                      },
+                      "children": [
+                        {
+                          "type": "JSXText",
+                          "value": "Text",
+                          "raw": "Text",
+                          "loc": null,
+                          "range": [
+                            96,
+                            100
+                          ]
+                        }
+                      ],
+                      "closingFragment": {
+                        "type": "JSXClosingFragment",
+                        "loc": null,
+                        "range": [
+                          100,
+                          103
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        94,
+                        103
+                      ]
+                    },
+                    {
+                      "type": "JSXText",
+                      "value": "\n      ",
+                      "raw": "\n      ",
+                      "loc": null,
+                      "range": [
+                        103,
+                        110
+                      ]
+                    }
+                  ],
+                  "closingElement": {
+                    "type": "JSXClosingElement",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "div",
+                      "loc": null,
+                      "range": [
+                        112,
+                        115
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      110,
+                      116
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    80,
+                    116
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    116,
+                    121
+                  ]
+                }
+              ],
+              "closingFragment": {
+                "type": "JSXClosingFragment",
+                "loc": null,
+                "range": [
+                  121,
+                  124
+                ]
+              },
+              "loc": null,
+              "range": [
+                37,
+                124
+              ]
+            },
+            "loc": null,
+            "range": [
+              24,
+              129
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          131
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        131
+      ],
+      "loc": null,
+      "range": [
+        0,
+        131
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    131
+  ]
+}

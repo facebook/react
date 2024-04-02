@@ -1,0 +1,312 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/do-while-conditional-break.js
+---
+Input:
+function Component(props) {
+  let x = [0, 1, 2, 3];
+  do {
+    if (x === 0) {
+      break;
+    }
+    mutate(x);
+  } while (props.cond);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        39,
+                        40
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        42,
+                        43
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        45,
+                        46
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 3.0,
+                      "loc": null,
+                      "range": [
+                        48,
+                        49
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    38,
+                    50
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  50
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              51
+            ]
+          },
+          {
+            "type": "DoWhileStatement",
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "IfStatement",
+                  "test": {
+                    "type": "BinaryExpression",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        67,
+                        68
+                      ]
+                    },
+                    "operator": "===",
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        73,
+                        74
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      67,
+                      74
+                    ]
+                  },
+                  "consequent": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "BreakStatement",
+                        "label": null,
+                        "loc": null,
+                        "range": [
+                          84,
+                          90
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      76,
+                      96
+                    ]
+                  },
+                  "alternate": null,
+                  "loc": null,
+                  "range": [
+                    63,
+                    96
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "mutate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        101,
+                        107
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          108,
+                          109
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      101,
+                      110
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    101,
+                    111
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                57,
+                115
+              ]
+            },
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  123,
+                  128
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  129,
+                  133
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                123,
+                133
+              ]
+            },
+            "loc": null,
+            "range": [
+              54,
+              135
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                145,
+                146
+              ]
+            },
+            "loc": null,
+            "range": [
+              138,
+              147
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          149
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        149
+      ],
+      "loc": null,
+      "range": [
+        0,
+        149
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    149
+  ]
+}

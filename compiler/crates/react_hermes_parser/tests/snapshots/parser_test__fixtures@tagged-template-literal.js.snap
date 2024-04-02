@@ -1,0 +1,161 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/tagged-template-literal.js
+---
+Input:
+function component() {
+  let t = graphql`
+    fragment List_viewer on Viewer
+    @argumentDefinitions(
+      count: {
+        type: "Int"
+        defaultValue: 10
+        directives: ["@int_max_value(logged_in: 10)"]
+      }
+      cursor: { type: "ID" }
+    )
+
+  `;
+
+  return t;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "t",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    29,
+                    30
+                  ]
+                },
+                "init": {
+                  "type": "TaggedTemplateExpression",
+                  "tag": {
+                    "type": "Identifier",
+                    "name": "graphql",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      33,
+                      40
+                    ]
+                  },
+                  "quasi": {
+                    "type": "TemplateLiteral",
+                    "quasis": [
+                      {
+                        "type": "TemplateElement",
+                        "tail": true,
+                        "value": {
+                          "cooked": "\n    fragment List_viewer on Viewer\n    @argumentDefinitions(\n      count: {\n        type: \"Int\"\n        defaultValue: 10\n        directives: [\"@int_max_value(logged_in: 10)\"]\n      }\n      cursor: { type: \"ID\" }\n    )\n\n  ",
+                          "raw": "\n    fragment List_viewer on Viewer\n    @argumentDefinitions(\n      count: {\n        type: \"Int\"\n        defaultValue: 10\n        directives: [\"@int_max_value(logged_in: 10)\"]\n      }\n      cursor: { type: \"ID\" }\n    )\n\n  "
+                        },
+                        "loc": null,
+                        "range": [
+                          40,
+                          264
+                        ]
+                      }
+                    ],
+                    "expressions": [],
+                    "loc": null,
+                    "range": [
+                      40,
+                      264
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    33,
+                    264
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  264
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              265
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "t",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                276,
+                277
+              ]
+            },
+            "loc": null,
+            "range": [
+              269,
+              278
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          280
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        280
+      ],
+      "loc": null,
+      "range": [
+        0,
+        280
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    280
+  ]
+}

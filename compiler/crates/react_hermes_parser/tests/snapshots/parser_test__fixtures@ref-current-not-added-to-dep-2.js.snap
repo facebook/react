@@ -1,0 +1,349 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ref-current-not-added-to-dep-2.js
+---
+Input:
+// @validateRefAccessDuringRender false
+function Foo({ a }) {
+  const ref = useRef();
+  const x = { a, val: ref.current };
+
+  return <VideoList videos={x} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          49,
+          52
+        ]
+      },
+      "params": [
+        {
+          "type": "ObjectPattern",
+          "properties": [
+            {
+              "type": "Property",
+              "key": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  55,
+                  56
+                ]
+              },
+              "value": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  55,
+                  56
+                ]
+              },
+              "kind": "init",
+              "computed": false,
+              "shorthand": true,
+              "method": false,
+              "loc": null,
+              "range": [
+                55,
+                56
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            53,
+            58
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    70,
+                    73
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      76,
+                      82
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    76,
+                    84
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  70,
+                  84
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              64,
+              85
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    94,
+                    95
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          100,
+                          101
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          100,
+                          101
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        100,
+                        101
+                      ]
+                    },
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "val",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          103,
+                          106
+                        ]
+                      },
+                      "value": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "ref",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            108,
+                            111
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "current",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            112,
+                            119
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          108,
+                          119
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": false,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        103,
+                        119
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    98,
+                    121
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  94,
+                  121
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              88,
+              122
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "VideoList",
+                  "loc": null,
+                  "range": [
+                    134,
+                    143
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "videos",
+                      "loc": null,
+                      "range": [
+                        144,
+                        150
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          152,
+                          153
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        151,
+                        154
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      144,
+                      154
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  133,
+                  157
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                133,
+                157
+              ]
+            },
+            "loc": null,
+            "range": [
+              126,
+              158
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          60,
+          160
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        40,
+        160
+      ],
+      "loc": null,
+      "range": [
+        40,
+        160
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    40,
+    160
+  ]
+}
