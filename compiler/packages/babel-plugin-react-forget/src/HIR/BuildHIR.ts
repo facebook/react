@@ -168,6 +168,7 @@ export function lower(
     }
   });
 
+  let directives: string[] = [];
   const body = func.get("body");
   if (body.isExpression()) {
     const fallthrough = builder.reserve("block");
@@ -180,6 +181,7 @@ export function lower(
     builder.terminateWithContinuation(terminal, fallthrough);
   } else if (body.isBlockStatement()) {
     lowerStatement(builder, body);
+    directives = body.get("directives").map((d) => d.node.value.value);
   } else {
     builder.errors.push({
       reason: `Unexpected function body kind: ${body.type}}. This error is likely caused by a bug in React Compiler. Please file an issue`,
@@ -219,6 +221,7 @@ export function lower(
     loc: func.node.loc ?? GeneratedSource,
     env,
     effects: null,
+    directives,
   });
 }
 

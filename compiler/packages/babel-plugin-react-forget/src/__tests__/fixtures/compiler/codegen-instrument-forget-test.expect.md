@@ -27,6 +27,7 @@ import { useRenderCounter, shouldInstrument } from "react-forget-runtime";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {
+  "use forget";
   if (__DEV__ && shouldInstrument)
     useRenderCounter("Bar", "/codegen-instrument-forget-test.ts");
   const $ = useMemoCache(2);
@@ -46,6 +47,7 @@ function NoForget(props) {
 }
 
 function Foo(props) {
+  "use forget";
   if (__DEV__ && shouldInstrument)
     useRenderCounter("Foo", "/codegen-instrument-forget-test.ts");
   const $ = useMemoCache(2);

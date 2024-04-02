@@ -26,6 +26,7 @@ import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @compilationMode(annotation)
 export default isForgetEnabled_Fixtures()
   ? function Bar(props) {
+      "use forget";
       const $ = useMemoCache(2);
       let t0;
       if ($[0] !== props.bar) {
@@ -48,6 +49,7 @@ function NoForget(props) {
 
 export const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
+      "use forget";
       const $ = useMemoCache(2);
       let t0;
       if ($[0] !== props.bar) {

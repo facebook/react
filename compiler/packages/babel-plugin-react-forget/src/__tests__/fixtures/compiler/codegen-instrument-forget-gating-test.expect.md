@@ -28,6 +28,7 @@ import { useRenderCounter, shouldInstrument } from "react-forget-runtime";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation) @gating
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
+      "use forget";
       if (__DEV__ && shouldInstrument)
         useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
       const $ = useMemoCache(2);
@@ -51,6 +52,7 @@ function NoForget(props) {
 }
 const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
+      "use forget";
       if (__DEV__ && shouldInstrument)
         useRenderCounter("Foo", "/codegen-instrument-forget-gating-test.ts");
       const $ = useMemoCache(2);

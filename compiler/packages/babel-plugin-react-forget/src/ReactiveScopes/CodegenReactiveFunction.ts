@@ -167,6 +167,9 @@ function codegenReactiveFunction(
 
   const params = fn.params.map((param) => convertParameter(param));
   const body: t.BlockStatement = codegenBlock(cx, fn.body);
+  body.directives = fn.directives.map((d) =>
+    t.directive(t.directiveLiteral(d))
+  );
   const statements = body.body;
   if (statements.length !== 0) {
     const last = statements[statements.length - 1];

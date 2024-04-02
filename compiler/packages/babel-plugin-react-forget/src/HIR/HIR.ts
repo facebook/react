@@ -55,6 +55,7 @@ export type ReactiveFunction = {
   async: boolean;
   body: ReactiveBlock;
   env: Environment;
+  directives: string[];
 };
 
 export type ReactiveScopeBlock = {
@@ -280,6 +281,7 @@ export type HIRFunction = {
   body: HIR;
   generator: boolean;
   async: boolean;
+  directives: string[];
 };
 
 export type FunctionEffect = {
