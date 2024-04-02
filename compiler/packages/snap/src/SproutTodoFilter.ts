@@ -28,7 +28,6 @@ const skipFilter = new Set([
    * Category B:
    * Tests with at least one param and 0 refs to external values
    */
-  "bug_object-pattern",
   "bug.useMemo-deps-array-not-cleared",
   "capture_mutate-across-fns",
   "capture-indirect-mutate-alias",
