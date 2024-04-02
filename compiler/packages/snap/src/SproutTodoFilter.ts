@@ -402,27 +402,6 @@ const skipFilter = new Set([
   "readonly-object-method-calls",
   "readonly-object-method-calls-mutable-lambda",
 
-  // TODO: 🌲
-  "forest/forest-basic.flow",
-  "forest/forest-basic-jsx.flow",
-  "forest/forest-typing.flow",
-  "forest/forest-primitive-operations.flow",
-  "forest/computed-load-props.flow",
-  "forest/property-load-props.flow",
-  "forest/forest-binding-test",
-  "forest/forest-inline-object-type.flow",
-  "forest/forest-object-type-valid.flow",
-  "forest/forest-partial-reassignment-type-annotation.flow",
-  "forest/todo-forest-phi-type-unused-initializer.flow",
-  "forest/forest-hook.flow",
-  "forest/access-property-of-non-escaping-value",
-  "forest/forest-TasksApp.flow",
-  "forest/forest-overwritten-let-binding-type-annotation.flow",
-  "forest/forest-phi-type-unused-initializer.flow",
-  "forest/forest-TaskEditor.flow",
-  "forest/forest-TaskTitleField.flow",
-  "forest/forest-prefixed-useState.flow",
-
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
   "rules-of-hooks/rules-of-hooks-0e2214abc294",
