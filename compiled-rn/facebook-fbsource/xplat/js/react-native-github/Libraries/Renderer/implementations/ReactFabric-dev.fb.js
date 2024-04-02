@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6f1a3674eda8e64a39fec845789b844f>>
+ * @generated SignedSource<<3e3ed9765dda9f3c6023ab53e91bd9f2>>
  */
 
 "use strict";
@@ -5134,7 +5134,6 @@ to return true:wantsResponderID|                            |
     var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -5211,10 +5210,6 @@ to return true:wantsResponderID|                            |
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
       }
 
       if (typeof type === "object") {
@@ -30246,12 +30241,6 @@ to return true:wantsResponderID|                            |
 
           // Fall through
 
-          case REACT_CACHE_TYPE: {
-            return createFiberFromCache(pendingProps, mode, lanes, key);
-          }
-
-          // Fall through
-
           case REACT_TRACING_MARKER_TYPE:
 
           // Fall through
@@ -30439,12 +30428,6 @@ to return true:wantsResponderID|                            |
       fiber.stateNode = primaryChildInstance;
       return fiber;
     }
-    function createFiberFromCache(pendingProps, mode, lanes, key) {
-      var fiber = createFiber(CacheComponent, pendingProps, key, mode);
-      fiber.elementType = REACT_CACHE_TYPE;
-      fiber.lanes = lanes;
-      return fiber;
-    }
     function createFiberFromText(content, mode, lanes) {
       var fiber = createFiber(HostText, content, null, mode);
       fiber.lanes = lanes;
@@ -30596,7 +30579,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-a3fc349c";
+    var ReactVersion = "19.0.0-canary-187f2f09";
 
     function createPortal$1(
       children,

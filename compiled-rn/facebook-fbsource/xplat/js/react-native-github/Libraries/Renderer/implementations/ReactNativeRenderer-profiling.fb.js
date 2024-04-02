@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fc27d724c0f8d7f6a049705a480b49c9>>
+ * @generated SignedSource<<e20efb6f8a0e902b2692d1672db6f725>>
  */
 
 "use strict";
@@ -897,7 +897,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_268 = {
+var injectedNamesToPlugins$jscomp$inline_267 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -943,32 +943,32 @@ var injectedNamesToPlugins$jscomp$inline_268 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_269 = !1,
-  pluginName$jscomp$inline_270;
-for (pluginName$jscomp$inline_270 in injectedNamesToPlugins$jscomp$inline_268)
+  isOrderingDirty$jscomp$inline_268 = !1,
+  pluginName$jscomp$inline_269;
+for (pluginName$jscomp$inline_269 in injectedNamesToPlugins$jscomp$inline_267)
   if (
-    injectedNamesToPlugins$jscomp$inline_268.hasOwnProperty(
-      pluginName$jscomp$inline_270
+    injectedNamesToPlugins$jscomp$inline_267.hasOwnProperty(
+      pluginName$jscomp$inline_269
     )
   ) {
-    var pluginModule$jscomp$inline_271 =
-      injectedNamesToPlugins$jscomp$inline_268[pluginName$jscomp$inline_270];
+    var pluginModule$jscomp$inline_270 =
+      injectedNamesToPlugins$jscomp$inline_267[pluginName$jscomp$inline_269];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_270) ||
-      namesToPlugins[pluginName$jscomp$inline_270] !==
-        pluginModule$jscomp$inline_271
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_269) ||
+      namesToPlugins[pluginName$jscomp$inline_269] !==
+        pluginModule$jscomp$inline_270
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_270])
+      if (namesToPlugins[pluginName$jscomp$inline_269])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_270 + "`.")
+            (pluginName$jscomp$inline_269 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_270] =
-        pluginModule$jscomp$inline_271;
-      isOrderingDirty$jscomp$inline_269 = !0;
+      namesToPlugins[pluginName$jscomp$inline_269] =
+        pluginModule$jscomp$inline_270;
+      isOrderingDirty$jscomp$inline_268 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_269 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_268 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -1142,12 +1142,11 @@ var ReactSharedInternals =
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -1179,8 +1178,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -11136,15 +11133,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -11553,10 +11541,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1250 = {
+  devToolsConfig$jscomp$inline_1243 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-694beb7a",
+    version: "19.0.0-canary-f494fd51",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11586,10 +11574,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1250.bundleType,
-  version: devToolsConfig$jscomp$inline_1250.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1250.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1250.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1243.bundleType,
+  version: devToolsConfig$jscomp$inline_1243.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1243.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1243.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11605,14 +11593,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1250.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1243.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-694beb7a"
+  reconcilerVersion: "19.0.0-canary-f494fd51"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

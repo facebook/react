@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50a5378f60ee29fee7964f02f5243965>>
+ * @generated SignedSource<<849c048328a890d86bad5a8956d27c43>>
  */
 
 "use strict";
@@ -33,7 +33,6 @@ var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -566,7 +565,6 @@ exports.startTransition = function (scope) {
     }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
@@ -659,7 +657,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-5f0b765f";
+exports.version = "19.0.0-canary-2f767b28";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

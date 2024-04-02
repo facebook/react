@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b862b395b4f51e602cf4cf820214c31d>>
+ * @generated SignedSource<<7ac197948521e47e5a2da9b0dae35269>>
  */
 
 "use strict";
@@ -43,12 +43,11 @@ var assign = Object.assign,
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -80,8 +79,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -8655,15 +8652,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -9208,19 +9196,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_999 = {
+var devToolsConfig$jscomp$inline_992 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-120686d7",
+  version: "19.0.0-canary-b78d8890",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1187 = {
-  bundleType: devToolsConfig$jscomp$inline_999.bundleType,
-  version: devToolsConfig$jscomp$inline_999.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_999.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_999.rendererConfig,
+var internals$jscomp$inline_1180 = {
+  bundleType: devToolsConfig$jscomp$inline_992.bundleType,
+  version: devToolsConfig$jscomp$inline_992.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_992.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_992.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9237,26 +9225,26 @@ var internals$jscomp$inline_1187 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_999.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_992.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-120686d7"
+  reconcilerVersion: "19.0.0-canary-b78d8890"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1188 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1181 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1188.isDisabled &&
-    hook$jscomp$inline_1188.supportsFiber
+    !hook$jscomp$inline_1181.isDisabled &&
+    hook$jscomp$inline_1181.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1188.inject(
-        internals$jscomp$inline_1187
+      (rendererID = hook$jscomp$inline_1181.inject(
+        internals$jscomp$inline_1180
       )),
-        (injectedHook = hook$jscomp$inline_1188);
+        (injectedHook = hook$jscomp$inline_1181);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

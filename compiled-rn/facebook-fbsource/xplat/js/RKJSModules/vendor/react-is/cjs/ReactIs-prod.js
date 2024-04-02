@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f71d56737b959dc3ce937d61f1bd9834>>
+ * @generated SignedSource<<8b4e45fcdea67ae633a64f641072fdb0>>
  */
 
 "use strict";
@@ -26,7 +26,6 @@ var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
@@ -131,7 +130,6 @@ exports.isValidElementType = function (type) {
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
     type === REACT_OFFSCREEN_TYPE ||
-    type === REACT_CACHE_TYPE ||
     ("object" === typeof type &&
       null !== type &&
       (type.$$typeof === REACT_LAZY_TYPE ||

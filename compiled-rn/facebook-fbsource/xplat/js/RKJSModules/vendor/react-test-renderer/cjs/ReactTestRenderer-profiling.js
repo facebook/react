@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1e162bfd81c2744b7c22ac7c96c87f91>>
+ * @generated SignedSource<<a70ea58db09502275f7ba43d5cdee6ae>>
  */
 
 "use strict";
@@ -43,12 +43,11 @@ var assign = Object.assign,
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -80,8 +79,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -9268,15 +9265,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -9826,12 +9814,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1083 = {
+var devToolsConfig$jscomp$inline_1076 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-841877f9",
+  version: "19.0.0-canary-4e13c867",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9848,10 +9836,10 @@ var devToolsConfig$jscomp$inline_1083 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1083.bundleType,
-  version: devToolsConfig$jscomp$inline_1083.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1083.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1083.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1076.bundleType,
+  version: devToolsConfig$jscomp$inline_1076.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1076.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1076.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9868,14 +9856,14 @@ var devToolsConfig$jscomp$inline_1083 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1083.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1076.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-841877f9"
+  reconcilerVersion: "19.0.0-canary-4e13c867"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

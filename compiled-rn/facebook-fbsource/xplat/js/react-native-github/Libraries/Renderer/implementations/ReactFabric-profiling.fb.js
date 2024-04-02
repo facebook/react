@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2c0df7fb4dbca6b68b253a6729ffbfb7>>
+ * @generated SignedSource<<8c624a39a5ea9b24da7b85bd960521b9>>
  */
 
 "use strict";
@@ -897,7 +897,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_261 = {
+var injectedNamesToPlugins$jscomp$inline_260 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -943,32 +943,32 @@ var injectedNamesToPlugins$jscomp$inline_261 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_262 = !1,
-  pluginName$jscomp$inline_263;
-for (pluginName$jscomp$inline_263 in injectedNamesToPlugins$jscomp$inline_261)
+  isOrderingDirty$jscomp$inline_261 = !1,
+  pluginName$jscomp$inline_262;
+for (pluginName$jscomp$inline_262 in injectedNamesToPlugins$jscomp$inline_260)
   if (
-    injectedNamesToPlugins$jscomp$inline_261.hasOwnProperty(
-      pluginName$jscomp$inline_263
+    injectedNamesToPlugins$jscomp$inline_260.hasOwnProperty(
+      pluginName$jscomp$inline_262
     )
   ) {
-    var pluginModule$jscomp$inline_264 =
-      injectedNamesToPlugins$jscomp$inline_261[pluginName$jscomp$inline_263];
+    var pluginModule$jscomp$inline_263 =
+      injectedNamesToPlugins$jscomp$inline_260[pluginName$jscomp$inline_262];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_263) ||
-      namesToPlugins[pluginName$jscomp$inline_263] !==
-        pluginModule$jscomp$inline_264
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_262) ||
+      namesToPlugins[pluginName$jscomp$inline_262] !==
+        pluginModule$jscomp$inline_263
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_263])
+      if (namesToPlugins[pluginName$jscomp$inline_262])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_263 + "`.")
+            (pluginName$jscomp$inline_262 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_263] =
-        pluginModule$jscomp$inline_264;
-      isOrderingDirty$jscomp$inline_262 = !0;
+      namesToPlugins[pluginName$jscomp$inline_262] =
+        pluginModule$jscomp$inline_263;
+      isOrderingDirty$jscomp$inline_261 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_262 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_261 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1772,12 +1772,11 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -1809,8 +1808,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -10926,15 +10923,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -11336,10 +11324,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1183 = {
+  devToolsConfig$jscomp$inline_1176 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-3f7007f5",
+    version: "19.0.0-canary-56dfcbcb",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11369,10 +11357,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1183.bundleType,
-  version: devToolsConfig$jscomp$inline_1183.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1183.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1183.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1176.bundleType,
+  version: devToolsConfig$jscomp$inline_1176.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1176.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1176.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11388,14 +11376,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1183.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1176.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-3f7007f5"
+  reconcilerVersion: "19.0.0-canary-56dfcbcb"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

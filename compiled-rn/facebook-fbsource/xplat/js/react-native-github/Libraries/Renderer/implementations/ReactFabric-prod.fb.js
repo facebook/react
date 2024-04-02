@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<24c748cb5ad6fedf32c95c0a70ca3378>>
+ * @generated SignedSource<<53f0c6b6504a10433786b5f29d2fd80a>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_245 = {
+var injectedNamesToPlugins$jscomp$inline_244 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_245 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_246 = !1,
-  pluginName$jscomp$inline_247;
-for (pluginName$jscomp$inline_247 in injectedNamesToPlugins$jscomp$inline_245)
+  isOrderingDirty$jscomp$inline_245 = !1,
+  pluginName$jscomp$inline_246;
+for (pluginName$jscomp$inline_246 in injectedNamesToPlugins$jscomp$inline_244)
   if (
-    injectedNamesToPlugins$jscomp$inline_245.hasOwnProperty(
-      pluginName$jscomp$inline_247
+    injectedNamesToPlugins$jscomp$inline_244.hasOwnProperty(
+      pluginName$jscomp$inline_246
     )
   ) {
-    var pluginModule$jscomp$inline_248 =
-      injectedNamesToPlugins$jscomp$inline_245[pluginName$jscomp$inline_247];
+    var pluginModule$jscomp$inline_247 =
+      injectedNamesToPlugins$jscomp$inline_244[pluginName$jscomp$inline_246];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_247) ||
-      namesToPlugins[pluginName$jscomp$inline_247] !==
-        pluginModule$jscomp$inline_248
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_246) ||
+      namesToPlugins[pluginName$jscomp$inline_246] !==
+        pluginModule$jscomp$inline_247
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_247])
+      if (namesToPlugins[pluginName$jscomp$inline_246])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_247 + "`.")
+            (pluginName$jscomp$inline_246 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_247] =
-        pluginModule$jscomp$inline_248;
-      isOrderingDirty$jscomp$inline_246 = !0;
+      namesToPlugins[pluginName$jscomp$inline_246] =
+        pluginModule$jscomp$inline_247;
+      isOrderingDirty$jscomp$inline_245 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_246 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_245 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1650,12 +1650,11 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
-  REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope");
+  REACT_LAZY_TYPE = Symbol.for("react.lazy");
+Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
@@ -1687,8 +1686,6 @@ function getComponentNameFromType(type) {
       return "Suspense";
     case REACT_SUSPENSE_LIST_TYPE:
       return "SuspenseList";
-    case REACT_CACHE_TYPE:
-      return "Cache";
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
@@ -10226,15 +10223,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_CACHE_TYPE:
-        return (
-          (type = createFiber(24, pendingProps, key, mode)),
-          (type.elementType = REACT_CACHE_TYPE),
-          (type.lanes = lanes),
-          type
-        );
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -10629,10 +10617,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1101 = {
+  devToolsConfig$jscomp$inline_1094 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-743ed8be",
+    version: "19.0.0-canary-e039c15e",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10648,11 +10636,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1338 = {
-  bundleType: devToolsConfig$jscomp$inline_1101.bundleType,
-  version: devToolsConfig$jscomp$inline_1101.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1101.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1101.rendererConfig,
+var internals$jscomp$inline_1331 = {
+  bundleType: devToolsConfig$jscomp$inline_1094.bundleType,
+  version: devToolsConfig$jscomp$inline_1094.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1094.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1094.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10668,26 +10656,26 @@ var internals$jscomp$inline_1338 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1101.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1094.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-743ed8be"
+  reconcilerVersion: "19.0.0-canary-e039c15e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1332 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1339.isDisabled &&
-    hook$jscomp$inline_1339.supportsFiber
+    !hook$jscomp$inline_1332.isDisabled &&
+    hook$jscomp$inline_1332.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1339.inject(
-        internals$jscomp$inline_1338
+      (rendererID = hook$jscomp$inline_1332.inject(
+        internals$jscomp$inline_1331
       )),
-        (injectedHook = hook$jscomp$inline_1339);
+        (injectedHook = hook$jscomp$inline_1332);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3c9d3cbcbb7690bdd3c319e0ba24e0a8>>
+ * @generated SignedSource<<f6c84bf1921e7e8ae7d4eac966e4e55f>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-d53f813c";
+    var ReactVersion = "19.0.0-canary-c952bafb";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -50,7 +50,6 @@ if (__DEV__) {
     var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
@@ -640,10 +639,6 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
       }
 
       if (typeof type === "object") {
@@ -730,7 +725,6 @@ if (__DEV__) {
         enableLegacyHidden ||
         type === REACT_OFFSCREEN_TYPE ||
         enableScopeAPI ||
-        type === REACT_CACHE_TYPE ||
         enableTransitionTracing
       ) {
         return true;
@@ -3640,7 +3634,6 @@ if (__DEV__) {
     exports.memo = memo;
     exports.startTransition = startTransition;
     exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-    exports.unstable_Cache = REACT_CACHE_TYPE;
     exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
     exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
     exports.unstable_Scope = REACT_SCOPE_TYPE;

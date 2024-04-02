@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d9a77506743aad44cc841af6c1c670c>>
+ * @generated SignedSource<<59264a532371cf816058b1cd23998d35>>
  */
 
 "use strict";
@@ -38,7 +38,6 @@ if (__DEV__) {
     var REACT_MEMO_TYPE = Symbol.for("react.memo");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
     function getIteratorFn(maybeIterable) {
@@ -172,10 +171,6 @@ if (__DEV__) {
 
         case REACT_SUSPENSE_LIST_TYPE:
           return "SuspenseList";
-
-        case REACT_CACHE_TYPE: {
-          return "Cache";
-        }
       }
 
       if (typeof type === "object") {
@@ -338,7 +333,6 @@ if (__DEV__) {
         enableLegacyHidden ||
         type === REACT_OFFSCREEN_TYPE ||
         enableScopeAPI ||
-        type === REACT_CACHE_TYPE ||
         enableTransitionTracing
       ) {
         return true;

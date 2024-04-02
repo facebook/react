@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ed4da00dc7705121a507bffa64d7f8bb>>
+ * @generated SignedSource<<4d62414ddfd6f7eb3ca9d918bf686921>>
  */
 
 "use strict";
@@ -29,7 +29,6 @@ var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
@@ -563,7 +562,6 @@ exports.startTransition = function (scope) {
     }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
@@ -657,4 +655,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-a9f85346";
+exports.version = "19.0.0-canary-6446e904";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2efa0f7ab5ad5e492b13b7c939b8e190>>
+ * @generated SignedSource<<afb777050b34d9327e7a32096f5bb566>>
  */
 
 "use strict";
@@ -37,7 +37,6 @@ if (__DEV__) {
     var REACT_MEMO_TYPE = Symbol.for("react.memo");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
 
     // Re-export dynamic flags from the internal module.
     var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -66,7 +65,6 @@ if (__DEV__) {
         enableLegacyHidden ||
         type === REACT_OFFSCREEN_TYPE ||
         enableScopeAPI ||
-        type === REACT_CACHE_TYPE ||
         enableTransitionTracing
       ) {
         return true;
