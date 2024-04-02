@@ -178,6 +178,8 @@ export type Awaited<T> = T extends null | void
     : T // argument was not an object
   : T; // non-thenable
 
+export type NotFunction<V> = Extract<V, Function> extends never ? V : never;
+
 export type ReactComponentInfo = {
   +name?: string,
   +env?: string,
