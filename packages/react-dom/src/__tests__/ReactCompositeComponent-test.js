@@ -261,29 +261,17 @@ describe('ReactCompositeComponent', () => {
     await act(() => {
       root.render(<Component ref={refFn1} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance1.props).toEqual({prop: 'testKey', ref: refFn1});
-    } else {
-      expect(instance1.props).toEqual({prop: 'testKey'});
-    }
+    expect(instance1.props).toEqual({prop: 'testKey'});
 
     await act(() => {
       root.render(<Component ref={refFn2} prop={undefined} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance2.props).toEqual({prop: 'testKey', ref: refFn2});
-    } else {
-      expect(instance2.props).toEqual({prop: 'testKey'});
-    }
+    expect(instance2.props).toEqual({prop: 'testKey'});
 
     await act(() => {
       root.render(<Component ref={refFn3} prop={null} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance3.props).toEqual({prop: null, ref: refFn3});
-    } else {
-      expect(instance3.props).toEqual({prop: null});
-    }
+    expect(instance3.props).toEqual({prop: null});
   });
 
   it('should not mutate passed-in props object', async () => {

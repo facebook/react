@@ -23,6 +23,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -1248,7 +1249,15 @@ export function resolveClassComponentProps(
     }
   }
 
-  // TODO: Remove ref from props object
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in newProps) {
+      if (newProps === baseProps) {
+        newProps = assign({}, newProps);
+      }
+      delete newProps.ref;
+    }
+  }
 
   return newProps;
 }

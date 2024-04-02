@@ -472,6 +472,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
           if (__DEV__) {
             if (
               !finishedWork.type.defaultProps &&
+              !('ref' in finishedWork.memoizedProps) &&
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
@@ -808,7 +809,11 @@ function commitClassLayoutLifecycles(
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
-      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
+      if (
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
+        !didWarnAboutReassigningProps
+      ) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +
@@ -857,7 +862,11 @@ function commitClassLayoutLifecycles(
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
-      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
+      if (
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
+        !didWarnAboutReassigningProps
+      ) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +
@@ -914,7 +923,11 @@ function commitClassCallbacks(finishedWork: Fiber) {
   if (updateQueue !== null) {
     const instance = finishedWork.stateNode;
     if (__DEV__) {
-      if (!finishedWork.type.defaultProps && !didWarnAboutReassigningProps) {
+      if (
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
+        !didWarnAboutReassigningProps
+      ) {
         if (instance.props !== finishedWork.memoizedProps) {
           console.error(
             'Expected %s props to match memoized props before ' +

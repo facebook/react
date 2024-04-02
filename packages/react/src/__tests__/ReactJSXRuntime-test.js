@@ -244,7 +244,7 @@ describe('ReactJSXRuntime', () => {
     );
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when `ref` is being accessed', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
