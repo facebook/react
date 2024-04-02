@@ -1416,6 +1416,12 @@ export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   return getHookKindForType(env, id.type);
 }
 
+export function isUseOperator(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInUseOperator"
+  );
+}
+
 export function getHookKindForType(
   env: Environment,
   type: Type

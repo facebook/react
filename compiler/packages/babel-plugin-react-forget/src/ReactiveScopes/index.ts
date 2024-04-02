@@ -16,7 +16,7 @@ export {
 } from "./CodegenReactiveFunction";
 export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
-export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";
+export { flattenScopesWithHooksOrUse } from "./FlattenScopesWithHooksOrUse";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { memoizeFbtOperandsInSameScope } from "./MemoizeFbtOperandsInSameScope";
 export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";

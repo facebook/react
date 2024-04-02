@@ -47,7 +47,7 @@ import {
   codegenFunction,
   extractScopeDeclarationsFromDestructuring,
   flattenReactiveLoops,
-  flattenScopesWithHooks,
+  flattenScopesWithHooksOrUse,
   inferReactiveScopeVariables,
   memoizeFbtOperandsInSameScope,
   mergeOverlappingReactiveScopes,
@@ -277,7 +277,7 @@ function* runWithEnvironment(
 
   assertScopeInstructionsWithinScopes(reactiveFunction);
 
-  flattenScopesWithHooks(reactiveFunction);
+  flattenScopesWithHooksOrUse(reactiveFunction);
   yield log({
     kind: "reactive",
     name: "FlattenScopesWithHooks",

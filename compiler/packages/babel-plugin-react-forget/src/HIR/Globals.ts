@@ -12,6 +12,7 @@ import {
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
+  BuiltInUseOperatorId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   ShapeRegistry,
@@ -239,7 +240,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
  * now that FeatureFlag `enableTreatHooksAsFunctions` is removed we can
  * use positional params too (?)
  */
-const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
+const REACT_APIS: Array<[string, BuiltInType]> = [
   [
     "useContext",
     addHook(DEFAULT_SHAPES, {
@@ -342,13 +343,28 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
       BuiltInUseInsertionEffectHookId
     ),
   ],
+  [
+    "use",
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInUseOperatorId
+    ),
+  ],
 ];
 
 TYPED_GLOBALS.push(
   [
     "React",
     addObject(DEFAULT_SHAPES, null, [
-      ...BUILTIN_HOOKS,
+      ...REACT_APIS,
       [
         "createElement",
         addFunction(DEFAULT_SHAPES, [], {
@@ -395,7 +411,7 @@ TYPED_GLOBALS.push(
 
 export type Global = BuiltInType | PolyType;
 export type GlobalRegistry = Map<string, Global>;
-export const DEFAULT_GLOBALS: GlobalRegistry = new Map(BUILTIN_HOOKS);
+export const DEFAULT_GLOBALS: GlobalRegistry = new Map(REACT_APIS);
 
 // Hack until we add ObjectShapes for all globals
 for (const name of UNTYPED_GLOBALS) {

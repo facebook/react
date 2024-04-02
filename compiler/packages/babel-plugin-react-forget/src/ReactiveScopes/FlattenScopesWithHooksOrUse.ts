@@ -13,6 +13,7 @@ import {
   ReactiveStatement,
   ReactiveValue,
   getHookKind,
+  isUseOperator,
 } from "../HIR";
 import {
   ReactiveFunctionTransform,
@@ -20,18 +21,28 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/*
- * Most parts of compilation do not treat hooks specially, because there is no guarantee that custom
- * hooks obey any particular contract. For example, we can't assume that custom hooks won't modify
- * their arguments, and we can't assume that hooks return immutable or memoized values. Therefore
- * earlier passes largely ignore hooks, and may end up creating reactive scopes that contain hook calls.
+/**
+ * For simplicity the majority of compiler passes do not treat hooks specially. However, hooks are different
+ * from regular functions in two key ways:
+ * - They can introduce reactivity even when their arguments are non-reactive (accounted for in InferReactivePlaces)
+ * - They cannot be called conditionally
  *
- * This pass then finds and removes any scopes that transitively contain a hook call. By running all
+ * The `use` operator is similar:
+ * - It can access context, and therefore introduce reactivity
+ * - It can be called conditionally, but _it must be called if the component needs the return value_. This is because
+ *   React uses the fact that use was called to remember that the component needs the value, and that changes to the
+ *   input should invalidate the component itself.
+ *
+ * This pass accounts for the "can't call conditionally" aspect of both hooks and use. Though the reasoning is slightly
+ * different for reach, the result is that we can't memoize scopes that call hooks or use since this would make them
+ * called conditionally in the output.
+ *
+ * The pass finds and removes any scopes that transitively contain a hook or use call. By running all
  * the reactive scope inference first, agnostic of hooks, we know that the reactive scopes accurately
  * describe the set of values which "construct together", and remove _all_ that memoization in order
  * to ensure the hook call does not inadvertently become conditional.
  */
-export function flattenScopesWithHooks(fn: ReactiveFunction): void {
+export function flattenScopesWithHooksOrUse(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Transform(), {
     env: fn.env,
     hasHook: false,
@@ -69,13 +80,19 @@ class Transform extends ReactiveFunctionTransform<State> {
     this.traverseValue(id, value, state);
     switch (value.kind) {
       case "CallExpression": {
-        if (getHookKind(state.env, value.callee.identifier) != null) {
+        if (
+          getHookKind(state.env, value.callee.identifier) != null ||
+          isUseOperator(value.callee.identifier)
+        ) {
           state.hasHook = true;
         }
         break;
       }
       case "MethodCall": {
-        if (getHookKind(state.env, value.property.identifier) != null) {
+        if (
+          getHookKind(state.env, value.property.identifier) != null ||
+          isUseOperator(value.property.identifier)
+        ) {
           state.hasHook = true;
         }
         break;

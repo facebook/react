@@ -16,6 +16,7 @@ import {
   computePostDominatorTree,
   getHookKind,
   isSetStateType,
+  isUseOperator,
 } from "../HIR";
 import { PostDominator } from "../HIR/Dominator";
 import {
@@ -195,18 +196,23 @@ export function inferReactivePlaces(fn: HIRFunction): void {
           hasReactiveInput ||= reactive;
         }
 
-        /*
-         * Hooks may always return a reactive variable, even if their inputs are
-         * non-reactive, because they can access state or context.
+        /**
+         * Hooks and the 'use' operator are sources of reactivity because
+         * they can access state (for hooks) or context (for hooks/use).
+         *
+         * Technically, `use` could be used to await a non-reactive promise,
+         * but we are conservative and assume that the value could be reactive.
          */
         if (
           value.kind === "CallExpression" &&
-          getHookKind(fn.env, value.callee.identifier) != null
+          (getHookKind(fn.env, value.callee.identifier) != null ||
+            isUseOperator(value.callee.identifier))
         ) {
           hasReactiveInput = true;
         } else if (
           value.kind === "MethodCall" &&
-          getHookKind(fn.env, value.property.identifier) != null
+          (getHookKind(fn.env, value.property.identifier) != null ||
+            isUseOperator(value.property.identifier))
         ) {
           hasReactiveInput = true;
         }

@@ -197,6 +197,7 @@ export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
 export const BuiltInUseEffectHookId = "BuiltInUseEffectHook";
 export const BuiltInUseLayoutEffectHookId = "BuiltInUseLayoutEffectHook";
 export const BuiltInUseInsertionEffectHookId = "BuiltInUseInsertionEffectHook";
+export const BuiltInUseOperatorId = "BuiltInUseOperator";
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
