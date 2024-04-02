@@ -15,7 +15,6 @@
 
 export const disableIEWorkarounds = __VARIANT__;
 export const enableBigIntSupport = __VARIANT__;
-export const enableLegacyFBSupport = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
