@@ -681,7 +681,7 @@ function setProp(
         }
       }
     }
-    // fallthrough for new boolean props without the flag on
+    // Fallthrough for boolean props that don't have a warning for empty strings.
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -2783,7 +2783,6 @@ function diffHydratedGenericElement(
           serverDifferences,
         );
         continue;
-      // fallthrough for new boolean props without the flag on
       default: {
         if (
           // shouldIgnoreAttribute

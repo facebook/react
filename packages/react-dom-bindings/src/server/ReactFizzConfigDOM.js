@@ -1301,6 +1301,21 @@ function pushAttribute(
       }
       return;
     }
+    case 'inert': {
+      if (__DEV__) {
+        if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[name]) {
+          didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+          console.error(
+            'Received an empty string for a boolean attribute `%s`. ' +
+              'This will treat the attribute as if it were false. ' +
+              'Either pass `false` to silence this warning, or ' +
+              'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+            name,
+          );
+        }
+      }
+    }
+    // Fallthrough for boolean props that don't have a warning for empty strings.
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -1421,30 +1436,6 @@ function pushAttribute(
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
       return;
-    case 'inert': {
-      if (__DEV__) {
-        if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[name]) {
-          didWarnForNewBooleanPropsWithEmptyValue[name] = true;
-          console.error(
-            'Received an empty string for a boolean attribute `%s`. ' +
-              'This will treat the attribute as if it were false. ' +
-              'Either pass `false` to silence this warning, or ' +
-              'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
-            name,
-          );
-        }
-      }
-      // Boolean
-      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-        target.push(
-          attributeSeparator,
-          stringToChunk(name),
-          attributeEmptyString,
-        );
-      }
-      return;
-    }
-    // fallthrough for new boolean props without the flag on
     default:
       if (
         // shouldIgnoreAttribute
