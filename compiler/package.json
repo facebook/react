@@ -29,8 +29,16 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
-    "typescript": "^5.4.3",
-    "@tsconfig/strictest": "^2.0.5"
+    "rollup": "^4.13.2",
+    "rollup-plugin-license": "^3.3.1",
+    "rollup-plugin-prettier": "^4.1.1",
+    "typescript": "^5.4.3"
   }
 }
