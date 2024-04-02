@@ -406,7 +406,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-dev
  * @preventMunge
  * ${getSigningToken()}
  */
@@ -421,7 +420,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-prod
  * @preventMunge
  * ${getSigningToken()}
  */
@@ -436,7 +434,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-profiling
  * @preventMunge
  * ${getSigningToken()}
  */
