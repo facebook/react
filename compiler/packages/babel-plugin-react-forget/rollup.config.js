@@ -12,10 +12,12 @@ import json from "@rollup/plugin-json";
 import license from "rollup-plugin-license";
 import path from "path";
 import process from "process";
+import terser from "@rollup/plugin-terser";
+import prettier from "rollup-plugin-prettier";
 
 const NO_INLINE = new Set(["@babel/types"]);
 
-export default {
+const DEV_ROLLUP_CONFIG = {
   input: "src/index.ts",
   output: {
     file: "dist/index.js",
@@ -37,6 +39,14 @@ export default {
       rootDir: path.join(process.cwd(), ".."),
     }),
     commonjs(),
+    terser({
+      format: {
+        comments: false,
+      },
+      compress: false,
+      mangle: false,
+    }),
+    prettier(),
     license({
       banner: {
         content: `Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -53,3 +63,5 @@ LICENSE file in the root directory of this source tree.
     }),
   ],
 };
+
+export default DEV_ROLLUP_CONFIG;

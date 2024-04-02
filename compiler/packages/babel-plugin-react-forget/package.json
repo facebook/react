@@ -38,6 +38,7 @@
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@babel/traverse": "^7.2.0",
+    "@rollup/plugin-terser": "^0.4.4",
     "@testing-library/react": "^13.4.0",
     "@tsconfig/node18-strictest": "^1.0.0",
     "@types/glob": "^8.1.0",
@@ -60,6 +61,7 @@
     "react-dom": "^0.0.0-experimental-493f72b0a-20230727",
     "rimraf": "^3.0.2",
     "rollup-plugin-license": "^3.2.0",
+    "rollup-plugin-prettier": "^4.1.1",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2"
   },
