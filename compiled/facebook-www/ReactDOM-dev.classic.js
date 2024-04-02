@@ -126,7 +126,6 @@ if (__DEV__) {
       enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
       enableTrustedTypesIntegration =
         dynamicFeatureFlags.enableTrustedTypesIntegration,
-      enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
       enableLazyContextPropagation =
@@ -36280,7 +36279,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-21bc38d6";
+    var ReactVersion = "19.0.0-www-classic-7bc0e095";
 
     function createPortal$1(
       children,
@@ -40182,10 +40181,9 @@ if (__DEV__) {
         }
       }
 
-      targetContainer =
-        enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-          ? targetContainer.ownerDocument
-          : targetContainer;
+      targetContainer = isDeferredListenerForLegacyFBSupport
+        ? targetContainer.ownerDocument
+        : targetContainer;
       var unsubscribeListener; // When legacyFBSupport is enabled, it's for when we
       // want to add a one time event listener to a container.
       // This should only be used with enableLegacyFBSupport
@@ -40198,7 +40196,7 @@ if (__DEV__) {
       // to support legacy code patterns, it's likely they'll
       // need support for such browsers.
 
-      if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
+      if (isDeferredListenerForLegacyFBSupport) {
         var originalListener = listener; // $FlowFixMe[missing-this-annot]
 
         listener = function () {
@@ -40296,7 +40294,7 @@ if (__DEV__) {
         // time event listener so we can defer the event.
 
         if (
-          enableLegacyFBSupport && // If our event flags match the required flags for entering
+          // If our event flags match the required flags for entering
           // FB legacy mode and we are processing the "click" event,
           // then we can defer the event to the "document", to allow
           // for legacy FB support, where the expected behavior was to

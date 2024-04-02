@@ -43,7 +43,6 @@ var ReactSharedInternals =
   enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
@@ -14336,11 +14335,10 @@ function addTrappedEventListener(
       "touchmove" !== domEventName &&
       "wheel" !== domEventName) ||
     (isPassiveListener = !0);
-  targetContainer =
-    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? targetContainer.ownerDocument
-      : targetContainer;
-  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
+  targetContainer = isDeferredListenerForLegacyFBSupport
+    ? targetContainer.ownerDocument
+    : targetContainer;
+  if (isDeferredListenerForLegacyFBSupport) {
     var originalListener = eventSystemFlags;
     eventSystemFlags = function () {
       unsubscribeListener.remove();
@@ -14385,7 +14383,6 @@ function dispatchEventForPluginEventSystem(
   var ancestorInst = targetInst$jscomp$0;
   if (0 === (eventSystemFlags & 1) && 0 === (eventSystemFlags & 2)) {
     if (
-      enableLegacyFBSupport &&
       "click" === domEventName &&
       0 === (eventSystemFlags & 20) &&
       nativeEvent !== currentReplayingEvent
@@ -17823,7 +17820,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-5f617d4d",
+  version: "19.0.0-www-classic-567f79e4",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17867,7 +17864,7 @@ var devToolsConfig$jscomp$inline_1808 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-5f617d4d"
+  reconcilerVersion: "19.0.0-www-classic-567f79e4"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18304,7 +18301,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-5f617d4d";
+exports.version = "19.0.0-www-classic-567f79e4";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

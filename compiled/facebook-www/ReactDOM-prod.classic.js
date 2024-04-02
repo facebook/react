@@ -39,7 +39,6 @@ var ReactSharedInternals =
   enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
@@ -13586,11 +13585,10 @@ function addTrappedEventListener(
       "touchmove" !== domEventName &&
       "wheel" !== domEventName) ||
     (isPassiveListener = !0);
-  targetContainer =
-    enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? targetContainer.ownerDocument
-      : targetContainer;
-  if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
+  targetContainer = isDeferredListenerForLegacyFBSupport
+    ? targetContainer.ownerDocument
+    : targetContainer;
+  if (isDeferredListenerForLegacyFBSupport) {
     var originalListener = eventSystemFlags;
     eventSystemFlags = function () {
       unsubscribeListener.remove();
@@ -13635,7 +13633,6 @@ function dispatchEventForPluginEventSystem(
   var ancestorInst = targetInst$jscomp$0;
   if (0 === (eventSystemFlags & 1) && 0 === (eventSystemFlags & 2)) {
     if (
-      enableLegacyFBSupport &&
       "click" === domEventName &&
       0 === (eventSystemFlags & 20) &&
       nativeEvent !== currentReplayingEvent
@@ -17073,7 +17070,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1722 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-b417b4be",
+  version: "19.0.0-www-classic-eeb06fc6",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2150 = {
@@ -17103,7 +17100,7 @@ var internals$jscomp$inline_2150 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-b417b4be"
+  reconcilerVersion: "19.0.0-www-classic-eeb06fc6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2151 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17553,4 +17550,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-b417b4be";
+exports.version = "19.0.0-www-classic-eeb06fc6";
