@@ -43,7 +43,6 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableCache = true;
 export const enableLegacyCache = false;
-export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableBinaryFlight = true;
 export const enableTaint = true;

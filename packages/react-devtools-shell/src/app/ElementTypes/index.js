@@ -18,7 +18,6 @@ import {
   Profiler,
   StrictMode,
   Suspense,
-  unstable_Cache as Cache,
 } from 'react';
 
 const Context = createContext('abc');
