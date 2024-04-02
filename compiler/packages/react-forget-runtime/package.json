@@ -10,7 +10,7 @@
     "react": "^18.2.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "echo 'no tests'"
   }
 }
