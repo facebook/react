@@ -2,7 +2,7 @@
 
 ## Deprecation notice
 
-`react-test-renderer` is deprecated and no longer maintained. It will be removed in a future version. As of React 19, you will see a console warning when invoking ReactTestRenderer.create().
+`react-test-renderer` is deprecated and no longer maintained. It will be removed in a future version. As of React 19, you will see a console warning when invoking `ReactTestRenderer.create()`.
 
 ### React Testing
 
