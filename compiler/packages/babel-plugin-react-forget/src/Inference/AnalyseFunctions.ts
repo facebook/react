@@ -117,7 +117,7 @@ function lower(func: HIRFunction): void {
 function infer(
   loweredFunc: LoweredFunction,
   state: IdentifierState,
-  context: Place[]
+  context: Array<Place>
 ): void {
   const mutations = new Map<string, Effect>();
   for (const operand of loweredFunc.func.context) {

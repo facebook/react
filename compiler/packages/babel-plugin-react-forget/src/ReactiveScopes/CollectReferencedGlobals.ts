@@ -34,7 +34,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
 
   override visitReactiveFunctionValue(
     _id: InstructionId,
-    _dependencies: Place[],
+    _dependencies: Array<Place>,
     fn: ReactiveFunction,
     state: Set<string>
   ): void {

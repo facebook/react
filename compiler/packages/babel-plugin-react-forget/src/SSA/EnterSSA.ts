@@ -33,7 +33,7 @@ type IncompletePhi = {
 
 type State = {
   defs: Map<Identifier, Identifier>;
-  incompletePhis: IncompletePhi[];
+  incompletePhis: Array<IncompletePhi>;
 };
 
 class SSABuilder {
@@ -213,7 +213,7 @@ class SSABuilder {
   }
 
   print(): void {
-    const text: string[] = [];
+    const text: Array<string> = [];
     for (const [block, state] of this.#states) {
       text.push(`bb${block.id}:`);
       for (const [oldId, newId] of state.defs) {

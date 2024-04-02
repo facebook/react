@@ -1069,7 +1069,7 @@ function codegenDependency(
   return object;
 }
 
-function withLoc<T extends (...args: any[]) => t.Node>(
+function withLoc<T extends (...args: Array<any>) => t.Node>(
   fn: T
 ): (
   loc: SourceLocation | null | undefined,
@@ -1109,7 +1109,7 @@ const createStringLiteral = withLoc(t.stringLiteral);
 
 function createHookGuard(
   guard: ExternalFunction,
-  stmts: t.Statement[],
+  stmts: Array<t.Statement>,
   before: GuardKind,
   after: GuardKind
 ): t.TryStatement {

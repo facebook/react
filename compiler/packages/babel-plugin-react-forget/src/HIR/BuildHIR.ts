@@ -70,12 +70,12 @@ export function lower(
   func: NodePath<t.Function>,
   env: Environment,
   bindings: Bindings | null = null,
-  capturedRefs: t.Identifier[] = [],
+  capturedRefs: Array<t.Identifier> = [],
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
   parent: NodePath<t.Function> | null = null
 ): Result<HIRFunction, CompilerError> {
   const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
-  const context: Place[] = [];
+  const context: Array<Place> = [];
 
   for (const ref of capturedRefs ?? []) {
     context.push({
@@ -168,7 +168,7 @@ export function lower(
     }
   });
 
-  let directives: string[] = [];
+  let directives: Array<string> = [];
   const body = func.get("body");
   if (body.isExpression()) {
     const fallthrough = builder.reserve("block");
@@ -730,7 +730,7 @@ function lowerStatement(
        * Iterate through cases in reverse order, so that previous blocks can fallthrough
        * to successors
        */
-      const cases: Case[] = [];
+      const cases: Array<Case> = [];
       let hasDefault = false;
       for (let ii = stmt.get("cases").length - 1; ii >= 0; ii--) {
         const case_: NodePath<t.SwitchCase> = stmt.get("cases")[ii];
@@ -3827,7 +3827,7 @@ function gatherCapturedDeps(
     | t.ObjectMethod
   >,
   componentScope: Scope
-): { identifiers: t.Identifier[]; refs: Place[] } {
+): { identifiers: Array<t.Identifier>; refs: Array<Place> } {
   const capturedIds: Map<t.Identifier, number> = new Map();
   const capturedRefs: Set<Place> = new Set();
   const seenPaths: Set<string> = new Set();

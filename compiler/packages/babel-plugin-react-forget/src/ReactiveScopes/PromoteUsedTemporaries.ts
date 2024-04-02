@@ -65,7 +65,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   override visitReactiveFunctionValue(
     _id: InstructionId,
-    _dependencies: Place[],
+    _dependencies: Array<Place>,
     fn: ReactiveFunction,
     state: VisitorState
   ): void {

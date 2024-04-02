@@ -104,7 +104,7 @@ export default class HIRBuilder {
   #current: WipBlock;
   #entry: BlockId;
   #scopes: Array<Scope> = [];
-  #context: t.Identifier[];
+  #context: Array<t.Identifier>;
   #bindings: Bindings;
   #env: Environment;
   #exceptionHandlerStack: Array<BlockId> = [];
@@ -115,7 +115,7 @@ export default class HIRBuilder {
     return this.#env.nextIdentifierId;
   }
 
-  get context(): t.Identifier[] {
+  get context(): Array<t.Identifier> {
     return this.#context;
   }
 
@@ -131,7 +131,7 @@ export default class HIRBuilder {
     env: Environment,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
     bindings: Bindings | null = null,
-    context: t.Identifier[] | null = null
+    context: Array<t.Identifier> | null = null
   ) {
     this.#env = env;
     this.#bindings = bindings ?? new Map();

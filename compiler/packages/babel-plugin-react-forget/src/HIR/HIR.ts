@@ -55,7 +55,7 @@ export type ReactiveFunction = {
   async: boolean;
   body: ReactiveBlock;
   env: Environment;
-  directives: string[];
+  directives: Array<string>;
 };
 
 export type ReactiveScopeBlock = {
@@ -281,7 +281,7 @@ export type HIRFunction = {
   body: HIR;
   generator: boolean;
   async: boolean;
-  directives: string[];
+  directives: Array<string>;
 };
 
 export type FunctionEffect = {
@@ -423,7 +423,7 @@ export type BranchTerminal = {
 export type SwitchTerminal = {
   kind: "switch";
   test: Place;
-  cases: Case[];
+  cases: Array<Case>;
   fallthrough: BlockId | null;
   id: InstructionId;
   loc: SourceLocation;

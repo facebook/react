@@ -98,7 +98,7 @@ export class CompilerErrorDetail {
 }
 
 export class CompilerError extends Error {
-  details: CompilerErrorDetail[] = [];
+  details: Array<CompilerErrorDetail> = [];
 
   static invariant(
     condition: unknown,
@@ -171,7 +171,7 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  constructor(...args: any[]) {
+  constructor(...args: Array<any>) {
     super(...args);
     this.name = "ReactCompilerError";
   }

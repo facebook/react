@@ -35,11 +35,11 @@ import {
 export type CompilerPass = {
   opts: PluginOptions;
   filename: string | null;
-  comments: (t.CommentBlock | t.CommentLine)[];
+  comments: Array<t.CommentBlock | t.CommentLine>;
 };
 
 function findDirectiveEnablingMemoization(
-  directives: t.Directive[]
+  directives: Array<t.Directive>
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
@@ -51,7 +51,7 @@ function findDirectiveEnablingMemoization(
 }
 
 function findDirectiveDisablingMemoization(
-  directives: t.Directive[],
+  directives: Array<t.Directive>,
   options: PluginOptions
 ): t.Directive | null {
   for (const directive of directives) {
@@ -222,7 +222,7 @@ export function compileProgram(
   );
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
-  const compiledFns: CompileResult[] = [];
+  const compiledFns: Array<CompileResult> = [];
 
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
     const fnType = getReactFunctionType(fn, pass);
@@ -333,7 +333,7 @@ export function compileProgram(
     }
   }
 
-  const externalFunctions: ExternalFunction[] = [];
+  const externalFunctions: Array<ExternalFunction> = [];
   let gating: null | ExternalFunction = null;
   try {
     // TODO: check for duplicate import specifiers
@@ -705,7 +705,7 @@ function getFunctionName(
 
 function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   program: NodePath<t.Program>,
-  fns: BabelFn[]
+  fns: Array<BabelFn>
 ): CompilerError | null {
   const fnIds = new Set(
     fns

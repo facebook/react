@@ -7,8 +7,10 @@
 
 "use strict";
 
-// Based on similar script in React
-// https://github.com/facebook/react/blob/main/scripts/prettier/index.js
+/*
+ * Based on similar script in React
+ * https://github.com/facebook/react/blob/main/scripts/prettier/index.js
+ */
 
 const chalk = require("chalk");
 const glob = require("glob");

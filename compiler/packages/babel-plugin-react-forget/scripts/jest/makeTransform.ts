@@ -43,8 +43,10 @@ module.exports = (useForget: boolean) => {
               ? [
                   ReactForgetFunctionTransform,
                   {
-                    // Jest hashes the babel config as a cache breaker.
-                    // (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
+                    /*
+                     * Jest hashes the babel config as a cache breaker.
+                     * (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
+                     */
                     compilerCacheKey: execSync(
                       "yarn --silent --cwd ../.. hash packages/babel-plugin-react-forget/dist"
                     ).toString(),
@@ -70,8 +72,10 @@ module.exports = (useForget: boolean) => {
                       ) {
                         const arg = path.node.arguments[0];
                         if (arg.type === "StringLiteral") {
-                          // The compiler adds requires of "React", which is expected to be a wrapper
-                          // around the "react" package. For tests, we just rewrite the require.
+                          /*
+                           * The compiler adds requires of "React", which is expected to be a wrapper
+                           * around the "react" package. For tests, we just rewrite the require.
+                           */
                           if (arg.value === "React") {
                             arg.value = "react";
                           }
@@ -90,8 +94,10 @@ module.exports = (useForget: boolean) => {
         esmodules: true,
       },
     } as any);
-    // typecast needed as DefinitelyTyped does not have updated Babel configs types yet
-    // (missing passPerPreset and targets).
+    /*
+     * typecast needed as DefinitelyTyped does not have updated Babel configs types yet
+     * (missing passPerPreset and targets).
+     */
   }
 
   return {
@@ -104,8 +110,10 @@ function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
   let isReactComponent = false;
   let hasNoUseForgetDirective = false;
 
-  // React components start with an upper case letter,
-  // React hooks start with `use`
+  /*
+   * React components start with an upper case letter,
+   * React hooks start with `use`
+   */
   if (
     fn.node.id == null ||
     (fn.node.id.name[0].toUpperCase() !== fn.node.id.name[0] &&

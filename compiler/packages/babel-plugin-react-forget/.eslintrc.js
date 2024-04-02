@@ -73,7 +73,7 @@ module.exports = {
       "off",
       "constructor",
     ],
-    "@typescript-eslint/array-type": ["off", "generic"],
+    "@typescript-eslint/array-type": ["error", { default: "generic" }],
     "@typescript-eslint/triple-slash-reference": "off",
   },
   parser: "@typescript-eslint/parser",
