@@ -6417,11 +6417,6 @@ detect-node@^2.0.4:
   resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.0.4.tgz#014ee8f8f669c5c58023da64b8179c083a28c46c"
   integrity sha512-ZIzRpLJrOj7jjP2miAtgqIfmzbxa4ZOr5jJc601zklsfEx9oTzmmj2nVpIPRpNlRTIh8lc1kyViIY7BWSGNmKw==
 
-devtools-ignore-webpack-plugin@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/devtools-ignore-webpack-plugin/-/devtools-ignore-webpack-plugin-0.1.1.tgz#8f4fcf83019bc361e8a3cf7b7d466a33693de14e"
-  integrity sha512-pJ/NGZTQxK1VDoyy8fLm0UV3ugOanostztLKUmzqYnUIKqyUm2ZkIpon6No0gWlpOSMoSpBWTnzrx1cdsbpuyw==
-
 diff-sequences@^27.0.6:
   version "27.0.6"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-27.0.6.tgz#3305cb2e55a033924054695cc66019fd7f8e5723"
@@ -6997,6 +6992,7 @@ eslint-plugin-no-unsanitized@3.1.2:
 
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
+  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
@@ -12991,7 +12987,7 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.8:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
-react-is@^16.8.1, react-is@^17.0.1, "react-is@npm:react-is":
+react-is@^16.8.1, react-is@^17.0.1, react-is@^18.0.0, react-is@^18.2.0, "react-is@npm:react-is":
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==

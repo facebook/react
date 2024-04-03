@@ -14,6 +14,7 @@ const {
   getVersionString,
 } = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
+const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -54,7 +55,7 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  devtool: false,
   entry: {
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
@@ -133,6 +134,27 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+    }),
+    new Webpack.SourceMapDevToolPlugin({
+      filename: '[file].map',
+      noSources: !__DEV__,
+    }),
+    new SourceMapIgnoreListPlugin({
+      shouldIgnoreSource: (assetName, _source) => {
+        if (__DEV__) {
+          // Don't ignore list anything in DEV build for debugging purposes
+          return false;
+        }
+
+        const contentScriptNamesToIgnoreList = [
+          // This is where we override console
+          'installHook',
+        ];
+
+        return contentScriptNamesToIgnoreList.some(ignoreListName =>
+          assetName.startsWith(ignoreListName),
+        );
+      },
     }),
   ],
   module: {
