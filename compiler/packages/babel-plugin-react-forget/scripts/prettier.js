@@ -29,15 +29,7 @@ let didError = false;
 
 const files = glob
   .sync("**/*.{js,ts,tsx,jsx}", {
-    ignore: [
-      "**/node_modules/**",
-      "packages/demo-2021Q3/**",
-      "packages/demo-todolist-live/**",
-      "packages/demo-todolist-next/**",
-      "packages/demo-todolist-playground/**",
-      "packages/eslint-browser/**",
-      "**/__tests__/fixtures/**/*.flow.js",
-    ],
+    ignore: ["**/node_modules/**", "**/__tests__/fixtures/**/*.flow.js"],
   })
   .filter((f) => !onlyChanged || changedFiles.has(f));
 if (!files.length) {
