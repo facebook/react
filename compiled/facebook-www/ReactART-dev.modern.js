@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-f0fe1a8a";
+    var ReactVersion = "19.0.0-www-modern-cdf34e74";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -195,7 +195,7 @@ if (__DEV__) {
     var enableAsyncActions = true;
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
-    var disableLegacyMode = false;
+    var disableLegacyMode = true;
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -494,7 +494,9 @@ if (__DEV__) {
         // The display name for these tags come from the user-provided type:
 
         case IncompleteClassComponent:
-        case IncompleteFunctionComponent:
+        case IncompleteFunctionComponent: {
+          break;
+        }
 
         // Fallthrough
 
@@ -578,8 +580,6 @@ if (__DEV__) {
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
     var DidDefer = ContentReset;
-    var LifecycleEffectMask =
-      Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
     var HostEffectMask =
       /*               */
@@ -2954,8 +2954,6 @@ if (__DEV__) {
     function shouldAttemptEagerTransition() {
       return false;
     } // The ART renderer is secondary to the React DOM renderer.
-
-    var warnsIfNotActing = false;
     function appendChild(parentInstance, child) {
       if (child.parentNode === parentInstance) {
         child.eject();
@@ -4505,23 +4503,11 @@ if (__DEV__) {
         // unblock additional features we have planned.
         scheduleTaskForRootDuringMicrotask(root, now$1());
       }
-
-      if (ReactCurrentActQueue$4.isBatchingLegacy && root.tag === LegacyRoot) {
-        // Special `act` case: Record whenever a legacy update is scheduled.
-        ReactCurrentActQueue$4.didScheduleLegacyUpdate = true;
-      }
     }
     function flushSyncWorkOnAllRoots() {
       // This is allowed to be called synchronously, but the caller should check
       // the execution context first.
       flushSyncWorkAcrossRoots_impl(false);
-    }
-    function flushSyncWorkOnLegacyRootsOnly() {
-      // This is allowed to be called synchronously, but the caller should check
-      // the execution context first.
-      {
-        flushSyncWorkAcrossRoots_impl(true);
-      }
     }
 
     function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
@@ -4545,7 +4531,7 @@ if (__DEV__) {
         var root = firstScheduledRoot;
 
         while (root !== null) {
-          if (onlyLegacy && root.tag !== LegacyRoot);
+          if (onlyLegacy && disableLegacyMode);
           else {
             var workInProgressRoot = getWorkInProgressRoot();
             var workInProgressRootRenderLanes =
@@ -9153,7 +9139,7 @@ if (__DEV__) {
           // need to mark fibers that commit in an incomplete state, somehow. For
           // now I'll disable the warning that most of the bugs that would trigger
           // it are either exclusive to concurrent mode or exist in both.
-          (current.mode & ConcurrentMode) !== NoMode
+          disableLegacyMode
         ) {
           error(
             "Internal React error: Expected static flag was missing. Please " +
@@ -14505,27 +14491,6 @@ if (__DEV__) {
           );
         }
       } // Reset the memoizedState to what it was before we attempted to render it.
-      // A legacy mode Suspense quirk, only relevant to hook components.
-
-      var tag = sourceFiber.tag;
-
-      if (
-        (sourceFiber.mode & ConcurrentMode) === NoMode &&
-        (tag === FunctionComponent ||
-          tag === ForwardRef ||
-          tag === SimpleMemoComponent)
-      ) {
-        var currentSource = sourceFiber.alternate;
-
-        if (currentSource) {
-          sourceFiber.updateQueue = currentSource.updateQueue;
-          sourceFiber.memoizedState = currentSource.memoizedState;
-          sourceFiber.lanes = currentSource.lanes;
-        } else {
-          sourceFiber.updateQueue = null;
-          sourceFiber.memoizedState = null;
-        }
-      }
     }
 
     function markSuspenseBoundaryShouldCapture(
@@ -14535,72 +14500,6 @@ if (__DEV__) {
       root,
       rootRenderLanes
     ) {
-      // This marks a Suspense boundary so that when we're unwinding the stack,
-      // it captures the suspended "exception" and does a second (fallback) pass.
-      if ((suspenseBoundary.mode & ConcurrentMode) === NoMode) {
-        // Legacy Mode Suspense
-        //
-        // If the boundary is in legacy mode, we should *not*
-        // suspend the commit. Pretend as if the suspended component rendered
-        // null and keep rendering. When the Suspense boundary completes,
-        // we'll do a second pass to render the fallback.
-        if (suspenseBoundary === returnFiber) {
-          // Special case where we suspended while reconciling the children of
-          // a Suspense boundary's inner Offscreen wrapper fiber. This happens
-          // when a React.lazy component is a direct child of a
-          // Suspense boundary.
-          //
-          // Suspense boundaries are implemented as multiple fibers, but they
-          // are a single conceptual unit. The legacy mode behavior where we
-          // pretend the suspended fiber committed as `null` won't work,
-          // because in this case the "suspended" fiber is the inner
-          // Offscreen wrapper.
-          //
-          // Because the contents of the boundary haven't started rendering
-          // yet (i.e. nothing in the tree has partially rendered) we can
-          // switch to the regular, concurrent mode behavior: mark the
-          // boundary with ShouldCapture and enter the unwind phase.
-          suspenseBoundary.flags |= ShouldCapture;
-        } else {
-          suspenseBoundary.flags |= DidCapture;
-          sourceFiber.flags |= ForceUpdateForLegacySuspense; // We're going to commit this fiber even though it didn't complete.
-          // But we shouldn't call any lifecycle methods or callbacks. Remove
-          // all lifecycle effect tags.
-
-          sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
-
-          if (sourceFiber.tag === ClassComponent) {
-            var currentSourceFiber = sourceFiber.alternate;
-
-            if (currentSourceFiber === null) {
-              // This is a new mount. Change the tag so it's not mistaken for a
-              // completed class component. For example, we should not call
-              // componentWillUnmount if it is deleted.
-              sourceFiber.tag = IncompleteClassComponent;
-            } else {
-              // When we try rendering again, we should not reuse the current fiber,
-              // since it's known to be in an inconsistent state. Use a force update to
-              // prevent a bail out.
-              var update = createUpdate(SyncLane);
-              update.tag = ForceUpdate;
-              enqueueUpdate(sourceFiber, update, SyncLane);
-            }
-          } else if (sourceFiber.tag === FunctionComponent) {
-            var _currentSourceFiber = sourceFiber.alternate;
-
-            if (_currentSourceFiber === null) {
-              // This is a new mount. Change the tag so it's not mistaken for a
-              // completed function component.
-              sourceFiber.tag = IncompleteFunctionComponent;
-            }
-          } // The source fiber did not complete. Mark it with Sync priority to
-          // indicate that it still has pending work.
-
-          sourceFiber.lanes = mergeLanes(sourceFiber.lanes, SyncLane);
-        }
-
-        return suspenseBoundary;
-      } // Confirmed that the boundary is in a concurrent mode tree. Continue
       // with the normal suspend path.
       //
       // After this we'll use a set of heuristics to determine whether this
@@ -14695,7 +14594,7 @@ if (__DEV__) {
                 // we don't have to recompute it on demand. This would also allow us
                 // to unify with `use` which needs to perform this logic even sooner,
                 // before `throwException` is called.
-                if (sourceFiber.mode & ConcurrentMode) {
+                {
                   if (getShellBoundary() === null) {
                     // Suspended in the "shell" of the app. This is an undesirable
                     // loading state. We should avoid committing this tree.
@@ -14763,7 +14662,7 @@ if (__DEV__) {
                   // Suspense always commits fallbacks synchronously, so there are
                   // no pings.
 
-                  if (suspenseBoundary.mode & ConcurrentMode) {
+                  {
                     attachPingListener(root, wakeable, rootRenderLanes);
                   }
                 }
@@ -14772,7 +14671,7 @@ if (__DEV__) {
               }
 
               case OffscreenComponent: {
-                if (suspenseBoundary.mode & ConcurrentMode) {
+                {
                   suspenseBoundary.flags |= ShouldCapture;
 
                   var _isSuspenseyResource =
@@ -14817,7 +14716,7 @@ if (__DEV__) {
           } else {
             // No boundary was found. Unless this is a sync update, this is OK.
             // We can suspend and wait for more data to arrive.
-            if (root.tag === ConcurrentRoot) {
+            {
               // In a concurrent root, suspending without a Suspense boundary is
               // allowed. It will suspend indefinitely without committing.
               //
@@ -14827,15 +14726,6 @@ if (__DEV__) {
               attachPingListener(root, wakeable, rootRenderLanes);
               renderDidSuspendDelayIfPossible();
               return false;
-            } else {
-              // In a legacy root, suspending without a boundary is always an error.
-              var uncaughtSuspenseError = new Error(
-                "A component suspended while responding to synchronous input. This " +
-                  "will cause the UI to be replaced with a loading indicator. To " +
-                  "fix, updates that suspend should be wrapped " +
-                  "with startTransition."
-              );
-              value = uncaughtSuspenseError;
             }
           }
         }
@@ -15520,26 +15410,7 @@ if (__DEV__) {
           );
         }
 
-        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-          // In legacy sync mode, don't defer the subtree. Render it now.
-          // TODO: Consider how Offscreen should work with transitions in the future
-          var nextState = {
-            baseLanes: NoLanes,
-            cachePool: null
-          };
-          workInProgress.memoizedState = nextState;
-
-          {
-            // push the cache pool even though we're going to bail out
-            // because otherwise there'd be a context mismatch
-            if (current !== null) {
-              pushTransition(workInProgress, null, null);
-            }
-          }
-
-          reuseHiddenContextOnStack(workInProgress);
-          pushOffscreenSuspenseHandler(workInProgress);
-        } else if (!includesSomeLane(renderLanes, OffscreenLane)) {
+        if (!includesSomeLane(renderLanes, OffscreenLane)) {
           // We're hidden, and we're not rendering at Offscreen. We will bail out
           // and resume this tree later.
           // Schedule this fiber to re-render at Offscreen priority
@@ -15847,24 +15718,6 @@ if (__DEV__) {
       }
     }
 
-    function mountIncompleteFunctionComponent(
-      _current,
-      workInProgress,
-      Component,
-      nextProps,
-      renderLanes
-    ) {
-      resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
-      workInProgress.tag = FunctionComponent;
-      return updateFunctionComponent(
-        null,
-        workInProgress,
-        Component,
-        nextProps,
-        renderLanes
-      );
-    }
-
     function updateFunctionComponent(
       current,
       workInProgress,
@@ -16067,8 +15920,6 @@ if (__DEV__) {
       var shouldUpdate;
 
       if (instance === null) {
-        resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress); // In the initial pass we might need to construct the instance.
-
         constructClassInstance(workInProgress, Component, nextProps);
         mountClassInstance(workInProgress, Component, nextProps, renderLanes);
         shouldUpdate = true;
@@ -16353,7 +16204,6 @@ if (__DEV__) {
       elementType,
       renderLanes
     ) {
-      resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
       var props = workInProgress.pendingProps;
       var lazyComponent = elementType;
       var payload = lazyComponent._payload;
@@ -16445,41 +16295,6 @@ if (__DEV__) {
           Component +
           ". " +
           ("Lazy element type must resolve to a class or function." + hint)
-      );
-    }
-
-    function mountIncompleteClassComponent(
-      _current,
-      workInProgress,
-      Component,
-      nextProps,
-      renderLanes
-    ) {
-      resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress); // Promote the fiber to a class and try rendering again.
-
-      workInProgress.tag = ClassComponent; // The rest of this function is a fork of `updateClassComponent`
-      // Push context providers early to prevent context stack mismatches.
-      // During mounting we don't know the child context yet as the instance doesn't exist.
-      // We will invalidate the child context in finishClassComponent() right after rendering.
-
-      var hasContext;
-
-      if (isContextProvider()) {
-        hasContext = true;
-      } else {
-        hasContext = false;
-      }
-
-      prepareToReadContext(workInProgress, renderLanes);
-      constructClassInstance(workInProgress, Component, nextProps);
-      mountClassInstance(workInProgress, Component, nextProps, renderLanes);
-      return finishClassComponent(
-        null,
-        workInProgress,
-        Component,
-        true,
-        hasContext,
-        renderLanes
       );
     }
 
@@ -16876,8 +16691,7 @@ if (__DEV__) {
           var _primaryChildFragment3 = updateSuspensePrimaryChildren(
             current,
             workInProgress,
-            _nextPrimaryChildren2,
-            renderLanes
+            _nextPrimaryChildren2
           );
 
           workInProgress.memoizedState = null;
@@ -16912,7 +16726,6 @@ if (__DEV__) {
       renderLanes
     ) {
       var mode = workInProgress.mode;
-      var progressedPrimaryFragment = workInProgress.child;
       var primaryChildProps = {
         mode: "hidden",
         children: primaryChildren
@@ -16920,34 +16733,7 @@ if (__DEV__) {
       var primaryChildFragment;
       var fallbackChildFragment;
 
-      if (
-        (mode & ConcurrentMode) === NoMode &&
-        progressedPrimaryFragment !== null
-      ) {
-        // In legacy mode, we commit the primary tree as if it successfully
-        // completed, even though it's in an inconsistent state.
-        primaryChildFragment = progressedPrimaryFragment;
-        primaryChildFragment.childLanes = NoLanes;
-        primaryChildFragment.pendingProps = primaryChildProps;
-
-        if (workInProgress.mode & ProfileMode) {
-          // Reset the durations from the first pass so they aren't included in the
-          // final amounts. This seems counterintuitive, since we're intentionally
-          // not measuring part of the render phase, but this makes it match what we
-          // do in Concurrent Mode.
-          primaryChildFragment.actualDuration = 0;
-          primaryChildFragment.actualStartTime = -1;
-          primaryChildFragment.selfBaseDuration = 0;
-          primaryChildFragment.treeBaseDuration = 0;
-        }
-
-        fallbackChildFragment = createFiberFromFragment(
-          fallbackChildren,
-          mode,
-          renderLanes,
-          null
-        );
-      } else {
+      {
         primaryChildFragment = mountWorkInProgressOffscreenFiber(
           primaryChildProps,
           mode
@@ -16999,10 +16785,6 @@ if (__DEV__) {
         }
       );
 
-      if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-        primaryChildFragment.lanes = renderLanes;
-      }
-
       primaryChildFragment.return = workInProgress;
       primaryChildFragment.sibling = null;
 
@@ -17038,39 +16820,7 @@ if (__DEV__) {
       };
       var primaryChildFragment;
 
-      if (
-        // In legacy mode, we commit the primary tree as if it successfully
-        // completed, even though it's in an inconsistent state.
-        (mode & ConcurrentMode) === NoMode && // Make sure we're on the second pass, i.e. the primary child fragment was
-        // already cloned. In legacy mode, the only case where this isn't true is
-        // when DevTools forces us to display a fallback; we skip the first render
-        // pass entirely and go straight to rendering the fallback. (In Concurrent
-        // Mode, SuspenseList can also trigger this scenario, but this is a legacy-
-        // only codepath.)
-        workInProgress.child !== currentPrimaryChildFragment
-      ) {
-        var progressedPrimaryFragment = workInProgress.child;
-        primaryChildFragment = progressedPrimaryFragment;
-        primaryChildFragment.childLanes = NoLanes;
-        primaryChildFragment.pendingProps = primaryChildProps;
-
-        if (workInProgress.mode & ProfileMode) {
-          // Reset the durations from the first pass so they aren't included in the
-          // final amounts. This seems counterintuitive, since we're intentionally
-          // not measuring part of the render phase, but this makes it match what we
-          // do in Concurrent Mode.
-          primaryChildFragment.actualDuration = 0;
-          primaryChildFragment.actualStartTime = -1;
-          primaryChildFragment.selfBaseDuration =
-            currentPrimaryChildFragment.selfBaseDuration;
-          primaryChildFragment.treeBaseDuration =
-            currentPrimaryChildFragment.treeBaseDuration;
-        } // The fallback fiber was added as a deletion during the first pass.
-        // However, since we're going to remain on the fallback, we no longer want
-        // to delete it.
-
-        workInProgress.deletions = null;
-      } else {
+      {
         primaryChildFragment = updateWorkInProgressOffscreenFiber(
           currentPrimaryChildFragment,
           primaryChildProps
@@ -17170,7 +16920,7 @@ if (__DEV__) {
       primaryChildFragment.sibling = fallbackChildFragment;
       workInProgress.child = primaryChildFragment;
 
-      if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
+      {
         // We will have dropped the effect list which contains the
         // deletion. We need to reconcile to delete the current child.
         reconcileChildFibers(workInProgress, current.child, null, renderLanes);
@@ -17731,11 +17481,7 @@ if (__DEV__) {
 
       pushSuspenseListContext(workInProgress, suspenseContext);
 
-      if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-        // In legacy mode, SuspenseList doesn't work so we just
-        // use make it a noop by treating it as the default revealOrder.
-        workInProgress.memoizedState = null;
-      } else {
+      {
         switch (revealOrder) {
           case "forwards": {
             var lastContentRow = findLastContentRow(workInProgress.child);
@@ -17972,21 +17718,6 @@ if (__DEV__) {
     }
     function checkIfWorkInProgressReceivedUpdate() {
       return didReceiveUpdate;
-    }
-
-    function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
-      if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-        if (current !== null) {
-          // A lazy component only mounts if it suspended inside a non-
-          // concurrent tree, in an inconsistent state. We want to treat it like
-          // a new mount, even though an empty version of it already committed.
-          // Disconnect the alternate pointers.
-          current.alternate = null;
-          workInProgress.alternate = null; // Since this is conceptually a new fiber, schedule a Placement effect
-
-          workInProgress.flags |= Placement;
-        }
-      }
     }
 
     function bailoutOnAlreadyFinishedWork(
@@ -18561,39 +18292,15 @@ if (__DEV__) {
         }
 
         case IncompleteClassComponent: {
-          var _Component2 = workInProgress.type;
-          var _unresolvedProps4 = workInProgress.pendingProps;
-
-          var _resolvedProps4 =
-            workInProgress.elementType === _Component2
-              ? _unresolvedProps4
-              : resolveDefaultProps(_Component2, _unresolvedProps4);
-
-          return mountIncompleteClassComponent(
-            current,
-            workInProgress,
-            _Component2,
-            _resolvedProps4,
-            renderLanes
-          );
+          {
+            break;
+          }
         }
 
         case IncompleteFunctionComponent: {
-          var _Component3 = workInProgress.type;
-          var _unresolvedProps5 = workInProgress.pendingProps;
-
-          var _resolvedProps5 =
-            workInProgress.elementType === _Component3
-              ? _unresolvedProps5
-              : resolveDefaultProps(_Component3, _unresolvedProps5);
-
-          return mountIncompleteFunctionComponent(
-            current,
-            workInProgress,
-            _Component3,
-            _resolvedProps5,
-            renderLanes
-          );
+          {
+            break;
+          }
         }
 
         case SuspenseListComponent: {
@@ -20192,7 +19899,11 @@ if (__DEV__) {
       var newProps = workInProgress.pendingProps; // Note: This intentionally doesn't check if we're hydrating because comparing
 
       switch (workInProgress.tag) {
-        case IncompleteFunctionComponent:
+        case IncompleteFunctionComponent: {
+          {
+            break;
+          } // Fallthrough
+        }
 
         case LazyComponent:
         case SimpleMemoComponent:
@@ -20545,8 +20256,9 @@ if (__DEV__) {
           return null;
 
         case IncompleteClassComponent: {
-          bubbleProperties(workInProgress);
-          return null;
+          {
+            break;
+          } // Same as class component case. I put it down here so that the tags are
         }
 
         case SuspenseListComponent: {
@@ -20807,10 +20519,7 @@ if (__DEV__) {
             }
           }
 
-          if (
-            !nextIsHidden ||
-            (workInProgress.mode & ConcurrentMode) === NoMode
-          ) {
+          if (!nextIsHidden || !disableLegacyMode) {
             bubbleProperties(workInProgress);
           } else {
             // Don't bubble properties for hidden children unless we're rendering
@@ -22088,7 +21797,7 @@ if (__DEV__) {
         }
 
         case OffscreenComponent: {
-          var isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
+          var isModernRoot = disableLegacyMode;
 
           if (isModernRoot) {
             var isHidden = finishedWork.memoizedState !== null;
@@ -23078,7 +22787,7 @@ if (__DEV__) {
         case OffscreenComponent: {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
 
-          if (deletedFiber.mode & ConcurrentMode) {
+          {
             // If this offscreen component is hidden, we already unmounted it. Before
             // deleting the children, track that it's already unmounted so that we
             // don't attempt to unmount the effects again.
@@ -23098,12 +22807,6 @@ if (__DEV__) {
               deletedFiber
             );
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-          } else {
-            recursivelyTraverseDeletionEffects(
-              finishedRoot,
-              nearestMountedAncestor,
-              deletedFiber
-            );
           }
 
           break;
@@ -23588,7 +23291,7 @@ if (__DEV__) {
           var isHidden = newState !== null;
           var wasHidden = current !== null && current.memoizedState !== null;
 
-          if (finishedWork.mode & ConcurrentMode) {
+          {
             // Before committing the children, track on the stack whether this
             // offscreen subtree was already hidden, so that we don't unmount the
             // effects again.
@@ -23600,8 +23303,6 @@ if (__DEV__) {
             recursivelyTraverseMutationEffects(root, finishedWork);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-          } else {
-            recursivelyTraverseMutationEffects(root, finishedWork);
           }
 
           commitReconciliationEffects(finishedWork);
@@ -23632,7 +23333,7 @@ if (__DEV__) {
               //   - Ancestor Offscreen was not hidden in previous commit.
 
               if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
-                if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
+                {
                   // Disappear the layout effects of all the children
                   recursivelyTraverseDisappearLayoutEffects(finishedWork);
                 }
@@ -24363,7 +24064,7 @@ if (__DEV__) {
                 committedTransitions
               );
             } else {
-              if (finishedWork.mode & ConcurrentMode) {
+              {
                 // The effects are currently disconnected. Since the tree is hidden,
                 // don't connect them. This also applies to the initial render.
                 {
@@ -24375,15 +24076,6 @@ if (__DEV__) {
                     finishedWork
                   );
                 }
-              } else {
-                // Legacy Mode: Fire the effects even if the tree is hidden.
-                _instance3._visibility |= OffscreenPassiveEffectsConnected;
-                recursivelyTraversePassiveMountEffects(
-                  finishedRoot,
-                  finishedWork,
-                  committedLanes,
-                  committedTransitions
-                );
               }
             }
           } else {
@@ -24576,7 +24268,7 @@ if (__DEV__) {
                 includeWorkInProgressEffects
               );
             } else {
-              if (finishedWork.mode & ConcurrentMode) {
+              {
                 // The effects are currently disconnected. Since the tree is hidden,
                 // don't connect them. This also applies to the initial render.
                 {
@@ -24588,16 +24280,6 @@ if (__DEV__) {
                     finishedWork
                   );
                 }
-              } else {
-                // Legacy Mode: Fire the effects even if the tree is hidden.
-                _instance4._visibility |= OffscreenPassiveEffectsConnected;
-                recursivelyTraverseReconnectPassiveEffects(
-                  finishedRoot,
-                  finishedWork,
-                  committedLanes,
-                  committedTransitions,
-                  includeWorkInProgressEffects
-                );
               }
             }
           } else {
@@ -25231,116 +24913,6 @@ if (__DEV__) {
       }
     }
 
-    function invokeLayoutEffectMountInDEV(fiber) {
-      {
-        // We don't need to re-check StrictEffectsMode here.
-        // This function is only called if that check has already passed.
-        switch (fiber.tag) {
-          case FunctionComponent:
-          case ForwardRef:
-          case SimpleMemoComponent: {
-            try {
-              commitHookEffectListMount(Layout | HasEffect, fiber);
-            } catch (error) {
-              captureCommitPhaseError(fiber, fiber.return, error);
-            }
-
-            break;
-          }
-
-          case ClassComponent: {
-            var instance = fiber.stateNode;
-
-            if (typeof instance.componentDidMount === "function") {
-              try {
-                instance.componentDidMount();
-              } catch (error) {
-                captureCommitPhaseError(fiber, fiber.return, error);
-              }
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
-    function invokePassiveEffectMountInDEV(fiber) {
-      {
-        // We don't need to re-check StrictEffectsMode here.
-        // This function is only called if that check has already passed.
-        switch (fiber.tag) {
-          case FunctionComponent:
-          case ForwardRef:
-          case SimpleMemoComponent: {
-            try {
-              commitHookEffectListMount(Passive | HasEffect, fiber);
-            } catch (error) {
-              captureCommitPhaseError(fiber, fiber.return, error);
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
-    function invokeLayoutEffectUnmountInDEV(fiber) {
-      {
-        // We don't need to re-check StrictEffectsMode here.
-        // This function is only called if that check has already passed.
-        switch (fiber.tag) {
-          case FunctionComponent:
-          case ForwardRef:
-          case SimpleMemoComponent: {
-            try {
-              commitHookEffectListUnmount(
-                Layout | HasEffect,
-                fiber,
-                fiber.return
-              );
-            } catch (error) {
-              captureCommitPhaseError(fiber, fiber.return, error);
-            }
-
-            break;
-          }
-
-          case ClassComponent: {
-            var instance = fiber.stateNode;
-
-            if (typeof instance.componentWillUnmount === "function") {
-              safelyCallComponentWillUnmount(fiber, fiber.return, instance);
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
-    function invokePassiveEffectUnmountInDEV(fiber) {
-      {
-        // We don't need to re-check StrictEffectsMode here.
-        // This function is only called if that check has already passed.
-        switch (fiber.tag) {
-          case FunctionComponent:
-          case ForwardRef:
-          case SimpleMemoComponent: {
-            try {
-              commitHookEffectListUnmount(
-                Passive | HasEffect,
-                fiber,
-                fiber.return
-              );
-            } catch (error) {
-              captureCommitPhaseError(fiber, fiber.return, error);
-            }
-          }
-        }
-      }
-    }
-
     function getCacheForType(resourceType) {
       var cache = readContext(CacheContext);
       var cacheForType = cache.data.get(resourceType);
@@ -25367,19 +24939,6 @@ if (__DEV__) {
     }
 
     var ReactCurrentActQueue$1 = ReactSharedInternals.ReactCurrentActQueue;
-    function isLegacyActEnvironment(fiber) {
-      {
-        // Legacy mode. We preserve the behavior of React 17's act. It assumes an
-        // act environment whenever `jest` is defined, but you can still turn off
-        // spurious warnings by setting IS_REACT_ACT_ENVIRONMENT explicitly
-        // to false.
-        // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
-        typeof IS_REACT_ACT_ENVIRONMENT !== "undefined" // $FlowFixMe[cannot-resolve-name]
-          ? IS_REACT_ACT_ENVIRONMENT
-          : undefined; // $FlowFixMe[cannot-resolve-name] - Flow doesn't know about jest
-        return warnsIfNotActing;
-      }
-    }
     function isConcurrentActEnvironment() {
       {
         var isReactActEnvironmentGlobal = // $FlowFixMe[cannot-resolve-name] Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
@@ -25684,12 +25243,7 @@ if (__DEV__) {
       return workInProgressSuspendedReason === SuspendedOnData;
     }
     function requestUpdateLane(fiber) {
-      // Special cases
-      var mode = fiber.mode;
-
-      if ((mode & ConcurrentMode) === NoMode) {
-        return SyncLane;
-      } else if (
+      if (
         (executionContext & RenderContext) !== NoContext &&
         workInProgressRootRenderLanes !== NoLanes
       ) {
@@ -25747,16 +25301,6 @@ if (__DEV__) {
     }
 
     function requestRetryLane(fiber) {
-      // This is a fork of `requestUpdateLane` designed specifically for Suspense
-      // "retries" — a special update that attempts to flip a Suspense boundary
-      // from its placeholder state to its primary/resolved state.
-      // Special cases
-      var mode = fiber.mode;
-
-      if ((mode & ConcurrentMode) === NoMode) {
-        return SyncLane;
-      }
-
       return claimNextRetryLane();
     }
 
@@ -25906,7 +25450,6 @@ if (__DEV__) {
             // without immediately flushing it. We only do this for user-initiated
             // updates, to preserve historical behavior of legacy mode.
             resetRenderTimer();
-            flushSyncWorkOnLegacyRootsOnly();
           }
         }
       }
@@ -26398,7 +25941,7 @@ if (__DEV__) {
 
       var exitStatus = renderRootSync(root, lanes);
 
-      if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+      if (exitStatus === RootErrored) {
         // If something threw an error, try rendering one more time. We'll render
         // synchronously to block concurrent data mutations, and we'll includes
         // all pending updates are included. If it still fails after the second
@@ -27894,7 +27437,7 @@ if (__DEV__) {
 
       {
         if (!rootDidHavePassiveEffects) {
-          commitDoubleInvokeEffectsInDEV(root, false);
+          commitDoubleInvokeEffectsInDEV(root);
         }
       }
 
@@ -27928,10 +27471,7 @@ if (__DEV__) {
       // currently schedule the callback in multiple places, will wait until those
       // are consolidated.
 
-      if (
-        includesSyncLane(pendingPassiveEffectsLanes) &&
-        root.tag !== LegacyRoot
-      ) {
+      if (includesSyncLane(pendingPassiveEffectsLanes) && disableLegacyMode) {
         flushPassiveEffects();
       } // Read this again, since a passive effect might have updated it
 
@@ -28127,7 +27667,7 @@ if (__DEV__) {
       }
 
       {
-        commitDoubleInvokeEffectsInDEV(root, true);
+        commitDoubleInvokeEffectsInDEV(root);
       }
 
       executionContext = prevExecutionContext;
@@ -28328,7 +27868,7 @@ if (__DEV__) {
       }
 
       markRootPinged(root, pingedLanes);
-      warnIfSuspenseResolutionNotWrappedWithActDEV(root);
+      warnIfSuspenseResolutionNotWrappedWithActDEV();
 
       if (
         workInProgressRoot === root &&
@@ -28373,7 +27913,7 @@ if (__DEV__) {
       if (retryLane === NoLane) {
         // TODO: Assign this to `suspenseState.retryLane`? to avoid
         // unnecessary entanglement?
-        retryLane = requestRetryLane(boundaryFiber);
+        retryLane = requestRetryLane();
       } // TODO: Special case idle priority?
 
       var root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
@@ -28584,13 +28124,10 @@ if (__DEV__) {
 
     function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
       {
-        if (root.tag !== LegacyRoot) {
+        {
           var doubleInvokeEffects = true;
 
-          if (
-            root.tag === ConcurrentRoot &&
-            !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
-          ) {
+          if (!(root.current.mode & (StrictLegacyMode | StrictEffectsMode))) {
             doubleInvokeEffects = false;
           }
 
@@ -28599,63 +28136,6 @@ if (__DEV__) {
             root.current,
             doubleInvokeEffects
           );
-        } else {
-          legacyCommitDoubleInvokeEffectsInDEV(root.current, hasPassiveEffects);
-        }
-      }
-    }
-
-    function legacyCommitDoubleInvokeEffectsInDEV(fiber, hasPassiveEffects) {
-      // TODO (StrictEffects) Should we set a marker on the root if it contains strict effects
-      // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
-      // Maybe not a big deal since this is DEV only behavior.
-      setCurrentFiber(fiber);
-      invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
-
-      if (hasPassiveEffects) {
-        invokeEffectsInDev(
-          fiber,
-          MountPassiveDev,
-          invokePassiveEffectUnmountInDEV
-        );
-      }
-
-      invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV);
-
-      if (hasPassiveEffects) {
-        invokeEffectsInDev(
-          fiber,
-          MountPassiveDev,
-          invokePassiveEffectMountInDEV
-        );
-      }
-
-      resetCurrentFiber();
-    }
-
-    function invokeEffectsInDev(firstChild, fiberFlags, invokeEffectFn) {
-      var current = firstChild;
-      var subtreeRoot = null;
-
-      while (current != null) {
-        var primarySubtreeFlag = current.subtreeFlags & fiberFlags;
-
-        if (
-          current !== subtreeRoot &&
-          current.child != null &&
-          primarySubtreeFlag !== NoFlags$1
-        ) {
-          current = current.child;
-        } else {
-          if ((current.flags & fiberFlags) !== NoFlags$1) {
-            invokeEffectFn(current);
-          }
-
-          if (current.sibling !== null) {
-            current = current.sibling;
-          } else {
-            current = subtreeRoot = current.return;
-          }
         }
       }
     }
@@ -28665,10 +28145,6 @@ if (__DEV__) {
       {
         if ((executionContext & RenderContext) !== NoContext) {
           // We let the other warning about render phase updates deal with this one.
-          return;
-        }
-
-        if (!(fiber.mode & ConcurrentMode)) {
           return;
         }
 
@@ -28816,31 +28292,9 @@ if (__DEV__) {
 
     function warnIfUpdatesNotWrappedWithActDEV(fiber) {
       {
-        if (fiber.mode & ConcurrentMode) {
+        {
           if (!isConcurrentActEnvironment()) {
             // Not in an act environment. No need to warn.
-            return;
-          }
-        } else {
-          // Legacy mode has additional cases where we suppress a warning.
-          if (!isLegacyActEnvironment()) {
-            // Not in an act environment. No need to warn.
-            return;
-          }
-
-          if (executionContext !== NoContext) {
-            // Legacy mode doesn't warn if the update is batched, i.e.
-            // batchedUpdates or flushSync.
-            return;
-          }
-
-          if (
-            fiber.tag !== FunctionComponent &&
-            fiber.tag !== ForwardRef &&
-            fiber.tag !== SimpleMemoComponent
-          ) {
-            // For backwards compatibility with pre-hooks code, legacy mode only
-            // warns for updates that originate from a hook.
             return;
           }
         }
@@ -28878,7 +28332,6 @@ if (__DEV__) {
     function warnIfSuspenseResolutionNotWrappedWithActDEV(root) {
       {
         if (
-          root.tag !== LegacyRoot &&
           isConcurrentActEnvironment() &&
           ReactCurrentActQueue.current === null
         ) {
@@ -29650,7 +29103,7 @@ if (__DEV__) {
     ) {
       var mode;
 
-      if (tag === ConcurrentRoot) {
+      {
         mode = ConcurrentMode;
 
         if (isStrictMode === true) {
@@ -29663,8 +29116,6 @@ if (__DEV__) {
         ) {
           mode |= ConcurrentUpdatesByDefaultMode;
         }
-      } else {
-        mode = NoMode;
       }
 
       if (isDevToolsPresent) {
@@ -29718,7 +29169,7 @@ if (__DEV__) {
             fiberTag = Mode;
             mode |= StrictLegacyMode;
 
-            if ((mode & ConcurrentMode) !== NoMode) {
+            {
               // Strict effects should never run on legacy roots
               mode |= StrictEffectsMode;
 
@@ -30029,7 +29480,7 @@ if (__DEV__) {
       onRecoverableError,
       formState
     ) {
-      this.tag = tag;
+      this.tag = ConcurrentRoot;
       this.containerInfo = containerInfo;
       this.pendingChildren = null;
       this.current = null;
@@ -30095,15 +29546,8 @@ if (__DEV__) {
 
       {
         {
-          switch (tag) {
-            case ConcurrentRoot:
-              this._debugRootType = hydrate ? "hydrateRoot()" : "createRoot()";
-              break;
-
-            case LegacyRoot:
-              this._debugRootType = hydrate ? "hydrate()" : "render()";
-              break;
-          }
+          // TODO: This varies by each renderer.
+          this._debugRootType = hydrate ? "hydrateRoot()" : "createRoot()";
         }
       }
     }
@@ -30674,7 +30118,7 @@ if (__DEV__) {
         this._surface = Mode$1.Surface(+width, +height, this._tagRef);
         this._mountNode = createContainer(
           this._surface,
-          LegacyRoot,
+          ConcurrentRoot,
           null,
           false,
           false,

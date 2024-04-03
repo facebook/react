@@ -13114,6 +13114,17 @@ function getContextForSubtree(parentComponent) {
   }
   return JSCompiler_inline_result;
 }
+function findHostInstance(component) {
+  var fiber = component._reactInternals;
+  if (void 0 === fiber) {
+    if ("function" === typeof component.render)
+      throw Error(formatProdErrorMessage(188));
+    component = Object.keys(component).join(",");
+    throw Error(formatProdErrorMessage(268, component));
+  }
+  component = findCurrentHostFiber(fiber);
+  return null === component ? null : component.stateNode;
+}
 function createHydrationContainer(
   initialChildren,
   callback,
@@ -13763,19 +13774,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$370;
+  var JSCompiler_inline_result$jscomp$365;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1569 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1569) {
-      var element$jscomp$inline_1570 = document.createElement("div");
-      element$jscomp$inline_1570.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1569 =
-        "function" === typeof element$jscomp$inline_1570.oninput;
+    var isSupported$jscomp$inline_1563 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1563) {
+      var element$jscomp$inline_1564 = document.createElement("div");
+      element$jscomp$inline_1564.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1563 =
+        "function" === typeof element$jscomp$inline_1564.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1569;
-  } else JSCompiler_inline_result$jscomp$370 = !1;
+    JSCompiler_inline_result$jscomp$365 = isSupported$jscomp$inline_1563;
+  } else JSCompiler_inline_result$jscomp$365 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$370 &&
+    JSCompiler_inline_result$jscomp$365 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14147,20 +14158,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1610 = 0;
-  i$jscomp$inline_1610 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1610++
+  var i$jscomp$inline_1604 = 0;
+  i$jscomp$inline_1604 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1604++
 ) {
-  var eventName$jscomp$inline_1611 =
-      simpleEventPluginEvents[i$jscomp$inline_1610],
-    domEventName$jscomp$inline_1612 =
-      eventName$jscomp$inline_1611.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1613 =
-      eventName$jscomp$inline_1611[0].toUpperCase() +
-      eventName$jscomp$inline_1611.slice(1);
+  var eventName$jscomp$inline_1605 =
+      simpleEventPluginEvents[i$jscomp$inline_1604],
+    domEventName$jscomp$inline_1606 =
+      eventName$jscomp$inline_1605.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1607 =
+      eventName$jscomp$inline_1605[0].toUpperCase() +
+      eventName$jscomp$inline_1605.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1612,
-    "on" + capitalizedEvent$jscomp$inline_1613
+    domEventName$jscomp$inline_1606,
+    "on" + capitalizedEvent$jscomp$inline_1607
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17650,121 +17661,6 @@ function isValidContainerLegacy(node) {
         " react-mount-point-unstable " !== node.nodeValue))
   );
 }
-function noopOnRecoverableError$1() {}
-function legacyCreateRootFromDOMContainer$1(
-  container,
-  initialChildren,
-  parentComponent,
-  callback,
-  isHydrationContainer
-) {
-  if (isHydrationContainer) {
-    if ("function" === typeof callback) {
-      var originalCallback = callback;
-      callback = function () {
-        var instance = getPublicRootInstance(root$308);
-        originalCallback.call(instance);
-      };
-    }
-    var root$308 = createHydrationContainer(
-      initialChildren,
-      callback,
-      container,
-      0,
-      null,
-      !1,
-      !1,
-      "",
-      defaultOnUncaughtError,
-      defaultOnCaughtError,
-      noopOnRecoverableError$1,
-      null,
-      null
-    );
-    container._reactRootContainer = root$308;
-    container[internalContainerInstanceKey] = root$308.current;
-    listenToAllSupportedEvents(
-      8 === container.nodeType ? container.parentNode : container
-    );
-    flushSync$1();
-    return root$308;
-  }
-  clearContainer(container);
-  if ("function" === typeof callback) {
-    var originalCallback$309 = callback;
-    callback = function () {
-      var instance = getPublicRootInstance(root$310);
-      originalCallback$309.call(instance);
-    };
-  }
-  var root$310 = createFiberRoot(
-    container,
-    0,
-    !1,
-    null,
-    null,
-    !1,
-    !1,
-    "",
-    defaultOnUncaughtError,
-    defaultOnCaughtError,
-    noopOnRecoverableError$1,
-    null,
-    null
-  );
-  container._reactRootContainer = root$310;
-  container[internalContainerInstanceKey] = root$310.current;
-  listenToAllSupportedEvents(
-    8 === container.nodeType ? container.parentNode : container
-  );
-  flushSync$1(function () {
-    updateContainer(initialChildren, root$310, parentComponent, callback);
-  });
-  return root$310;
-}
-function legacyRenderSubtreeIntoContainer$1(
-  parentComponent,
-  children,
-  container,
-  forceHydrate,
-  callback
-) {
-  var maybeRoot = container._reactRootContainer;
-  if (maybeRoot) {
-    var root = maybeRoot;
-    if ("function" === typeof callback) {
-      var originalCallback = callback;
-      callback = function () {
-        var instance = getPublicRootInstance(root);
-        originalCallback.call(instance);
-      };
-    }
-    updateContainer(children, root, parentComponent, callback);
-  } else
-    root = legacyCreateRootFromDOMContainer$1(
-      container,
-      children,
-      parentComponent,
-      callback,
-      forceHydrate
-    );
-  return getPublicRootInstance(root);
-}
-function findDOMNode(componentOrElement) {
-  if (null == componentOrElement) return null;
-  if (1 === componentOrElement.nodeType) return componentOrElement;
-  var fiber = componentOrElement._reactInternals;
-  if (void 0 === fiber) {
-    if ("function" === typeof componentOrElement.render)
-      throw Error(formatProdErrorMessage(188));
-    componentOrElement = Object.keys(componentOrElement).join(",");
-    throw Error(formatProdErrorMessage(268, componentOrElement));
-  }
-  componentOrElement = findCurrentHostFiber(fiber);
-  componentOrElement =
-    null === componentOrElement ? null : componentOrElement.stateNode;
-  return componentOrElement;
-}
 function registerReactDOMEvent(target, domEventName, isCapturePhaseListener) {
   if (
     1 !== target.nodeType &&
@@ -17792,7 +17688,9 @@ function getCrossOriginStringAs(as, input) {
     return "use-credentials" === input ? input : "";
 }
 var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
-Internals.findDOMNode = findDOMNode;
+Internals.findDOMNode = function (componentOrElement) {
+  return findHostInstance(componentOrElement);
+};
 Internals.Events = [
   getInstanceFromNode,
   getNodeFromInstance,
@@ -17803,10 +17701,10 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1804 = {
+var devToolsConfig$jscomp$inline_1780 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-a76f386a",
+  version: "19.0.0-www-classic-e0c3715f",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17824,10 +17722,10 @@ var devToolsConfig$jscomp$inline_1804 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1804.bundleType,
-  version: devToolsConfig$jscomp$inline_1804.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1804.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1804.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1780.bundleType,
+  version: devToolsConfig$jscomp$inline_1780.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1780.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1780.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17843,14 +17741,14 @@ var devToolsConfig$jscomp$inline_1804 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1804.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1780.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-a76f386a"
+  reconcilerVersion: "19.0.0-www-classic-e0c3715f"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17885,11 +17783,11 @@ function legacyCreateRootFromDOMContainer(
     if ("function" === typeof callback) {
       var originalCallback = callback;
       callback = function () {
-        var instance = getPublicRootInstance(root$312);
+        var instance = getPublicRootInstance(root$308);
         originalCallback.call(instance);
       };
     }
-    var root$312 = createHydrationContainer(
+    var root$308 = createHydrationContainer(
       initialChildren,
       callback,
       container,
@@ -17904,23 +17802,23 @@ function legacyCreateRootFromDOMContainer(
       null,
       null
     );
-    container._reactRootContainer = root$312;
-    container[internalContainerInstanceKey] = root$312.current;
+    container._reactRootContainer = root$308;
+    container[internalContainerInstanceKey] = root$308.current;
     listenToAllSupportedEvents(
       8 === container.nodeType ? container.parentNode : container
     );
     flushSync$1();
-    return root$312;
+    return root$308;
   }
   clearContainer(container);
   if ("function" === typeof callback) {
-    var originalCallback$313 = callback;
+    var originalCallback$309 = callback;
     callback = function () {
-      var instance = getPublicRootInstance(root$314);
-      originalCallback$313.call(instance);
+      var instance = getPublicRootInstance(root$310);
+      originalCallback$309.call(instance);
     };
   }
-  var root$314 = createFiberRoot(
+  var root$310 = createFiberRoot(
     container,
     0,
     !1,
@@ -17935,15 +17833,15 @@ function legacyCreateRootFromDOMContainer(
     null,
     null
   );
-  container._reactRootContainer = root$314;
-  container[internalContainerInstanceKey] = root$314.current;
+  container._reactRootContainer = root$310;
+  container[internalContainerInstanceKey] = root$310.current;
   listenToAllSupportedEvents(
     8 === container.nodeType ? container.parentNode : container
   );
   flushSync$1(function () {
-    updateContainer(initialChildren, root$314, parentComponent, callback);
+    updateContainer(initialChildren, root$310, parentComponent, callback);
   });
-  return root$314;
+  return root$310;
 }
 function legacyRenderSubtreeIntoContainer(
   parentComponent,
@@ -18035,7 +17933,13 @@ exports.createRoot = function (container, options) {
   );
   return new ReactDOMRoot(options);
 };
-exports.findDOMNode = findDOMNode;
+exports.findDOMNode = function (componentOrElement) {
+  return null == componentOrElement
+    ? null
+    : 1 === componentOrElement.nodeType
+    ? componentOrElement
+    : findHostInstance(componentOrElement);
+};
 exports.flushSync = function (fn) {
   return flushSync$1(fn);
 };
@@ -18214,7 +18118,7 @@ exports.unmountComponentAtNode = function (container) {
     throw Error(formatProdErrorMessage(299));
   return container._reactRootContainer
     ? (flushSync$1(function () {
-        legacyRenderSubtreeIntoContainer$1(
+        legacyRenderSubtreeIntoContainer(
           null,
           null,
           container,
@@ -18268,7 +18172,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
     throw Error(formatProdErrorMessage(299));
   if (null == parentComponent || void 0 === parentComponent._reactInternals)
     throw Error(formatProdErrorMessage(38));
-  return legacyRenderSubtreeIntoContainer$1(
+  return legacyRenderSubtreeIntoContainer(
     parentComponent,
     element,
     containerNode,
@@ -18287,7 +18191,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-a76f386a";
+exports.version = "19.0.0-www-classic-e0c3715f";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
