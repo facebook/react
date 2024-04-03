@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/*
- * Copyright (c) Facebook, Inc. and its affiliates.
- */
 
 import invariant from "invariant";
 import { defaultStore } from "../defaultStore";

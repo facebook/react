@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/*
- * Copyright (c) Facebook, Inc. and its affiliates.
- */
 
 /**
  * Sync from <https://github.com/reactjs/reactjs.org/blob/main/beta/colors.js>.

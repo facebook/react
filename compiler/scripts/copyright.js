@@ -18,7 +18,7 @@ const META_COPYRIGHT_COMMENT_BLOCK =
  * LICENSE file in the root directory of this source tree.
  */`.trim() + "\n\n";
 
-const files = glob.sync("**/*.{js,ts,tsx,jsx}", {
+const files = glob.sync("**/*.{js,ts,tsx,jsx,rs}", {
   ignore: [
     "**/dist/**",
     "**/node_modules/**",

@@ -1,4 +1,11 @@
 /**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
  * Our philosophy for linting is that lints should be very high-signal:
  * - Error, don't warn. If it's worth mentioning it's worth fixing.
  * - Enable rules that consistently identify real problems. If we frequently would have to
