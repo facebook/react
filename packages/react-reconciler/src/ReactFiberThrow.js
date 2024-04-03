@@ -559,39 +559,34 @@ function throwException(
       // Even though the user may not be affected by this error, we should
       // still log it so it can be fixed.
       if (value !== HydrationMismatchException) {
-        queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering from the nearest Suspense boundary.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
       }
-      const appendix = createCapturedValueAtFiber<mixed>(
-        new Error(
-          'There was an error while hydrating this Suspense boundary. ' +
-            'Switched to client rendering.',
-        ),
-        suspenseBoundary,
-      );
-      queueHydrationError(appendix);
       return false;
     } else {
-      const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
       if (value !== HydrationMismatchException) {
-        queueHydrationError(rootErrorInfo);
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering the entire root.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
       }
       const workInProgress: Fiber = (root.current: any).alternate;
-
-      const appendix = createCapturedValueAtFiber<mixed>(
-        new Error(
-          'There was an error while hydrating. Because the error happened outside ' +
-            'of a Suspense boundary, the entire root will switch to ' +
-            'client rendering.',
-        ),
-        workInProgress,
-      );
-      queueHydrationError(appendix);
-
       // Schedule an update at the root to log the error but this shouldn't
       // actually happen because we should recover.
       workInProgress.flags |= ShouldCapture;
       const lane = pickArbitraryLane(rootRenderLanes);
       workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+      const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
       const update = createRootErrorUpdate(
         workInProgress.stateNode,
         rootErrorInfo, // This should never actually get logged due to the recovery.
