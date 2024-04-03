@@ -28457,24 +28457,6 @@ if (__DEV__) {
       }
     }
 
-    function resolveDefaultProps(Component, baseProps) {
-      if (Component && Component.defaultProps) {
-        // Resolve default props. Taken from ReactElement
-        var props = assign({}, baseProps);
-        var defaultProps = Component.defaultProps;
-
-        for (var propName in defaultProps) {
-          if (props[propName] === undefined) {
-            props[propName] = defaultProps[propName];
-          }
-        }
-
-        return props;
-      }
-
-      return baseProps;
-    }
-
     var fakeInternalInstance = {};
     var didWarnAboutStateAssignmentForComponent;
     var didWarnAboutUninitializedState;
@@ -29309,7 +29291,12 @@ if (__DEV__) {
       renderLanes
     ) {
       var instance = workInProgress.stateNode;
-      var oldProps = workInProgress.memoizedProps;
+      var unresolvedOldProps = workInProgress.memoizedProps;
+      var oldProps = resolveClassComponentProps(
+        ctor,
+        unresolvedOldProps,
+        workInProgress.type === workInProgress.elementType
+      );
       instance.props = oldProps;
       var oldContext = instance.context;
       var contextType = ctor.contextType;
@@ -29322,7 +29309,13 @@ if (__DEV__) {
       var getDerivedStateFromProps = ctor.getDerivedStateFromProps;
       var hasNewLifecycles =
         typeof getDerivedStateFromProps === "function" ||
-        typeof instance.getSnapshotBeforeUpdate === "function"; // Note: During these life-cycles, instance.props/instance.state are what
+        typeof instance.getSnapshotBeforeUpdate === "function"; // When comparing whether props changed, we should compare using the
+      // unresolved props object that is stored on the fiber, rather than the
+      // one that gets assigned to the instance, because that object may have been
+      // cloned to resolve default props and/or remove `ref`.
+
+      var unresolvedNewProps = workInProgress.pendingProps;
+      var didReceiveNewProps = unresolvedNewProps !== unresolvedOldProps; // Note: During these life-cycles, instance.props/instance.state are what
       // ever the previously attempted to render - not the "current". However,
       // during componentDidUpdate we pass the "current" props.
       // In order to support react-lifecycles-compat polyfilled components,
@@ -29333,7 +29326,7 @@ if (__DEV__) {
         (typeof instance.UNSAFE_componentWillReceiveProps === "function" ||
           typeof instance.componentWillReceiveProps === "function")
       ) {
-        if (oldProps !== newProps || oldContext !== nextContext) {
+        if (didReceiveNewProps || oldContext !== nextContext) {
           callComponentWillReceiveProps(
             workInProgress,
             instance,
@@ -29351,7 +29344,7 @@ if (__DEV__) {
       newState = workInProgress.memoizedState;
 
       if (
-        oldProps === newProps &&
+        !didReceiveNewProps &&
         oldState === newState &&
         !hasContextChanged() &&
         !checkHasForceUpdateAfterProcessing()
@@ -29448,10 +29441,11 @@ if (__DEV__) {
       var instance = workInProgress.stateNode;
       cloneUpdateQueue(current, workInProgress);
       var unresolvedOldProps = workInProgress.memoizedProps;
-      var oldProps =
+      var oldProps = resolveClassComponentProps(
+        ctor,
+        unresolvedOldProps,
         workInProgress.type === workInProgress.elementType
-          ? unresolvedOldProps
-          : resolveDefaultProps(workInProgress.type, unresolvedOldProps);
+      );
       instance.props = oldProps;
       var unresolvedNewProps = workInProgress.pendingProps;
       var oldContext = instance.context;
@@ -29619,6 +29613,64 @@ if (__DEV__) {
       instance.state = newState;
       instance.context = nextContext;
       return shouldUpdate;
+    }
+
+    function resolveClassComponentProps(
+      Component,
+      baseProps, // Only resolve default props if this is a lazy component. Otherwise, they
+      // would have already been resolved by the JSX runtime.
+      // TODO: We're going to remove default prop resolution from the JSX runtime
+      // and keep it only for class components. As part of that change, we should
+      // remove this extra check.
+      alreadyResolvedDefaultProps
+    ) {
+      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
+
+      var defaultProps = Component.defaultProps;
+
+      if (defaultProps && !alreadyResolvedDefaultProps) {
+        newProps = assign({}, newProps, baseProps);
+
+        for (var propName in defaultProps) {
+          if (newProps[propName] === undefined) {
+            newProps[propName] = defaultProps[propName];
+          }
+        }
+      }
+
+      if (enableRefAsProp) {
+        // Remove ref from the props object, if it exists.
+        if ("ref" in newProps) {
+          if (newProps === baseProps) {
+            newProps = assign({}, newProps);
+          }
+
+          delete newProps.ref;
+        }
+      }
+
+      return newProps;
+    }
+
+    function resolveDefaultProps(Component, baseProps) {
+      // TODO: Remove support for default props for everything except class
+      // components, including setting default props on a lazy wrapper around a
+      // class type.
+      if (Component && Component.defaultProps) {
+        // Resolve default props. Taken from ReactElement
+        var props = assign({}, baseProps);
+        var defaultProps = Component.defaultProps;
+
+        for (var propName in defaultProps) {
+          if (props[propName] === undefined) {
+            props[propName] = defaultProps[propName];
+          }
+        }
+
+        return props;
+      }
+
+      return baseProps;
     }
 
     var CapturedStacks = new WeakMap();
@@ -31813,10 +31865,14 @@ if (__DEV__) {
       var Component = init(payload); // Store the unwrapped component in the type.
 
       workInProgress.type = Component;
-      var resolvedProps = resolveDefaultProps(Component, props);
 
       if (typeof Component === "function") {
         if (isFunctionClassComponent(Component)) {
+          var resolvedProps = resolveClassComponentProps(
+            Component,
+            props,
+            false
+          );
           workInProgress.tag = ClassComponent;
 
           {
@@ -31832,6 +31888,8 @@ if (__DEV__) {
             renderLanes
           );
         } else {
+          var _resolvedProps = resolveDefaultProps(Component, props);
+
           workInProgress.tag = FunctionComponent;
 
           {
@@ -31844,7 +31902,7 @@ if (__DEV__) {
             null,
             workInProgress,
             Component,
-            resolvedProps,
+            _resolvedProps,
             renderLanes
           );
         }
@@ -31852,6 +31910,8 @@ if (__DEV__) {
         var $$typeof = Component.$$typeof;
 
         if ($$typeof === REACT_FORWARD_REF_TYPE) {
+          var _resolvedProps2 = resolveDefaultProps(Component, props);
+
           workInProgress.tag = ForwardRef;
 
           {
@@ -31863,16 +31923,18 @@ if (__DEV__) {
             null,
             workInProgress,
             Component,
-            resolvedProps,
+            _resolvedProps2,
             renderLanes
           );
         } else if ($$typeof === REACT_MEMO_TYPE) {
+          var _resolvedProps3 = resolveDefaultProps(Component, props);
+
           workInProgress.tag = MemoComponent;
           return updateMemoComponent(
             null,
             workInProgress,
             Component,
-            resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
+            resolveDefaultProps(Component.type, _resolvedProps3), // The inner type can have defaults too
             renderLanes
           );
         }
@@ -33885,16 +33947,17 @@ if (__DEV__) {
           var _Component = workInProgress.type;
           var _unresolvedProps = workInProgress.pendingProps;
 
-          var _resolvedProps =
+          var _resolvedProps4 = resolveClassComponentProps(
+            _Component,
+            _unresolvedProps,
             workInProgress.elementType === _Component
-              ? _unresolvedProps
-              : resolveDefaultProps(_Component, _unresolvedProps);
+          );
 
           return updateClassComponent(
             current,
             workInProgress,
             _Component,
-            _resolvedProps,
+            _resolvedProps4,
             renderLanes
           );
         }
@@ -33930,7 +33993,7 @@ if (__DEV__) {
           var type = workInProgress.type;
           var _unresolvedProps2 = workInProgress.pendingProps;
 
-          var _resolvedProps2 =
+          var _resolvedProps5 =
             workInProgress.elementType === type
               ? _unresolvedProps2
               : resolveDefaultProps(type, _unresolvedProps2);
@@ -33939,7 +34002,7 @@ if (__DEV__) {
             current,
             workInProgress,
             type,
-            _resolvedProps2,
+            _resolvedProps5,
             renderLanes
           );
         }
@@ -33963,14 +34026,14 @@ if (__DEV__) {
           var _type = workInProgress.type;
           var _unresolvedProps3 = workInProgress.pendingProps; // Resolve outer props first, then resolve inner props.
 
-          var _resolvedProps3 = resolveDefaultProps(_type, _unresolvedProps3);
+          var _resolvedProps6 = resolveDefaultProps(_type, _unresolvedProps3);
 
-          _resolvedProps3 = resolveDefaultProps(_type.type, _resolvedProps3);
+          _resolvedProps6 = resolveDefaultProps(_type.type, _resolvedProps6);
           return updateMemoComponent(
             current,
             workInProgress,
             _type,
-            _resolvedProps3,
+            _resolvedProps6,
             renderLanes
           );
         }
@@ -36763,7 +36826,11 @@ if (__DEV__) {
     }
 
     function callComponentWillUnmountWithTimer(current, instance) {
-      instance.props = current.memoizedProps;
+      instance.props = resolveClassComponentProps(
+        current.type,
+        current.memoizedProps,
+        current.elementType === current.type
+      );
       instance.state = current.memoizedState;
 
       if (shouldProfile(current)) {
@@ -36989,7 +37056,8 @@ if (__DEV__) {
 
               {
                 if (
-                  finishedWork.type === finishedWork.elementType &&
+                  !finishedWork.type.defaultProps &&
+                  !("ref" in finishedWork.memoizedProps) &&
                   !didWarnAboutReassigningProps
                 ) {
                   if (instance.props !== finishedWork.memoizedProps) {
@@ -37017,9 +37085,11 @@ if (__DEV__) {
               }
 
               var snapshot = instance.getSnapshotBeforeUpdate(
-                finishedWork.elementType === finishedWork.type
-                  ? prevProps
-                  : resolveDefaultProps(finishedWork.type, prevProps),
+                resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                ),
                 prevState
               );
 
@@ -37350,7 +37420,8 @@ if (__DEV__) {
         // TODO: revisit this when we implement resuming.
         {
           if (
-            finishedWork.type === finishedWork.elementType &&
+            !finishedWork.type.defaultProps &&
+            !("ref" in finishedWork.memoizedProps) &&
             !didWarnAboutReassigningProps
           ) {
             if (instance.props !== finishedWork.memoizedProps) {
@@ -37394,17 +37465,19 @@ if (__DEV__) {
           }
         }
       } else {
-        var prevProps =
+        var prevProps = resolveClassComponentProps(
+          finishedWork.type,
+          current.memoizedProps,
           finishedWork.elementType === finishedWork.type
-            ? current.memoizedProps
-            : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+        );
         var prevState = current.memoizedState; // We could update instance props and state here,
         // but instead we rely on them being set during last render.
         // TODO: revisit this when we implement resuming.
 
         {
           if (
-            finishedWork.type === finishedWork.elementType &&
+            !finishedWork.type.defaultProps &&
+            !("ref" in finishedWork.memoizedProps) &&
             !didWarnAboutReassigningProps
           ) {
             if (instance.props !== finishedWork.memoizedProps) {
@@ -37468,7 +37541,8 @@ if (__DEV__) {
 
         {
           if (
-            finishedWork.type === finishedWork.elementType &&
+            !finishedWork.type.defaultProps &&
+            !("ref" in finishedWork.memoizedProps) &&
             !didWarnAboutReassigningProps
           ) {
             if (instance.props !== finishedWork.memoizedProps) {
@@ -46460,7 +46534,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-b20d143e";
+    var ReactVersion = "19.0.0-www-modern-e1f40a3f";
 
     function createPortal$1(
       children,
