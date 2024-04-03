@@ -47,7 +47,7 @@ type HookLogEntry = {
   stackError: Error,
   value: mixed,
   debugInfo: ReactDebugInfo | null,
-  dispatcherMethodName: string,
+  dispatcherHookName: string,
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -210,7 +210,7 @@ function use<T>(usable: Usable<T>): T {
             value: fulfilledValue,
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
-            dispatcherMethodName: 'use',
+            dispatcherHookName: 'Use',
           });
           return fulfilledValue;
         }
@@ -228,7 +228,7 @@ function use<T>(usable: Usable<T>): T {
         value: thenable,
         debugInfo:
           thenable._debugInfo === undefined ? null : thenable._debugInfo,
-        dispatcherMethodName: 'use',
+        dispatcherHookName: 'Use',
       });
       throw SuspenseException;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -241,7 +241,7 @@ function use<T>(usable: Usable<T>): T {
         stackError: new Error(),
         value,
         debugInfo: null,
-        dispatcherMethodName: 'use',
+        dispatcherHookName: 'Use',
       });
 
       return value;
@@ -260,7 +260,7 @@ function useContext<T>(context: ReactContext<T>): T {
     stackError: new Error(),
     value: value,
     debugInfo: null,
-    dispatcherMethodName: 'useContext',
+    dispatcherHookName: 'Context',
   });
   return value;
 }
@@ -282,7 +282,7 @@ function useState<S>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
-    dispatcherMethodName: 'useState',
+    dispatcherHookName: 'State',
   });
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -305,7 +305,7 @@ function useReducer<S, I, A>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
-    dispatcherMethodName: 'useReducer',
+    dispatcherHookName: 'Reducer',
   });
   return [state, (action: A) => {}];
 }
@@ -319,7 +319,7 @@ function useRef<T>(initialValue: T): {current: T} {
     stackError: new Error(),
     value: ref.current,
     debugInfo: null,
-    dispatcherMethodName: 'useRef',
+    dispatcherHookName: 'Ref',
   });
   return ref;
 }
@@ -332,7 +332,7 @@ function useCacheRefresh(): () => void {
     stackError: new Error(),
     value: hook !== null ? hook.memoizedState : function refresh() {},
     debugInfo: null,
-    dispatcherMethodName: 'useCacheRefresh',
+    dispatcherHookName: 'CacheRefresh',
   });
   return () => {};
 }
@@ -348,7 +348,7 @@ function useLayoutEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
-    dispatcherMethodName: 'useLayoutEffect',
+    dispatcherHookName: 'LayoutEffect',
   });
 }
 
@@ -363,7 +363,7 @@ function useInsertionEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
-    dispatcherMethodName: 'useInsertionEffect',
+    dispatcherHookName: 'InsertionEffect',
   });
 }
 
@@ -378,7 +378,7 @@ function useEffect(
     stackError: new Error(),
     value: create,
     debugInfo: null,
-    dispatcherMethodName: 'useEffect',
+    dispatcherHookName: 'Effect',
   });
 }
 
@@ -402,7 +402,7 @@ function useImperativeHandle<T>(
     stackError: new Error(),
     value: instance,
     debugInfo: null,
-    dispatcherMethodName: 'useImperativeHandle',
+    dispatcherHookName: 'ImperativeHandle',
   });
 }
 
@@ -413,7 +413,7 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     stackError: new Error(),
     value: typeof formatterFn === 'function' ? formatterFn(value) : value,
     debugInfo: null,
-    dispatcherMethodName: 'useDebugValue',
+    dispatcherHookName: 'DebugValue',
   });
 }
 
@@ -425,7 +425,7 @@ function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
     stackError: new Error(),
     value: hook !== null ? hook.memoizedState[0] : callback,
     debugInfo: null,
-    dispatcherMethodName: 'useCallback',
+    dispatcherHookName: 'Callback',
   });
   return callback;
 }
@@ -442,7 +442,7 @@ function useMemo<T>(
     stackError: new Error(),
     value,
     debugInfo: null,
-    dispatcherMethodName: 'useMemo',
+    dispatcherHookName: 'Memo',
   });
   return value;
 }
@@ -464,7 +464,7 @@ function useSyncExternalStore<T>(
     stackError: new Error(),
     value,
     debugInfo: null,
-    dispatcherMethodName: 'useSyncExternalStore',
+    dispatcherHookName: 'SyncExternalStore',
   });
   return value;
 }
@@ -487,7 +487,7 @@ function useTransition(): [
     stackError: new Error(),
     value: isPending,
     debugInfo: null,
-    dispatcherMethodName: 'useTransition',
+    dispatcherHookName: 'Transition',
   });
   return [isPending, () => {}];
 }
@@ -501,7 +501,7 @@ function useDeferredValue<T>(value: T, initialValue?: T): T {
     stackError: new Error(),
     value: prevValue,
     debugInfo: null,
-    dispatcherMethodName: 'useDeferredValue',
+    dispatcherHookName: 'DeferredValue',
   });
   return prevValue;
 }
@@ -515,7 +515,7 @@ function useId(): string {
     stackError: new Error(),
     value: id,
     debugInfo: null,
-    dispatcherMethodName: 'useId',
+    dispatcherHookName: 'Id',
   });
   return id;
 }
@@ -566,7 +566,7 @@ function useOptimistic<S, A>(
     stackError: new Error(),
     value: state,
     debugInfo: null,
-    dispatcherMethodName: 'useOptimistic',
+    dispatcherHookName: 'Optimistic',
   });
   return [state, (action: A) => {}];
 }
@@ -626,7 +626,7 @@ function useFormState<S, P>(
     stackError: stackError,
     value: value,
     debugInfo: debugInfo,
-    dispatcherMethodName: 'useFormState',
+    dispatcherHookName: 'FormState',
   });
 
   if (error !== null) {
@@ -696,7 +696,7 @@ function useActionState<S, P>(
     stackError: stackError,
     value: value,
     debugInfo: debugInfo,
-    dispatcherMethodName: 'useActionState',
+    dispatcherHookName: 'ActionState',
   });
 
   if (error !== null) {
@@ -835,16 +835,7 @@ function findCommonAncestorIndex(rootStack: any, hookStack: any) {
 }
 
 function isReactWrapper(functionName: any, wrapperName: string) {
-  if (!functionName) {
-    return false;
-  }
-  if (functionName.length < wrapperName.length) {
-    return false;
-  }
-  return (
-    functionName.lastIndexOf(wrapperName) ===
-    functionName.length - wrapperName.length
-  );
+  return parseHookName(functionName) === wrapperName;
 }
 
 function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
@@ -860,13 +851,13 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
       // This prohibits nesting dispatcher calls in hooks.
       if (
         i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.dispatcherMethodName)
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
       }
       if (
         i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.dispatcherMethodName)
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
       }
@@ -904,7 +895,15 @@ function parseHookName(functionName: void | string): string {
   if (!functionName) {
     return '';
   }
-  let startIndex = functionName.lastIndexOf('.');
+  let startIndex = functionName.lastIndexOf('[as ');
+
+  if (startIndex !== -1) {
+    // Workaround for sourcemaps in Jest and Chrome.
+    // In `node --enable-source-maps`, we don't see "Object.useHostTransitionStatus [as useFormStatus]" but "Object.useFormStatus"
+    // "Object.useHostTransitionStatus [as useFormStatus]" -> "useFormStatus"
+    return parseHookName(functionName.slice(startIndex + '[as '.length, -1));
+  }
+  startIndex = functionName.lastIndexOf('.');
   if (startIndex === -1) {
     startIndex = 0;
   } else {
@@ -939,7 +938,7 @@ function buildTree(
         parseHookName(primitiveFrame.functionName) ||
         // Older versions of React do not have sourcemaps.
         // In those versions there was always a 1:1 mapping between wrapper and dispatcher method.
-        parseHookName(hook.dispatcherMethodName);
+        parseHookName(hook.dispatcherHookName);
     }
     if (stack !== null) {
       // Note: The indices 0 <= n < length-1 will contain the names.
