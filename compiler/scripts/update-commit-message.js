@@ -5,26 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *
  * INSTALLATION:
- *   - $ npm install octokit
- *   - Update TOKEN after creating token from
- *     https://github.com/settings/tokens
- *   - Update REPO_LOCAL_PATH to point to local Forget repo
+ *   - `$ npm install octokit
+ *   - Get a token from https://github.com/settings/tokens for use in the command below,
+ *     set the token value as the GITHUB_AUTH_TOKEN environment variable
  *
  *  USAGE:
- *   - $ git filter-branch -f --msg-filter "node script-filter-branch.mjs" 2364096862b72cf4d801ef2008c54252335a2df9..HEAD
+ *   - $ GITHUB_AUTH_TOKEN="..." git filter-branch -f --msg-filter "node update-commit-message.js" 2364096862b72cf4d801ef2008c54252335a2df9..HEAD
  */
 
-import { Octokit, App } from "octokit";
-
-/*
- * UPDATE ${TOKEN} and ${REPO_LOCAL_PATH} before running this!
- */
-const TOKEN = "";
-const REPO_LOCAL_PATH = "";
+const { Octokit, App } = require("octokit");
+const fs = require("fs");
 
 const OWNER = "facebook";
 const REPO = "react-forget";
-const octokit = new Octokit({ auth: TOKEN });
+const octokit = new Octokit({ auth: process.env.GITHUB_AUTH_TOKEN });
 
 const fetchPullRequest = async (pullNumber) => {
   const response = await octokit.request(
@@ -109,9 +103,24 @@ function parsePullRequestNumber(text) {
   if (!text) {
     return null;
   }
-  const regex = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/(\d+)/;
-  const match = text.match(regex);
-  return match ? match[1] : null;
+  const ghstackUrlRegex =
+    /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/(\d+)/;
+  const ghstackMatch = text.match(ghstackUrlRegex);
+  if (ghstackMatch) {
+    return ghstackMatch[1];
+  }
+  const firstLine = text
+    .split("\n")
+    .filter((text) => text.trim().length > 0)[0];
+  if (firstLine == null) {
+    return null;
+  }
+  const prNumberRegex = /\(#(\d{3,})\)\s*$/;
+  const prNumberMatch = firstLine.match(prNumberRegex);
+  if (prNumberMatch) {
+    return prNumberMatch[1];
+  }
+  return null;
 }
 
 async function main() {
