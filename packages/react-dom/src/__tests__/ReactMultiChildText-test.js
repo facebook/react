@@ -174,7 +174,6 @@ describe('ReactMultiChildText', () => {
     ]);
   });
 
-  // @gate enableBigIntSupport
   it('should correctly handle bigint children for render and update', async () => {
     // prettier-ignore
     await testAllPermutations([

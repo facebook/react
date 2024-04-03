@@ -80,7 +80,6 @@ describe('ReactDOMTextarea', () => {
     expect(node.value).toBe('0');
   });
 
-  // @gate enableBigIntSupport
   it('should display `defaultValue` of bigint 0', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

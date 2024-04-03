@@ -846,7 +846,6 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  // @gate enableBigIntSupport
   it('should display `value` of bigint 5', async () => {
     await act(() => {
       root.render(<input type="text" value={5n} onChange={emptyFunction} />);
