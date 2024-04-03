@@ -9749,14 +9749,11 @@ if (__DEV__) {
 
     function mountRef(initialValue) {
       var hook = mountWorkInProgressHook();
-
-      {
-        var _ref2 = {
-          current: initialValue
-        };
-        hook.memoizedState = _ref2;
-        return _ref2;
-      }
+      var ref = {
+        current: initialValue
+      };
+      hook.memoizedState = ref;
+      return ref;
     }
 
     function updateRef(initialValue) {
@@ -26836,7 +26833,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-59157927";
+    var ReactVersion = "19.0.0-www-modern-ea7c02d5";
 
     // Might add PROFILE later.
 

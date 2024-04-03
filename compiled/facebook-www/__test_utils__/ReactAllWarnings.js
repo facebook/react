@@ -54,8 +54,6 @@ export default [
   "%s: It is not recommended to assign props directly to state because updates to props won't be reflected in state. In most cases, it is better to use props directly.",
   "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
   "%s: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.",
-  "%s: Unsafe read of a mutable value during render.\n\nReading from a ref during render is only safe if:\n1. The ref value has not been updated, or\n2. The ref holds a lazily-initialized value that is only set once.\n",
-  "%s: Unsafe write of a mutable value during render.\n\nWriting to a ref during render is only safe if the ref holds a lazily-initialized value that is only set once.\n",
   "%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)",
   "%s: `ref` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)",
   "%s: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
