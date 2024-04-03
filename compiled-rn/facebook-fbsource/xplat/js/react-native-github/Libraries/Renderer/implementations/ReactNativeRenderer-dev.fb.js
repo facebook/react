@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b4fc5df79fb17a2da678b5f79de50f7e>>
+ * @generated SignedSource<<22a535e2c48d800961ea18814927a538>>
  */
 
 "use strict";
@@ -993,8 +993,6 @@ if (__DEV__) {
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
-    var IndeterminateComponent = 2; // Before we know whether it is function or class
-
     var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
 
     var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
@@ -1021,6 +1019,7 @@ if (__DEV__) {
     var TracingMarkerComponent = 25;
     var HostHoistable = 26;
     var HostSingleton = 27;
+    var IncompleteFunctionComponent = 28;
 
     /**
      * Instance of element that should respond to touch/move types of interactions,
@@ -2971,7 +2970,6 @@ to return true:wantsResponderID|                            |
         case ClassComponent:
         case FunctionComponent:
         case IncompleteClassComponent:
-        case IndeterminateComponent:
         case MemoComponent:
         case SimpleMemoComponent:
           if (typeof type === "function") {
@@ -6487,7 +6485,6 @@ to return true:wantsResponderID|                            |
           return "SuspenseList";
 
         case FunctionComponent:
-        case IndeterminateComponent:
         case SimpleMemoComponent:
           var fn = fiber.type;
           return fn.displayName || fn.name || null;
@@ -8882,7 +8879,6 @@ to return true:wantsResponderID|                            |
           return describeBuiltInComponentFrame("SuspenseList", owner);
 
         case FunctionComponent:
-        case IndeterminateComponent:
         case SimpleMemoComponent:
           return describeFunctionComponentFrame(fiber.type, owner);
 
@@ -16404,17 +16400,6 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function adoptClassInstance(workInProgress, instance) {
-      instance.updater = classComponentUpdater;
-      workInProgress.stateNode = instance; // The instance needs access to the fiber so that it can schedule updates
-
-      set(instance, workInProgress);
-
-      {
-        instance._reactInternalInstance = fakeInternalInstance;
-      }
-    }
-
     function constructClassInstance(workInProgress, ctor, props) {
       var isLegacyContextConsumer = false;
       var unmaskedContext = emptyContextObject;
@@ -16490,7 +16475,14 @@ to return true:wantsResponderID|                            |
         instance.state !== null && instance.state !== undefined
           ? instance.state
           : null);
-      adoptClassInstance(workInProgress, instance);
+      instance.updater = classComponentUpdater;
+      workInProgress.stateNode = instance; // The instance needs access to the fiber so that it can schedule updates
+
+      set(instance, workInProgress);
+
+      {
+        instance._reactInternalInstance = fakeInternalInstance;
+      }
 
       {
         if (
@@ -17441,6 +17433,14 @@ to return true:wantsResponderID|                            |
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update, SyncLane);
             }
+          } else if (sourceFiber.tag === FunctionComponent) {
+            var _currentSourceFiber = sourceFiber.alternate;
+
+            if (_currentSourceFiber === null) {
+              // This is a new mount. Change the tag so it's not mistaken for a
+              // completed function component.
+              sourceFiber.tag = IncompleteFunctionComponent;
+            }
           } // The source fiber did not complete. Mark it with Sync priority to
           // indicate that it still has pending work.
 
@@ -17758,7 +17758,6 @@ to return true:wantsResponderID|                            |
     );
     var didReceiveUpdate = false;
     var didWarnAboutBadClass;
-    var didWarnAboutModulePatternComponent;
     var didWarnAboutContextTypeOnFunctionComponent;
     var didWarnAboutGetDerivedStateOnFunctionComponent;
     var didWarnAboutFunctionRefs;
@@ -17769,7 +17768,6 @@ to return true:wantsResponderID|                            |
 
     {
       didWarnAboutBadClass = {};
-      didWarnAboutModulePatternComponent = {};
       didWarnAboutContextTypeOnFunctionComponent = {};
       didWarnAboutGetDerivedStateOnFunctionComponent = {};
       didWarnAboutFunctionRefs = {};
@@ -18383,6 +18381,24 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    function mountIncompleteFunctionComponent(
+      _current,
+      workInProgress,
+      Component,
+      nextProps,
+      renderLanes
+    ) {
+      resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
+      workInProgress.tag = FunctionComponent;
+      return updateFunctionComponent(
+        null,
+        workInProgress,
+        Component,
+        nextProps,
+        renderLanes
+      );
+    }
+
     function updateFunctionComponent(
       current,
       workInProgress,
@@ -18390,6 +18406,39 @@ to return true:wantsResponderID|                            |
       nextProps,
       renderLanes
     ) {
+      {
+        if (
+          Component.prototype &&
+          typeof Component.prototype.render === "function"
+        ) {
+          var componentName = getComponentNameFromType(Component) || "Unknown";
+
+          if (!didWarnAboutBadClass[componentName]) {
+            error(
+              "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+                "This is likely to cause errors. Change %s to extend React.Component instead.",
+              componentName,
+              componentName
+            );
+
+            didWarnAboutBadClass[componentName] = true;
+          }
+        }
+
+        if (workInProgress.mode & StrictLegacyMode) {
+          ReactStrictModeWarnings.recordLegacyContextWarning(
+            workInProgress,
+            null
+          );
+        }
+
+        if (current === null) {
+          // Some validations were previously done in mountIndeterminateComponent however and are now run
+          // in updateFuntionComponent but only on mount
+          validateFunctionComponentInDev(workInProgress, workInProgress.type);
+        }
+      }
+
       var context;
 
       {
@@ -18854,70 +18903,68 @@ to return true:wantsResponderID|                            |
       var Component = init(payload); // Store the unwrapped component in the type.
 
       workInProgress.type = Component;
-      var resolvedTag = (workInProgress.tag =
-        resolveLazyComponentTag(Component));
       var resolvedProps = resolveDefaultProps(Component, props);
-      var child;
 
-      switch (resolvedTag) {
-        case FunctionComponent: {
+      if (typeof Component === "function") {
+        if (isFunctionClassComponent(Component)) {
+          workInProgress.tag = ClassComponent;
+
+          {
+            workInProgress.type = Component =
+              resolveClassForHotReloading(Component);
+          }
+
+          return updateClassComponent(
+            null,
+            workInProgress,
+            Component,
+            resolvedProps,
+            renderLanes
+          );
+        } else {
+          workInProgress.tag = FunctionComponent;
+
           {
             validateFunctionComponentInDev(workInProgress, Component);
             workInProgress.type = Component =
               resolveFunctionForHotReloading(Component);
           }
 
-          child = updateFunctionComponent(
+          return updateFunctionComponent(
             null,
             workInProgress,
             Component,
             resolvedProps,
             renderLanes
           );
-          return child;
         }
+      } else if (Component !== undefined && Component !== null) {
+        var $$typeof = Component.$$typeof;
 
-        case ClassComponent: {
-          {
-            workInProgress.type = Component =
-              resolveClassForHotReloading(Component);
-          }
+        if ($$typeof === REACT_FORWARD_REF_TYPE) {
+          workInProgress.tag = ForwardRef;
 
-          child = updateClassComponent(
-            null,
-            workInProgress,
-            Component,
-            resolvedProps,
-            renderLanes
-          );
-          return child;
-        }
-
-        case ForwardRef: {
           {
             workInProgress.type = Component =
               resolveForwardRefForHotReloading(Component);
           }
 
-          child = updateForwardRef(
+          return updateForwardRef(
             null,
             workInProgress,
             Component,
             resolvedProps,
             renderLanes
           );
-          return child;
-        }
-
-        case MemoComponent: {
-          child = updateMemoComponent(
+        } else if ($$typeof === REACT_MEMO_TYPE) {
+          workInProgress.tag = MemoComponent;
+          return updateMemoComponent(
             null,
             workInProgress,
             Component,
             resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
             renderLanes
           );
-          return child;
         }
       }
 
@@ -18979,116 +19026,6 @@ to return true:wantsResponderID|                            |
       );
     }
 
-    function mountIndeterminateComponent(
-      _current,
-      workInProgress,
-      Component,
-      renderLanes
-    ) {
-      resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
-      var props = workInProgress.pendingProps;
-      var context;
-
-      {
-        var unmaskedContext = getUnmaskedContext(
-          workInProgress,
-          Component,
-          false
-        );
-        context = getMaskedContext(workInProgress, unmaskedContext);
-      }
-
-      prepareToReadContext(workInProgress, renderLanes);
-      var value;
-
-      {
-        markComponentRenderStarted(workInProgress);
-      }
-
-      {
-        if (
-          Component.prototype &&
-          typeof Component.prototype.render === "function"
-        ) {
-          var componentName = getComponentNameFromType(Component) || "Unknown";
-
-          if (!didWarnAboutBadClass[componentName]) {
-            error(
-              "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-                "This is likely to cause errors. Change %s to extend React.Component instead.",
-              componentName,
-              componentName
-            );
-
-            didWarnAboutBadClass[componentName] = true;
-          }
-        }
-
-        if (workInProgress.mode & StrictLegacyMode) {
-          ReactStrictModeWarnings.recordLegacyContextWarning(
-            workInProgress,
-            null
-          );
-        }
-
-        setIsRendering(true);
-        ReactCurrentOwner$2.current = workInProgress;
-        value = renderWithHooks(
-          null,
-          workInProgress,
-          Component,
-          props,
-          context,
-          renderLanes
-        );
-        setIsRendering(false);
-      }
-
-      {
-        markComponentRenderStopped();
-      } // React DevTools reads this flag.
-
-      workInProgress.flags |= PerformedWork;
-
-      {
-        // Support for module components is deprecated and is removed behind a flag.
-        // Whether or not it would crash later, we want to show a good message in DEV first.
-        if (
-          typeof value === "object" &&
-          value !== null &&
-          typeof value.render === "function" &&
-          value.$$typeof === undefined
-        ) {
-          var _componentName = getComponentNameFromType(Component) || "Unknown";
-
-          if (!didWarnAboutModulePatternComponent[_componentName]) {
-            error(
-              "The <%s /> component appears to be a function component that returns a class instance. " +
-                "Change %s to a class that extends React.Component instead. " +
-                "If you can't use a class try assigning the prototype on the function as a workaround. " +
-                "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-                "cannot be called with `new` by React.",
-              _componentName,
-              _componentName,
-              _componentName
-            );
-
-            didWarnAboutModulePatternComponent[_componentName] = true;
-          }
-        }
-      } // Proceed under the assumption that this is a function component
-
-      workInProgress.tag = FunctionComponent;
-
-      reconcileChildren(null, workInProgress, value, renderLanes);
-
-      {
-        validateFunctionComponentInDev(workInProgress, Component);
-      }
-
-      return workInProgress.child;
-    }
-
     function validateFunctionComponentInDev(workInProgress, Component) {
       {
         if (Component) {
@@ -19125,33 +19062,32 @@ to return true:wantsResponderID|                            |
         }
 
         if (Component.defaultProps !== undefined) {
-          var _componentName2 =
-            getComponentNameFromType(Component) || "Unknown";
+          var _componentName = getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName2]) {
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName]) {
             error(
               "%s: Support for defaultProps will be removed from function components " +
                 "in a future major release. Use JavaScript default parameters instead.",
-              _componentName2
+              _componentName
             );
 
-            didWarnAboutDefaultPropsOnFunctionComponent[_componentName2] = true;
+            didWarnAboutDefaultPropsOnFunctionComponent[_componentName] = true;
           }
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName3 =
+          var _componentName2 =
             getComponentNameFromType(Component) || "Unknown";
 
           if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3]
+            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2]
           ) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName3
+              _componentName2
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] =
               true;
           }
         }
@@ -19160,16 +19096,16 @@ to return true:wantsResponderID|                            |
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName4 =
+          var _componentName3 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName4]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName3]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName4
+              _componentName3
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName4] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName3] = true;
           }
         }
       }
@@ -20909,15 +20845,6 @@ to return true:wantsResponderID|                            |
       workInProgress.lanes = NoLanes;
 
       switch (workInProgress.tag) {
-        case IndeterminateComponent: {
-          return mountIndeterminateComponent(
-            current,
-            workInProgress,
-            workInProgress.type,
-            renderLanes
-          );
-        }
-
         case LazyComponent: {
           var elementType = workInProgress.elementType;
           return mountLazyComponent(
@@ -21058,6 +20985,24 @@ to return true:wantsResponderID|                            |
             workInProgress,
             _Component2,
             _resolvedProps4,
+            renderLanes
+          );
+        }
+
+        case IncompleteFunctionComponent: {
+          var _Component3 = workInProgress.type;
+          var _unresolvedProps5 = workInProgress.pendingProps;
+
+          var _resolvedProps5 =
+            workInProgress.elementType === _Component3
+              ? _unresolvedProps5
+              : resolveDefaultProps(_Component3, _unresolvedProps5);
+
+          return mountIncompleteFunctionComponent(
+            current,
+            workInProgress,
+            _Component3,
+            _resolvedProps5,
             renderLanes
           );
         }
@@ -22065,10 +22010,10 @@ to return true:wantsResponderID|                            |
       var newProps = workInProgress.pendingProps; // Note: This intentionally doesn't check if we're hydrating because comparing
 
       switch (workInProgress.tag) {
-        case IndeterminateComponent:
         case LazyComponent:
         case SimpleMemoComponent:
         case FunctionComponent:
+        case IncompleteFunctionComponent:
         case ForwardRef:
         case Fragment:
         case Mode:
@@ -28294,12 +28239,6 @@ to return true:wantsResponderID|                            |
       }
 
       switch (unitOfWork.tag) {
-        case IndeterminateComponent: {
-          // Because it suspended with `use`, we can assume it's a
-          // function component.
-          unitOfWork.tag = FunctionComponent; // Fallthrough to the next branch.
-        }
-
         case SimpleMemoComponent:
         case FunctionComponent: {
           // Resolve `defaultProps`. This logic is copied from `beginWork`.
@@ -29596,7 +29535,6 @@ to return true:wantsResponderID|                            |
         var tag = fiber.tag;
 
         if (
-          tag !== IndeterminateComponent &&
           tag !== HostRoot &&
           tag !== ClassComponent &&
           tag !== FunctionComponent &&
@@ -30395,22 +30333,8 @@ to return true:wantsResponderID|                            |
         type.defaultProps === undefined
       );
     }
-    function resolveLazyComponentTag(Component) {
-      if (typeof Component === "function") {
-        return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
-      } else if (Component !== undefined && Component !== null) {
-        var $$typeof = Component.$$typeof;
-
-        if ($$typeof === REACT_FORWARD_REF_TYPE) {
-          return ForwardRef;
-        }
-
-        if ($$typeof === REACT_MEMO_TYPE) {
-          return MemoComponent;
-        }
-      }
-
-      return IndeterminateComponent;
+    function isFunctionClassComponent(type) {
+      return shouldConstruct(type);
     } // This is used to create an alternate fiber to do work on.
 
     function createWorkInProgress(current, pendingProps) {
@@ -30495,7 +30419,6 @@ to return true:wantsResponderID|                            |
         workInProgress._debugNeedsRemount = current._debugNeedsRemount;
 
         switch (workInProgress.tag) {
-          case IndeterminateComponent:
           case FunctionComponent:
           case SimpleMemoComponent:
             workInProgress.type = resolveFunctionForHotReloading(current.type);
@@ -30614,7 +30537,7 @@ to return true:wantsResponderID|                            |
       mode,
       lanes
     ) {
-      var fiberTag = IndeterminateComponent; // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
+      var fiberTag = FunctionComponent; // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
 
       var resolvedType = type;
 
@@ -31013,7 +30936,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-753ddd75";
+    var ReactVersion = "19.0.0-canary-fcdbf716";
 
     function createPortal$1(
       children,
