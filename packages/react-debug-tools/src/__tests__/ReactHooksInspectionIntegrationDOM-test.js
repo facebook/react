@@ -38,8 +38,6 @@ describe('ReactHooksInspectionIntegration', () => {
     ReactDebugTools = require('react-debug-tools');
   });
 
-  // Gating production, non-source builds only for Jest.
-  // @gate source || build === "development"
   it('should support useFormStatus hook', async () => {
     function FormStatus() {
       const status = ReactDOM.useFormStatus();
