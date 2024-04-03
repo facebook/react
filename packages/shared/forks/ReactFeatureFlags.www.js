@@ -18,7 +18,6 @@ export const {
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableDebugTracing,
-  enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,

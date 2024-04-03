@@ -124,7 +124,6 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     expect(root).toMatchRenderedOutput('client');
   });
 
-  // @gate !(enableUseRefAccessWarning && __DEV__)
   test('Using isEqual to bailout', async () => {
     const store = createExternalStore({a: 0, b: 0});
 

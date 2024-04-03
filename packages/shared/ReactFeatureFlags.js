@@ -195,8 +195,6 @@ export const enableRenderableContext = true;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-export const enableUseRefAccessWarning = false;
-
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
 

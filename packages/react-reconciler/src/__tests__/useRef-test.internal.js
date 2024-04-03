@@ -160,24 +160,6 @@ describe('useRef', () => {
       });
     });
 
-    // @gate enableUseRefAccessWarning
-    it('should warn about reads during render', async () => {
-      function Example() {
-        const ref = useRef(123);
-        let value;
-        expect(() => {
-          value = ref.current;
-        }).toWarnDev([
-          'Example: Unsafe read of a mutable value during render.',
-        ]);
-        return value;
-      }
-
-      await act(() => {
-        ReactNoop.render(<Example />);
-      });
-    });
-
     it('should not warn about lazy init during render', async () => {
       function Example() {
         const ref1 = useRef(null);
@@ -213,113 +195,6 @@ describe('useRef', () => {
           ref2.current = 123;
           setDidMount(true);
         }, []);
-        return null;
-      }
-
-      await act(() => {
-        ReactNoop.render(<Example />);
-      });
-    });
-
-    // @gate enableUseRefAccessWarning
-    it('should warn about unconditional lazy init during render', async () => {
-      function Example() {
-        const ref1 = useRef(null);
-        const ref2 = useRef(undefined);
-
-        if (shouldExpectWarning) {
-          expect(() => {
-            ref1.current = 123;
-          }).toWarnDev([
-            'Example: Unsafe write of a mutable value during render',
-          ]);
-          expect(() => {
-            ref2.current = 123;
-          }).toWarnDev([
-            'Example: Unsafe write of a mutable value during render',
-          ]);
-        } else {
-          ref1.current = 123;
-          ref1.current = 123;
-        }
-
-        // But only warn once
-        ref1.current = 345;
-        ref1.current = 345;
-
-        return null;
-      }
-
-      let shouldExpectWarning = true;
-      await act(() => {
-        ReactNoop.render(<Example />);
-      });
-
-      // Should not warn again on update.
-      shouldExpectWarning = false;
-      await act(() => {
-        ReactNoop.render(<Example />);
-      });
-    });
-
-    // @gate enableUseRefAccessWarning
-    it('should warn about reads to ref after lazy init pattern', async () => {
-      function Example() {
-        const ref1 = useRef(null);
-        const ref2 = useRef(undefined);
-
-        // Read 1: safe because lazy init:
-        if (ref1.current === null) {
-          ref1.current = 123;
-        }
-        if (ref2.current === undefined) {
-          ref2.current = 123;
-        }
-
-        let value;
-        expect(() => {
-          value = ref1.current;
-        }).toWarnDev(['Example: Unsafe read of a mutable value during render']);
-        expect(() => {
-          value = ref2.current;
-        }).toWarnDev(['Example: Unsafe read of a mutable value during render']);
-
-        // But it should only warn once.
-        value = ref1.current;
-        value = ref2.current;
-
-        return value;
-      }
-
-      await act(() => {
-        ReactNoop.render(<Example />);
-      });
-    });
-
-    // @gate enableUseRefAccessWarning
-    it('should warn about writes to ref after lazy init pattern', async () => {
-      function Example() {
-        const ref1 = useRef(null);
-        const ref2 = useRef(undefined);
-        // Read: safe because lazy init:
-        if (ref1.current === null) {
-          ref1.current = 123;
-        }
-        if (ref2.current === undefined) {
-          ref2.current = 123;
-        }
-
-        expect(() => {
-          ref1.current = 456;
-        }).toWarnDev([
-          'Example: Unsafe write of a mutable value during render',
-        ]);
-        expect(() => {
-          ref2.current = 456;
-        }).toWarnDev([
-          'Example: Unsafe write of a mutable value during render',
-        ]);
-
         return null;
       }
 
