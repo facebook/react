@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-5ccfe516";
+    var ReactVersion = "19.0.0-www-modern-e4b79a21";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -404,6 +404,7 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
     // On WWW, true is used for a new modern build.
+    var disableLegacyMode = false;
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -3281,7 +3282,10 @@ if (__DEV__) {
         // triggered during an async event, because this is how the legacy
         // implementation of `act` behaved.
 
-        ReactCurrentActQueue.isBatchingLegacy = true;
+        {
+          ReactCurrentActQueue.isBatchingLegacy = true;
+        }
+
         var result; // This tracks whether the `act` call is awaited. In certain cases, not
         // awaiting it is a mistake, so we will detect that and warn.
 
@@ -3291,10 +3295,14 @@ if (__DEV__) {
           // Reset this to `false` right before entering the React work loop. The
           // only place we ever read this fields is just below, right after running
           // the callback. So we don't need to reset after the callback runs.
-          ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+          if (!disableLegacyMode) {
+            ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+          }
+
           result = callback();
-          var didScheduleLegacyUpdate =
-            ReactCurrentActQueue.didScheduleLegacyUpdate; // Replicate behavior of original `act` implementation in legacy mode,
+          var didScheduleLegacyUpdate = !disableLegacyMode
+            ? ReactCurrentActQueue.didScheduleLegacyUpdate
+            : false; // Replicate behavior of original `act` implementation in legacy mode,
           // which flushed updates immediately after the scope function exits, even
           // if it's an async function.
 
@@ -3305,7 +3313,9 @@ if (__DEV__) {
           // that's how it worked before version 18. Yes, it's confusing! We should
           // delete legacy mode!!
 
-          ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+          if (!disableLegacyMode) {
+            ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+          }
         } catch (error) {
           // `isBatchingLegacy` gets reset using the regular stack, not the async
           // one used to track `act` scopes. Why, you may be wondering? Because
@@ -3315,7 +3325,10 @@ if (__DEV__) {
         }
 
         if (ReactCurrentActQueue.thrownErrors.length > 0) {
-          ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+          {
+            ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+          }
+
           popActScope(prevActQueue, prevActScopeDepth);
           var thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
           ReactCurrentActQueue.thrownErrors.length = 0;

@@ -6276,10 +6276,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -10325,7 +10325,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-7cc92098",
+    version: "19.0.0-www-modern-7e9951a8",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1289 = {
@@ -10356,7 +10356,7 @@ var internals$jscomp$inline_1289 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-7cc92098"
+  reconcilerVersion: "19.0.0-www-modern-7e9951a8"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1290 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

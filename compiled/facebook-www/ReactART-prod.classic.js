@@ -223,9 +223,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -6537,10 +6538,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -10649,7 +10650,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-da81c41b",
+    version: "19.0.0-www-classic-d150a248",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1308 = {
@@ -10680,7 +10681,7 @@ var internals$jscomp$inline_1308 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-da81c41b"
+  reconcilerVersion: "19.0.0-www-classic-d150a248"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1309 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

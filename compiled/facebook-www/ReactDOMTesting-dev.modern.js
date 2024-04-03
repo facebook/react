@@ -147,6 +147,7 @@ if (__DEV__) {
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableSuspenseCallback = true;
+    var disableLegacyMode = false;
 
     var assign = Object.assign;
 
@@ -3715,11 +3716,15 @@ if (__DEV__) {
 
         case TracingMarkerComponent:
           return "TracingMarker";
-        // The display name for this tags come from the user-provided type:
+        // The display name for these tags come from the user-provided type:
+
+        case IncompleteClassComponent:
+        case IncompleteFunctionComponent:
+
+        // Fallthrough
 
         case ClassComponent:
         case FunctionComponent:
-        case IncompleteClassComponent:
         case MemoComponent:
         case SimpleMemoComponent:
           if (typeof type === "function") {
@@ -9764,7 +9769,9 @@ if (__DEV__) {
     function flushSyncWorkOnLegacyRootsOnly() {
       // This is allowed to be called synchronously, but the caller should check
       // the execution context first.
-      flushSyncWorkAcrossRoots_impl(true);
+      {
+        flushSyncWorkAcrossRoots_impl(true);
+      }
     }
 
     function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
@@ -25571,10 +25578,11 @@ if (__DEV__) {
       popTreeContext(workInProgress);
 
       switch (workInProgress.tag) {
+        case IncompleteFunctionComponent:
+
         case LazyComponent:
         case SimpleMemoComponent:
         case FunctionComponent:
-        case IncompleteFunctionComponent:
         case ForwardRef:
         case Fragment:
         case Mode:
@@ -32254,6 +32262,7 @@ if (__DEV__) {
         if (
           lane === SyncLane &&
           executionContext === NoContext &&
+          !disableLegacyMode &&
           (fiber.mode & ConcurrentMode) === NoMode
         ) {
           if (ReactCurrentActQueue.isBatchingLegacy);
@@ -32894,6 +32903,7 @@ if (__DEV__) {
       // next event, not at the end of the previous one.
       if (
         rootWithPendingPassiveEffects !== null &&
+        !disableLegacyMode &&
         rootWithPendingPassiveEffects.tag === LegacyRoot &&
         (executionContext & (RenderContext | CommitContext)) === NoContext
       ) {
@@ -36586,14 +36596,16 @@ if (__DEV__) {
       }
 
       {
-        switch (tag) {
-          case ConcurrentRoot:
-            this._debugRootType = hydrate ? "hydrateRoot()" : "createRoot()";
-            break;
+        {
+          switch (tag) {
+            case ConcurrentRoot:
+              this._debugRootType = hydrate ? "hydrateRoot()" : "createRoot()";
+              break;
 
-          case LegacyRoot:
-            this._debugRootType = hydrate ? "hydrate()" : "render()";
-            break;
+            case LegacyRoot:
+              this._debugRootType = hydrate ? "hydrate()" : "render()";
+              break;
+          }
         }
       }
     }
@@ -36669,7 +36681,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-7a34747a";
+    var ReactVersion = "19.0.0-www-modern-2a9ce9a7";
 
     function createPortal$1(
       children,

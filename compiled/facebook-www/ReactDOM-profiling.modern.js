@@ -7827,10 +7827,10 @@ function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -17334,7 +17334,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1766 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-affc19ee",
+  version: "19.0.0-www-modern-1c28c153",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17378,7 +17378,7 @@ var devToolsConfig$jscomp$inline_1766 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-affc19ee"
+  reconcilerVersion: "19.0.0-www-modern-1c28c153"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17668,7 +17668,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-affc19ee";
+exports.version = "19.0.0-www-modern-1c28c153";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

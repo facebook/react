@@ -7694,10 +7694,10 @@ function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -16980,7 +16980,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1707 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-efc491b3",
+  version: "19.0.0-www-modern-80d60d79",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2110 = {
@@ -17010,7 +17010,7 @@ var internals$jscomp$inline_2110 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-efc491b3"
+  reconcilerVersion: "19.0.0-www-modern-80d60d79"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2111 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17436,4 +17436,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-efc491b3";
+exports.version = "19.0.0-www-modern-80d60d79";

@@ -201,9 +201,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -7790,10 +7791,10 @@ function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -17386,7 +17387,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1745 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-a4f1494e",
+  version: "19.0.0-www-classic-029f2025",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2151 = {
@@ -17416,7 +17417,7 @@ var internals$jscomp$inline_2151 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-a4f1494e"
+  reconcilerVersion: "19.0.0-www-classic-029f2025"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2152 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18009,4 +18010,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-a4f1494e";
+exports.version = "19.0.0-www-classic-029f2025";
