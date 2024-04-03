@@ -273,7 +273,6 @@ export default [
   "Symbols are not valid as a React child.\n  root.render(%s)",
   "Text strings must be rendered within a <Text> component.",
   "Textarea elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled textarea and remove one of these props. More info: https://react.dev/link/controlled-components",
-  "The <%s /> component appears to be a function component that returns a class instance. Change %s to a class that extends React.Component instead. If you can't use a class try assigning the prototype on the function as a workaround. `%s.prototype = React.Component.prototype`. Don't use an arrow function since it cannot be called with `new` by React.",
   "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
   "The `%s` prop supplied to <select> must be a scalar value if `multiple` is false.",
   "The `%s` prop supplied to <select> must be a scalar value if `multiple` is false.%s",

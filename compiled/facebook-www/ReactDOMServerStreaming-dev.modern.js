@@ -11795,22 +11795,14 @@ if (__DEV__) {
     }
 
     var didWarnAboutBadClass = {};
-    var didWarnAboutModulePatternComponent = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
     var didWarnAboutGetDerivedStateOnFunctionComponent = {};
     var didWarnAboutReassigningProps = false;
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var didWarnAboutGenerators = false;
-    var didWarnAboutMaps = false; // This would typically be a function component but we still support module pattern
-    // components for some reason.
+    var didWarnAboutMaps = false;
 
-    function renderIndeterminateComponent(
-      request,
-      task,
-      keyPath,
-      Component,
-      props
-    ) {
+    function renderFunctionComponent(request, task, keyPath, Component, props) {
       var legacyContext;
 
       var previousComponentStack = task.componentStack;
@@ -11847,34 +11839,6 @@ if (__DEV__) {
       var hasId = checkDidRenderIdHook();
       var actionStateCount = getActionStateCount();
       var actionStateMatchingIndex = getActionStateMatchingIndex();
-
-      {
-        // Support for module components is deprecated and is removed behind a flag.
-        // Whether or not it would crash later, we want to show a good message in DEV first.
-        if (
-          typeof value === "object" &&
-          value !== null &&
-          typeof value.render === "function" &&
-          value.$$typeof === undefined
-        ) {
-          var _componentName = getComponentNameFromType(Component) || "Unknown";
-
-          if (!didWarnAboutModulePatternComponent[_componentName]) {
-            error(
-              "The <%s /> component appears to be a function component that returns a class instance. " +
-                "Change %s to a class that extends React.Component instead. " +
-                "If you can't use a class try assigning the prototype on the function as a workaround. " +
-                "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-                "cannot be called with `new` by React.",
-              _componentName,
-              _componentName,
-              _componentName
-            );
-
-            didWarnAboutModulePatternComponent[_componentName] = true;
-          }
-        }
-      } // Proceed under the assumption that this is a function component
 
       {
         if (Component.contextTypes) {
@@ -11996,18 +11960,15 @@ if (__DEV__) {
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName2 =
-            getComponentNameFromType(Component) || "Unknown";
+          var _componentName = getComponentNameFromType(Component) || "Unknown";
 
-          if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2]
-          ) {
+          if (!didWarnAboutGetDerivedStateOnFunctionComponent[_componentName]) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName2
+              _componentName
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName] =
               true;
           }
         }
@@ -12016,16 +11977,16 @@ if (__DEV__) {
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName3 =
+          var _componentName2 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName3]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName2]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName3
+              _componentName2
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName3] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName2] = true;
           }
         }
       }
@@ -12186,7 +12147,7 @@ if (__DEV__) {
           renderClassComponent(request, task, keyPath, type, props);
           return;
         } else {
-          renderIndeterminateComponent(request, task, keyPath, type, props);
+          renderFunctionComponent(request, task, keyPath, type, props);
           return;
         }
       }
