@@ -503,5 +503,6 @@
   "515": "Cannot assign to a temporary client reference from a server module.",
   "516": "Attempted to call a temporary Client Reference from the server but it is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.",
   "517": "Symbols cannot be passed to a Server Function without a temporary reference set. Pass a TemporaryReferenceSet to the options.%s",
-  "518": "Saw multiple hydration diff roots in a pass. This is a bug in React."
+  "518": "Saw multiple hydration diff roots in a pass. This is a bug in React.",
+  "519": "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
 }
