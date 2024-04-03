@@ -1410,7 +1410,6 @@ function renderClassComponent(
 }
 
 const didWarnAboutBadClass: {[string]: boolean} = {};
-const didWarnAboutModulePatternComponent: {[string]: boolean} = {};
 const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
@@ -1418,9 +1417,7 @@ const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 
-// This would typically be a function component but we still support module pattern
-// components for some reason.
-function renderIndeterminateComponent(
+function renderFunctionComponent(
   request: Request,
   task: Task,
   keyPath: KeyNode,
@@ -1465,33 +1462,6 @@ function renderIndeterminateComponent(
   const actionStateCount = getActionStateCount();
   const actionStateMatchingIndex = getActionStateMatchingIndex();
 
-  if (__DEV__) {
-    // Support for module components is deprecated and is removed behind a flag.
-    // Whether or not it would crash later, we want to show a good message in DEV first.
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      typeof value.render === 'function' &&
-      value.$$typeof === undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
-    }
-  }
-
-  // Proceed under the assumption that this is a function component
   if (__DEV__) {
     if (disableLegacyContext && Component.contextTypes) {
       console.error(
@@ -1817,7 +1787,7 @@ function renderElement(
       renderClassComponent(request, task, keyPath, type, props);
       return;
     } else {
-      renderIndeterminateComponent(request, task, keyPath, type, props);
+      renderFunctionComponent(request, task, keyPath, type, props);
       return;
     }
   }

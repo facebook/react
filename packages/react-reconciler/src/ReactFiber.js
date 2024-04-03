@@ -41,7 +41,6 @@ import {
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
-  IndeterminateComponent,
   ClassComponent,
   HostRoot,
   HostComponent,
@@ -245,19 +244,10 @@ export function isSimpleFunctionComponent(type: any): boolean {
   );
 }
 
-export function resolveLazyComponentTag(Component: Function): WorkTag {
-  if (typeof Component === 'function') {
-    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
-  } else if (Component !== undefined && Component !== null) {
-    const $$typeof = Component.$$typeof;
-    if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      return ForwardRef;
-    }
-    if ($$typeof === REACT_MEMO_TYPE) {
-      return MemoComponent;
-    }
-  }
-  return IndeterminateComponent;
+export function isFunctionClassComponent(
+  type: (...args: Array<any>) => mixed,
+): boolean {
+  return shouldConstruct(type);
 }
 
 // This is used to create an alternate fiber to do work on.
@@ -348,7 +338,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
-      case IndeterminateComponent:
       case FunctionComponent:
       case SimpleMemoComponent:
         workInProgress.type = resolveFunctionForHotReloading(current.type);
@@ -489,7 +478,7 @@ export function createFiberFromTypeAndProps(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let fiberTag = IndeterminateComponent;
+  let fiberTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {
