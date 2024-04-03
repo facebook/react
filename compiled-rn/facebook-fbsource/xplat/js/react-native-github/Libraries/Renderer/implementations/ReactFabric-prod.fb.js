@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23f2356ead4c48c2d682dd38827bd844>>
+ * @generated SignedSource<<6e486276fd15c9cf3d9aa8672c3fc7df>>
  */
 
 "use strict";
@@ -1268,7 +1268,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
-  enableBigIntSupport = dynamicFlagsUntyped.enableBigIntSupport,
   enableComponentStackLocations =
     dynamicFlagsUntyped.enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask =
@@ -3087,7 +3086,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (newChild = createFiberFromText(
@@ -3156,7 +3155,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return null !== key
         ? null
@@ -3209,7 +3208,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (existingChildren = existingChildren.get(newIdx) || null),
@@ -3590,7 +3589,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
@@ -10641,7 +10640,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1101 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-788ddcaa",
+    version: "19.0.0-canary-bf2c7fb6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10684,7 +10683,7 @@ var internals$jscomp$inline_1334 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-788ddcaa"
+  reconcilerVersion: "19.0.0-canary-bf2c7fb6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1335 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

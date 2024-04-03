@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5d4b17155470d32432404bc5027771b>>
+ * @generated SignedSource<<9049da9d0398addbe9ad47567cb0a0f2>>
  */
 
 "use strict";
@@ -148,7 +148,6 @@ if (__DEV__) {
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
     var disableLegacyMode = false;
-    var enableBigIntSupport = false; // Flow magic to verify the exports of this file match the original version.
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -6513,7 +6512,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -6648,7 +6647,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a text
@@ -6775,7 +6774,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           // Text nodes don't have keys, so we neither have to check the old nor
           // new node for the key. If both are text nodes, they match.
@@ -7624,7 +7623,7 @@ if (__DEV__) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number" ||
-          enableBigIntSupport
+          typeof newChild === "bigint"
         ) {
           return placeSingleChild(
             reconcileSingleTextNode(
@@ -26802,7 +26801,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-327941b3";
+    var ReactVersion = "19.0.0-canary-23a1aa6f";
 
     // Might add PROFILE later.
 

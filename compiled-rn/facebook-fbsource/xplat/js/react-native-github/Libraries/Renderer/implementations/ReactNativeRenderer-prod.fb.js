@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ca1c4b814a631e506c88a6a00c102a67>>
+ * @generated SignedSource<<9db21d4a697e662725618f615a03fdba>>
  */
 
 "use strict";
@@ -1116,7 +1116,6 @@ var ReactSharedInternals =
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
-  enableBigIntSupport = dynamicFlagsUntyped.enableBigIntSupport,
   enableComponentStackLocations =
     dynamicFlagsUntyped.enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask =
@@ -3152,7 +3151,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (newChild = createFiberFromText(
@@ -3221,7 +3220,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return null !== key
         ? null
@@ -3274,7 +3273,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (existingChildren = existingChildren.get(newIdx) || null),
@@ -3655,7 +3654,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
@@ -10857,7 +10856,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1168 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-1766b206",
+    version: "19.0.0-canary-617388a5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10900,7 +10899,7 @@ var internals$jscomp$inline_1415 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-1766b206"
+  reconcilerVersion: "19.0.0-canary-617388a5"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1416 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

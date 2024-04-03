@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ba923810748b6a7ee3587bd2f20b845d>>
+ * @generated SignedSource<<a22169b5b22944f74fdafbe7b1983c9e>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-f7b8f960";
+    var ReactVersion = "19.0.0-canary-1e9a91a1";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -491,25 +491,6 @@ if (__DEV__) {
       return isArrayImpl(a);
     }
 
-    // Re-export dynamic flags from the internal module.
-    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-    // the exports object every time a flag is read.
-
-    var enableAsyncActions = dynamicFlags.enableAsyncActions,
-      enableBigIntSupport = dynamicFlags.enableBigIntSupport,
-      enableComponentStackLocations =
-        dynamicFlags.enableComponentStackLocations,
-      enableRenderableContext = dynamicFlags.enableRenderableContext;
-    // The rest of the flags are static for better dead code elimination.
-    var enableDebugTracing = false;
-    var enableScopeAPI = false;
-    var enableLegacyHidden = false;
-    var enableTransitionTracing = false;
-    // because JSX is an extremely hot path.
-
-    var enableRefAsProp = false;
-    var disableLegacyMode = false;
-
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
      * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -583,6 +564,24 @@ if (__DEV__) {
         }
       }
     }
+
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+    // the exports object every time a flag is read.
+
+    var enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableComponentStackLocations =
+        dynamicFlags.enableComponentStackLocations,
+      enableRenderableContext = dynamicFlags.enableRenderableContext;
+    // The rest of the flags are static for better dead code elimination.
+    var enableDebugTracing = false;
+    var enableScopeAPI = false;
+    var enableLegacyHidden = false;
+    var enableTransitionTracing = false;
+    // because JSX is an extremely hot path.
+
+    var enableRefAsProp = false;
+    var disableLegacyMode = false;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -2281,12 +2280,6 @@ if (__DEV__) {
       } else {
         switch (type) {
           case "bigint":
-            if (!enableBigIntSupport) {
-              break;
-            }
-
-          // fallthrough for enabled BigInt support
-
           case "string":
           case "number":
             invokeCallback = true;
