@@ -10,6 +10,10 @@
 import assign from 'shared/assign';
 
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {
+  // TODO: Remove support for default props for everything except class
+  // components, including setting default props on a lazy wrapper around a
+  // class type.
+
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
     const props = assign({}, baseProps);

@@ -245,6 +245,7 @@ import {
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
+  resolveClassComponentProps,
 } from './ReactFiberClassComponent';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
@@ -1762,9 +1763,9 @@ function mountLazyComponent(
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
 
-  const resolvedProps = resolveDefaultProps(Component, props);
   if (typeof Component === 'function') {
     if (isFunctionClassComponent(Component)) {
+      const resolvedProps = resolveClassComponentProps(Component, props, false);
       workInProgress.tag = ClassComponent;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -1778,6 +1779,7 @@ function mountLazyComponent(
         renderLanes,
       );
     } else {
+      const resolvedProps = resolveDefaultProps(Component, props);
       workInProgress.tag = FunctionComponent;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
@@ -1795,6 +1797,7 @@ function mountLazyComponent(
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
+      const resolvedProps = resolveDefaultProps(Component, props);
       workInProgress.tag = ForwardRef;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -1808,6 +1811,7 @@ function mountLazyComponent(
         renderLanes,
       );
     } else if ($$typeof === REACT_MEMO_TYPE) {
+      const resolvedProps = resolveDefaultProps(Component, props);
       workInProgress.tag = MemoComponent;
       return updateMemoComponent(
         null,
@@ -3938,10 +3942,11 @@ function beginWork(
     case ClassComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
       return updateClassComponent(
         current,
         workInProgress,
@@ -4024,10 +4029,11 @@ function beginWork(
       }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
       return mountIncompleteClassComponent(
         current,
         workInProgress,
@@ -4042,10 +4048,11 @@ function beginWork(
       }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
       return mountIncompleteFunctionComponent(
         current,
         workInProgress,

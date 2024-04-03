@@ -23,6 +23,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -34,7 +35,6 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   DebugTracingMode,
   NoMode,
@@ -904,7 +904,12 @@ function resumeMountClassInstance(
 ): boolean {
   const instance = workInProgress.stateNode;
 
-  const oldProps = workInProgress.memoizedProps;
+  const unresolvedOldProps = workInProgress.memoizedProps;
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -926,6 +931,13 @@ function resumeMountClassInstance(
     typeof getDerivedStateFromProps === 'function' ||
     typeof instance.getSnapshotBeforeUpdate === 'function';
 
+  // When comparing whether props changed, we should compare using the
+  // unresolved props object that is stored on the fiber, rather than the
+  // one that gets assigned to the instance, because that object may have been
+  // cloned to resolve default props and/or remove `ref`.
+  const unresolvedNewProps = workInProgress.pendingProps;
+  const didReceiveNewProps = unresolvedNewProps !== unresolvedOldProps;
+
   // Note: During these life-cycles, instance.props/instance.state are what
   // ever the previously attempted to render - not the "current". However,
   // during componentDidUpdate we pass the "current" props.
@@ -937,7 +949,7 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextContext) {
+    if (didReceiveNewProps || oldContext !== nextContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
@@ -955,7 +967,7 @@ function resumeMountClassInstance(
   suspendIfUpdateReadFromEntangledAsyncAction();
   newState = workInProgress.memoizedState;
   if (
-    oldProps === newProps &&
+    !didReceiveNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
@@ -1052,10 +1064,11 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps =
-    workInProgress.type === workInProgress.elementType
-      ? unresolvedOldProps
-      : resolveDefaultProps(workInProgress.type, unresolvedOldProps);
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1223,6 +1236,42 @@ function updateClassInstance(
   instance.context = nextContext;
 
   return shouldUpdate;
+}
+
+export function resolveClassComponentProps(
+  Component: any,
+  baseProps: Object,
+  // Only resolve default props if this is a lazy component. Otherwise, they
+  // would have already been resolved by the JSX runtime.
+  // TODO: We're going to remove default prop resolution from the JSX runtime
+  // and keep it only for class components. As part of that change, we should
+  // remove this extra check.
+  alreadyResolvedDefaultProps: boolean,
+): Object {
+  let newProps = baseProps;
+
+  // Resolve default props. Taken from old JSX runtime, where this used to live.
+  const defaultProps = Component.defaultProps;
+  if (defaultProps && !alreadyResolvedDefaultProps) {
+    newProps = assign({}, newProps, baseProps);
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in newProps) {
+      if (newProps === baseProps) {
+        newProps = assign({}, newProps);
+      }
+      delete newProps.ref;
+    }
+  }
+
+  return newProps;
 }
 
 export {

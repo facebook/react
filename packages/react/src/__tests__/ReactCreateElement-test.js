@@ -90,7 +90,7 @@ describe('ReactCreateElement', () => {
     );
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
