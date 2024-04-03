@@ -561,17 +561,34 @@ function throwException(
       if (value !== HydrationMismatchException) {
         queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
       }
+      const appendix = createCapturedValueAtFiber<mixed>(
+        new Error(
+          'There was an error while hydrating this Suspense boundary. ' +
+            'Switched to client rendering.',
+        ),
+        suspenseBoundary,
+      );
+      queueHydrationError(appendix);
       return false;
     } else {
       const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
       if (value !== HydrationMismatchException) {
-        // This is a concurrent error that then becomes a hydration error when
-        // we retry the root.
-        queueConcurrentError(rootErrorInfo);
+        queueHydrationError(rootErrorInfo);
       }
+      const workInProgress: Fiber = (root.current: any).alternate;
+
+      const appendix = createCapturedValueAtFiber<mixed>(
+        new Error(
+          'There was an error while hydrating. Because the error happened outside ' +
+            'of a Suspense boundary, the entire root will switch to ' +
+            'client rendering.',
+        ),
+        workInProgress,
+      );
+      queueHydrationError(appendix);
+
       // Schedule an update at the root to log the error but this shouldn't
       // actually happen because we should recover.
-      const workInProgress: Fiber = (root.current: any).alternate;
       workInProgress.flags |= ShouldCapture;
       const lane = pickArbitraryLane(rootRenderLanes);
       workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
