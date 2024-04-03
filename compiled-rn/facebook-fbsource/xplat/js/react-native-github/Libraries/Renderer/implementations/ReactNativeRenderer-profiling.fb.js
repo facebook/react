@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<599385fe4e89c287b93fd54b1bf287f9>>
+ * @generated SignedSource<<cd2b60d6bfff7f9b721661a5d81f18b3>>
  */
 
 "use strict";
@@ -1265,9 +1265,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -7456,10 +7457,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -11531,7 +11532,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1241 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-553aa6e5",
+    version: "19.0.0-canary-79f907d7",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11587,7 +11588,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-553aa6e5"
+  reconcilerVersion: "19.0.0-canary-79f907d7"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

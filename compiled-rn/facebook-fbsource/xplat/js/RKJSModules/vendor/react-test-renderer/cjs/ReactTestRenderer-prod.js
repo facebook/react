@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<69239f8b92157c4f6a4c39bc63f04216>>
+ * @generated SignedSource<<ecfcb176376bc197ec85ddd358a1c474>>
  */
 
 "use strict";
@@ -155,9 +155,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -5571,10 +5572,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -9190,7 +9191,7 @@ var devToolsConfig$jscomp$inline_990 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-7c981d93",
+  version: "19.0.0-canary-e5758235",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1175 = {
@@ -9221,7 +9222,7 @@ var internals$jscomp$inline_1175 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7c981d93"
+  reconcilerVersion: "19.0.0-canary-e5758235"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1176 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

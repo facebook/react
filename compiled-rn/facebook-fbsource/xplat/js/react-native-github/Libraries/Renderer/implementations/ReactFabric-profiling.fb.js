@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d0367d02a04e1178ccc2b2d33a25ba8a>>
+ * @generated SignedSource<<9617af24c78110fa36cd5a86db603668>>
  */
 
 "use strict";
@@ -1895,9 +1895,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -7502,10 +7503,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -11314,7 +11315,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1174 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-ccea4ec2",
+    version: "19.0.0-canary-44851f70",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11370,7 +11371,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-ccea4ec2"
+  reconcilerVersion: "19.0.0-canary-44851f70"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

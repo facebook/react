@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b3b698a77d1e2b886a5c5302efcce57c>>
+ * @generated SignedSource<<ac41f3084be71e7e00628cd7386a97f2>>
  */
 
 "use strict";
@@ -155,9 +155,10 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 17:
+    case 28:
     case 1:
     case 0:
-    case 17:
     case 14:
     case 15:
       if ("function" === typeof type)
@@ -5802,10 +5803,10 @@ function bubbleProperties(completedWork) {
 function completeWork(current, workInProgress, renderLanes) {
   var newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
+    case 28:
     case 16:
     case 15:
     case 0:
-    case 28:
     case 11:
     case 7:
     case 8:
@@ -9806,7 +9807,7 @@ var devToolsConfig$jscomp$inline_1074 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-0b841a65",
+  version: "19.0.0-canary-1b065d5e",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9850,7 +9851,7 @@ var devToolsConfig$jscomp$inline_1074 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-0b841a65"
+  reconcilerVersion: "19.0.0-canary-1b065d5e"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
