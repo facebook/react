@@ -950,10 +950,15 @@ function completeWork(
   // for hydration.
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
+    case IncompleteFunctionComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
+      // Fallthrough
+    }
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
-    case IncompleteFunctionComponent:
     case ForwardRef:
     case Fragment:
     case Mode:

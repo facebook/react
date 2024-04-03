@@ -36,6 +36,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   DehydratedFragment,
   SuspenseListComponent,
   ScopeComponent,

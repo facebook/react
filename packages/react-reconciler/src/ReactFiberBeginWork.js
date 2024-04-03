@@ -4037,6 +4037,9 @@ function beginWork(
       );
     }
     case IncompleteFunctionComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
