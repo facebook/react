@@ -904,7 +904,12 @@ function resumeMountClassInstance(
 ): boolean {
   const instance = workInProgress.stateNode;
 
-  const oldProps = workInProgress.memoizedProps;
+  const unresolvedOldProps = workInProgress.memoizedProps;
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -926,6 +931,13 @@ function resumeMountClassInstance(
     typeof getDerivedStateFromProps === 'function' ||
     typeof instance.getSnapshotBeforeUpdate === 'function';
 
+  // When comparing whether props changed, we should compare using the
+  // unresolved props object that is stored on the fiber, rather than the
+  // one that gets assigned to the instance, because that object may have been
+  // cloned to resolve default props and/or remove `ref`.
+  const unresolvedNewProps = workInProgress.pendingProps;
+  const didReceiveNewProps = unresolvedNewProps !== unresolvedOldProps;
+
   // Note: During these life-cycles, instance.props/instance.state are what
   // ever the previously attempted to render - not the "current". However,
   // during componentDidUpdate we pass the "current" props.
@@ -937,7 +949,7 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextContext) {
+    if (didReceiveNewProps || oldContext !== nextContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
@@ -955,7 +967,7 @@ function resumeMountClassInstance(
   suspendIfUpdateReadFromEntangledAsyncAction();
   newState = workInProgress.memoizedState;
   if (
-    oldProps === newProps &&
+    !didReceiveNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
