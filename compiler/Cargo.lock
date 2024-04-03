@@ -699,13 +699,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "react_reactive_ir"
-version = "0.1.0"
-dependencies = [
- "react_hir",
-]
-
-[[package]]
 name = "react_semantic_analysis"
 version = "0.1.0"
 dependencies = [

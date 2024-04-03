@@ -21,7 +21,6 @@ react_fixtures = { path = "crates/react_fixtures" }
 react_hermes_parser = { path = "crates/react_hermes_parser" }
 react_hir = { path = "crates/react_hir" }
 react_optimization = { path = "crates/react_optimization" }
-react_reactive_ir = { path = "crates/react_reactive_ir" }
 react_semantic_analysis = { path = "crates/react_semantic_analysis" }
 react_ssa = { path = "crates/react_ssa" }
 react_utils = { path = "crates/react_utils" }
