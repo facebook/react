@@ -433,6 +433,7 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should support default props', async () => {
     function Child(props) {
       return <div>{props.test}</div>;
@@ -446,6 +447,7 @@ describe('ReactFunctionComponent', () => {
       await act(() => {
         root.render(<Child />);
       });
+      expect(container.textContent).toBe('2');
     }).toErrorDev([
       'Warning: Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);

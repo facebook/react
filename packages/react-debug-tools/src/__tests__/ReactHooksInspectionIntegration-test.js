@@ -2293,6 +2293,7 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should support defaultProps and lazy', async () => {
     const Suspense = React.Suspense;
 
