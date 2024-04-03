@@ -161,8 +161,6 @@ export const disableClientCache = false;
 // Changes Server Components Reconciliation when they have keys
 export const enableServerComponentKeys = true;
 
-export const enableBigIntSupport = true;
-
 /**
  * Enables a new error detection for infinite render loops from updates caused
  * by setState or similar outside of the component owning the state.

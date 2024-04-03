@@ -171,7 +171,6 @@ describe('ReactDOMOption', () => {
     expect(container.firstChild.value).toBe('hello');
   });
 
-  // @gate enableBigIntSupport
   it('should support bigint values', async () => {
     const container = await renderIntoDocument(<option>{5n}</option>);
     expect(container.firstChild.innerHTML).toBe('5');
