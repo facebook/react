@@ -600,8 +600,12 @@ function throwException(
     // Otherwise, fall through to the error path.
   }
 
-  const errorInfo = createCapturedValueAtFiber(value, sourceFiber);
-  queueConcurrentError(errorInfo);
+  const wrapperError = new Error(
+    'There was an error during concurrent rendering but React was able to recover by ' +
+      'instead synchronously rendering the entire root.',
+    {cause: value},
+  );
+  queueConcurrentError(createCapturedValueAtFiber(wrapperError, sourceFiber));
   renderDidError();
 
   // We didn't find a boundary that could handle this type of exception. Start
@@ -614,6 +618,7 @@ function throwException(
     return true;
   }
 
+  const errorInfo = createCapturedValueAtFiber(value, sourceFiber);
   let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {

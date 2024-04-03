@@ -3297,7 +3297,8 @@ describe('ReactDOMFizzServer', () => {
       'B',
 
       // Log the error
-      'onRecoverableError: Oops!',
+      'onRecoverableError: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.',
+      'Cause: Oops!',
     ]);
 
     // UI looks normal
