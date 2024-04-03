@@ -130,7 +130,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   const resolveText = resolveMostRecentTextCache;
 
-  // @gate experimental || www
+  // @gate www && !disableLegacyMode
   it('regression: false positive for legacy suspense', async () => {
     const Child = ({text}) => {
       // If text hasn't resolved, this will throw and exit before the passive

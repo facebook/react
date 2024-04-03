@@ -108,6 +108,7 @@ import {
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -700,7 +701,10 @@ function updateOffscreenComponent(
       );
     }
 
-    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+    if (
+      !disableLegacyMode &&
+      (workInProgress.mode & ConcurrentMode) === NoMode
+    ) {
       // In legacy sync mode, don't defer the subtree. Render it now.
       // TODO: Consider how Offscreen should work with transitions in the future
       const nextState: OffscreenState = {
@@ -2347,6 +2351,7 @@ function mountSuspenseFallbackChildren(
   let primaryChildFragment;
   let fallbackChildFragment;
   if (
+    !disableLegacyMode &&
     (mode & ConcurrentMode) === NoMode &&
     progressedPrimaryFragment !== null
   ) {
@@ -2430,7 +2435,7 @@ function updateSuspensePrimaryChildren(
       children: primaryChildren,
     },
   );
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     primaryChildFragment.lanes = renderLanes;
   }
   primaryChildFragment.return = workInProgress;
@@ -2471,6 +2476,7 @@ function updateSuspenseFallbackChildren(
   if (
     // In legacy mode, we commit the primary tree as if it successfully
     // completed, even though it's in an inconsistent state.
+    !disableLegacyMode &&
     (mode & ConcurrentMode) === NoMode &&
     // Make sure we're on the second pass, i.e. the primary child fragment was
     // already cloned. In legacy mode, the only case where this isn't true is
@@ -2607,7 +2613,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   primaryChildFragment.sibling = fallbackChildFragment;
   workInProgress.child = primaryChildFragment;
 
-  if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
+  if (disableLegacyMode || (workInProgress.mode & ConcurrentMode) !== NoMode) {
     // We will have dropped the effect list which contains the
     // deletion. We need to reconcile to delete the current child.
     reconcileChildFibers(workInProgress, current.child, null, renderLanes);
@@ -3195,7 +3201,7 @@ function updateSuspenseListComponent(
   }
   pushSuspenseListContext(workInProgress, suspenseContext);
 
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     // In legacy mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
     workInProgress.memoizedState = null;
@@ -3443,7 +3449,7 @@ function resetSuspendedCurrentOnMountInLegacyMode(
   current: null | Fiber,
   workInProgress: Fiber,
 ) {
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     if (current !== null) {
       // A lazy component only mounts if it suspended inside a non-
       // concurrent tree, in an inconsistent state. We want to treat it like
@@ -4013,6 +4019,9 @@ function beginWork(
       );
     }
     case IncompleteClassComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
@@ -4028,6 +4037,9 @@ function beginWork(
       );
     }
     case IncompleteFunctionComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =

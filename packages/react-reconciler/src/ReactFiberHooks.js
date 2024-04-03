@@ -42,6 +42,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
   enableUseDeferredValueInitialArg,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -662,7 +663,7 @@ function finishRenderingHooks<Props, SecondArg>(
       // need to mark fibers that commit in an incomplete state, somehow. For
       // now I'll disable the warning that most of the bugs that would trigger
       // it are either exclusive to concurrent mode or exist in both.
-      (current.mode & ConcurrentMode) !== NoMode
+      (disableLegacyMode || (current.mode & ConcurrentMode) !== NoMode)
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +

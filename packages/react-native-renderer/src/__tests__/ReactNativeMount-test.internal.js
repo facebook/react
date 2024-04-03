@@ -45,6 +45,7 @@ describe('ReactNative', () => {
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').TextInputState;
   });
 
+  // @gate !disableLegacyMode
   it('should be able to create and render a native component', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -58,6 +59,7 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).not.toBeCalled();
   });
 
+  // @gate !disableLegacyMode
   it('should be able to create and update a native component', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -79,6 +81,7 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).toBeCalledWith(3, 'RCTView', {foo: 'bar'});
   });
 
+  // @gate !disableLegacyMode
   it('should not call UIManager.updateView after render for properties that have not changed', () => {
     const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {foo: true},
@@ -105,6 +108,7 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).toHaveBeenCalledTimes(4);
   });
 
+  // @gate !disableLegacyMode
   it('should call dispatchCommand for native refs', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -133,6 +137,7 @@ describe('ReactNative', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should warn and no-op if calling dispatchCommand on non native refs', () => {
     class BasicClass extends React.Component {
       render() {
@@ -162,6 +167,7 @@ describe('ReactNative', () => {
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
   });
 
+  // @gate !disableLegacyMode
   it('should call sendAccessibilityEvent for native refs', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -192,6 +198,7 @@ describe('ReactNative', () => {
     ).toHaveBeenCalledWith(expect.any(Number), 'focus');
   });
 
+  // @gate !disableLegacyMode
   it('should warn and no-op if calling sendAccessibilityEvent on non native refs', () => {
     class BasicClass extends React.Component {
       render() {
@@ -221,6 +228,7 @@ describe('ReactNative', () => {
     expect(UIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 
+  // @gate !disableLegacyMode
   it('should not call UIManager.updateView from ref.setNativeProps for properties that have not changed', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -254,6 +262,7 @@ describe('ReactNative', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should call UIManager.measure on ref.measure', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -280,6 +289,7 @@ describe('ReactNative', () => {
     expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
   });
 
+  // @gate !disableLegacyMode
   it('should call UIManager.measureInWindow on ref.measureInWindow', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -306,6 +316,7 @@ describe('ReactNative', () => {
     expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
   });
 
+  // @gate !disableLegacyMode
   it('should support reactTag in ref.measureLayout', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -346,6 +357,7 @@ describe('ReactNative', () => {
     expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
   });
 
+  // @gate !disableLegacyMode
   it('should support ref in ref.measureLayout of host components', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -382,6 +394,7 @@ describe('ReactNative', () => {
     expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
   });
 
+  // @gate !disableLegacyMode
   it('returns the correct instance and calls it in the callback', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -403,6 +416,7 @@ describe('ReactNative', () => {
     expect(a).toBe(c);
   });
 
+  // @gate !disableLegacyMode
   it('renders and reorders children', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
@@ -427,12 +441,59 @@ describe('ReactNative', () => {
     const after = 'mxhpgwfralkeoivcstzy';
 
     ReactNative.render(<Component chars={before} />, 11);
-    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchInlineSnapshot(`
+      "<native root> {}
+        RCTView null
+          RCTView {"title":"a"}
+          RCTView {"title":"b"}
+          RCTView {"title":"c"}
+          RCTView {"title":"d"}
+          RCTView {"title":"e"}
+          RCTView {"title":"f"}
+          RCTView {"title":"g"}
+          RCTView {"title":"h"}
+          RCTView {"title":"i"}
+          RCTView {"title":"j"}
+          RCTView {"title":"k"}
+          RCTView {"title":"l"}
+          RCTView {"title":"m"}
+          RCTView {"title":"n"}
+          RCTView {"title":"o"}
+          RCTView {"title":"p"}
+          RCTView {"title":"q"}
+          RCTView {"title":"r"}
+          RCTView {"title":"s"}
+          RCTView {"title":"t"}"
+    `);
 
     ReactNative.render(<Component chars={after} />, 11);
-    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchInlineSnapshot(`
+      "<native root> {}
+        RCTView null
+          RCTView {"title":"m"}
+          RCTView {"title":"x"}
+          RCTView {"title":"h"}
+          RCTView {"title":"p"}
+          RCTView {"title":"g"}
+          RCTView {"title":"w"}
+          RCTView {"title":"f"}
+          RCTView {"title":"r"}
+          RCTView {"title":"a"}
+          RCTView {"title":"l"}
+          RCTView {"title":"k"}
+          RCTView {"title":"e"}
+          RCTView {"title":"o"}
+          RCTView {"title":"i"}
+          RCTView {"title":"v"}
+          RCTView {"title":"c"}
+          RCTView {"title":"s"}
+          RCTView {"title":"t"}
+          RCTView {"title":"z"}
+          RCTView {"title":"y"}"
+    `);
   });
 
+  // @gate !disableLegacyMode
   it('calls setState with no arguments', () => {
     let mockArgs;
     class Component extends React.Component {
@@ -448,6 +509,7 @@ describe('ReactNative', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
+  // @gate !disableLegacyMode
   it('should not throw when <View> is used inside of a <Text> ancestor', () => {
     const Image = createReactNativeComponentClass('RCTImage', () => ({
       validAttributes: {},
@@ -478,6 +540,7 @@ describe('ReactNative', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should throw for text not inside of a <Text> ancestor', async () => {
     const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
       validAttributes: {},
@@ -512,6 +575,7 @@ describe('ReactNative', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
     const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {},
@@ -528,6 +592,7 @@ describe('ReactNative', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('findHostInstance_DEPRECATED should warn if used to find a host component inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -564,6 +629,7 @@ describe('ReactNative', () => {
     expect(match).toBe(child);
   });
 
+  // @gate !disableLegacyMode
   it('findHostInstance_DEPRECATED should warn if passed a component that is inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -601,6 +667,7 @@ describe('ReactNative', () => {
     expect(match).toBe(child);
   });
 
+  // @gate !disableLegacyMode
   it('findNodeHandle should warn if used to find a host component inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -635,6 +702,7 @@ describe('ReactNative', () => {
     expect(match).toBe(child._nativeTag);
   });
 
+  // @gate !disableLegacyMode
   it('findNodeHandle should warn if passed a component that is inside StrictMode', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -670,6 +738,7 @@ describe('ReactNative', () => {
     expect(match).toBe(child._nativeTag);
   });
 
+  // @gate !disableLegacyMode
   it('blur on host component calls TextInputState', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -687,6 +756,7 @@ describe('ReactNative', () => {
     expect(TextInputState.blurTextInput).toHaveBeenCalledWith(viewRef.current);
   });
 
+  // @gate !disableLegacyMode
   it('focus on host component calls TextInputState', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},

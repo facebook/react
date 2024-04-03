@@ -43,6 +43,7 @@ import {
   enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePostpone,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -189,6 +190,7 @@ function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
   // A legacy mode Suspense quirk, only relevant to hook components.
   const tag = sourceFiber.tag;
   if (
+    !disableLegacyMode &&
     (sourceFiber.mode & ConcurrentMode) === NoMode &&
     (tag === FunctionComponent ||
       tag === ForwardRef ||
@@ -215,7 +217,10 @@ function markSuspenseBoundaryShouldCapture(
 ): Fiber | null {
   // This marks a Suspense boundary so that when we're unwinding the stack,
   // it captures the suspended "exception" and does a second (fallback) pass.
-  if ((suspenseBoundary.mode & ConcurrentMode) === NoMode) {
+  if (
+    !disableLegacyMode &&
+    (suspenseBoundary.mode & ConcurrentMode) === NoMode
+  ) {
     // Legacy Mode Suspense
     //
     // If the boundary is in legacy mode, we should *not*
@@ -354,7 +359,10 @@ function throwException(
       resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
       if (__DEV__) {
-        if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+        if (
+          getIsHydrating() &&
+          (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+        ) {
           markDidThrowWhileHydratingDEV();
         }
       }
@@ -383,7 +391,7 @@ function throwException(
             // we don't have to recompute it on demand. This would also allow us
             // to unify with `use` which needs to perform this logic even sooner,
             // before `throwException` is called.
-            if (sourceFiber.mode & ConcurrentMode) {
+            if (disableLegacyMode || sourceFiber.mode & ConcurrentMode) {
               if (getShellBoundary() === null) {
                 // Suspended in the "shell" of the app. This is an undesirable
                 // loading state. We should avoid committing this tree.
@@ -451,14 +459,14 @@ function throwException(
               // We only attach ping listeners in concurrent mode. Legacy
               // Suspense always commits fallbacks synchronously, so there are
               // no pings.
-              if (suspenseBoundary.mode & ConcurrentMode) {
+              if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
                 attachPingListener(root, wakeable, rootRenderLanes);
               }
             }
             return false;
           }
           case OffscreenComponent: {
-            if (suspenseBoundary.mode & ConcurrentMode) {
+            if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
               suspenseBoundary.flags |= ShouldCapture;
               const isSuspenseyResource =
                 wakeable === noopSuspenseyCommitThenable;
@@ -497,7 +505,7 @@ function throwException(
         // No boundary was found. Unless this is a sync update, this is OK.
         // We can suspend and wait for more data to arrive.
 
-        if (root.tag === ConcurrentRoot) {
+        if (disableLegacyMode || root.tag === ConcurrentRoot) {
           // In a concurrent root, suspending without a Suspense boundary is
           // allowed. It will suspend indefinitely without committing.
           //
@@ -522,7 +530,10 @@ function throwException(
   }
 
   // This is a regular error, not a Suspense wakeable.
-  if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+  if (
+    getIsHydrating() &&
+    (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+  ) {
     markDidThrowWhileHydratingDEV();
     const suspenseBoundary = getSuspenseHandler();
     // If the error was thrown during hydration, we may be able to recover by
