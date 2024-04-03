@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9049da9d0398addbe9ad47567cb0a0f2>>
+ * @generated SignedSource<<dff5882f8219f97fa6b685d700750e06>>
  */
 
 "use strict";
@@ -9818,14 +9818,11 @@ if (__DEV__) {
 
     function mountRef(initialValue) {
       var hook = mountWorkInProgressHook();
-
-      {
-        var _ref2 = {
-          current: initialValue
-        };
-        hook.memoizedState = _ref2;
-        return _ref2;
-      }
+      var ref = {
+        current: initialValue
+      };
+      hook.memoizedState = ref;
+      return ref;
     }
 
     function updateRef(initialValue) {
@@ -26801,7 +26798,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-23a1aa6f";
+    var ReactVersion = "19.0.0-canary-9dd5e9f4";
 
     // Might add PROFILE later.
 

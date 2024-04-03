@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<83ce9566209d54efec3736b91598c233>>
+ * @generated SignedSource<<cb885e8934a011f045924ca7dbd54aba>>
  */
 
 "use strict";
@@ -2984,7 +2984,6 @@ to return true:wantsResponderID|                            |
         dynamicFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFlags.enableRenderableContext,
       enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-      enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlags.passChildrenWhenCloningPersistedNodes,
       useModernStrictMode = dynamicFlags.useModernStrictMode; // The rest of the flags are static for better dead code elimination.
@@ -13309,95 +13308,13 @@ to return true:wantsResponderID|                            |
       };
     }
 
-    var stackContainsErrorMessage = null;
-
-    function getCallerStackFrame() {
-      // eslint-disable-next-line react-internal/prod-error-codes
-      var stackFrames = new Error("Error message").stack.split("\n"); // Some browsers (e.g. Chrome) include the error message in the stack
-      // but others (e.g. Firefox) do not.
-
-      if (stackContainsErrorMessage === null) {
-        stackContainsErrorMessage = stackFrames[0].includes("Error message");
-      }
-
-      return stackContainsErrorMessage
-        ? stackFrames.slice(3, 4).join("\n")
-        : stackFrames.slice(2, 3).join("\n");
-    }
-
     function mountRef(initialValue) {
       var hook = mountWorkInProgressHook();
-
-      if (enableUseRefAccessWarning) {
-        {
-          // Support lazy initialization pattern shown in docs.
-          // We need to store the caller stack frame so that we don't warn on subsequent renders.
-          var hasBeenInitialized = initialValue != null;
-          var lazyInitGetterStack = null;
-          var didCheckForLazyInit = false; // Only warn once per component+hook.
-
-          var didWarnAboutRead = false;
-          var didWarnAboutWrite = false;
-          var current = initialValue;
-          var ref = {
-            get current() {
-              if (!hasBeenInitialized) {
-                didCheckForLazyInit = true;
-                lazyInitGetterStack = getCallerStackFrame();
-              } else if (
-                currentlyRenderingFiber$1 !== null &&
-                !didWarnAboutRead
-              ) {
-                if (
-                  lazyInitGetterStack === null ||
-                  lazyInitGetterStack !== getCallerStackFrame()
-                ) {
-                  didWarnAboutRead = true;
-
-                  warn(
-                    "%s: Unsafe read of a mutable value during render.\n\n" +
-                      "Reading from a ref during render is only safe if:\n" +
-                      "1. The ref value has not been updated, or\n" +
-                      "2. The ref holds a lazily-initialized value that is only set once.\n",
-                    getComponentNameFromFiber(currentlyRenderingFiber$1) ||
-                      "Unknown"
-                  );
-                }
-              }
-
-              return current;
-            },
-
-            set current(value) {
-              if (currentlyRenderingFiber$1 !== null && !didWarnAboutWrite) {
-                if (hasBeenInitialized || !didCheckForLazyInit) {
-                  didWarnAboutWrite = true;
-
-                  warn(
-                    "%s: Unsafe write of a mutable value during render.\n\n" +
-                      "Writing to a ref during render is only safe if the ref holds " +
-                      "a lazily-initialized value that is only set once.\n",
-                    getComponentNameFromFiber(currentlyRenderingFiber$1) ||
-                      "Unknown"
-                  );
-                }
-              }
-
-              hasBeenInitialized = true;
-              current = value;
-            }
-          };
-          Object.seal(ref);
-          hook.memoizedState = ref;
-          return ref;
-        }
-      } else {
-        var _ref2 = {
-          current: initialValue
-        };
-        hook.memoizedState = _ref2;
-        return _ref2;
-      }
+      var ref = {
+        current: initialValue
+      };
+      hook.memoizedState = ref;
+      return ref;
     }
 
     function updateRef(initialValue) {
@@ -30572,7 +30489,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-d5e5d620";
+    var ReactVersion = "19.0.0-canary-dbb66dd5";
 
     function createPortal$1(
       children,
