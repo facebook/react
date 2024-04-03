@@ -30,7 +30,6 @@
     "README.md",
     "index.js",
     "shallow.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ]
 }

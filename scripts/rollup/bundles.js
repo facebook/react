@@ -11,9 +11,6 @@ const bundleTypes = {
   NODE_ES2015: 'NODE_ES2015',
   ESM_DEV: 'ESM_DEV',
   ESM_PROD: 'ESM_PROD',
-  UMD_DEV: 'UMD_DEV',
-  UMD_PROD: 'UMD_PROD',
-  UMD_PROFILING: 'UMD_PROFILING',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
   NODE_PROFILING: 'NODE_PROFILING',
@@ -35,9 +32,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -72,9 +66,6 @@ const bundles = [
   /******* Isomorphic *******/
   {
     bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      UMD_PROFILING,
       NODE_DEV,
       NODE_PROD,
       FB_WWW_DEV,
@@ -173,9 +164,6 @@ const bundles = [
   /******* React DOM *******/
   {
     bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      UMD_PROFILING,
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
@@ -207,7 +195,7 @@ const bundles = [
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     minifyWithProdErrorCodes: false,
@@ -230,14 +218,7 @@ const bundles = [
 
   /******* React DOM Server *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/src/server/ReactDOMLegacyServerBrowser.js',
     name: 'react-dom-server-legacy.browser',
@@ -270,7 +251,7 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/src/server/react-dom-server.browser.js',
     name: 'react-dom-server.browser',
@@ -339,7 +320,7 @@ const bundles = [
 
   /******* React DOM Server Render Stub *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/server-rendering-stub',
     name: 'react-dom-server-rendering-stub',
@@ -351,7 +332,7 @@ const bundles = [
 
   /******* React Server DOM Webpack Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/server.browser',
     condition: 'react-server',
@@ -393,7 +374,7 @@ const bundles = [
 
   /******* React Server DOM Webpack Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/client.browser',
     global: 'ReactServerDOMClient',
@@ -467,7 +448,7 @@ const bundles = [
 
   /******* React Server DOM Turbopack Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-turbopack/server.browser',
     condition: 'react-server',
@@ -509,7 +490,7 @@ const bundles = [
 
   /******* React Server DOM Turbopack Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-turbopack/client.browser',
     global: 'ReactServerDOMClient',
@@ -651,14 +632,7 @@ const bundles = [
 
   /******* React ART *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-art',
     global: 'ReactART',
@@ -752,8 +726,6 @@ const bundles = [
       FB_WWW_DEV,
       NODE_DEV,
       NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
       RN_FB_DEV,
       RN_FB_PROD,
       RN_FB_PROFILING,
@@ -917,8 +889,6 @@ const bundles = [
       NODE_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
-      UMD_DEV,
-      UMD_PROD,
       RN_FB_DEV,
       RN_FB_PROD,
       RN_FB_PROFILING,
@@ -1044,8 +1014,6 @@ const bundles = [
   /******* React Scheduler Mock (experimental) *******/
   {
     bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
       NODE_DEV,
       NODE_PROD,
       FB_WWW_DEV,
@@ -1172,12 +1140,6 @@ function getFilename(bundle, bundleType) {
       return `${name}.development.js`;
     case ESM_PROD:
       return `${name}.production.min.js`;
-    case UMD_DEV:
-      return `${name}.development.js`;
-    case UMD_PROD:
-      return `${name}.production.min.js`;
-    case UMD_PROFILING:
-      return `${name}.profiling.min.js`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:

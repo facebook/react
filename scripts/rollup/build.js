@@ -3,7 +3,6 @@
 const rollup = require('rollup');
 const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('@rollup/plugin-commonjs');
 const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('@rollup/plugin-replace');
@@ -48,9 +47,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -228,10 +224,6 @@ function getRollupOutputOptions(
 
 function getFormat(bundleType) {
   switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case UMD_PROFILING:
-      return `umd`;
     case NODE_ES2015:
     case NODE_DEV:
     case NODE_PROD:
@@ -261,7 +253,6 @@ function isProductionBundleType(bundleType) {
     case NODE_ES2015:
       return true;
     case ESM_DEV:
-    case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
     case FB_WWW_DEV:
@@ -269,10 +260,8 @@ function isProductionBundleType(bundleType) {
     case RN_FB_DEV:
       return false;
     case ESM_PROD:
-    case UMD_PROD:
     case NODE_PROD:
     case BUN_PROD:
-    case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -302,15 +291,12 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case ESM_DEV:
     case ESM_PROD:
-    case UMD_DEV:
-    case UMD_PROD:
     case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
-    case UMD_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -318,10 +304,6 @@ function isProfilingBundleType(bundleType) {
 }
 
 function getBundleTypeFlags(bundleType) {
-  const isUMDBundle =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
   const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
@@ -341,17 +323,10 @@ function getBundleTypeFlags(bundleType) {
 
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
 
-  const shouldBundleDependencies =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
-
   return {
-    isUMDBundle,
     isFBWWWBundle,
     isRNBundle,
     isFBRNBundle,
-    shouldBundleDependencies,
     shouldStayReadable,
   };
 }
@@ -387,7 +362,7 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
+    const {shouldStayReadable} = getBundleTypeFlags(bundleType);
 
     const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
 
@@ -403,14 +378,12 @@ function getPlugins(
     // Generate sourcemaps for true "production" build artifacts
     // that will be used by bundlers, such as `react-dom.production.min.js`.
     // Also include profiling builds as well.
-    // UMD builds are rarely used and not worth having sourcemaps.
     const needsSourcemaps =
       needsMinifiedByClosure &&
       // This will only exclude `unstable_server-external-runtime.js` artifact
       // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
       // and force `react-dom` to include .map files in npm-package at the root level
       bundleType !== BROWSER_SCRIPT &&
-      !isUMDBundle &&
       !sourcemapPackageExcludes.includes(entry) &&
       !shouldStayReadable;
 
@@ -463,17 +436,12 @@ function getPlugins(
         values: {
           __DEV__: isProduction ? 'false' : 'true',
           __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-          __UMD__: isUMDBundle ? 'true' : 'false',
           'process.env.NODE_ENV': isProduction
             ? "'production'"
             : "'development'",
           __EXPERIMENTAL__,
         },
       }),
-      // The CommonJS plugin *only* exists to pull "art" into "react-art".
-      // I'm going to port "art" to ES modules to avoid this problem.
-      // Please don't enable this for anything else!
-      isUMDBundle && entry === 'react-art' && commonjs(),
       {
         name: 'top-level-definitions',
         renderChunk(source) {
@@ -530,7 +498,7 @@ function getPlugins(
 
             // Don't let it create global variables in the browser.
             // https://github.com/facebook/react/issues/10909
-            assume_function_wrapper: !isUMDBundle,
+            assume_function_wrapper: true,
             renaming: !shouldStayReadable,
           },
           {needsSourcemaps}
@@ -733,8 +701,7 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
-    getBundleTypeFlags(bundleType);
+  const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
@@ -743,10 +710,9 @@ async function createBundle(bundle, bundleType) {
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
-  if (!shouldBundleDependencies) {
-    const deps = Modules.getDependencies(bundleType, bundle.entry);
-    externals = externals.concat(deps);
-  }
+
+  const deps = Modules.getDependencies(bundleType, bundle.entry);
+  externals = externals.concat(deps);
 
   const importSideEffects = Modules.getImportSideEffects();
   const pureExternalModules = Object.keys(importSideEffects).filter(
@@ -763,7 +729,7 @@ async function createBundle(bundle, bundleType) {
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
-      if (!shouldBundleDependencies && isProvidedByDependency) {
+      if (isProvidedByDependency) {
         if (id.indexOf('/src/') !== -1) {
           throw Error(
             'You are trying to import ' +
@@ -931,9 +897,6 @@ async function buildEverything() {
       [bundle, NODE_ES2015],
       [bundle, ESM_DEV],
       [bundle, ESM_PROD],
-      [bundle, UMD_DEV],
-      [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],

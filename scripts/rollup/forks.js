@@ -5,9 +5,6 @@ const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const {
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -188,25 +185,6 @@ const forks = Object.freeze({
     return null;
   },
 
-  './packages/scheduler/index.js': (bundleType, entry, dependencies) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        if (dependencies.indexOf('react') === -1) {
-          // It's only safe to use this fork for modules that depend on React,
-          // because they read the re-exported API from the SECRET_INTERNALS object.
-          return null;
-        }
-        // Optimization: for UMDs, use the API that is already a part of the React
-        // package instead of requiring it to be loaded via a separate <script> tag
-        return './packages/shared/forks/Scheduler.umd.js';
-      default:
-        // For other bundles, use the shared NPM package.
-        return null;
-    }
-  },
-
   './packages/scheduler/src/SchedulerFeatureFlags.js': (
     bundleType,
     entry,
@@ -226,17 +204,6 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
         return './packages/shared/forks/consoleWithStackDev.www.js';
-      default:
-        return null;
-    }
-  },
-
-  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }
