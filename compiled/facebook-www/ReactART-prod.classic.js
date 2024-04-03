@@ -62,7 +62,6 @@ function formatProdErrorMessage(code) {
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
@@ -1955,7 +1954,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (newChild = createFiberFromText(
@@ -2024,7 +2023,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return null !== key
         ? null
@@ -2077,7 +2076,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (existingChildren = existingChildren.get(newIdx) || null),
@@ -2455,7 +2454,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
@@ -10684,7 +10683,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-29066230",
+    version: "19.0.0-www-classic-4f441558",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1316 = {
@@ -10715,7 +10714,7 @@ var internals$jscomp$inline_1316 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-29066230"
+  reconcilerVersion: "19.0.0-www-classic-4f441558"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1317 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

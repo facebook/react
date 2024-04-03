@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-1ce4afb4";
+    var ReactVersion = "19.0.0-www-modern-3e52800d";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -395,17 +395,6 @@ if (__DEV__) {
       return isArrayImpl(a);
     }
 
-    // Re-export dynamic flags from the www version.
-    var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
-      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
-    // On WWW, true is used for a new modern build.
-    var disableLegacyMode = true;
-
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
      * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -479,6 +468,16 @@ if (__DEV__) {
         }
       }
     }
+
+    // Re-export dynamic flags from the www version.
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
+    // On WWW, true is used for a new modern build.
+    var disableLegacyMode = true;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -2313,12 +2312,6 @@ if (__DEV__) {
       } else {
         switch (type) {
           case "bigint":
-            if (!enableBigIntSupport) {
-              break;
-            }
-
-          // fallthrough for enabled BigInt support
-
           case "string":
           case "number":
             invokeCallback = true;

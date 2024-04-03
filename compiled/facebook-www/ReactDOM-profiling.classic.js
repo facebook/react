@@ -40,7 +40,6 @@ var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
-  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -1147,7 +1146,6 @@ function getStackByFiberInDevAndProd(workInProgress) {
 function getToStringValue(value) {
   switch (typeof value) {
     case "bigint":
-      if (!enableBigIntSupport) return "";
     case "boolean":
     case "number":
     case "string":
@@ -1878,18 +1876,18 @@ function prepareToHydrateHostInstance(fiber) {
         track(instance);
   }
   fiber = props.children;
-  ("string" === typeof fiber ||
-    "number" === typeof fiber ||
-    (enableBigIntSupport && "bigint" === typeof fiber)) &&
-  instance.textContent !== "" + fiber &&
-  !0 !== props.suppressHydrationWarning &&
-  !checkForUnmatchedText(instance.textContent, fiber)
-    ? (instance = !1)
-    : (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+  ("string" !== typeof fiber &&
+    "number" !== typeof fiber &&
+    "bigint" !== typeof fiber) ||
+  instance.textContent === "" + fiber ||
+  !0 === props.suppressHydrationWarning ||
+  checkForUnmatchedText(instance.textContent, fiber)
+    ? (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
       null != props.onClick && (instance.onclick = noop$2),
-      (instance = !0));
+      (instance = !0))
+    : (instance = !1);
   !instance && favorSafetyOverHydrationPerf && throwOnHydrationMismatch();
 }
 function popToNextHostParent(fiber) {
@@ -2790,7 +2788,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (newChild = createFiberFromText(
@@ -2859,7 +2857,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return null !== key
         ? null
@@ -2912,7 +2910,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (
       ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
     )
       return (
         (existingChildren = existingChildren.get(newIdx) || null),
@@ -3300,7 +3298,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     }
     return ("string" === typeof newChild && "" !== newChild) ||
       "number" === typeof newChild ||
-      (enableBigIntSupport && "bigint" === typeof newChild)
+      "bigint" === typeof newChild
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
@@ -15054,8 +15052,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         ? "body" === tag ||
           ("textarea" === tag && "" === value) ||
           setTextContent(domElement, value)
-        : ("number" === typeof value ||
-            (enableBigIntSupport && "bigint" === typeof value)) &&
+        : ("number" === typeof value || "bigint" === typeof value) &&
           "body" !== tag &&
           setTextContent(domElement, "" + value);
       break;
@@ -15383,8 +15380,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
     case "children":
       "string" === typeof value
         ? setTextContent(domElement, value)
-        : ("number" === typeof value ||
-            (enableBigIntSupport && "bigint" === typeof value)) &&
+        : ("number" === typeof value || "bigint" === typeof value) &&
           setTextContent(domElement, "" + value);
       break;
     case "onScroll":
@@ -16033,7 +16029,7 @@ function shouldSetTextContent(type, props) {
     "noscript" === type ||
     "string" === typeof props.children ||
     "number" === typeof props.children ||
-    (enableBigIntSupport && "bigint" === typeof props.children) ||
+    "bigint" === typeof props.children ||
     ("object" === typeof props.dangerouslySetInnerHTML &&
       null !== props.dangerouslySetInnerHTML &&
       null != props.dangerouslySetInnerHTML.__html)
@@ -17736,7 +17732,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1789 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-f2a4b026",
+  version: "19.0.0-www-classic-43cc101b",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17780,7 +17776,7 @@ var devToolsConfig$jscomp$inline_1789 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-f2a4b026"
+  reconcilerVersion: "19.0.0-www-classic-43cc101b"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18223,7 +18219,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-f2a4b026";
+exports.version = "19.0.0-www-classic-43cc101b";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

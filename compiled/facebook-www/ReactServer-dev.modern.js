@@ -82,8 +82,7 @@ if (__DEV__) {
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-    var enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
-      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
@@ -2023,12 +2022,6 @@ if (__DEV__) {
       } else {
         switch (type) {
           case "bigint":
-            if (!enableBigIntSupport) {
-              break;
-            }
-
-          // fallthrough for enabled BigInt support
-
           case "string":
           case "number":
             invokeCallback = true;
@@ -2839,7 +2832,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-35ac071d";
+    var ReactVersion = "19.0.0-www-modern-aac4a3b6";
 
     // Patch fetch
     var Children = {

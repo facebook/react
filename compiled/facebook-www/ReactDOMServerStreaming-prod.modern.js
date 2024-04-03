@@ -120,7 +120,6 @@ function writeChunkAndReturn(destination, chunk) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
@@ -231,7 +230,7 @@ function escapeTextForBrowser(text) {
   if (
     "boolean" === typeof text ||
     "number" === typeof text ||
-    (enableBigIntSupport && "bigint" === typeof text)
+    "bigint" === typeof text
   )
     return "" + text;
   text = "" + text;
@@ -4317,7 +4316,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
           ));
     else if (
       "number" === typeof node$jscomp$0 ||
-      (enableBigIntSupport && "bigint" === typeof node$jscomp$0)
+      "bigint" === typeof node$jscomp$0
     )
       (childIndex = task.blockedSegment),
         null !== childIndex &&

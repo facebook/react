@@ -128,7 +128,6 @@ function murmurhash3_32_gc(key, seed) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
@@ -239,7 +238,7 @@ function escapeTextForBrowser(text) {
   if (
     "boolean" === typeof text ||
     "number" === typeof text ||
-    (enableBigIntSupport && "bigint" === typeof text)
+    "bigint" === typeof text
   )
     return "" + text;
   text = "" + text;
@@ -4484,7 +4483,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
           ));
     else if (
       "number" === typeof node$jscomp$0 ||
-      (enableBigIntSupport && "bigint" === typeof node$jscomp$0)
+      "bigint" === typeof node$jscomp$0
     )
       (childIndex = task.blockedSegment),
         null !== childIndex &&
@@ -5634,4 +5633,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-e9074a7c";
+exports.version = "19.0.0-www-modern-d998fb79";

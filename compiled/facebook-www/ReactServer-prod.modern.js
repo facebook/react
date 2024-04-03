@@ -13,7 +13,6 @@
 "use strict";
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableBigIntSupport = dynamicFeatureFlags.enableBigIntSupport,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   ReactCurrentCache = { current: null },
@@ -170,7 +169,6 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   else
     switch (type) {
       case "bigint":
-        if (!enableBigIntSupport) break;
       case "string":
       case "number":
         invokeCallback = !0;
@@ -557,4 +555,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-395ddcb4";
+exports.version = "19.0.0-www-modern-342eadac";
