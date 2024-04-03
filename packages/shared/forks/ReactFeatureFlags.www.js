@@ -113,7 +113,7 @@ export const useModernStrictMode = true;
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
-export const disableLegacyMode = false;
+export const disableLegacyMode = __EXPERIMENTAL__;
 
 export const disableDOMTestUtils = false;
 

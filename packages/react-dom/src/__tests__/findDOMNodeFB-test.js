@@ -14,7 +14,7 @@ const ReactDOM = require('react-dom');
 const StrictMode = React.StrictMode;
 
 describe('findDOMNode', () => {
-  // @gate www
+  // @gate www && !disableLegacyMode
   it('findDOMNode should return null if passed null', () => {
     expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
@@ -66,7 +66,7 @@ describe('findDOMNode', () => {
     expect(b.tagName).toBe('SPAN');
   });
 
-  // @gate www
+  // @gate www && !disableLegacyMode
   it('findDOMNode should reject random objects', () => {
     expect(function () {
       ReactDOM.findDOMNode({foo: 'bar'});
