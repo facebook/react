@@ -178,7 +178,7 @@ export const enableReactTestRendererWarning = __NEXT_MAJOR__;
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
-export const disableLegacyMode = __NEXT_MAJOR__;
+export const disableLegacyMode = true;
 
 export const disableDOMTestUtils = __NEXT_MAJOR__;
 
