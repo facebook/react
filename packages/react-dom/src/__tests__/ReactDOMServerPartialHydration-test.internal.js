@@ -2157,7 +2157,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ]);
     } else {
       await waitForAll([
-        'The server could not finish this Suspense boundary, likely due to ' +
+        'onRecoverableError: The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering.',
       ]);
     }
@@ -2230,7 +2230,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ]);
     } else {
       await waitForAll([
-        'The server could not finish this Suspense boundary, likely due to ' +
+        'onRecoverableError: The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering.',
       ]);
     }
@@ -2308,7 +2308,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ]);
     } else {
       await waitForAll([
-        'The server could not finish this Suspense boundary, likely due to ' +
+        'onRecoverableError: The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering.',
       ]);
     }
@@ -2632,7 +2632,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ]);
     } else {
       await waitForAll([
-        'The server could not finish this Suspense boundary, likely due to ' +
+        'onRecoverableError: The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering.',
       ]);
     }
@@ -2706,7 +2706,7 @@ describe('ReactDOMServerPartialHydration', () => {
       ]);
     } else {
       await waitForAll([
-        'The server could not finish this Suspense boundary, likely due to ' +
+        'onRecoverableError: The server could not finish this Suspense boundary, likely due to ' +
           'an error during server rendering.',
       ]);
     }
