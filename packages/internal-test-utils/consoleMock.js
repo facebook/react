@@ -182,6 +182,53 @@ export function clearErrors() {
   return errors;
 }
 
+export function assertConsoleLogsCleared() {
+  const logs = clearLogs();
+  const warnings = clearWarnings();
+  const errors = clearErrors();
+
+  if (logs.length > 0 || errors.length > 0 || warnings.length > 0) {
+    let message = `${chalk.dim('asserConsoleLogsCleared')}(${chalk.red(
+      'expected',
+    )})\n`;
+
+    if (logs.length > 0) {
+      message += `\nconsole.log was called without assertConsoleLogDev:\n${diff(
+        '',
+        logs.join('\n'),
+        {
+          omitAnnotationLines: true,
+        },
+      )}\n`;
+    }
+
+    if (warnings.length > 0) {
+      message += `\nconsole.warn was called without assertConsoleWarnDev:\n${diff(
+        '',
+        warnings.join('\n'),
+        {
+          omitAnnotationLines: true,
+        },
+      )}\n`;
+    }
+    if (errors.length > 0) {
+      message += `\nconsole.error was called without assertConsoleErrorDev:\n${diff(
+        '',
+        errors.join('\n'),
+        {
+          omitAnnotationLines: true,
+        },
+      )}\n`;
+    }
+
+    message += `\nYou must call one of the assertConsoleDev helpers between each act call.`;
+
+    const error = Error(message);
+    Error.captureStackTrace(error, assertConsoleLogsCleared);
+    throw error;
+  }
+}
+
 function replaceComponentStack(str) {
   if (typeof str !== 'string') {
     return str;

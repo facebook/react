@@ -308,12 +308,23 @@ describe('ReactInternalTestUtils console mocks', () => {
   });
 });
 
-// Helper methods avoids invalid toWarn().toThrow() nesting
-// See no-to-warn-dev-within-to-throw
-const expectToWarnAndToThrow = (expectBlock, expectedErrorMessage) => {
+// Helper method to capture assertion failure.
+const expectToWarnAndToThrow = expectBlock => {
   let caughtError;
   try {
     expectBlock();
+  } catch (error) {
+    caughtError = error;
+  }
+  expect(caughtError).toBeDefined();
+  return stripAnsi(caughtError.message);
+};
+
+// Helper method to capture assertion failure with act.
+const awaitExpectToWarnAndToThrow = async expectBlock => {
+  let caughtError;
+  try {
+    await expectBlock();
   } catch (error) {
     caughtError = error;
   }
@@ -344,6 +355,44 @@ describe('ReactInternalTestUtils console assertions', () => {
       console.log('Good day');
       console.log('Bye');
       assertConsoleLogDev(['Hello', 'Good day', 'Bye']);
+    });
+
+    it('fails if act is called without assertConsoleLogDev', async () => {
+      const Yield = ({id}) => {
+        console.log(id);
+        return id;
+      };
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <Yield id="C" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App />);
+      });
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await act(() => {
+          root.render(<App />);
+        });
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + A
+        + B
+        + C
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
     });
 
     // @gate __DEV__
@@ -646,6 +695,44 @@ describe('ReactInternalTestUtils console assertions', () => {
       console.warn('Good day');
       console.warn('Bye\n    in div');
       assertConsoleWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: 1});
+    });
+
+    it('fails if act is called without assertConsoleWarnDev', async () => {
+      const Yield = ({id}) => {
+        console.warn(id);
+        return id;
+      };
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <Yield id="C" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App />);
+      });
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await act(() => {
+          root.render(<App />);
+        });
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + A
+        + B
+        + C
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
     });
 
     // @gate __DEV__
@@ -1141,6 +1228,94 @@ describe('ReactInternalTestUtils console assertions', () => {
       console.error('Good day');
       console.error('Bye\n    in div');
       assertConsoleErrorDev(['Hello', 'Good day', 'Bye'], {withoutStack: 1});
+    });
+
+    it('fails if act is called without assertConsoleErrorDev', async () => {
+      const Yield = ({id}) => {
+        console.error(id);
+        return id;
+      };
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <Yield id="C" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App />);
+      });
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await act(() => {
+          root.render(<App />);
+        });
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + A
+        + B
+        + C
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+    });
+
+    it('fails if act is called without any assertConsoleDev helpers', async () => {
+      const Yield = ({id}) => {
+        console.log(id);
+        console.warn(id);
+        console.error(id);
+        return id;
+      };
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <Yield id="C" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App />);
+      });
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await act(() => {
+          root.render(<App />);
+        });
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + A
+        + B
+        + C
+
+        console.warn was called without assertConsoleWarnDev:
+        + A
+        + B
+        + C
+
+        console.error was called without assertConsoleErrorDev:
+        + A
+        + B
+        + C
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
     });
 
     // @gate __DEV__
