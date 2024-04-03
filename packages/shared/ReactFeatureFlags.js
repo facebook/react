@@ -130,33 +130,38 @@ export const transitionLaneExpirationMs = 5000;
 //
 // Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
 // -----------------------------------------------------------------------------
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+
+// TODO: Anything that's set to `true` in this section should either be cleaned
+// up (if it's on everywhere, including Meta and RN builds) or moved to a
+// different section of this file.
+
+// const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
 // Removes legacy style context
-export const disableLegacyContext = __NEXT_MAJOR__;
+export const disableLegacyContext = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = __NEXT_MAJOR__;
+export const useModernStrictMode = true;
 
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = __NEXT_MAJOR__;
+export const disableIEWorkarounds = true;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = false;
 
 // Changes Server Components Reconciliation when they have keys
-export const enableServerComponentKeys = __NEXT_MAJOR__;
+export const enableServerComponentKeys = true;
 
-export const enableBigIntSupport = __NEXT_MAJOR__;
+export const enableBigIntSupport = true;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused
@@ -169,21 +174,21 @@ export const enableInfiniteRenderLoopDetection = true;
 
 // Passes `ref` as a normal prop instead of stripping it from the props object
 // during element creation.
-export const enableRefAsProp = __NEXT_MAJOR__;
-export const disableStringRefs = __NEXT_MAJOR__;
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
 
 // Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = __NEXT_MAJOR__;
+export const enableReactTestRendererWarning = true;
 
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
 
-export const disableDOMTestUtils = __NEXT_MAJOR__;
+export const disableDOMTestUtils = true;
 
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = __NEXT_MAJOR__;
+export const enableRenderableContext = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
