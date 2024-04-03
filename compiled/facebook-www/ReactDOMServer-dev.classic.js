@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-57497d22";
+    var ReactVersion = "19.0.0-www-classic-81cf15cb";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -11996,13 +11996,39 @@ if (__DEV__) {
       task.keyPath = prevKeyPath;
     }
 
+    function resolveClassComponentProps(Component, baseProps) {
+      var newProps = baseProps; // TODO: This is where defaultProps should be resolved, too.
+
+      if (enableRefAsProp) {
+        // Remove ref from the props object, if it exists.
+        if ("ref" in newProps) {
+          newProps = assign({}, newProps);
+          delete newProps.ref;
+        }
+      }
+
+      return newProps;
+    }
+
     function renderClassComponent(request, task, keyPath, Component, props) {
+      var resolvedProps = resolveClassComponentProps(Component, props);
       var previousComponentStack = task.componentStack;
       task.componentStack = createClassComponentStack(task, Component);
       var maskedContext = getMaskedContext(Component, task.legacyContext);
-      var instance = constructClassInstance(Component, props, maskedContext);
-      mountClassInstance(instance, Component, props, maskedContext);
-      finishClassComponent(request, task, keyPath, instance, Component, props);
+      var instance = constructClassInstance(
+        Component,
+        resolvedProps,
+        maskedContext
+      );
+      mountClassInstance(instance, Component, resolvedProps, maskedContext);
+      finishClassComponent(
+        request,
+        task,
+        keyPath,
+        instance,
+        Component,
+        resolvedProps
+      );
       task.componentStack = previousComponentStack;
     }
 

@@ -11778,13 +11778,35 @@ if (__DEV__) {
       task.keyPath = prevKeyPath;
     }
 
+    function resolveClassComponentProps(Component, baseProps) {
+      var newProps = baseProps; // TODO: This is where defaultProps should be resolved, too.
+
+      if (enableRefAsProp) {
+        // Remove ref from the props object, if it exists.
+        if ("ref" in newProps) {
+          newProps = assign({}, newProps);
+          delete newProps.ref;
+        }
+      }
+
+      return newProps;
+    }
+
     function renderClassComponent(request, task, keyPath, Component, props) {
+      var resolvedProps = resolveClassComponentProps(Component, props);
       var previousComponentStack = task.componentStack;
       task.componentStack = createClassComponentStack(task, Component);
       var maskedContext = undefined;
-      var instance = constructClassInstance(Component, props);
-      mountClassInstance(instance, Component, props, maskedContext);
-      finishClassComponent(request, task, keyPath, instance, Component, props);
+      var instance = constructClassInstance(Component, resolvedProps);
+      mountClassInstance(instance, Component, resolvedProps, maskedContext);
+      finishClassComponent(
+        request,
+        task,
+        keyPath,
+        instance,
+        Component,
+        resolvedProps
+      );
       task.componentStack = previousComponentStack;
     }
 

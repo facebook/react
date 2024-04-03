@@ -3618,20 +3618,24 @@ function renderContextProvider(request, task, keyPath, context, props) {
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
-      ref = task.componentStack;
+      enableRefAsProp &&
+        "ref" in props &&
+        ((props = assign({}, props)), delete props.ref);
+      ref = props;
+      props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
       var JSCompiler_inline_result = emptyContextObject;
       var contextType = type.contextType;
       "object" === typeof contextType &&
         null !== contextType &&
         (JSCompiler_inline_result = contextType._currentValue);
-      JSCompiler_inline_result = new type(props, JSCompiler_inline_result);
+      JSCompiler_inline_result = new type(ref, JSCompiler_inline_result);
       var initialState =
         void 0 !== JSCompiler_inline_result.state
           ? JSCompiler_inline_result.state
           : null;
       JSCompiler_inline_result.updater = classComponentUpdater;
-      JSCompiler_inline_result.props = props;
+      JSCompiler_inline_result.props = ref;
       JSCompiler_inline_result.state = initialState;
       contextType = { queue: [], replace: !1 };
       JSCompiler_inline_result._reactInternals = contextType;
@@ -3643,7 +3647,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           : emptyContextObject;
       contextType$jscomp$0 = type.getDerivedStateFromProps;
       "function" === typeof contextType$jscomp$0 &&
-        ((contextType$jscomp$0 = contextType$jscomp$0(props, initialState)),
+        ((contextType$jscomp$0 = contextType$jscomp$0(ref, initialState)),
         (initialState =
           null === contextType$jscomp$0 || void 0 === contextType$jscomp$0
             ? initialState
@@ -3696,7 +3700,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                   ? partial.call(
                       JSCompiler_inline_result,
                       contextType,
-                      props,
+                      ref,
                       void 0
                     )
                   : partial;
@@ -3709,12 +3713,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
             JSCompiler_inline_result.state = contextType;
           }
         else contextType.queue = null;
-      props = JSCompiler_inline_result.render();
-      type = task.keyPath;
+      type = JSCompiler_inline_result.render();
+      ref = task.keyPath;
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, props, -1);
-      task.keyPath = type;
-      task.componentStack = ref;
+      renderNodeDestructive(request, task, type, -1);
+      task.keyPath = ref;
+      task.componentStack = props;
     } else
       (ref = task.componentStack),
         (task.componentStack = {
