@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Runtime for React Forget",
   "license": "MIT",
+  "main": "dist/index.js",
   "files": [
     "src"
   ],

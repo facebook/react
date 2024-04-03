@@ -18,6 +18,7 @@ module.exports = function (api) {
             {
               compilationMode: "infer",
               panicThreshold: "NONE",
+              enableUseMemoCachePolyfill: true,
             },
           ],
         ],

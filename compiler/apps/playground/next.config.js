@@ -6,6 +6,7 @@
  */
 
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+const path = require("path");
 
 const nextConfig = {
   reactStrictMode: true,
@@ -25,13 +26,18 @@ const nextConfig = {
         }),
       );
     }
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "react-forget-runtime": path.resolve(
+        __dirname,
+        "../../packages/react-forget-runtime",
+      ),
+    };
+
     return config;
   },
-  // These aren't used by the playground, but turning it on forces nextjs to use
-  // experimental react which has the useMemoCache hook.
-  experimental: {
-    serverActions: true,
-  },
+
   transpilePackages: ["monaco-editor"],
 };
 
