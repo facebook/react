@@ -32,6 +32,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
+  REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -574,6 +575,7 @@ exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -648,7 +650,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-modern-2111cb84";
+exports.version = "19.0.0-www-modern-1eaf4ddd";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

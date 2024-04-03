@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-cf1ffacc";
+    var ReactVersion = "19.0.0-www-modern-1ce4afb4";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3645,6 +3645,7 @@ if (__DEV__) {
     exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+    exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_getCacheForType = getCacheForType;
     exports.unstable_useCacheRefresh = useCacheRefresh;
     exports.unstable_useMemoCache = useMemoCache;
