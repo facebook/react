@@ -14,7 +14,6 @@ let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let Scheduler;
 let act;
 let useState;
@@ -54,7 +53,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
@@ -673,8 +671,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   });
 
   describe('extra features implemented in user-space', () => {
-    // The selector implementation uses the lazy ref initialization pattern
-    // @gate !(enableUseRefAccessWarning && __DEV__)
     it('memoized selectors are only called once per update', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
@@ -716,8 +712,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A1');
     });
 
-    // The selector implementation uses the lazy ref initialization pattern
-    // @gate !(enableUseRefAccessWarning && __DEV__)
     it('Using isEqual to bailout', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
@@ -857,8 +851,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('UPDATED');
   });
 
-  // The selector implementation uses the lazy ref initialization pattern
-  // @gate !(enableUseRefAccessWarning && __DEV__)
   it('compares selection to rendered selection even if selector changes', async () => {
     const store = createExternalStore({items: ['A', 'B']});
 
@@ -981,26 +973,14 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
         // In 17, the error is re-thrown in DEV.
         await expect(async () => {
-          await expect(async () => {
-            await act(() => {
-              store.set({});
-            });
-          }).rejects.toThrow('Malformed state');
-        }).toWarnDev(
-          ReactFeatureFlags.enableUseRefAccessWarning
-            ? ['Warning: App: Unsafe read of a mutable value during render.']
-            : [],
-        );
-      } else {
-        await expect(async () => {
           await act(() => {
             store.set({});
           });
-        }).toWarnDev(
-          ReactFeatureFlags.enableUseRefAccessWarning
-            ? ['Warning: App: Unsafe read of a mutable value during render.']
-            : [],
-        );
+        }).rejects.toThrow('Malformed state');
+      } else {
+        await act(() => {
+          store.set({});
+        });
       }
 
       expect(container.textContent).toEqual('Malformed state');
@@ -1042,26 +1022,14 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
         // In 17, the error is re-thrown in DEV.
         await expect(async () => {
-          await expect(async () => {
-            await act(() => {
-              store.set({});
-            });
-          }).rejects.toThrow('Malformed state');
-        }).toWarnDev(
-          ReactFeatureFlags.enableUseRefAccessWarning
-            ? ['Warning: App: Unsafe read of a mutable value during render.']
-            : [],
-        );
-      } else {
-        await expect(async () => {
           await act(() => {
             store.set({});
           });
-        }).toWarnDev(
-          ReactFeatureFlags.enableUseRefAccessWarning
-            ? ['Warning: App: Unsafe read of a mutable value during render.']
-            : [],
-        );
+        }).rejects.toThrow('Malformed state');
+      } else {
+        await act(() => {
+          store.set({});
+        });
       }
 
       expect(container.textContent).toEqual('Malformed state');

@@ -43,7 +43,6 @@ export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
-export const enableUseRefAccessWarning = false;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableRenderableContext = false;
 
