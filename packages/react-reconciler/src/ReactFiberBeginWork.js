@@ -269,7 +269,6 @@ import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
 import {
   createCapturedValueFromError,
   createCapturedValueAtFiber,
-  type CapturedValue,
 } from './ReactCapturedValue';
 import {
   createClassErrorUpdate,
@@ -1500,21 +1499,12 @@ function updateHostRoot(
 
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
-      // forced a client render.
-      const recoverableError = createCapturedValueAtFiber<mixed>(
-        new Error(
-          'There was an error while hydrating. Because the error happened outside ' +
-            'of a Suspense boundary, the entire root will switch to ' +
-            'client rendering.',
-        ),
-        workInProgress,
-      );
+      // forced a client render. We should have a recoverable error already scheduled.
       return mountHostRootWithoutHydrating(
         current,
         workInProgress,
         nextChildren,
         renderLanes,
-        recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
       const recoverableError = createCapturedValueAtFiber<mixed>(
@@ -1524,12 +1514,12 @@ function updateHostRoot(
         ),
         workInProgress,
       );
+      queueHydrationError(recoverableError);
       return mountHostRootWithoutHydrating(
         current,
         workInProgress,
         nextChildren,
         renderLanes,
-        recoverableError,
       );
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
@@ -1572,12 +1562,9 @@ function mountHostRootWithoutHydrating(
   workInProgress: Fiber,
   nextChildren: ReactNodeList,
   renderLanes: Lanes,
-  recoverableError: CapturedValue<mixed>,
 ) {
   // Revert to client rendering.
   resetHydrationState();
-
-  queueHydrationError(recoverableError);
 
   workInProgress.flags |= ForceClientRender;
 
@@ -2553,18 +2540,10 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-  recoverableError: CapturedValue<mixed> | null,
 ) {
   // Falling back to client rendering. Because this has performance
   // implications, it's considered a recoverable error, even though the user
   // likely won't observe anything wrong with the UI.
-  //
-  // The error is passed in as an argument to enforce that every caller provide
-  // a custom message, or explicitly opt out (currently the only path that opts
-  // out is legacy mode; every concurrent path provides an error).
-  if (recoverableError !== null) {
-    queueHydrationError(recoverableError);
-  }
 
   // This will add the old fiber to the deletion list
   reconcileChildFibers(workInProgress, current.child, null, renderLanes);
@@ -2688,10 +2667,9 @@ function updateDehydratedSuspenseComponent(
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       }
 
-      let capturedValue = null;
       // TODO: Figure out a better signal than encoding a magic digest value.
       if (!enablePostpone || digest !== 'POSTPONE') {
-        let error;
+        let error: Error;
         if (__DEV__ && message) {
           // eslint-disable-next-line react-internal/prod-error-codes
           error = new Error(message);
@@ -2705,16 +2683,16 @@ function updateDehydratedSuspenseComponent(
         // Replace the stack with the server stack
         error.stack = (__DEV__ && stack) || '';
         (error: any).digest = digest;
-        capturedValue = createCapturedValueFromError(
+        const capturedValue = createCapturedValueFromError(
           error,
           componentStack === undefined ? null : componentStack,
         );
+        queueHydrationError(capturedValue);
       }
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
       );
     }
 
@@ -2795,7 +2773,6 @@ function updateDehydratedSuspenseComponent(
         current,
         workInProgress,
         renderLanes,
-        null,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its
@@ -2842,21 +2819,13 @@ function updateDehydratedSuspenseComponent(
 
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during hydration. Try again without hydrating.
+      // The error should've already been logged in throwException.
       pushPrimaryTreeSuspenseHandler(workInProgress);
-
       workInProgress.flags &= ~ForceClientRender;
-      const capturedValue = createCapturedValueFromError(
-        new Error(
-          'There was an error while hydrating this Suspense boundary. ' +
-            'Switched to client rendering.',
-        ),
-        null,
-      );
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
       );
     } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
       // Something suspended and we should still be in dehydrated mode.

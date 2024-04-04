@@ -200,15 +200,17 @@ describe('rendering React components at document', () => {
         ReactDOMClient.hydrateRoot(container, <div>parsnip</div>, {
           onRecoverableError: error => {
             Scheduler.log(
-              'Log recoverable error: ' + normalizeError(error.message),
+              'onRecoverableError: ' + normalizeError(error.message),
             );
+            if (error.cause) {
+              Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+            }
           },
         });
       });
 
       assertLog([
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
       ]);
 
       // This creates an unfortunate double text case.
@@ -229,16 +231,18 @@ describe('rendering React components at document', () => {
           {
             onRecoverableError: error => {
               Scheduler.log(
-                'Log recoverable error: ' + normalizeError(error.message),
+                'onRecoverableError: ' + normalizeError(error.message),
               );
+              if (error.cause) {
+                Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+              }
             },
           },
         );
       });
 
       assertLog([
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
       ]);
       expect(container.textContent).toBe('parsnip');
     });
@@ -273,8 +277,13 @@ describe('rendering React components at document', () => {
             {
               onRecoverableError: error => {
                 Scheduler.log(
-                  'Log recoverable error: ' + normalizeError(error.message),
+                  'onRecoverableError: ' + normalizeError(error.message),
                 );
+                if (error.cause) {
+                  Scheduler.log(
+                    'Cause: ' + normalizeError(error.cause.message),
+                  );
+                }
               },
             },
           );
@@ -291,8 +300,7 @@ describe('rendering React components at document', () => {
       assertLog(
         favorSafetyOverHydrationPerf
           ? [
-              "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-              'Log recoverable error: There was an error while hydrating.',
+              "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
             ]
           : [],
       );
@@ -325,15 +333,17 @@ describe('rendering React components at document', () => {
           {
             onRecoverableError: error => {
               Scheduler.log(
-                'Log recoverable error: ' + normalizeError(error.message),
+                'onRecoverableError: ' + normalizeError(error.message),
               );
+              if (error.cause) {
+                Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+              }
             },
           },
         );
       });
       assertLog([
-        "Log recoverable error: Hydration failed because the server rendered HTML didn't match the client.",
-        'Log recoverable error: There was an error while hydrating.',
+        "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
       ]);
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });

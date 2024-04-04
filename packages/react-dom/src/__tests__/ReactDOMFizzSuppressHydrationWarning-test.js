@@ -165,7 +165,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         // Don't miss a hydration error. There should be none.
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([]);
@@ -205,7 +208,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([]);
@@ -246,12 +252,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -283,7 +291,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     const root = ReactDOMClient.hydrateRoot(container, <App text="Client" />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([]);
@@ -327,12 +338,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -367,12 +380,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -410,12 +425,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -451,12 +468,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -496,7 +515,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([]);
@@ -533,7 +555,10 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([]);
@@ -566,12 +591,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -604,12 +631,14 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     );
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.log(normalizeError(error.message));
+        Scheduler.log('onRecoverableError: ' + normalizeError(error.message));
+        if (error.cause) {
+          Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+        }
       },
     });
     await waitForAll([
-      "Hydration failed because the server rendered HTML didn't match the client.",
-      'There was an error while hydrating.',
+      "onRecoverableError: Hydration failed because the server rendered HTML didn't match the client.",
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>

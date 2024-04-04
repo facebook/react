@@ -60,6 +60,7 @@ import {
 } from './ReactFiberSuspenseContext';
 import {
   renderDidError,
+  queueConcurrentError,
   renderDidSuspendDelayIfPossible,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
@@ -81,6 +82,7 @@ import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
+  HydrationMismatchException,
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
@@ -556,15 +558,55 @@ function throwException(
 
       // Even though the user may not be affected by this error, we should
       // still log it so it can be fixed.
-      queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering from the nearest Suspense boundary.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      return false;
+    } else {
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering the entire root.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      const workInProgress: Fiber = (root.current: any).alternate;
+      // Schedule an update at the root to log the error but this shouldn't
+      // actually happen because we should recover.
+      workInProgress.flags |= ShouldCapture;
+      const lane = pickArbitraryLane(rootRenderLanes);
+      workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+      const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
+      const update = createRootErrorUpdate(
+        workInProgress.stateNode,
+        rootErrorInfo, // This should never actually get logged due to the recovery.
+        lane,
+      );
+      enqueueCapturedUpdate(workInProgress, update);
+      renderDidError();
       return false;
     }
   } else {
     // Otherwise, fall through to the error path.
   }
 
-  value = createCapturedValueAtFiber(value, sourceFiber);
-  renderDidError(value);
+  const wrapperError = new Error(
+    'There was an error during concurrent rendering but React was able to recover by ' +
+      'instead synchronously rendering the entire root.',
+    {cause: value},
+  );
+  queueConcurrentError(createCapturedValueAtFiber(wrapperError, sourceFiber));
+  renderDidError();
 
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
@@ -576,11 +618,11 @@ function throwException(
     return true;
   }
 
+  const errorInfo = createCapturedValueAtFiber(value, sourceFiber);
   let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
-        const errorInfo = value;
         workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
@@ -593,15 +635,7 @@ function throwException(
         return false;
       }
       case ClassComponent:
-        if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-          // If we're hydrating and got here, it means that we didn't find a suspense
-          // boundary above so it's a root error. In this case we shouldn't let the
-          // error boundary capture it because it'll just try to hydrate the error state.
-          // Instead we let it bubble to the root and let the recover pass handle it.
-          break;
-        }
         // Capture and retry
-        const errorInfo = value;
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (

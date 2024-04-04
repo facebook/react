@@ -397,6 +397,9 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
@@ -462,6 +465,9 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
@@ -529,13 +535,16 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
 
     assertLog([
-      'onRecoverableError: plain error',
-      'onRecoverableError: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      'onRecoverableError: There was an error while hydrating but React was able to recover by instead client rendering the entire root.',
+      'Cause: plain error',
     ]);
     expect(container.textContent).toBe('Hello world');
   });

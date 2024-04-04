@@ -13,7 +13,7 @@ import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
 const CapturedStacks: WeakMap<any, string> = new WeakMap();
 
-export type CapturedValue<T> = {
+export type CapturedValue<+T> = {
   +value: T,
   source: Fiber | null,
   stack: string | null,
