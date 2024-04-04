@@ -614,10 +614,17 @@ function renderFunctionComponent<Props>(
       const componentName =
         (Component: any).displayName || Component.name || '';
       request.pendingChunks++;
-      emitDebugChunk(request, debugID, {
+
+      const componentDebugID = debugID;
+      const serverComponentMetaData: ReactComponentInfo = {
         name: componentName,
         env: request.environmentName,
-      });
+      };
+      // We outline this model eagerly so that we can refer to by reference as an owner.
+      // If we had a smarter way to dedupe we might not have to do this if there ends up
+      // being no references to this as an owner.
+      outlineModel(request, serverComponentMetaData);
+      emitDebugChunk(request, componentDebugID, serverComponentMetaData);
     }
   }
 
