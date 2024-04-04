@@ -1904,8 +1904,27 @@ function emitDebugChunk(
     );
   }
 
+  // We use the console encoding so that we can dedupe objects but don't necessarily
+  // use the full serialization that requires a task.
+  const counter = {objectCount: 0};
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    return renderConsoleValue(
+      request,
+      counter,
+      this,
+      parentPropertyName,
+      value,
+    );
+  }
+
   // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(debugInfo);
+  const json: string = stringify(debugInfo, replacer);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);

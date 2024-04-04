@@ -1286,7 +1286,10 @@ function processFullRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const debugInfo = JSON.parse(row);
+        const debugInfo: ReactComponentInfo | ReactAsyncInfo = parseModel(
+          response,
+          row,
+        );
         resolveDebugInfo(response, id, debugInfo);
         return;
       }
