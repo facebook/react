@@ -842,7 +842,7 @@ function encodeErrorForBoundary(
       ? 'Switched to client rendering because the server rendering aborted due to:\n\n'
       : 'Switched to client rendering because the server rendering errored:\n\n';
     boundary.errorMessage = prefix + message;
-    boundary.errorStack = stack;
+    boundary.errorStack = stack !== null ? prefix + stack : null;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }
