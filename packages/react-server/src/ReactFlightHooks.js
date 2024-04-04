@@ -9,7 +9,7 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
-import type {Thenable, Usable} from 'shared/ReactTypes';
+import type {Thenable, Usable, ReactComponentInfo} from 'shared/ReactTypes';
 import type {ThenableState} from './ReactFlightThenable';
 import {
   REACT_MEMO_CACHE_SENTINEL,
@@ -21,6 +21,7 @@ import {isClientReference} from './ReactFlightServerConfig';
 let currentRequest = null;
 let thenableIndexCounter = 0;
 let thenableState = null;
+let currentComponentDebugInfo = null;
 
 export function prepareToUseHooksForRequest(request: Request) {
   currentRequest = request;
@@ -32,9 +33,13 @@ export function resetHooksForRequest() {
 
 export function prepareToUseHooksForComponent(
   prevThenableState: ThenableState | null,
+  componentDebugInfo: null | ReactComponentInfo,
 ) {
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
+  if (__DEV__) {
+    currentComponentDebugInfo = componentDebugInfo;
+  }
 }
 
 export function getThenableStateAfterSuspending(): ThenableState {
@@ -42,6 +47,12 @@ export function getThenableStateAfterSuspending(): ThenableState {
   // which is not really supported anymore, it will be empty. We use the empty set as a
   // marker to know if this was a replay of the same component or first attempt.
   const state = thenableState || createThenableState();
+  if (__DEV__) {
+    // This is a hack but we stash the debug info here so that we don't need a completely
+    // different data structure just for this in DEV. Not too happy about it.
+    (state: any)._componentDebugInfo = currentComponentDebugInfo;
+    currentComponentDebugInfo = null;
+  }
   thenableState = null;
   return state;
 }

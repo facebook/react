@@ -484,6 +484,7 @@ function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
+  owner: null | ReactComponentInfo, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -493,7 +494,7 @@ function createElement(
       type,
       key,
       props,
-      _owner: null,
+      _owner: owner,
     }: any);
     Object.defineProperty(element, 'ref', {
       enumerable: false,
@@ -520,7 +521,7 @@ function createElement(
       props,
 
       // Record the component responsible for creating this element.
-      _owner: null,
+      _owner: owner,
     }: any);
   }
 
@@ -854,7 +855,12 @@ function parseModelTuple(
   if (tuple[0] === REACT_ELEMENT_TYPE) {
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
-    return createElement(tuple[1], tuple[2], tuple[3]);
+    return createElement(
+      tuple[1],
+      tuple[2],
+      tuple[3],
+      __DEV__ ? (tuple: any)[4] : null,
+    );
   }
   return value;
 }
