@@ -66,6 +66,8 @@ var ReactSharedInternals =
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   favorSafetyOverHydrationPerf =
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -5011,7 +5013,10 @@ function resolveClassComponentProps(
   alreadyResolvedDefaultProps
 ) {
   var newProps = baseProps;
-  if ((Component = Component.defaultProps) && !alreadyResolvedDefaultProps) {
+  if (
+    (Component = Component.defaultProps) &&
+    (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
+  ) {
     newProps = assign({}, newProps, baseProps);
     for (var propName in Component)
       void 0 === newProps[propName] &&
@@ -5023,7 +5028,8 @@ function resolveClassComponentProps(
     delete newProps.ref);
   return newProps;
 }
-function resolveDefaultProps(Component, baseProps) {
+function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
+  if (disableDefaultPropsExceptForClasses) return baseProps;
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
     Component = Component.defaultProps;
@@ -5558,7 +5564,7 @@ function updateMemoComponent(
       !shouldConstruct(type) &&
       void 0 === type.defaultProps &&
       null === Component.compare &&
-      void 0 === Component.defaultProps
+      (disableDefaultPropsExceptForClasses || void 0 === Component.defaultProps)
     )
       return (
         (workInProgress.tag = 15),
@@ -6898,7 +6904,9 @@ function beginWork(current, workInProgress, renderLanes) {
                 props,
                 renderLanes
               )))
-            : ((props = resolveDefaultProps(current, props)),
+            : ((props = disableDefaultPropsExceptForClasses
+                ? props
+                : resolveDefaultPropsOnNonClassComponent(current, props)),
               (workInProgress.tag = 0),
               (workInProgress = updateFunctionComponent(
                 null,
@@ -6913,7 +6921,9 @@ function beginWork(current, workInProgress, renderLanes) {
               ((elementType = current.$$typeof),
               elementType === REACT_FORWARD_REF_TYPE)
             ) {
-              props = resolveDefaultProps(current, props);
+              props = disableDefaultPropsExceptForClasses
+                ? props
+                : resolveDefaultPropsOnNonClassComponent(current, props);
               workInProgress.tag = 11;
               workInProgress = updateForwardRef(
                 null,
@@ -6924,13 +6934,17 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             } else if (elementType === REACT_MEMO_TYPE) {
-              props = resolveDefaultProps(current, props);
+              props = disableDefaultPropsExceptForClasses
+                ? props
+                : resolveDefaultPropsOnNonClassComponent(current, props);
               workInProgress.tag = 14;
               workInProgress = updateMemoComponent(
                 null,
                 workInProgress,
                 current,
-                resolveDefaultProps(current.type, props),
+                disableDefaultPropsExceptForClasses
+                  ? props
+                  : resolveDefaultPropsOnNonClassComponent(current.type, props),
                 renderLanes
               );
               break a;
@@ -6944,9 +6958,10 @@ function beginWork(current, workInProgress, renderLanes) {
         (props = workInProgress.type),
         (elementType = workInProgress.pendingProps),
         (elementType =
+          disableDefaultPropsExceptForClasses ||
           workInProgress.elementType === props
             ? elementType
-            : resolveDefaultProps(props, elementType)),
+            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
         updateFunctionComponent(
           current,
           workInProgress,
@@ -7198,9 +7213,10 @@ function beginWork(current, workInProgress, renderLanes) {
         (props = workInProgress.type),
         (elementType = workInProgress.pendingProps),
         (elementType =
+          disableDefaultPropsExceptForClasses ||
           workInProgress.elementType === props
             ? elementType
-            : resolveDefaultProps(props, elementType)),
+            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
         updateForwardRef(
           current,
           workInProgress,
@@ -7293,8 +7309,13 @@ function beginWork(current, workInProgress, renderLanes) {
     case 14:
       return (
         (props = workInProgress.type),
-        (elementType = resolveDefaultProps(props, workInProgress.pendingProps)),
-        (elementType = resolveDefaultProps(props.type, elementType)),
+        (elementType = workInProgress.pendingProps),
+        (elementType = disableDefaultPropsExceptForClasses
+          ? elementType
+          : resolveDefaultPropsOnNonClassComponent(props, elementType)),
+        (elementType = disableDefaultPropsExceptForClasses
+          ? elementType
+          : resolveDefaultPropsOnNonClassComponent(props.type, elementType)),
         updateMemoComponent(
           current,
           workInProgress,
@@ -12165,9 +12186,10 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       var Component = unitOfWork.type,
         unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor.current;
@@ -12185,9 +12207,10 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       Component = unitOfWork.type.render;
       unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       current = replayFunctionComponent(
         current,
         unitOfWork,
@@ -17741,7 +17764,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1790 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-1231a9cb",
+  version: "19.0.0-www-classic-1006227c",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17785,7 +17808,7 @@ var devToolsConfig$jscomp$inline_1790 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-1231a9cb"
+  reconcilerVersion: "19.0.0-www-classic-1006227c"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18228,7 +18251,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-1231a9cb";
+exports.version = "19.0.0-www-classic-1006227c";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

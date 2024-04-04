@@ -109,8 +109,9 @@ if (__DEV__) {
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
-    // On WWW, false is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, false is used for a new modern build.
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -1231,14 +1232,17 @@ if (__DEV__) {
           ) {
             props[propName] = config[propName];
           }
-        } // Resolve default props
+        }
 
-        if (type && type.defaultProps) {
-          var defaultProps = type.defaultProps;
+        if (!disableDefaultPropsExceptForClasses) {
+          // Resolve default props
+          if (type && type.defaultProps) {
+            var defaultProps = type.defaultProps;
 
-          for (propName in defaultProps) {
-            if (props[propName] === undefined) {
-              props[propName] = defaultProps[propName];
+            for (propName in defaultProps) {
+              if (props[propName] === undefined) {
+                props[propName] = defaultProps[propName];
+              }
             }
           }
         }

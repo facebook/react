@@ -125,6 +125,8 @@ var assign = Object.assign,
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -3569,7 +3571,8 @@ function finishFunctionComponent(
     : renderNodeDestructive(request, task, children, -1);
   task.keyPath = actionStateCount;
 }
-function resolveDefaultProps(Component, baseProps) {
+function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
+  if (disableDefaultPropsExceptForClasses) return baseProps;
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
     Component = Component.defaultProps;
@@ -3618,109 +3621,108 @@ function renderContextProvider(request, task, keyPath, context, props) {
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
+      var JSCompiler_inline_result = props;
+      var defaultProps = type.defaultProps;
+      if (defaultProps && disableDefaultPropsExceptForClasses) {
+        JSCompiler_inline_result = assign({}, JSCompiler_inline_result, props);
+        for (var propName in defaultProps)
+          void 0 === JSCompiler_inline_result[propName] &&
+            (JSCompiler_inline_result[propName] = defaultProps[propName]);
+      }
       enableRefAsProp &&
-        "ref" in props &&
-        ((props = assign({}, props)), delete props.ref);
-      ref = props;
+        "ref" in JSCompiler_inline_result &&
+        (JSCompiler_inline_result === props &&
+          (JSCompiler_inline_result = assign({}, JSCompiler_inline_result)),
+        delete JSCompiler_inline_result.ref);
       props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
-      var JSCompiler_inline_result = emptyContextObject;
+      defaultProps = emptyContextObject;
+      ref = type.contextType;
+      "object" === typeof ref &&
+        null !== ref &&
+        (defaultProps = ref._currentValue);
+      defaultProps = new type(JSCompiler_inline_result, defaultProps);
+      propName = void 0 !== defaultProps.state ? defaultProps.state : null;
+      defaultProps.updater = classComponentUpdater;
+      defaultProps.props = JSCompiler_inline_result;
+      defaultProps.state = propName;
+      ref = { queue: [], replace: !1 };
+      defaultProps._reactInternals = ref;
       var contextType = type.contextType;
-      "object" === typeof contextType &&
-        null !== contextType &&
-        (JSCompiler_inline_result = contextType._currentValue);
-      JSCompiler_inline_result = new type(ref, JSCompiler_inline_result);
-      var initialState =
-        void 0 !== JSCompiler_inline_result.state
-          ? JSCompiler_inline_result.state
-          : null;
-      JSCompiler_inline_result.updater = classComponentUpdater;
-      JSCompiler_inline_result.props = ref;
-      JSCompiler_inline_result.state = initialState;
-      contextType = { queue: [], replace: !1 };
-      JSCompiler_inline_result._reactInternals = contextType;
-      var contextType$jscomp$0 = type.contextType;
-      JSCompiler_inline_result.context =
-        "object" === typeof contextType$jscomp$0 &&
-        null !== contextType$jscomp$0
-          ? contextType$jscomp$0._currentValue
+      defaultProps.context =
+        "object" === typeof contextType && null !== contextType
+          ? contextType._currentValue
           : emptyContextObject;
-      contextType$jscomp$0 = type.getDerivedStateFromProps;
-      "function" === typeof contextType$jscomp$0 &&
-        ((contextType$jscomp$0 = contextType$jscomp$0(ref, initialState)),
-        (initialState =
-          null === contextType$jscomp$0 || void 0 === contextType$jscomp$0
-            ? initialState
-            : assign({}, initialState, contextType$jscomp$0)),
-        (JSCompiler_inline_result.state = initialState));
+      contextType = type.getDerivedStateFromProps;
+      "function" === typeof contextType &&
+        ((contextType = contextType(JSCompiler_inline_result, propName)),
+        (propName =
+          null === contextType || void 0 === contextType
+            ? propName
+            : assign({}, propName, contextType)),
+        (defaultProps.state = propName));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
-        "function" !==
-          typeof JSCompiler_inline_result.getSnapshotBeforeUpdate &&
-        ("function" ===
-          typeof JSCompiler_inline_result.UNSAFE_componentWillMount ||
-          "function" === typeof JSCompiler_inline_result.componentWillMount)
+        "function" !== typeof defaultProps.getSnapshotBeforeUpdate &&
+        ("function" === typeof defaultProps.UNSAFE_componentWillMount ||
+          "function" === typeof defaultProps.componentWillMount)
       )
         if (
-          ((type = JSCompiler_inline_result.state),
-          "function" === typeof JSCompiler_inline_result.componentWillMount &&
-            JSCompiler_inline_result.componentWillMount(),
-          "function" ===
-            typeof JSCompiler_inline_result.UNSAFE_componentWillMount &&
-            JSCompiler_inline_result.UNSAFE_componentWillMount(),
-          type !== JSCompiler_inline_result.state &&
+          ((type = defaultProps.state),
+          "function" === typeof defaultProps.componentWillMount &&
+            defaultProps.componentWillMount(),
+          "function" === typeof defaultProps.UNSAFE_componentWillMount &&
+            defaultProps.UNSAFE_componentWillMount(),
+          type !== defaultProps.state &&
             classComponentUpdater.enqueueReplaceState(
-              JSCompiler_inline_result,
-              JSCompiler_inline_result.state,
+              defaultProps,
+              defaultProps.state,
               null
             ),
-          null !== contextType.queue && 0 < contextType.queue.length)
+          null !== ref.queue && 0 < ref.queue.length)
         )
           if (
-            ((type = contextType.queue),
-            (contextType$jscomp$0 = contextType.replace),
-            (contextType.queue = null),
-            (contextType.replace = !1),
-            contextType$jscomp$0 && 1 === type.length)
+            ((type = ref.queue),
+            (contextType = ref.replace),
+            (ref.queue = null),
+            (ref.replace = !1),
+            contextType && 1 === type.length)
           )
-            JSCompiler_inline_result.state = type[0];
+            defaultProps.state = type[0];
           else {
-            contextType = contextType$jscomp$0
-              ? type[0]
-              : JSCompiler_inline_result.state;
-            initialState = !0;
+            ref = contextType ? type[0] : defaultProps.state;
+            propName = !0;
             for (
-              contextType$jscomp$0 = contextType$jscomp$0 ? 1 : 0;
-              contextType$jscomp$0 < type.length;
-              contextType$jscomp$0++
+              contextType = contextType ? 1 : 0;
+              contextType < type.length;
+              contextType++
             ) {
-              var partial = type[contextType$jscomp$0];
+              var partial = type[contextType];
               partial =
                 "function" === typeof partial
                   ? partial.call(
-                      JSCompiler_inline_result,
-                      contextType,
+                      defaultProps,
                       ref,
+                      JSCompiler_inline_result,
                       void 0
                     )
                   : partial;
               null != partial &&
-                (initialState
-                  ? ((initialState = !1),
-                    (contextType = assign({}, contextType, partial)))
-                  : assign(contextType, partial));
+                (propName
+                  ? ((propName = !1), (ref = assign({}, ref, partial)))
+                  : assign(ref, partial));
             }
-            JSCompiler_inline_result.state = contextType;
+            defaultProps.state = ref;
           }
-        else contextType.queue = null;
-      type = JSCompiler_inline_result.render();
-      ref = task.keyPath;
+        else ref.queue = null;
+      type = defaultProps.render();
+      JSCompiler_inline_result = task.keyPath;
       task.keyPath = keyPath;
       renderNodeDestructive(request, task, type, -1);
-      task.keyPath = ref;
+      task.keyPath = JSCompiler_inline_result;
       task.componentStack = props;
     } else
-      (ref = task.componentStack),
+      (JSCompiler_inline_result = task.componentStack),
         (task.componentStack = {
           tag: 1,
           parent: task.componentStack,
@@ -3736,42 +3738,42 @@ function renderElement(request, task, keyPath, type, props, ref) {
           actionStateCounter,
           actionStateMatchingIndex
         ),
-        (task.componentStack = ref);
+        (task.componentStack = JSCompiler_inline_result);
   else if ("string" === typeof type) {
-    ref = task.componentStack;
+    JSCompiler_inline_result = task.componentStack;
     task.componentStack = createBuiltInComponentStack(task, type);
-    JSCompiler_inline_result = task.blockedSegment;
-    if (null === JSCompiler_inline_result)
-      (JSCompiler_inline_result = props.children),
-        (contextType = task.formatContext),
-        (initialState = task.keyPath),
-        (task.formatContext = getChildFormatContext(contextType, type, props)),
+    defaultProps = task.blockedSegment;
+    if (null === defaultProps)
+      (defaultProps = props.children),
+        (ref = task.formatContext),
+        (propName = task.keyPath),
+        (task.formatContext = getChildFormatContext(ref, type, props)),
         (task.keyPath = keyPath),
-        renderNode(request, task, JSCompiler_inline_result, -1),
-        (task.formatContext = contextType),
-        (task.keyPath = initialState);
+        renderNode(request, task, defaultProps, -1),
+        (task.formatContext = ref),
+        (task.keyPath = propName);
     else {
-      initialState = pushStartInstance(
-        JSCompiler_inline_result.chunks,
+      propName = pushStartInstance(
+        defaultProps.chunks,
         type,
         props,
         request.resumableState,
         request.renderState,
         task.hoistableState,
         task.formatContext,
-        JSCompiler_inline_result.lastPushedText,
+        defaultProps.lastPushedText,
         task.isFallback
       );
-      JSCompiler_inline_result.lastPushedText = !1;
-      contextType = task.formatContext;
-      contextType$jscomp$0 = task.keyPath;
-      task.formatContext = getChildFormatContext(contextType, type, props);
+      defaultProps.lastPushedText = !1;
+      ref = task.formatContext;
+      contextType = task.keyPath;
+      task.formatContext = getChildFormatContext(ref, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, initialState, -1);
-      task.formatContext = contextType;
-      task.keyPath = contextType$jscomp$0;
+      renderNode(request, task, propName, -1);
+      task.formatContext = ref;
+      task.keyPath = contextType;
       a: {
-        keyPath = JSCompiler_inline_result.chunks;
+        keyPath = defaultProps.chunks;
         request = request.resumableState;
         switch (type) {
           case "title":
@@ -3794,22 +3796,22 @@ function renderElement(request, task, keyPath, type, props, ref) {
           case "wbr":
             break a;
           case "body":
-            if (1 >= contextType.insertionMode) {
+            if (1 >= ref.insertionMode) {
               request.hasBody = !0;
               break a;
             }
             break;
           case "html":
-            if (0 === contextType.insertionMode) {
+            if (0 === ref.insertionMode) {
               request.hasHtml = !0;
               break a;
             }
         }
         keyPath.push(endChunkForTag(type));
       }
-      JSCompiler_inline_result.lastPushedText = !1;
+      defaultProps.lastPushedText = !1;
     }
-    task.componentStack = ref;
+    task.componentStack = JSCompiler_inline_result;
   } else {
     switch (type) {
       case REACT_LEGACY_HIDDEN_TYPE:
@@ -3832,10 +3834,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
       case REACT_SUSPENSE_LIST_TYPE:
         type = task.componentStack;
         task.componentStack = createBuiltInComponentStack(task, "SuspenseList");
-        ref = task.keyPath;
+        JSCompiler_inline_result = task.keyPath;
         task.keyPath = keyPath;
         renderNodeDestructive(request, task, props.children, -1);
-        task.keyPath = ref;
+        task.keyPath = JSCompiler_inline_result;
         task.componentStack = type;
         return;
       case REACT_SCOPE_TYPE:
@@ -3864,16 +3866,16 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = task.blockedBoundary;
           var parentHoistableState = task.hoistableState,
             parentSegment = task.blockedSegment;
-          JSCompiler_inline_result = props.fallback;
+          propName = props.fallback;
           var content = props.children;
           props = new Set();
-          contextType$jscomp$0 = createSuspenseBoundary(request, props);
+          contextType = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
-            (contextType$jscomp$0.trackedContentKeyPath = keyPath);
+            (contextType.trackedContentKeyPath = keyPath);
           partial = createPendingSegment(
             request,
             parentSegment.chunks.length,
-            contextType$jscomp$0,
+            contextType,
             task.formatContext,
             !1,
             !1
@@ -3889,8 +3891,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
             !1
           );
           contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = contextType$jscomp$0;
-          task.hoistableState = contextType$jscomp$0.contentState;
+          task.blockedBoundary = contextType;
+          task.hoistableState = contextType.contentState;
           task.blockedSegment = contentRootSegment;
           task.keyPath = keyPath;
           try {
@@ -3900,21 +3902,27 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
-              queueCompletedSegment(contextType$jscomp$0, contentRootSegment),
-              0 === contextType$jscomp$0.pendingTasks &&
-                0 === contextType$jscomp$0.status)
+              queueCompletedSegment(contextType, contentRootSegment),
+              0 === contextType.pendingTasks && 0 === contextType.status)
             ) {
-              contextType$jscomp$0.status = 1;
+              contextType.status = 1;
               task.componentStack = previousComponentStack;
               break a;
             }
           } catch (error) {
             (contentRootSegment.status = 4),
-              (contextType$jscomp$0.status = 4),
-              (contextType = getThrownInfo(request, task.componentStack)),
-              (initialState = logRecoverableError(request, error, contextType)),
-              (contextType$jscomp$0.errorDigest = initialState),
-              untrackBoundary(request, contextType$jscomp$0);
+              (contextType.status = 4),
+              (JSCompiler_inline_result = getThrownInfo(
+                request,
+                task.componentStack
+              )),
+              (defaultProps = logRecoverableError(
+                request,
+                error,
+                JSCompiler_inline_result
+              )),
+              (contextType.errorDigest = defaultProps),
+              untrackBoundary(request, contextType);
           } finally {
             (task.blockedBoundary = ref),
               (task.hoistableState = parentHoistableState),
@@ -3922,31 +3930,37 @@ function renderElement(request, task, keyPath, type, props, ref) {
               (task.keyPath = prevKeyPath),
               (task.componentStack = previousComponentStack);
           }
-          contextType = [keyPath[0], "Suspense Fallback", keyPath[2]];
-          initialState = request.trackedPostpones;
-          null !== initialState &&
+          JSCompiler_inline_result = [
+            keyPath[0],
+            "Suspense Fallback",
+            keyPath[2]
+          ];
+          defaultProps = request.trackedPostpones;
+          null !== defaultProps &&
             ((previousComponentStack = [
-              contextType[1],
-              contextType[2],
+              JSCompiler_inline_result[1],
+              JSCompiler_inline_result[2],
               [],
               null
             ]),
-            initialState.workingMap.set(contextType, previousComponentStack),
-            5 === contextType$jscomp$0.status
-              ? (initialState.workingMap.get(keyPath)[4] =
+            defaultProps.workingMap.set(
+              JSCompiler_inline_result,
+              previousComponentStack
+            ),
+            5 === contextType.status
+              ? (defaultProps.workingMap.get(keyPath)[4] =
                   previousComponentStack)
-              : (contextType$jscomp$0.trackedFallbackNode =
-                  previousComponentStack));
+              : (contextType.trackedFallbackNode = previousComponentStack));
           task = createRenderTask(
             request,
             null,
-            JSCompiler_inline_result,
+            propName,
             -1,
             ref,
             partial,
-            contextType$jscomp$0.fallbackState,
+            contextType.fallbackState,
             props,
-            contextType,
+            JSCompiler_inline_result,
             task.formatContext,
             task.legacyContext,
             task.context,
@@ -3961,24 +3975,23 @@ function renderElement(request, task, keyPath, type, props, ref) {
     if ("object" === typeof type && null !== type)
       switch (type.$$typeof) {
         case REACT_FORWARD_REF_TYPE:
-          contextType = task.componentStack;
+          JSCompiler_inline_result = task.componentStack;
           task.componentStack = {
             tag: 1,
             parent: task.componentStack,
             type: type.render
           };
           if (enableRefAsProp && "ref" in props)
-            for (JSCompiler_inline_result in ((initialState = {}), props))
-              "ref" !== JSCompiler_inline_result &&
-                (initialState[JSCompiler_inline_result] =
-                  props[JSCompiler_inline_result]);
-          else initialState = props;
+            for (contextType in ((defaultProps = {}), props))
+              "ref" !== contextType &&
+                (defaultProps[contextType] = props[contextType]);
+          else defaultProps = props;
           props = renderWithHooks(
             request,
             task,
             keyPath,
             type.render,
-            initialState,
+            defaultProps,
             ref
           );
           finishFunctionComponent(
@@ -3990,11 +4003,11 @@ function renderElement(request, task, keyPath, type, props, ref) {
             actionStateCounter,
             actionStateMatchingIndex
           );
-          task.componentStack = contextType;
+          task.componentStack = JSCompiler_inline_result;
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
-          props = resolveDefaultProps(type, props);
+          props = resolveDefaultPropsOnNonClassComponent(type, props);
           renderElement(request, task, keyPath, type, props, ref);
           return;
         case REACT_PROVIDER_TYPE:
@@ -4013,13 +4026,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
             return;
           }
         case REACT_LAZY_TYPE:
-          ref = task.componentStack;
+          JSCompiler_inline_result = task.componentStack;
           task.componentStack = createBuiltInComponentStack(task, "Lazy");
-          JSCompiler_inline_result = type._init;
-          type = JSCompiler_inline_result(type._payload);
-          props = resolveDefaultProps(type, props);
+          defaultProps = type._init;
+          type = defaultProps(type._payload);
+          props = resolveDefaultPropsOnNonClassComponent(type, props);
           renderElement(request, task, keyPath, type, props, void 0);
-          task.componentStack = ref;
+          task.componentStack = JSCompiler_inline_result;
           return;
       }
     throw Error(

@@ -89,6 +89,8 @@ var isArrayImpl = Array.isArray,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
   ReactCurrentBatchConfig = { transition: null },
@@ -125,7 +127,7 @@ function jsxProd(type, config, maybeKey) {
       "key" !== propName &&
       (enableRefAsProp || "ref" !== propName) &&
       (props[propName] = config[propName]);
-  if (type && type.defaultProps)
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
       void 0 === props[propName] && (props[propName] = config[propName]);
   return ReactElement(
@@ -433,7 +435,11 @@ exports.cloneElement = function (element, config, children) {
       (enableRefAsProp || (ref = config.ref),
       (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
-    if (element.type && element.type.defaultProps)
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      element.type &&
+      element.type.defaultProps
+    )
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       !hasOwnProperty.call(config, propName) ||
@@ -443,9 +449,11 @@ exports.cloneElement = function (element, config, children) {
         "__source" === propName ||
         (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
         (props[propName] =
-          void 0 === config[propName] && void 0 !== defaultProps
-            ? defaultProps[propName]
-            : config[propName]);
+          disableDefaultPropsExceptForClasses ||
+          void 0 !== config[propName] ||
+          void 0 === defaultProps
+            ? config[propName]
+            : defaultProps[propName]);
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -648,7 +656,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-modern-fc935265";
+exports.version = "19.0.0-www-modern-26c19df2";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

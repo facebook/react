@@ -164,7 +164,9 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
       favorSafetyOverHydrationPerf =
-        dynamicFeatureFlags.favorSafetyOverHydrationPerf; // On WWW, true is used for a new modern build.
+        dynamicFeatureFlags.favorSafetyOverHydrationPerf,
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -29308,7 +29310,11 @@ if (__DEV__) {
 
       var defaultProps = Component.defaultProps;
 
-      if (defaultProps && !alreadyResolvedDefaultProps) {
+      if (
+        defaultProps && // If disableDefaultPropsExceptForClasses is true, we always resolve
+        // default props here in the reconciler, rather than in the JSX runtime.
+        (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
+      ) {
         newProps = assign({}, newProps, baseProps);
 
         for (var propName in defaultProps) {
@@ -29332,10 +29338,13 @@ if (__DEV__) {
       return newProps;
     }
 
-    function resolveDefaultProps(Component, baseProps) {
-      // TODO: Remove support for default props for everything except class
-      // components, including setting default props on a lazy wrapper around a
-      // class type.
+    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
+      if (disableDefaultPropsExceptForClasses) {
+        // Support for defaultProps is removed in React 19 for all types
+        // except classes.
+        return baseProps;
+      }
+
       if (Component && Component.defaultProps) {
         // Resolve default props. Taken from ReactElement
         var props = assign({}, baseProps);
@@ -30362,7 +30371,8 @@ if (__DEV__) {
         if (
           isSimpleFunctionComponent(type) &&
           Component.compare === null && // SimpleMemoComponent codepath doesn't resolve outer props either.
-          Component.defaultProps === undefined
+          (disableDefaultPropsExceptForClasses ||
+            Component.defaultProps === undefined)
         ) {
           var resolvedType = type;
 
@@ -30388,18 +30398,21 @@ if (__DEV__) {
           );
         }
 
-        {
-          if (Component.defaultProps !== undefined) {
-            var componentName = getComponentNameFromType(type) || "Unknown";
+        if (!disableDefaultPropsExceptForClasses) {
+          {
+            if (Component.defaultProps !== undefined) {
+              var componentName = getComponentNameFromType(type) || "Unknown";
 
-            if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-              error(
-                "%s: Support for defaultProps will be removed from memo components " +
-                  "in a future major release. Use JavaScript default parameters instead.",
-                componentName
-              );
+              if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+                error(
+                  "%s: Support for defaultProps will be removed from memo components " +
+                    "in a future major release. Use JavaScript default parameters instead.",
+                  componentName
+                );
 
-              didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+                didWarnAboutDefaultPropsOnFunctionComponent[componentName] =
+                  true;
+              }
             }
           }
         }
@@ -31567,7 +31580,9 @@ if (__DEV__) {
             renderLanes
           );
         } else {
-          var _resolvedProps = resolveDefaultProps(Component, props);
+          var _resolvedProps = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = FunctionComponent;
 
@@ -31589,7 +31604,9 @@ if (__DEV__) {
         var $$typeof = Component.$$typeof;
 
         if ($$typeof === REACT_FORWARD_REF_TYPE) {
-          var _resolvedProps2 = resolveDefaultProps(Component, props);
+          var _resolvedProps2 = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = ForwardRef;
 
@@ -31606,14 +31623,21 @@ if (__DEV__) {
             renderLanes
           );
         } else if ($$typeof === REACT_MEMO_TYPE) {
-          var _resolvedProps3 = resolveDefaultProps(Component, props);
+          var _resolvedProps3 = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = MemoComponent;
           return updateMemoComponent(
             null,
             workInProgress,
             Component,
-            resolveDefaultProps(Component.type, _resolvedProps3), // The inner type can have defaults too
+            disableDefaultPropsExceptForClasses
+              ? _resolvedProps3
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component.type,
+                  _resolvedProps3
+                ), // The inner type can have defaults too
             renderLanes
           );
         }
@@ -31676,7 +31700,10 @@ if (__DEV__) {
           }
         }
 
-        if (Component.defaultProps !== undefined) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          Component.defaultProps !== undefined
+        ) {
           var _componentName = getComponentNameFromType(Component) || "Unknown";
 
           if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName]) {
@@ -33590,9 +33617,13 @@ if (__DEV__) {
           var Component = workInProgress.type;
           var unresolvedProps = workInProgress.pendingProps;
           var resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             workInProgress.elementType === Component
               ? unresolvedProps
-              : resolveDefaultProps(Component, unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component,
+                  unresolvedProps
+                );
           return updateFunctionComponent(
             current,
             workInProgress,
@@ -33653,9 +33684,10 @@ if (__DEV__) {
           var _unresolvedProps2 = workInProgress.pendingProps;
 
           var _resolvedProps5 =
+            disableDefaultPropsExceptForClasses ||
             workInProgress.elementType === type
               ? _unresolvedProps2
-              : resolveDefaultProps(type, _unresolvedProps2);
+              : resolveDefaultPropsOnNonClassComponent(type, _unresolvedProps2);
 
           return updateForwardRef(
             current,
@@ -33685,9 +33717,16 @@ if (__DEV__) {
           var _type = workInProgress.type;
           var _unresolvedProps3 = workInProgress.pendingProps; // Resolve outer props first, then resolve inner props.
 
-          var _resolvedProps6 = resolveDefaultProps(_type, _unresolvedProps3);
+          var _resolvedProps6 = disableDefaultPropsExceptForClasses
+            ? _unresolvedProps3
+            : resolveDefaultPropsOnNonClassComponent(_type, _unresolvedProps3);
 
-          _resolvedProps6 = resolveDefaultProps(_type.type, _resolvedProps6);
+          _resolvedProps6 = disableDefaultPropsExceptForClasses
+            ? _resolvedProps6
+            : resolveDefaultPropsOnNonClassComponent(
+                _type.type,
+                _resolvedProps6
+              );
           return updateMemoComponent(
             current,
             workInProgress,
@@ -42902,9 +42941,13 @@ if (__DEV__) {
           var Component = unitOfWork.type;
           var unresolvedProps = unitOfWork.pendingProps;
           var resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             unitOfWork.elementType === Component
               ? unresolvedProps
-              : resolveDefaultProps(Component, unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component,
+                  unresolvedProps
+                );
           var context;
 
           next = replayFunctionComponent(
@@ -42927,9 +42970,13 @@ if (__DEV__) {
           var _unresolvedProps = unitOfWork.pendingProps;
 
           var _resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             unitOfWork.elementType === _Component
               ? _unresolvedProps
-              : resolveDefaultProps(_Component, _unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  _Component,
+                  _unresolvedProps
+                );
 
           next = replayFunctionComponent(
             current,
@@ -45707,7 +45754,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-b12aa191";
+    var ReactVersion = "19.0.0-www-modern-bedb0a17";
 
     function createPortal$1(
       children,

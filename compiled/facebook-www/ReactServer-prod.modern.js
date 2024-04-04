@@ -15,6 +15,8 @@ var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   ReactCurrentCache = { current: null },
   ReactCurrentDispatcher = { current: null },
   ReactSharedInternals = {
@@ -82,7 +84,7 @@ function jsxProd(type, config, maybeKey) {
       "key" !== propName &&
       (enableRefAsProp || "ref" !== propName) &&
       (props[propName] = config[propName]);
-  if (type && type.defaultProps)
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
       void 0 === props[propName] && (props[propName] = config[propName]);
   return ReactElement(
@@ -425,7 +427,11 @@ exports.cloneElement = function (element, config, children) {
       (enableRefAsProp || (ref = config.ref),
       (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
-    if (element.type && element.type.defaultProps)
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      element.type &&
+      element.type.defaultProps
+    )
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       !hasOwnProperty.call(config, propName) ||
@@ -435,9 +441,11 @@ exports.cloneElement = function (element, config, children) {
         "__source" === propName ||
         (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
         (props[propName] =
-          void 0 === config[propName] && void 0 !== defaultProps
-            ? defaultProps[propName]
-            : config[propName]);
+          disableDefaultPropsExceptForClasses ||
+          void 0 !== config[propName] ||
+          void 0 === defaultProps
+            ? config[propName]
+            : defaultProps[propName]);
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -555,4 +563,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-342eadac";
+exports.version = "19.0.0-www-modern-53e0c063";

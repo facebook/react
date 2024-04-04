@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-6ac6cbda";
+    var ReactVersion = "19.0.0-www-classic-de6e54b3";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -678,8 +678,9 @@ if (__DEV__) {
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp;
-    // On WWW, false is used for a new modern build.
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, false is used for a new modern build.
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -11997,12 +11998,27 @@ if (__DEV__) {
     }
 
     function resolveClassComponentProps(Component, baseProps) {
-      var newProps = baseProps; // TODO: This is where defaultProps should be resolved, too.
+      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
+
+      var defaultProps = Component.defaultProps;
+
+      if (defaultProps && disableDefaultPropsExceptForClasses) {
+        newProps = assign({}, newProps, baseProps);
+
+        for (var propName in defaultProps) {
+          if (newProps[propName] === undefined) {
+            newProps[propName] = defaultProps[propName];
+          }
+        }
+      }
 
       if (enableRefAsProp) {
         // Remove ref from the props object, if it exists.
         if ("ref" in newProps) {
-          newProps = assign({}, newProps);
+          if (newProps === baseProps) {
+            newProps = assign({}, newProps);
+          }
+
           delete newProps.ref;
         }
       }
@@ -12177,7 +12193,10 @@ if (__DEV__) {
           }
         }
 
-        if (Component.defaultProps !== undefined) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          Component.defaultProps !== undefined
+        ) {
           var componentName = getComponentNameFromType(Component) || "Unknown";
 
           if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -12224,7 +12243,13 @@ if (__DEV__) {
       }
     }
 
-    function resolveDefaultProps(Component, baseProps) {
+    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
+      if (disableDefaultPropsExceptForClasses) {
+        // Support for defaultProps is removed in React 19 for all types
+        // except classes.
+        return baseProps;
+      }
+
       if (Component && Component.defaultProps) {
         // Resolve default props. Taken from ReactElement
         var props = assign({}, baseProps);
@@ -12290,7 +12315,10 @@ if (__DEV__) {
 
     function renderMemo(request, task, keyPath, type, props, ref) {
       var innerType = type.type;
-      var resolvedProps = resolveDefaultProps(innerType, props);
+      var resolvedProps = resolveDefaultPropsOnNonClassComponent(
+        innerType,
+        props
+      );
       renderElement(request, task, keyPath, innerType, resolvedProps, ref);
     }
 
@@ -12354,7 +12382,10 @@ if (__DEV__) {
       var payload = lazyComponent._payload;
       var init = lazyComponent._init;
       var Component = init(payload);
-      var resolvedProps = resolveDefaultProps(Component, props);
+      var resolvedProps = resolveDefaultPropsOnNonClassComponent(
+        Component,
+        props
+      );
       renderElement(request, task, keyPath, Component, resolvedProps, ref);
       task.componentStack = previousComponentStack;
     }
