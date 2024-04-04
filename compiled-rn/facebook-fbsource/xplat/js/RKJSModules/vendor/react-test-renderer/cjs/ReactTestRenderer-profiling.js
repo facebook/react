@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e280f409fef36ae642790f490d606184>>
+ * @generated SignedSource<<c03b4f2580a3f28e5204dac43fdc8e39>>
  */
 
 "use strict";
@@ -3699,7 +3699,7 @@ function resolveClassComponentProps(
   }
   return newProps;
 }
-function resolveDefaultProps(Component, baseProps) {
+function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
     Component = Component.defaultProps;
@@ -5146,7 +5146,7 @@ function beginWork(current, workInProgress, renderLanes) {
                 props,
                 renderLanes
               )))
-            : ((props = resolveDefaultProps(current, props)),
+            : ((props = resolveDefaultPropsOnNonClassComponent(current, props)),
               (workInProgress.tag = 0),
               (workInProgress = updateFunctionComponent(
                 null,
@@ -5161,7 +5161,7 @@ function beginWork(current, workInProgress, renderLanes) {
               ((elementType = current.$$typeof),
               elementType === REACT_FORWARD_REF_TYPE)
             ) {
-              props = resolveDefaultProps(current, props);
+              props = resolveDefaultPropsOnNonClassComponent(current, props);
               workInProgress.tag = 11;
               workInProgress = updateForwardRef(
                 null,
@@ -5172,13 +5172,13 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             } else if (elementType === REACT_MEMO_TYPE) {
-              props = resolveDefaultProps(current, props);
+              props = resolveDefaultPropsOnNonClassComponent(current, props);
               workInProgress.tag = 14;
               workInProgress = updateMemoComponent(
                 null,
                 workInProgress,
                 current,
-                resolveDefaultProps(current.type, props),
+                resolveDefaultPropsOnNonClassComponent(current.type, props),
                 renderLanes
               );
               break a;
@@ -5198,7 +5198,7 @@ function beginWork(current, workInProgress, renderLanes) {
         (elementType =
           workInProgress.elementType === props
             ? elementType
-            : resolveDefaultProps(props, elementType)),
+            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
         updateFunctionComponent(
           current,
           workInProgress,
@@ -5304,7 +5304,7 @@ function beginWork(current, workInProgress, renderLanes) {
         (elementType =
           workInProgress.elementType === props
             ? elementType
-            : resolveDefaultProps(props, elementType)),
+            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
         updateForwardRef(
           current,
           workInProgress,
@@ -5393,8 +5393,14 @@ function beginWork(current, workInProgress, renderLanes) {
     case 14:
       return (
         (props = workInProgress.type),
-        (elementType = resolveDefaultProps(props, workInProgress.pendingProps)),
-        (elementType = resolveDefaultProps(props.type, elementType)),
+        (elementType = resolveDefaultPropsOnNonClassComponent(
+          props,
+          workInProgress.pendingProps
+        )),
+        (elementType = resolveDefaultPropsOnNonClassComponent(
+          props.type,
+          elementType
+        )),
         updateMemoComponent(
           current,
           workInProgress,
@@ -8628,7 +8634,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
@@ -8648,7 +8654,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       current = replayFunctionComponent(
         current,
         unitOfWork,
@@ -9826,7 +9832,7 @@ var devToolsConfig$jscomp$inline_1079 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-2ec9dab1",
+  version: "19.0.0-canary-3aa3c53d",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9870,7 +9876,7 @@ var devToolsConfig$jscomp$inline_1079 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-2ec9dab1"
+  reconcilerVersion: "19.0.0-canary-3aa3c53d"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

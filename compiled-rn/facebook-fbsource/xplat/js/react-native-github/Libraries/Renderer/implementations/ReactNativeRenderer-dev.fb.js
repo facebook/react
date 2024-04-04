@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<73d4b3e0decf43fb88c1de550d9bf8e3>>
+ * @generated SignedSource<<f3e55aa36d3d27892c4128e881af247b>>
  */
 
 "use strict";
@@ -2695,7 +2695,9 @@ to return true:wantsResponderID|                            |
         dynamicFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFlags.enableRenderableContext,
       enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-      useModernStrictMode = dynamicFlags.useModernStrictMode; // The rest of the flags are static for better dead code elimination.
+      useModernStrictMode = dynamicFlags.useModernStrictMode,
+      disableDefaultPropsExceptForClasses =
+        dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
@@ -17041,7 +17043,11 @@ to return true:wantsResponderID|                            |
 
       var defaultProps = Component.defaultProps;
 
-      if (defaultProps && !alreadyResolvedDefaultProps) {
+      if (
+        defaultProps && // If disableDefaultPropsExceptForClasses is true, we always resolve
+        // default props here in the reconciler, rather than in the JSX runtime.
+        (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
+      ) {
         newProps = assign({}, newProps, baseProps);
 
         for (var propName in defaultProps) {
@@ -17054,10 +17060,13 @@ to return true:wantsResponderID|                            |
       return newProps;
     }
 
-    function resolveDefaultProps(Component, baseProps) {
-      // TODO: Remove support for default props for everything except class
-      // components, including setting default props on a lazy wrapper around a
-      // class type.
+    function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
+      if (disableDefaultPropsExceptForClasses) {
+        // Support for defaultProps is removed in React 19 for all types
+        // except classes.
+        return baseProps;
+      }
+
       if (Component && Component.defaultProps) {
         // Resolve default props. Taken from ReactElement
         var props = assign({}, baseProps);
@@ -17888,7 +17897,8 @@ to return true:wantsResponderID|                            |
         if (
           isSimpleFunctionComponent(type) &&
           Component.compare === null && // SimpleMemoComponent codepath doesn't resolve outer props either.
-          Component.defaultProps === undefined
+          (disableDefaultPropsExceptForClasses ||
+            Component.defaultProps === undefined)
         ) {
           var resolvedType = type;
 
@@ -17914,18 +17924,21 @@ to return true:wantsResponderID|                            |
           );
         }
 
-        {
-          if (Component.defaultProps !== undefined) {
-            var componentName = getComponentNameFromType(type) || "Unknown";
+        if (!disableDefaultPropsExceptForClasses) {
+          {
+            if (Component.defaultProps !== undefined) {
+              var componentName = getComponentNameFromType(type) || "Unknown";
 
-            if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-              error(
-                "%s: Support for defaultProps will be removed from memo components " +
-                  "in a future major release. Use JavaScript default parameters instead.",
-                componentName
-              );
+              if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+                error(
+                  "%s: Support for defaultProps will be removed from memo components " +
+                    "in a future major release. Use JavaScript default parameters instead.",
+                  componentName
+                );
 
-              didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+                didWarnAboutDefaultPropsOnFunctionComponent[componentName] =
+                  true;
+              }
             }
           }
         }
@@ -18903,7 +18916,9 @@ to return true:wantsResponderID|                            |
             renderLanes
           );
         } else {
-          var _resolvedProps = resolveDefaultProps(Component, props);
+          var _resolvedProps = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = FunctionComponent;
 
@@ -18925,7 +18940,9 @@ to return true:wantsResponderID|                            |
         var $$typeof = Component.$$typeof;
 
         if ($$typeof === REACT_FORWARD_REF_TYPE) {
-          var _resolvedProps2 = resolveDefaultProps(Component, props);
+          var _resolvedProps2 = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = ForwardRef;
 
@@ -18942,14 +18959,21 @@ to return true:wantsResponderID|                            |
             renderLanes
           );
         } else if ($$typeof === REACT_MEMO_TYPE) {
-          var _resolvedProps3 = resolveDefaultProps(Component, props);
+          var _resolvedProps3 = disableDefaultPropsExceptForClasses
+            ? props
+            : resolveDefaultPropsOnNonClassComponent(Component, props);
 
           workInProgress.tag = MemoComponent;
           return updateMemoComponent(
             null,
             workInProgress,
             Component,
-            resolveDefaultProps(Component.type, _resolvedProps3), // The inner type can have defaults too
+            disableDefaultPropsExceptForClasses
+              ? _resolvedProps3
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component.type,
+                  _resolvedProps3
+                ), // The inner type can have defaults too
             renderLanes
           );
         }
@@ -19048,7 +19072,10 @@ to return true:wantsResponderID|                            |
           }
         }
 
-        if (Component.defaultProps !== undefined) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          Component.defaultProps !== undefined
+        ) {
           var _componentName = getComponentNameFromType(Component) || "Unknown";
 
           if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName]) {
@@ -20826,9 +20853,13 @@ to return true:wantsResponderID|                            |
           var Component = workInProgress.type;
           var unresolvedProps = workInProgress.pendingProps;
           var resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             workInProgress.elementType === Component
               ? unresolvedProps
-              : resolveDefaultProps(Component, unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component,
+                  unresolvedProps
+                );
           return updateFunctionComponent(
             current,
             workInProgress,
@@ -20885,9 +20916,10 @@ to return true:wantsResponderID|                            |
           var _unresolvedProps2 = workInProgress.pendingProps;
 
           var _resolvedProps5 =
+            disableDefaultPropsExceptForClasses ||
             workInProgress.elementType === type
               ? _unresolvedProps2
-              : resolveDefaultProps(type, _unresolvedProps2);
+              : resolveDefaultPropsOnNonClassComponent(type, _unresolvedProps2);
 
           return updateForwardRef(
             current,
@@ -20917,9 +20949,16 @@ to return true:wantsResponderID|                            |
           var _type = workInProgress.type;
           var _unresolvedProps3 = workInProgress.pendingProps; // Resolve outer props first, then resolve inner props.
 
-          var _resolvedProps6 = resolveDefaultProps(_type, _unresolvedProps3);
+          var _resolvedProps6 = disableDefaultPropsExceptForClasses
+            ? _unresolvedProps3
+            : resolveDefaultPropsOnNonClassComponent(_type, _unresolvedProps3);
 
-          _resolvedProps6 = resolveDefaultProps(_type.type, _resolvedProps6);
+          _resolvedProps6 = disableDefaultPropsExceptForClasses
+            ? _resolvedProps6
+            : resolveDefaultPropsOnNonClassComponent(
+                _type.type,
+                _resolvedProps6
+              );
           return updateMemoComponent(
             current,
             workInProgress,
@@ -28233,9 +28272,13 @@ to return true:wantsResponderID|                            |
           var Component = unitOfWork.type;
           var unresolvedProps = unitOfWork.pendingProps;
           var resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             unitOfWork.elementType === Component
               ? unresolvedProps
-              : resolveDefaultProps(Component, unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  Component,
+                  unresolvedProps
+                );
           var context;
 
           {
@@ -28267,9 +28310,13 @@ to return true:wantsResponderID|                            |
           var _unresolvedProps = unitOfWork.pendingProps;
 
           var _resolvedProps =
+            disableDefaultPropsExceptForClasses ||
             unitOfWork.elementType === _Component
               ? _unresolvedProps
-              : resolveDefaultProps(_Component, _unresolvedProps);
+              : resolveDefaultPropsOnNonClassComponent(
+                  _Component,
+                  _unresolvedProps
+                );
 
           next = replayFunctionComponent(
             current,
@@ -30923,7 +30970,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-3041fabf";
+    var ReactVersion = "19.0.0-canary-997c5634";
 
     function createPortal$1(
       children,

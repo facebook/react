@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a22169b5b22944f74fdafbe7b1983c9e>>
+ * @generated SignedSource<<f325d8cf2d69b090409eb199bc04571f>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-1e9a91a1";
+    var ReactVersion = "19.0.0-canary-1e7b10f9";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -572,8 +572,9 @@ if (__DEV__) {
     var enableAsyncActions = dynamicFlags.enableAsyncActions,
       enableComponentStackLocations =
         dynamicFlags.enableComponentStackLocations,
-      enableRenderableContext = dynamicFlags.enableRenderableContext;
-    // The rest of the flags are static for better dead code elimination.
+      enableRenderableContext = dynamicFlags.enableRenderableContext,
+      disableDefaultPropsExceptForClasses =
+        dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
     var enableLegacyHidden = false;
@@ -1607,14 +1608,17 @@ if (__DEV__) {
           ) {
             props[propName] = config[propName];
           }
-        } // Resolve default props
+        }
 
-        if (type && type.defaultProps) {
-          var defaultProps = type.defaultProps;
+        if (!disableDefaultPropsExceptForClasses) {
+          // Resolve default props
+          if (type && type.defaultProps) {
+            var defaultProps = type.defaultProps;
 
-          for (propName in defaultProps) {
-            if (props[propName] === undefined) {
-              props[propName] = defaultProps[propName];
+            for (propName in defaultProps) {
+              if (props[propName] === undefined) {
+                props[propName] = defaultProps[propName];
+              }
             }
           }
         }
@@ -1874,7 +1878,11 @@ if (__DEV__) {
 
         var defaultProps;
 
-        if (element.type && element.type.defaultProps) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          element.type &&
+          element.type.defaultProps
+        ) {
           defaultProps = element.type.defaultProps;
         }
 
@@ -1894,7 +1902,11 @@ if (__DEV__) {
             // backwards compatibility.
             !enableRefAsProp
           ) {
-            if (config[propName] === undefined && defaultProps !== undefined) {
+            if (
+              !disableDefaultPropsExceptForClasses &&
+              config[propName] === undefined &&
+              defaultProps !== undefined
+            ) {
               // Resolve default props
               props[propName] = defaultProps[propName];
             } else {
@@ -2733,55 +2745,35 @@ if (__DEV__) {
         _init: lazyInitializer
       };
 
-      {
-        // In production, this would just set it on the object.
-        var defaultProps;
-        var propTypes; // $FlowFixMe[prop-missing]
+      if (!disableDefaultPropsExceptForClasses) {
+        {
+          // In production, this would just set it on the object.
+          var defaultProps; // $FlowFixMe[prop-missing]
 
-        Object.defineProperties(lazyType, {
-          defaultProps: {
-            configurable: true,
-            get: function () {
-              return defaultProps;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newDefaultProps) {
-              error(
-                "It is not supported to assign `defaultProps` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
+          Object.defineProperties(lazyType, {
+            defaultProps: {
+              configurable: true,
+              get: function () {
+                return defaultProps;
+              },
+              // $FlowFixMe[missing-local-annot]
+              set: function (newDefaultProps) {
+                error(
+                  "It is not supported to assign `defaultProps` to " +
+                    "a lazy component import. Either specify them where the component " +
+                    "is defined, or create a wrapping component around it."
+                );
 
-              defaultProps = newDefaultProps; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
+                defaultProps = newDefaultProps; // Match production behavior more closely:
+                // $FlowFixMe[prop-missing]
 
-              Object.defineProperty(lazyType, "defaultProps", {
-                enumerable: true
-              });
+                Object.defineProperty(lazyType, "defaultProps", {
+                  enumerable: true
+                });
+              }
             }
-          },
-          propTypes: {
-            configurable: true,
-            get: function () {
-              return propTypes;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newPropTypes) {
-              error(
-                "It is not supported to assign `propTypes` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
-
-              propTypes = newPropTypes; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
-
-              Object.defineProperty(lazyType, "propTypes", {
-                enumerable: true
-              });
-            }
-          }
-        });
+          });
+        }
       }
 
       return lazyType;

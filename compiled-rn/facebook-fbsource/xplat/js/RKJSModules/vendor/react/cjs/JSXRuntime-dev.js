@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b8adb7b0f518a62eeeafe1982920443a>>
+ * @generated SignedSource<<282fb3cb626f5517884e1ac1196ba98f>>
  */
 
 "use strict";
@@ -108,8 +108,9 @@ if (__DEV__) {
 
     var enableComponentStackLocations =
         dynamicFlags.enableComponentStackLocations,
-      enableRenderableContext = dynamicFlags.enableRenderableContext;
-    // The rest of the flags are static for better dead code elimination.
+      enableRenderableContext = dynamicFlags.enableRenderableContext,
+      disableDefaultPropsExceptForClasses =
+        dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
     var enableLegacyHidden = false;
@@ -1221,14 +1222,17 @@ if (__DEV__) {
           ) {
             props[propName] = config[propName];
           }
-        } // Resolve default props
+        }
 
-        if (type && type.defaultProps) {
-          var defaultProps = type.defaultProps;
+        if (!disableDefaultPropsExceptForClasses) {
+          // Resolve default props
+          if (type && type.defaultProps) {
+            var defaultProps = type.defaultProps;
 
-          for (propName in defaultProps) {
-            if (props[propName] === undefined) {
-              props[propName] = defaultProps[propName];
+            for (propName in defaultProps) {
+              if (props[propName] === undefined) {
+                props[propName] = defaultProps[propName];
+              }
             }
           }
         }

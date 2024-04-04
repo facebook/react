@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8059dbaad39c17fd2df36f1b57304c46>>
+ * @generated SignedSource<<be131f90efa167ba38901cfaea311b01>>
  */
 
 "use strict";
@@ -88,6 +88,8 @@ pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
   enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   ReactCurrentDispatcher = { current: null },
   ReactCurrentCache = { current: null },
   ReactCurrentBatchConfig = { transition: null },
@@ -122,7 +124,7 @@ function jsxProd(type, config, maybeKey) {
       "key" !== propName &&
       "ref" !== propName &&
       (props[propName] = config[propName]);
-  if (type && type.defaultProps)
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
       void 0 === props[propName] && (props[propName] = config[propName]);
   return ReactElement(
@@ -429,7 +431,11 @@ exports.cloneElement = function (element, config, children) {
     void 0 !== config.ref &&
       ((ref = config.ref), (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
-    if (element.type && element.type.defaultProps)
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      element.type &&
+      element.type.defaultProps
+    )
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       hasOwnProperty.call(config, propName) &&
@@ -438,9 +444,11 @@ exports.cloneElement = function (element, config, children) {
         "__self" !== propName &&
         "__source" !== propName &&
         (props[propName] =
-          void 0 === config[propName] && void 0 !== defaultProps
-            ? defaultProps[propName]
-            : config[propName]);
+          disableDefaultPropsExceptForClasses ||
+          void 0 !== config[propName] ||
+          void 0 === defaultProps
+            ? config[propName]
+            : defaultProps[propName]);
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -645,7 +653,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-2454820c";
+exports.version = "19.0.0-canary-46b57fd6";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

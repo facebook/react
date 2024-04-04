@@ -7,13 +7,16 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aae4d2e3e2cad8ded1a63513bfed3d4a>>
+ * @generated SignedSource<<26fbc8eee6902991682d526f8537439c>>
  */
 
 "use strict";
-var React = require("react"),
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+  React = require("react"),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
@@ -30,7 +33,7 @@ function jsxProd(type, config, maybeKey) {
       "key" !== propName &&
       "ref" !== propName &&
       (props[propName] = config[propName]);
-  if (type && type.defaultProps)
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
       void 0 === props[propName] && (props[propName] = config[propName]);
   return {
