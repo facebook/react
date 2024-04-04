@@ -318,6 +318,26 @@ Same as `unhideInstance`, but for nodes created by `createTextInstance`.
 
 This method should mutate the `container` root node and remove all children from it.
 
+#### `maySuspendCommit(type, props)`
+
+This method should determine if this combination of type and props may need to suspend.
+
+#### `preloadInstance(type, props)`
+
+This method should kick off any preloading of resources required. Return `true` to indicate it's already loaded or `false` to trigger a fallback.
+
+#### `startSuspendingCommit()`
+
+This method begins Suspense on something that isn't associated with a particular node.
+
+#### `suspendInstance(type, props)`
+
+This method prevents a tree from being displayed without blocking the components from being evaluated. Consider it Suspense for the commit phase.
+
+#### `waitForCommitToBeReady()`
+
+This method determines if the renderer is ready to commit or if React should suspend. If it is not ready, return a callback to subscribe to a ready event.
+
 ### Persistence Methods
 
 If you use the persistent mode instead of the mutation mode, you would still need the "Core Methods". However, instead of the Mutation Methods above you will implement a different set of methods that performs cloning nodes and replacing them at the root level. You can find a list of them in the "Persistence" section [listed in this file](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberConfig.custom.js). File an issue if you need help.
