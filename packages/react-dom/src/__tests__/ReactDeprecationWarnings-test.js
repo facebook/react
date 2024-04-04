@@ -26,6 +26,7 @@ describe('ReactDeprecationWarnings', () => {
     }
   });
 
+  // @gate !disableDefaultPropsExceptForClasses || !__DEV__
   it('should warn when given defaultProps', async () => {
     function FunctionalComponent(props) {
       return null;
@@ -43,6 +44,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses || !__DEV__
   it('should warn when given defaultProps on a memoized function', async () => {
     const MemoComponent = React.memo(function FunctionalComponent(props) {
       return null;

@@ -109,6 +109,7 @@ import {
   enableRenderableContext,
   enableRefAsProp,
   disableLegacyMode,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -247,7 +248,7 @@ import {
   updateClassInstance,
   resolveClassComponentProps,
 } from './ReactFiberClassComponent';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {
   createFiberFromTypeAndProps,
   createFiberFromFragment,
@@ -487,7 +488,8 @@ function updateMemoComponent(
       isSimpleFunctionComponent(type) &&
       Component.compare === null &&
       // SimpleMemoComponent codepath doesn't resolve outer props either.
-      Component.defaultProps === undefined
+      (disableDefaultPropsExceptForClasses ||
+        Component.defaultProps === undefined)
     ) {
       let resolvedType = type;
       if (__DEV__) {
@@ -509,16 +511,18 @@ function updateMemoComponent(
         renderLanes,
       );
     }
-    if (__DEV__) {
-      if (Component.defaultProps !== undefined) {
-        const componentName = getComponentNameFromType(type) || 'Unknown';
-        if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-          console.error(
-            '%s: Support for defaultProps will be removed from memo components ' +
-              'in a future major release. Use JavaScript default parameters instead.',
-            componentName,
-          );
-          didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+    if (!disableDefaultPropsExceptForClasses) {
+      if (__DEV__) {
+        if (Component.defaultProps !== undefined) {
+          const componentName = getComponentNameFromType(type) || 'Unknown';
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+            console.error(
+              '%s: Support for defaultProps will be removed from memo components ' +
+                'in a future major release. Use JavaScript default parameters instead.',
+              componentName,
+            );
+            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+          }
         }
       }
     }
@@ -1766,7 +1770,9 @@ function mountLazyComponent(
         renderLanes,
       );
     } else {
-      const resolvedProps = resolveDefaultProps(Component, props);
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = FunctionComponent;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
@@ -1784,7 +1790,9 @@ function mountLazyComponent(
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      const resolvedProps = resolveDefaultProps(Component, props);
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = ForwardRef;
       if (__DEV__) {
         workInProgress.type = Component =
@@ -1798,13 +1806,20 @@ function mountLazyComponent(
         renderLanes,
       );
     } else if ($$typeof === REACT_MEMO_TYPE) {
-      const resolvedProps = resolveDefaultProps(Component, props);
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
       workInProgress.tag = MemoComponent;
       return updateMemoComponent(
         null,
         workInProgress,
         Component,
-        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
+        disableDefaultPropsExceptForClasses
+          ? resolvedProps
+          : resolveDefaultPropsOnNonClassComponent(
+              Component.type,
+              resolvedProps,
+            ), // The inner type can have defaults too
         renderLanes,
       );
     }
@@ -1900,7 +1915,10 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       }
     }
 
-    if (Component.defaultProps !== undefined) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      Component.defaultProps !== undefined
+    ) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -3897,9 +3915,10 @@ function beginWork(
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         workInProgress.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
@@ -3948,9 +3967,10 @@ function beginWork(
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         workInProgress.elementType === type
           ? unresolvedProps
-          : resolveDefaultProps(type, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
@@ -3973,8 +3993,12 @@ function beginWork(
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       // Resolve outer props first, then resolve inner props.
-      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
-      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
+      let resolvedProps = disableDefaultPropsExceptForClasses
+        ? unresolvedProps
+        : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
+      resolvedProps = disableDefaultPropsExceptForClasses
+        ? resolvedProps
+        : resolveDefaultPropsOnNonClassComponent(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,

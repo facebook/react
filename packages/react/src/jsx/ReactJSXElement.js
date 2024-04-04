@@ -18,7 +18,11 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
+import {
+  enableRefAsProp,
+  disableStringRefs,
+  disableDefaultPropsExceptForClasses,
+} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -340,12 +344,14 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  // Resolve default props
-  if (type && type.defaultProps) {
-    const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
+  if (!disableDefaultPropsExceptForClasses) {
+    // Resolve default props
+    if (type && type.defaultProps) {
+      const defaultProps = type.defaultProps;
+      for (propName in defaultProps) {
+        if (props[propName] === undefined) {
+          props[propName] = defaultProps[propName];
+        }
       }
     }
   }
@@ -554,12 +560,14 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    // Resolve default props
-    if (type && type.defaultProps) {
-      const defaultProps = type.defaultProps;
-      for (propName in defaultProps) {
-        if (props[propName] === undefined) {
-          props[propName] = defaultProps[propName];
+    if (!disableDefaultPropsExceptForClasses) {
+      // Resolve default props
+      if (type && type.defaultProps) {
+        const defaultProps = type.defaultProps;
+        for (propName in defaultProps) {
+          if (props[propName] === undefined) {
+            props[propName] = defaultProps[propName];
+          }
         }
       }
     }
@@ -811,7 +819,11 @@ export function cloneElement(element, config, children) {
 
     // Remaining properties override existing props
     let defaultProps;
-    if (element.type && element.type.defaultProps) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      element.type &&
+      element.type.defaultProps
+    ) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
@@ -833,7 +845,11 @@ export function cloneElement(element, config, children) {
         // backwards compatibility.
         !(enableRefAsProp && propName === 'ref' && config.ref === undefined)
       ) {
-        if (config[propName] === undefined && defaultProps !== undefined) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          config[propName] === undefined &&
+          defaultProps !== undefined
+        ) {
           // Resolve default props
           props[propName] = defaultProps[propName];
         } else {

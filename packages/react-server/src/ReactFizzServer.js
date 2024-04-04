@@ -143,6 +143,7 @@ import {
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -1396,12 +1397,23 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  // TODO: This is where defaultProps should be resolved, too.
+  // Resolve default props. Taken from old JSX runtime, where this used to live.
+  const defaultProps = Component.defaultProps;
+  if (defaultProps && disableDefaultPropsExceptForClasses) {
+    newProps = assign({}, newProps, baseProps);
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
+      }
+    }
+  }
 
   if (enableRefAsProp) {
     // Remove ref from the props object, if it exists.
     if ('ref' in newProps) {
-      newProps = assign({}, newProps);
+      if (newProps === baseProps) {
+        newProps = assign({}, newProps);
+      }
       delete newProps.ref;
     }
   }
@@ -1587,7 +1599,10 @@ function validateFunctionComponentInDev(Component: any): void {
       }
     }
 
-    if (Component.defaultProps !== undefined) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      Component.defaultProps !== undefined
+    ) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -1629,7 +1644,15 @@ function validateFunctionComponentInDev(Component: any): void {
   }
 }
 
-function resolveDefaultProps(Component: any, baseProps: Object): Object {
+function resolveDefaultPropsOnNonClassComponent(
+  Component: any,
+  baseProps: Object,
+): Object {
+  if (disableDefaultPropsExceptForClasses) {
+    // Support for defaultProps is removed in React 19 for all types
+    // except classes.
+    return baseProps;
+  }
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
     const props = assign({}, baseProps);
@@ -1705,7 +1728,10 @@ function renderMemo(
   ref: any,
 ): void {
   const innerType = type.type;
-  const resolvedProps = resolveDefaultProps(innerType, props);
+  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
+    innerType,
+    props,
+  );
   renderElement(request, task, keyPath, innerType, resolvedProps, ref);
 }
 
@@ -1779,7 +1805,10 @@ function renderLazyComponent(
   const payload = lazyComponent._payload;
   const init = lazyComponent._init;
   const Component = init(payload);
-  const resolvedProps = resolveDefaultProps(Component, props);
+  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
+    Component,
+    props,
+  );
   renderElement(request, task, keyPath, Component, resolvedProps, ref);
   task.componentStack = previousComponentStack;
 }

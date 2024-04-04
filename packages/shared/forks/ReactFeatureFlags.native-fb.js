@@ -29,6 +29,7 @@ export const {
   enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
   useModernStrictMode,
+  disableDefaultPropsExceptForClasses,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.

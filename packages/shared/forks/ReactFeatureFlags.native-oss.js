@@ -37,6 +37,7 @@ export const enableComponentStackLocations = __TODO_NEXT_RN_MAJOR__;
 // -----------------------------------------------------------------------------
 export const enableCache = __TODO_NEXT_RN_MAJOR__;
 export const enableRenderableContext = __TODO_NEXT_RN_MAJOR__;
+export const disableDefaultPropsExceptForClasses = __TODO_NEXT_RN_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Already enabled for next React Native major.

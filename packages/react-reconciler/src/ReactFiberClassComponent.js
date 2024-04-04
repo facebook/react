@@ -24,6 +24,7 @@ import {
   enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableRefAsProp,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -1252,7 +1253,12 @@ export function resolveClassComponentProps(
 
   // Resolve default props. Taken from old JSX runtime, where this used to live.
   const defaultProps = Component.defaultProps;
-  if (defaultProps && !alreadyResolvedDefaultProps) {
+  if (
+    defaultProps &&
+    // If disableDefaultPropsExceptForClasses is true, we always resolve
+    // default props here in the reconciler, rather than in the JSX runtime.
+    (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
+  ) {
     newProps = assign({}, newProps, baseProps);
     for (const propName in defaultProps) {
       if (newProps[propName] === undefined) {

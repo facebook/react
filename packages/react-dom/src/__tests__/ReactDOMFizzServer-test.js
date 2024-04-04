@@ -405,18 +405,6 @@ describe('ReactDOMFizzServer', () => {
   }
 
   it('should asynchronously load a lazy component', async () => {
-    const originalConsoleError = console.error;
-    const mockError = jest.fn();
-    console.error = (...args) => {
-      if (args.length > 1) {
-        if (typeof args[1] === 'object') {
-          mockError(args[0].split('\n')[0]);
-          return;
-        }
-      }
-      mockError(...args.map(normalizeCodeLocInfo));
-    };
-
     let resolveA;
     const LazyA = React.lazy(() => {
       return new Promise(r => {
@@ -431,74 +419,59 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    function TextWithPunctuation({text, punctuation}) {
-      return <Text text={text + punctuation} />;
+    class TextWithPunctuation extends React.Component {
+      render() {
+        return <Text text={this.props.text + this.props.punctuation} />;
+      }
     }
+
     // This tests that default props of the inner element is resolved.
     TextWithPunctuation.defaultProps = {
       punctuation: '!',
     };
 
-    try {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <div>
           <div>
-            <div>
-              <Suspense fallback={<Text text="Loading..." />}>
-                <LazyA text="Hello" />
-              </Suspense>
-            </div>
-            <div>
-              <Suspense fallback={<Text text="Loading..." />}>
-                <LazyB text="world" />
-              </Suspense>
-            </div>
-          </div>,
-        );
-        pipe(writable);
-      });
+            <Suspense fallback={<Text text="Loading..." />}>
+              <LazyA text="Hello" />
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <LazyB text="world" />
+            </Suspense>
+          </div>
+        </div>,
+      );
+      pipe(writable);
+    });
 
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Loading...</div>
-          <div>Loading...</div>
-        </div>,
-      );
-      await act(() => {
-        resolveA({default: Text});
-      });
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Hello</div>
-          <div>Loading...</div>
-        </div>,
-      );
-      await act(() => {
-        resolveB({default: TextWithPunctuation});
-      });
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Hello</div>
-          <div>world!</div>
-        </div>,
-      );
-
-      if (__DEV__) {
-        expect(mockError).toHaveBeenCalledWith(
-          'Warning: %s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.%s',
-          'TextWithPunctuation',
-          '\n    in TextWithPunctuation (at **)\n' +
-            '    in Lazy (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in div (at **)',
-        );
-      } else {
-        expect(mockError).not.toHaveBeenCalled();
-      }
-    } finally {
-      console.error = originalConsoleError;
-    }
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Loading...</div>
+        <div>Loading...</div>
+      </div>,
+    );
+    await act(() => {
+      resolveA({default: Text});
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Hello</div>
+        <div>Loading...</div>
+      </div>,
+    );
+    await act(() => {
+      resolveB({default: TextWithPunctuation});
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Hello</div>
+        <div>world!</div>
+      </div>,
+    );
   });
 
   it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {

@@ -40,6 +40,7 @@ import {
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -264,7 +265,7 @@ import {
   getSuspenseHandler,
   getShellBoundary,
 } from './ReactFiberSuspenseContext';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
 import {
   ensureRootIsScheduled,
@@ -2411,9 +2412,10 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       const Component = unitOfWork.type;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       let context: any;
       if (!disableLegacyContext) {
         const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
@@ -2437,9 +2439,10 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       const Component = unitOfWork.type.render;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
 
       next = replayFunctionComponent(
         current,

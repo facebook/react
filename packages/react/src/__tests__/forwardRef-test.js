@@ -74,6 +74,7 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should support defaultProps', async () => {
     function FunctionComponent({forwardedRef, optional, required}) {
       return (
