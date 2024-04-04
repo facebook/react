@@ -338,6 +338,8 @@ describe('useSubscription', () => {
       observableB.next('b-3');
     });
 
+    assertLog(['Grandchild: b-0', 'Child: b-3', 'Grandchild: b-3']);
+
     // Update again
     await act(() => root.render(<Parent observed={observableA} />));
 
@@ -345,13 +347,7 @@ describe('useSubscription', () => {
     // We expect the last emitted update to be rendered (because of the commit phase value check)
     // But the intermediate ones should be ignored,
     // And the final rendered output should be the higher-priority observable.
-    assertLog([
-      'Grandchild: b-0',
-      'Child: b-3',
-      'Grandchild: b-3',
-      'Child: a-0',
-      'Grandchild: a-0',
-    ]);
+    assertLog(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual([
       'Parent.componentDidMount',
       'Parent.componentDidUpdate',

@@ -342,12 +342,13 @@ describe('ReactDOMRoot', () => {
       root.render(<Foo value="a" />);
     });
 
+    assertLog(['a']);
     expect(container.textContent).toEqual('a');
 
     await act(async () => {
       root.render(<Foo value="b" />);
 
-      assertLog(['a']);
+      assertLog([]);
       expect(container.textContent).toEqual('a');
 
       await waitFor(['b']);

@@ -17,6 +17,7 @@ let Suspense;
 let Scheduler;
 let act;
 let textCache;
+let assertLog;
 
 describe('ReactDOMSuspensePlaceholder', () => {
   let container;
@@ -30,6 +31,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -156,11 +158,11 @@ describe('ReactDOMSuspensePlaceholder', () => {
     });
 
     expect(container.textContent).toEqual('Loading...');
-
+    assertLog(['A', 'Suspend! [B]', 'Loading...']);
     await act(() => {
       resolveText('B');
     });
-
+    assertLog(['A', 'B', 'C']);
     expect(container.textContent).toEqual('ABC');
   });
 
