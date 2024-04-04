@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dff5882f8219f97fa6b685d700750e06>>
+ * @generated SignedSource<<db6ccf0f194d95b91555bdb488cc0fab>>
  */
 
 "use strict";
@@ -2881,6 +2881,163 @@ if (__DEV__) {
 
     var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
 
+    function describeBuiltInComponentFrame(name, ownerFn) {
+      {
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
+      }
+    }
+    function describeDebugInfoFrame(name, env) {
+      return describeBuiltInComponentFrame(
+        name + (env ? " (" + env + ")" : ""),
+        null
+      );
+    }
+
+    {
+      var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
+      new PossiblyWeakMap$1();
+    }
+
+    function describeComponentFrame(name, ownerName) {
+      var sourceInfo = "";
+
+      if (ownerName) {
+        sourceInfo = " (created by " + ownerName + ")";
+      }
+
+      return "\n    in " + (name || "Unknown") + sourceInfo;
+    }
+
+    function describeClassComponentFrame(ctor, ownerFn) {
+      {
+        return describeFunctionComponentFrame(ctor, ownerFn);
+      }
+    }
+    function describeFunctionComponentFrame(fn, ownerFn) {
+      {
+        if (!fn) {
+          return "";
+        }
+
+        var name = fn.displayName || fn.name || null;
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
+      }
+    }
+
+    function describeFiber(fiber) {
+      var owner = fiber._debugOwner ? fiber._debugOwner.type : null;
+
+      switch (fiber.tag) {
+        case HostHoistable:
+        case HostSingleton:
+        case HostComponent:
+          return describeBuiltInComponentFrame(fiber.type, owner);
+
+        case LazyComponent:
+          return describeBuiltInComponentFrame("Lazy", owner);
+
+        case SuspenseComponent:
+          return describeBuiltInComponentFrame("Suspense", owner);
+
+        case SuspenseListComponent:
+          return describeBuiltInComponentFrame("SuspenseList", owner);
+
+        case FunctionComponent:
+        case SimpleMemoComponent:
+          return describeFunctionComponentFrame(fiber.type, owner);
+
+        case ForwardRef:
+          return describeFunctionComponentFrame(fiber.type.render, owner);
+
+        case ClassComponent:
+          return describeClassComponentFrame(fiber.type, owner);
+
+        default:
+          return "";
+      }
+    }
+
+    function getStackByFiberInDevAndProd(workInProgress) {
+      try {
+        var info = "";
+        var node = workInProgress;
+
+        do {
+          info += describeFiber(node);
+
+          if (true) {
+            // Add any Server Component stack frames in reverse order.
+            var debugInfo = node._debugInfo;
+
+            if (debugInfo) {
+              for (var i = debugInfo.length - 1; i >= 0; i--) {
+                var entry = debugInfo[i];
+
+                if (typeof entry.name === "string") {
+                  info += describeDebugInfoFrame(entry.name, entry.env);
+                }
+              }
+            }
+          } // $FlowFixMe[incompatible-type] we bail out when we get a null
+
+          node = node.return;
+        } while (node);
+
+        return info;
+      } catch (x) {
+        return "\nError generating stack: " + x.message + "\n" + x.stack;
+      }
+    }
+
+    var CapturedStacks = new WeakMap();
+    function createCapturedValueAtFiber(value, source) {
+      // If the value is an error, call this function immediately after it is thrown
+      // so the stack is accurate.
+      var stack;
+
+      if (typeof value === "object" && value !== null) {
+        var capturedStack = CapturedStacks.get(value);
+
+        if (typeof capturedStack === "string") {
+          stack = capturedStack;
+        } else {
+          stack = getStackByFiberInDevAndProd(source);
+          CapturedStacks.set(value, stack);
+        }
+      } else {
+        stack = getStackByFiberInDevAndProd(source);
+      }
+
+      return {
+        value: value,
+        source: source,
+        stack: stack
+      };
+    }
+    function createCapturedValueFromError(value, stack) {
+      if (typeof stack === "string") {
+        CapturedStacks.set(value, stack);
+      }
+
+      return {
+        value: value,
+        source: null,
+        stack: stack
+      };
+    }
+
     var contextStackCursor = createCursor(null);
     var contextFiberStackCursor = createCursor(null);
     var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
@@ -5083,126 +5240,6 @@ if (__DEV__) {
       }
 
       return true;
-    }
-
-    function describeBuiltInComponentFrame(name, ownerFn) {
-      {
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
-      }
-    }
-    function describeDebugInfoFrame(name, env) {
-      return describeBuiltInComponentFrame(
-        name + (env ? " (" + env + ")" : ""),
-        null
-      );
-    }
-
-    {
-      var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
-      new PossiblyWeakMap$1();
-    }
-
-    function describeComponentFrame(name, ownerName) {
-      var sourceInfo = "";
-
-      if (ownerName) {
-        sourceInfo = " (created by " + ownerName + ")";
-      }
-
-      return "\n    in " + (name || "Unknown") + sourceInfo;
-    }
-
-    function describeClassComponentFrame(ctor, ownerFn) {
-      {
-        return describeFunctionComponentFrame(ctor, ownerFn);
-      }
-    }
-    function describeFunctionComponentFrame(fn, ownerFn) {
-      {
-        if (!fn) {
-          return "";
-        }
-
-        var name = fn.displayName || fn.name || null;
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
-      }
-    }
-
-    function describeFiber(fiber) {
-      var owner = fiber._debugOwner ? fiber._debugOwner.type : null;
-
-      switch (fiber.tag) {
-        case HostHoistable:
-        case HostSingleton:
-        case HostComponent:
-          return describeBuiltInComponentFrame(fiber.type, owner);
-
-        case LazyComponent:
-          return describeBuiltInComponentFrame("Lazy", owner);
-
-        case SuspenseComponent:
-          return describeBuiltInComponentFrame("Suspense", owner);
-
-        case SuspenseListComponent:
-          return describeBuiltInComponentFrame("SuspenseList", owner);
-
-        case FunctionComponent:
-        case SimpleMemoComponent:
-          return describeFunctionComponentFrame(fiber.type, owner);
-
-        case ForwardRef:
-          return describeFunctionComponentFrame(fiber.type.render, owner);
-
-        case ClassComponent:
-          return describeClassComponentFrame(fiber.type, owner);
-
-        default:
-          return "";
-      }
-    }
-
-    function getStackByFiberInDevAndProd(workInProgress) {
-      try {
-        var info = "";
-        var node = workInProgress;
-
-        do {
-          info += describeFiber(node);
-
-          if (true) {
-            // Add any Server Component stack frames in reverse order.
-            var debugInfo = node._debugInfo;
-
-            if (debugInfo) {
-              for (var i = debugInfo.length - 1; i >= 0; i--) {
-                var entry = debugInfo[i];
-
-                if (typeof entry.name === "string") {
-                  info += describeDebugInfoFrame(entry.name, entry.env);
-                }
-              }
-            }
-          } // $FlowFixMe[incompatible-type] we bail out when we get a null
-
-          node = node.return;
-        } while (node);
-
-        return info;
-      } catch (x) {
-        return "\nError generating stack: " + x.message + "\n" + x.stack;
-      }
     }
 
     var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -13203,43 +13240,6 @@ if (__DEV__) {
       return baseProps;
     }
 
-    var CapturedStacks = new WeakMap();
-    function createCapturedValueAtFiber(value, source) {
-      // If the value is an error, call this function immediately after it is thrown
-      // so the stack is accurate.
-      var stack;
-
-      if (typeof value === "object" && value !== null) {
-        var capturedStack = CapturedStacks.get(value);
-
-        if (typeof capturedStack === "string") {
-          stack = capturedStack;
-        } else {
-          stack = getStackByFiberInDevAndProd(source);
-          CapturedStacks.set(value, stack);
-        }
-      } else {
-        stack = getStackByFiberInDevAndProd(source);
-      }
-
-      return {
-        value: value,
-        source: source,
-        stack: stack
-      };
-    }
-    function createCapturedValueFromError(value, stack) {
-      if (typeof stack === "string") {
-        CapturedStacks.set(value, stack);
-      }
-
-      return {
-        value: value,
-        source: null,
-        stack: stack
-      };
-    }
-
     var reportGlobalError =
       typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
         ? // emulating an uncaught JavaScript error.
@@ -13802,8 +13802,17 @@ if (__DEV__) {
         }
       } // This is a regular error, not a Suspense wakeable.
 
-      value = createCapturedValueAtFiber(value, sourceFiber);
-      renderDidError(value); // We didn't find a boundary that could handle this type of exception. Start
+      var wrapperError = new Error(
+        "There was an error during concurrent rendering but React was able to recover by " +
+          "instead synchronously rendering the entire root.",
+        {
+          cause: value
+        }
+      );
+      queueConcurrentError(
+        createCapturedValueAtFiber(wrapperError, sourceFiber)
+      );
+      renderDidError(); // We didn't find a boundary that could handle this type of exception. Start
       // over and traverse parent path again, this time treating the exception
       // as an error.
 
@@ -13813,26 +13822,30 @@ if (__DEV__) {
         return true;
       }
 
+      var errorInfo = createCapturedValueAtFiber(value, sourceFiber);
       var workInProgress = returnFiber;
 
       do {
         switch (workInProgress.tag) {
           case HostRoot: {
-            var _errorInfo = value;
             workInProgress.flags |= ShouldCapture;
-            var lane = pickArbitraryLane(rootRenderLanes);
-            workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
-            var update = createRootErrorUpdate(
+
+            var _lane = pickArbitraryLane(rootRenderLanes);
+
+            workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane);
+
+            var _update = createRootErrorUpdate(
               workInProgress.stateNode,
-              _errorInfo,
-              lane
+              errorInfo,
+              _lane
             );
-            enqueueCapturedUpdate(workInProgress, update);
+
+            enqueueCapturedUpdate(workInProgress, _update);
             return false;
           }
 
           case ClassComponent:
-            var errorInfo = value;
+            // Capture and retry
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
 
@@ -13845,19 +13858,19 @@ if (__DEV__) {
             ) {
               workInProgress.flags |= ShouldCapture;
 
-              var _lane = pickArbitraryLane(rootRenderLanes);
+              var _lane2 = pickArbitraryLane(rootRenderLanes);
 
-              workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane); // Schedule the error boundary to re-render using updated state
+              workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane2); // Schedule the error boundary to re-render using updated state
 
-              var _update = createClassErrorUpdate(_lane);
+              var _update2 = createClassErrorUpdate(_lane2);
 
               initializeClassErrorUpdate(
-                _update,
+                _update2,
                 root,
                 workInProgress,
                 errorInfo
               );
-              enqueueCapturedUpdate(workInProgress, _update);
+              enqueueCapturedUpdate(workInProgress, _update2);
               return false;
             }
 
@@ -15720,20 +15733,12 @@ if (__DEV__) {
     function retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
-      renderLanes,
-      recoverableError
+      renderLanes
     ) {
       // Falling back to client rendering. Because this has performance
       // implications, it's considered a recoverable error, even though the user
       // likely won't observe anything wrong with the UI.
-      //
-      // The error is passed in as an argument to enforce that every caller provide
-      // a custom message, or explicitly opt out (currently the only path that opts
-      // out is legacy mode; every concurrent path provides an error).
-      if (recoverableError !== null) {
-        queueHydrationError(recoverableError);
-      } // This will add the old fiber to the deletion list
-
+      // This will add the old fiber to the deletion list
       reconcileChildFibers(workInProgress, current.child, null, renderLanes); // We're now not suspended nor dehydrated.
 
       var nextProps = workInProgress.pendingProps;
@@ -15819,9 +15824,7 @@ if (__DEV__) {
             message = _getSuspenseInstanceF.message;
             stack = _getSuspenseInstanceF.stack;
             componentStack = _getSuspenseInstanceF.componentStack;
-          }
-
-          var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
+          } // TODO: Figure out a better signal than encoding a magic digest value.
 
           {
             var error;
@@ -15839,17 +15842,17 @@ if (__DEV__) {
 
             error.stack = stack || "";
             error.digest = digest;
-            capturedValue = createCapturedValueFromError(
+            var capturedValue = createCapturedValueFromError(
               error,
               componentStack === undefined ? null : componentStack
             );
+            queueHydrationError(capturedValue);
           }
 
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            capturedValue
+            renderLanes
           );
         }
         // any context has changed, we need to treat is as if the input might have changed.
@@ -15909,8 +15912,7 @@ if (__DEV__) {
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            null
+            renderLanes
           );
         } else if (isSuspenseInstancePending()) {
           // This component is still pending more data from the server, so we can't hydrate its
@@ -15949,22 +15951,13 @@ if (__DEV__) {
         // something either suspended or errored.
         if (workInProgress.flags & ForceClientRender) {
           // Something errored during hydration. Try again without hydrating.
+          // The error should've already been logged in throwException.
           pushPrimaryTreeSuspenseHandler(workInProgress);
           workInProgress.flags &= ~ForceClientRender;
-
-          var _capturedValue = createCapturedValueFromError(
-            new Error(
-              "There was an error while hydrating this Suspense boundary. " +
-                "Switched to client rendering."
-            ),
-            null
-          );
-
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            _capturedValue
+            renderLanes
           );
         } else if (workInProgress.memoizedState !== null) {
           // Something suspended and we should still be in dehydrated mode.
@@ -23830,11 +23823,12 @@ if (__DEV__) {
         );
       }
     }
-    function renderDidError(error) {
+    function renderDidError() {
       if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
         workInProgressRootExitStatus = RootErrored;
       }
-
+    }
+    function queueConcurrentError(error) {
       if (workInProgressRootConcurrentErrors === null) {
         workInProgressRootConcurrentErrors = [error];
       } else {
@@ -26798,7 +26792,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-9dd5e9f4";
+    var ReactVersion = "19.0.0-canary-7222486b";
 
     // Might add PROFILE later.
 
