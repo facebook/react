@@ -2145,4 +2145,49 @@ describe('ReactFlight', () => {
     expect(loggedFn).not.toBe(foo);
     expect(loggedFn.toString()).toBe(foo.toString());
   });
+
+  it('uses the server component debug info as the element owner in DEV', async () => {
+    function Container({children}) {
+      return children;
+    }
+
+    function Greeting({firstName}) {
+      // We can't use JSX here because it'll use the Client React.
+      return ReactServer.createElement(
+        Container,
+        null,
+        ReactServer.createElement('span', null, 'Hello, ', firstName),
+      );
+    }
+
+    const model = {
+      greeting: ReactServer.createElement(Greeting, {firstName: 'Seb'}),
+    };
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const greeting = rootModel.greeting;
+      // We've rendered down to the span.
+      expect(greeting.type).toBe('span');
+      if (__DEV__) {
+        expect(greeting._debugInfo).toEqual([
+          {name: 'Greeting', env: 'Server'},
+          {name: 'Container', env: 'Server'},
+        ]);
+        // The owner that created the span was the outer server component.
+        // We expect the debug info to be referentially equal to the owner.
+        expect(greeting._owner).toBe(greeting._debugInfo[0]);
+      } else {
+        expect(greeting._debugInfo).toBe(undefined);
+        expect(greeting._owner).toBe(
+          gate(flags => flags.disableStringRefs) ? undefined : null,
+        );
+      }
+      ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
+  });
 });
