@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-81cf15cb";
+    var ReactVersion = "19.0.0-www-classic-6ac6cbda";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -11516,7 +11516,7 @@ if (__DEV__) {
           ? "Switched to client rendering because the server rendering aborted due to:\n\n"
           : "Switched to client rendering because the server rendering errored:\n\n";
         boundary.errorMessage = prefix + message;
-        boundary.errorStack = stack;
+        boundary.errorStack = stack !== null ? prefix + stack : null;
         boundary.errorComponentStack = thrownInfo.componentStack;
       }
     }
