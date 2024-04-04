@@ -239,6 +239,19 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
         value: null,
       });
     }
+  } else if (!__DEV__ && disableStringRefs) {
+    // In prod, `ref` is a regular property and _owner doesn't exist.
+    element = {
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
+
+      // Built-in properties that belong on the element
+      type,
+      key,
+      ref,
+
+      props,
+    };
   } else {
     // In prod, `ref` is a regular property. It will be removed in a
     // future release.
@@ -774,7 +787,7 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     enableRefAsProp ? null : oldElement.ref,
     undefined,
     undefined,
-    oldElement._owner,
+    !__DEV__ && disableStringRefs ? undefined : oldElement._owner,
     oldElement.props,
   );
 }
@@ -800,7 +813,7 @@ export function cloneElement(element, config, children) {
   let ref = enableRefAsProp ? null : element.ref;
 
   // Owner will be preserved, unless ref is overridden
-  let owner = element._owner;
+  let owner = !__DEV__ && disableStringRefs ? undefined : element._owner;
 
   if (config != null) {
     if (hasValidRef(config)) {

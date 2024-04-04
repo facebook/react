@@ -32,7 +32,11 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import {enableRefAsProp, disableLegacyMode} from 'shared/ReactFeatureFlags';
+import {
+  enableRefAsProp,
+  disableLegacyMode,
+  disableStringRefs,
+} from 'shared/ReactFeatureFlags';
 
 type Container = {
   rootID: string,
@@ -799,6 +803,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         value: null,
       });
       return element;
+    } else if (!__DEV__ && disableStringRefs) {
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: type,
+        key: null,
+        ref: null,
+        props: props,
+      };
     } else {
       return {
         $$typeof: REACT_ELEMENT_TYPE,

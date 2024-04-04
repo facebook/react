@@ -275,7 +275,11 @@ describe('ReactCreateElement', () => {
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(React.createElement(Wrapper)));
-    expect(element._owner.stateNode).toBe(instance);
+    if (__DEV__ || !gate(flags => flags.disableStringRefs)) {
+      expect(element._owner.stateNode).toBe(instance);
+    } else {
+      expect('_owner' in element).toBe(false);
+    }
   });
 
   it('merges an additional argument onto the children prop', () => {
