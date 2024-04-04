@@ -15,6 +15,7 @@ import type {
 import {create, diff} from './ReactNativeAttributePayload';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
   type EventPriority,
@@ -309,6 +310,17 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   // It's not clear to me which is better so I'm deferring for now.
   // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
   return false;
+}
+
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(
+  newEventPriority: EventPriority,
+): void {
+  currentUpdatePriority = newEventPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
 }
 
 export function getCurrentEventPriority(): EventPriority {

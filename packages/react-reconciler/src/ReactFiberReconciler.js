@@ -41,7 +41,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {getPublicInstance, getCurrentUpdatePriority} from './ReactFiberConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
@@ -86,10 +86,6 @@ import {
   getHighestPriorityPendingLanes,
   higherPriorityLane,
 } from './ReactFiberLane';
-import {
-  getCurrentUpdatePriority,
-  runWithPriority,
-} from './ReactEventPriorities';
 import {
   scheduleRefresh,
   scheduleRoot,
@@ -525,7 +521,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   markRetryLaneIfNotHydrated(fiber, lane);
 }
 
-export {getCurrentUpdatePriority, runWithPriority};
+export {getCurrentUpdatePriority};
 
 export {findHostInstance};
 

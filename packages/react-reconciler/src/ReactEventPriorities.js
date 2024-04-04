@@ -21,30 +21,11 @@ import {
 
 export opaque type EventPriority = Lane;
 
+export const NoEventPriority: EventPriority = NoLane;
 export const DiscreteEventPriority: EventPriority = SyncLane;
 export const ContinuousEventPriority: EventPriority = InputContinuousLane;
 export const DefaultEventPriority: EventPriority = DefaultLane;
 export const IdleEventPriority: EventPriority = IdleLane;
-
-let currentUpdatePriority: EventPriority = NoLane;
-
-export function getCurrentUpdatePriority(): EventPriority {
-  return currentUpdatePriority;
-}
-
-export function setCurrentUpdatePriority(newPriority: EventPriority) {
-  currentUpdatePriority = newPriority;
-}
-
-export function runWithPriority<T>(priority: EventPriority, fn: () => T): T {
-  const previousPriority = currentUpdatePriority;
-  try {
-    currentUpdatePriority = priority;
-    return fn();
-  } finally {
-    currentUpdatePriority = previousPriority;
-  }
-}
 
 export function higherEventPriority(
   a: EventPriority,

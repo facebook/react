@@ -75,6 +75,8 @@ import {
   waitForCommitToBeReady,
   preloadInstance,
   supportsHydration,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -157,8 +159,6 @@ import {
 import {
   DiscreteEventPriority,
   DefaultEventPriority,
-  getCurrentUpdatePriority,
-  setCurrentUpdatePriority,
   lowerEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
@@ -3543,7 +3543,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
 
 export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-  let retryLane = NoLane;
+  let retryLane: Lane = NoLane;
   if (suspenseState !== null) {
     retryLane = suspenseState.retryLane;
   }
@@ -3551,7 +3551,7 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 }
 
 export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
-  let retryLane = NoLane; // Default
+  let retryLane: Lane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   switch (boundaryFiber.tag) {
     case SuspenseComponent:

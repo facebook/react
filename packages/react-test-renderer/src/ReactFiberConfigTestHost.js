@@ -10,6 +10,7 @@
 import isArray from 'shared/isArray';
 import {
   DefaultEventPriority,
+  NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
@@ -199,6 +200,15 @@ export function createTextInstance(
     isHidden: false,
     tag: 'TEXT',
   };
+}
+
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
 }
 
 export function getCurrentEventPriority(): EventPriority {
