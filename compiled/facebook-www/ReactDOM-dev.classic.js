@@ -7875,6 +7875,43 @@ if (__DEV__) {
       return currentState.isDehydrated;
     }
 
+    var CapturedStacks = new WeakMap();
+    function createCapturedValueAtFiber(value, source) {
+      // If the value is an error, call this function immediately after it is thrown
+      // so the stack is accurate.
+      var stack;
+
+      if (typeof value === "object" && value !== null) {
+        var capturedStack = CapturedStacks.get(value);
+
+        if (typeof capturedStack === "string") {
+          stack = capturedStack;
+        } else {
+          stack = getStackByFiberInDevAndProd(source);
+          CapturedStacks.set(value, stack);
+        }
+      } else {
+        stack = getStackByFiberInDevAndProd(source);
+      }
+
+      return {
+        value: value,
+        source: source,
+        stack: stack
+      };
+    }
+    function createCapturedValueFromError(value, stack) {
+      if (typeof stack === "string") {
+        CapturedStacks.set(value, stack);
+      }
+
+      return {
+        value: value,
+        source: null,
+        stack: stack
+      };
+    }
+
     // Intentionally not using it yet to derisk the initial implementation, because
     // the way we push/pop these values is a bit unusual. If there's a mistake, I'd
     // rather the ids be wrong than crash the whole reconciler.
@@ -8943,6 +8980,11 @@ if (__DEV__) {
       return false;
     }
 
+    var HydrationMismatchException = new Error(
+      "Hydration Mismatch Exception: This is not a real error, and should not leak into " +
+        "userspace. If you're seeing this, it's likely a bug in React."
+    );
+
     function throwOnHydrationMismatch(fiber) {
       var diff = "";
 
@@ -8957,7 +8999,7 @@ if (__DEV__) {
         }
       }
 
-      throw new Error(
+      var error = new Error(
         "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
           "\n" +
           "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
@@ -8971,6 +9013,8 @@ if (__DEV__) {
           "https://react.dev/link/hydration-mismatch" +
           diff
       );
+      queueHydrationError(createCapturedValueAtFiber(error, fiber));
+      throw HydrationMismatchException;
     }
 
     function claimHydratableSingleton(fiber) {
@@ -9032,7 +9076,7 @@ if (__DEV__) {
           warnNonHydratedInstance(fiber, nextInstance);
         }
 
-        throwOnHydrationMismatch();
+        throwOnHydrationMismatch(fiber);
       }
     }
 
@@ -9056,7 +9100,7 @@ if (__DEV__) {
           warnNonHydratedInstance(fiber, nextInstance);
         }
 
-        throwOnHydrationMismatch();
+        throwOnHydrationMismatch(fiber);
       }
     }
 
@@ -9069,7 +9113,7 @@ if (__DEV__) {
 
       if (!nextInstance || !tryHydrateSuspense(fiber, nextInstance)) {
         warnNonHydratedInstance(fiber, nextInstance);
-        throwOnHydrationMismatch();
+        throwOnHydrationMismatch(fiber);
       }
     }
 
@@ -9097,7 +9141,7 @@ if (__DEV__) {
       // rendering. We don't bother to check if we're in a concurrent root because
       // useActionState is a new API, so backwards compat is not an issue.
 
-      throwOnHydrationMismatch();
+      throwOnHydrationMismatch(fiber);
       return false;
     }
 
@@ -9112,7 +9156,7 @@ if (__DEV__) {
       );
 
       if (!didHydrate && favorSafetyOverHydrationPerf) {
-        throwOnHydrationMismatch();
+        throwOnHydrationMismatch(fiber);
       }
     }
 
@@ -9179,7 +9223,7 @@ if (__DEV__) {
       );
 
       if (!didHydrate && favorSafetyOverHydrationPerf) {
-        throwOnHydrationMismatch();
+        throwOnHydrationMismatch(fiber);
       }
     }
 
@@ -9273,7 +9317,7 @@ if (__DEV__) {
 
         if (nextInstance) {
           warnIfUnhydratedTailNodes(fiber);
-          throwOnHydrationMismatch();
+          throwOnHydrationMismatch(fiber);
         }
       }
 
@@ -15231,7 +15275,9 @@ if (__DEV__) {
         // matches this hook instance.
 
         if (ssrFormState !== null) {
-          var isMatching = tryToClaimNextHydratableFormMarkerInstance();
+          var isMatching = tryToClaimNextHydratableFormMarkerInstance(
+            currentlyRenderingFiber$1
+          );
 
           if (isMatching) {
             initialState = ssrFormState[0];
@@ -19147,43 +19193,6 @@ if (__DEV__) {
       return baseProps;
     }
 
-    var CapturedStacks = new WeakMap();
-    function createCapturedValueAtFiber(value, source) {
-      // If the value is an error, call this function immediately after it is thrown
-      // so the stack is accurate.
-      var stack;
-
-      if (typeof value === "object" && value !== null) {
-        var capturedStack = CapturedStacks.get(value);
-
-        if (typeof capturedStack === "string") {
-          stack = capturedStack;
-        } else {
-          stack = getStackByFiberInDevAndProd(source);
-          CapturedStacks.set(value, stack);
-        }
-      } else {
-        stack = getStackByFiberInDevAndProd(source);
-      }
-
-      return {
-        value: value,
-        source: source,
-        stack: stack
-      };
-    }
-    function createCapturedValueFromError(value, stack) {
-      if (typeof stack === "string") {
-        CapturedStacks.set(value, stack);
-      }
-
-      return {
-        value: value,
-        source: null,
-        stack: stack
-      };
-    }
-
     var reportGlobalError =
       typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
         ? // emulating an uncaught JavaScript error.
@@ -19809,13 +19818,65 @@ if (__DEV__) {
           ); // Even though the user may not be affected by this error, we should
           // still log it so it can be fixed.
 
-          queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+          if (value !== HydrationMismatchException) {
+            var _wrapperError = new Error(
+              "There was an error while hydrating but React was able to recover by " +
+                "instead client rendering from the nearest Suspense boundary.",
+              {
+                cause: value
+              }
+            );
+
+            queueHydrationError(
+              createCapturedValueAtFiber(_wrapperError, sourceFiber)
+            );
+          }
+
+          return false;
+        } else {
+          if (value !== HydrationMismatchException) {
+            var _wrapperError2 = new Error(
+              "There was an error while hydrating but React was able to recover by " +
+                "instead client rendering the entire root.",
+              {
+                cause: value
+              }
+            );
+
+            queueHydrationError(
+              createCapturedValueAtFiber(_wrapperError2, sourceFiber)
+            );
+          }
+
+          var _workInProgress = root.current.alternate; // Schedule an update at the root to log the error but this shouldn't
+          // actually happen because we should recover.
+
+          _workInProgress.flags |= ShouldCapture;
+          var lane = pickArbitraryLane(rootRenderLanes);
+          _workInProgress.lanes = mergeLanes(_workInProgress.lanes, lane);
+          var rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
+          var update = createRootErrorUpdate(
+            _workInProgress.stateNode,
+            rootErrorInfo, // This should never actually get logged due to the recovery.
+            lane
+          );
+          enqueueCapturedUpdate(_workInProgress, update);
+          renderDidError();
           return false;
         }
       }
 
-      value = createCapturedValueAtFiber(value, sourceFiber);
-      renderDidError(value); // We didn't find a boundary that could handle this type of exception. Start
+      var wrapperError = new Error(
+        "There was an error during concurrent rendering but React was able to recover by " +
+          "instead synchronously rendering the entire root.",
+        {
+          cause: value
+        }
+      );
+      queueConcurrentError(
+        createCapturedValueAtFiber(wrapperError, sourceFiber)
+      );
+      renderDidError(); // We didn't find a boundary that could handle this type of exception. Start
       // over and traverse parent path again, this time treating the exception
       // as an error.
 
@@ -19825,34 +19886,30 @@ if (__DEV__) {
         return true;
       }
 
+      var errorInfo = createCapturedValueAtFiber(value, sourceFiber);
       var workInProgress = returnFiber;
 
       do {
         switch (workInProgress.tag) {
           case HostRoot: {
-            var _errorInfo = value;
             workInProgress.flags |= ShouldCapture;
-            var lane = pickArbitraryLane(rootRenderLanes);
-            workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
-            var update = createRootErrorUpdate(
+
+            var _lane = pickArbitraryLane(rootRenderLanes);
+
+            workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane);
+
+            var _update = createRootErrorUpdate(
               workInProgress.stateNode,
-              _errorInfo,
-              lane
+              errorInfo,
+              _lane
             );
-            enqueueCapturedUpdate(workInProgress, update);
+
+            enqueueCapturedUpdate(workInProgress, _update);
             return false;
           }
 
           case ClassComponent:
-            if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-              // If we're hydrating and got here, it means that we didn't find a suspense
-              // boundary above so it's a root error. In this case we shouldn't let the
-              // error boundary capture it because it'll just try to hydrate the error state.
-              // Instead we let it bubble to the root and let the recover pass handle it.
-              break;
-            } // Capture and retry
-
-            var errorInfo = value;
+            // Capture and retry
             var ctor = workInProgress.type;
             var instance = workInProgress.stateNode;
 
@@ -19865,19 +19922,19 @@ if (__DEV__) {
             ) {
               workInProgress.flags |= ShouldCapture;
 
-              var _lane = pickArbitraryLane(rootRenderLanes);
+              var _lane2 = pickArbitraryLane(rootRenderLanes);
 
-              workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane); // Schedule the error boundary to re-render using updated state
+              workInProgress.lanes = mergeLanes(workInProgress.lanes, _lane2); // Schedule the error boundary to re-render using updated state
 
-              var _update = createClassErrorUpdate(_lane);
+              var _update2 = createClassErrorUpdate(_lane2);
 
               initializeClassErrorUpdate(
-                _update,
+                _update2,
                 root,
                 workInProgress,
                 errorInfo
               );
-              enqueueCapturedUpdate(workInProgress, _update);
+              enqueueCapturedUpdate(workInProgress, _update2);
               return false;
             }
 
@@ -21287,37 +21344,27 @@ if (__DEV__) {
 
         if (workInProgress.flags & ForceClientRender) {
           // Something errored during a previous attempt to hydrate the shell, so we
-          // forced a client render.
-          var recoverableError = createCapturedValueAtFiber(
-            new Error(
-              "There was an error while hydrating. Because the error happened outside " +
-                "of a Suspense boundary, the entire root will switch to " +
-                "client rendering."
-            ),
-            workInProgress
-          );
+          // forced a client render. We should have a recoverable error already scheduled.
           return mountHostRootWithoutHydrating(
             current,
             workInProgress,
             nextChildren,
-            renderLanes,
-            recoverableError
+            renderLanes
           );
         } else if (nextChildren !== prevChildren) {
-          var _recoverableError = createCapturedValueAtFiber(
+          var recoverableError = createCapturedValueAtFiber(
             new Error(
               "This root received an early update, before anything was able " +
                 "hydrate. Switched the entire root to client rendering."
             ),
             workInProgress
           );
-
+          queueHydrationError(recoverableError);
           return mountHostRootWithoutHydrating(
             current,
             workInProgress,
             nextChildren,
-            renderLanes,
-            _recoverableError
+            renderLanes
           );
         } else {
           // The outermost shell has not hydrated yet. Start hydrating.
@@ -21365,12 +21412,10 @@ if (__DEV__) {
       current,
       workInProgress,
       nextChildren,
-      renderLanes,
-      recoverableError
+      renderLanes
     ) {
       // Revert to client rendering.
       resetHydrationState();
-      queueHydrationError(recoverableError);
       workInProgress.flags |= ForceClientRender;
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
@@ -22330,20 +22375,12 @@ if (__DEV__) {
     function retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
-      renderLanes,
-      recoverableError
+      renderLanes
     ) {
       // Falling back to client rendering. Because this has performance
       // implications, it's considered a recoverable error, even though the user
       // likely won't observe anything wrong with the UI.
-      //
-      // The error is passed in as an argument to enforce that every caller provide
-      // a custom message, or explicitly opt out (currently the only path that opts
-      // out is legacy mode; every concurrent path provides an error).
-      if (recoverableError !== null) {
-        queueHydrationError(recoverableError);
-      } // This will add the old fiber to the deletion list
-
+      // This will add the old fiber to the deletion list
       reconcileChildFibers(workInProgress, current.child, null, renderLanes); // We're now not suspended nor dehydrated.
 
       var nextProps = workInProgress.pendingProps;
@@ -22461,9 +22498,7 @@ if (__DEV__) {
             message = _getSuspenseInstanceF.message;
             stack = _getSuspenseInstanceF.stack;
             componentStack = _getSuspenseInstanceF.componentStack;
-          }
-
-          var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
+          } // TODO: Figure out a better signal than encoding a magic digest value.
 
           {
             var error;
@@ -22481,17 +22516,17 @@ if (__DEV__) {
 
             error.stack = stack || "";
             error.digest = digest;
-            capturedValue = createCapturedValueFromError(
+            var capturedValue = createCapturedValueFromError(
               error,
               componentStack === undefined ? null : componentStack
             );
+            queueHydrationError(capturedValue);
           }
 
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            capturedValue
+            renderLanes
           );
         }
 
@@ -22566,8 +22601,7 @@ if (__DEV__) {
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            null
+            renderLanes
           );
         } else if (isSuspenseInstancePending(suspenseInstance)) {
           // This component is still pending more data from the server, so we can't hydrate its
@@ -22612,22 +22646,13 @@ if (__DEV__) {
         // something either suspended or errored.
         if (workInProgress.flags & ForceClientRender) {
           // Something errored during hydration. Try again without hydrating.
+          // The error should've already been logged in throwException.
           pushPrimaryTreeSuspenseHandler(workInProgress);
           workInProgress.flags &= ~ForceClientRender;
-
-          var _capturedValue = createCapturedValueFromError(
-            new Error(
-              "There was an error while hydrating this Suspense boundary. " +
-                "Switched to client rendering."
-            ),
-            null
-          );
-
           return retrySuspenseComponentWithoutHydrating(
             current,
             workInProgress,
-            renderLanes,
-            _capturedValue
+            renderLanes
           );
         } else if (workInProgress.memoizedState !== null) {
           // Something suspended and we should still be in dehydrated mode.
@@ -32779,11 +32804,12 @@ if (__DEV__) {
         );
       }
     }
-    function renderDidError(error) {
+    function renderDidError() {
       if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
         workInProgressRootExitStatus = RootErrored;
       }
-
+    }
+    function queueConcurrentError(error) {
       if (workInProgressRootConcurrentErrors === null) {
         workInProgressRootConcurrentErrors = [error];
       } else {
@@ -36187,7 +36213,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-bf989094";
+    var ReactVersion = "19.0.0-www-classic-cd5ebeba";
 
     function createPortal$1(
       children,
