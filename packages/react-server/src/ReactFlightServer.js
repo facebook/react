@@ -596,6 +596,7 @@ function renderFunctionComponent<Props>(
   key: null | string,
   Component: (p: Props, arg: void) => any,
   props: Props,
+  owner: null | ReactComponentInfo,
 ): ReactJSONValue {
   // Reset the task's thenable state before continuing, so that if a later
   // component suspends we can reuse the same task object. If the same
@@ -624,6 +625,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = {
         name: componentName,
         env: request.environmentName,
+        owner: owner,
       };
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
@@ -832,7 +834,7 @@ function renderElement(
       return renderClientElement(task, type, key, props, owner);
     }
     // This is a Server Component.
-    return renderFunctionComponent(request, task, key, type, props);
+    return renderFunctionComponent(request, task, key, type, props, owner);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return renderClientElement(task, type, key, props, owner);
@@ -878,7 +880,14 @@ function renderElement(
         );
       }
       case REACT_FORWARD_REF_TYPE: {
-        return renderFunctionComponent(request, task, key, type.render, props);
+        return renderFunctionComponent(
+          request,
+          task,
+          key,
+          type.render,
+          props,
+          owner,
+        );
       }
       case REACT_MEMO_TYPE: {
         return renderElement(request, task, type.type, key, ref, props, owner);

@@ -214,7 +214,7 @@ describe('ReactFlight', () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const greeting = rootModel.greeting;
       expect(greeting._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server', owner: null}] : undefined,
       );
       ReactNoop.render(greeting);
     });
@@ -241,7 +241,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server', owner: null}] : undefined,
       );
       ReactNoop.render(await promise);
     });
@@ -2072,19 +2072,21 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ServerComponent', env: 'Server'}] : undefined,
+        __DEV__
+          ? [{name: 'ServerComponent', env: 'Server', owner: null}]
+          : undefined,
       );
       const result = await promise;
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
       expect(thirdPartyChildren[0]._debugInfo).toEqual(
         __DEV__
-          ? [{name: 'ThirdPartyComponent', env: 'third-party'}]
+          ? [{name: 'ThirdPartyComponent', env: 'third-party', owner: null}]
           : undefined,
       );
       expect(thirdPartyChildren[1]._debugInfo).toEqual(
         __DEV__
-          ? [{name: 'ThirdPartyLazyComponent', env: 'third-party'}]
+          ? [{name: 'ThirdPartyLazyComponent', env: 'third-party', owner: null}]
           : undefined,
       );
       ReactNoop.render(result);
@@ -2172,9 +2174,10 @@ describe('ReactFlight', () => {
       // We've rendered down to the span.
       expect(greeting.type).toBe('span');
       if (__DEV__) {
+        const greetInfo = {name: 'Greeting', env: 'Server', owner: null};
         expect(greeting._debugInfo).toEqual([
-          {name: 'Greeting', env: 'Server'},
-          {name: 'Container', env: 'Server'},
+          greetInfo,
+          {name: 'Container', env: 'Server', owner: greetInfo},
         ]);
         // The owner that created the span was the outer server component.
         // We expect the debug info to be referentially equal to the owner.
