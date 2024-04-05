@@ -16,19 +16,24 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentUpdatePriority =
-  ReactDOMSharedInternals.ReactDOMCurrentUpdatePriority;
 
-export function setCurrentUpdatePriority(newPriority: EventPriority): void {
-  ReactDOMCurrentUpdatePriority.current = newPriority;
+export function setCurrentUpdatePriority(
+  newPriority: EventPriority,
+  // Closure will consistently not inline this function when it has arity 1
+  // however when it has arity 2 even if the second arg is omitted at every
+  // callsite it seems to inline it even when the internal length of the function
+  // is much longer. I hope this is consistent enough to rely on across builds
+  IntentionallyUnusedArgument?: empty,
+): void {
+  ReactDOMSharedInternals.up = newPriority;
 }
 
 export function getCurrentUpdatePriority(): EventPriority {
-  return ReactDOMCurrentUpdatePriority.current;
+  return ReactDOMSharedInternals.up;
 }
 
 export function resolveUpdatePriority(): EventPriority {
-  const updatePriority = ReactDOMCurrentUpdatePriority.current;
+  const updatePriority = ReactDOMSharedInternals.up;
   if (updatePriority !== NoEventPriority) {
     return updatePriority;
   }

@@ -23,9 +23,7 @@ type InternalsType = {
     | ((
         componentOrElement: React$Component<any, any>,
       ) => null | Element | Text),
-  ReactDOMCurrentUpdatePriority: {
-    current: EventPriority,
-  },
+  up /* currentUpdatePriority */: EventPriority,
 };
 
 function noop() {}
@@ -47,9 +45,7 @@ const Internals: InternalsType = {
     current: DefaultDispatcher,
   },
   findDOMNode: null,
-  ReactDOMCurrentUpdatePriority: {
-    current: NoEventPriority,
-  },
+  up /* currentUpdatePriority */: NoEventPriority,
 };
 
 export default Internals;
