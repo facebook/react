@@ -2032,6 +2032,12 @@ if (__DEV__) {
       return "$Q" + id.toString(16);
     }
 
+    function serializeFormData(request, formData) {
+      var entries = Array.from(formData.entries());
+      var id = outlineModel(request, entries);
+      return "$K" + id.toString(16);
+    }
+
     function serializeSet(request, set) {
       var entries = Array.from(set);
 
@@ -2338,6 +2344,10 @@ if (__DEV__) {
 
         if (value instanceof Set) {
           return serializeSet(request, value);
+        } // TODO: FormData is not available in old Node. Remove the typeof later.
+
+        if (typeof FormData === "function" && value instanceof FormData) {
+          return serializeFormData(request, value);
         }
 
         var iteratorFn = getIteratorFn(value);
@@ -2730,6 +2740,10 @@ if (__DEV__) {
 
         if (value instanceof Set) {
           return serializeSet(request, value);
+        } // TODO: FormData is not available in old Node. Remove the typeof later.
+
+        if (typeof FormData === "function" && value instanceof FormData) {
+          return serializeFormData(request, value);
         }
 
         var iteratorFn = getIteratorFn(value);

@@ -839,6 +839,21 @@ if (__DEV__) {
             return undefined;
           }
 
+          case "K": {
+            // FormData
+            var _id7 = parseInt(value.slice(2), 16);
+
+            var _data3 = getOutlinedModel(response, _id7);
+
+            var formData = new FormData();
+
+            for (var i = 0; i < _data3.length; i++) {
+              formData.append(_data3[i][0], _data3[i][1]);
+            }
+
+            return formData;
+          }
+
           case "I": {
             // $Infinity
             return Infinity;
@@ -891,9 +906,9 @@ if (__DEV__) {
 
           default: {
             // We assume that anything else is a reference ID.
-            var _id7 = parseInt(value.slice(1), 16);
+            var _id8 = parseInt(value.slice(1), 16);
 
-            var _chunk2 = getChunk(response, _id7);
+            var _chunk2 = getChunk(response, _id8);
 
             switch (_chunk2.status) {
               case RESOLVED_MODEL:

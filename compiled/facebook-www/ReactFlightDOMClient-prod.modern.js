@@ -296,6 +296,13 @@ function parseModelString(response, parentObject, key, value) {
         );
       case "B":
         return;
+      case "K":
+        parentObject = parseInt(value.slice(2), 16);
+        response = getOutlinedModel(response, parentObject);
+        parentObject = new FormData();
+        for (key = 0; key < response.length; key++)
+          parentObject.append(response[key][0], response[key][1]);
+        return parentObject;
       case "I":
         return Infinity;
       case "-":

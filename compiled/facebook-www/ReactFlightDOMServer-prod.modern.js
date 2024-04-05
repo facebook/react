@@ -862,6 +862,11 @@ function renderModelDestructive(
               parentPropertyName.set(parent, -1));
       return "$W" + outlineModel(request, value).toString(16);
     }
+    if ("function" === typeof FormData && value instanceof FormData)
+      return (
+        (value = Array.from(value.entries())),
+        "$K" + outlineModel(request, value).toString(16)
+      );
     null === value || "object" !== typeof value
       ? (parent = null)
       : ((parent =
