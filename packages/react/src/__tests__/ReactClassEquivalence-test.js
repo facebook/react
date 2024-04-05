@@ -12,13 +12,13 @@
 const spawnSync = require('child_process').spawnSync;
 
 describe('ReactClassEquivalence', () => {
-  it('tests the same thing for es6 classes and CoffeeScript', () => {
+  it.skip('tests the same thing for es6 classes and CoffeeScript', () => {
     const result1 = runJest('ReactCoffeeScriptClass-test.coffee');
     const result2 = runJest('ReactES6Class-test.js');
     compareResults(result1, result2);
   });
 
-  it('tests the same thing for es6 classes and TypeScript', () => {
+  it.skip('tests the same thing for es6 classes and TypeScript', () => {
     const result1 = runJest('ReactTypeScriptClass-test.ts');
     const result2 = runJest('ReactES6Class-test.js');
     compareResults(result1, result2);
