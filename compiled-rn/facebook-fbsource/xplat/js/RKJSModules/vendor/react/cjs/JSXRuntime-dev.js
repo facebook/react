@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<34a2867901178400502ec58badbb7a11>>
+ * @generated SignedSource<<14b1fac5da603ed3a82ddba00e57ffbe>>
  */
 
 "use strict";
@@ -479,7 +479,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, ownerFn) {
+    function describeBuiltInComponentFrame(name) {
       if (enableComponentStackLocations) {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -493,13 +493,7 @@ if (__DEV__) {
 
         return "\n" + prefix + name;
       } else {
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
+        return describeComponentFrame(name);
       }
     }
     var reentry = false;
@@ -757,16 +751,10 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeComponentFrame(name, ownerName) {
-      var sourceInfo = "";
-
-      if (ownerName) {
-        sourceInfo = " (created by " + ownerName + ")";
-      }
-
-      return "\n    in " + (name || "Unknown") + sourceInfo;
+    function describeComponentFrame(name) {
+      return "\n    in " + (name || "Unknown");
     }
-    function describeFunctionComponentFrame(fn, ownerFn) {
+    function describeFunctionComponentFrame(fn) {
       if (enableComponentStackLocations) {
         return describeNativeComponentFrame(fn, false);
       } else {
@@ -775,13 +763,7 @@ if (__DEV__) {
         }
 
         var name = fn.displayName || fn.name || null;
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
+        return describeComponentFrame(name);
       }
     }
 
@@ -790,7 +772,7 @@ if (__DEV__) {
       return !!(prototype && prototype.isReactComponent);
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type) {
       if (type == null) {
         return "";
       }
@@ -799,30 +781,30 @@ if (__DEV__) {
         if (enableComponentStackLocations) {
           return describeNativeComponentFrame(type, shouldConstruct(type));
         } else {
-          return describeFunctionComponentFrame(type, ownerFn);
+          return describeFunctionComponentFrame(type);
         }
       }
 
       if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type, ownerFn);
+        return describeBuiltInComponentFrame(type);
       }
 
       switch (type) {
         case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense", ownerFn);
+          return describeBuiltInComponentFrame("Suspense");
 
         case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
+          return describeBuiltInComponentFrame("SuspenseList");
       }
 
       if (typeof type === "object") {
         switch (type.$$typeof) {
           case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render, ownerFn);
+            return describeFunctionComponentFrame(type.render);
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
+            return describeUnknownElementTypeFrameInDEV(type.type);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -831,10 +813,7 @@ if (__DEV__) {
 
             try {
               // Lazy may contain any component type so we recursively resolve it.
-              return describeUnknownElementTypeFrameInDEV(
-                init(payload),
-                ownerFn
-              );
+              return describeUnknownElementTypeFrameInDEV(init(payload));
             } catch (x) {}
           }
         }
@@ -885,7 +864,6 @@ if (__DEV__) {
     function getContextName(type) {
       return type.displayName || "Context";
     }
-
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -1554,14 +1532,18 @@ if (__DEV__) {
 
         if (
           element &&
-          element._owner &&
+          element._owner != null &&
           element._owner !== ReactCurrentOwner.current
         ) {
-          // Give the component that originally created this child.
-          childOwner =
-            " It was passed a child from " +
-            getComponentNameFromType(element._owner.type) +
-            ".";
+          var ownerName = null;
+
+          if (typeof element._owner.tag === "number") {
+            ownerName = getComponentNameFromType(element._owner.type);
+          } else if (typeof element._owner.name === "string") {
+            ownerName = element._owner.name;
+          } // Give the component that originally created this child.
+
+          childOwner = " It was passed a child from " + ownerName + ".";
         }
 
         setCurrentlyValidatingElement(element);
@@ -1580,11 +1562,7 @@ if (__DEV__) {
     function setCurrentlyValidatingElement(element) {
       {
         if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
+          var stack = describeUnknownElementTypeFrameInDEV(element.type);
           ReactDebugCurrentFrame.setExtraStackFrame(stack);
         } else {
           ReactDebugCurrentFrame.setExtraStackFrame(null);
