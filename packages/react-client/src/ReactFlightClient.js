@@ -1138,12 +1138,14 @@ function resolveConsoleEntry(
     );
   }
 
-  const payload: [string, string, string, mixed] = parseModel(response, value);
+  const payload: [string, string, null | ReactComponentInfo, string, mixed] =
+    parseModel(response, value);
   const methodName = payload[0];
   // TODO: Restore the fake stack before logging.
   // const stackTrace = payload[1];
-  const env = payload[2];
-  const args = payload.slice(3);
+  // const owner = payload[2];
+  const env = payload[3];
+  const args = payload.slice(4);
   printToConsole(methodName, args, env);
 }
 

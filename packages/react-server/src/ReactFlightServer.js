@@ -154,7 +154,8 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        emitConsoleChunk(request, id, methodName, stack, arguments);
+        const owner: null | ReactComponentInfo = ReactCurrentOwner.current;
+        emitConsoleChunk(request, id, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -2272,6 +2273,7 @@ function emitConsoleChunk(
   request: Request,
   id: number,
   methodName: string,
+  owner: null | ReactComponentInfo,
   stackTrace: string,
   args: Array<any>,
 ): void {
@@ -2306,7 +2308,7 @@ function emitConsoleChunk(
 
   // TODO: Don't double badge if this log came from another Flight Client.
   const env = request.environmentName;
-  const payload = [methodName, stackTrace, env];
+  const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
   // $FlowFixMe[incompatible-type] stringify can return null
