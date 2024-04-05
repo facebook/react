@@ -1692,9 +1692,8 @@ function renderModelDestructive(
       );
     } else {
       throw new Error(
-        'Functions cannot be passed directly to Client Components ' +
-          'unless you explicitly expose it by marking it with "use server". ' +
-          'Or maybe you meant to call this function rather than return it.' +
+        'Functions declared in a Server Module cannot be passed directly to Client Components. ' +
+          'You can explicitly expose it with "use server" or move it to a Client Module.' +
           describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }

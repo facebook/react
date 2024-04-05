@@ -1814,15 +1814,15 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors.length).toBe(1);
     if (__DEV__) {
       expect(reportedErrors[0].message).toEqual(
-        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
-          'Or maybe you meant to call this function rather than return it.\n' +
+        'Functions declared in a Server Module cannot be passed directly to Client Components. ' +
+          'You can explicitly expose it with "use server" or move it to a Client Module.\n' +
           '  <... prop={client} invalid={function InvalidValue}>\n' +
           '                             ^^^^^^^^^^^^^^^^^^^^^^^',
       );
     } else {
       expect(reportedErrors[0].message).toEqual(
-        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
-          'Or maybe you meant to call this function rather than return it.\n' +
+        'Functions declared in a Server Module cannot be passed directly to Client Components. ' +
+          'You can explicitly expose it with "use server" or move it to a Client Module.\n' +
           '  {prop: client, invalid: function InvalidValue}\n' +
           '                          ^^^^^^^^^^^^^^^^^^^^^',
       );

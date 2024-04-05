@@ -361,7 +361,7 @@
   "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React.",
   "373": "This Hook is not supported in Server Components.",
   "374": "Event handlers cannot be passed to Client Component props.%s\nIf you need interactivity, consider converting part of this to a Client Component.",
-  "375": "Functions declared in a Server Module cannot be passed directly to Client Components as they are not serializable. You can explicitly expose it with \"use server\" or move it to a Client Module.%s",
+  "375": "Functions declared in a Server Module cannot be passed directly to Client Components. You can explicitly expose it with \"use server\" or move it to a Client Module.%s",
   "376": "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(%s) cannot be found among global symbols.%s",
   "377": "BigInt (%s) is not yet supported in Client Component props.%s",
   "378": "Type %s is not supported in Client Component props.%s",
