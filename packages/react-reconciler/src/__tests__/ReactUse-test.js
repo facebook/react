@@ -663,6 +663,8 @@ describe('ReactUse', () => {
     }
 
     const root1 = ReactNoop.createRoot();
+    assertLog(['Async text requested [Hi]']);
+
     await act(() => {
       root1.render(<Suspense fallback={<Text text="Loading..." />} />);
     });
@@ -677,7 +679,7 @@ describe('ReactUse', () => {
         );
       });
     });
-    assertLog(['Async text requested [Hi]']);
+    assertLog([]);
 
     // While we're waiting for the first root's data to resolve, a second
     // root renders.
