@@ -40,7 +40,7 @@ function flushSyncImpl<R>(fn: (() => R) | void): R | void {
       previousUpdatePriority;
     const wasInRender =
       ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
-        .flushSyncWork();
+        .f(); /* flushSyncWork */
     if (__DEV__) {
       if (wasInRender) {
         console.error(
