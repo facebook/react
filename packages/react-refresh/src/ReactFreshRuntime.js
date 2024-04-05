@@ -694,6 +694,7 @@ export function isLikelyComponentType(type: any): boolean {
           if (
             ownNames.length > 1 ||
             ownNames[0] !== 'constructor' ||
+            // eslint-disable-next-line no-proto
             type.prototype.__proto__ !== Object.prototype
           ) {
             // This looks like a class or it has a superclass.

@@ -484,6 +484,7 @@ function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
+  owner: null | ReactComponentInfo, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -493,7 +494,7 @@ function createElement(
       type,
       key,
       props,
-      _owner: null,
+      _owner: owner,
     }: any);
     Object.defineProperty(element, 'ref', {
       enumerable: false,
@@ -520,7 +521,7 @@ function createElement(
       props,
 
       // Record the component responsible for creating this element.
-      _owner: null,
+      _owner: owner,
     }: any);
   }
 
@@ -736,6 +737,15 @@ function parseModelString(
         const data = getOutlinedModel(response, id);
         return new Set(data);
       }
+      case 'B': {
+        // Blob
+        if (enableBinaryFlight) {
+          const id = parseInt(value.slice(2), 16);
+          const data = getOutlinedModel(response, id);
+          return new Blob(data.slice(1), {type: data[0]});
+        }
+        return undefined;
+      }
       case 'I': {
         // $Infinity
         return Infinity;
@@ -854,7 +864,12 @@ function parseModelTuple(
   if (tuple[0] === REACT_ELEMENT_TYPE) {
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
-    return createElement(tuple[1], tuple[2], tuple[3]);
+    return createElement(
+      tuple[1],
+      tuple[2],
+      tuple[3],
+      __DEV__ ? (tuple: any)[4] : null,
+    );
   }
   return value;
 }
@@ -1132,12 +1147,14 @@ function resolveConsoleEntry(
     );
   }
 
-  const payload: [string, string, string, mixed] = parseModel(response, value);
+  const payload: [string, string, null | ReactComponentInfo, string, mixed] =
+    parseModel(response, value);
   const methodName = payload[0];
   // TODO: Restore the fake stack before logging.
   // const stackTrace = payload[1];
-  const env = payload[2];
-  const args = payload.slice(3);
+  // const owner = payload[2];
+  const env = payload[3];
+  const args = payload.slice(4);
   printToConsole(methodName, args, env);
 }
 
@@ -1286,7 +1303,10 @@ function processFullRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const debugInfo = JSON.parse(row);
+        const debugInfo: ReactComponentInfo | ReactAsyncInfo = parseModel(
+          response,
+          row,
+        );
         resolveDebugInfo(response, id, debugInfo);
         return;
       }

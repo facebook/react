@@ -68,7 +68,7 @@ import {
   TracingMarkerComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   resolveClassForHotReloading,
@@ -110,6 +110,7 @@ import {
   attachOffscreenInstance,
 } from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
+import type {ReactComponentInfo} from '../../shared/ReactTypes';
 
 export type {Fiber};
 
@@ -475,7 +476,7 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  owner: null | Fiber,
+  owner: null | ReactComponentInfo | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
@@ -610,7 +611,7 @@ export function createFiberFromTypeAndProps(
               "it's defined in, or you might have mixed up default and " +
               'named imports.';
           }
-          const ownerName = owner ? getComponentNameFromFiber(owner) : null;
+          const ownerName = owner ? getComponentNameFromOwner(owner) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }

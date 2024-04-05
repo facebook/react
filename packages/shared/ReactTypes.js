@@ -181,6 +181,7 @@ export type Awaited<T> = T extends null | void
 export type ReactComponentInfo = {
   +name?: string,
   +env?: string,
+  +owner?: null | ReactComponentInfo,
 };
 
 export type ReactAsyncInfo = {
