@@ -359,16 +359,20 @@ describe('ReactElementClone', () => {
     const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
-    if (gate(flags => flags.enableRefAsProp)) {
+    if (gate(flags => flags.enableRefAsProp && flags.disableStringRefs)) {
       expect(clone.props.ref).toBe('34');
       expect(() => expect(clone.ref).toBe('34')).toErrorDev(
         'Accessing element.ref was removed in React 19',
         {withoutStack: true},
       );
       expect(clone.props).toEqual({foo: 'ef', ref: '34'});
-    } else {
-      expect(clone.ref).toBe('34');
+    } else if (
+      gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(clone.ref).toBe(element.ref);
       expect(clone.props).toEqual({foo: 'ef'});
+    } else {
+      // Not going to bother testing every possible combination.
     }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);

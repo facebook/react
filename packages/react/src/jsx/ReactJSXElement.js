@@ -23,6 +23,9 @@ import {
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
+import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -342,6 +345,9 @@ export function jsxProd(type, config, maybeKey) {
   if (hasValidRef(config)) {
     if (!enableRefAsProp) {
       ref = config.ref;
+      if (!disableStringRefs) {
+        ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+      }
     }
   }
 
@@ -353,7 +359,15 @@ export function jsxProd(type, config, maybeKey) {
       propName !== 'key' &&
       (enableRefAsProp || propName !== 'ref')
     ) {
-      props[propName] = config[propName];
+      if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
+        props.ref = coerceStringRef(
+          config[propName],
+          ReactCurrentOwner.current,
+          type,
+        );
+      } else {
+        props[propName] = config[propName];
+      }
     }
   }
 
@@ -555,6 +569,9 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     if (hasValidRef(config)) {
       if (!enableRefAsProp) {
         ref = config.ref;
+        if (!disableStringRefs) {
+          ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+        }
       }
       if (!disableStringRefs) {
         warnIfStringRefCannotBeAutoConverted(config, self);
@@ -569,7 +586,15 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
         propName !== 'key' &&
         (enableRefAsProp || propName !== 'ref')
       ) {
-        props[propName] = config[propName];
+        if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
+          props.ref = coerceStringRef(
+            config[propName],
+            ReactCurrentOwner.current,
+            type,
+          );
+        } else {
+          props[propName] = config[propName];
+        }
       }
     }
 
@@ -687,6 +712,9 @@ export function createElement(type, config, children) {
     if (hasValidRef(config)) {
       if (!enableRefAsProp) {
         ref = config.ref;
+        if (!disableStringRefs) {
+          ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+        }
       }
 
       if (__DEV__ && !disableStringRefs) {
@@ -714,7 +742,15 @@ export function createElement(type, config, children) {
         propName !== '__self' &&
         propName !== '__source'
       ) {
-        props[propName] = config[propName];
+        if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
+          props.ref = coerceStringRef(
+            config[propName],
+            ReactCurrentOwner.current,
+            type,
+          );
+        } else {
+          props[propName] = config[propName];
+        }
       }
     }
   }
@@ -820,6 +856,9 @@ export function cloneElement(element, config, children) {
       if (!enableRefAsProp) {
         // Silently steal the ref from the parent.
         ref = config.ref;
+        if (!disableStringRefs) {
+          ref = coerceStringRef(ref, owner, element.type);
+        }
       }
       owner = ReactCurrentOwner.current;
     }
@@ -866,7 +905,11 @@ export function cloneElement(element, config, children) {
           // Resolve default props
           props[propName] = defaultProps[propName];
         } else {
-          props[propName] = config[propName];
+          if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
+            props.ref = coerceStringRef(config[propName], owner, element.type);
+          } else {
+            props[propName] = config[propName];
+          }
         }
       }
     }
@@ -1085,4 +1128,90 @@ function validateFragmentProps(fragment) {
       setCurrentlyValidatingElement(null);
     }
   }
+}
+
+function coerceStringRef(mixedRef, owner, type) {
+  if (disableStringRefs) {
+    return mixedRef;
+  }
+
+  let stringRef;
+  if (typeof mixedRef === 'string') {
+    stringRef = mixedRef;
+  } else {
+    if (typeof mixedRef === 'number' || typeof mixedRef === 'boolean') {
+      if (__DEV__) {
+        checkPropStringCoercion(mixedRef, 'ref');
+      }
+      stringRef = '' + mixedRef;
+    } else {
+      return mixedRef;
+    }
+  }
+
+  return stringRefAsCallbackRef.bind(null, stringRef, type, owner);
+}
+
+function stringRefAsCallbackRef(stringRef, type, owner, value) {
+  if (disableStringRefs) {
+    return;
+  }
+  if (!owner) {
+    throw new Error(
+      `Element ref was specified as a string (${stringRef}) but no owner was set. This could happen for one of` +
+        ' the following reasons:\n' +
+        '1. You may be adding a ref to a function component\n' +
+        "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+        '3. You have multiple copies of React loaded\n' +
+        'See https://react.dev/link/refs-must-have-owner for more information.',
+    );
+  }
+  if (owner.tag !== ClassComponent) {
+    throw new Error(
+      'Function components cannot have string refs. ' +
+        'We recommend using useRef() instead. ' +
+        'Learn more about using refs safely here: ' +
+        'https://react.dev/link/strict-mode-string-ref',
+    );
+  }
+
+  if (__DEV__) {
+    if (
+      // Will already warn with "Function components cannot be given refs"
+      !(typeof type === 'function' && !isReactClass(type))
+    ) {
+      const componentName = getComponentNameFromFiber(owner) || 'Component';
+      if (!didWarnAboutStringRefs[componentName]) {
+        console.error(
+          'Component "%s" contains the string ref "%s". Support for string refs ' +
+            'will be removed in a future major release. We recommend using ' +
+            'useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://react.dev/link/strict-mode-string-ref',
+          componentName,
+          stringRef,
+        );
+        didWarnAboutStringRefs[componentName] = true;
+      }
+    }
+  }
+
+  const inst = owner.stateNode;
+  if (!inst) {
+    throw new Error(
+      `Missing owner for string ref ${stringRef}. This error is likely caused by a ` +
+        'bug in React. Please file an issue.',
+    );
+  }
+
+  const refs = inst.refs;
+  if (value === null) {
+    delete refs[stringRef];
+  } else {
+    refs[stringRef] = value;
+  }
+}
+
+function isReactClass(type) {
+  return type.prototype && type.prototype.isReactComponent;
 }
