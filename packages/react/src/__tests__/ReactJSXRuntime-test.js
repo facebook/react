@@ -374,4 +374,37 @@ describe('ReactJSXRuntime', () => {
     }
     expect(didCall).toBe(false);
   });
+
+  // @gate enableRefAsProp
+  // @gate disableStringRefs
+  it('does not clone props object if key is not spread', async () => {
+    const config = {
+      foo: 'foo',
+      bar: 'bar',
+    };
+
+    const element = __DEV__
+      ? JSXDEVRuntime.jsxDEV('div', config)
+      : JSXRuntime.jsx('div', config);
+    expect(element.props).toBe(config);
+
+    const configWithKey = {
+      foo: 'foo',
+      bar: 'bar',
+      // This only happens when the key is spread onto the element. A statically
+      // defined key is passed as a separate argument to the jsx() runtime.
+      key: 'key',
+    };
+
+    let elementWithSpreadKey;
+    expect(() => {
+      elementWithSpreadKey = __DEV__
+        ? JSXDEVRuntime.jsxDEV('div', configWithKey)
+        : JSXRuntime.jsx('div', configWithKey);
+    }).toErrorDev(
+      'A props object containing a "key" prop is being spread into JSX',
+      {withoutStack: true},
+    );
+    expect(elementWithSpreadKey.props).not.toBe(configWithKey);
+  });
 });
