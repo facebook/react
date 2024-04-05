@@ -9,6 +9,12 @@
 
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
+import {getEventPriority} from '../events/ReactDOMEventListener';
+import {
+  NoEventPriority,
+  DefaultEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
+
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentUpdatePriority =
   ReactDOMSharedInternals.ReactDOMCurrentUpdatePriority;
@@ -19,6 +25,18 @@ export function setCurrentUpdatePriority(newPriority: EventPriority): void {
 
 export function getCurrentUpdatePriority(): EventPriority {
   return ReactDOMCurrentUpdatePriority.current;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  const updatePriority = ReactDOMCurrentUpdatePriority.current;
+  if (updatePriority !== NoEventPriority) {
+    return updatePriority;
+  }
+  const currentEvent = window.event;
+  if (currentEvent === undefined) {
+    return DefaultEventPriority;
+  }
+  return getEventPriority(currentEvent.type);
 }
 
 export function runWithPriority<T>(priority: EventPriority, fn: () => T): T {

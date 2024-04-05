@@ -343,16 +343,16 @@ export function shouldSetTextContent(type, props) {
 
 let currentUpdatePriority: EventPriority = NoEventPriority;
 
-export function setCurrentUpdatePriority(newPriority: EventPriority) {
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
   currentUpdatePriority = newPriority;
 }
 
-export function getCurrentUpdatePriority() {
+export function getCurrentUpdatePriority(): EventPriority {
   return currentUpdatePriority;
 }
 
-export function getCurrentEventPriority() {
-  return DefaultEventPriority;
+export function resolveUpdatePriority(): EventPriority {
+  return currentUpdatePriority || DefaultEventPriority;
 }
 
 export function shouldAttemptEagerTransition() {

@@ -70,13 +70,13 @@ import {
   cancelTimeout,
   noTimeout,
   afterActiveInstanceBlur,
-  getCurrentEventPriority,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
   supportsHydration,
-  getCurrentUpdatePriority,
   setCurrentUpdatePriority,
+  getCurrentUpdatePriority,
+  resolveUpdatePriority,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -161,6 +161,7 @@ import {
   DefaultEventPriority,
   lowerEventPriority,
   lanesToEventPriority,
+  eventPriorityToLane,
 } from './ReactEventPriorities';
 import {requestCurrentTransition} from './ReactFiberTransition';
 import {
@@ -641,25 +642,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
         requestTransitionLane(transition);
   }
 
-  // Updates originating inside certain React methods, like flushSync, have
-  // their priority set by tracking it with a context variable.
-  //
-  // The opaque type returned by the host config is internally a lane, so we can
-  // use that directly.
-  // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
-  if (updateLane !== NoLane) {
-    return updateLane;
-  }
-
-  // This update originated outside React. Ask the host environment for an
-  // appropriate priority, based on the type of event.
-  //
-  // The opaque type returned by the host config is internally a lane, so we can
-  // use that directly.
-  // TODO: Move this type conversion to the event priority module.
-  const eventLane: Lane = (getCurrentEventPriority(): any);
-  return eventLane;
+  return eventPriorityToLane(resolveUpdatePriority());
 }
 
 function requestRetryLane(fiber: Fiber) {
@@ -1446,12 +1429,12 @@ export function getExecutionContext(): ExecutionContext {
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
-  const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
 
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DefaultEventPriority);
+    ReactCurrentBatchConfig.transition = null;
     return fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
@@ -1492,11 +1475,11 @@ export function discreteUpdates<A, B, C, D, R>(
   c: C,
   d: D,
 ): R {
-  const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
+    ReactCurrentBatchConfig.transition = null;
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdatePriority(previousPriority);
@@ -1533,8 +1516,8 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
   const previousPriority = getCurrentUpdatePriority();
 
   try {
-    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
+    ReactCurrentBatchConfig.transition = null;
     if (fn) {
       return fn();
     } else {
@@ -2713,12 +2696,12 @@ function commitRoot(
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
-  const previousUpdateLanePriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
 
+  const previousUpdateLanePriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
+    ReactCurrentBatchConfig.transition = null;
     commitRootImpl(
       root,
       recoverableErrors,
@@ -3187,8 +3170,8 @@ export function flushPassiveEffects(): boolean {
     const previousPriority = getCurrentUpdatePriority();
 
     try {
-      ReactCurrentBatchConfig.transition = null;
       setCurrentUpdatePriority(priority);
+      ReactCurrentBatchConfig.transition = null;
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);

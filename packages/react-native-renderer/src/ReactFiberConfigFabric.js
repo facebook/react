@@ -313,17 +313,19 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 }
 
 let currentUpdatePriority: EventPriority = NoEventPriority;
-export function setCurrentUpdatePriority(
-  newEventPriority: EventPriority,
-): void {
-  currentUpdatePriority = newEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
 }
 
 export function getCurrentUpdatePriority(): EventPriority {
   return currentUpdatePriority;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
+
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;

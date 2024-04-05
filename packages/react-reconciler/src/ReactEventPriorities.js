@@ -48,6 +48,10 @@ export function isHigherEventPriority(
   return a !== 0 && a < b;
 }
 
+export function eventPriorityToLane(updatePriority: EventPriority): Lane {
+  return updatePriority;
+}
+
 export function lanesToEventPriority(lanes: Lanes): EventPriority {
   const lane = getHighestPriorityLane(lanes);
   if (!isHigherEventPriority(DiscreteEventPriority, lane)) {

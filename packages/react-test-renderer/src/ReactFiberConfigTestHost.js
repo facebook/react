@@ -211,7 +211,10 @@ export function getCurrentUpdatePriority(): EventPriority {
   return currentUpdatePriority;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
 }
 export function shouldAttemptEagerTransition(): boolean {

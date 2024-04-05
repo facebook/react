@@ -77,7 +77,10 @@ describe('ReactFiberHostContext', () => {
       getCurrentUpdatePriority: function () {
         return updatePriority;
       },
-      getCurrentEventPriority: function () {
+      resolveUpdatePriority: function () {
+        if (updatePriority !== NoEventPriority) {
+          return updatePriority;
+        }
         return DefaultEventPriority;
       },
       shouldAttemptEagerTransition() {

@@ -513,7 +513,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     setCurrentUpdatePriority,
     getCurrentUpdatePriority,
 
-    getCurrentEventPriority() {
+    resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
       return currentEventPriority;
     },
 
