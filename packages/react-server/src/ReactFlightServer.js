@@ -239,6 +239,7 @@ export type ReactClientValue =
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
   | Set<ReactClientValue>
+  | FormData
   | $ArrayBufferView
   | ArrayBuffer
   | Date
@@ -1186,6 +1187,12 @@ function serializeMap(
   return '$Q' + id.toString(16);
 }
 
+function serializeFormData(request: Request, formData: FormData): string {
+  const entries = Array.from(formData.entries());
+  const id = outlineModel(request, (entries: any));
+  return '$K' + id.toString(16);
+}
+
 function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   const entries = Array.from(set);
   for (let i = 0; i < entries.length; i++) {
@@ -1594,6 +1601,10 @@ function renderModelDestructive(
     }
     if (value instanceof Set) {
       return serializeSet(request, value);
+    }
+    // TODO: FormData is not available in old Node. Remove the typeof later.
+    if (typeof FormData === 'function' && value instanceof FormData) {
+      return serializeFormData(request, value);
     }
 
     if (enableBinaryFlight) {
@@ -2138,6 +2149,10 @@ function renderConsoleValue(
     }
     if (value instanceof Set) {
       return serializeSet(request, value);
+    }
+    // TODO: FormData is not available in old Node. Remove the typeof later.
+    if (typeof FormData === 'function' && value instanceof FormData) {
+      return serializeFormData(request, value);
     }
 
     if (enableBinaryFlight) {
