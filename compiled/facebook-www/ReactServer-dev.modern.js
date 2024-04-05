@@ -1472,9 +1472,6 @@ if (__DEV__) {
           }
         }
 
-        var propName; // Reserved names are extracted
-
-        var props = {};
         var key = null;
         var ref = null; // Currently, key can be spread in as a prop. This causes a potential
         // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
@@ -1511,22 +1508,42 @@ if (__DEV__) {
           {
             warnIfStringRefCannotBeAutoConverted(config, self);
           }
-        } // Remaining properties are added to a new props object
+        }
 
-        for (propName in config) {
-          if (
-            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" &&
-            (enableRefAsProp || propName !== "ref")
-          ) {
-            if (enableRefAsProp && !disableStringRefs && propName === "ref") {
-              props.ref = coerceStringRef(
-                config[propName],
-                ReactCurrentOwner.current,
-                type
-              );
-            } else {
-              props[propName] = config[propName];
+        var props;
+
+        if (enableRefAsProp && disableStringRefs && !("key" in config)) {
+          // If key was not spread in, we can reuse the original props object. This
+          // only works for `jsx`, not `createElement`, because `jsx` is a compiler
+          // target and the compiler always passes a new object. For `createElement`,
+          // we can't assume a new object is passed every time because it can be
+          // called manually.
+          //
+          // Spreading key is a warning in dev. In a future release, we will not
+          // remove a spread key from the props object. (But we'll still warn.) We'll
+          // always pass the object straight through.
+          props = config;
+        } else {
+          // We need to remove reserved props (key, prop, ref). Create a fresh props
+          // object and copy over all the non-reserved props. We don't use `delete`
+          // because in V8 it will deopt the object to dictionary mode.
+          props = {};
+
+          for (var propName in config) {
+            if (
+              hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+              propName !== "key" &&
+              (enableRefAsProp || propName !== "ref")
+            ) {
+              if (enableRefAsProp && !disableStringRefs && propName === "ref") {
+                props.ref = coerceStringRef(
+                  config[propName],
+                  ReactCurrentOwner.current,
+                  type
+                );
+              } else {
+                props[propName] = config[propName];
+              }
             }
           }
         }
@@ -1536,9 +1553,9 @@ if (__DEV__) {
           if (type && type.defaultProps) {
             var defaultProps = type.defaultProps;
 
-            for (propName in defaultProps) {
-              if (props[propName] === undefined) {
-                props[propName] = defaultProps[propName];
+            for (var _propName2 in defaultProps) {
+              if (props[_propName2] === undefined) {
+                props[_propName2] = defaultProps[_propName2];
               }
             }
           }
@@ -3117,7 +3134,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-48d37fb2";
+    var ReactVersion = "19.0.0-www-modern-4e2ff20e";
 
     // Patch fetch
     var Children = {

@@ -72,9 +72,7 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
   };
 }
 function jsxProd(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
+  var key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
@@ -82,20 +80,24 @@ function jsxProd(type, config, maybeKey) {
     enableRefAsProp ||
     ((ref = config.ref),
     (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
-  for (propName in config)
+  maybeKey = {};
+  for (var propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       (enableRefAsProp || "ref" !== propName) &&
       (enableRefAsProp && "ref" === propName
-        ? (props.ref = coerceStringRef(
+        ? (maybeKey.ref = coerceStringRef(
             config[propName],
             ReactCurrentOwner.current,
             type
           ))
-        : (props[propName] = config[propName]));
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
+        : (maybeKey[propName] = config[propName]));
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
+    config = type.defaultProps;
+    for (var propName$0 in config)
+      void 0 === maybeKey[propName$0] &&
+        (maybeKey[propName$0] = config[propName$0]);
+  }
   return ReactElement(
     type,
     key,
@@ -103,7 +105,7 @@ function jsxProd(type, config, maybeKey) {
     void 0,
     void 0,
     ReactCurrentOwner.current,
-    props
+    maybeKey
   );
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -600,4 +602,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-d4f4a106";
+exports.version = "19.0.0-www-modern-ea5b7988";
