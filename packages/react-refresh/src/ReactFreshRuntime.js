@@ -128,13 +128,12 @@ function haveEqualSignatures(prevType: any, nextType: any) {
   if (prevSignature === undefined && nextSignature === undefined) {
     return true;
   }
-  if (prevSignature === undefined || nextSignature === undefined) {
-    return false;
-  }
-  if (computeFullKey(prevSignature) !== computeFullKey(nextSignature)) {
-    return false;
-  }
-  if (nextSignature.forceReset) {
+  if (
+    prevSignature === undefined ||
+    nextSignature === undefined ||
+    computeFullKey(prevSignature) !== computeFullKey(nextSignature) ||
+    nextSignature.forceReset
+  ) {
     return false;
   }
 
@@ -252,10 +251,7 @@ export function performReactRefresh(): RefreshUpdate | null {
       if (!failedRoots.has(root)) {
         // No longer failed.
       }
-      if (rootElements === null) {
-        return;
-      }
-      if (!rootElements.has(root)) {
+      if (rootElements === null || !rootElements.has(root)) {
         return;
       }
       const element = rootElements.get(root);
@@ -300,10 +296,10 @@ export function performReactRefresh(): RefreshUpdate | null {
 
 export function register(type: any, id: string): void {
   if (__DEV__) {
-    if (type === null) {
-      return;
-    }
-    if (typeof type !== 'function' && typeof type !== 'object') {
+    if (
+      type === null ||
+      (typeof type !== 'function' && typeof type !== 'object')
+    ) {
       return;
     }
 
@@ -695,13 +691,12 @@ export function isLikelyComponentType(type: any): boolean {
             return true;
           }
           const ownNames = Object.getOwnPropertyNames(type.prototype);
-          if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
-            // This looks like a class.
-            return false;
-          }
-          // eslint-disable-next-line no-proto
-          if (type.prototype.__proto__ !== Object.prototype) {
-            // It has a superclass.
+          if (
+            ownNames.length > 1 ||
+            ownNames[0] !== 'constructor' ||
+            type.prototype.__proto__ !== Object.prototype
+          ) {
+            // This looks like a class or it has a superclass.
             return false;
           }
           // Pass through.
