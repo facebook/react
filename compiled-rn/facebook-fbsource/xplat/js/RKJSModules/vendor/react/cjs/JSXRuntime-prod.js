@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<95871e7bee6e8808b03f8a095c660457>>
+ * @generated SignedSource<<d24a690e1d6994ec3438bae6ba3ca710>>
  */
 
 "use strict";
@@ -36,9 +36,7 @@ var disableDefaultPropsExceptForClasses =
   ReactCurrentOwner =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
 function jsxProd(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
+  var key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
@@ -54,20 +52,24 @@ function jsxProd(type, config, maybeKey) {
         ReactCurrentOwner.current
       );
     }
-  for (propName in config)
+  maybeKey = {};
+  for (var propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
+      (maybeKey[propName] = config[propName]);
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
+    config = type.defaultProps;
+    for (var propName$0 in config)
+      void 0 === maybeKey[propName$0] &&
+        (maybeKey[propName$0] = config[propName$0]);
+  }
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: ref,
-    props: props,
+    props: maybeKey,
     _owner: ReactCurrentOwner.current
   };
 }

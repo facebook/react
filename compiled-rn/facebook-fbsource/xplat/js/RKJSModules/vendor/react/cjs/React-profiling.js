@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3a211c656ba13ce7f2fa442cb1420f88>>
+ * @generated SignedSource<<5a164104e95b6f496fecb7036c4b4780>>
  */
 
 "use strict";
@@ -112,23 +112,25 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
   };
 }
 function jsxProd(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
+  var key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
   void 0 !== config.ref &&
     ((ref = config.ref),
     (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
-  for (propName in config)
+  maybeKey = {};
+  for (var propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
+      (maybeKey[propName] = config[propName]);
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
+    config = type.defaultProps;
+    for (var propName$0 in config)
+      void 0 === maybeKey[propName$0] &&
+        (maybeKey[propName$0] = config[propName$0]);
+  }
   return ReactElement(
     type,
     key,
@@ -136,7 +138,7 @@ function jsxProd(type, config, maybeKey) {
     void 0,
     void 0,
     ReactCurrentOwner.current,
-    props
+    maybeKey
   );
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -687,7 +689,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-158ab85d";
+exports.version = "19.0.0-canary-cedf8410";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

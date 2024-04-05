@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<14b1fac5da603ed3a82ddba00e57ffbe>>
+ * @generated SignedSource<<f9829995214271eca2ce345a7f2da74a>>
  */
 
 "use strict";
@@ -1316,9 +1316,6 @@ if (__DEV__) {
           }
         }
 
-        var propName; // Reserved names are extracted
-
-        var props = {};
         var key = null;
         var ref = null; // Currently, key can be spread in as a prop. This causes a potential
         // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
@@ -1355,16 +1352,25 @@ if (__DEV__) {
           {
             warnIfStringRefCannotBeAutoConverted(config, self);
           }
-        } // Remaining properties are added to a new props object
+        }
 
-        for (propName in config) {
-          if (
-            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" &&
-            propName !== "ref"
-          ) {
-            {
-              props[propName] = config[propName];
+        var props;
+
+        {
+          // We need to remove reserved props (key, prop, ref). Create a fresh props
+          // object and copy over all the non-reserved props. We don't use `delete`
+          // because in V8 it will deopt the object to dictionary mode.
+          props = {};
+
+          for (var propName in config) {
+            if (
+              hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+              propName !== "key" &&
+              propName !== "ref"
+            ) {
+              {
+                props[propName] = config[propName];
+              }
             }
           }
         }
@@ -1374,9 +1380,9 @@ if (__DEV__) {
           if (type && type.defaultProps) {
             var defaultProps = type.defaultProps;
 
-            for (propName in defaultProps) {
-              if (props[propName] === undefined) {
-                props[propName] = defaultProps[propName];
+            for (var _propName2 in defaultProps) {
+              if (props[_propName2] === undefined) {
+                props[_propName2] = defaultProps[_propName2];
               }
             }
           }
