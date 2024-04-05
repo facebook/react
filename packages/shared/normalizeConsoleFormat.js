@@ -18,39 +18,36 @@ export default function normalizeConsoleFormat(
   let j = firstArg;
   let normalizedString = '';
   let last = 0;
-  for (let i = 0; i < formatString.length - 1; i++) {
-    if (formatString.charCodeAt(i) !== 37 /* "%" */) {
+  const formatLength = formatString.length;
+  
+  for (let i = 0; i < formatLength - 1; i++) {
+    if (formatString[i] !== '%') {
       continue;
     }
-    switch (formatString.charCodeAt(++i)) {
-      case 79 /* "O" */:
-      case 99 /* "c" */:
-      case 100 /* "d" */:
-      case 102 /* "f" */:
-      case 105 /* "i" */:
-      case 111 /* "o" */:
-      case 115 /* "s" */: {
-        if (j < args.length) {
-          // We have a matching argument.
-          j++;
-        } else {
-          // We have more format specifiers than arguments.
-          // So we need to escape this to print the literal.
-          normalizedString += formatString.slice(last, (last = i)) + '%';
-        }
+    const specifier = formatString[i + 1];
+    if (specifier === 'O' || specifier === 'c' || specifier === 'd' ||
+        specifier === 'f' || specifier === 'i' || specifier === 'o' ||
+        specifier === 's') {
+      if (j < args.length) {
+        // We have a matching argument.
+        j++;
+      } else {
+        // We have more format specifiers than arguments.
+        // So we need to escape this to print the literal.
+        normalizedString += formatString.slice(last, i) + '%';
+        last = i;
       }
     }
   }
-  normalizedString += formatString.slice(last, formatString.length);
+  normalizedString += formatString.slice(last, formatLength);
   // Pad with extra format specifiers for the rest.
   while (j < args.length) {
-    if (normalizedString !== '') {
-      normalizedString += ' ';
-    }
     // Not every environment has the same default.
-    // This seems to be what Chrome DevTools defaults to.
-    normalizedString += typeof args[j] === 'string' ? '%s' : '%o';
+    // This is what Chrome DevTools defaults to.
+    normalizedString += (normalizedString ? ' ' : '') +
+                        (typeof args[j] === 'string' ? '%s' : '%o');
     j++;
   }
+  
   return normalizedString;
 }
