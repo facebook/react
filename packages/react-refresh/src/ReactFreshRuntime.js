@@ -192,10 +192,7 @@ export function performReactRefresh(): RefreshUpdate | null {
       'Unexpected call to React Refresh in a production environment.',
     );
   }
-  if (pendingUpdates.length === 0) {
-    return null;
-  }
-  if (isPerformingRefresh) {
+  if (pendingUpdates.length === 0 || isPerformingRefresh) {
     return null;
   }
 
