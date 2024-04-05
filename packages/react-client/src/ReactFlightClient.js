@@ -737,6 +737,15 @@ function parseModelString(
         const data = getOutlinedModel(response, id);
         return new Set(data);
       }
+      case 'B': {
+        // Blob
+        if (enableBinaryFlight) {
+          const id = parseInt(value.slice(2), 16);
+          const data = getOutlinedModel(response, id);
+          return new Blob(data.slice(1), {type: data[0]});
+        }
+        return undefined;
+      }
       case 'I': {
         // $Infinity
         return Infinity;

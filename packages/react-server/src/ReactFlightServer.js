@@ -239,6 +239,8 @@ export type ReactClientValue =
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
   | Set<ReactClientValue>
+  | $ArrayBufferView
+  | ArrayBuffer
   | Date
   | ReactClientObject
   | Promise<ReactClientValue>; // Thenable<ReactClientValue>
@@ -1229,6 +1231,46 @@ function serializeTypedArray(
   return serializeByValueID(bufferId);
 }
 
+function serializeBlob(request: Request, blob: Blob): string {
+  const id = request.nextChunkId++;
+  request.pendingChunks++;
+
+  const reader = blob.stream().getReader();
+
+  const model: Array<string | Uint8Array> = [blob.type];
+
+  function progress(
+    entry: {done: false, value: Uint8Array} | {done: true, value: void},
+  ): Promise<void> | void {
+    if (entry.done) {
+      const blobId = outlineModel(request, model);
+      const blobReference = '$B' + blobId.toString(16);
+      const processedChunk = encodeReferenceChunk(request, id, blobReference);
+      request.completedRegularChunks.push(processedChunk);
+      if (request.destination !== null) {
+        flushCompletedChunks(request, request.destination);
+      }
+      return;
+    }
+    // TODO: Emit the chunk early and refer to it later.
+    model.push(entry.value);
+    // $FlowFixMe[incompatible-call]
+    return reader.read().then(progress).catch(error);
+  }
+
+  function error(reason: mixed) {
+    const digest = logRecoverableError(request, reason);
+    emitErrorChunk(request, id, digest, reason);
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
+    }
+  }
+  // $FlowFixMe[incompatible-call]
+  reader.read().then(progress).catch(error);
+
+  return '$' + id.toString(16);
+}
+
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use those to encode
@@ -1605,6 +1647,10 @@ function renderModelDestructive(
       }
       if (value instanceof DataView) {
         return serializeTypedArray(request, 'V', value);
+      }
+      // TODO: Blob is not available in old Node. Remove the typeof check later.
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        return serializeBlob(request, value);
       }
     }
 
@@ -2145,6 +2191,10 @@ function renderConsoleValue(
       }
       if (value instanceof DataView) {
         return serializeTypedArray(request, 'V', value);
+      }
+      // TODO: Blob is not available in old Node. Remove the typeof check later.
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        return serializeBlob(request, value);
       }
     }
 
