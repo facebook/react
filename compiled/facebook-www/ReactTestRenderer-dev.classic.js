@@ -12943,7 +12943,7 @@ if (__DEV__) {
       // remove this extra check.
       alreadyResolvedDefaultProps
     ) {
-      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
+      var newProps = baseProps;
 
       var defaultProps = Component.defaultProps;
 
@@ -12952,11 +12952,15 @@ if (__DEV__) {
         // default props here in the reconciler, rather than in the JSX runtime.
         !alreadyResolvedDefaultProps
       ) {
-        newProps = assign({}, newProps, baseProps);
+        // We may have already copied the props object above to remove ref. If so,
+        // we can modify that. Otherwise, copy the props object with Object.assign.
+        if (newProps === baseProps) {
+          newProps = assign({}, newProps, baseProps);
+        } // Taken from old JSX runtime, where this used to live.
 
-        for (var propName in defaultProps) {
-          if (newProps[propName] === undefined) {
-            newProps[propName] = defaultProps[propName];
+        for (var _propName in defaultProps) {
+          if (newProps[_propName] === undefined) {
+            newProps[_propName] = defaultProps[_propName];
           }
         }
       }
@@ -26676,7 +26680,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-5f35e275";
+    var ReactVersion = "19.0.0-www-classic-6d44fc36";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

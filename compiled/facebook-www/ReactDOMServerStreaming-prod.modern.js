@@ -3622,18 +3622,24 @@ function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
       var JSCompiler_inline_result = props;
+      if (enableRefAsProp && "ref" in props) {
+        JSCompiler_inline_result = {};
+        for (var propName in props)
+          "ref" !== propName &&
+            (JSCompiler_inline_result[propName] = props[propName]);
+      }
       var defaultProps = type.defaultProps;
       if (defaultProps && disableDefaultPropsExceptForClasses) {
-        JSCompiler_inline_result = assign({}, JSCompiler_inline_result, props);
-        for (var propName in defaultProps)
-          void 0 === JSCompiler_inline_result[propName] &&
-            (JSCompiler_inline_result[propName] = defaultProps[propName]);
+        JSCompiler_inline_result === props &&
+          (JSCompiler_inline_result = assign(
+            {},
+            JSCompiler_inline_result,
+            props
+          ));
+        for (var propName$31 in defaultProps)
+          void 0 === JSCompiler_inline_result[propName$31] &&
+            (JSCompiler_inline_result[propName$31] = defaultProps[propName$31]);
       }
-      enableRefAsProp &&
-        "ref" in JSCompiler_inline_result &&
-        (JSCompiler_inline_result === props &&
-          (JSCompiler_inline_result = assign({}, JSCompiler_inline_result)),
-        delete JSCompiler_inline_result.ref);
       props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
       defaultProps = emptyContextObject;
@@ -3642,10 +3648,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
         null !== ref &&
         (defaultProps = ref._currentValue);
       defaultProps = new type(JSCompiler_inline_result, defaultProps);
-      propName = void 0 !== defaultProps.state ? defaultProps.state : null;
+      propName$31 = void 0 !== defaultProps.state ? defaultProps.state : null;
       defaultProps.updater = classComponentUpdater;
       defaultProps.props = JSCompiler_inline_result;
-      defaultProps.state = propName;
+      defaultProps.state = propName$31;
       ref = { queue: [], replace: !1 };
       defaultProps._reactInternals = ref;
       var contextType = type.contextType;
@@ -3655,12 +3661,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
           : emptyContextObject;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
-        ((contextType = contextType(JSCompiler_inline_result, propName)),
-        (propName =
+        ((contextType = contextType(JSCompiler_inline_result, propName$31)),
+        (propName$31 =
           null === contextType || void 0 === contextType
-            ? propName
-            : assign({}, propName, contextType)),
-        (defaultProps.state = propName));
+            ? propName$31
+            : assign({}, propName$31, contextType)),
+        (defaultProps.state = propName$31));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
         "function" !== typeof defaultProps.getSnapshotBeforeUpdate &&
@@ -3691,27 +3697,26 @@ function renderElement(request, task, keyPath, type, props, ref) {
             defaultProps.state = type[0];
           else {
             ref = contextType ? type[0] : defaultProps.state;
-            propName = !0;
+            propName$31 = !0;
             for (
               contextType = contextType ? 1 : 0;
               contextType < type.length;
               contextType++
-            ) {
-              var partial = type[contextType];
-              partial =
-                "function" === typeof partial
-                  ? partial.call(
-                      defaultProps,
-                      ref,
-                      JSCompiler_inline_result,
-                      void 0
-                    )
-                  : partial;
-              null != partial &&
-                (propName
-                  ? ((propName = !1), (ref = assign({}, ref, partial)))
-                  : assign(ref, partial));
-            }
+            )
+              (propName = type[contextType]),
+                (propName =
+                  "function" === typeof propName
+                    ? propName.call(
+                        defaultProps,
+                        ref,
+                        JSCompiler_inline_result,
+                        void 0
+                      )
+                    : propName),
+                null != propName &&
+                  (propName$31
+                    ? ((propName$31 = !1), (ref = assign({}, ref, propName)))
+                    : assign(ref, propName));
             defaultProps.state = ref;
           }
         else ref.queue = null;
@@ -3746,14 +3751,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
     if (null === defaultProps)
       (defaultProps = props.children),
         (ref = task.formatContext),
-        (propName = task.keyPath),
+        (propName$31 = task.keyPath),
         (task.formatContext = getChildFormatContext(ref, type, props)),
         (task.keyPath = keyPath),
         renderNode(request, task, defaultProps, -1),
         (task.formatContext = ref),
-        (task.keyPath = propName);
+        (task.keyPath = propName$31);
     else {
-      propName = pushStartInstance(
+      propName$31 = pushStartInstance(
         defaultProps.chunks,
         type,
         props,
@@ -3769,7 +3774,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
       contextType = task.keyPath;
       task.formatContext = getChildFormatContext(ref, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, propName, -1);
+      renderNode(request, task, propName$31, -1);
       task.formatContext = ref;
       task.keyPath = contextType;
       a: {
@@ -3866,13 +3871,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = task.blockedBoundary;
           var parentHoistableState = task.hoistableState,
             parentSegment = task.blockedSegment;
-          propName = props.fallback;
+          propName$31 = props.fallback;
           var content = props.children;
           props = new Set();
           contextType = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
             (contextType.trackedContentKeyPath = keyPath);
-          partial = createPendingSegment(
+          propName = createPendingSegment(
             request,
             parentSegment.chunks.length,
             contextType,
@@ -3880,7 +3885,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             !1,
             !1
           );
-          parentSegment.children.push(partial);
+          parentSegment.children.push(propName);
           parentSegment.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
@@ -3954,10 +3959,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
           task = createRenderTask(
             request,
             null,
-            propName,
+            propName$31,
             -1,
             ref,
-            partial,
+            propName,
             contextType.fallbackState,
             props,
             JSCompiler_inline_result,
@@ -4488,15 +4493,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$42) {
+    } catch (thrownValue$43) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$42 === SuspenseException
+          thrownValue$43 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$42),
+            : thrownValue$43),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5151,11 +5156,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$46 = partialBoundaries[i];
+      var boundary$47 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$46.completedSegments;
+        var completedSegments = boundary$47.completedSegments;
         for (
           JSCompiler_inline_result = 0;
           JSCompiler_inline_result < completedSegments.length;
@@ -5165,7 +5170,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$46,
+              boundary$47,
               completedSegments[JSCompiler_inline_result]
             )
           ) {
@@ -5177,7 +5182,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, JSCompiler_inline_result);
         JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
           boundary,
-          boundary$46.contentState,
+          boundary$47.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5232,8 +5237,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$48) {
-    logRecoverableError(request, error$48, {}), fatalError(request, error$48);
+  } catch (error$49) {
+    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
   }
 }
 exports.abortStream = function (stream, reason) {

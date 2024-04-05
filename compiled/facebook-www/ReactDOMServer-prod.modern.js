@@ -2619,16 +2619,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1616 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1618 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1630 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1631 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1632 = new Set(),
-    JSCompiler_object_inline_styles_1633 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1634 = new Set(),
-    JSCompiler_object_inline_scripts_1635 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1636 = new Set(),
-    JSCompiler_object_inline_preloads_1637 = {
+  var JSCompiler_object_inline_preconnects_1632 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1633 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1634 = new Set(),
+    JSCompiler_object_inline_styles_1635 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1636 = new Set(),
+    JSCompiler_object_inline_scripts_1637 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1638 = new Set(),
+    JSCompiler_object_inline_preloads_1639 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2665,7 +2665,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1634.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1636.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2706,7 +2706,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1634.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1636.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2721,7 +2721,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1616,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1618,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2741,14 +2741,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1630,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1631,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1632,
-    styles: JSCompiler_object_inline_styles_1633,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1634,
-    scripts: JSCompiler_object_inline_scripts_1635,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1636,
-    preloads: JSCompiler_object_inline_preloads_1637,
+    preconnects: JSCompiler_object_inline_preconnects_1632,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1633,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1634,
+    styles: JSCompiler_object_inline_styles_1635,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1636,
+    scripts: JSCompiler_object_inline_scripts_1637,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1638,
+    preloads: JSCompiler_object_inline_preloads_1639,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -3798,18 +3798,24 @@ function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
       var JSCompiler_inline_result = props;
+      if (enableRefAsProp && "ref" in props) {
+        JSCompiler_inline_result = {};
+        for (var propName in props)
+          "ref" !== propName &&
+            (JSCompiler_inline_result[propName] = props[propName]);
+      }
       var defaultProps = type.defaultProps;
       if (defaultProps && disableDefaultPropsExceptForClasses) {
-        JSCompiler_inline_result = assign({}, JSCompiler_inline_result, props);
-        for (var propName in defaultProps)
-          void 0 === JSCompiler_inline_result[propName] &&
-            (JSCompiler_inline_result[propName] = defaultProps[propName]);
+        JSCompiler_inline_result === props &&
+          (JSCompiler_inline_result = assign(
+            {},
+            JSCompiler_inline_result,
+            props
+          ));
+        for (var propName$31 in defaultProps)
+          void 0 === JSCompiler_inline_result[propName$31] &&
+            (JSCompiler_inline_result[propName$31] = defaultProps[propName$31]);
       }
-      enableRefAsProp &&
-        "ref" in JSCompiler_inline_result &&
-        (JSCompiler_inline_result === props &&
-          (JSCompiler_inline_result = assign({}, JSCompiler_inline_result)),
-        delete JSCompiler_inline_result.ref);
       props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
       defaultProps = emptyContextObject;
@@ -3818,10 +3824,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
         null !== ref &&
         (defaultProps = ref._currentValue2);
       defaultProps = new type(JSCompiler_inline_result, defaultProps);
-      propName = void 0 !== defaultProps.state ? defaultProps.state : null;
+      propName$31 = void 0 !== defaultProps.state ? defaultProps.state : null;
       defaultProps.updater = classComponentUpdater;
       defaultProps.props = JSCompiler_inline_result;
-      defaultProps.state = propName;
+      defaultProps.state = propName$31;
       ref = { queue: [], replace: !1 };
       defaultProps._reactInternals = ref;
       var contextType = type.contextType;
@@ -3831,12 +3837,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
           : emptyContextObject;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
-        ((contextType = contextType(JSCompiler_inline_result, propName)),
-        (propName =
+        ((contextType = contextType(JSCompiler_inline_result, propName$31)),
+        (propName$31 =
           null === contextType || void 0 === contextType
-            ? propName
-            : assign({}, propName, contextType)),
-        (defaultProps.state = propName));
+            ? propName$31
+            : assign({}, propName$31, contextType)),
+        (defaultProps.state = propName$31));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
         "function" !== typeof defaultProps.getSnapshotBeforeUpdate &&
@@ -3867,27 +3873,26 @@ function renderElement(request, task, keyPath, type, props, ref) {
             defaultProps.state = type[0];
           else {
             ref = contextType ? type[0] : defaultProps.state;
-            propName = !0;
+            propName$31 = !0;
             for (
               contextType = contextType ? 1 : 0;
               contextType < type.length;
               contextType++
-            ) {
-              var partial = type[contextType];
-              partial =
-                "function" === typeof partial
-                  ? partial.call(
-                      defaultProps,
-                      ref,
-                      JSCompiler_inline_result,
-                      void 0
-                    )
-                  : partial;
-              null != partial &&
-                (propName
-                  ? ((propName = !1), (ref = assign({}, ref, partial)))
-                  : assign(ref, partial));
-            }
+            )
+              (propName = type[contextType]),
+                (propName =
+                  "function" === typeof propName
+                    ? propName.call(
+                        defaultProps,
+                        ref,
+                        JSCompiler_inline_result,
+                        void 0
+                      )
+                    : propName),
+                null != propName &&
+                  (propName$31
+                    ? ((propName$31 = !1), (ref = assign({}, ref, propName)))
+                    : assign(ref, propName));
             defaultProps.state = ref;
           }
         else ref.queue = null;
@@ -3922,14 +3927,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
     if (null === defaultProps)
       (defaultProps = props.children),
         (ref = task.formatContext),
-        (propName = task.keyPath),
+        (propName$31 = task.keyPath),
         (task.formatContext = getChildFormatContext(ref, type, props)),
         (task.keyPath = keyPath),
         renderNode(request, task, defaultProps, -1),
         (task.formatContext = ref),
-        (task.keyPath = propName);
+        (task.keyPath = propName$31);
     else {
-      propName = pushStartInstance(
+      propName$31 = pushStartInstance(
         defaultProps.chunks,
         type,
         props,
@@ -3945,7 +3950,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
       contextType = task.keyPath;
       task.formatContext = getChildFormatContext(ref, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, propName, -1);
+      renderNode(request, task, propName$31, -1);
       task.formatContext = ref;
       task.keyPath = contextType;
       a: {
@@ -4042,13 +4047,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = task.blockedBoundary;
           var parentHoistableState = task.hoistableState,
             parentSegment = task.blockedSegment;
-          propName = props.fallback;
+          propName$31 = props.fallback;
           var content = props.children;
           props = new Set();
           contextType = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
             (contextType.trackedContentKeyPath = keyPath);
-          partial = createPendingSegment(
+          propName = createPendingSegment(
             request,
             parentSegment.chunks.length,
             contextType,
@@ -4056,7 +4061,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             !1,
             !1
           );
-          parentSegment.children.push(partial);
+          parentSegment.children.push(propName);
           parentSegment.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
@@ -4131,10 +4136,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
           task = createRenderTask(
             request,
             null,
-            propName,
+            propName$31,
             -1,
             ref,
-            partial,
+            propName,
             contextType.fallbackState,
             props,
             JSCompiler_inline_result,
@@ -4653,15 +4658,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$42) {
+    } catch (thrownValue$43) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$42 === SuspenseException
+          thrownValue$43 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$42),
+            : thrownValue$43),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5478,11 +5483,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$46 = partialBoundaries[i];
+      var boundary$47 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$46.completedSegments;
+        var completedSegments = boundary$47.completedSegments;
         for (
           JSCompiler_inline_result = 0;
           JSCompiler_inline_result < completedSegments.length;
@@ -5492,7 +5497,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$46,
+              boundary$47,
               completedSegments[JSCompiler_inline_result]
             )
           ) {
@@ -5504,7 +5509,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, JSCompiler_inline_result);
         JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
           boundary,
-          boundary$46.contentState,
+          boundary$47.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5578,8 +5583,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$48) {
-    logRecoverableError(request, error$48, {}), fatalError(request, error$48);
+  } catch (error$49) {
+    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
   }
 }
 function onError() {}
@@ -5650,4 +5655,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-e467878c";
+exports.version = "19.0.0-www-modern-3dacd53a";
