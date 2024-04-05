@@ -22,15 +22,14 @@ export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions,
-  enableBigIntSupport,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
   enableUnifiedSyncLane,
-  enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
   useModernStrictMode,
+  disableDefaultPropsExceptForClasses,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.

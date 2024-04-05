@@ -14,9 +14,6 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const disableIEWorkarounds = __VARIANT__;
-export const enableBigIntSupport = __VARIANT__;
-export const enableLegacyFBSupport = __VARIANT__;
-export const enableUseRefAccessWarning = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
 export const forceConcurrentByDefaultForTesting = __VARIANT__;
@@ -30,6 +27,7 @@ export const enableRenderableContext = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
+export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;

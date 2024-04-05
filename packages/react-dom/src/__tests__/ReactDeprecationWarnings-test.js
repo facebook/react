@@ -26,6 +26,7 @@ describe('ReactDeprecationWarnings', () => {
     }
   });
 
+  // @gate !disableDefaultPropsExceptForClasses || !__DEV__
   it('should warn when given defaultProps', async () => {
     function FunctionalComponent(props) {
       return null;
@@ -43,6 +44,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses || !__DEV__
   it('should warn when given defaultProps on a memoized function', async () => {
     const MemoComponent = React.memo(function FunctionalComponent(props) {
       return null;
@@ -103,9 +105,9 @@ describe('ReactDeprecationWarnings', () => {
         });
       }
     }
-    expect(() => {
-      ReactNoop.renderLegacySyncRoot(<Component />);
-    }).toErrorDev([
+
+    ReactNoop.render(<Component />);
+    await expect(async () => await waitForAll([])).toErrorDev([
       'Component "Component" contains the string ref "refComponent". Support for string refs will be removed in a future major release.',
     ]);
     await waitForAll([]);

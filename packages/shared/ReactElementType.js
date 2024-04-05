@@ -13,7 +13,7 @@ export type ReactElement = {
   key: any,
   ref: any,
   props: any,
-  // ReactFiber
+  // __DEV__ or for string refs
   _owner: any,
 
   // __DEV__

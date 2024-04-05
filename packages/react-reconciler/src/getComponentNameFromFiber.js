@@ -11,6 +11,7 @@ import type {ReactContext, ReactConsumerType} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 
 import {
+  disableLegacyMode,
   enableLegacyHidden,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
@@ -18,7 +19,6 @@ import {
 import {
   FunctionComponent,
   ClassComponent,
-  IndeterminateComponent,
   HostRoot,
   HostPortal,
   HostComponent,
@@ -36,6 +36,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   DehydratedFragment,
   SuspenseListComponent,
   ScopeComponent,
@@ -124,11 +125,15 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return 'SuspenseList';
     case TracingMarkerComponent:
       return 'TracingMarker';
-    // The display name for this tags come from the user-provided type:
+    // The display name for these tags come from the user-provided type:
+    case IncompleteClassComponent:
+    case IncompleteFunctionComponent:
+      if (disableLegacyMode) {
+        break;
+      }
+    // Fallthrough
     case ClassComponent:
     case FunctionComponent:
-    case IncompleteClassComponent:
-    case IndeterminateComponent:
     case MemoComponent:
     case SimpleMemoComponent:
       if (typeof type === 'function') {

@@ -14,7 +14,6 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let findDOMNode;
 
 const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
@@ -95,8 +94,6 @@ describe('ReactComponentLifeCycle', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    findDOMNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
   });
 
@@ -376,6 +373,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
 
+  // @gate www && !disableLegacyMode
   it('warns if legacy findDOMNode is used inside render', async () => {
     class Component extends React.Component {
       state = {isMounted: false};
@@ -384,7 +382,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       render() {
         if (this.state.isMounted) {
-          expect(findDOMNode(this).tagName).toBe('DIV');
+          expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
         }
         return <div />;
       }

@@ -9,21 +9,11 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
-  Container,
-  PublicInstance,
-} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
-import type {
   RootType,
   HydrateRootOptions,
   CreateRootOptions,
 } from './ReactDOMRoot';
 
-import {
-  findDOMNode,
-  render,
-  unstable_renderSubtreeIntoContainer,
-  unmountComponentAtNode,
-} from './ReactDOMLegacy';
 import {
   createRoot as createRootImpl,
   hydrateRoot as hydrateRootImpl,
@@ -35,6 +25,7 @@ import {
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   injectIntoDevTools,
+  findHostInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -99,20 +90,6 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
-function renderSubtreeIntoContainer(
-  parentComponent: React$Component<any, any>,
-  element: React$Element<any>,
-  containerNode: Container,
-  callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
-  return unstable_renderSubtreeIntoContainer(
-    parentComponent,
-    element,
-    containerNode,
-    callback,
-  );
-}
-
 function createRoot(
   container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
@@ -163,6 +140,12 @@ function flushSync<R>(fn: (() => R) | void): R | void {
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 
+function findDOMNode(
+  componentOrElement: React$Component<any, any>,
+): null | Element | Text {
+  return findHostInstance(componentOrElement);
+}
+
 // Expose findDOMNode on internals
 Internals.findDOMNode = findDOMNode;
 
@@ -178,15 +161,9 @@ export {
   unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
-  // Disabled behind disableLegacyReactDOMAPIs
-  findDOMNode,
-  render,
-  unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  // Disabled behind disableUnstableRenderSubtreeIntoContainer
-  renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
   // TODO: Remove this once callers migrate to alternatives.

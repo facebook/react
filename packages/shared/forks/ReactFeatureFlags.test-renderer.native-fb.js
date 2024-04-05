@@ -43,7 +43,6 @@ export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
-export const enableUseRefAccessWarning = false;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableRenderableContext = false;
 
@@ -86,7 +85,7 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
 export const disableDOMTestUtils = false;
 
-export const enableBigIntSupport = false;
+export const disableDefaultPropsExceptForClasses = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

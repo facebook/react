@@ -38,6 +38,7 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
+  disableStringRefs,
   enableBinaryFlight,
   enablePostpone,
   enableRefAsProp,
@@ -498,6 +499,16 @@ function createElement(
       enumerable: false,
       get: nullRefGetter,
     });
+  } else if (!__DEV__ && disableStringRefs) {
+    element = ({
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
+
+      type,
+      key,
+      ref: null,
+      props,
+    }: any);
   } else {
     element = ({
       // This tag allows us to uniquely identify this as a React Element

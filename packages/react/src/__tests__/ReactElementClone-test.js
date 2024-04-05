@@ -294,6 +294,7 @@ describe('ReactElementClone', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should normalize props with default values', () => {
     class Component extends React.Component {
       render() {

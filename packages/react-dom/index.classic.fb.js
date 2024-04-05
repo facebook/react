@@ -20,11 +20,8 @@ Object.assign((Internals: any), {
 
 export {
   createPortal,
-  findDOMNode,
   flushSync,
-  unmountComponentAtNode,
   unstable_createEventHandle,
-  unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus,
   useFormState,
@@ -42,6 +39,9 @@ export {
   hydrateRoot,
   render,
   unstable_batchedUpdates,
+  findDOMNode,
+  unstable_renderSubtreeIntoContainer,
+  unmountComponentAtNode,
 } from './src/client/ReactDOMRootFB';
 
 export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};

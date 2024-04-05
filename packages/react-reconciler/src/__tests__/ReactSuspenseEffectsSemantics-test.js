@@ -324,7 +324,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not change behavior in sync', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -445,7 +445,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
   });
 
   describe('layout effects within a tree that re-suspends in an update', () => {
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not be destroyed or recreated in legacy roots', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -2542,7 +2542,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       return null;
     }
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not be cleared within legacy roots', async () => {
       class ClassComponent extends React.Component {
         render() {

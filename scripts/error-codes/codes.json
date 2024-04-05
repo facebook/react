@@ -407,8 +407,8 @@
   "419": "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.",
   "420": "ServerContext: %s already defined",
   "421": "This Suspense boundary received an update before it finished hydrating. This caused the boundary to switch to client rendering. The usual way to fix this is to wrap the original update in startTransition.",
-  "422": "There was an error while hydrating this Suspense boundary. Switched to client rendering.",
-  "423": "There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.",
+  "422": "There was an error while hydrating but React was able to recover by instead client rendering from the nearest Suspense boundary.",
+  "423": "There was an error while hydrating but React was able to recover by instead client rendering the entire root.",
   "424": "This root received an early update, before anything was able hydrate. Switched the entire root to client rendering.",
   "425": "Text content does not match server-rendered HTML.",
   "426": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition.",
@@ -503,5 +503,7 @@
   "515": "Cannot assign to a temporary client reference from a server module.",
   "516": "Attempted to call a temporary Client Reference from the server but it is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.",
   "517": "Symbols cannot be passed to a Server Function without a temporary reference set. Pass a TemporaryReferenceSet to the options.%s",
-  "518": "Saw multiple hydration diff roots in a pass. This is a bug in React."
+  "518": "Saw multiple hydration diff roots in a pass. This is a bug in React.",
+  "519": "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React.",
+  "520": "There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root."
 }

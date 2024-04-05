@@ -12,14 +12,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 
-function unsupported() {
-  throw new Error('This feature is not supported by ReactSuspenseTestUtils.');
-}
-
 export function waitForSuspense<T>(fn: () => T): Promise<T> {
   const cache: Map<Function, mixed> = new Map();
   const testDispatcher: CacheDispatcher = {
-    getCacheSignal: unsupported,
     getCacheForType<R>(resourceType: () => R): R {
       let entry: R | void = (cache.get(resourceType): any);
       if (entry === undefined) {

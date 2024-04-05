@@ -16,7 +16,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import isArray from 'shared/isArray';
-import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -165,10 +164,6 @@ function mapIntoArray(
   } else {
     switch (type) {
       case 'bigint':
-        if (!enableBigIntSupport) {
-          break;
-        }
-      // fallthrough for enabled BigInt support
       case 'string':
       case 'number':
         invokeCallback = true;

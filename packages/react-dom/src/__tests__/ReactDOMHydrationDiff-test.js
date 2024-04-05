@@ -55,6 +55,15 @@ describe('ReactDOMServerHydration', () => {
   function formatMessage(args) {
     const [format, ...rest] = args;
     if (format instanceof Error) {
+      if (format.cause instanceof Error) {
+        return (
+          'Caught [' +
+          format.message +
+          ']\n  Cause [' +
+          format.cause.message +
+          ']'
+        );
+      }
       return 'Caught [' + format.message + ']';
     }
     rest[rest.length - 1] = normalizeCodeLocInfo(rest[rest.length - 1]);
@@ -88,28 +97,27 @@ describe('ReactDOMServerHydration', () => {
       }
       if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-                  [
-                    "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+          [
+            "Caught [Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
-                  - A server/client branch \`if (typeof window !== 'undefined')\`.
-                  - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
-                  - Date formatting in a user's locale which doesn't match the server.
-                  - External changing data without sending a snapshot of it along with the HTML.
-                  - Invalid HTML tag nesting.
+          - A server/client branch \`if (typeof window !== 'undefined')\`.
+          - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
+          - Date formatting in a user's locale which doesn't match the server.
+          - External changing data without sending a snapshot of it along with the HTML.
+          - Invalid HTML tag nesting.
 
-                  It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+          It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
 
-                  https://react.dev/link/hydration-mismatch
+          https://react.dev/link/hydration-mismatch
 
-                    <Mismatch isClient={true}>
-                      <div className="parent">
-                        <main className="child">
-                  +       client
-                  -       server
-                  ]",
-                    "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-                  ]
-              `);
+            <Mismatch isClient={true}>
+              <div className="parent">
+                <main className="child">
+          +       client
+          -       server
+          ]",
+          ]
+        `);
       } else {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
@@ -170,7 +178,6 @@ describe('ReactDOMServerHydration', () => {
           +     This markup contains an nbsp entity:   client text
           -     This markup contains an nbsp entity:   server text
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       } else {
@@ -477,7 +484,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           +     <main className="only">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -513,7 +519,6 @@ describe('ReactDOMServerHydration', () => {
           -     <main className="2">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -550,7 +555,6 @@ describe('ReactDOMServerHydration', () => {
           -     <footer className="3">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -586,7 +590,6 @@ describe('ReactDOMServerHydration', () => {
                 <main>
           +     <footer className="3">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -618,7 +621,6 @@ describe('ReactDOMServerHydration', () => {
             +     only
             -     
             ]",
-              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
         } else {
@@ -678,7 +680,6 @@ describe('ReactDOMServerHydration', () => {
           -     <footer className="3">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -714,7 +715,6 @@ describe('ReactDOMServerHydration', () => {
           -     <main className="2">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -750,7 +750,6 @@ describe('ReactDOMServerHydration', () => {
                 <main>
           +     third
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -786,7 +785,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     <main className="only">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -822,7 +820,6 @@ describe('ReactDOMServerHydration', () => {
           -     <header className="1">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -858,7 +855,6 @@ describe('ReactDOMServerHydration', () => {
           +     <footer className="3">
           -     <main className="2">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -892,7 +888,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     <footer className="3">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -922,7 +917,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     only
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -958,7 +952,6 @@ describe('ReactDOMServerHydration', () => {
           -     first
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -994,7 +987,6 @@ describe('ReactDOMServerHydration', () => {
           +     <footer className="3">
           -     second
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1028,7 +1020,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     third
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1072,7 +1063,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           +     <Suspense fallback={<p>}>
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1108,7 +1098,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     <Suspense>
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1146,7 +1135,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           +     <Suspense fallback={<p>}>
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1188,7 +1176,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
           -     <Suspense>
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1228,7 +1215,6 @@ describe('ReactDOMServerHydration', () => {
           -       <footer className="3">
                   ...
           ]",
-            "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
           ]
         `);
       });
@@ -1267,7 +1253,6 @@ describe('ReactDOMServerHydration', () => {
           +       <footer className="3">
           -       <main className="second">
           ]",
-            "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
           ]
         `);
       });
@@ -1364,7 +1349,6 @@ describe('ReactDOMServerHydration', () => {
           +     <header className="1">
                 ...
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1404,7 +1388,6 @@ describe('ReactDOMServerHydration', () => {
           -     <main className="2">
           -     <footer className="3">
           ]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
       });
@@ -1469,7 +1452,6 @@ describe('ReactDOMServerHydration', () => {
                   <main>
         +         <footer className="3">
         ]",
-          "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
       `);
     });
@@ -1527,7 +1509,6 @@ describe('ReactDOMServerHydration', () => {
               <div className="parent">
         -       <footer className="3">
         ]",
-          "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
         ]
       `);
     });

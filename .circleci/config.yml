@@ -84,7 +84,6 @@ jobs:
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
-      - run: ./scripts/circleci/check_modules.sh
       - run: ./scripts/circleci/test_print_warnings.sh
 
   yarn_flow:

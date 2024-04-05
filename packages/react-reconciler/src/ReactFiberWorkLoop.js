@@ -40,6 +40,7 @@ import {
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -90,7 +91,6 @@ import {
 } from './ReactTypeOfMode';
 import {
   HostRoot,
-  IndeterminateComponent,
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
@@ -265,7 +265,7 @@ import {
   getSuspenseHandler,
   getShellBoundary,
 } from './ReactFiberSuspenseContext';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
 import {
   ensureRootIsScheduled,
@@ -603,7 +603,7 @@ export function getCurrentTime(): number {
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   } else if (
     (executionContext & RenderContext) !== NoContext &&
@@ -670,7 +670,7 @@ function requestRetryLane(fiber: Fiber) {
 
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   }
 
@@ -825,6 +825,7 @@ export function scheduleUpdateOnFiber(
     if (
       lane === SyncLane &&
       executionContext === NoContext &&
+      !disableLegacyMode &&
       (fiber.mode & ConcurrentMode) === NoMode
     ) {
       if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy) {
@@ -1368,7 +1369,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   }
 
   let exitStatus = renderRootSync(root, lanes);
-  if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+  if (
+    (disableLegacyMode || root.tag !== LegacyRoot) &&
+    exitStatus === RootErrored
+  ) {
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
@@ -1516,6 +1520,7 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
   // next event, not at the end of the previous one.
   if (
     rootWithPendingPassiveEffects !== null &&
+    !disableLegacyMode &&
     rootWithPendingPassiveEffects.tag === LegacyRoot &&
     (executionContext & (RenderContext | CommitContext)) === NoContext
   ) {
@@ -1929,10 +1934,13 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError(error: CapturedValue<mixed>) {
+export function renderDidError() {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
   }
+}
+
+export function queueConcurrentError(error: CapturedValue<mixed>) {
   if (workInProgressRootConcurrentErrors === null) {
     workInProgressRootConcurrentErrors = [error];
   } else {
@@ -2395,12 +2403,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     startProfilerTimer(unitOfWork);
   }
   switch (unitOfWork.tag) {
-    case IndeterminateComponent: {
-      // Because it suspended with `use`, we can assume it's a
-      // function component.
-      unitOfWork.tag = FunctionComponent;
-      // Fallthrough to the next branch.
-    }
     case SimpleMemoComponent:
     case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
@@ -2410,9 +2412,10 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       const Component = unitOfWork.type;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       let context: any;
       if (!disableLegacyContext) {
         const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
@@ -2436,9 +2439,10 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       const Component = unitOfWork.type.render;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         unitOfWork.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
 
       next = replayFunctionComponent(
         current,
@@ -3042,7 +3046,10 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
+  if (
+    includesSyncLane(pendingPassiveEffectsLanes) &&
+    (disableLegacyMode || root.tag !== LegacyRoot)
+  ) {
     flushPassiveEffects();
   }
 
@@ -3723,11 +3730,11 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode && root.tag !== LegacyRoot) {
+    if (useModernStrictMode && (disableLegacyMode || root.tag !== LegacyRoot)) {
       let doubleInvokeEffects = true;
 
       if (
-        root.tag === ConcurrentRoot &&
+        (disableLegacyMode || root.tag === ConcurrentRoot) &&
         !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
       ) {
         doubleInvokeEffects = false;
@@ -3801,13 +3808,12 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
       return;
     }
 
-    if (!(fiber.mode & ConcurrentMode)) {
+    if (!disableLegacyMode && !(fiber.mode & ConcurrentMode)) {
       return;
     }
 
     const tag = fiber.tag;
     if (
-      tag !== IndeterminateComponent &&
       tag !== HostRoot &&
       tag !== ClassComponent &&
       tag !== FunctionComponent &&
@@ -3941,7 +3947,7 @@ function shouldForceFlushFallbacksInDEV() {
 
 function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
   if (__DEV__) {
-    if (fiber.mode & ConcurrentMode) {
+    if (disableLegacyMode || fiber.mode & ConcurrentMode) {
       if (!isConcurrentActEnvironment()) {
         // Not in an act environment. No need to warn.
         return;
@@ -3999,7 +4005,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
 function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
   if (__DEV__) {
     if (
-      root.tag !== LegacyRoot &&
+      (disableLegacyMode || root.tag !== LegacyRoot) &&
       isConcurrentActEnvironment() &&
       ReactCurrentActQueue.current === null
     ) {

@@ -66,7 +66,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
-  enableBigIntSupport,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -370,10 +369,7 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (
-        typeof value === 'number' ||
-        (enableBigIntSupport && typeof value === 'bigint')
-      ) {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
@@ -929,10 +925,7 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (
-        typeof value === 'number' ||
-        (enableBigIntSupport && typeof value === 'bigint')
-      ) {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
@@ -1301,7 +1294,7 @@ export function setInitialProperties(
             continue;
           }
           const propValue = props[propKey];
-          if (propValue == null) {
+          if (propValue === undefined) {
             continue;
           }
           setPropOnCustomElement(
@@ -1310,7 +1303,7 @@ export function setInitialProperties(
             propKey,
             propValue,
             props,
-            null,
+            undefined,
           );
         }
         return;
@@ -1741,14 +1734,14 @@ export function updateProperties(
           const lastProp = lastProps[propKey];
           if (
             lastProps.hasOwnProperty(propKey) &&
-            lastProp != null &&
+            lastProp !== undefined &&
             !nextProps.hasOwnProperty(propKey)
           ) {
             setPropOnCustomElement(
               domElement,
               tag,
               propKey,
-              null,
+              undefined,
               nextProps,
               lastProp,
             );
@@ -1760,7 +1753,7 @@ export function updateProperties(
           if (
             nextProps.hasOwnProperty(propKey) &&
             nextProp !== lastProp &&
-            (nextProp != null || lastProp != null)
+            (nextProp !== undefined || lastProp !== undefined)
           ) {
             setPropOnCustomElement(
               domElement,
@@ -2948,7 +2941,7 @@ export function hydrateProperties(
   if (
     typeof children === 'string' ||
     typeof children === 'number' ||
-    (enableBigIntSupport && typeof children === 'bigint')
+    typeof children === 'bigint'
   ) {
     if (
       // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint

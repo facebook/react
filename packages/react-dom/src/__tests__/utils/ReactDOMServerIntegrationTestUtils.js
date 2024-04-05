@@ -10,7 +10,7 @@
 'use strict';
 
 const stream = require('stream');
-const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgnoreConsoleError');
+const shouldIgnoreConsoleError = require('internal-test-utils/shouldIgnoreConsoleError');
 
 module.exports = function (initModules) {
   let ReactDOM;

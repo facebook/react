@@ -48,6 +48,7 @@ import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFab
 
 // Module provided by RN:
 import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
   throw new Error(
@@ -106,6 +107,10 @@ function render(
   callback: ?() => void,
   concurrentRoot: ?boolean,
 ): ?ElementRef<ElementType> {
+  if (disableLegacyMode && !concurrentRoot) {
+    throw new Error('render: Unsupported Legacy Mode API.');
+  }
+
   let root = roots.get(containerTag);
 
   if (!root) {

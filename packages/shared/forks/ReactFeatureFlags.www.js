@@ -16,11 +16,8 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   disableIEWorkarounds,
-  enableBigIntSupport,
   enableTrustedTypesIntegration,
-  enableLegacyFBSupport,
   enableDebugTracing,
-  enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,
@@ -37,6 +34,7 @@ export const {
   enableRenderableContext,
   enableRefAsProp,
   favorSafetyOverHydrationPerf,
+  disableDefaultPropsExceptForClasses,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -57,6 +55,7 @@ export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableAsyncActions = true;
 export const disableInputAttributeSyncing = false;
+export const enableLegacyFBSupport = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -113,7 +112,7 @@ export const useModernStrictMode = true;
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
-export const disableLegacyMode = false;
+export const disableLegacyMode = __EXPERIMENTAL__;
 
 export const disableDOMTestUtils = false;
 

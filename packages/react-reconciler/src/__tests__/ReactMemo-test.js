@@ -65,19 +65,17 @@ describe('memo', () => {
 
   // @gate !enableRefAsProp || !__DEV__
   it('warns when giving a ref (complex)', async () => {
-    // defaultProps means this won't use SimpleMemoComponent (as of this writing)
-    // SimpleMemoComponent is unobservable tho, so we can't check :)
     function App() {
       return null;
     }
-    App.defaultProps = {};
-    App = React.memo(App);
+    // A custom compare function means this won't use SimpleMemoComponent (as of this writing)
+    // SimpleMemoComponent is unobservable tho, so we can't check :)
+    App = React.memo(App, () => false);
     function Outer() {
       return <App ref={() => {}} />;
     }
     ReactNoop.render(<Outer />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -409,6 +407,7 @@ describe('memo', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="1!" />);
       });
 
+      // @gate !disableDefaultPropsExceptForClasses
       it('supports defaultProps defined on the memo() return value', async () => {
         function Counter({a, b, c, d, e}) {
           return <Text text={a + b + c + d + e} />;
@@ -483,6 +482,7 @@ describe('memo', () => {
         );
       });
 
+      // @gate !disableDefaultPropsExceptForClasses
       it('handles nested defaultProps declarations', async () => {
         function Inner(props) {
           return props.inner + props.middle + props.outer;

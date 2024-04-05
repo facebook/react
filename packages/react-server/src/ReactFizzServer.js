@@ -137,13 +137,13 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
-  enableBigIntSupport,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableCache,
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -843,7 +843,7 @@ function encodeErrorForBoundary(
       ? 'Switched to client rendering because the server rendering aborted due to:\n\n'
       : 'Switched to client rendering because the server rendering errored:\n\n';
     boundary.errorMessage = prefix + message;
-    boundary.errorStack = stack;
+    boundary.errorStack = stack !== null ? prefix + stack : null;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }
@@ -1391,6 +1391,36 @@ function finishClassComponent(
   task.keyPath = prevKeyPath;
 }
 
+export function resolveClassComponentProps(
+  Component: any,
+  baseProps: Object,
+): Object {
+  let newProps = baseProps;
+
+  // Resolve default props. Taken from old JSX runtime, where this used to live.
+  const defaultProps = Component.defaultProps;
+  if (defaultProps && disableDefaultPropsExceptForClasses) {
+    newProps = assign({}, newProps, baseProps);
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in newProps) {
+      if (newProps === baseProps) {
+        newProps = assign({}, newProps);
+      }
+      delete newProps.ref;
+    }
+  }
+
+  return newProps;
+}
+
 function renderClassComponent(
   request: Request,
   task: Task,
@@ -1398,19 +1428,30 @@ function renderClassComponent(
   Component: any,
   props: any,
 ): void {
+  const resolvedProps = resolveClassComponentProps(Component, props);
   const previousComponentStack = task.componentStack;
   task.componentStack = createClassComponentStack(task, Component);
   const maskedContext = !disableLegacyContext
     ? getMaskedContext(Component, task.legacyContext)
     : undefined;
-  const instance = constructClassInstance(Component, props, maskedContext);
-  mountClassInstance(instance, Component, props, maskedContext);
-  finishClassComponent(request, task, keyPath, instance, Component, props);
+  const instance = constructClassInstance(
+    Component,
+    resolvedProps,
+    maskedContext,
+  );
+  mountClassInstance(instance, Component, resolvedProps, maskedContext);
+  finishClassComponent(
+    request,
+    task,
+    keyPath,
+    instance,
+    Component,
+    resolvedProps,
+  );
   task.componentStack = previousComponentStack;
 }
 
 const didWarnAboutBadClass: {[string]: boolean} = {};
-const didWarnAboutModulePatternComponent: {[string]: boolean} = {};
 const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
@@ -1418,9 +1459,7 @@ const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
 
-// This would typically be a function component but we still support module pattern
-// components for some reason.
-function renderIndeterminateComponent(
+function renderFunctionComponent(
   request: Request,
   task: Task,
   keyPath: KeyNode,
@@ -1465,33 +1504,6 @@ function renderIndeterminateComponent(
   const actionStateCount = getActionStateCount();
   const actionStateMatchingIndex = getActionStateMatchingIndex();
 
-  if (__DEV__) {
-    // Support for module components is deprecated and is removed behind a flag.
-    // Whether or not it would crash later, we want to show a good message in DEV first.
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      typeof value.render === 'function' &&
-      value.$$typeof === undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
-    }
-  }
-
-  // Proceed under the assumption that this is a function component
   if (__DEV__) {
     if (disableLegacyContext && Component.contextTypes) {
       console.error(
@@ -1587,7 +1599,10 @@ function validateFunctionComponentInDev(Component: any): void {
       }
     }
 
-    if (Component.defaultProps !== undefined) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      Component.defaultProps !== undefined
+    ) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -1629,7 +1644,15 @@ function validateFunctionComponentInDev(Component: any): void {
   }
 }
 
-function resolveDefaultProps(Component: any, baseProps: Object): Object {
+function resolveDefaultPropsOnNonClassComponent(
+  Component: any,
+  baseProps: Object,
+): Object {
+  if (disableDefaultPropsExceptForClasses) {
+    // Support for defaultProps is removed in React 19 for all types
+    // except classes.
+    return baseProps;
+  }
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
     const props = assign({}, baseProps);
@@ -1705,7 +1728,10 @@ function renderMemo(
   ref: any,
 ): void {
   const innerType = type.type;
-  const resolvedProps = resolveDefaultProps(innerType, props);
+  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
+    innerType,
+    props,
+  );
   renderElement(request, task, keyPath, innerType, resolvedProps, ref);
 }
 
@@ -1779,7 +1805,10 @@ function renderLazyComponent(
   const payload = lazyComponent._payload;
   const init = lazyComponent._init;
   const Component = init(payload);
-  const resolvedProps = resolveDefaultProps(Component, props);
+  const resolvedProps = resolveDefaultPropsOnNonClassComponent(
+    Component,
+    props,
+  );
   renderElement(request, task, keyPath, Component, resolvedProps, ref);
   task.componentStack = previousComponentStack;
 }
@@ -1817,7 +1846,7 @@ function renderElement(
       renderClassComponent(request, task, keyPath, type, props);
       return;
     } else {
-      renderIndeterminateComponent(request, task, keyPath, type, props);
+      renderFunctionComponent(request, task, keyPath, type, props);
       return;
     }
   }
@@ -2353,10 +2382,7 @@ function renderNodeDestructive(
     return;
   }
 
-  if (
-    typeof node === 'number' ||
-    (enableBigIntSupport && typeof node === 'bigint')
-  ) {
+  if (typeof node === 'number' || typeof node === 'bigint') {
     const segment = task.blockedSegment;
     if (segment === null) {
       // We assume a text node doesn't have a representation in the replay set,

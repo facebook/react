@@ -60,7 +60,6 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
-  // @gate enableBigIntSupport
   it('should render bigints as children', async () => {
     const Box = ({value}) => <div>{value}</div>;
 

@@ -18,7 +18,11 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
+import {
+  enableRefAsProp,
+  disableStringRefs,
+  disableDefaultPropsExceptForClasses,
+} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -235,6 +239,19 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
         value: null,
       });
     }
+  } else if (!__DEV__ && disableStringRefs) {
+    // In prod, `ref` is a regular property and _owner doesn't exist.
+    element = {
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
+
+      // Built-in properties that belong on the element
+      type,
+      key,
+      ref,
+
+      props,
+    };
   } else {
     // In prod, `ref` is a regular property. It will be removed in a
     // future release.
@@ -340,12 +357,14 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  // Resolve default props
-  if (type && type.defaultProps) {
-    const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
+  if (!disableDefaultPropsExceptForClasses) {
+    // Resolve default props
+    if (type && type.defaultProps) {
+      const defaultProps = type.defaultProps;
+      for (propName in defaultProps) {
+        if (props[propName] === undefined) {
+          props[propName] = defaultProps[propName];
+        }
       }
     }
   }
@@ -554,12 +573,14 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    // Resolve default props
-    if (type && type.defaultProps) {
-      const defaultProps = type.defaultProps;
-      for (propName in defaultProps) {
-        if (props[propName] === undefined) {
-          props[propName] = defaultProps[propName];
+    if (!disableDefaultPropsExceptForClasses) {
+      // Resolve default props
+      if (type && type.defaultProps) {
+        const defaultProps = type.defaultProps;
+        for (propName in defaultProps) {
+          if (props[propName] === undefined) {
+            props[propName] = defaultProps[propName];
+          }
         }
       }
     }
@@ -766,7 +787,7 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     enableRefAsProp ? null : oldElement.ref,
     undefined,
     undefined,
-    oldElement._owner,
+    !__DEV__ && disableStringRefs ? undefined : oldElement._owner,
     oldElement.props,
   );
 }
@@ -792,7 +813,7 @@ export function cloneElement(element, config, children) {
   let ref = enableRefAsProp ? null : element.ref;
 
   // Owner will be preserved, unless ref is overridden
-  let owner = element._owner;
+  let owner = !__DEV__ && disableStringRefs ? undefined : element._owner;
 
   if (config != null) {
     if (hasValidRef(config)) {
@@ -811,7 +832,11 @@ export function cloneElement(element, config, children) {
 
     // Remaining properties override existing props
     let defaultProps;
-    if (element.type && element.type.defaultProps) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      element.type &&
+      element.type.defaultProps
+    ) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
@@ -833,7 +858,11 @@ export function cloneElement(element, config, children) {
         // backwards compatibility.
         !(enableRefAsProp && propName === 'ref' && config.ref === undefined)
       ) {
-        if (config[propName] === undefined && defaultProps !== undefined) {
+        if (
+          !disableDefaultPropsExceptForClasses &&
+          config[propName] === undefined &&
+          defaultProps !== undefined
+        ) {
           // Resolve default props
           props[propName] = defaultProps[propName];
         } else {

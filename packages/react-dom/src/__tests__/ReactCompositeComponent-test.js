@@ -223,23 +223,16 @@ describe('ReactCompositeComponent', () => {
     const el = document.createElement('div');
     const root = ReactDOMClient.createRoot(el);
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          root.render(<Child test="test" />);
-        });
-      }).rejects.toThrow(
-        'Objects are not valid as a React child (found: object with keys {render}).',
-      );
-    }).toErrorDev(
-      'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
-        'Change Child to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Child.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
+      await act(() => {
+        root.render(<Child test="test" />);
+      });
+    }).rejects.toThrow(
+      'Objects are not valid as a React child (found: object with keys {render}).',
     );
 
     expect(el.textContent).toBe('');
   });
+
   it('should use default values for undefined props', async () => {
     class Component extends React.Component {
       static defaultProps = {prop: 'testKey'};
@@ -268,29 +261,17 @@ describe('ReactCompositeComponent', () => {
     await act(() => {
       root.render(<Component ref={refFn1} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance1.props).toEqual({prop: 'testKey', ref: refFn1});
-    } else {
-      expect(instance1.props).toEqual({prop: 'testKey'});
-    }
+    expect(instance1.props).toEqual({prop: 'testKey'});
 
     await act(() => {
       root.render(<Component ref={refFn2} prop={undefined} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance2.props).toEqual({prop: 'testKey', ref: refFn2});
-    } else {
-      expect(instance2.props).toEqual({prop: 'testKey'});
-    }
+    expect(instance2.props).toEqual({prop: 'testKey'});
 
     await act(() => {
       root.render(<Component ref={refFn3} prop={null} />);
     });
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(instance3.props).toEqual({prop: null, ref: refFn3});
-    } else {
-      expect(instance3.props).toEqual({prop: null});
-    }
+    expect(instance3.props).toEqual({prop: null});
   });
 
   it('should not mutate passed-in props object', async () => {

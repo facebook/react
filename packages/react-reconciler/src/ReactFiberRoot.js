@@ -33,6 +33,7 @@ import {
   enableProfilerTimer,
   enableUpdaterTracking,
   enableTransitionTracing,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -56,7 +57,7 @@ function FiberRootNode(
   onRecoverableError: any,
   formState: ReactFormState<any, any> | null,
 ) {
-  this.tag = tag;
+  this.tag = disableLegacyMode ? ConcurrentRoot : tag;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
   this.current = null;
@@ -123,13 +124,18 @@ function FiberRootNode(
   }
 
   if (__DEV__) {
-    switch (tag) {
-      case ConcurrentRoot:
-        this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
-        break;
-      case LegacyRoot:
-        this._debugRootType = hydrate ? 'hydrate()' : 'render()';
-        break;
+    if (disableLegacyMode) {
+      // TODO: This varies by each renderer.
+      this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
+    } else {
+      switch (tag) {
+        case ConcurrentRoot:
+          this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
+          break;
+        case LegacyRoot:
+          this._debugRootType = hydrate ? 'hydrate()' : 'render()';
+          break;
+      }
     }
   }
 }

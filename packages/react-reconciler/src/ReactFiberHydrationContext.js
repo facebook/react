@@ -29,6 +29,8 @@ import {
 } from './ReactWorkTags';
 import {favorSafetyOverHydrationPerf} from 'shared/ReactFeatureFlags';
 
+import {createCapturedValueAtFiber} from './ReactCapturedValue';
+
 import {createFiberFromDehydratedFragment} from './ReactFiber';
 import {
   shouldSetTextContent,
@@ -297,6 +299,11 @@ function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
   return false;
 }
 
+export const HydrationMismatchException: mixed = new Error(
+  'Hydration Mismatch Exception: This is not a real error, and should not leak into ' +
+    "userspace. If you're seeing this, it's likely a bug in React.",
+);
+
 function throwOnHydrationMismatch(fiber: Fiber) {
   let diff = '';
   if (__DEV__) {
@@ -308,7 +315,7 @@ function throwOnHydrationMismatch(fiber: Fiber) {
       diff = describeDiff(diffRoot);
     }
   }
-  throw new Error(
+  const error = new Error(
     "Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n" +
       '\n' +
       "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
@@ -322,6 +329,8 @@ function throwOnHydrationMismatch(fiber: Fiber) {
       'https://react.dev/link/hydration-mismatch' +
       diff,
   );
+  queueHydrationError(createCapturedValueAtFiber(error, fiber));
+  throw HydrationMismatchException;
 }
 
 function claimHydratableSingleton(fiber: Fiber): void {

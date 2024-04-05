@@ -188,9 +188,7 @@ describe('ReactChildren', () => {
     );
 
     function assertCalls() {
-      expect(callback).toHaveBeenCalledTimes(
-        gate(flags => flags.enableBigIntSupport) ? 10 : 9,
-      );
+      expect(callback).toHaveBeenCalledTimes(10);
       expect(callback).toHaveBeenCalledWith(div, 0);
       expect(callback).toHaveBeenCalledWith(span, 1);
       expect(callback).toHaveBeenCalledWith(a, 2);
@@ -200,11 +198,7 @@ describe('ReactChildren', () => {
       expect(callback).toHaveBeenCalledWith(null, 6);
       expect(callback).toHaveBeenCalledWith(null, 7);
       expect(callback).toHaveBeenCalledWith(null, 8);
-      if (gate(flags => flags.enableBigIntSupport)) {
-        expect(callback).toHaveBeenCalledWith(9n, 9);
-      } else {
-        expect(callback).not.toHaveBeenCalledWith(9n, 9);
-      }
+      expect(callback).toHaveBeenCalledWith(9n, 9);
       callback.mockClear();
     }
 
@@ -217,24 +211,14 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    expect(mappedChildren).toEqual(
-      gate(flags => flags.enableBigIntSupport)
-        ? [
-            <div key=".$divNode" />,
-            <span key=".1:0:$spanNode" />,
-            <a key=".2:$aNode" />,
-            'string',
-            1234,
-            9n,
-          ]
-        : [
-            <div key=".$divNode" />,
-            <span key=".1:0:$spanNode" />,
-            <a key=".2:$aNode" />,
-            'string',
-            1234,
-          ],
-    );
+    expect(mappedChildren).toEqual([
+      <div key=".$divNode" />,
+      <span key=".1:0:$spanNode" />,
+      <a key=".2:$aNode" />,
+      'string',
+      1234,
+      9n,
+    ]);
   });
 
   it('should be called for each child in nested structure', () => {

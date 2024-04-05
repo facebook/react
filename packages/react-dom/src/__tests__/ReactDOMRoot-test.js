@@ -47,7 +47,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
-  // @gate !classic || !__DEV__
+  // @gate !www || !__DEV__
   it('warns if you import createRoot from react-dom', async () => {
     expect(() => ReactDOM.createRoot(container)).toErrorDev(
       'You are importing createRoot from "react-dom" which is not supported. ' +
@@ -58,7 +58,7 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  // @gate !classic || !__DEV__
+  // @gate !www || !__DEV__
   it('warns if you import hydrateRoot from react-dom', async () => {
     expect(() => ReactDOM.hydrateRoot(container, null)).toErrorDev(
       'You are importing hydrateRoot from "react-dom" which is not supported. ' +
