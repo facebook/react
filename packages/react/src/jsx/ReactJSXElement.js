@@ -1051,13 +1051,17 @@ function validateExplicitKey(element, parentType) {
     let childOwner = '';
     if (
       element &&
-      element._owner &&
+      element._owner != null &&
       element._owner !== ReactCurrentOwner.current
     ) {
+      let ownerName = null;
+      if (typeof element._owner.tag === 'number') {
+        ownerName = getComponentNameFromType(element._owner.type);
+      } else if (typeof element._owner.name === 'string') {
+        ownerName = element._owner.name;
+      }
       // Give the component that originally created this child.
-      childOwner = ` It was passed a child from ${getComponentNameFromType(
-        element._owner.type,
-      )}.`;
+      childOwner = ` It was passed a child from ${ownerName}.`;
     }
 
     setCurrentlyValidatingElement(element);
