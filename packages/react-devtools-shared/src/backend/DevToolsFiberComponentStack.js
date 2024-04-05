@@ -39,38 +39,30 @@ export function describeFiber(
     ClassComponent,
   } = workTagMap;
 
-  const owner: null | Function = __DEV__
-    ? workInProgress._debugOwner
-      ? workInProgress._debugOwner.type
-      : null
-    : null;
   switch (workInProgress.tag) {
     case HostComponent:
-      return describeBuiltInComponentFrame(workInProgress.type, owner);
+      return describeBuiltInComponentFrame(workInProgress.type);
     case LazyComponent:
-      return describeBuiltInComponentFrame('Lazy', owner);
+      return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
-      return describeBuiltInComponentFrame('Suspense', owner);
+      return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
-      return describeBuiltInComponentFrame('SuspenseList', owner);
+      return describeBuiltInComponentFrame('SuspenseList');
     case FunctionComponent:
     case IndeterminateComponent:
     case SimpleMemoComponent:
       return describeFunctionComponentFrame(
         workInProgress.type,
-        owner,
         currentDispatcherRef,
       );
     case ForwardRef:
       return describeFunctionComponentFrame(
         workInProgress.type.render,
-        owner,
         currentDispatcherRef,
       );
     case ClassComponent:
       return describeClassComponentFrame(
         workInProgress.type,
-        owner,
         currentDispatcherRef,
       );
     default:

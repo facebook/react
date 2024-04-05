@@ -1952,15 +1952,24 @@ export function attach(
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
-      const {_debugOwner} = fiber;
+      const debugOwner = fiber._debugOwner;
 
       // Ideally we should call getFiberIDThrows() for _debugOwner,
       // since owners are almost always higher in the tree (and so have already been processed),
       // but in some (rare) instances reported in open source, a descendant mounts before an owner.
       // Since this is a DEV only field it's probably okay to also just lazily generate and ID here if needed.
       // See https://github.com/facebook/react/issues/21445
-      const ownerID =
-        _debugOwner != null ? getOrGenerateFiberID(_debugOwner) : 0;
+      let ownerID: number;
+      if (debugOwner != null) {
+        if (typeof debugOwner.tag === 'number') {
+          ownerID = getOrGenerateFiberID((debugOwner: any));
+        } else {
+          // TODO: Track Server Component Owners.
+          ownerID = 0;
+        }
+      } else {
+        ownerID = 0;
+      }
       const parentID = parentFiber ? getFiberIDThrows(parentFiber) : 0;
 
       const displayNameStringID = getStringID(displayName);
@@ -3104,15 +3113,17 @@ export function attach(
       return null;
     }
 
-    const {_debugOwner} = fiber;
-
     const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
-    if (_debugOwner) {
-      let owner: null | Fiber = _debugOwner;
-      while (owner !== null) {
-        owners.unshift(fiberToSerializedElement(owner));
-        owner = owner._debugOwner || null;
+    let owner = fiber._debugOwner;
+    while (owner != null) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber: Fiber = (owner: any); // Refined
+        owners.unshift(fiberToSerializedElement(ownerFiber));
+        owner = ownerFiber._debugOwner;
+      } else {
+        // TODO: Track Server Component Owners.
+        break;
       }
     }
 
@@ -3173,7 +3184,7 @@ export function attach(
     }
 
     const {
-      _debugOwner,
+      _debugOwner: debugOwner,
       stateNode,
       key,
       memoizedProps,
@@ -3300,13 +3311,19 @@ export function attach(
       context = {value: context};
     }
 
-    let owners = null;
-    if (_debugOwner) {
-      owners = ([]: Array<SerializedElement>);
-      let owner: null | Fiber = _debugOwner;
-      while (owner !== null) {
-        owners.push(fiberToSerializedElement(owner));
-        owner = owner._debugOwner || null;
+    let owners: null | Array<SerializedElement> = null;
+    let owner = debugOwner;
+    while (owner != null) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber: Fiber = (owner: any); // Refined
+        if (owners === null) {
+          owners = [];
+        }
+        owners.push(fiberToSerializedElement(ownerFiber));
+        owner = ownerFiber._debugOwner;
+      } else {
+        // TODO: Track Server Component Owners.
+        break;
       }
     }
 

@@ -43,13 +43,13 @@ export function getStackByComponentStackNode(
     do {
       switch (node.tag) {
         case 0:
-          info += describeBuiltInComponentFrame(node.type, null);
+          info += describeBuiltInComponentFrame(node.type);
           break;
         case 1:
-          info += describeFunctionComponentFrame(node.type, null);
+          info += describeFunctionComponentFrame(node.type);
           break;
         case 2:
-          info += describeClassComponentFrame(node.type, null);
+          info += describeClassComponentFrame(node.type);
           break;
       }
       // $FlowFixMe[incompatible-type] we bail out when we get a null
