@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50a9b99ec068577f4323f59c87924a6b>>
+ * @generated SignedSource<<c73a551f4a3130c37086d7107a16668b>>
  */
 
 "use strict";
@@ -16823,7 +16823,7 @@ to return true:wantsResponderID|                            |
       // remove this extra check.
       alreadyResolvedDefaultProps
     ) {
-      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
+      var newProps = baseProps;
 
       var defaultProps = Component.defaultProps;
 
@@ -16832,11 +16832,15 @@ to return true:wantsResponderID|                            |
         // default props here in the reconciler, rather than in the JSX runtime.
         (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
       ) {
-        newProps = assign({}, newProps, baseProps);
+        // We may have already copied the props object above to remove ref. If so,
+        // we can modify that. Otherwise, copy the props object with Object.assign.
+        if (newProps === baseProps) {
+          newProps = assign({}, newProps, baseProps);
+        } // Taken from old JSX runtime, where this used to live.
 
-        for (var propName in defaultProps) {
-          if (newProps[propName] === undefined) {
-            newProps[propName] = defaultProps[propName];
+        for (var _propName in defaultProps) {
+          if (newProps[_propName] === undefined) {
+            newProps[_propName] = defaultProps[_propName];
           }
         }
       }
@@ -30754,7 +30758,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-6807d8d2";
+    var ReactVersion = "19.0.0-canary-4c6edcb1";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

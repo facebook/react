@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<74899a6d3fe92773c2f385a9916407bb>>
+ * @generated SignedSource<<b9d1eed3b9bd859cc782a84afe6d9a15>>
  */
 
 "use strict";
@@ -3630,7 +3630,7 @@ function resolveClassComponentProps(
 ) {
   var newProps = baseProps;
   if ((Component = Component.defaultProps) && !alreadyResolvedDefaultProps) {
-    newProps = assign({}, newProps, baseProps);
+    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
     for (var propName in Component)
       void 0 === newProps[propName] &&
         (newProps[propName] = Component[propName]);
@@ -9770,7 +9770,7 @@ var devToolsConfig$jscomp$inline_1078 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-aa699661",
+  version: "19.0.0-canary-461e8e8d",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9814,7 +9814,7 @@ var devToolsConfig$jscomp$inline_1078 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-aa699661"
+  reconcilerVersion: "19.0.0-canary-461e8e8d"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

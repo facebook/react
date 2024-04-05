@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b334f048486473032d93217c6858a766>>
+ * @generated SignedSource<<4a679b19e322c1ae35a57c741538ab4c>>
  */
 
 "use strict";
@@ -5275,7 +5275,7 @@ function resolveClassComponentProps(
     (Component = Component.defaultProps) &&
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps = assign({}, newProps, baseProps);
+    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
     for (var propName in Component)
       void 0 === newProps[propName] &&
         (newProps[propName] = Component[propName]);
@@ -11506,7 +11506,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1244 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-596ee199",
+    version: "19.0.0-canary-d2e200b3",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11562,7 +11562,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-596ee199"
+  reconcilerVersion: "19.0.0-canary-d2e200b3"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

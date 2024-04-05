@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54298e069f406267149c6223a3e091da>>
+ * @generated SignedSource<<40b9e8d1940ea7c4aa128e958d245bc0>>
  */
 
 "use strict";
@@ -5018,7 +5018,7 @@ function resolveClassComponentProps(
     (Component = Component.defaultProps) &&
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps = assign({}, newProps, baseProps);
+    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
     for (var propName in Component)
       void 0 === newProps[propName] &&
         (newProps[propName] = Component[propName]);
@@ -10584,7 +10584,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1095 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-dd9880b4",
+    version: "19.0.0-canary-01f2d6f5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10627,7 +10627,7 @@ var internals$jscomp$inline_1364 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-dd9880b4"
+  reconcilerVersion: "19.0.0-canary-01f2d6f5"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1365 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
