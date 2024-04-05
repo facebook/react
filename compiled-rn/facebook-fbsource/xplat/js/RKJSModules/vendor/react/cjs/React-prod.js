@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b1e8f7cea4c2238622f5d5ff373a78b6>>
+ * @generated SignedSource<<1d4dfe262135ef97303d2935beb2bc9f>>
  */
 
 "use strict";
@@ -114,7 +114,9 @@ function jsxProd(type, config, maybeKey) {
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
+  void 0 !== config.ref &&
+    ((ref = config.ref),
+    (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
@@ -150,6 +152,34 @@ function isValidElement(object) {
     null !== object &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+function coerceStringRef(mixedRef, owner, type) {
+  if ("string" !== typeof mixedRef)
+    if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
+      mixedRef = "" + mixedRef;
+    else return mixedRef;
+  return stringRefAsCallbackRef.bind(null, mixedRef, type, owner);
+}
+function stringRefAsCallbackRef(stringRef, type, owner, value) {
+  if (!owner)
+    throw Error(
+      "Element ref was specified as a string (" +
+        stringRef +
+        ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
+    );
+  if (1 !== owner.tag)
+    throw Error(
+      "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
+    );
+  type = owner.stateNode;
+  if (!type)
+    throw Error(
+      "Missing owner for string ref " +
+        stringRef +
+        ". This error is likely caused by a bug in React. Please file an issue."
+    );
+  type = type.refs;
+  null === value ? delete type[stringRef] : (type[stringRef] = value);
 }
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
@@ -425,7 +455,9 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((ref = config.ref), (owner = ReactCurrentOwner.current));
+      ((ref = config.ref),
+      (ref = coerceStringRef(ref, owner, element.type)),
+      (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -483,7 +515,9 @@ exports.createElement = function (type, config, children) {
     key = null,
     ref = null;
   if (null != config)
-    for (propName in (void 0 !== config.ref && (ref = config.ref),
+    for (propName in (void 0 !== config.ref &&
+      ((ref = config.ref),
+      (ref = coerceStringRef(ref, ReactCurrentOwner.current, type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -649,4 +683,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-c781fee2";
+exports.version = "19.0.0-canary-54d35464";

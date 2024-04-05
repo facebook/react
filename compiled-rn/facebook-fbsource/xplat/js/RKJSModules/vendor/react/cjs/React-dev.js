@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f325d8cf2d69b090409eb199bc04571f>>
+ * @generated SignedSource<<25217836b8f863c9d7a02187e9851881>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-1e7b10f9";
+    var ReactVersion = "19.0.0-canary-135898c8";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -564,6 +564,20 @@ if (__DEV__) {
         }
       }
     }
+    function checkPropStringCoercion(value, propName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` prop is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            propName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
 
     // Re-export dynamic flags from the internal module.
     var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -584,7 +598,7 @@ if (__DEV__) {
     var enableRefAsProp = false;
     var disableLegacyMode = false;
 
-    function getWrappedName(outerType, innerType, wrapperName) {
+    function getWrappedName$1(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
 
       if (displayName) {
@@ -597,7 +611,7 @@ if (__DEV__) {
         : wrapperName;
     } // Keep in sync with react-reconciler/getComponentNameFromFiber
 
-    function getContextName(type) {
+    function getContextName$1(type) {
       return type.displayName || "Context";
     }
 
@@ -658,28 +672,28 @@ if (__DEV__) {
               return null;
             } else {
               var provider = type;
-              return getContextName(provider._context) + ".Provider";
+              return getContextName$1(provider._context) + ".Provider";
             }
 
           case REACT_CONTEXT_TYPE:
             var context = type;
 
             if (enableRenderableContext) {
-              return getContextName(context) + ".Provider";
+              return getContextName$1(context) + ".Provider";
             } else {
-              return getContextName(context) + ".Consumer";
+              return getContextName$1(context) + ".Consumer";
             }
 
           case REACT_CONSUMER_TYPE:
             if (enableRenderableContext) {
               var consumer = type;
-              return getContextName(consumer._context) + ".Consumer";
+              return getContextName$1(consumer._context) + ".Consumer";
             } else {
               return null;
             }
 
           case REACT_FORWARD_REF_TYPE:
-            return getWrappedName(type, type.render, "ForwardRef");
+            return getWrappedName$1(type, type.render, "ForwardRef");
 
           case REACT_MEMO_TYPE:
             var outerName = type.displayName || null;
@@ -1215,6 +1229,153 @@ if (__DEV__) {
       return "";
     }
 
+    var FunctionComponent = 0;
+    var ClassComponent = 1;
+    var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+
+    var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+
+    var HostComponent = 5;
+    var HostText = 6;
+    var Fragment = 7;
+    var Mode = 8;
+    var ContextConsumer = 9;
+    var ContextProvider = 10;
+    var ForwardRef = 11;
+    var Profiler = 12;
+    var SuspenseComponent = 13;
+    var MemoComponent = 14;
+    var SimpleMemoComponent = 15;
+    var LazyComponent = 16;
+    var IncompleteClassComponent = 17;
+    var DehydratedFragment = 18;
+    var SuspenseListComponent = 19;
+    var ScopeComponent = 21;
+    var OffscreenComponent = 22;
+    var CacheComponent = 24;
+    var TracingMarkerComponent = 25;
+    var HostHoistable = 26;
+    var HostSingleton = 27;
+    var IncompleteFunctionComponent = 28;
+
+    function getWrappedName(outerType, innerType, wrapperName) {
+      var functionName = innerType.displayName || innerType.name || "";
+      return (
+        outerType.displayName ||
+        (functionName !== ""
+          ? wrapperName + "(" + functionName + ")"
+          : wrapperName)
+      );
+    } // Keep in sync with shared/getComponentNameFromType
+
+    function getContextName(type) {
+      return type.displayName || "Context";
+    }
+
+    function getComponentNameFromFiber(fiber) {
+      var tag = fiber.tag,
+        type = fiber.type;
+
+      switch (tag) {
+        case CacheComponent:
+          return "Cache";
+
+        case ContextConsumer:
+          if (enableRenderableContext) {
+            var consumer = type;
+            return getContextName(consumer._context) + ".Consumer";
+          } else {
+            var context = type;
+            return getContextName(context) + ".Consumer";
+          }
+
+        case ContextProvider:
+          if (enableRenderableContext) {
+            var _context = type;
+            return getContextName(_context) + ".Provider";
+          } else {
+            var provider = type;
+            return getContextName(provider._context) + ".Provider";
+          }
+
+        case DehydratedFragment:
+          return "DehydratedFragment";
+
+        case ForwardRef:
+          return getWrappedName(type, type.render, "ForwardRef");
+
+        case Fragment:
+          return "Fragment";
+
+        case HostHoistable:
+        case HostSingleton:
+        case HostComponent:
+          // Host component type is the display name (e.g. "div", "View")
+          return type;
+
+        case HostPortal:
+          return "Portal";
+
+        case HostRoot:
+          return "Root";
+
+        case HostText:
+          return "Text";
+
+        case LazyComponent:
+          // Name comes from the type in this case; we don't have a tag.
+          return getComponentNameFromType(type);
+
+        case Mode:
+          if (type === REACT_STRICT_MODE_TYPE) {
+            // Don't be less specific than shared/getComponentNameFromType
+            return "StrictMode";
+          }
+
+          return "Mode";
+
+        case OffscreenComponent:
+          return "Offscreen";
+
+        case Profiler:
+          return "Profiler";
+
+        case ScopeComponent:
+          return "Scope";
+
+        case SuspenseComponent:
+          return "Suspense";
+
+        case SuspenseListComponent:
+          return "SuspenseList";
+
+        case TracingMarkerComponent:
+          return "TracingMarker";
+        // The display name for these tags come from the user-provided type:
+
+        case IncompleteClassComponent:
+        case IncompleteFunctionComponent:
+
+        // Fallthrough
+
+        case ClassComponent:
+        case FunctionComponent:
+        case MemoComponent:
+        case SimpleMemoComponent:
+          if (typeof type === "function") {
+            return type.displayName || type.name || null;
+          }
+
+          if (typeof type === "string") {
+            return type;
+          }
+
+          break;
+      }
+
+      return null;
+    }
+
     var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
     var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
@@ -1593,6 +1754,10 @@ if (__DEV__) {
         if (hasValidRef(config)) {
           {
             ref = config.ref;
+
+            {
+              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+            }
           }
 
           {
@@ -1606,7 +1771,9 @@ if (__DEV__) {
             propName !== "key" &&
             propName !== "ref"
           ) {
-            props[propName] = config[propName];
+            {
+              props[propName] = config[propName];
+            }
           }
         }
 
@@ -1728,6 +1895,10 @@ if (__DEV__) {
         if (hasValidRef(config)) {
           {
             ref = config.ref;
+
+            {
+              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+            }
           }
 
           {
@@ -1754,7 +1925,9 @@ if (__DEV__) {
             propName !== "__self" &&
             propName !== "__source"
           ) {
-            props[propName] = config[propName];
+            {
+              props[propName] = config[propName];
+            }
           }
         }
       } // Children can be more than one argument, and those are transferred onto
@@ -1863,6 +2036,10 @@ if (__DEV__) {
           {
             // Silently steal the ref from the parent.
             ref = config.ref;
+
+            {
+              ref = coerceStringRef(ref, owner, element.type);
+            }
           }
 
           owner = ReactCurrentOwner.current;
@@ -1910,7 +2087,9 @@ if (__DEV__) {
               // Resolve default props
               props[propName] = defaultProps[propName];
             } else {
-              props[propName] = config[propName];
+              {
+                props[propName] = config[propName];
+              }
             }
           }
         }
@@ -2154,6 +2333,96 @@ if (__DEV__) {
           setCurrentlyValidatingElement(null);
         }
       }
+    }
+
+    function coerceStringRef(mixedRef, owner, type) {
+      var stringRef;
+
+      if (typeof mixedRef === "string") {
+        stringRef = mixedRef;
+      } else {
+        if (typeof mixedRef === "number" || typeof mixedRef === "boolean") {
+          {
+            checkPropStringCoercion(mixedRef, "ref");
+          }
+
+          stringRef = "" + mixedRef;
+        } else {
+          return mixedRef;
+        }
+      }
+
+      return stringRefAsCallbackRef.bind(null, stringRef, type, owner);
+    }
+
+    function stringRefAsCallbackRef(stringRef, type, owner, value) {
+      if (!owner) {
+        throw new Error(
+          "Element ref was specified as a string (" +
+            stringRef +
+            ") but no owner was set. This could happen for one of" +
+            " the following reasons:\n" +
+            "1. You may be adding a ref to a function component\n" +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            "3. You have multiple copies of React loaded\n" +
+            "See https://react.dev/link/refs-must-have-owner for more information."
+        );
+      }
+
+      if (owner.tag !== ClassComponent) {
+        throw new Error(
+          "Function components cannot have string refs. " +
+            "We recommend using useRef() instead. " +
+            "Learn more about using refs safely here: " +
+            "https://react.dev/link/strict-mode-string-ref"
+        );
+      }
+
+      {
+        if (
+          // Will already warn with "Function components cannot be given refs"
+          !(typeof type === "function" && !isReactClass(type))
+        ) {
+          var componentName = getComponentNameFromFiber(owner) || "Component";
+
+          if (!didWarnAboutStringRefs[componentName]) {
+            error(
+              'Component "%s" contains the string ref "%s". Support for string refs ' +
+                "will be removed in a future major release. We recommend using " +
+                "useRef() or createRef() instead. " +
+                "Learn more about using refs safely here: " +
+                "https://react.dev/link/strict-mode-string-ref",
+              componentName,
+              stringRef
+            );
+
+            didWarnAboutStringRefs[componentName] = true;
+          }
+        }
+      }
+
+      var inst = owner.stateNode;
+
+      if (!inst) {
+        throw new Error(
+          "Missing owner for string ref " +
+            stringRef +
+            ". This error is likely caused by a " +
+            "bug in React. Please file an issue."
+        );
+      }
+
+      var refs = inst.refs;
+
+      if (value === null) {
+        delete refs[stringRef];
+      } else {
+        refs[stringRef] = value;
+      }
+    }
+
+    function isReactClass(type) {
+      return type.prototype && type.prototype.isReactComponent;
     }
 
     var SEPARATOR = ".";
