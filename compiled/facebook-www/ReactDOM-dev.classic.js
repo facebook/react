@@ -2981,20 +2981,6 @@ if (__DEV__) {
         }
       }
     }
-    function checkPropStringCoercion(value, propName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` prop is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            propName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
     function checkCSSPropertyStringCoercion(value, propName) {
       {
         if (willCoercionThrow(value)) {
@@ -11432,7 +11418,6 @@ if (__DEV__) {
 
     var didWarnAboutMaps;
     var didWarnAboutGenerators;
-    var didWarnAboutStringRefs;
     var ownerHasKeyUseWarning;
     var ownerHasFunctionTypeWarning;
     var ownerHasSymbolTypeWarning;
@@ -11442,7 +11427,6 @@ if (__DEV__) {
     {
       didWarnAboutMaps = false;
       didWarnAboutGenerators = false;
-      didWarnAboutStringRefs = {};
       /**
        * Warn if there's no key explicitly set on dynamic arrays of children or
        * object keys are not valid. This allows us to keep track of children between
@@ -11487,10 +11471,6 @@ if (__DEV__) {
       };
     }
 
-    function isReactClass(type) {
-      return type.prototype && type.prototype.isReactComponent;
-    }
-
     function unwrapThenable(thenable) {
       var index = thenableIndexCounter$1;
       thenableIndexCounter$1 += 1;
@@ -11502,159 +11482,22 @@ if (__DEV__) {
       return trackUsedThenable(thenableState$1, thenable, index);
     }
 
-    function convertStringRefToCallbackRef(
-      returnFiber,
-      current,
-      element,
-      mixedRef
-    ) {
-      {
-        checkPropStringCoercion(mixedRef, "ref");
-      }
-
-      var stringRef = "" + mixedRef;
-      var owner = element._owner;
-
-      if (!owner) {
-        throw new Error(
-          "Element ref was specified as a string (" +
-            stringRef +
-            ") but no owner was set. This could happen for one of" +
-            " the following reasons:\n" +
-            "1. You may be adding a ref to a function component\n" +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            "3. You have multiple copies of React loaded\n" +
-            "See https://react.dev/link/refs-must-have-owner for more information."
-        );
-      }
-
-      if (owner.tag !== ClassComponent) {
-        throw new Error(
-          "Function components cannot have string refs. " +
-            "We recommend using useRef() instead. " +
-            "Learn more about using refs safely here: " +
-            "https://react.dev/link/strict-mode-string-ref"
-        );
-      }
-
-      {
-        if (
-          // Will already warn with "Function components cannot be given refs"
-          !(typeof element.type === "function" && !isReactClass(element.type))
-        ) {
-          var componentName =
-            getComponentNameFromFiber(returnFiber) || "Component";
-
-          if (!didWarnAboutStringRefs[componentName]) {
-            error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                "will be removed in a future major release. We recommend using " +
-                "useRef() or createRef() instead. " +
-                "Learn more about using refs safely here: " +
-                "https://react.dev/link/strict-mode-string-ref",
-              componentName,
-              stringRef
-            );
-
-            didWarnAboutStringRefs[componentName] = true;
-          }
-        }
-      }
-
-      var inst = owner.stateNode;
-
-      if (!inst) {
-        throw new Error(
-          "Missing owner for string ref " +
-            stringRef +
-            ". This error is likely caused by a " +
-            "bug in React. Please file an issue."
-        );
-      } // Check if previous string ref matches new string ref
-
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === "function" &&
-        current.ref._stringRef === stringRef
-      ) {
-        // Reuse the existing string ref
-        var currentRef = current.ref;
-        return currentRef;
-      } // Create a new string ref
-
-      var ref = function (value) {
-        var refs = inst.refs;
-
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-
-      ref._stringRef = stringRef;
-      return ref;
-    }
-
     function coerceRef(returnFiber, current, workInProgress, element) {
-      var mixedRef;
+      var ref;
 
       if (enableRefAsProp) {
         // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
         // we should resolve the `ref` prop during the begin phase of the component
         // it's attached to (HostComponent, ClassComponent, etc).
         var refProp = element.props.ref;
-        mixedRef = refProp !== undefined ? refProp : null;
+        ref = refProp !== undefined ? refProp : null;
       } else {
         // Old behavior.
-        mixedRef = element.ref;
-      }
-
-      var coercedRef;
-
-      if (
-        typeof mixedRef === "string" ||
-        typeof mixedRef === "number" ||
-        typeof mixedRef === "boolean"
-      ) {
-        coercedRef = convertStringRefToCallbackRef(
-          returnFiber,
-          current,
-          element,
-          mixedRef
-        );
-
-        if (enableRefAsProp) {
-          // When enableRefAsProp is on, we should always use the props as the
-          // source of truth for refs. Not a field on the fiber.
-          //
-          // In the case of string refs, this presents a problem, because string
-          // refs are not passed around internally as strings; they are converted to
-          // callback refs. The ref used by the reconciler is not the same as the
-          // one the user provided.
-          //
-          // But since this is a deprecated feature anyway, what we can do is clone
-          // the props object and replace it with the internal callback ref. Then we
-          // can continue to use the props object as the source of truth.
-          //
-          // This means the internal callback ref will leak into userspace. The
-          // receiving component will receive a callback ref even though the parent
-          // passed a string. Which is weird, but again, this is a deprecated
-          // feature, and we're only leaving it around behind a flag so that Meta
-          // can keep using string refs temporarily while they finish migrating
-          // their codebase.
-          var userProvidedProps = workInProgress.pendingProps;
-          var propsWithInternalCallbackRef = assign({}, userProvidedProps);
-          propsWithInternalCallbackRef.ref = coercedRef;
-          workInProgress.pendingProps = propsWithInternalCallbackRef;
-        }
-      } else {
-        coercedRef = mixedRef;
+        ref = element.ref;
       } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
       // should always read the ref from the prop.
 
-      workInProgress.ref = coercedRef;
+      workInProgress.ref = ref;
     }
 
     function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -36260,7 +36103,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-82184e0e";
+    var ReactVersion = "19.0.0-www-classic-0c1cc9db";
 
     function createPortal$1(
       children,

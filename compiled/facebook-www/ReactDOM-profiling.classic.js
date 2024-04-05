@@ -2606,51 +2606,11 @@ function unwrapThenable(thenable) {
   null === thenableState$1 && (thenableState$1 = []);
   return trackUsedThenable(thenableState$1, thenable, index);
 }
-function convertStringRefToCallbackRef(
-  returnFiber,
-  current,
-  element,
-  mixedRef
-) {
-  function ref(value) {
-    var refs = inst.refs;
-    null === value ? delete refs[stringRef] : (refs[stringRef] = value);
-  }
-  var stringRef = "" + mixedRef;
-  returnFiber = element._owner;
-  if (!returnFiber) throw Error(formatProdErrorMessage(290, stringRef));
-  if (1 !== returnFiber.tag) throw Error(formatProdErrorMessage(309));
-  var inst = returnFiber.stateNode;
-  if (!inst) throw Error(formatProdErrorMessage(147, stringRef));
-  if (
-    null !== current &&
-    null !== current.ref &&
-    "function" === typeof current.ref &&
-    current.ref._stringRef === stringRef
-  )
-    return current.ref;
-  ref._stringRef = stringRef;
-  return ref;
-}
 function coerceRef(returnFiber, current, workInProgress, element) {
-  if (enableRefAsProp) {
-    var mixedRef = element.props.ref;
-    mixedRef = void 0 !== mixedRef ? mixedRef : null;
-  } else mixedRef = element.ref;
-  "string" === typeof mixedRef ||
-  "number" === typeof mixedRef ||
-  "boolean" === typeof mixedRef
-    ? ((returnFiber = convertStringRefToCallbackRef(
-        returnFiber,
-        current,
-        element,
-        mixedRef
-      )),
-      enableRefAsProp &&
-        ((current = assign({}, workInProgress.pendingProps)),
-        (current.ref = returnFiber),
-        (workInProgress.pendingProps = current)))
-    : (returnFiber = mixedRef);
+  enableRefAsProp
+    ? ((returnFiber = element.props.ref),
+      (returnFiber = void 0 !== returnFiber ? returnFiber : null))
+    : (returnFiber = element.ref);
   workInProgress.ref = returnFiber;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -17764,7 +17724,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1790 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-1006227c",
+  version: "19.0.0-www-classic-f764c3af",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17808,7 +17768,7 @@ var devToolsConfig$jscomp$inline_1790 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-1006227c"
+  reconcilerVersion: "19.0.0-www-classic-f764c3af"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18251,7 +18211,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-1006227c";
+exports.version = "19.0.0-www-classic-f764c3af";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

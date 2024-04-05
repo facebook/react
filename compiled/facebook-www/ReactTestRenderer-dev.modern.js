@@ -5562,81 +5562,6 @@ if (__DEV__) {
       };
     }
 
-    /*
-     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-        var type =
-          (hasToStringTag && value[Symbol.toStringTag]) ||
-          value.constructor.name ||
-          "Object"; // $FlowFixMe[incompatible-return]
-
-        return type;
-      }
-    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
-    }
-
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return "" + value;
-    }
-    function checkPropStringCoercion(value, propName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` prop is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            propName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-
     var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue;
 
     function getThenablesFromState(state) {
@@ -5916,7 +5841,6 @@ if (__DEV__) {
 
     var didWarnAboutMaps;
     var didWarnAboutGenerators;
-    var didWarnAboutStringRefs;
     var ownerHasKeyUseWarning;
     var ownerHasFunctionTypeWarning;
     var ownerHasSymbolTypeWarning;
@@ -5926,7 +5850,6 @@ if (__DEV__) {
     {
       didWarnAboutMaps = false;
       didWarnAboutGenerators = false;
-      didWarnAboutStringRefs = {};
       /**
        * Warn if there's no key explicitly set on dynamic arrays of children or
        * object keys are not valid. This allows us to keep track of children between
@@ -5971,10 +5894,6 @@ if (__DEV__) {
       };
     }
 
-    function isReactClass(type) {
-      return type.prototype && type.prototype.isReactComponent;
-    }
-
     function unwrapThenable(thenable) {
       var index = thenableIndexCounter$1;
       thenableIndexCounter$1 += 1;
@@ -5986,128 +5905,16 @@ if (__DEV__) {
       return trackUsedThenable(thenableState$1, thenable, index);
     }
 
-    function convertStringRefToCallbackRef(
-      returnFiber,
-      current,
-      element,
-      mixedRef
-    ) {
-      {
-        checkPropStringCoercion(mixedRef, "ref");
-      }
-
-      var stringRef = "" + mixedRef;
-      var owner = element._owner;
-
-      if (!owner) {
-        throw new Error(
-          "Element ref was specified as a string (" +
-            stringRef +
-            ") but no owner was set. This could happen for one of" +
-            " the following reasons:\n" +
-            "1. You may be adding a ref to a function component\n" +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            "3. You have multiple copies of React loaded\n" +
-            "See https://react.dev/link/refs-must-have-owner for more information."
-        );
-      }
-
-      if (owner.tag !== ClassComponent) {
-        throw new Error(
-          "Function components cannot have string refs. " +
-            "We recommend using useRef() instead. " +
-            "Learn more about using refs safely here: " +
-            "https://react.dev/link/strict-mode-string-ref"
-        );
-      }
-
-      {
-        if (
-          // Will already warn with "Function components cannot be given refs"
-          !(typeof element.type === "function" && !isReactClass(element.type))
-        ) {
-          var componentName =
-            getComponentNameFromFiber(returnFiber) || "Component";
-
-          if (!didWarnAboutStringRefs[componentName]) {
-            error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                "will be removed in a future major release. We recommend using " +
-                "useRef() or createRef() instead. " +
-                "Learn more about using refs safely here: " +
-                "https://react.dev/link/strict-mode-string-ref",
-              componentName,
-              stringRef
-            );
-
-            didWarnAboutStringRefs[componentName] = true;
-          }
-        }
-      }
-
-      var inst = owner.stateNode;
-
-      if (!inst) {
-        throw new Error(
-          "Missing owner for string ref " +
-            stringRef +
-            ". This error is likely caused by a " +
-            "bug in React. Please file an issue."
-        );
-      } // Check if previous string ref matches new string ref
-
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === "function" &&
-        current.ref._stringRef === stringRef
-      ) {
-        // Reuse the existing string ref
-        var currentRef = current.ref;
-        return currentRef;
-      } // Create a new string ref
-
-      var ref = function (value) {
-        var refs = inst.refs;
-
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-
-      ref._stringRef = stringRef;
-      return ref;
-    }
-
     function coerceRef(returnFiber, current, workInProgress, element) {
-      var mixedRef;
+      var ref;
 
       {
         // Old behavior.
-        mixedRef = element.ref;
-      }
-
-      var coercedRef;
-
-      if (
-        typeof mixedRef === "string" ||
-        typeof mixedRef === "number" ||
-        typeof mixedRef === "boolean"
-      ) {
-        coercedRef = convertStringRefToCallbackRef(
-          returnFiber,
-          current,
-          element,
-          mixedRef
-        );
-      } else {
-        coercedRef = mixedRef;
+        ref = element.ref;
       } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
       // should always read the ref from the prop.
 
-      workInProgress.ref = coercedRef;
+      workInProgress.ref = ref;
     }
 
     function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -26858,7 +26665,82 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-74b383db";
+    var ReactVersion = "19.0.0-www-modern-69d440e1";
+
+    /*
+     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+     *
+     * The functions in this module will throw an easier-to-understand,
+     * easier-to-debug exception with a clear errors message message explaining the
+     * problem. (Instead of a confusing exception thrown inside the implementation
+     * of the `value` object).
+     */
+    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+    function typeName(value) {
+      {
+        // toStringTag is needed for namespaced types like Temporal.Instant
+        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+        var type =
+          (hasToStringTag && value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object"; // $FlowFixMe[incompatible-return]
+
+        return type;
+      }
+    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+
+    function willCoercionThrow(value) {
+      {
+        try {
+          testStringCoercion(value);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+    }
+
+    function testStringCoercion(value) {
+      // If you ended up here by following an exception call stack, here's what's
+      // happened: you supplied an object or symbol value to React (as a prop, key,
+      // DOM attribute, CSS property, string ref, etc.) and when React tried to
+      // coerce it to a string using `'' + value`, an exception was thrown.
+      //
+      // The most common types that will cause this exception are `Symbol` instances
+      // and Temporal objects like `Temporal.Instant`. But any object that has a
+      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+      // exception. (Library authors do this to prevent users from using built-in
+      // numeric operators like `+` or comparison operators like `>=` because custom
+      // methods are needed to perform accurate arithmetic or comparison.)
+      //
+      // To fix the problem, coerce this object or symbol value to a string before
+      // passing it to React. The most reliable way is usually `String(value)`.
+      //
+      // To find which value is throwing, check the browser or debugger console.
+      // Before this exception was thrown, there should be `console.error` output
+      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+      // problem and how that type was used: key, atrribute, input value prop, etc.
+      // In most cases, this console output also shows the component and its
+      // ancestor components where the exception happened.
+      //
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      return "" + value;
+    }
+    function checkPropStringCoercion(value, propName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` prop is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            propName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
 
     // Might add PROFILE later.
 

@@ -78,12 +78,21 @@ function jsxProd(type, config, maybeKey) {
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 === config.ref || enableRefAsProp || (ref = config.ref);
+  void 0 === config.ref ||
+    enableRefAsProp ||
+    ((ref = config.ref),
+    (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       (enableRefAsProp || "ref" !== propName) &&
-      (props[propName] = config[propName]);
+      (enableRefAsProp && "ref" === propName
+        ? (props.ref = coerceStringRef(
+            config[propName],
+            ReactCurrentOwner.current,
+            type
+          ))
+        : (props[propName] = config[propName]));
   if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
       void 0 === props[propName] && (props[propName] = config[propName]);
@@ -114,6 +123,21 @@ function isValidElement(object) {
     null !== object &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+function coerceStringRef(mixedRef, owner, type) {
+  if ("string" !== typeof mixedRef)
+    if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
+      mixedRef = "" + mixedRef;
+    else return mixedRef;
+  return stringRefAsCallbackRef.bind(null, mixedRef, type, owner);
+}
+function stringRefAsCallbackRef(stringRef, type, owner, value) {
+  if (!owner) throw Error(formatProdErrorMessage(290, stringRef));
+  if (1 !== owner.tag) throw Error(formatProdErrorMessage(309));
+  type = owner.stateNode;
+  if (!type) throw Error(formatProdErrorMessage(147, stringRef));
+  type = type.refs;
+  null === value ? delete type[stringRef] : (type[stringRef] = value);
 }
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
@@ -424,7 +448,8 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      (enableRefAsProp || (ref = config.ref),
+      (enableRefAsProp ||
+        ((ref = config.ref), (ref = coerceStringRef(ref, owner, element.type))),
       (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
     if (
@@ -440,12 +465,17 @@ exports.cloneElement = function (element, config, children) {
         "__self" === propName ||
         "__source" === propName ||
         (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
-        (props[propName] =
-          disableDefaultPropsExceptForClasses ||
-          void 0 !== config[propName] ||
-          void 0 === defaultProps
-            ? config[propName]
-            : defaultProps[propName]);
+        (disableDefaultPropsExceptForClasses ||
+        void 0 !== config[propName] ||
+        void 0 === defaultProps
+          ? enableRefAsProp && "ref" === propName
+            ? (props.ref = coerceStringRef(
+                config[propName],
+                owner,
+                element.type
+              ))
+            : (props[propName] = config[propName])
+          : (props[propName] = defaultProps[propName]));
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -464,7 +494,8 @@ exports.createElement = function (type, config, children) {
   if (null != config)
     for (propName in (void 0 === config.ref ||
       enableRefAsProp ||
-      (ref = config.ref),
+      ((ref = config.ref),
+      (ref = coerceStringRef(ref, ReactCurrentOwner.current, type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -472,7 +503,13 @@ exports.createElement = function (type, config, children) {
         (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
-        (props[propName] = config[propName]);
+        (enableRefAsProp && "ref" === propName
+          ? (props.ref = coerceStringRef(
+              config[propName],
+              ReactCurrentOwner.current,
+              type
+            ))
+          : (props[propName] = config[propName]));
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
   else if (1 < childrenLength) {
@@ -563,4 +600,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-53e0c063";
+exports.version = "19.0.0-www-modern-d4f4a106";
