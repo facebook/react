@@ -1251,7 +1251,19 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  // Resolve default props. Taken from old JSX runtime, where this used to live.
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in baseProps) {
+      newProps = ({}: any);
+      for (const propName in baseProps) {
+        if (propName !== 'ref') {
+          newProps[propName] = baseProps[propName];
+        }
+      }
+    }
+  }
+
+  // Resolve default props.
   const defaultProps = Component.defaultProps;
   if (
     defaultProps &&
@@ -1259,21 +1271,16 @@ export function resolveClassComponentProps(
     // default props here in the reconciler, rather than in the JSX runtime.
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps = assign({}, newProps, baseProps);
+    // We may have already copied the props object above to remove ref. If so,
+    // we can modify that. Otherwise, copy the props object with Object.assign.
+    if (newProps === baseProps) {
+      newProps = assign({}, newProps, baseProps);
+    }
+    // Taken from old JSX runtime, where this used to live.
     for (const propName in defaultProps) {
       if (newProps[propName] === undefined) {
         newProps[propName] = defaultProps[propName];
       }
-    }
-  }
-
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in newProps) {
-      if (newProps === baseProps) {
-        newProps = assign({}, newProps);
-      }
-      delete newProps.ref;
     }
   }
 
