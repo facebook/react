@@ -746,6 +746,16 @@ function parseModelString(
         }
         return undefined;
       }
+      case 'K': {
+        // FormData
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        const formData = new FormData();
+        for (let i = 0; i < data.length; i++) {
+          formData.append(data[i][0], data[i][1]);
+        }
+        return formData;
+      }
       case 'I': {
         // $Infinity
         return Infinity;
