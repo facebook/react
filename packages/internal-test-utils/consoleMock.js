@@ -90,8 +90,7 @@ const flushUnexpectedConsoleCalls = (
         `console.${methodName}()`,
       )}.\n\n` +
       `If the ${type} is expected, test for it explicitly by:\n` +
-      `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
-      `matcher, or...\n` +
+      `1. Using ${chalk.bold(expectedMatcher + '()')} or...\n` +
       `2. Mock it out using ${chalk.bold(
         'spyOnDev',
       )}(console, '${methodName}') or ${chalk.bold(
@@ -128,20 +127,20 @@ export function flushAllUnexpectedConsoleCalls() {
   flushUnexpectedConsoleCalls(
     errorMethod,
     'error',
-    'toErrorDev',
+    'assertConsoleErrorDev',
     unexpectedErrorCallStacks,
   );
   flushUnexpectedConsoleCalls(
     warnMethod,
     'warn',
-    'toWarnDev',
+    'assertConsoleWarnDev',
     unexpectedWarnCallStacks,
   );
   if (logMethod) {
     flushUnexpectedConsoleCalls(
       logMethod,
       'log',
-      'toLogDev',
+      'assertConsoleLogDev',
       unexpectedLogCallStacks,
     );
     unexpectedLogCallStacks.length = 0;
