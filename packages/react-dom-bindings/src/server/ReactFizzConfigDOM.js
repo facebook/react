@@ -88,6 +88,7 @@ const ReactDOMCurrentDispatcher =
 
 const previousDispatcher = ReactDOMCurrentDispatcher.current;
 ReactDOMCurrentDispatcher.current = {
+  flushSyncWork: previousDispatcher.flushSyncWork,
   prefetchDNS,
   preconnect,
   preload,

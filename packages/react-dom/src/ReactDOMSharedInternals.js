@@ -29,6 +29,7 @@ type InternalsType = {
 function noop() {}
 
 const DefaultDispatcher: HostDispatcher = {
+  flushSyncWork: noop,
   prefetchDNS: noop,
   preconnect: noop,
   preload: noop,

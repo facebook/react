@@ -49,7 +49,8 @@ import {
   createHydrationContainer,
   findHostInstanceWithNoPortals,
   updateContainer,
-  flushSync,
+  updateContainerSync,
+  flushSyncWork,
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
@@ -247,7 +248,7 @@ function legacyCreateRootFromDOMContainer(
     // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
-    flushSync();
+    flushSyncWork();
     return root;
   } else {
     // First clear any existing content.
@@ -282,9 +283,8 @@ function legacyCreateRootFromDOMContainer(
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
-    flushSync(() => {
-      updateContainer(initialChildren, root, parentComponent, callback);
-    });
+    updateContainerSync(initialChildren, root, parentComponent, callback);
+    flushSyncWork();
 
     return root;
   }
@@ -485,6 +485,8 @@ export function unmountComponentAtNode(container: Container): boolean {
   }
 
   if (container._reactRootContainer) {
+    const root = container._reactRootContainer;
+
     if (__DEV__) {
       const rootEl = getReactRootElementInContainer(container);
       const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
@@ -496,16 +498,11 @@ export function unmountComponentAtNode(container: Container): boolean {
       }
     }
 
-    // Unmount should not be batched.
-    flushSync(() => {
-      legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-        // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
-        container._reactRootContainer = null;
-        unmarkContainerAsRoot(container);
-      });
-    });
-    // If you call unmountComponentAtNode twice in quick succession, you'll
-    // get `true` twice. That's probably fine?
+    updateContainerSync(null, root, null, null);
+    flushSyncWork();
+    // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
+    container._reactRootContainer = null;
+    unmarkContainerAsRoot(container);
     return true;
   } else {
     if (__DEV__) {

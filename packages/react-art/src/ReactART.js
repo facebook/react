@@ -10,9 +10,9 @@ import ReactVersion from 'shared/ReactVersion';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,
-  updateContainer,
+  updateContainerSync,
   injectIntoDevTools,
-  flushSync,
+  flushSyncWork,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
@@ -78,9 +78,8 @@ class Surface extends React.Component {
     );
     // We synchronously flush updates coming from above so that they commit together
     // and so that refs resolve before the parent life cycles.
-    flushSync(() => {
-      updateContainer(this.props.children, this._mountNode, this);
-    });
+    updateContainerSync(this.props.children, this._mountNode, this);
+    flushSyncWork();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -92,9 +91,8 @@ class Surface extends React.Component {
 
     // We synchronously flush updates coming from above so that they commit together
     // and so that refs resolve before the parent life cycles.
-    flushSync(() => {
-      updateContainer(this.props.children, this._mountNode, this);
-    });
+    updateContainerSync(this.props.children, this._mountNode, this);
+    flushSyncWork();
 
     if (this._surface.render) {
       this._surface.render();
@@ -104,9 +102,8 @@ class Surface extends React.Component {
   componentWillUnmount() {
     // We synchronously flush updates coming from above so that they commit together
     // and so that refs resolve before the parent life cycles.
-    flushSync(() => {
-      updateContainer(null, this._mountNode, this);
-    });
+    updateContainerSync(null, this._mountNode, this);
+    flushSyncWork();
   }
 
   render() {
