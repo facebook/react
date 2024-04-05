@@ -117,13 +117,10 @@ export function preinitModuleForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitModuleScript(href, {
-      crossOrigin: getCrossOriginString(crossOrigin),
-      nonce,
-    });
-  }
+  ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
+    crossOrigin: getCrossOriginString(crossOrigin),
+    nonce,
+  });
 }
 
 export function preinitScriptForSSR(
@@ -131,11 +128,8 @@ export function preinitScriptForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitScript(href, {
-      crossOrigin: getCrossOriginString(crossOrigin),
-      nonce,
-    });
-  }
+  ReactDOMCurrentDispatcher.current.preinitScript(href, {
+    crossOrigin: getCrossOriginString(crossOrigin),
+    nonce,
+  });
 }
