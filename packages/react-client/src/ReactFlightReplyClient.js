@@ -75,7 +75,6 @@ export type ReactServerValue =
   | string
   | boolean
   | number
-  | symbol
   | null
   | void
   | bigint
@@ -83,6 +82,7 @@ export type ReactServerValue =
   | Array<ReactServerValue>
   | Map<ReactServerValue, ReactServerValue>
   | Set<ReactServerValue>
+  | FormData
   | Date
   | ReactServerObject
   | Promise<ReactServerValue>; // Thenable<ReactServerValue>
