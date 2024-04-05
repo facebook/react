@@ -1397,24 +1397,36 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  // Resolve default props. Taken from old JSX runtime, where this used to live.
-  const defaultProps = Component.defaultProps;
-  if (defaultProps && disableDefaultPropsExceptForClasses) {
-    newProps = assign({}, newProps, baseProps);
-    for (const propName in defaultProps) {
-      if (newProps[propName] === undefined) {
-        newProps[propName] = defaultProps[propName];
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in baseProps) {
+      newProps = ({}: any);
+      for (const propName in baseProps) {
+        if (propName !== 'ref') {
+          newProps[propName] = baseProps[propName];
+        }
       }
     }
   }
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in newProps) {
-      if (newProps === baseProps) {
-        newProps = assign({}, newProps);
+  // Resolve default props.
+  const defaultProps = Component.defaultProps;
+  if (
+    defaultProps &&
+    // If disableDefaultPropsExceptForClasses is true, we always resolve
+    // default props here, rather than in the JSX runtime.
+    disableDefaultPropsExceptForClasses
+  ) {
+    // We may have already copied the props object above to remove ref. If so,
+    // we can modify that. Otherwise, copy the props object with Object.assign.
+    if (newProps === baseProps) {
+      newProps = assign({}, newProps, baseProps);
+    }
+    // Taken from old JSX runtime, where this used to live.
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
       }
-      delete newProps.ref;
     }
   }
 
