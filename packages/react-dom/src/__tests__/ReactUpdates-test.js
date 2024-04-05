@@ -1899,6 +1899,8 @@ describe('ReactUpdates', () => {
       await act(() => {
         root.render(<Terminating />);
       });
+
+      assertLog(Array.from({length: LIMIT + 1}, (_, k) => k));
       expect(container.textContent).toBe('50');
       await act(() => {
         _setStep(0);
