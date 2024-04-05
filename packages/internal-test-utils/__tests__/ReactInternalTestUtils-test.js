@@ -333,13 +333,8 @@ const awaitExpectToWarnAndToThrow = async expectBlock => {
 };
 
 describe('ReactInternalTestUtils console assertions', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
+  beforeAll(() => {
     patchConsoleMethods({includeLog: true});
-  });
-
-  afterEach(() => {
-    resetAllUnexpectedConsoleCalls();
   });
 
   describe('assertConsoleLogDev', () => {
@@ -582,6 +577,8 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Do not pass withoutStack to assertConsoleLogDev, console.log does not have component stacks."
       `);
+
+      assertConsoleLogDev(['Hello']);
     });
 
     // @gate __DEV__
@@ -652,6 +649,7 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if first arg is not an array', () => {
       const message = expectToWarnAndToThrow(() => {
         console.log('Hi');
+        console.log('Bye');
         assertConsoleLogDev('Hi', 'Bye');
       });
       expect(message).toMatchInlineSnapshot(`
@@ -659,6 +657,190 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+
+      assertConsoleLogDev(['Hi', 'Bye']);
+    });
+
+    it('should fail if waitFor is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.log('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitFor(['foo', 'bar']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+
+    test('should fail if waitForThrow is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      function BadRender() {
+        throw new Error('Oh no!');
+      }
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <BadRender />
+            <Yield id="C" />
+            <Yield id="D" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+
+      console.log('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForThrow('Oh no!');
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['A', 'B', 'A', 'B']);
+    });
+
+    test('should fail if waitForPaint is called before asserting', async () => {
+      function App({prop}) {
+        const deferred = useDeferredValue(prop);
+        const text = `Urgent: ${prop}, Deferred: ${deferred}`;
+        Scheduler.log(text);
+        return text;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App prop="A" />);
+
+      await waitForAll(['Urgent: A, Deferred: A']);
+      expect(root).toMatchRenderedOutput('Urgent: A, Deferred: A');
+
+      // This update will result in two separate paints: an urgent one, and a
+      // deferred one.
+      root.render(<App prop="B" />);
+
+      console.log('Not asserted');
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForPaint(['Urgent: B, Deferred: A']);
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
+    });
+
+    it('should fail if waitForAll is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.log('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForAll(['foo', 'bar', 'baz']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+    it('should fail if toMatchRenderedOutput is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        console.log('Not asserted');
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      assertLog([]);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+      const message = expectToWarnAndToThrow(() => {
+        expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.log was called without assertConsoleLogDev:
+        + Not asserted
+        + Not asserted
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });
   });
 
@@ -1046,6 +1228,8 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleWarnDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received object."
       `);
+
+      assertConsoleWarnDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1059,6 +1243,8 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleWarnDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received object."
       `);
+
+      assertConsoleWarnDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1072,6 +1258,8 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleWarnDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received string."
       `);
+
+      assertConsoleWarnDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1156,6 +1344,7 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if multiple strings are passed without an array wrapper for single log', () => {
       const message = expectToWarnAndToThrow(() => {
         console.warn('Hi \n    in div');
+        console.warn('Bye \n    in div');
         assertConsoleWarnDev('Hi', 'Bye');
       });
       expect(message).toMatchInlineSnapshot(`
@@ -1163,6 +1352,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleWarnDev(['Hi', 'Bye']);
     });
 
     // @gate __DEV__
@@ -1177,6 +1367,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleWarnDev(['Hi', 'Bye']);
     });
 
     // @gate __DEV__
@@ -1192,6 +1383,189 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleWarnDev(['Hi', 'Wow', 'Bye']);
+    });
+
+    it('should fail if waitFor is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.warn('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitFor(['foo', 'bar']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+
+    test('should fail if waitForThrow is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      function BadRender() {
+        throw new Error('Oh no!');
+      }
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <BadRender />
+            <Yield id="C" />
+            <Yield id="D" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+
+      console.warn('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForThrow('Oh no!');
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['A', 'B', 'A', 'B']);
+    });
+
+    test('should fail if waitForPaint is called before asserting', async () => {
+      function App({prop}) {
+        const deferred = useDeferredValue(prop);
+        const text = `Urgent: ${prop}, Deferred: ${deferred}`;
+        Scheduler.log(text);
+        return text;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App prop="A" />);
+
+      await waitForAll(['Urgent: A, Deferred: A']);
+      expect(root).toMatchRenderedOutput('Urgent: A, Deferred: A');
+
+      // This update will result in two separate paints: an urgent one, and a
+      // deferred one.
+      root.render(<App prop="B" />);
+
+      console.warn('Not asserted');
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForPaint(['Urgent: B, Deferred: A']);
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
+    });
+
+    it('should fail if waitForAll is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.warn('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForAll(['foo', 'bar', 'baz']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+    it('should fail if toMatchRenderedOutput is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        console.warn('Not asserted');
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      assertLog([]);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+      const message = expectToWarnAndToThrow(() => {
+        expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.warn was called without assertConsoleWarnDev:
+        + Not asserted
+        + Not asserted
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });
   });
 
@@ -1462,12 +1836,15 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if only error does not contain a stack', () => {
       const message = expectToWarnAndToThrow(() => {
         console.error('Hello');
-        assertConsoleErrorDev('Hello');
+        assertConsoleErrorDev(['Hello']);
       });
       expect(message).toMatchInlineSnapshot(`
         "assertConsoleErrorDev(expected)
 
-        Expected messages should be an array of strings but was given type "string"."
+        Missing component stack for:
+          "Hello"
+
+        If this error intentionally omits the component stack, add {withoutStack: true} to the assertConsoleErrorDev call."
       `);
     });
 
@@ -1650,6 +2027,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleErrorDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received object."
       `);
+      assertConsoleErrorDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1663,6 +2041,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleErrorDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received object."
       `);
+      assertConsoleErrorDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1676,6 +2055,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         The second argument for assertConsoleErrorDev(), when specified, must be an object. It may have a property called "withoutStack" whose value may be a boolean or number. Instead received string."
       `);
+      assertConsoleErrorDev(['Hi'], {withoutStack: true});
     });
 
     // @gate __DEV__
@@ -1778,6 +2158,7 @@ describe('ReactInternalTestUtils console assertions', () => {
     it('fails if multiple strings are passed without an array wrapper for single log', () => {
       const message = expectToWarnAndToThrow(() => {
         console.error('Hi \n    in div');
+        console.error('Bye \n    in div');
         assertConsoleErrorDev('Hi', 'Bye');
       });
       expect(message).toMatchInlineSnapshot(`
@@ -1785,6 +2166,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleErrorDev(['Hi', 'Bye']);
     });
 
     // @gate __DEV__
@@ -1799,6 +2181,7 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleErrorDev(['Hi', 'Bye']);
     });
 
     // @gate __DEV__
@@ -1814,6 +2197,189 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         Expected messages should be an array of strings but was given type "string"."
       `);
+      assertConsoleErrorDev(['Hi', 'Wow', 'Bye']);
+    });
+
+    it('should fail if waitFor is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.error('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitFor(['foo', 'bar']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+
+    test('should fail if waitForThrow is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      function BadRender() {
+        throw new Error('Oh no!');
+      }
+
+      function App() {
+        return (
+          <div>
+            <Yield id="A" />
+            <Yield id="B" />
+            <BadRender />
+            <Yield id="C" />
+            <Yield id="D" />
+          </div>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App />);
+
+      console.error('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForThrow('Oh no!');
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['A', 'B', 'A', 'B']);
+    });
+
+    test('should fail if waitForPaint is called before asserting', async () => {
+      function App({prop}) {
+        const deferred = useDeferredValue(prop);
+        const text = `Urgent: ${prop}, Deferred: ${deferred}`;
+        Scheduler.log(text);
+        return text;
+      }
+
+      const root = ReactNoop.createRoot();
+      root.render(<App prop="A" />);
+
+      await waitForAll(['Urgent: A, Deferred: A']);
+      expect(root).toMatchRenderedOutput('Urgent: A, Deferred: A');
+
+      // This update will result in two separate paints: an urgent one, and a
+      // deferred one.
+      root.render(<App prop="B" />);
+
+      console.error('Not asserted');
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForPaint(['Urgent: B, Deferred: A']);
+      });
+
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['Urgent: B, Deferred: A', 'Urgent: B, Deferred: B']);
+    });
+
+    it('should fail if waitForAll is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      console.error('Not asserted');
+
+      const message = await awaitExpectToWarnAndToThrow(async () => {
+        await waitForAll(['foo', 'bar', 'baz']);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+    });
+    it('should fail if toMatchRenderedOutput is called before asserting', async () => {
+      const Yield = ({id}) => {
+        Scheduler.log(id);
+        console.error('Not asserted');
+        return id;
+      };
+
+      const root = ReactNoop.createRoot();
+      startTransition(() => {
+        root.render(
+          <div>
+            <Yield id="foo" />
+            <Yield id="bar" />
+            <Yield id="baz" />
+          </div>
+        );
+      });
+
+      assertLog([]);
+
+      await waitForAll(['foo', 'bar', 'baz']);
+      const message = expectToWarnAndToThrow(() => {
+        expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "asserConsoleLogsCleared(expected)
+
+        console.error was called without assertConsoleErrorDev:
+        + Not asserted
+        + Not asserted
+        + Not asserted
+
+        You must call one of the assertConsoleDev helpers between each act call."
+      `);
+
+      expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });
   });
 });

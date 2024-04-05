@@ -1,7 +1,7 @@
 'use strict';
 
 const JestReact = require('jest-react');
-
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 // TODO: Move to ReactInternalTestUtils
 
 function captureAssertion(fn) {
@@ -35,6 +35,7 @@ function toMatchRenderedOutput(ReactNoop, expectedJSX) {
   if (typeof ReactNoop.getChildrenAsJSX === 'function') {
     const Scheduler = ReactNoop._Scheduler;
     assertYieldsWereCleared(Scheduler, toMatchRenderedOutput);
+    assertConsoleLogsCleared();
     return captureAssertion(() => {
       expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
     });

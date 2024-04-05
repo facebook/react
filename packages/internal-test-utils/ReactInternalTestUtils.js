@@ -17,6 +17,7 @@ import {
   createLogAssertion,
 } from './consoleMock';
 export {act} from './internalAct';
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
 import {thrownErrors, actingUpdatesScopeDepth} from './internalAct';
 
@@ -29,6 +30,7 @@ function assertYieldsWereCleared(caller) {
     Error.captureStackTrace(error, caller);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 export async function waitForMicrotasks() {
