@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -14,6 +15,9 @@ global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
+if (typeof Blob === 'undefined') {
+  global.Blob = require('buffer').Blob;
+}
 
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
@@ -324,6 +328,28 @@ describe('ReactFlightDOMEdge', () => {
       },
     });
     expect(result).toEqual(buffers);
+  });
+
+  // @gate enableBinaryFlight
+  it('should be able to serialize a blob', async () => {
+    const bytes = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+    const blob = new Blob([bytes, bytes], {
+      type: 'application/x-test',
+    });
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(blob),
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    expect(result instanceof Blob).toBe(true);
+    expect(result.size).toBe(bytes.length * 2);
+    expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
   it('warns if passing a this argument to bind() of a server reference', async () => {
