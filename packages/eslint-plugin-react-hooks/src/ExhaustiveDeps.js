@@ -1252,8 +1252,8 @@ export default {
             return; // Handled
           }
           // We'll do our best effort to find it, complain otherwise.
-          const scope = context.sourceCode.getScope
-            ? context.sourceCode.getScope(node)
+          const scope = sourceCode.getScope
+            ? sourceCode.getScope(node)
             : context.getScope();
           const variable = scope.set.get(callback.name);
           if (variable == null || variable.defs == null) {
