@@ -148,6 +148,27 @@ export default {
       }
     }
 
+    /**
+     * SourceCode#getText that also works down to ESLint 3.0.0
+     */
+    function getSource(node) {
+      if (typeof context.getSource === 'function') {
+        return context.getSource(node);
+      } else {
+        return context.sourceCode.getText(node);
+      }
+    }
+    /**
+     * SourceCode#getScope that also works down to ESLint 3.0.0
+     */
+    function getScope(node) {
+      if (typeof context.getScope === 'function') {
+        return context.getScope();
+      } else {
+        return context.sourceCode.getScope(node);
+      }
+    }
+
     return {
       // Maintain code segment path stack as we traverse.
       onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
@@ -466,9 +487,7 @@ export default {
               context.report({
                 node: hook,
                 message:
-                  `React Hook "${context.sourceCode.getText(
-                    hook,
-                  )}" may be executed ` +
+                  `React Hook "${getSource(hook)}" may be executed ` +
                   'more than once. Possibly because it is called in a loop. ' +
                   'React Hooks must be called in the exact same order in ' +
                   'every component render.',
@@ -487,9 +506,8 @@ export default {
                 context.report({
                   node: hook,
                   message:
-                    `React Hook "${context.sourceCode.getText(
-                      hook,
-                    )}" cannot be ` + 'called in an async function.',
+                    `React Hook "${getSource(hook)}" cannot be ` +
+                    'called in an async function.',
                 });
               }
 
@@ -503,9 +521,7 @@ export default {
                 !isUseIdentifier(hook) // `use(...)` can be called conditionally.
               ) {
                 const message =
-                  `React Hook "${context.sourceCode.getText(
-                    hook,
-                  )}" is called ` +
+                  `React Hook "${getSource(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +
                   'same order in every component render.' +
                   (possiblyHasEarlyReturn
@@ -522,21 +538,15 @@ export default {
             ) {
               // Custom message for hooks inside a class
               const message =
-                `React Hook "${context.sourceCode.getText(
-                  hook,
-                )}" cannot be called ` +
+                `React Hook "${getSource(hook)}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
-                `React Hook "${context.sourceCode.getText(
-                  hook,
-                )}" is called in ` +
-                `function "${context.sourceCode.getText(
-                  codePathFunctionName,
-                )}" ` +
+                `React Hook "${getSource(hook)}" is called in ` +
+                `function "${getSource(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
@@ -545,9 +555,7 @@ export default {
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
-                `React Hook "${context.sourceCode.getText(
-                  hook,
-                )}" cannot be called ` +
+                `React Hook "${getSource(hook)}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
@@ -560,9 +568,7 @@ export default {
               // `use(...)` can be called in callbacks.
               if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
                 const message =
-                  `React Hook "${context.sourceCode.getText(
-                    hook,
-                  )}" cannot be called ` +
+                  `React Hook "${getSource(hook)}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
                 context.report({node: hook, message});
@@ -615,7 +621,7 @@ export default {
           context.report({
             node,
             message:
-              `\`${context.sourceCode.getText(
+              `\`${getSource(
                 node,
               )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
               'the same component. They cannot be assigned to variables or passed down.',
@@ -632,14 +638,14 @@ export default {
       FunctionDeclaration(node) {
         // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.sourceCode.getScope(node));
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       },
 
       ArrowFunctionExpression(node) {
         // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.sourceCode.getScope(node));
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       },
     };

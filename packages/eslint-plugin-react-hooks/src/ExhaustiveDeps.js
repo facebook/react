@@ -67,6 +67,27 @@ export default {
       context.report(problem);
     }
 
+    /**
+     * SourceCode#getText that also works down to ESLint 3.0.0
+     */
+    function getSource(node) {
+      if (typeof context.getSource === 'function') {
+        return context.getSource(node);
+      } else {
+        return context.sourceCode.getText(node);
+      }
+    }
+    /**
+     * SourceCode#getScope that also works down to ESLint 3.0.0
+     */
+    function getScope(node) {
+      if (typeof context.getScope === 'function') {
+        return context.getScope();
+      } else {
+        return context.sourceCode.getScope(node);
+      }
+    }
+
     const scopeManager = context.getSourceCode().scopeManager;
 
     // Should be shared between visitors.
@@ -526,13 +547,11 @@ export default {
           node: writeExpr,
           message:
             `Assignments to the '${key}' variable from inside React Hook ` +
-            `${context.sourceCode.getText(
-              reactiveHook,
-            )} will be lost after each ` +
+            `${getSource(reactiveHook)} will be lost after each ` +
             `render. To preserve the value over time, store it in a useRef ` +
             `Hook and keep the mutable value in the '.current' property. ` +
             `Otherwise, you can move this variable directly inside ` +
-            `${context.sourceCode.getText(reactiveHook)}.`,
+            `${getSource(reactiveHook)}.`,
         });
       }
 
@@ -632,9 +651,7 @@ export default {
         reportProblem({
           node: declaredDependenciesNode,
           message:
-            `React Hook ${context.sourceCode.getText(
-              reactiveHook,
-            )} was passed a ` +
+            `React Hook ${getSource(reactiveHook)} was passed a ` +
             'dependency list that is not an array literal. This means we ' +
             "can't statically verify whether you've passed the correct " +
             'dependencies.',
@@ -654,9 +671,7 @@ export default {
             reportProblem({
               node: declaredDependencyNode,
               message:
-                `React Hook ${context.sourceCode.getText(
-                  reactiveHook,
-                )} has a spread ` +
+                `React Hook ${getSource(reactiveHook)} has a spread ` +
                 "element in its dependency array. This means we can't " +
                 "statically verify whether you've passed the " +
                 'correct dependencies.',
@@ -668,12 +683,12 @@ export default {
               node: declaredDependencyNode,
               message:
                 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
-                `Remove \`${context.sourceCode.getText(
+                `Remove \`${getSource(
                   declaredDependencyNode,
                 )}\` from the list.`,
               suggest: [
                 {
-                  desc: `Remove the dependency \`${context.sourceCode.getText(
+                  desc: `Remove the dependency \`${getSource(
                     declaredDependencyNode,
                   )}\``,
                   fix(fixer) {
@@ -714,9 +729,7 @@ export default {
                 reportProblem({
                   node: declaredDependencyNode,
                   message:
-                    `React Hook ${context.sourceCode.getText(
-                      reactiveHook,
-                    )} has a ` +
+                    `React Hook ${getSource(reactiveHook)} has a ` +
                     `complex expression in the dependency array. ` +
                     'Extract it to a separate variable so it can be statically checked.',
                 });
@@ -986,7 +999,7 @@ export default {
             ` However, 'props' will change when *any* prop changes, so the ` +
             `preferred fix is to destructure the 'props' object outside of ` +
             `the ${reactiveHookName} call and refer to those specific props ` +
-            `inside ${context.sourceCode.getText(reactiveHook)}.`;
+            `inside ${getSource(reactiveHook)}.`;
         }
       }
 
@@ -1136,7 +1149,7 @@ export default {
       reportProblem({
         node: declaredDependenciesNode,
         message:
-          `React Hook ${context.sourceCode.getText(reactiveHook)} has ` +
+          `React Hook ${getSource(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
           (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
             getWarningMessage(
@@ -1258,9 +1271,7 @@ export default {
             return; // Handled
           }
           // We'll do our best effort to find it, complain otherwise.
-          const variable = context.sourceCode
-            .getScope(callback)
-            .set.get(callback.name);
+          const variable = getScope(callback).set.get(callback.name);
           if (variable == null || variable.defs == null) {
             // If it's not in scope, we don't care.
             return; // Handled
@@ -1804,7 +1815,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
 }
 
 /**
- * ESLint won't assign node.parent to references from context.sourceCode.getScope()
+ * ESLint won't assign node.parent to references from context.getScope()
  *
  * So instead we search for the node from an ancestor assigning node.parent
  * as we go. This mutates the AST.

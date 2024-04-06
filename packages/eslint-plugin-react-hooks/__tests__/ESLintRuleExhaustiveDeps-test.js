@@ -9,7 +9,8 @@
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTesterV7 = require('eslint-v7').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
@@ -8223,8 +8224,15 @@ if (!process.env.CI) {
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
-describe('react-hooks', () => {
-  const languageOptions = {
+describe('rules-of-hooks/exhaustive-deps', () => {
+  const parserOptionsV7 = {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 6,
+    sourceType: 'module',
+  };
+  const languageOptionsV9 = {
     ecmaVersion: 6,
     sourceType: 'module',
     parserOptions: {
@@ -8239,13 +8247,22 @@ describe('react-hooks', () => {
     invalid: [...testsFlow.invalid, ...tests.invalid],
   };
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('babel-eslint'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: babel-eslint',
+    ReactHooksESLintRule,
+    testsBabelEslint
+  );
+
+  new ESLintTesterV9({
     languageOptions: {
-      ...languageOptions,
+      ...languageOptionsV9,
       parser: require('@babel/eslint-parser'),
     },
   }).run(
-    'parser: @babel/eslint-parser',
+    'eslint: v9, parser: @babel/eslint-parser',
     ReactHooksESLintRule,
     testsBabelEslint
   );
@@ -8255,57 +8272,119 @@ describe('react-hooks', () => {
     invalid: [...testsTypescript.invalid, ...tests.invalid],
   };
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v2'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
+
+  new ESLintTesterV9({
     languageOptions: {
-      ...languageOptions,
+      ...languageOptionsV9,
       parser: require('@typescript-eslint/parser-v2'),
     },
   }).run(
-    'parser: @typescript-eslint/parser@2.x',
+    'eslint: v9, parser: @typescript-eslint/parser@2.x',
     ReactHooksESLintRule,
     testsTypescriptEslintParser
   );
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v3'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
+
+  new ESLintTesterV9({
     languageOptions: {
-      ...languageOptions,
+      ...languageOptionsV9,
       parser: require('@typescript-eslint/parser-v3'),
     },
   }).run(
-    'parser: @typescript-eslint/parser@3.x',
+    'eslint: v9, parser: @typescript-eslint/parser@3.x',
     ReactHooksESLintRule,
     testsTypescriptEslintParser
   );
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
+
+  new ESLintTesterV9({
     languageOptions: {
-      ...languageOptions,
+      ...languageOptionsV9,
       parser: require('@typescript-eslint/parser-v4'),
     },
-  }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
-    valid: [
-      ...testsTypescriptEslintParserV4.valid,
-      ...testsTypescriptEslintParser.valid,
-    ],
-    invalid: [
-      ...testsTypescriptEslintParserV4.invalid,
-      ...testsTypescriptEslintParser.invalid,
-    ],
-  });
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
 
-  new ESLintTester({
+  new ESLintTesterV7({
+    parser: require.resolve('@typescript-eslint/parser-v5'),
+    parserOptions: parserOptionsV7,
+  }).run(
+    'eslint: v7, parser: @typescript-eslint/parser@^5.0.0-0',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
+
+  new ESLintTesterV9({
     languageOptions: {
-      ...languageOptions,
+      ...languageOptionsV9,
       parser: require('@typescript-eslint/parser-v5'),
     },
-  }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
-    valid: [
-      ...testsTypescriptEslintParserV4.valid,
-      ...testsTypescriptEslintParser.valid,
-    ],
-    invalid: [
-      ...testsTypescriptEslintParserV4.invalid,
-      ...testsTypescriptEslintParser.invalid,
-    ],
-  });
+  }).run(
+    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0-0',
+    ReactHooksESLintRule,
+    {
+      valid: [
+        ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParser.valid,
+      ],
+      invalid: [
+        ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParser.invalid,
+      ],
+    }
+  );
 });
