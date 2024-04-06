@@ -3,11 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
  */
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTester = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
@@ -4673,17 +4675,8 @@ const tests = {
           return <div ref={myRef} />;
         }
       `,
-      output: `
-        function MyComponent() {
-          const myRef = useRef();
-          useLayoutEffect_SAFE_FOR_SSR(() => {
-            const handleMove = () => {};
-            myRef.current.addEventListener('mousemove', handleMove);
-            return () => myRef.current.removeEventListener('mousemove', handleMove);
-          });
-          return <div ref={myRef} />;
-        }
-      `,
+      // No changes
+      output: null,
       errors: [
         `The ref value 'myRef.current' will likely have changed by the time ` +
           `this effect cleanup function runs. If this ref points to a node ` +
@@ -7098,9 +7091,23 @@ const tests = {
       `,
       errors: [
         {
+          // TODO
           message:
             "React Hook useEffect has a missing dependency: 'local'. " +
             'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const local = {};
+                  useEffect(() => {
+                    console.log(local);
+                  }, [local]);
+                }
+              `,
+            },
+          ],
         },
       ],
       // Keep this until major IDEs and VS Code FB ESLint plugin support Suggestions API.
@@ -8218,12 +8225,14 @@ if (!process.env.CI) {
 }
 
 describe('react-hooks', () => {
-  const parserOptions = {
-    ecmaFeatures: {
-      jsx: true,
-    },
+  const languageOptions = {
     ecmaVersion: 6,
     sourceType: 'module',
+    parserOptions: {
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
   };
 
   const testsBabelEslint = {
@@ -8232,13 +8241,10 @@ describe('react-hooks', () => {
   };
 
   new ESLintTester({
-    parser: require.resolve('babel-eslint'),
-    parserOptions,
-  }).run('parser: babel-eslint', ReactHooksESLintRule, testsBabelEslint);
-
-  new ESLintTester({
-    parser: require.resolve('@babel/eslint-parser'),
-    parserOptions,
+    languageOptions: {
+      ...languageOptions,
+      parser: require('@babel/eslint-parser'),
+    },
   }).run(
     'parser: @babel/eslint-parser',
     ReactHooksESLintRule,
@@ -8251,8 +8257,10 @@ describe('react-hooks', () => {
   };
 
   new ESLintTester({
-    parser: require.resolve('@typescript-eslint/parser-v2'),
-    parserOptions,
+    languageOptions: {
+      ...languageOptions,
+      parser: require('@typescript-eslint/parser-v2'),
+    },
   }).run(
     'parser: @typescript-eslint/parser@2.x',
     ReactHooksESLintRule,
@@ -8260,8 +8268,10 @@ describe('react-hooks', () => {
   );
 
   new ESLintTester({
-    parser: require.resolve('@typescript-eslint/parser-v3'),
-    parserOptions,
+    languageOptions: {
+      ...languageOptions,
+      parser: require('@typescript-eslint/parser-v3'),
+    },
   }).run(
     'parser: @typescript-eslint/parser@3.x',
     ReactHooksESLintRule,
@@ -8269,8 +8279,10 @@ describe('react-hooks', () => {
   );
 
   new ESLintTester({
-    parser: require.resolve('@typescript-eslint/parser-v4'),
-    parserOptions,
+    languageOptions: {
+      ...languageOptions,
+      parser: require('@typescript-eslint/parser-v4'),
+    },
   }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
     valid: [
       ...testsTypescriptEslintParserV4.valid,
@@ -8283,8 +8295,10 @@ describe('react-hooks', () => {
   });
 
   new ESLintTester({
-    parser: require.resolve('@typescript-eslint/parser-v5'),
-    parserOptions,
+    languageOptions: {
+      ...languageOptions,
+      parser: require('@typescript-eslint/parser-v5'),
+    },
   }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
     valid: [
       ...testsTypescriptEslintParserV4.valid,

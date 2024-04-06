@@ -3,17 +3,20 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
  */
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTester = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
+const BabelEslintParser = require('@babel/eslint-parser');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
 
 ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
+  languageOptions: {
+    parser: BabelEslintParser,
     ecmaVersion: 6,
     sourceType: 'module',
   },
