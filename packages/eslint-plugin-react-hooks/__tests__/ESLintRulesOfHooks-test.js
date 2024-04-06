@@ -9,7 +9,7 @@
 
 'use strict';
 
-const ESLintTester = require('eslint-v9').RuleTester;
+const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const BabelEslintParser = require('@babel/eslint-parser');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];

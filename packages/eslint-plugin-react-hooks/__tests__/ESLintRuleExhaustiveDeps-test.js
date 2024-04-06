@@ -9,7 +9,7 @@
 
 'use strict';
 
-const ESLintTester = require('eslint-v9').RuleTester;
+const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
@@ -7091,7 +7091,6 @@ const tests = {
       `,
       errors: [
         {
-          // TODO
           message:
             "React Hook useEffect has a missing dependency: 'local'. " +
             'Either include it or remove the dependency array.',
