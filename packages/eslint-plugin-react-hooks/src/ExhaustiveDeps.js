@@ -37,6 +37,8 @@ export default {
     ],
   },
   create(context) {
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
+
     // Parse the `additionalHooks` regex.
     const additionalHooks =
       context.options &&
@@ -67,7 +69,7 @@ export default {
       context.report(problem);
     }
 
-    const scopeManager = context.getSourceCode().scopeManager;
+    const scopeManager = sourceCode.scopeManager;
 
     // Should be shared between visitors.
     const setStateCallSites = new WeakMap();
@@ -526,11 +528,11 @@ export default {
           node: writeExpr,
           message:
             `Assignments to the '${key}' variable from inside React Hook ` +
-            `${context.getSource(reactiveHook)} will be lost after each ` +
+            `${sourceCode.getText(reactiveHook)} will be lost after each ` +
             `render. To preserve the value over time, store it in a useRef ` +
             `Hook and keep the mutable value in the '.current' property. ` +
             `Otherwise, you can move this variable directly inside ` +
-            `${context.getSource(reactiveHook)}.`,
+            `${sourceCode.getText(reactiveHook)}.`,
         });
       }
 
@@ -630,7 +632,7 @@ export default {
         reportProblem({
           node: declaredDependenciesNode,
           message:
-            `React Hook ${context.getSource(reactiveHook)} was passed a ` +
+            `React Hook ${sourceCode.getText(reactiveHook)} was passed a ` +
             'dependency list that is not an array literal. This means we ' +
             "can't statically verify whether you've passed the correct " +
             'dependencies.',
@@ -650,7 +652,7 @@ export default {
             reportProblem({
               node: declaredDependencyNode,
               message:
-                `React Hook ${context.getSource(reactiveHook)} has a spread ` +
+                `React Hook ${sourceCode.getText(reactiveHook)} has a spread ` +
                 "element in its dependency array. This means we can't " +
                 "statically verify whether you've passed the " +
                 'correct dependencies.',
@@ -662,12 +664,12 @@ export default {
               node: declaredDependencyNode,
               message:
                 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
-                `Remove \`${context.getSource(
+                `Remove \`${sourceCode.getText(
                   declaredDependencyNode,
                 )}\` from the list.`,
               suggest: [
                 {
-                  desc: `Remove the dependency \`${context.getSource(
+                  desc: `Remove the dependency \`${sourceCode.getText(
                     declaredDependencyNode,
                   )}\``,
                   fix(fixer) {
@@ -708,7 +710,7 @@ export default {
                 reportProblem({
                   node: declaredDependencyNode,
                   message:
-                    `React Hook ${context.getSource(reactiveHook)} has a ` +
+                    `React Hook ${sourceCode.getText(reactiveHook)} has a ` +
                     `complex expression in the dependency array. ` +
                     'Extract it to a separate variable so it can be statically checked.',
                 });
@@ -978,7 +980,7 @@ export default {
             ` However, 'props' will change when *any* prop changes, so the ` +
             `preferred fix is to destructure the 'props' object outside of ` +
             `the ${reactiveHookName} call and refer to those specific props ` +
-            `inside ${context.getSource(reactiveHook)}.`;
+            `inside ${sourceCode.getText(reactiveHook)}.`;
         }
       }
 
@@ -1128,7 +1130,7 @@ export default {
       reportProblem({
         node: declaredDependenciesNode,
         message:
-          `React Hook ${context.getSource(reactiveHook)} has ` +
+          `React Hook ${sourceCode.getText(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
           (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
             getWarningMessage(
@@ -1250,7 +1252,10 @@ export default {
             return; // Handled
           }
           // We'll do our best effort to find it, complain otherwise.
-          const variable = context.getScope().set.get(callback.name);
+          const scope = context.sourceCode.getScope
+            ? context.sourceCode.getScope(node)
+            : context.getScope();
+          const variable = scope.set.get(callback.name);
           if (variable == null || variable.defs == null) {
             // If it's not in scope, we don't care.
             return; // Handled

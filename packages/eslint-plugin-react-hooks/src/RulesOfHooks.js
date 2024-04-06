@@ -125,6 +125,13 @@ export default {
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
     const useEffectEventFunctions = new WeakSet();
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
+
+    function getScope(node) {
+      return sourceCode.getScope
+        ? sourceCode.getScope(node)
+        : context.getScope();
+    }
 
     // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
     // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
@@ -466,7 +473,7 @@ export default {
               context.report({
                 node: hook,
                 message:
-                  `React Hook "${context.getSource(hook)}" may be executed ` +
+                  `React Hook "${sourceCode.getText(hook)}" may be executed ` +
                   'more than once. Possibly because it is called in a loop. ' +
                   'React Hooks must be called in the exact same order in ' +
                   'every component render.',
@@ -485,7 +492,7 @@ export default {
                 context.report({
                   node: hook,
                   message:
-                    `React Hook "${context.getSource(hook)}" cannot be ` +
+                    `React Hook "${sourceCode.getText(hook)}" cannot be ` +
                     'called in an async function.',
                 });
               }
@@ -500,7 +507,7 @@ export default {
                 !isUseIdentifier(hook) // `use(...)` can be called conditionally.
               ) {
                 const message =
-                  `React Hook "${context.getSource(hook)}" is called ` +
+                  `React Hook "${sourceCode.getText(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +
                   'same order in every component render.' +
                   (possiblyHasEarlyReturn
@@ -517,15 +524,15 @@ export default {
             ) {
               // Custom message for hooks inside a class
               const message =
-                `React Hook "${context.getSource(hook)}" cannot be called ` +
+                `React Hook "${sourceCode.getText(hook)}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
-                `React Hook "${context.getSource(hook)}" is called in ` +
-                `function "${context.getSource(codePathFunctionName)}" ` +
+                `React Hook "${sourceCode.getText(hook)}" is called in ` +
+                `function "${sourceCode.getText(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
@@ -534,7 +541,7 @@ export default {
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
-                `React Hook "${context.getSource(hook)}" cannot be called ` +
+                `React Hook "${sourceCode.getText(hook)}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
@@ -547,7 +554,7 @@ export default {
               // `use(...)` can be called in callbacks.
               if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
                 const message =
-                  `React Hook "${context.getSource(hook)}" cannot be called ` +
+                  `React Hook "${sourceCode.getText(hook)}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
                 context.report({node: hook, message});
@@ -600,7 +607,7 @@ export default {
           context.report({
             node,
             message:
-              `\`${context.getSource(
+              `\`${sourceCode.getText(
                 node,
               )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
               'the same component. They cannot be assigned to variables or passed down.',
@@ -617,14 +624,14 @@ export default {
       FunctionDeclaration(node) {
         // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       },
 
       ArrowFunctionExpression(node) {
         // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       },
     };
