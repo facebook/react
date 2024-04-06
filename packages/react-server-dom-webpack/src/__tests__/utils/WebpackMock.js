@@ -55,7 +55,7 @@ exports.clientModuleError = function clientModuleError(moduleError) {
     chunks: [],
     name: '*',
   };
-  const mod = {exports: {}};
+  const mod = new Module();
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
@@ -111,7 +111,7 @@ exports.clientExports = function clientExports(
       name: 's',
     };
   }
-  const mod = {exports: {}};
+  const mod = new Module();
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
@@ -146,7 +146,8 @@ exports.serverExports = function serverExports(moduleExports) {
       name: 's',
     };
   }
-  const mod = {exports: moduleExports};
+  const mod = new Module();
+  mod.exports = moduleExports;
   nodeCompile.call(mod, '"use server"', idx);
   return mod.exports;
 };

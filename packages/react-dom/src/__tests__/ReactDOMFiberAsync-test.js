@@ -16,6 +16,8 @@ let ReactDOMClient;
 let Scheduler;
 let act;
 let waitForAll;
+let waitFor;
+let waitForMicrotasks;
 let assertLog;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
@@ -36,6 +38,8 @@ describe('ReactDOMFiberAsync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    waitForMicrotasks = InternalTestUtils.waitForMicrotasks;
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
@@ -46,7 +50,8 @@ describe('ReactDOMFiberAsync', () => {
     document.body.removeChild(container);
   });
 
-  it('renders synchronously by default', () => {
+  // @gate !disableLegacyMode
+  it('renders synchronously by default in legacy mode', () => {
     const ops = [];
     ReactDOM.render(<div>Hi</div>, container, () => {
       ops.push(container.textContent);
@@ -57,12 +62,16 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['Hi', 'Bye']);
   });
 
-  it('flushSync batches sync updates and flushes them at the end of the batch', () => {
+  it('flushSync batches sync updates and flushes them at the end of the batch', async () => {
     const ops = [];
     let instance;
 
     class Component extends React.Component {
       state = {text: ''};
+      componentDidMount() {
+        instance = this;
+      }
+
       push(val) {
         this.setState(state => ({text: state.text + val}));
       }
@@ -75,9 +84,13 @@ describe('ReactDOMFiberAsync', () => {
       }
     }
 
-    ReactDOM.render(<Component />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<Component />));
 
-    instance.push('A');
+    await act(() => {
+      instance.push('A');
+    });
+
     expect(ops).toEqual(['A']);
     expect(container.textContent).toEqual('A');
 
@@ -88,19 +101,26 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('A');
       expect(ops).toEqual(['A']);
     });
+
     expect(container.textContent).toEqual('ABC');
     expect(ops).toEqual(['A', 'ABC']);
-    instance.push('D');
+    await act(() => {
+      instance.push('D');
+    });
     expect(container.textContent).toEqual('ABCD');
     expect(ops).toEqual(['A', 'ABC', 'ABCD']);
   });
 
-  it('flushSync flushes updates even if nested inside another flushSync', () => {
+  it('flushSync flushes updates even if nested inside another flushSync', async () => {
     const ops = [];
     let instance;
 
     class Component extends React.Component {
       state = {text: ''};
+      componentDidMount() {
+        instance = this;
+      }
+
       push(val) {
         this.setState(state => ({text: state.text + val}));
       }
@@ -113,9 +133,12 @@ describe('ReactDOMFiberAsync', () => {
       }
     }
 
-    ReactDOM.render(<Component />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<Component />));
 
-    instance.push('A');
+    await act(() => {
+      instance.push('A');
+    });
     expect(ops).toEqual(['A']);
     expect(container.textContent).toEqual('A');
 
@@ -137,7 +160,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['A', 'ABCD']);
   });
 
-  it('flushSync logs an error if already performing work', () => {
+  it('flushSync logs an error if already performing work', async () => {
     class Component extends React.Component {
       componentDidUpdate() {
         ReactDOM.flushSync();
@@ -148,11 +171,16 @@ describe('ReactDOMFiberAsync', () => {
     }
 
     // Initial mount
-    ReactDOM.render(<Component />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
     // Update
-    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
-      'flushSync was called from inside a lifecycle method',
-    );
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(<Component />);
+      });
+    }).toErrorDev('flushSync was called from inside a lifecycle method');
   });
 
   describe('concurrent mode', () => {
@@ -488,11 +516,14 @@ describe('ReactDOMFiberAsync', () => {
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
     const containerC = document.createElement('div');
+    const rootA = ReactDOMClient.createRoot(containerA);
+    const rootB = ReactDOMClient.createRoot(containerB);
+    const rootC = ReactDOMClient.createRoot(containerC);
 
     await act(() => {
-      ReactDOM.render(<App label="A" />, containerA);
-      ReactDOM.render(<App label="B" />, containerB);
-      ReactDOM.render(<App label="C" />, containerC);
+      rootA.render(<App label="A" />);
+      rootB.render(<App label="B" />);
+      rootC.render(<App label="C" />);
     });
 
     expect(containerA.textContent).toEqual('Finished');
@@ -653,52 +684,157 @@ describe('ReactDOMFiberAsync', () => {
     });
   });
 
-  it('transition lane in popState should yield if it suspends', async () => {
-    const never = {then() {}};
-    let _setText;
+  it('transition lane in popState should be allowed to suspend', async () => {
+    let resolvePromise;
+    const promise = new Promise(res => {
+      resolvePromise = res;
+    });
+
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
 
     function App() {
-      const [shouldSuspend, setShouldSuspend] = React.useState(false);
-      const [text, setText] = React.useState('0');
-      _setText = setText;
-      if (shouldSuspend) {
-        Scheduler.log('Suspend!');
-        throw never;
+      const [pathname, setPathname] = React.useState('/path/a');
+
+      if (pathname !== '/path/a') {
+        try {
+          React.use(promise);
+        } catch (e) {
+          Scheduler.log(`Suspend! [${pathname}]`);
+          throw e;
+        }
       }
-      function onPopstate() {
-        React.startTransition(() => {
-          setShouldSuspend(val => !val);
-        });
-      }
+
       React.useEffect(() => {
+        function onPopstate() {
+          React.startTransition(() => {
+            setPathname('/path/b');
+          });
+        }
         window.addEventListener('popstate', onPopstate);
         return () => window.removeEventListener('popstate', onPopstate);
       }, []);
-      Scheduler.log(`Child:${shouldSuspend}/${text}`);
-      return text;
+
+      return (
+        <>
+          <Text text="Before" />
+          <div>
+            <Text text={pathname} />
+          </div>
+          <Text text="After" />
+        </>
+      );
     }
 
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App />);
     });
-    assertLog(['Child:false/0']);
+    assertLog(['Before', '/path/a', 'After']);
 
-    await act(() => {
+    const div = container.getElementsByTagName('div')[0];
+    expect(div.textContent).toBe('/path/a');
+
+    // Simulate a popstate event
+    await act(async () => {
       const popStateEvent = new Event('popstate');
+
+      // Simulate a popstate event
       window.event = popStateEvent;
       window.dispatchEvent(popStateEvent);
-      queueMicrotask(() => {
-        window.event = undefined;
-      });
+      await waitForMicrotasks();
+      window.event = undefined;
+
+      // The transition lane should have been attempted synchronously (in
+      // a microtask)
+      assertLog(['Suspend! [/path/b]']);
+      // Because it suspended, it remains on the current path
+      expect(div.textContent).toBe('/path/a');
     });
-    assertLog(['Suspend!']);
+    assertLog(['Suspend! [/path/b]']);
 
     await act(async () => {
-      _setText('1');
-    });
-    assertLog(['Child:false/1', 'Suspend!']);
+      resolvePromise();
 
-    root.unmount();
+      // Since the transition previously suspended, there's no need for this
+      // transition to be rendered synchronously on susbequent attempts; if we
+      // fail to commit synchronously the first time, the scroll restoration
+      // state won't be restored anyway.
+      //
+      // Yield in between each child to prove that it's concurrent.
+      await waitForMicrotasks();
+      assertLog([]);
+
+      await waitFor(['Before']);
+      await waitFor(['/path/b']);
+      await waitFor(['After']);
+    });
+    assertLog([]);
+    expect(div.textContent).toBe('/path/b');
+    await act(() => {
+      root.unmount();
+    });
+  });
+
+  it('regression: infinite deferral loop caused by unstable useDeferredValue input', async () => {
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
+
+    let i = 0;
+    function App() {
+      const [pathname, setPathname] = React.useState('/path/a');
+      // This is an unstable input, so it will always cause a deferred render.
+      const {value: deferredPathname} = React.useDeferredValue({
+        value: pathname,
+      });
+      if (i++ > 100) {
+        throw new Error('Infinite loop detected');
+      }
+      React.useEffect(() => {
+        function onPopstate() {
+          React.startTransition(() => {
+            setPathname('/path/b');
+          });
+        }
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+
+      return <Text text={deferredPathname} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    assertLog(['/path/a']);
+    expect(container.textContent).toBe('/path/a');
+
+    // Simulate a popstate event
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+
+      // Simulate a popstate event
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      await waitForMicrotasks();
+      window.event = undefined;
+
+      // The transition lane is attempted synchronously (in a microtask).
+      // Because the input to useDeferredValue is referentially unstable, it
+      // will spawn a deferred task at transition priority. However, even
+      // though it was spawned during a transition event, the spawned task
+      // not also be upgraded to sync.
+      assertLog(['/path/a']);
+    });
+    assertLog(['/path/b']);
+    expect(container.textContent).toBe('/path/b');
+    await act(() => {
+      root.unmount();
+    });
   });
 });

@@ -1,7 +1,6 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {IS_FIREFOX} from '../utils';
 
 // We run scripts on the page via the service worker (background/index.js) for
 // Manifest V3 extensions (Chrome & Edge).
@@ -62,7 +61,7 @@ window.addEventListener('pageshow', function ({target}) {
   chrome.runtime.sendMessage(lastSentDevToolsHookMessage);
 });
 
-if (IS_FIREFOX) {
+if (__IS_FIREFOX__) {
   injectScriptSync(chrome.runtime.getURL('build/renderer.js'));
 
   // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.

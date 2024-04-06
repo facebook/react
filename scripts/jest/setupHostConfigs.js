@@ -14,11 +14,6 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .js
 
   if (isFBBundle) {
-    if (__EXPERIMENTAL__) {
-      // We can't currently use the true modern entry point because too many tests fail.
-      // TODO: Fix tests to not use ReactDOM.render or gate them. Then we can remove this.
-      return resolvedEntry;
-    }
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
@@ -58,9 +53,9 @@ global.__unmockReact = mockReact;
 
 mockReact();
 
-jest.mock('react/react.shared-subset', () => {
+jest.mock('react/react.react-server', () => {
   const resolvedEntryPoint = resolveEntryFork(
-    require.resolve('react/src/ReactSharedSubset'),
+    require.resolve('react/src/ReactServer'),
     global.__WWW__
   );
   return jest.requireActual(resolvedEntryPoint);

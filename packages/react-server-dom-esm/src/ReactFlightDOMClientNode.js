@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes.js';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {Response} from 'react-client/src/ReactFlightClient';
 
@@ -38,8 +38,14 @@ export function createServerReference<A: Iterable<any>, T>(
   return createServerReferenceImpl(id, noServerCall);
 }
 
+type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
+
 export type Options = {
   nonce?: string,
+  encodeFormAction?: EncodeFormActionCallback,
 };
 
 function createFromNodeStream<T>(
@@ -52,7 +58,9 @@ function createFromNodeStream<T>(
     moduleRootPath,
     moduleBaseURL,
     noServerCall,
+    options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,
+    undefined, // TODO: If encodeReply is supported, this should support temporaryReferences
   );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);

@@ -8,8 +8,9 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {Awaited} from 'shared/ReactTypes';
 
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -55,7 +56,7 @@ function resolveDispatcher() {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     }
   }
@@ -66,7 +67,7 @@ function resolveDispatcher() {
 }
 
 export function useFormStatus(): FormStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
@@ -76,11 +77,11 @@ export function useFormStatus(): FormStatus {
 }
 
 export function useFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
-  if (!(enableFormActions && enableAsyncActions)) {
+): [Awaited<S>, (P) => void, boolean] {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();

@@ -8,7 +8,7 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
@@ -38,9 +38,9 @@ export {
 } from './ReactFlightWebpackReferences';
 
 type Options = {
+  environmentName?: string,
   identifierPrefix?: string,
   signal?: AbortSignal,
-  context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -54,9 +54,9 @@ function renderToReadableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -100,8 +100,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(webpackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};

@@ -2,10 +2,8 @@
 
 'use strict';
 
-import {IS_FIREFOX} from 'react-devtools-extensions/src/utils';
-
 function setExtensionIconAndPopup(reactBuildType, tabId) {
-  const action = IS_FIREFOX ? chrome.browserAction : chrome.action;
+  const action = __IS_FIREFOX__ ? chrome.browserAction : chrome.action;
 
   action.setIcon({
     tabId,

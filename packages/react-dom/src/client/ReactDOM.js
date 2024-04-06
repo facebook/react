@@ -9,22 +9,11 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
-  Container,
-  PublicInstance,
-} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
-import type {
   RootType,
   HydrateRootOptions,
   CreateRootOptions,
 } from './ReactDOMRoot';
 
-import {
-  findDOMNode,
-  render,
-  hydrate,
-  unstable_renderSubtreeIntoContainer,
-  unmountComponentAtNode,
-} from './ReactDOMLegacy';
 import {
   createRoot as createRootImpl,
   hydrateRoot as hydrateRootImpl,
@@ -33,10 +22,10 @@ import {
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 
 import {
-  batchedUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   injectIntoDevTools,
+  findHostInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -82,7 +71,7 @@ if (__DEV__) {
   ) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
-        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
+        'polyfill in older browsers. https://react.dev/link/react-polyfills',
     );
   }
 }
@@ -99,20 +88,6 @@ function createPortal(
   // TODO: pass ReactDOM portal implementation as third argument
   // $FlowFixMe[incompatible-return] The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
-}
-
-function renderSubtreeIntoContainer(
-  parentComponent: React$Component<any, any>,
-  element: React$Element<any>,
-  containerNode: Container,
-  callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
-  return unstable_renderSubtreeIntoContainer(
-    parentComponent,
-    element,
-    containerNode,
-    callback,
-  );
 }
 
 function createRoot(
@@ -165,21 +140,30 @@ function flushSync<R>(fn: (() => R) | void): R | void {
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 
+function findDOMNode(
+  componentOrElement: React$Component<any, any>,
+): null | Element | Text {
+  return findHostInstance(componentOrElement);
+}
+
+// Expose findDOMNode on internals
+Internals.findDOMNode = findDOMNode;
+
+function unstable_batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
+  // batchedUpdates was a legacy mode feature that is a no-op outside of
+  // legacy mode. In 19, we made it an actual no-op, but we're keeping it
+  // for now since there may be libraries that still include it.
+  return fn(a);
+}
+
 export {
   createPortal,
-  batchedUpdates as unstable_batchedUpdates,
+  unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
-  // Disabled behind disableLegacyReactDOMAPIs
-  findDOMNode,
-  hydrate,
-  render,
-  unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  // Disabled behind disableUnstableRenderSubtreeIntoContainer
-  renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
   // TODO: Remove this once callers migrate to alternatives.
@@ -195,7 +179,7 @@ Internals.Events = [
   getFiberCurrentPropsFromNode,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  batchedUpdates,
+  unstable_batchedUpdates,
 ];
 
 const foundDevTools = injectIntoDevTools({
@@ -220,10 +204,10 @@ if (__DEV__) {
         console.info(
           '%cDownload the React DevTools ' +
             'for a better development experience: ' +
-            'https://reactjs.org/link/react-devtools' +
+            'https://react.dev/link/react-devtools' +
             (protocol === 'file:'
               ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                'https://reactjs.org/link/react-devtools-faq'
+                'https://react.dev/link/react-devtools-faq'
               : ''),
           'font-weight:bold',
         );

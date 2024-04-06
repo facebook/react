@@ -12,7 +12,7 @@
 describe('ReactDOMInReactServer', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
   });
 
   it('can require react-dom', () => {

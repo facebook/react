@@ -6,7 +6,7 @@
     "react"
   ],
   "version": "0.1.0",
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
   "files": [
@@ -33,15 +33,7 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
-    "loose-envify": "^1.1.0"
-  },
   "peerDependencies": {
     "react": "^17.0.0"
-  },
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
   }
 }

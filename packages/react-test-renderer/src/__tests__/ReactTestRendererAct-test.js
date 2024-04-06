@@ -16,6 +16,7 @@ describe('ReactTestRenderer.act()', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    global.IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   // @gate __DEV__
@@ -91,7 +92,10 @@ describe('ReactTestRenderer.act()', () => {
         });
         return step;
       }
-      const root = ReactTestRenderer.create(null);
+      let root;
+      await act(() => {
+        root = ReactTestRenderer.create(null);
+      });
       await act(async () => {
         root.update(<App />);
       });

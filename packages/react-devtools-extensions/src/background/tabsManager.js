@@ -2,8 +2,6 @@
 
 'use strict';
 
-import {IS_FIREFOX} from 'react-devtools-extensions/src/utils';
-
 import setExtensionIconAndPopup from './setExtensionIconAndPopup';
 
 function isRestrictedBrowserPage(url) {
@@ -20,7 +18,7 @@ function checkAndHandleRestrictedPageIfSo(tab) {
 // we can't update for any other types (prod,dev,outdated etc)
 // as the content script needs to be injected at document_start itself for those kinds of detection
 // TODO: Show a different popup page(to reload current page probably) for old tabs, opened before the extension is installed
-if (!IS_FIREFOX) {
+if (__IS_CHROME__ || __IS_EDGE__) {
   chrome.tabs.query({}, tabs => tabs.forEach(checkAndHandleRestrictedPageIfSo));
   chrome.tabs.onCreated.addListener((tabId, changeInfo, tab) =>
     checkAndHandleRestrictedPageIfSo(tab),
@@ -29,7 +27,7 @@ if (!IS_FIREFOX) {
 
 // Listen to URL changes on the active tab and update the DevTools icon.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (IS_FIREFOX) {
+  if (__IS_FIREFOX__) {
     // We don't properly detect protected URLs in Firefox at the moment.
     // However, we can reset the DevTools icon to its loading state when the URL changes.
     // It will be updated to the correct icon by the onMessage callback below.

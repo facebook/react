@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement, Source} from 'shared/ReactElementType';
+import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -18,7 +18,7 @@ import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -28,8 +28,6 @@ import {
   isHostSingletonType,
 } from './ReactFiberConfig';
 import {
-  createRootStrictEffectsByDefault,
-  enableCache,
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
@@ -37,14 +35,13 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
-  enableFloat,
-  enableHostSingletons,
   enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableRenderableContext,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
-  IndeterminateComponent,
   ClassComponent,
   HostRoot,
   HostComponent,
@@ -68,11 +65,10 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-  CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {OffscreenVisible} from './ReactFiberActivityComponent';
+import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   resolveClassForHotReloading,
@@ -98,6 +94,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -105,7 +102,6 @@ import {
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
@@ -114,6 +110,7 @@ import {
   attachOffscreenInstance,
 } from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
+import type {ReactComponentInfo} from '../../shared/ReactTypes';
 
 export type {Fiber};
 
@@ -203,8 +200,7 @@ function FiberNode(
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
-
-    this._debugSource = null;
+    this._debugInfo = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
@@ -250,19 +246,10 @@ export function isSimpleFunctionComponent(type: any): boolean {
   );
 }
 
-export function resolveLazyComponentTag(Component: Function): WorkTag {
-  if (typeof Component === 'function') {
-    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
-  } else if (Component !== undefined && Component !== null) {
-    const $$typeof = Component.$$typeof;
-    if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      return ForwardRef;
-    }
-    if ($$typeof === REACT_MEMO_TYPE) {
-      return MemoComponent;
-    }
-  }
-  return IndeterminateComponent;
+export function isFunctionClassComponent(
+  type: (...args: Array<any>) => mixed,
+): boolean {
+  return shouldConstruct(type);
 }
 
 // This is used to create an alternate fiber to do work on.
@@ -287,7 +274,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     if (__DEV__) {
       // DEV-only fields
 
-      workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
@@ -351,9 +337,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   }
 
   if (__DEV__) {
+    workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
-      case IndeterminateComponent:
       case FunctionComponent:
       case SimpleMemoComponent:
         workInProgress.type = resolveFunctionForHotReloading(current.type);
@@ -455,9 +441,9 @@ export function createHostRootFiber(
   concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
-  if (tag === ConcurrentRoot) {
+  if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (isStrictMode === true || createRootStrictEffectsByDefault) {
+    if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
@@ -490,12 +476,11 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  source: null | Source,
-  owner: null | Fiber,
+  owner: null | ReactComponentInfo | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let fiberTag = IndeterminateComponent;
+  let fiberTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {
@@ -510,24 +495,19 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    if (
-      enableFloat &&
-      supportsResources &&
-      enableHostSingletons &&
-      supportsSingletons
-    ) {
+    if (supportsResources && supportsSingletons) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
-    } else if (enableFloat && supportsResources) {
+    } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : HostComponent;
-    } else if (enableHostSingletons && supportsSingletons) {
+    } else if (supportsSingletons) {
       fiberTag = isHostSingletonType(type) ? HostSingleton : HostComponent;
     } else {
       fiberTag = HostComponent;
@@ -539,7 +519,7 @@ export function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictLegacyMode;
-        if ((mode & ConcurrentMode) !== NoMode) {
+        if (disableLegacyMode || (mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
           if (
@@ -568,11 +548,6 @@ export function createFiberFromTypeAndProps(
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
       // Fall through
-      case REACT_CACHE_TYPE:
-        if (enableCache) {
-          return createFiberFromCache(pendingProps, mode, lanes, key);
-        }
-      // Fall through
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
@@ -589,12 +564,25 @@ export function createFiberFromTypeAndProps(
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = ContextProvider;
-              break getTag;
+              if (!enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              }
+            // Fall through
             case REACT_CONTEXT_TYPE:
-              // This is a consumer
-              fiberTag = ContextConsumer;
-              break getTag;
+              if (enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              } else {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            case REACT_CONSUMER_TYPE:
+              if (enableRenderableContext) {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               if (__DEV__) {
@@ -623,7 +611,7 @@ export function createFiberFromTypeAndProps(
               "it's defined in, or you might have mixed up default and " +
               'named imports.';
           }
-          const ownerName = owner ? getComponentNameFromFiber(owner) : null;
+          const ownerName = owner ? getComponentNameFromOwner(owner) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
@@ -644,7 +632,6 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
-    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
@@ -656,10 +643,8 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let source = null;
   let owner = null;
   if (__DEV__) {
-    source = element._source;
     owner = element._owner;
   }
   const type = element.type;
@@ -669,13 +654,11 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
-    source,
     owner,
     mode,
     lanes,
   );
   if (__DEV__) {
-    fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
   return fiber;
@@ -807,18 +790,6 @@ export function createFiberFromLegacyHidden(
   return fiber;
 }
 
-export function createFiberFromCache(
-  pendingProps: any,
-  mode: TypeOfMode,
-  lanes: Lanes,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(CacheComponent, pendingProps, key, mode);
-  fiber.elementType = REACT_CACHE_TYPE;
-  fiber.lanes = lanes;
-  return fiber;
-}
-
 export function createFiberFromTracingMarker(
   pendingProps: any,
   mode: TypeOfMode,
@@ -849,12 +820,6 @@ export function createFiberFromText(
   return fiber;
 }
 
-export function createFiberFromHostInstanceForDeletion(): Fiber {
-  const fiber = createFiber(HostComponent, null, null, NoMode);
-  fiber.elementType = 'DELETED';
-  return fiber;
-}
-
 export function createFiberFromDehydratedFragment(
   dehydratedNode: SuspenseInstance,
 ): Fiber {
@@ -877,58 +842,4 @@ export function createFiberFromPortal(
     implementation: portal.implementation,
   };
   return fiber;
-}
-
-// Used for stashing WIP properties to replay failed work in DEV.
-export function assignFiberPropertiesInDEV(
-  target: Fiber | null,
-  source: Fiber,
-): Fiber {
-  if (target === null) {
-    // This Fiber's initial properties will always be overwritten.
-    // We only use a Fiber to ensure the same hidden class so DEV isn't slow.
-    target = createFiber(IndeterminateComponent, null, null, NoMode);
-  }
-
-  // This is intentionally written as a list of all properties.
-  // We tried to use Object.assign() instead but this is called in
-  // the hottest path, and Object.assign() was too slow:
-  // https://github.com/facebook/react/issues/12502
-  // This code is DEV-only so size is not a concern.
-
-  target.tag = source.tag;
-  target.key = source.key;
-  target.elementType = source.elementType;
-  target.type = source.type;
-  target.stateNode = source.stateNode;
-  target.return = source.return;
-  target.child = source.child;
-  target.sibling = source.sibling;
-  target.index = source.index;
-  target.ref = source.ref;
-  target.refCleanup = source.refCleanup;
-  target.pendingProps = source.pendingProps;
-  target.memoizedProps = source.memoizedProps;
-  target.updateQueue = source.updateQueue;
-  target.memoizedState = source.memoizedState;
-  target.dependencies = source.dependencies;
-  target.mode = source.mode;
-  target.flags = source.flags;
-  target.subtreeFlags = source.subtreeFlags;
-  target.deletions = source.deletions;
-  target.lanes = source.lanes;
-  target.childLanes = source.childLanes;
-  target.alternate = source.alternate;
-  if (enableProfilerTimer) {
-    target.actualDuration = source.actualDuration;
-    target.actualStartTime = source.actualStartTime;
-    target.selfBaseDuration = source.selfBaseDuration;
-    target.treeBaseDuration = source.treeBaseDuration;
-  }
-
-  target._debugSource = source._debugSource;
-  target._debugOwner = source._debugOwner;
-  target._debugNeedsRemount = source._debugNeedsRemount;
-  target._debugHookTypes = source._debugHookTypes;
-  return target;
 }

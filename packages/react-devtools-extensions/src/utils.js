@@ -2,12 +2,8 @@
 
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export const IS_EDGE: boolean = process.env.IS_EDGE;
-export const IS_FIREFOX: boolean = process.env.IS_FIREFOX;
-export const IS_CHROME: boolean = process.env.IS_CHROME;
-
 export function getBrowserTheme(): BrowserTheme {
-  if (IS_CHROME) {
+  if (__IS_CHROME__) {
     // chrome.devtools.panels added in Chrome 18.
     // chrome.devtools.panels.themeName added in Chrome 54.
     return chrome.devtools.panels.themeName === 'dark' ? 'dark' : 'light';

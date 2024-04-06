@@ -7,15 +7,18 @@
  * @flow
  */
 
-const {enableProfiling: enableProfilingFeatureFlag} =
-  // $FlowFixMe[cannot-resolve-module]
-  require('SchedulerFeatureFlags');
+// $FlowFixMe[cannot-resolve-module]
+const dynamicFeatureFlags = require('SchedulerFeatureFlags');
 
+const {enableProfiling: enableProfilingFeatureFlag} = dynamicFeatureFlags;
+
+export const {
+  userBlockingPriorityTimeout,
+  normalPriorityTimeout,
+  lowPriorityTimeout,
+} = dynamicFeatureFlags;
+
+export const frameYieldMs = 10;
 export const enableSchedulerDebugging = true;
 export const enableProfiling: boolean =
   __PROFILE__ && enableProfilingFeatureFlag;
-export const enableIsInputPending = true;
-export const enableIsInputPendingContinuous = true;
-export const frameYieldMs = 5;
-export const continuousYieldMs = 10;
-export const maxYieldMs = 10;

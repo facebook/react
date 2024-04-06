@@ -5,7 +5,7 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {IS_CHROME, IS_EDGE, getBrowserTheme, IS_FIREFOX} from '../utils';
+import {getBrowserTheme} from '../utils';
 import {
   localStorageGetItem,
   localStorageSetItem,
@@ -93,10 +93,10 @@ function createBridgeAndStore() {
 
   store = new Store(bridge, {
     isProfiling,
-    supportsReloadAndProfile: IS_CHROME || IS_EDGE,
+    supportsReloadAndProfile: __IS_CHROME__ || __IS_EDGE__,
     supportsProfiling,
     // At this time, the timeline can only parse Chrome performance profiles.
-    supportsTimeline: IS_CHROME,
+    supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,
   });
 
@@ -128,34 +128,13 @@ function createBridgeAndStore() {
     }
   };
 
-  const viewElementSourceFunction = id => {
-    const rendererID = store.getRendererIDForElement(id);
-    if (rendererID != null) {
-      // Ask the renderer interface to determine the component function,
-      // and store it as a global variable on the window
-      bridge.send('viewElementSource', {id, rendererID});
+  const viewElementSourceFunction = (source, symbolicatedSource) => {
+    const {sourceURL, line, column} = symbolicatedSource
+      ? symbolicatedSource
+      : source;
 
-      setTimeout(() => {
-        // Ask Chrome to display the location of the component function,
-        // or a render method if it is a Class (ideally Class instance, not type)
-        // assuming the renderer found one.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$type != null) {
-                  if (
-                    window.$type &&
-                    window.$type.prototype &&
-                    window.$type.prototype.isReactComponent
-                  ) {
-                    // inspect Component.render, not constructor
-                    inspect(window.$type.prototype.render);
-                  } else {
-                    // inspect Functional Component
-                    inspect(window.$type);
-                  }
-                }
-              `);
-      }, 100);
-    }
+    // We use 1-based line and column, Chrome expects them 0-based.
+    chrome.devtools.panels.openResource(sourceURL, line - 1, column - 1);
   };
 
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
@@ -183,16 +162,13 @@ function createBridgeAndStore() {
         store,
         warnIfUnsupportedVersionDetected: true,
         viewAttributeSourceFunction,
+        // Firefox doesn't support chrome.devtools.panels.openResource yet
+        canViewElementSourceFunction: () => __IS_CHROME__ || __IS_EDGE__,
         viewElementSourceFunction,
-        viewUrlSourceFunction,
       }),
     );
   };
 }
-
-const viewUrlSourceFunction = (url, line, col) => {
-  chrome.devtools.panels.openResource(url, line, col);
-};
 
 function ensureInitialHTMLIsCleared(container) {
   if (container._hasInitialHTMLBeenCleared) {
@@ -218,8 +194,8 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       componentsPanel = createdPanel;
@@ -257,8 +233,8 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Profiler' : 'Profiler',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       profilerPanel = createdPanel;
@@ -444,7 +420,7 @@ const debouncedOnNavigatedListener = debounce(() => {
 chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
 
 // Should be emitted when browser DevTools are closed
-if (IS_FIREFOX) {
+if (__IS_FIREFOX__) {
   // For some reason Firefox doesn't emit onBeforeUnload event
   window.addEventListener('unload', performFullCleanup);
 } else {

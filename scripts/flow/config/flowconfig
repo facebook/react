@@ -2,7 +2,8 @@
 .*/scripts/bench/.*
 .*/build/.*
 .*/fixtures/.*
-.*/.tempUserDataDir/.*
+# Any hidden directory
+.*/\..*
 
 # These shims are copied into external projects:
 .*/rollup/shims/facebook-www/.*
@@ -36,4 +37,4 @@ munge_underscores=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.217.0
+%FLOW_VERSION%
