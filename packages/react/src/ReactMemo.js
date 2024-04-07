@@ -15,6 +15,11 @@ export function memo<Props>(
   type: React$ElementType,
   compare?: (oldProps: Props, newProps: Props) => boolean,
 ) {
+  const elementType = {
+    $$typeof: REACT_MEMO_TYPE,
+    type,
+    compare: compare === undefined ? null : compare,
+  };
   if (__DEV__) {
     if (!isValidElementType(type)) {
       console.error(
@@ -23,13 +28,6 @@ export function memo<Props>(
         type === null ? 'null' : typeof type,
       );
     }
-  }
-  const elementType = {
-    $$typeof: REACT_MEMO_TYPE,
-    type,
-    compare: compare === undefined ? null : compare,
-  };
-  if (__DEV__) {
     let ownName;
     Object.defineProperty(elementType, 'displayName', {
       enumerable: false,
