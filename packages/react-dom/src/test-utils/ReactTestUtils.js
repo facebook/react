@@ -21,11 +21,7 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
 import {ELEMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
-import {
-  rethrowCaughtError,
-  invokeGuardedCallbackAndCatchFirstError,
-} from 'shared/ReactErrorUtils';
-import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {disableDOMTestUtils} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -39,7 +35,18 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 
-const act = React.unstable_act;
+let didWarnAboutUsingAct = false;
+function act(callback) {
+  if (didWarnAboutUsingAct === false) {
+    didWarnAboutUsingAct = true;
+    console.error(
+      '`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. ' +
+        'Import `act` from `react` instead of `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+  return React.act(callback);
+}
 
 function Event(suffix) {}
 
@@ -65,8 +72,8 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostText ||
       node.tag === ClassComponent ||
       node.tag === FunctionComponent ||
-      (enableFloat ? node.tag === HostHoistable : false) ||
-      (enableHostSingletons ? node.tag === HostSingleton : false)
+      node.tag === HostHoistable ||
+      node.tag === HostSingleton
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
@@ -114,7 +121,7 @@ function validateClassInstance(inst, methodName) {
   }
 
   throw new Error(
-    `${methodName}(...): the first argument must be a React class instance. ` +
+    `The first argument must be a React class instance. ` +
       `Instead received: ${received}.`,
   );
 }
@@ -129,6 +136,13 @@ function validateClassInstance(inst, methodName) {
  * @lends ReactTestUtils
  */
 function renderIntoDocument(element) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`renderIntoDocument` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   const div = document.createElement('div');
   // None of our tests actually require attaching the container to the
   // DOM, and doing so creates a mess that we rely on test isolation to
@@ -139,22 +153,57 @@ function renderIntoDocument(element) {
 }
 
 function isElement(element) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isElement` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return React.isValidElement(element);
 }
 
 function isElementOfType(inst, convenienceConstructor) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isElementOfType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return React.isValidElement(inst) && inst.type === convenienceConstructor;
 }
 
 function isDOMComponent(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
 }
 
 function isDOMComponentElement(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isDOMComponentElement` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return !!(inst && React.isValidElement(inst) && !!inst.tagName);
 }
 
 function isCompositeComponent(inst) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isCompositeComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (isDOMComponent(inst)) {
     // Accessing inst.setState warns; just return false as that'll be what
     // this returns when we have DOM nodes as refs directly
@@ -168,6 +217,13 @@ function isCompositeComponent(inst) {
 }
 
 function isCompositeComponentWithType(inst, type) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`isCompositeComponentWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (!isCompositeComponent(inst)) {
     return false;
   }
@@ -177,6 +233,13 @@ function isCompositeComponentWithType(inst, type) {
 }
 
 function findAllInRenderedTree(inst, test) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findAllInRenderedTree` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(inst, 'findAllInRenderedTree');
   if (!inst) {
     return [];
@@ -191,6 +254,13 @@ function findAllInRenderedTree(inst, test) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedDOMComponentsWithClass(root, classNames) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedDOMComponentsWithClass` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
   return findAllInRenderedTree(root, function (inst) {
     if (isDOMComponent(inst)) {
@@ -226,6 +296,13 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
  * @return {!ReactDOMComponent} The one match.
  */
 function findRenderedDOMComponentWithClass(root, className) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedDOMComponentWithClass` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedDOMComponentWithClass');
   const all = scryRenderedDOMComponentsWithClass(root, className);
   if (all.length !== 1) {
@@ -246,6 +323,13 @@ function findRenderedDOMComponentWithClass(root, className) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedDOMComponentsWithTag(root, tagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedDOMComponentsWithTag` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
   return findAllInRenderedTree(root, function (inst) {
     return (
@@ -262,6 +346,13 @@ function scryRenderedDOMComponentsWithTag(root, tagName) {
  * @return {!ReactDOMComponent} The one match.
  */
 function findRenderedDOMComponentWithTag(root, tagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedDOMComponentWithTag` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedDOMComponentWithTag');
   const all = scryRenderedDOMComponentsWithTag(root, tagName);
   if (all.length !== 1) {
@@ -281,6 +372,13 @@ function findRenderedDOMComponentWithTag(root, tagName) {
  * @return {array} an array of all the matches.
  */
 function scryRenderedComponentsWithType(root, componentType) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`scryRenderedComponentsWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'scryRenderedComponentsWithType');
   return findAllInRenderedTree(root, function (inst) {
     return isCompositeComponentWithType(inst, componentType);
@@ -294,6 +392,13 @@ function scryRenderedComponentsWithType(root, componentType) {
  * @return {!ReactComponent} The one match.
  */
 function findRenderedComponentWithType(root, componentType) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`findRenderedComponentWithType` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   validateClassInstance(root, 'findRenderedComponentWithType');
   const all = scryRenderedComponentsWithType(root, componentType);
   if (all.length !== 1) {
@@ -322,13 +427,20 @@ function findRenderedComponentWithType(root, componentType) {
  * @return {object} the ReactTestUtils object (for chaining)
  */
 function mockComponent(module, mockTagName) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`mockComponent` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedMockComponent) {
       hasWarnedAboutDeprecatedMockComponent = true;
       console.warn(
         'ReactTestUtils.mockComponent() is deprecated. ' +
           'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://reactjs.org/link/test-utils-mock-component for more information.',
+          'See https://react.dev/link/test-utils-mock-component for more information.',
       );
     }
   }
@@ -343,6 +455,13 @@ function mockComponent(module, mockTagName) {
 }
 
 function nativeTouchData(x, y) {
+  if (disableDOMTestUtils) {
+    throw new Error(
+      '`nativeTouchData` was removed from `react-dom/test-utils`. ' +
+        'See https://react.dev/warnings/react-dom-test-utils for more info.',
+    );
+  }
+
   return {
     touches: [{pageX: x, pageY: y}],
   };
@@ -352,6 +471,9 @@ function nativeTouchData(x, y) {
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
 
+let hasError: boolean = false;
+let caughtError: mixed = null;
+
 /**
  * Dispatch the event to the listener.
  * @param {SyntheticEvent} event SyntheticEvent to handle
@@ -359,9 +481,15 @@ function nativeTouchData(x, y) {
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, listener, inst) {
-  const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    if (!hasError) {
+      hasError = true;
+      caughtError = error;
+    }
+  }
   event.currentTarget = null;
 }
 
@@ -419,11 +547,7 @@ function getParent(inst) {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (
-    inst &&
-    inst.tag !== HostComponent &&
-    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
-  );
+  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
   if (inst) {
     return inst;
   }
@@ -576,6 +700,13 @@ const directDispatchEventTypes = new Set([
  */
 function makeSimulator(eventType) {
   return function (domNode, eventData) {
+    if (disableDOMTestUtils) {
+      throw new Error(
+        '`Simulate` was removed from `react-dom/test-utils`. ' +
+          'See https://react.dev/warnings/react-dom-test-utils for more info.',
+      );
+    }
+
     if (React.isValidElement(domNode)) {
       throw new Error(
         'TestUtils.Simulate expected a DOM node as the first argument but received ' +
@@ -621,7 +752,12 @@ function makeSimulator(eventType) {
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
       executeDispatchesAndRelease(event);
-      rethrowCaughtError();
+      if (hasError) {
+        const error = caughtError;
+        hasError = false;
+        caughtError = null;
+        throw error;
+      }
     });
     restoreStateIfNeeded();
   };

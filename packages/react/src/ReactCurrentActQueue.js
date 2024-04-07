@@ -20,6 +20,9 @@ const ReactCurrentActQueue = {
   // Determines whether we should yield to microtasks to unwrap already resolved
   // promises without suspending.
   didUsePromise: false,
+
+  // Track first uncaught error within this act
+  thrownErrors: ([]: Array<mixed>),
 };
 
 export default ReactCurrentActQueue;

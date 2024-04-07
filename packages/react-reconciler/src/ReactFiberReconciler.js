@@ -111,6 +111,11 @@ export {
   observeVisibleRects,
 } from './ReactTestSelectors';
 export {startHostTransition} from './ReactFiberHooks';
+export {
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
+} from './ReactFiberErrorLogger';
 
 type OpaqueRoot = FiberRoot;
 
@@ -209,7 +214,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which is inside StrictMode. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -220,7 +225,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which renders StrictMode children. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -249,7 +254,21 @@ export function createContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
@@ -263,6 +282,8 @@ export function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     null,
@@ -279,7 +300,21 @@ export function createHydrationContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -293,6 +328,8 @@ export function createHydrationContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState,
@@ -368,7 +405,7 @@ export function updateContainer(
     if (__DEV__) {
       if (typeof callback !== 'function') {
         console.error(
-          'render(...): Expected the last optional `callback` argument to be a ' +
+          'Expected the last optional `callback` argument to be a ' +
             'function. Instead received: %s.',
           callback,
         );

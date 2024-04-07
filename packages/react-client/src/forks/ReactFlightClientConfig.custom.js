@@ -23,7 +23,7 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$config: any;
+declare const $$$config: any;
 
 export opaque type ModuleLoading = mixed;
 export opaque type SSRModuleMap = mixed;
@@ -47,3 +47,5 @@ export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 export const createStringDecoder = $$$config.createStringDecoder;
 export const readPartialStringChunk = $$$config.readPartialStringChunk;
 export const readFinalStringChunk = $$$config.readFinalStringChunk;
+
+export const printToConsole = $$$config.printToConsole;

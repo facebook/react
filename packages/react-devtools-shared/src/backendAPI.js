@@ -8,7 +8,7 @@
  */
 
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {backendToFrontendSerializedElementMapper} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
 import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
 import ElementPollingCancellationError from 'react-devtools-shared/src/errors/ElementPollingCancellationError';
@@ -226,9 +226,9 @@ export function convertInspectedElementBackendToFrontend(
     canViewSource,
     hasLegacyContext,
     id,
-    source,
     type,
     owners,
+    source,
     context,
     hooks,
     plugins,
@@ -261,22 +261,14 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    source,
+    // Previous backend implementations (<= 5.0.1) have a different interface for Source, with fileName.
+    // This gates the source features for only compatible backends: >= 5.0.2
+    source: source && source.sourceURL ? source : null,
     type,
     owners:
       owners === null
         ? null
-        : owners.map(owner => {
-            const [displayName, hocDisplayNames] = separateDisplayNameAndHOCs(
-              owner.displayName,
-              owner.type,
-            );
-            return {
-              ...owner,
-              displayName,
-              hocDisplayNames,
-            };
-          }),
+        : owners.map(backendToFrontendSerializedElementMapper),
     context: hydrateHelper(context),
     hooks: hydrateHelper(hooks),
     props: hydrateHelper(props),

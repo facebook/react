@@ -12,12 +12,22 @@ import type {RendererTask} from './ReactCurrentActQueue';
 import ReactCurrentActQueue from './ReactCurrentActQueue';
 import queueMacrotask from 'shared/enqueueTask';
 
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+
 // `act` calls can be nested, so we track the depth. This represents the
 // number of `act` scopes on the stack.
 let actScopeDepth = 0;
 
 // We only warn the first time you neglect to await an async `act` scope.
 let didWarnNoAwaitAct = false;
+
+function aggregateErrors(errors: Array<mixed>): mixed {
+  if (errors.length > 1 && typeof AggregateError === 'function') {
+    // eslint-disable-next-line no-undef
+    return new AggregateError(errors);
+  }
+  return errors[0];
+}
 
 export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
   if (__DEV__) {
@@ -30,7 +40,9 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     // `act` calls can be nested.
     //
     // If we're already inside an `act` scope, reuse the existing queue.
-    const prevIsBatchingLegacy = ReactCurrentActQueue.isBatchingLegacy;
+    const prevIsBatchingLegacy = !disableLegacyMode
+      ? ReactCurrentActQueue.isBatchingLegacy
+      : false;
     const prevActQueue = ReactCurrentActQueue.current;
     const prevActScopeDepth = actScopeDepth;
     actScopeDepth++;
@@ -40,7 +52,9 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     // set to `true` while the given callback is executed, not for updates
     // triggered during an async event, because this is how the legacy
     // implementation of `act` behaved.
-    ReactCurrentActQueue.isBatchingLegacy = true;
+    if (!disableLegacyMode) {
+      ReactCurrentActQueue.isBatchingLegacy = true;
+    }
 
     let result;
     // This tracks whether the `act` call is awaited. In certain cases, not
@@ -50,10 +64,13 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       // Reset this to `false` right before entering the React work loop. The
       // only place we ever read this fields is just below, right after running
       // the callback. So we don't need to reset after the callback runs.
-      ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+      if (!disableLegacyMode) {
+        ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+      }
       result = callback();
-      const didScheduleLegacyUpdate =
-        ReactCurrentActQueue.didScheduleLegacyUpdate;
+      const didScheduleLegacyUpdate = !disableLegacyMode
+        ? ReactCurrentActQueue.didScheduleLegacyUpdate
+        : false;
 
       // Replicate behavior of original `act` implementation in legacy mode,
       // which flushed updates immediately after the scope function exits, even
@@ -65,15 +82,24 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       // one used to track `act` scopes. Why, you may be wondering? Because
       // that's how it worked before version 18. Yes, it's confusing! We should
       // delete legacy mode!!
-      ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+      if (!disableLegacyMode) {
+        ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+      }
     } catch (error) {
       // `isBatchingLegacy` gets reset using the regular stack, not the async
       // one used to track `act` scopes. Why, you may be wondering? Because
       // that's how it worked before version 18. Yes, it's confusing! We should
       // delete legacy mode!!
-      ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+      ReactCurrentActQueue.thrownErrors.push(error);
+    }
+    if (ReactCurrentActQueue.thrownErrors.length > 0) {
+      if (!disableLegacyMode) {
+        ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+      }
       popActScope(prevActQueue, prevActScopeDepth);
-      throw error;
+      const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
+      ReactCurrentActQueue.thrownErrors.length = 0;
+      throw thrownError;
     }
 
     if (
@@ -123,7 +149,14 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
                   // `thenable` might not be a real promise, and `flushActQueue`
                   // might throw, so we need to wrap `flushActQueue` in a
                   // try/catch.
-                  reject(error);
+                  ReactCurrentActQueue.thrownErrors.push(error);
+                }
+                if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                  const thrownError = aggregateErrors(
+                    ReactCurrentActQueue.thrownErrors,
+                  );
+                  ReactCurrentActQueue.thrownErrors.length = 0;
+                  reject(thrownError);
                 }
               } else {
                 resolve(returnValue);
@@ -131,7 +164,15 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
             },
             error => {
               popActScope(prevActQueue, prevActScopeDepth);
-              reject(error);
+              if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                const thrownError = aggregateErrors(
+                  ReactCurrentActQueue.thrownErrors,
+                );
+                ReactCurrentActQueue.thrownErrors.length = 0;
+                reject(thrownError);
+              } else {
+                reject(error);
+              }
             },
           );
         },
@@ -183,6 +224,13 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         // to be awaited, regardless of whether the callback is sync or async.
         ReactCurrentActQueue.current = null;
       }
+
+      if (ReactCurrentActQueue.thrownErrors.length > 0) {
+        const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
+        ReactCurrentActQueue.thrownErrors.length = 0;
+        throw thrownError;
+      }
+
       return {
         then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
@@ -239,15 +287,20 @@ function recursivelyFlushAsyncActWork<T>(
           queueMacrotask(() =>
             recursivelyFlushAsyncActWork(returnValue, resolve, reject),
           );
+          return;
         } catch (error) {
           // Leave remaining tasks on the queue if something throws.
-          reject(error);
+          ReactCurrentActQueue.thrownErrors.push(error);
         }
       } else {
         // The queue is empty. We can finish.
         ReactCurrentActQueue.current = null;
-        resolve(returnValue);
       }
+    }
+    if (ReactCurrentActQueue.thrownErrors.length > 0) {
+      const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
+      ReactCurrentActQueue.thrownErrors.length = 0;
+      reject(thrownError);
     } else {
       resolve(returnValue);
     }
@@ -287,7 +340,7 @@ function flushActQueue(queue: Array<RendererTask>) {
       } catch (error) {
         // If something throws, leave the remaining callbacks on the queue.
         queue.splice(0, i + 1);
-        throw error;
+        ReactCurrentActQueue.thrownErrors.push(error);
       } finally {
         isFlushing = false;
       }

@@ -2,9 +2,11 @@
 
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
+import semver from 'semver';
+
 import {createElement} from 'react';
 import {createRoot} from 'react-dom/client';
-import {render, unmountComponentAtNode} from 'react-dom';
+
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
 import EditableProps from './EditableProps';
@@ -28,7 +30,7 @@ ignoreErrors([
   'Warning: Legacy context API',
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
-  'Warning: ReactDOM.render is no longer supported in React 18',
+  'Warning: ReactDOM.render was removed in React 19',
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);
@@ -67,17 +69,26 @@ function mountStrictApp(App) {
 }
 
 function mountLegacyApp(App: () => React$Node) {
+  // $FlowFixMe[prop-missing]: These are removed in 19.
+  const {render, unmountComponentAtNode} = require('react-dom');
+
   function LegacyRender() {
     return createElement(App);
   }
 
   const container = createContainer();
 
+  // $FlowFixMe[not-a-function]: These are removed in 19.
   render(createElement(LegacyRender), container);
 
+  // $FlowFixMe: These are removed in 19.
   unmountFunctions.push(() => unmountComponentAtNode(container));
 }
 
+const shouldRenderLegacy = semver.lte(
+  process.env.E2E_APP_REACT_VERSION,
+  '18.2.0',
+);
 function mountTestApp() {
   mountStrictApp(ToDoList);
   mountApp(InspectableElements);
@@ -90,7 +101,10 @@ function mountTestApp() {
   mountApp(SuspenseTree);
   mountApp(DeeplyNestedComponents);
   mountApp(Iframe);
-  mountLegacyApp(PartiallyStrictApp);
+
+  if (shouldRenderLegacy) {
+    mountLegacyApp(PartiallyStrictApp);
+  }
 }
 
 function unmountTestApp() {

@@ -47,10 +47,7 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {
-  useMicrotasksForSchedulingInFabric,
-  passChildrenWhenCloningPersistedNodes,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -278,13 +275,21 @@ function getPublicTextInstance(
 export function getPublicInstanceFromInternalInstanceHandle(
   internalInstanceHandle: InternalInstanceHandle,
 ): null | PublicInstance | PublicTextInstance {
+  const instance = internalInstanceHandle.stateNode;
+
+  // React resets all the fields in the fiber when the component is unmounted
+  // to prevent memory leaks.
+  if (instance == null) {
+    return null;
+  }
+
   if (internalInstanceHandle.tag === HostText) {
-    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    const textInstance: TextInstance = instance;
     return getPublicTextInstance(textInstance, internalInstanceHandle);
   }
 
-  const instance: Instance = internalInstanceHandle.stateNode;
-  return getPublicInstance(instance);
+  const elementInstance: Instance = internalInstanceHandle.stateNode;
+  return getPublicInstance(elementInstance);
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
@@ -499,6 +504,10 @@ export const NotPendingTransition: TransitionStatus = null;
 // -------------------
 //     Microtasks
 // -------------------
-export const supportsMicrotasks = useMicrotasksForSchedulingInFabric;
+
+export const supportsMicrotasks: boolean =
+  typeof RN$enableMicrotasksInReact !== 'undefined' &&
+  !!RN$enableMicrotasksInReact;
+
 export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function' ? queueMicrotask : scheduleTimeout;

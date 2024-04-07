@@ -9,7 +9,6 @@ PropTypes = null
 React = null
 ReactDOM = null
 ReactDOMClient = null
-act = null
 
 featureFlags = require 'shared/ReactFeatureFlags'
 
@@ -49,17 +48,24 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'throws if no render function is defined', ->
     class Foo extends React.Component
+    caughtErrors = []
+    errorHandler = (event) ->
+      event.preventDefault()
+      caughtErrors.push(event.error)
+    window.addEventListener 'error', errorHandler;
     expect(->
-      expect(->
-        ReactDOM.flushSync ->
-          root.render React.createElement(Foo)
-      ).toThrow()
+      ReactDOM.flushSync ->
+        root.render React.createElement(Foo)
     ).toErrorDev([
-      # A failed component renders four times in DEV in concurrent mode
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
-      'No `render` method found on the returned component instance',
+      # A failed component renders twice in DEV in concurrent mode
+      'No `render` method found on the Foo instance',
+      'No `render` method found on the Foo instance',
+    ])
+    window.removeEventListener 'error', errorHandler;
+    expect(caughtErrors).toEqual([
+      expect.objectContaining(
+        message: expect.stringContaining('is not a function')
+      )
     ])
 
   it 'renders a simple stateless component with prop', ->
@@ -535,30 +541,25 @@ describe 'ReactCoffeeScriptClass', ->
 
       test React.createElement(Foo), 'DIV', 'bar-through-context'
 
-  it 'supports string refs', ->
-    class Foo extends React.Component
-      render: ->
-        React.createElement(InnerComponent,
-          name: 'foo'
-          ref: 'inner'
-        )
+  if !featureFlags.disableStringRefs
+    it 'supports string refs', ->
+      class Foo extends React.Component
+        render: ->
+          React.createElement(InnerComponent,
+            name: 'foo'
+            ref: 'inner'
+          )
 
-    ref = React.createRef()
-    expect(->
-      test(React.createElement(Foo, ref: ref), 'DIV', 'foo')
-    ).toErrorDev([
-      'Warning: Component "Foo" contains the string ref "inner". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in Foo (at **)'
-    ]);
-    expect(ref.current.refs.inner.getName()).toBe 'foo'
-
-  it 'supports drilling through to the DOM using findDOMNode', ->
-    ref = React.createRef()
-    test React.createElement(InnerComponent, name: 'foo', ref: ref), 'DIV', 'foo'
-    node = ReactDOM.findDOMNode(ref.current)
-    expect(node).toBe container.firstChild
+      ref = React.createRef()
+      expect(->
+        test(React.createElement(Foo, ref: ref), 'DIV', 'foo')
+      ).toErrorDev([
+        'Warning: Component "Foo" contains the string ref "inner". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+          '    in _Class (at **)'
+      ]);
+      expect(ref.current.refs.inner.getName()).toBe 'foo'
 
   undefined

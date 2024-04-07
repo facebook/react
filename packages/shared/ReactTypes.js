@@ -25,39 +25,34 @@ export type ReactText = string | number;
 
 export type ReactProvider<T> = {
   $$typeof: symbol | number,
-  type: ReactProviderType<T>,
+  type: ReactContext<T>,
   key: null | string,
   ref: null,
   props: {
     value: T,
     children?: ReactNodeList,
-    ...
   },
-  ...
 };
 
-export type ReactProviderType<T> = {
+export type ReactConsumerType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
-  ...
 };
 
 export type ReactConsumer<T> = {
   $$typeof: symbol | number,
-  type: ReactContext<T>,
+  type: ReactConsumerType<T>,
   key: null | string,
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactContext<T> = {
   $$typeof: symbol | number,
-  Consumer: ReactContext<T>,
-  Provider: ReactProviderType<T>,
+  Consumer: ReactConsumerType<T>,
+  Provider: ReactContext<T>,
   _currentValue: T,
   _currentValue2: T,
   _threadCount: number,
@@ -67,22 +62,7 @@ export type ReactContext<T> = {
   // This value may be added by application code
   // to improve DEV tooling display names
   displayName?: string,
-
-  // only used by ServerContext
-  _defaultValue: T,
-  _globalName: string,
-  ...
 };
-
-export type ServerContextJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | $ReadOnlyArray<ServerContextJSONValue>
-  | {+[key: string]: ServerContextJSONValue};
-
-export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
   $$typeof: symbol | number,
@@ -91,7 +71,6 @@ export type ReactPortal = {
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
-  ...
 };
 
 export type RefObject = {
@@ -104,7 +83,7 @@ export type ReactScope = {
 
 export type ReactScopeQuery = (
   type: string,
-  props: {[string]: mixed, ...},
+  props: {[string]: mixed},
   instance: mixed,
 ) => boolean;
 
@@ -132,20 +111,24 @@ interface ThenableImpl<T> {
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface PendingThenable<T> extends ThenableImpl<T> {
   status: 'pending';
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface FulfilledThenable<T> extends ThenableImpl<T> {
   status: 'fulfilled';
   value: T;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface RejectedThenable<T> extends ThenableImpl<T> {
   status: 'rejected';
   reason: mixed;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export type Thenable<T> =
@@ -184,3 +167,27 @@ export type ReactFormState<S, ReferenceId> = [
   ReferenceId /* Server Reference ID */,
   number /* number of bound arguments */,
 ];
+
+export type Awaited<T> = T extends null | void
+  ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
+  : T extends Object // `await` only unwraps object types with a callable then. Non-object types are not unwrapped.
+  ? T extends {then(onfulfilled: infer F): any} // thenable, extracts the first argument to `then()`
+    ? F extends (value: infer V) => any // if the argument to `then` is callable, extracts the argument
+      ? Awaited<V> // recursively unwrap the value
+      : empty // the argument to `then` was not callable.
+    : T // argument was not an object
+  : T; // non-thenable
+
+export type ReactComponentInfo = {
+  +name?: string,
+  +env?: string,
+  +owner?: null | ReactComponentInfo,
+};
+
+export type ReactAsyncInfo = {
+  +started?: number,
+  +completed?: number,
+  +stack?: string,
+};
+
+export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;

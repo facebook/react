@@ -16,7 +16,7 @@ import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
@@ -49,9 +49,9 @@ function createDrainHandler(destination: Destination, request: Request) {
 }
 
 type Options = {
+  environmentName?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
 
@@ -69,9 +69,9 @@ function renderToPipeableStream(
     model,
     turbopackMap,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -158,8 +158,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(turbopackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {

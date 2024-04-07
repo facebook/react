@@ -12,8 +12,8 @@
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
     "node-fetch": "^1.6.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",

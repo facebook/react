@@ -528,14 +528,13 @@ describe('ReactFabric', () => {
     }));
 
     const snapshots = [];
-    nativeFabricUIManager.completeRoot.mockImplementation(function (
-      rootTag,
-      newChildSet,
-    ) {
-      snapshots.push(
-        nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
-      );
-    });
+    nativeFabricUIManager.completeRoot.mockImplementation(
+      function (rootTag, newChildSet) {
+        snapshots.push(
+          nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
+        );
+      },
+    );
 
     await act(() => {
       ReactFabric.render(
@@ -903,7 +902,7 @@ describe('ReactFabric', () => {
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-find-node' +
+        'https://react.dev/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -942,7 +941,7 @@ describe('ReactFabric', () => {
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-find-node' +
+        'https://react.dev/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
@@ -981,7 +980,7 @@ describe('ReactFabric', () => {
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-find-node' +
+        'https://react.dev/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -1020,7 +1019,7 @@ describe('ReactFabric', () => {
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-find-node' +
+        'https://react.dev/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
@@ -1113,6 +1112,16 @@ describe('ReactFabric', () => {
         internalInstanceHandle,
       );
     expect(publicInstance).toBe(viewRef);
+
+    await act(() => {
+      ReactFabric.render(null, 1);
+    });
+
+    const publicInstanceAfterUnmount =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
+    expect(publicInstanceAfterUnmount).toBe(null);
   });
 
   it('getPublicInstanceFromInternalInstanceHandle should provide public instances for HostText', async () => {
@@ -1154,5 +1163,16 @@ describe('ReactFabric', () => {
       ReactNativePrivateInterface.createPublicTextInstance.mock.results[0]
         .value;
     expect(publicInstance).toBe(expectedPublicInstance);
+
+    await act(() => {
+      ReactFabric.render(null, 1);
+    });
+
+    const publicInstanceAfterUnmount =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
+
+    expect(publicInstanceAfterUnmount).toBe(null);
   });
 });

@@ -32,6 +32,7 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactDOMFizzServer;
+let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
@@ -46,19 +47,19 @@ describe('ReactFlightDOM', () => {
     JSDOM = require('jsdom').JSDOM;
 
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.react-server'));
+    FlightReact = require('react');
+    FlightReactDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    jest.mock('react', () => require('react/react.shared-subset'));
-
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
     ReactServerDOMServer = require('react-server-dom-webpack/server');
-    FlightReact = require('react');
-    FlightReactDOM = require('react-dom');
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.unmock('react-server-dom-webpack/server');
@@ -71,6 +72,7 @@ describe('ReactFlightDOM', () => {
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server.node');
+    ReactDOMStaticServer = require('react-dom/static.node');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
 
     ErrorBoundary = class extends React.Component {
@@ -566,6 +568,32 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('throws when accessing a symbol prop from client exports', () => {
+    const symbol = Symbol('test');
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function read() {
+      return ClientModule[symbol];
+    }
+    expect(read).toThrowError(
+      'Cannot read Symbol exports. ' +
+        'Only named exports are supported on a client module imported on the server.',
+    );
+  });
+
+  it('does not throw when toString:ing client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    expect(Object.prototype.toString.call(ClientModule)).toBe(
+      '[object Object]',
+    );
+    expect(Object.prototype.toString.call(ClientModule.Component)).toBe(
+      '[object Function]',
+    );
+  });
+
   it('does not throw when React inspects any deep props', () => {
     const ClientModule = clientExports({
       Component: function () {},
@@ -784,6 +812,110 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  it('should handle streaming async server components', async () => {
+    const reportedErrors = [];
+
+    const Row = async ({current, next}) => {
+      const chunk = await next;
+
+      if (chunk.done) {
+        return chunk.value;
+      }
+
+      return (
+        <Suspense fallback={chunk.value}>
+          <Row current={chunk.value} next={chunk.next} />
+        </Suspense>
+      );
+    };
+
+    function createResolvablePromise() {
+      let _resolve, _reject;
+
+      const promise = new Promise((resolve, reject) => {
+        _resolve = resolve;
+        _reject = reject;
+      });
+
+      return {promise, resolve: _resolve, reject: _reject};
+    }
+
+    function createSuspendedChunk(initialValue) {
+      const {promise, resolve, reject} = createResolvablePromise();
+
+      return {
+        row: (
+          <Suspense fallback={initialValue}>
+            <Row current={initialValue} next={promise} />
+          </Suspense>
+        ),
+        resolve,
+        reject,
+      };
+    }
+
+    function makeDelayedText() {
+      const {promise, resolve, reject} = createResolvablePromise();
+      async function DelayedText() {
+        const data = await promise;
+        return <div>{data}</div>;
+      }
+      return [DelayedText, resolve, reject];
+    }
+
+    const [Posts, resolvePostsData] = makeDelayedText();
+    const [Photos, resolvePhotosData] = makeDelayedText();
+    const suspendedChunk = createSuspendedChunk(<p>loading</p>);
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      suspendedChunk.row,
+      webpackMap,
+      {
+        onError(error) {
+          reportedErrors.push(error);
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    await act(() => {
+      root.render(<ClientRoot />);
+    });
+
+    expect(container.innerHTML).toBe('<p>loading</p>');
+
+    const donePromise = createResolvablePromise();
+
+    const value = (
+      <Suspense fallback={<p>loading posts and photos</p>}>
+        <Posts />
+        <Photos />
+      </Suspense>
+    );
+
+    await act(async () => {
+      suspendedChunk.resolve({value, done: false, next: donePromise.promise});
+      donePromise.resolve({value, done: true});
+    });
+
+    expect(container.innerHTML).toBe('<p>loading posts and photos</p>');
+
+    await act(async () => {
+      await resolvePostsData('posts');
+      await resolvePhotosData('photos');
+    });
+
+    expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
+    expect(reportedErrors).toEqual([]);
+  });
+
   it('should preserve state of client components on refetch', async () => {
     // Client
 
@@ -917,9 +1049,7 @@ describe('ReactFlightDOM', () => {
       abort('for reasons');
     });
     if (__DEV__) {
-      expect(container.innerHTML).toBe(
-        '<p>Error: for reasons + a dev digest</p>',
-      );
+      expect(container.innerHTML).toBe('<p>for reasons + a dev digest</p>');
     } else {
       expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
     }
@@ -1300,6 +1430,91 @@ describe('ReactFlightDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
+  // @gate enablePostpone
+  it('should allow postponing in Flight through a serialized promise', async () => {
+    const Context = React.createContext();
+    const ContextProvider = Context.Provider;
+
+    function Foo() {
+      const value = React.use(React.useContext(Context));
+      return <span>{value}</span>;
+    }
+
+    const ClientModule = clientExports({
+      ContextProvider,
+      Foo,
+    });
+
+    async function getFoo() {
+      React.unstable_postpone('foo');
+    }
+
+    function App() {
+      return (
+        <ClientModule.ContextProvider value={getFoo()}>
+          <div>
+            <Suspense fallback="loading...">
+              <ClientModule.Foo />
+            </Suspense>
+          </div>
+        </ClientModule.ContextProvider>
+      );
+    }
+
+    const {writable, readable} = getTestStream();
+
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <App />,
+      webpackMap,
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function Response() {
+      return getResponse();
+    }
+
+    const errors = [];
+    function onError(error, errorInfo) {
+      errors.push(error, errorInfo);
+    }
+    const result = await ReactDOMStaticServer.prerenderToNodeStream(
+      <Response />,
+      {
+        onError,
+      },
+    );
+
+    const prelude = await new Promise((resolve, reject) => {
+      let content = '';
+      result.prelude.on('data', chunk => {
+        content += Buffer.from(chunk).toString('utf8');
+      });
+      result.prelude.on('error', error => {
+        reject(error);
+      });
+      result.prelude.on('end', () => resolve(content));
+    });
+
+    expect(errors).toEqual([]);
+    const doc = new JSDOM(prelude).window.document;
+    expect(getMeaningfulChildren(doc)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+  });
+
   it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1569,5 +1784,48 @@ describe('ReactFlightDOM', () => {
 
     await collectHints(readable);
     expect(hintRows.length).toEqual(6);
+  });
+
+  it('should be able to include a client reference in printed errors', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function ({prop}) {
+      return 'This should never render';
+    });
+
+    const ClientReference = clientExports({});
+
+    class InvalidValue {}
+
+    const {writable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <div>
+        <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+
+    expect(reportedErrors.length).toBe(1);
+    if (__DEV__) {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <... prop={client} invalid={function InvalidValue}>\n' +
+          '                             ^^^^^^^^^^^^^^^^^^^^^^^',
+      );
+    } else {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  {prop: client, invalid: function InvalidValue}\n' +
+          '                          ^^^^^^^^^^^^^^^^^^^^^',
+      );
+    }
   });
 });

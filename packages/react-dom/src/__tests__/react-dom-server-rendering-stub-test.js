@@ -30,6 +30,9 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.createRoot).toBe(undefined);
     expect(ReactDOM.hydrateRoot).toBe(undefined);
     expect(ReactDOM.findDOMNode).toBe(undefined);
+    expect(
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode,
+    ).toBe(null);
     expect(ReactDOM.hydrate).toBe(undefined);
     expect(ReactDOM.render).toBe(undefined);
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
@@ -38,7 +41,6 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });
 
-  // @gate enableFloat
   it('provides preload, preloadModule, preinit, and preinitModule exports', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
@@ -83,7 +85,6 @@ describe('react-dom-server-rendering-stub', () => {
     expect(x).toBe(false);
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('exports useFormStatus', async () => {
     function App() {

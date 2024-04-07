@@ -7,4 +7,19 @@
  * @flow
  */
 
-export * from './index.stable.js';
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
+  preload,
+  preloadModule,
+  preinit,
+  preinitModule,
+  version,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+} from './index.stable.js';
+export {createRoot, hydrateRoot} from './client.js';

@@ -106,15 +106,15 @@ describe('updaters', () => {
 
     const Parent = () => <Child />;
     const Child = () => null;
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
 
     await act(() => {
-      ReactDOM.render(<Parent />, container);
+      root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot]]);
 
     await act(() => {
-      ReactDOM.render(<Parent />, container);
+      root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
   });
@@ -141,8 +141,9 @@ describe('updaters', () => {
     };
     const Child = () => null;
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
+      root.render(<Parent />);
     });
     expect(scheduleForA).not.toBeNull();
     expect(scheduleForB).not.toBeNull();
@@ -174,8 +175,9 @@ describe('updaters', () => {
     }
     const Child = () => null;
     let instance;
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
+      root.render(<Parent />);
     });
     expect(allSchedulerTypes).toEqual([[null]]);
 
@@ -260,6 +262,9 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
+  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
+  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
+  // @gate !disableLegacyMode
   it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;
