@@ -581,6 +581,8 @@ function createModelResolver<T>(
   parentObject: Object,
   key: string,
   cyclic: boolean,
+  response: Response,
+  map: (response: Response, model: any) => T,
 ): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
@@ -595,12 +597,12 @@ function createModelResolver<T>(
     };
   }
   return value => {
-    parentObject[key] = value;
+    parentObject[key] = map(response, value);
 
     // If this is the root object for a model reference, where `blocked.value`
     // is a stale `null`, the resolved value can be used directly.
     if (key === '' && blocked.value === null) {
-      blocked.value = value;
+      blocked.value = parentObject[key];
     }
 
     blocked.deps--;
@@ -651,22 +653,101 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
   return proxy;
 }
 
-function getOutlinedModel(response: Response, id: number): any {
+function getOutlinedModel<T>(
+  response: Response,
+  id: number,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any) => T,
+): T {
   const chunk = getChunk(response, id);
   switch (chunk.status) {
     case RESOLVED_MODEL:
       initializeModelChunk(chunk);
       break;
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
   }
   // The status might have changed after initialization.
   switch (chunk.status) {
-    case INITIALIZED: {
-      return chunk.value;
-    }
-    // We always encode it first in the stream so it won't be pending.
+    case INITIALIZED:
+      const chunkValue = map(response, chunk.value);
+      if (__DEV__ && chunk._debugInfo) {
+        // If we have a direct reference to an object that was rendered by a synchronous
+        // server component, it might have some debug info about how it was rendered.
+        // We forward this to the underlying object. This might be a React Element or
+        // an Array fragment.
+        // If this was a string / number return value we lose the debug info. We choose
+        // that tradeoff to allow sync server components to return plain values and not
+        // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+        if (
+          typeof chunkValue === 'object' &&
+          chunkValue !== null &&
+          (Array.isArray(chunkValue) ||
+            chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
+          !chunkValue._debugInfo
+        ) {
+          // We should maybe use a unique symbol for arrays but this is a React owned array.
+          // $FlowFixMe[prop-missing]: This should be added to elements.
+          Object.defineProperty((chunkValue: any), '_debugInfo', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: chunk._debugInfo,
+          });
+        }
+      }
+      return chunkValue;
+    case PENDING:
+    case BLOCKED:
+    case CYCLIC:
+      const parentChunk = initializingChunk;
+      chunk.then(
+        createModelResolver(
+          parentChunk,
+          parentObject,
+          key,
+          chunk.status === CYCLIC,
+          response,
+          map,
+        ),
+        createModelReject(parentChunk),
+      );
+      return (null: any);
     default:
       throw chunk.reason;
   }
+}
+
+function createMap(
+  response: Response,
+  model: Array<[any, any]>,
+): Map<any, any> {
+  return new Map(model);
+}
+
+function createSet(response: Response, model: Array<any>): Set<any> {
+  return new Set(model);
+}
+
+function createBlob(response: Response, model: Array<any>): Blob {
+  return new Blob(model.slice(1), {type: model[0]});
+}
+
+function createFormData(
+  response: Response,
+  model: Array<[any, any]>,
+): FormData {
+  const formData = new FormData();
+  for (let i = 0; i < model.length; i++) {
+    formData.append(model[i][0], model[i][1]);
+  }
+  return formData;
+}
+
+function createModel(response: Response, model: any): any {
+  return model;
 }
 
 function parseModelString(
@@ -710,8 +791,13 @@ function parseModelString(
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);
-        const metadata = getOutlinedModel(response, id);
-        return createServerReferenceProxy(response, metadata);
+        return getOutlinedModel(
+          response,
+          id,
+          parentObject,
+          key,
+          createServerReferenceProxy,
+        );
       }
       case 'T': {
         // Temporary Reference
@@ -728,33 +814,31 @@ function parseModelString(
       case 'Q': {
         // Map
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Map(data);
+        return getOutlinedModel(response, id, parentObject, key, createMap);
       }
       case 'W': {
         // Set
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Set(data);
+        return getOutlinedModel(response, id, parentObject, key, createSet);
       }
       case 'B': {
         // Blob
         if (enableBinaryFlight) {
           const id = parseInt(value.slice(2), 16);
-          const data = getOutlinedModel(response, id);
-          return new Blob(data.slice(1), {type: data[0]});
+          return getOutlinedModel(response, id, parentObject, key, createBlob);
         }
         return undefined;
       }
       case 'K': {
         // FormData
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        const formData = new FormData();
-        for (let i = 0; i < data.length; i++) {
-          formData.append(data[i][0], data[i][1]);
-        }
-        return formData;
+        return getOutlinedModel(
+          response,
+          id,
+          parentObject,
+          key,
+          createFormData,
+        );
       }
       case 'I': {
         // $Infinity
@@ -803,62 +887,7 @@ function parseModelString(
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.slice(1), 16);
-        const chunk = getChunk(response, id);
-        switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
-            break;
-          case RESOLVED_MODULE:
-            initializeModuleChunk(chunk);
-            break;
-        }
-        // The status might have changed after initialization.
-        switch (chunk.status) {
-          case INITIALIZED:
-            const chunkValue = chunk.value;
-            if (__DEV__ && chunk._debugInfo) {
-              // If we have a direct reference to an object that was rendered by a synchronous
-              // server component, it might have some debug info about how it was rendered.
-              // We forward this to the underlying object. This might be a React Element or
-              // an Array fragment.
-              // If this was a string / number return value we lose the debug info. We choose
-              // that tradeoff to allow sync server components to return plain values and not
-              // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-              if (
-                typeof chunkValue === 'object' &&
-                chunkValue !== null &&
-                (Array.isArray(chunkValue) ||
-                  chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
-                !chunkValue._debugInfo
-              ) {
-                // We should maybe use a unique symbol for arrays but this is a React owned array.
-                // $FlowFixMe[prop-missing]: This should be added to elements.
-                Object.defineProperty(chunkValue, '_debugInfo', {
-                  configurable: false,
-                  enumerable: false,
-                  writable: true,
-                  value: chunk._debugInfo,
-                });
-              }
-            }
-            return chunkValue;
-          case PENDING:
-          case BLOCKED:
-          case CYCLIC:
-            const parentChunk = initializingChunk;
-            chunk.then(
-              createModelResolver(
-                parentChunk,
-                parentObject,
-                key,
-                chunk.status === CYCLIC,
-              ),
-              createModelReject(parentChunk),
-            );
-            return null;
-          default:
-            throw chunk.reason;
-        }
+        return getOutlinedModel(response, id, parentObject, key, createModel);
       }
     }
   }

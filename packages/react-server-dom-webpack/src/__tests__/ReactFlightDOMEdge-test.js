@@ -18,6 +18,9 @@ global.TextDecoder = require('util').TextDecoder;
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
+if (typeof File === 'undefined') {
+  global.File = require('buffer').File;
+}
 
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
@@ -350,6 +353,81 @@ describe('ReactFlightDOMEdge', () => {
     expect(result instanceof Blob).toBe(true);
     expect(result.size).toBe(bytes.length * 2);
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  });
+
+  if (typeof FormData !== 'undefined' && typeof File !== 'undefined') {
+    // @gate enableBinaryFlight
+    it('can transport FormData (blobs)', async () => {
+      const bytes = new Uint8Array([
+        123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+      ]);
+      const blob = new Blob([bytes, bytes], {
+        type: 'application/x-test',
+      });
+
+      const formData = new FormData();
+      formData.append('hi', 'world');
+      formData.append('file', blob, 'filename.test');
+
+      expect(formData.get('file') instanceof File).toBe(true);
+      expect(formData.get('file').name).toBe('filename.test');
+
+      const stream = passThrough(
+        ReactServerDOMServer.renderToReadableStream(formData),
+      );
+      const result = await ReactServerDOMClient.createFromReadableStream(
+        stream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+
+      expect(result instanceof FormData).toBe(true);
+      expect(result.get('hi')).toBe('world');
+      const resultBlob = result.get('file');
+      expect(resultBlob instanceof Blob).toBe(true);
+      expect(resultBlob.name).toBe('blob'); // We should not pass through the file name for security.
+      expect(resultBlob.size).toBe(bytes.length * 2);
+      expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+    });
+  }
+
+  it('can pass an async import that resolves later to an outline object like a Map', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    const asyncClient = clientExports(promise);
+
+    // We await the value on the servers so it's an async value that the client should wait for
+    const awaitedValue = await asyncClient;
+
+    const map = new Map();
+    map.set('value', awaitedValue);
+
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(map, webpackMap),
+    );
+
+    // Parsing the root blocks because the module hasn't loaded yet
+    const resultPromise = ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    // Afterwards we finally resolve the module value so it's available on the client
+    resolve('hello');
+
+    const result = await resultPromise;
+    expect(result instanceof Map).toBe(true);
+    expect(result.get('value')).toBe('hello');
   });
 
   it('warns if passing a this argument to bind() of a server reference', async () => {

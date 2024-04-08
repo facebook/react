@@ -1239,27 +1239,25 @@ function serializeTypedArray(
 }
 
 function serializeBlob(request: Request, blob: Blob): string {
-  const id = request.nextChunkId++;
-  request.pendingChunks++;
+  const model: Array<string | Uint8Array> = [blob.type];
+  const newTask = createTask(
+    request,
+    model,
+    null,
+    false,
+    request.abortableTasks,
+  );
 
   const reader = blob.stream().getReader();
-
-  const model: Array<string | Uint8Array> = [blob.type];
 
   function progress(
     entry: {done: false, value: Uint8Array} | {done: true, value: void},
   ): Promise<void> | void {
     if (entry.done) {
-      const blobId = outlineModel(request, model);
-      const blobReference = '$B' + blobId.toString(16);
-      const processedChunk = encodeReferenceChunk(request, id, blobReference);
-      request.completedRegularChunks.push(processedChunk);
-      if (request.destination !== null) {
-        flushCompletedChunks(request, request.destination);
-      }
+      pingTask(request, newTask);
       return;
     }
-    // TODO: Emit the chunk early and refer to it later.
+    // TODO: Emit the chunk early and refer to it later by dedupe.
     model.push(entry.value);
     // $FlowFixMe[incompatible-call]
     return reader.read().then(progress).catch(error);
@@ -1267,7 +1265,8 @@ function serializeBlob(request: Request, blob: Blob): string {
 
   function error(reason: mixed) {
     const digest = logRecoverableError(request, reason);
-    emitErrorChunk(request, id, digest, reason);
+    emitErrorChunk(request, newTask.id, digest, reason);
+    request.abortableTasks.delete(newTask);
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
@@ -1275,7 +1274,7 @@ function serializeBlob(request: Request, blob: Blob): string {
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
 
-  return '$' + id.toString(16);
+  return '$B' + newTask.id.toString(16);
 }
 
 function escapeStringValue(value: string): string {
