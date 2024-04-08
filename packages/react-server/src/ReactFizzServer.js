@@ -152,10 +152,6 @@ import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
 import type {Postpone} from 'react/src/ReactPostpone';
 
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
 // because it's just the same compiled output in practice.
@@ -3665,21 +3661,21 @@ export function performWork(request: Request): void {
     return;
   }
   const prevContext = getActiveContext();
-  const prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = HooksDispatcher;
-  let prevCacheDispatcher;
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
+  let prevCacheDispatcher = null;
   if (enableCache) {
-    prevCacheDispatcher = ReactCurrentCache.current;
-    ReactCurrentCache.current = DefaultCacheDispatcher;
+    prevCacheDispatcher = ReactSharedInternals.C;
+    ReactSharedInternals.C = DefaultCacheDispatcher;
   }
 
   const prevRequest = currentRequest;
   currentRequest = request;
 
-  let prevGetCurrentStackImpl;
+  let prevGetCurrentStackImpl = null;
   if (__DEV__) {
-    prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
-    ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
+    prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
   }
   const prevResumableState = currentResumableState;
   setCurrentResumableState(request.resumableState);
@@ -3700,13 +3696,13 @@ export function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     setCurrentResumableState(prevResumableState);
-    ReactCurrentDispatcher.current = prevDispatcher;
+    ReactSharedInternals.H = prevDispatcher;
     if (enableCache) {
-      ReactCurrentCache.current = prevCacheDispatcher;
+      ReactSharedInternals.C = prevCacheDispatcher;
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+      ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
     }
     if (prevDispatcher === HooksDispatcher) {
       // This means that we were in a reentrant work loop. This could happen

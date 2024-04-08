@@ -7,26 +7,22 @@
  * @flow
  */
 
-import type {BatchConfig} from 'react/src/ReactCurrentBatchConfig';
-
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 import {DiscreteEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-const ReactCurrentBatchConfig: BatchConfig =
-  ReactSharedInternals.ReactCurrentBatchConfig;
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 declare function flushSyncImpl<R>(fn: () => R): R;
 declare function flushSyncImpl(void): void;
 function flushSyncImpl<R>(fn: (() => R) | void): R | void {
-  const previousTransition = ReactCurrentBatchConfig.transition;
+  const previousTransition = ReactSharedInternals.T;
   const previousUpdatePriority =
     ReactDOMSharedInternals.p; /* ReactDOMCurrentUpdatePriority */
 
   try {
-    ReactCurrentBatchConfig.transition = null;
+    ReactSharedInternals.T = null;
     ReactDOMSharedInternals.p /* ReactDOMCurrentUpdatePriority */ =
       DiscreteEventPriority;
     if (fn) {
@@ -35,7 +31,7 @@ function flushSyncImpl<R>(fn: (() => R) | void): R | void {
       return undefined;
     }
   } finally {
-    ReactCurrentBatchConfig.transition = previousTransition;
+    ReactSharedInternals.T = previousTransition;
     ReactDOMSharedInternals.p /* ReactDOMCurrentUpdatePriority */ =
       previousUpdatePriority;
     const wasInRender =

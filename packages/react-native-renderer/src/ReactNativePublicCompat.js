@@ -27,13 +27,11 @@ import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
 ): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
@@ -88,7 +86,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
 
 export function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(

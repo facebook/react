@@ -10,8 +10,6 @@
 import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-
 export function waitForSuspense<T>(fn: () => T): Promise<T> {
   const cache: Map<Function, mixed> = new Map();
   const testDispatcher: CacheDispatcher = {
@@ -28,8 +26,8 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
   // Not using async/await because we don't compile it.
   return new Promise((resolve, reject) => {
     function retry() {
-      const prevDispatcher = ReactCurrentCache.current;
-      ReactCurrentCache.current = testDispatcher;
+      const prevDispatcher = ReactSharedInternals.C;
+      ReactSharedInternals.C = testDispatcher;
       try {
         const result = fn();
         resolve(result);
@@ -40,7 +38,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
           reject(thrownValue);
         }
       } finally {
-        ReactCurrentCache.current = prevDispatcher;
+        ReactSharedInternals.C = prevDispatcher;
       }
     }
     retry();

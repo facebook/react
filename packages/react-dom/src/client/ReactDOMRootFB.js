@@ -154,8 +154,6 @@ export function hydrateRoot(
   );
 }
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
 let topLevelUpdateWarnings;
 
 if (__DEV__) {
@@ -344,7 +342,7 @@ export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
+    const owner = (ReactSharedInternals.owner: any);
     if (owner !== null && owner.stateNode !== null) {
       const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
       if (!warnedAboutRefsInRender) {
