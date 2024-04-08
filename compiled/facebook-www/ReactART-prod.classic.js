@@ -9339,28 +9339,10 @@ function performSyncWorkOnRoot(root, lanes) {
   ensureRootIsScheduled(root);
   return null;
 }
-function flushSync(fn) {
-  null !== rootWithPendingPassiveEffects &&
-    0 === rootWithPendingPassiveEffects.tag &&
-    0 === (executionContext & 6) &&
-    flushPassiveEffects();
-  var prevExecutionContext = executionContext;
-  executionContext |= 1;
-  var prevTransition = ReactCurrentBatchConfig.transition,
-    previousPriority = currentUpdatePriority;
-  try {
-    if (
-      ((currentUpdatePriority = 2),
-      (ReactCurrentBatchConfig.transition = null),
-      fn)
-    )
-      return fn();
-  } finally {
-    (currentUpdatePriority = previousPriority),
-      (ReactCurrentBatchConfig.transition = prevTransition),
-      (executionContext = prevExecutionContext),
-      0 === (executionContext & 6) && flushSyncWorkAcrossRoots_impl(!1);
-  }
+function flushSyncWork() {
+  return 0 === (executionContext & 6)
+    ? (flushSyncWorkAcrossRoots_impl(!1), !1)
+    : !0;
 }
 function resetWorkInProgressStack() {
   if (null !== workInProgress) {
@@ -10428,54 +10410,9 @@ function FiberRootNode(
     )
       containerInfo.push(null);
 }
-function createContainer(
-  containerInfo,
-  tag,
-  hydrationCallbacks,
-  isStrictMode,
-  concurrentUpdatesByDefaultOverride,
-  identifierPrefix,
-  onUncaughtError,
-  onCaughtError,
-  onRecoverableError,
-  transitionCallbacks
-) {
-  containerInfo = new FiberRootNode(
-    containerInfo,
-    tag,
-    !1,
-    identifierPrefix,
-    onUncaughtError,
-    onCaughtError,
-    onRecoverableError,
-    null
-  );
-  containerInfo.hydrationCallbacks = hydrationCallbacks;
-  enableTransitionTracing &&
-    (containerInfo.transitionCallbacks = transitionCallbacks);
-  1 === tag
-    ? ((tag = 1),
-      !0 === isStrictMode && (tag |= 24),
-      concurrentUpdatesByDefaultOverride && (tag |= 32))
-    : (tag = 0);
-  isStrictMode = createFiber(3, null, null, tag);
-  containerInfo.current = isStrictMode;
-  isStrictMode.stateNode = containerInfo;
-  concurrentUpdatesByDefaultOverride = createCache();
-  concurrentUpdatesByDefaultOverride.refCount++;
-  containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-  concurrentUpdatesByDefaultOverride.refCount++;
-  isStrictMode.memoizedState = {
-    element: null,
-    isDehydrated: !1,
-    cache: concurrentUpdatesByDefaultOverride
-  };
-  initializeUpdateQueue(isStrictMode);
-  return containerInfo;
-}
-function updateContainer(element, container, parentComponent, callback) {
-  var current = container.current,
-    lane = requestUpdateLane(current);
+function updateContainerSync(element, container, parentComponent, callback) {
+  0 === container.tag && flushPassiveEffects();
+  var current = container.current;
   a: if (parentComponent) {
     parentComponent = parentComponent._reactInternals;
     b: {
@@ -10519,15 +10456,15 @@ function updateContainer(element, container, parentComponent, callback) {
   null === container.context
     ? (container.context = parentComponent)
     : (container.pendingContext = parentComponent);
-  container = createUpdate(lane);
+  container = createUpdate(2);
   container.payload = { element: element };
   callback = void 0 === callback ? null : callback;
   null !== callback && (container.callback = callback);
-  element = enqueueUpdate(current, container, lane);
+  element = enqueueUpdate(current, container, 2);
   null !== element &&
-    (scheduleUpdateOnFiber(element, current, lane),
-    entangleTransitions(element, current, lane));
-  return lane;
+    (scheduleUpdateOnFiber(element, current, 2),
+    entangleTransitions(element, current, 2));
+  return 2;
 }
 function emptyFindFiberByHostInstance() {
   return null;
@@ -10568,41 +10505,52 @@ var slice = Array.prototype.slice,
     _inheritsLoose(Surface, _React$Component);
     var _proto4 = Surface.prototype;
     _proto4.componentDidMount = function () {
-      var $jscomp$this = this,
-        _this$props = this.props;
+      var _this$props = this.props;
       this._surface = Mode$1.Surface(
         +_this$props.width,
         +_this$props.height,
         this._tagRef
       );
-      this._mountNode = createContainer(this._surface, 0, null, !1, !1, "");
-      flushSync(function () {
-        updateContainer(
-          $jscomp$this.props.children,
-          $jscomp$this._mountNode,
-          $jscomp$this
-        );
-      });
+      _this$props = new FiberRootNode(
+        this._surface,
+        0,
+        !1,
+        "",
+        void 0,
+        void 0,
+        void 0,
+        null
+      );
+      _this$props.hydrationCallbacks = null;
+      enableTransitionTracing && (_this$props.transitionCallbacks = void 0);
+      var JSCompiler_inline_result = createFiber(3, null, null, 0);
+      _this$props.current = JSCompiler_inline_result;
+      JSCompiler_inline_result.stateNode = _this$props;
+      var initialCache = createCache();
+      initialCache.refCount++;
+      _this$props.pooledCache = initialCache;
+      initialCache.refCount++;
+      JSCompiler_inline_result.memoizedState = {
+        element: null,
+        isDehydrated: !1,
+        cache: initialCache
+      };
+      initializeUpdateQueue(JSCompiler_inline_result);
+      this._mountNode = _this$props;
+      updateContainerSync(this.props.children, this._mountNode, this);
+      flushSyncWork();
     };
     _proto4.componentDidUpdate = function (prevProps) {
-      var $jscomp$this = this,
-        props = this.props;
+      var props = this.props;
       (props.height === prevProps.height && props.width === prevProps.width) ||
         this._surface.resize(+props.width, +props.height);
-      flushSync(function () {
-        updateContainer(
-          $jscomp$this.props.children,
-          $jscomp$this._mountNode,
-          $jscomp$this
-        );
-      });
+      updateContainerSync(this.props.children, this._mountNode, this);
+      flushSyncWork();
       this._surface.render && this._surface.render();
     };
     _proto4.componentWillUnmount = function () {
-      var $jscomp$this = this;
-      flushSync(function () {
-        updateContainer(null, $jscomp$this._mountNode, $jscomp$this);
-      });
+      updateContainerSync(null, this._mountNode, this);
+      flushSyncWork();
     };
     _proto4.render = function () {
       var $jscomp$this = this,
@@ -10649,19 +10597,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1119 = {
+  devToolsConfig$jscomp$inline_1114 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-ce2e7147",
+    version: "19.0.0-www-classic-05d06035",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1315 = {
-  bundleType: devToolsConfig$jscomp$inline_1119.bundleType,
-  version: devToolsConfig$jscomp$inline_1119.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1119.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1119.rendererConfig,
+var internals$jscomp$inline_1323 = {
+  bundleType: devToolsConfig$jscomp$inline_1114.bundleType,
+  version: devToolsConfig$jscomp$inline_1114.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1114.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1114.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10678,26 +10626,26 @@ var internals$jscomp$inline_1315 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1119.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1114.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-ce2e7147"
+  reconcilerVersion: "19.0.0-www-classic-05d06035"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1316.isDisabled &&
-    hook$jscomp$inline_1316.supportsFiber
+    !hook$jscomp$inline_1324.isDisabled &&
+    hook$jscomp$inline_1324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1316.inject(
-        internals$jscomp$inline_1315
+      (rendererID = hook$jscomp$inline_1324.inject(
+        internals$jscomp$inline_1323
       )),
-        (injectedHook = hook$jscomp$inline_1316);
+        (injectedHook = hook$jscomp$inline_1324);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

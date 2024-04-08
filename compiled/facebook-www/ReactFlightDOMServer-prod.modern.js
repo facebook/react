@@ -31,6 +31,7 @@ var ReactDOMCurrentDispatcher =
       .ReactDOMCurrentDispatcher,
   previousDispatcher = ReactDOMCurrentDispatcher.current;
 ReactDOMCurrentDispatcher.current = {
+  flushSyncWork: previousDispatcher.flushSyncWork,
   prefetchDNS: prefetchDNS,
   preconnect: preconnect,
   preload: preload,

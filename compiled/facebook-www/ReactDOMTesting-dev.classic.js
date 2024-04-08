@@ -3016,6 +3016,7 @@ if (__DEV__) {
     function noop$3() {}
 
     var DefaultDispatcher = {
+      flushSyncWork: noop$3,
       prefetchDNS: noop$3,
       preconnect: noop$3,
       preload: noop$3,
@@ -7539,6 +7540,9 @@ if (__DEV__) {
       }
     }
 
+    var LegacyRoot = 0;
+    var ConcurrentRoot = 1;
+
     var warnedAboutMissingGetChildContext;
 
     {
@@ -7800,9 +7804,6 @@ if (__DEV__) {
         );
       }
     }
-
-    var LegacyRoot = 0;
-    var ConcurrentRoot = 1;
 
     // We use the existence of the state object as an indicator that the component
     // is hidden.
@@ -31863,11 +31864,12 @@ if (__DEV__) {
     }
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-      ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig,
-      ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentBatchConfig$1 =
+      ReactSharedInternals.ReactCurrentBatchConfig;
+    var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
       /*             */
       0;
@@ -32169,13 +32171,11 @@ if (__DEV__) {
 
       if (transition !== null) {
         {
-          var batchConfigTransition = ReactCurrentBatchConfig$1.transition;
-
-          if (!batchConfigTransition._updatedFibers) {
-            batchConfigTransition._updatedFibers = new Set();
+          if (!transition._updatedFibers) {
+            transition._updatedFibers = new Set();
           }
 
-          batchConfigTransition._updatedFibers.add(fiber);
+          transition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -32302,7 +32302,8 @@ if (__DEV__) {
           if (transition !== null && transition.name != null) {
             if (transition.startTime === -1) {
               transition.startTime = now$1();
-            }
+            } // $FlowFixMe[prop-missing]: The BatchConfigTransition and Transition types are incompatible but was previously untyped and thus uncaught
+            // $FlowFixMe[incompatible-call]: "
 
             addTransitionToLanesMap(root, transition, lane);
           }
@@ -32974,7 +32975,7 @@ if (__DEV__) {
     // eslint-disable-next-line no-redeclare
     // eslint-disable-next-line no-redeclare
 
-    function flushSync$1(fn) {
+    function flushSyncFromReconciler$1(fn) {
       // In legacy mode, we flush pending passive effects at the beginning of the
       // next event, not at the end of the previous one.
       if (
@@ -33014,6 +33015,16 @@ if (__DEV__) {
           flushSyncWorkOnAllRoots();
         }
       }
+    } // If called outside of a render or commit will flush all sync work on all roots
+    // Returns whether the the call was during a render or not
+
+    function flushSyncWork() {
+      if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+        flushSyncWorkOnAllRoots();
+        return false;
+      }
+
+      return true;
     }
     function isAlreadyRendering() {
       // Used by the renderer to print a warning if certain APIs are called from
@@ -35675,13 +35686,12 @@ if (__DEV__) {
         var staleFamilies = update.staleFamilies,
           updatedFamilies = update.updatedFamilies;
         flushPassiveEffects();
-        flushSync$1(function () {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies
-          );
-        });
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies
+        );
+        flushSyncWork();
       }
     };
     var scheduleRoot = function (root, element) {
@@ -35693,10 +35703,8 @@ if (__DEV__) {
           return;
         }
 
-        flushPassiveEffects();
-        flushSync$1(function () {
-          updateContainer(element, root, null, null);
-        });
+        updateContainerSync(element, root, null, null);
+        flushSyncWork();
       }
     };
 
@@ -36775,7 +36783,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-9d1adced";
+    var ReactVersion = "19.0.0-www-classic-63a82a32";
 
     function createPortal$1(
       children,
@@ -37002,12 +37010,51 @@ if (__DEV__) {
       return root;
     }
     function updateContainer(element, container, parentComponent, callback) {
+      var current = container.current;
+      var lane = requestUpdateLane(current);
+      updateContainerImpl(
+        current,
+        lane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return lane;
+    }
+    function updateContainerSync(
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
+      if (container.tag === LegacyRoot) {
+        flushPassiveEffects();
+      }
+
+      var current = container.current;
+      updateContainerImpl(
+        current,
+        SyncLane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return SyncLane;
+    }
+
+    function updateContainerImpl(
+      rootFiber,
+      lane,
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
       {
         onScheduleRoot(container, element);
       }
-
-      var current$1 = container.current;
-      var lane = requestUpdateLane(current$1);
 
       if (enableSchedulingProfiler) {
         markRenderScheduled(lane);
@@ -37057,14 +37104,12 @@ if (__DEV__) {
         update.callback = callback;
       }
 
-      var root = enqueueUpdate(current$1, update, lane);
+      var root = enqueueUpdate(rootFiber, update, lane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, current$1, lane);
-        entangleTransitions(root, current$1, lane);
+        scheduleUpdateOnFiber(root, rootFiber, lane);
+        entangleTransitions(root, rootFiber, lane);
       }
-
-      return lane;
     }
     function getPublicRootInstance(container) {
       var containerFiber = container.current;
@@ -37097,13 +37142,13 @@ if (__DEV__) {
         }
 
         case SuspenseComponent: {
-          flushSync$1(function () {
-            var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+          var _root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
-            if (root !== null) {
-              scheduleUpdateOnFiber(root, fiber, SyncLane);
-            }
-          }); // If we're still blocked after this, we need to increase
+          if (_root !== null) {
+            scheduleUpdateOnFiber(_root, fiber, SyncLane);
+          }
+
+          flushSyncWork(); // If we're still blocked after this, we need to increase
           // the priority of any promises resolving within this
           // boundary so that they next attempt also has higher pri.
 
@@ -37501,7 +37546,9 @@ if (__DEV__) {
         // bails out of the update without touching the DOM.
         // TODO: Restore state in the microtask, after the discrete updates flush,
         // instead of early flushing them here.
-        flushSync$1();
+        // @TODO Should move to flushSyncWork once legacy mode is removed but since this flushSync
+        // flushes passive effects we can't do this yet.
+        flushSyncWork();
         restoreStateIfNeeded();
       }
     }
@@ -46310,6 +46357,7 @@ if (__DEV__) {
 
     var previousDispatcher = ReactDOMCurrentDispatcher$1.current;
     ReactDOMCurrentDispatcher$1.current = {
+      flushSyncWork: previousDispatcher.flushSyncWork,
       prefetchDNS: prefetchDNS$1,
       preconnect: preconnect$1,
       preload: preload$1,
@@ -46317,7 +46365,7 @@ if (__DEV__) {
       preinitStyle: preinitStyle,
       preinitScript: preinitScript,
       preinitModuleScript: preinitModuleScript
-    }; // We expect this to get inlined. It is a function mostly to communicate the special nature of
+    };
     // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
     // these methods outside of render there is no way to know which Document or ShadowRoot is 'scoped'
     // and so we have to fall back to something universal. Currently we just refer to the global document.
@@ -49029,9 +49077,8 @@ if (__DEV__) {
             }
           }
 
-          flushSync$1(function () {
-            updateContainer(null, root, null, null);
-          });
+          updateContainerSync(null, root, null, null);
+          flushSyncWork();
           unmarkContainerAsRoot(container);
         }
       };
@@ -49796,7 +49843,7 @@ if (__DEV__) {
     // eslint-disable-next-line no-redeclare
     // eslint-disable-next-line no-redeclare
 
-    function flushSync(fn) {
+    function flushSyncFromReconciler(fn) {
       {
         if (isAlreadyRendering()) {
           error(
@@ -49807,8 +49854,10 @@ if (__DEV__) {
         }
       }
 
-      return flushSync$1(fn);
+      return flushSyncFromReconciler$1(fn);
     }
+
+    var flushSync = flushSyncFromReconciler;
 
     function findDOMNode$1(componentOrElement) {
       return findHostInstance(componentOrElement);
@@ -50005,7 +50054,7 @@ if (__DEV__) {
             : container; // $FlowFixMe[incompatible-call]
 
         listenToAllSupportedEvents(rootContainerElement);
-        flushSync$1();
+        flushSyncWork();
         return root;
       } else {
         // First clear any existing content.
@@ -50044,9 +50093,8 @@ if (__DEV__) {
 
         listenToAllSupportedEvents(_rootContainerElement); // Initial mount should not be batched.
 
-        flushSync$1(function () {
-          updateContainer(initialChildren, _root, parentComponent, callback);
-        });
+        updateContainerSync(initialChildren, _root, parentComponent, callback);
+        flushSyncWork();
         return _root;
       }
     }
@@ -50226,6 +50274,8 @@ if (__DEV__) {
       }
 
       if (container._reactRootContainer) {
+        var root = container._reactRootContainer;
+
         {
           var rootEl = getReactRootElementInContainer(container);
           var renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
@@ -50236,23 +50286,13 @@ if (__DEV__) {
                 "was rendered by another copy of React."
             );
           }
-        } // Unmount should not be batched.
+        }
 
-        flushSync$1(function () {
-          legacyRenderSubtreeIntoContainer(
-            null,
-            null,
-            container,
-            false,
-            function () {
-              // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
-              container._reactRootContainer = null;
-              unmarkContainerAsRoot(container);
-            }
-          );
-        }); // If you call unmountComponentAtNode twice in quick succession, you'll
-        // get `true` twice. That's probably fine?
+        updateContainerSync(null, root, null, null);
+        flushSyncWork(); // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
 
+        container._reactRootContainer = null;
+        unmarkContainerAsRoot(container);
         return true;
       } else {
         {

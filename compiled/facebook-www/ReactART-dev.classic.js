@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-6d726b4b";
+    var ReactVersion = "19.0.0-www-classic-52633ec3";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -25563,17 +25563,14 @@ if (__DEV__) {
     }
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-      ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
-      ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
+    var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
       /*             */
       0;
-    var BatchedContext =
-      /*               */
-      1;
     var RenderContext =
       /*         */
       2;
@@ -25869,13 +25866,11 @@ if (__DEV__) {
 
       if (transition !== null) {
         {
-          var batchConfigTransition = ReactCurrentBatchConfig.transition;
-
-          if (!batchConfigTransition._updatedFibers) {
-            batchConfigTransition._updatedFibers = new Set();
+          if (!transition._updatedFibers) {
+            transition._updatedFibers = new Set();
           }
 
-          batchConfigTransition._updatedFibers.add(fiber);
+          transition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -26002,7 +25997,8 @@ if (__DEV__) {
           if (transition !== null && transition.name != null) {
             if (transition.startTime === -1) {
               transition.startTime = now$1();
-            }
+            } // $FlowFixMe[prop-missing]: The BatchConfigTransition and Transition types are incompatible but was previously untyped and thus uncaught
+            // $FlowFixMe[incompatible-call]: "
 
             addTransitionToLanesMap(root, transition, lane);
           }
@@ -26597,51 +26593,15 @@ if (__DEV__) {
     function getExecutionContext() {
       return executionContext;
     }
-    // Warning, this opts-out of checking the function body.
-    // eslint-disable-next-line no-unused-vars
-    // eslint-disable-next-line no-redeclare
-    // eslint-disable-next-line no-redeclare
+    // Returns whether the the call was during a render or not
 
-    function flushSync(fn) {
-      // In legacy mode, we flush pending passive effects at the beginning of the
-      // next event, not at the end of the previous one.
-      if (
-        rootWithPendingPassiveEffects !== null &&
-        !disableLegacyMode &&
-        rootWithPendingPassiveEffects.tag === LegacyRoot &&
-        (executionContext & (RenderContext | CommitContext)) === NoContext
-      ) {
-        flushPassiveEffects();
+    function flushSyncWork() {
+      if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+        flushSyncWorkOnAllRoots();
+        return false;
       }
 
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
-      var prevTransition = ReactCurrentBatchConfig.transition;
-      var previousPriority = getCurrentUpdatePriority();
-
-      try {
-        setCurrentUpdatePriority(DiscreteEventPriority);
-        ReactCurrentBatchConfig.transition = null;
-
-        if (fn) {
-          return fn();
-        } else {
-          return undefined;
-        }
-      } finally {
-        setCurrentUpdatePriority(previousPriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
-        executionContext = prevExecutionContext; // Flush the immediate callbacks that were scheduled during this batch.
-        // Note that this will happen even if batchedUpdates is higher up
-        // the stack.
-
-        if (
-          (executionContext & (RenderContext | CommitContext)) ===
-          NoContext
-        ) {
-          flushSyncWorkOnAllRoots();
-        }
-      }
+      return true;
     }
     function isInvalidExecutionContextForEventFunction() {
       // Used to throw if certain APIs are called from the wrong context.
@@ -29250,13 +29210,12 @@ if (__DEV__) {
         var staleFamilies = update.staleFamilies,
           updatedFamilies = update.updatedFamilies;
         flushPassiveEffects();
-        flushSync(function () {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies
-          );
-        });
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies
+        );
+        flushSyncWork();
       }
     };
     var scheduleRoot = function (root, element) {
@@ -29268,10 +29227,8 @@ if (__DEV__) {
           return;
         }
 
-        flushPassiveEffects();
-        flushSync(function () {
-          updateContainer(element, root, null, null);
-        });
+        updateContainerSync(element, root, null, null);
+        flushSyncWork();
       }
     };
 
@@ -30397,13 +30354,39 @@ if (__DEV__) {
         null
       );
     }
-    function updateContainer(element, container, parentComponent, callback) {
+    function updateContainerSync(
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
+      if (container.tag === LegacyRoot) {
+        flushPassiveEffects();
+      }
+
+      var current = container.current;
+      updateContainerImpl(
+        current,
+        SyncLane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return SyncLane;
+    }
+
+    function updateContainerImpl(
+      rootFiber,
+      lane,
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
       {
         onScheduleRoot(container, element);
       }
-
-      var current$1 = container.current;
-      var lane = requestUpdateLane(current$1);
 
       if (enableSchedulingProfiler) {
         markRenderScheduled(lane);
@@ -30453,14 +30436,12 @@ if (__DEV__) {
         update.callback = callback;
       }
 
-      var root = enqueueUpdate(current$1, update, lane);
+      var root = enqueueUpdate(rootFiber, update, lane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, current$1, lane);
-        entangleTransitions(root, current$1, lane);
+        scheduleUpdateOnFiber(root, rootFiber, lane);
+        entangleTransitions(root, rootFiber, lane);
       }
-
-      return lane;
     }
 
     var shouldErrorImpl = function (fiber) {
@@ -30827,8 +30808,6 @@ if (__DEV__) {
       var _proto4 = Surface.prototype;
 
       _proto4.componentDidMount = function componentDidMount() {
-        var _this = this;
-
         var _this$props = this.props,
           height = _this$props.height,
           width = _this$props.width;
@@ -30843,17 +30822,14 @@ if (__DEV__) {
         ); // We synchronously flush updates coming from above so that they commit together
         // and so that refs resolve before the parent life cycles.
 
-        flushSync(function () {
-          updateContainer(_this.props.children, _this._mountNode, _this);
-        });
+        updateContainerSync(this.props.children, this._mountNode, this);
+        flushSyncWork();
       };
 
       _proto4.componentDidUpdate = function componentDidUpdate(
         prevProps,
         prevState
       ) {
-        var _this2 = this;
-
         var props = this.props;
 
         if (
@@ -30864,9 +30840,8 @@ if (__DEV__) {
         } // We synchronously flush updates coming from above so that they commit together
         // and so that refs resolve before the parent life cycles.
 
-        flushSync(function () {
-          updateContainer(_this2.props.children, _this2._mountNode, _this2);
-        });
+        updateContainerSync(this.props.children, this._mountNode, this);
+        flushSyncWork();
 
         if (this._surface.render) {
           this._surface.render();
@@ -30874,17 +30849,14 @@ if (__DEV__) {
       };
 
       _proto4.componentWillUnmount = function componentWillUnmount() {
-        var _this3 = this;
-
         // We synchronously flush updates coming from above so that they commit together
         // and so that refs resolve before the parent life cycles.
-        flushSync(function () {
-          updateContainer(null, _this3._mountNode, _this3);
-        });
+        updateContainerSync(null, this._mountNode, this);
+        flushSyncWork();
       };
 
       _proto4.render = function render() {
-        var _this4 = this;
+        var _this = this;
 
         // This is going to be a placeholder because we don't know what it will
         // actually resolve to because ART may render canvas, vml or svg tags here.
@@ -30895,7 +30867,7 @@ if (__DEV__) {
         var Tag = Mode$1.Surface.tagName;
         return /*#__PURE__*/ React.createElement(Tag, {
           ref: function (ref) {
-            return (_this4._tagRef = ref);
+            return (_this._tagRef = ref);
           },
           accessKey: props.accessKey,
           className: props.className,
@@ -30914,25 +30886,25 @@ if (__DEV__) {
       _inheritsLoose(Text, _React$Component2);
 
       function Text(props) {
-        var _this5;
+        var _this2;
 
-        _this5 = _React$Component2.call(this, props) || this; // We allow reading these props. Ideally we could expose the Text node as
+        _this2 = _React$Component2.call(this, props) || this; // We allow reading these props. Ideally we could expose the Text node as
         // ref directly.
 
         ["height", "width", "x", "y"].forEach(function (key) {
-          Object.defineProperty(_assertThisInitialized(_this5), key, {
+          Object.defineProperty(_assertThisInitialized(_this2), key, {
             get: function () {
               return this._text ? this._text[key] : undefined;
             }
           });
         });
-        return _this5;
+        return _this2;
       }
 
       var _proto5 = Text.prototype;
 
       _proto5.render = function render() {
-        var _this6 = this;
+        var _this3 = this;
 
         // This means you can't have children that render into strings...
         var T = TYPES.TEXT;
@@ -30940,7 +30912,7 @@ if (__DEV__) {
           T,
           _extends({}, this.props, {
             ref: function (t) {
-              return (_this6._text = t);
+              return (_this3._text = t);
             }
           }),
           childrenAsString(this.props.children)

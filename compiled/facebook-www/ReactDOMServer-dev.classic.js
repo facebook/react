@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-39a61d82";
+    var ReactVersion = "19.0.0-www-classic-d5ab330a";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2370,6 +2370,7 @@ if (__DEV__) {
       ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
     var previousDispatcher = ReactDOMCurrentDispatcher.current;
     ReactDOMCurrentDispatcher.current = {
+      flushSyncWork: previousDispatcher.flushSyncWork,
       prefetchDNS: prefetchDNS,
       preconnect: preconnect,
       preload: preload,
