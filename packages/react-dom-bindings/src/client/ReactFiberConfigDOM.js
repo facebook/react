@@ -2417,9 +2417,15 @@ export function getResource(
       return null;
     }
     case 'script': {
-      if (typeof pendingProps.src === 'string' && pendingProps.async === true) {
-        const scriptProps: ScriptProps = pendingProps;
-        const key = getScriptKey(scriptProps.src);
+      const async = pendingProps.async;
+      const src = pendingProps.src;
+      if (
+        typeof src === 'string' &&
+        async &&
+        typeof async !== 'function' &&
+        typeof async !== 'symbol'
+      ) {
+        const key = getScriptKey(src);
         const scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
 
         let resource = scripts.get(key);
@@ -3065,16 +3071,20 @@ export function isHostHoistableType(
       }
     }
     case 'script': {
+      const isAsync =
+        props.async &&
+        typeof props.async !== 'function' &&
+        typeof props.async !== 'symbol';
       if (
-        props.async !== true ||
+        !isAsync ||
         props.onLoad ||
         props.onError ||
-        typeof props.src !== 'string' ||
-        !props.src
+        !props.src ||
+        typeof props.src !== 'string'
       ) {
         if (__DEV__) {
           if (outsideHostContainerContext) {
-            if (props.async !== true) {
+            if (!isAsync) {
               console.error(
                 'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
                   ' Try adding async="" or moving it into the root <head> tag.',
