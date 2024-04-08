@@ -3016,14 +3016,30 @@ if (__DEV__) {
     function noop$4() {}
 
     var DefaultDispatcher$1 = {
-      flushSyncWork: noop$4,
-      prefetchDNS: noop$4,
-      preconnect: noop$4,
-      preload: noop$4,
-      preloadModule: noop$4,
-      preinitScript: noop$4,
-      preinitStyle: noop$4,
-      preinitModuleScript: noop$4
+      f:
+        /* flushSyncWork */
+        noop$4,
+      D:
+        /* prefetchDNS */
+        noop$4,
+      C:
+        /* preconnect */
+        noop$4,
+      L:
+        /* preload */
+        noop$4,
+      m:
+        /* preloadModule */
+        noop$4,
+      X:
+        /* preinitScript */
+        noop$4,
+      S:
+        /* preinitStyle */
+        noop$4,
+      M:
+        /* preinitModuleScript */
+        noop$4
     };
     var Internals$1 = {
       Events: null,
@@ -36786,7 +36802,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-438c6c1d";
+    var ReactVersion = "19.0.0-www-classic-45fdacd4";
 
     function createPortal$1(
       children,
@@ -46362,14 +46378,31 @@ if (__DEV__) {
     Internals$1.d =
       /* ReactDOMCurrentDispatcher */
       {
-        flushSyncWork: previousDispatcher.flushSyncWork,
-        prefetchDNS: prefetchDNS$1,
-        preconnect: preconnect$1,
-        preload: preload$1,
-        preloadModule: preloadModule$1,
-        preinitStyle: preinitStyle,
-        preinitScript: preinitScript,
-        preinitModuleScript: preinitModuleScript
+        f:
+          /* flushSyncWork */
+          previousDispatcher.f,
+        /* flushSyncWork */
+        D:
+          /* prefetchDNS */
+          prefetchDNS$1,
+        C:
+          /* preconnect */
+          preconnect$1,
+        L:
+          /* preload */
+          preload$1,
+        m:
+          /* preloadModule */
+          preloadModule$1,
+        X:
+          /* preinitScript */
+          preinitScript,
+        S:
+          /* preinitStyle */
+          preinitStyle,
+        M:
+          /* preinitModuleScript */
+          preinitModuleScript
       };
     // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
     // these methods outside of render there is no way to know which Document or ShadowRoot is 'scoped'
@@ -46414,17 +46447,29 @@ if (__DEV__) {
     }
 
     function prefetchDNS$1(href) {
-      previousDispatcher.prefetchDNS(href);
+      previousDispatcher.D(
+        /* prefetchDNS */
+        href
+      );
       preconnectAs("dns-prefetch", href, null);
     }
 
     function preconnect$1(href, crossOrigin) {
-      previousDispatcher.preconnect(href, crossOrigin);
+      previousDispatcher.C(
+        /* preconnect */
+        href,
+        crossOrigin
+      );
       preconnectAs("preconnect", href, crossOrigin);
     }
 
     function preload$1(href, as, options) {
-      previousDispatcher.preload(href, as, options);
+      previousDispatcher.L(
+        /* preload */
+        href,
+        as,
+        options
+      );
       var ownerDocument = getGlobalDocument();
 
       if (ownerDocument && href && as) {
@@ -46521,7 +46566,11 @@ if (__DEV__) {
     }
 
     function preloadModule$1(href, options) {
-      previousDispatcher.preloadModule(href, options);
+      previousDispatcher.m(
+        /* preloadModule */
+        href,
+        options
+      );
       var ownerDocument = getGlobalDocument();
 
       if (ownerDocument && href) {
@@ -46587,7 +46636,12 @@ if (__DEV__) {
     }
 
     function preinitStyle(href, precedence, options) {
-      previousDispatcher.preinitStyle(href, precedence, options);
+      previousDispatcher.S(
+        /* preinitStyle */
+        href,
+        precedence,
+        options
+      );
       var ownerDocument = getGlobalDocument();
 
       if (ownerDocument && href) {
@@ -46660,7 +46714,11 @@ if (__DEV__) {
     }
 
     function preinitScript(src, options) {
-      previousDispatcher.preinitScript(src, options);
+      previousDispatcher.X(
+        /* preinitScript */
+        src,
+        options
+      );
       var ownerDocument = getGlobalDocument();
 
       if (ownerDocument && src) {
@@ -46713,7 +46771,11 @@ if (__DEV__) {
     }
 
     function preinitModuleScript(src, options) {
-      previousDispatcher.preinitModuleScript(src, options);
+      previousDispatcher.M(
+        /* preinitModuleScript */
+        src,
+        options
+      );
       var ownerDocument = getGlobalDocument();
 
       if (ownerDocument && src) {
@@ -49466,7 +49528,10 @@ if (__DEV__) {
       if (typeof href === "string") {
         Internals$1.d
           /* ReactDOMCurrentDispatcher */
-          .prefetchDNS(href);
+          .D(
+            /* prefetchDNS */
+            href
+          );
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -49497,7 +49562,11 @@ if (__DEV__) {
           : null;
         Internals$1.d
           /* ReactDOMCurrentDispatcher */
-          .preconnect(href, crossOrigin);
+          .C(
+            /* preconnect */
+            href,
+            crossOrigin
+          );
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -49543,33 +49612,39 @@ if (__DEV__) {
         var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
         Internals$1.d
           /* ReactDOMCurrentDispatcher */
-          .preload(href, as, {
-            crossOrigin: crossOrigin,
-            integrity:
-              typeof options.integrity === "string"
-                ? options.integrity
-                : undefined,
-            nonce:
-              typeof options.nonce === "string" ? options.nonce : undefined,
-            type: typeof options.type === "string" ? options.type : undefined,
-            fetchPriority:
-              typeof options.fetchPriority === "string"
-                ? options.fetchPriority
-                : undefined,
-            referrerPolicy:
-              typeof options.referrerPolicy === "string"
-                ? options.referrerPolicy
-                : undefined,
-            imageSrcSet:
-              typeof options.imageSrcSet === "string"
-                ? options.imageSrcSet
-                : undefined,
-            imageSizes:
-              typeof options.imageSizes === "string"
-                ? options.imageSizes
-                : undefined,
-            media: typeof options.media === "string" ? options.media : undefined
-          });
+          .L(
+            /* preload */
+            href,
+            as,
+            {
+              crossOrigin: crossOrigin,
+              integrity:
+                typeof options.integrity === "string"
+                  ? options.integrity
+                  : undefined,
+              nonce:
+                typeof options.nonce === "string" ? options.nonce : undefined,
+              type: typeof options.type === "string" ? options.type : undefined,
+              fetchPriority:
+                typeof options.fetchPriority === "string"
+                  ? options.fetchPriority
+                  : undefined,
+              referrerPolicy:
+                typeof options.referrerPolicy === "string"
+                  ? options.referrerPolicy
+                  : undefined,
+              imageSrcSet:
+                typeof options.imageSrcSet === "string"
+                  ? options.imageSrcSet
+                  : undefined,
+              imageSizes:
+                typeof options.imageSizes === "string"
+                  ? options.imageSizes
+                  : undefined,
+              media:
+                typeof options.media === "string" ? options.media : undefined
+            }
+          );
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -49617,21 +49692,28 @@ if (__DEV__) {
           );
           Internals$1.d
             /* ReactDOMCurrentDispatcher */
-            .preloadModule(href, {
-              as:
-                typeof options.as === "string" && options.as !== "script"
-                  ? options.as
-                  : undefined,
-              crossOrigin: crossOrigin,
-              integrity:
-                typeof options.integrity === "string"
-                  ? options.integrity
-                  : undefined
-            });
+            .m(
+              /* preloadModule */
+              href,
+              {
+                as:
+                  typeof options.as === "string" && options.as !== "script"
+                    ? options.as
+                    : undefined,
+                crossOrigin: crossOrigin,
+                integrity:
+                  typeof options.integrity === "string"
+                    ? options.integrity
+                    : undefined
+              }
+            );
         } else {
           Internals$1.d
             /* ReactDOMCurrentDispatcher */
-            .preloadModule(href);
+            .m(
+              /* preloadModule */
+              href
+            );
         }
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -49674,7 +49756,8 @@ if (__DEV__) {
         if (as === "style") {
           Internals$1.d
             /* ReactDOMCurrentDispatcher */
-            .preinitStyle(
+            .S(
+              /* preinitStyle */
               href,
               typeof options.precedence === "string"
                 ? options.precedence
@@ -49688,13 +49771,17 @@ if (__DEV__) {
         } else if (as === "script") {
           Internals$1.d
             /* ReactDOMCurrentDispatcher */
-            .preinitScript(href, {
-              crossOrigin: crossOrigin,
-              integrity: integrity,
-              fetchPriority: fetchPriority,
-              nonce:
-                typeof options.nonce === "string" ? options.nonce : undefined
-            });
+            .X(
+              /* preinitScript */
+              href,
+              {
+                crossOrigin: crossOrigin,
+                integrity: integrity,
+                fetchPriority: fetchPriority,
+                nonce:
+                  typeof options.nonce === "string" ? options.nonce : undefined
+              }
+            );
         }
       } // We don't error because preinit needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -49763,20 +49850,29 @@ if (__DEV__) {
             );
             Internals$1.d
               /* ReactDOMCurrentDispatcher */
-              .preinitModuleScript(href, {
-                crossOrigin: crossOrigin,
-                integrity:
-                  typeof options.integrity === "string"
-                    ? options.integrity
-                    : undefined,
-                nonce:
-                  typeof options.nonce === "string" ? options.nonce : undefined
-              });
+              .M(
+                /* preinitModuleScript */
+                href,
+                {
+                  crossOrigin: crossOrigin,
+                  integrity:
+                    typeof options.integrity === "string"
+                      ? options.integrity
+                      : undefined,
+                  nonce:
+                    typeof options.nonce === "string"
+                      ? options.nonce
+                      : undefined
+                }
+              );
           }
         } else if (options == null) {
           Internals$1.d
             /* ReactDOMCurrentDispatcher */
-            .preinitModuleScript(href);
+            .M(
+              /* preinitModuleScript */
+              href
+            );
         }
       } // We don't error because preinit needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -50334,14 +50430,30 @@ if (__DEV__) {
     function noop() {}
 
     var DefaultDispatcher = {
-      flushSyncWork: noop,
-      prefetchDNS: noop,
-      preconnect: noop,
-      preload: noop,
-      preloadModule: noop,
-      preinitScript: noop,
-      preinitStyle: noop,
-      preinitModuleScript: noop
+      f:
+        /* flushSyncWork */
+        noop,
+      D:
+        /* prefetchDNS */
+        noop,
+      C:
+        /* preconnect */
+        noop,
+      L:
+        /* preload */
+        noop,
+      m:
+        /* preloadModule */
+        noop,
+      X:
+        /* preinitScript */
+        noop,
+      S:
+        /* preinitStyle */
+        noop,
+      M:
+        /* preinitModuleScript */
+        noop
     };
     var Internals = {
       d:

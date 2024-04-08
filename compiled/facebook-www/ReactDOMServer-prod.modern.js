@@ -298,14 +298,14 @@ var ReactSharedInternals =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
-  flushSyncWork: previousDispatcher.flushSyncWork,
-  prefetchDNS: prefetchDNS,
-  preconnect: preconnect,
-  preload: preload,
-  preloadModule: preloadModule,
-  preinitScript: preinitScript,
-  preinitStyle: preinitStyle,
-  preinitModuleScript: preinitModuleScript
+  f: previousDispatcher.f,
+  D: prefetchDNS,
+  C: preconnect,
+  L: preload,
+  m: preloadModule,
+  X: preinitScript,
+  S: preinitStyle,
+  M: preinitModuleScript
 };
 var PRELOAD_NO_CREDS = [],
   scriptRegex = /(<\/|<)(s)(cript)/gi;
@@ -2237,7 +2237,7 @@ function prefetchDNS(href) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.prefetchDNS(href);
+  } else previousDispatcher.D(href);
 }
 function preconnect(href, crossOrigin) {
   var request = currentRequest ? currentRequest : null;
@@ -2291,7 +2291,7 @@ function preconnect(href, crossOrigin) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.preconnect(href, crossOrigin);
+  } else previousDispatcher.C(href, crossOrigin);
 }
 function preload(href, as, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2405,7 +2405,7 @@ function preload(href, as, options) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.preload(href, as, options);
+  } else previousDispatcher.L(href, as, options);
 }
 function preloadModule(href, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2441,7 +2441,7 @@ function preloadModule(href, options) {
       renderState.bulkPreloads.add(as);
       enqueueFlush(request);
     }
-  } else previousDispatcher.preloadModule(href, options);
+  } else previousDispatcher.m(href, options);
 }
 function preinitStyle(href, precedence, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2481,7 +2481,7 @@ function preinitStyle(href, precedence, options) {
         styleQueue.sheets.set(href, precedence),
         enqueueFlush(request));
     }
-  } else previousDispatcher.preinitStyle(href, precedence, options);
+  } else previousDispatcher.S(href, precedence, options);
 }
 function preinitScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2505,7 +2505,7 @@ function preinitScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  } else previousDispatcher.preinitScript(src, options);
+  } else previousDispatcher.X(src, options);
 }
 function preinitModuleScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2531,7 +2531,7 @@ function preinitModuleScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  } else previousDispatcher.preinitModuleScript(src, options);
+  } else previousDispatcher.M(src, options);
 }
 function adoptPreloadCredentials(target, preloadState) {
   null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
@@ -5655,4 +5655,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-17053e45";
+exports.version = "19.0.0-www-modern-2f688027";

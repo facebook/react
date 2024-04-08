@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-e7ce3381";
+    var ReactVersion = "19.0.0-www-classic-dda4ebf9";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2372,14 +2372,31 @@ if (__DEV__) {
     ReactDOMSharedInternals.d =
       /* ReactDOMCurrentDispatcher */
       {
-        flushSyncWork: previousDispatcher.flushSyncWork,
-        prefetchDNS: prefetchDNS,
-        preconnect: preconnect,
-        preload: preload,
-        preloadModule: preloadModule,
-        preinitScript: preinitScript,
-        preinitStyle: preinitStyle,
-        preinitModuleScript: preinitModuleScript
+        f:
+          /* flushSyncWork */
+          previousDispatcher.f,
+        /* flushSyncWork */
+        D:
+          /* prefetchDNS */
+          prefetchDNS,
+        C:
+          /* preconnect */
+          preconnect,
+        L:
+          /* preload */
+          preload,
+        m:
+          /* preloadModule */
+          preloadModule,
+        X:
+          /* preinitScript */
+          preinitScript,
+        S:
+          /* preinitStyle */
+          preinitStyle,
+        M:
+          /* preinitModuleScript */
+          preinitModuleScript
       }; // We make every property of the descriptor optional because it is not a contract that
     var ScriptStreamingFormat = 0;
     var DataStreamingFormat = 1;
@@ -7456,7 +7473,10 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.prefetchDNS(href);
+        previousDispatcher.D(
+          /* prefetchDNS */
+          href
+        );
         return;
       }
 
@@ -7515,7 +7535,11 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preconnect(href, crossOrigin);
+        previousDispatcher.C(
+          /* preconnect */
+          href,
+          crossOrigin
+        );
         return;
       }
 
@@ -7580,7 +7604,12 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preload(href, as, options);
+        previousDispatcher.L(
+          /* preload */
+          href,
+          as,
+          options
+        );
         return;
       }
 
@@ -7815,7 +7844,11 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preloadModule(href, options);
+        previousDispatcher.m(
+          /* preloadModule */
+          href,
+          options
+        );
         return;
       }
 
@@ -7893,7 +7926,12 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preinitStyle(href, precedence, options);
+        previousDispatcher.S(
+          /* preinitStyle */
+          href,
+          precedence,
+          options
+        );
         return;
       }
 
@@ -7975,7 +8013,11 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preinitScript(src, options);
+        previousDispatcher.X(
+          /* preinitScript */
+          src,
+          options
+        );
         return;
       }
 
@@ -8041,7 +8083,11 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.preinitModuleScript(src, options);
+        previousDispatcher.M(
+          /* preinitModuleScript */
+          src,
+          options
+        );
         return;
       }
 

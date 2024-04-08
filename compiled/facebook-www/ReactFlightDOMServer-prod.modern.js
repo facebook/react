@@ -30,14 +30,14 @@ var ReactDOMSharedInternals =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
-  flushSyncWork: previousDispatcher.flushSyncWork,
-  prefetchDNS: prefetchDNS,
-  preconnect: preconnect,
-  preload: preload,
-  preloadModule: preloadModule,
-  preinitStyle: preinitStyle,
-  preinitScript: preinitScript,
-  preinitModuleScript: preinitModuleScript
+  f: previousDispatcher.f,
+  D: prefetchDNS,
+  C: preconnect,
+  L: preload,
+  m: preloadModule,
+  X: preinitScript,
+  S: preinitStyle,
+  M: preinitModuleScript
 };
 function prefetchDNS(href) {
   if ("string" === typeof href && href) {
@@ -46,7 +46,7 @@ function prefetchDNS(href) {
       var hints = request.hints,
         key = "D|" + href;
       hints.has(key) || (hints.add(key), emitHint(request, "D", href));
-    } else previousDispatcher.prefetchDNS(href);
+    } else previousDispatcher.D(href);
   }
 }
 function preconnect(href, crossOrigin) {
@@ -60,7 +60,7 @@ function preconnect(href, crossOrigin) {
         "string" === typeof crossOrigin
           ? emitHint(request, "C", [href, crossOrigin])
           : emitHint(request, "C", href));
-    } else previousDispatcher.preconnect(href, crossOrigin);
+    } else previousDispatcher.C(href, crossOrigin);
   }
 }
 function preload(href, as, options) {
@@ -85,7 +85,7 @@ function preload(href, as, options) {
         (options = trimOptions(options))
           ? emitHint(request, "L", [href, as, options])
           : emitHint(request, "L", [href, as]));
-    } else previousDispatcher.preload(href, as, options);
+    } else previousDispatcher.L(href, as, options);
   }
 }
 function preloadModule(href, options) {
@@ -100,7 +100,7 @@ function preloadModule(href, options) {
         ? emitHint(request, "m", [href, options])
         : emitHint(request, "m", href);
     }
-    previousDispatcher.preloadModule(href, options);
+    previousDispatcher.m(href, options);
   }
 }
 function preinitStyle(href, precedence, options) {
@@ -121,7 +121,7 @@ function preinitStyle(href, precedence, options) {
         ? emitHint(request, "S", [href, precedence])
         : emitHint(request, "S", href);
     }
-    previousDispatcher.preinitStyle(href, precedence, options);
+    previousDispatcher.S(href, precedence, options);
   }
 }
 function preinitScript(src, options) {
@@ -136,7 +136,7 @@ function preinitScript(src, options) {
         ? emitHint(request, "X", [src, options])
         : emitHint(request, "X", src);
     }
-    previousDispatcher.preinitScript(src, options);
+    previousDispatcher.X(src, options);
   }
 }
 function preinitModuleScript(src, options) {
@@ -151,7 +151,7 @@ function preinitModuleScript(src, options) {
         ? emitHint(request, "M", [src, options])
         : emitHint(request, "M", src);
     }
-    previousDispatcher.preinitModuleScript(src, options);
+    previousDispatcher.M(src, options);
   }
 }
 function trimOptions(options) {

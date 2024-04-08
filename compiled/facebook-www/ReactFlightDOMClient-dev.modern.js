@@ -89,7 +89,10 @@ if (__DEV__) {
         case "D": {
           var refined = refineModel(code, model);
           var href = refined;
-          dispatcher.prefetchDNS(href);
+          dispatcher.D(
+            /* prefetchDNS */
+            href
+          );
           return;
         }
 
@@ -98,11 +101,18 @@ if (__DEV__) {
 
           if (typeof _refined === "string") {
             var _href = _refined;
-            dispatcher.preconnect(_href);
+            dispatcher.C(
+              /* preconnect */
+              _href
+            );
           } else {
             var _href2 = _refined[0];
             var crossOrigin = _refined[1];
-            dispatcher.preconnect(_href2, crossOrigin);
+            dispatcher.C(
+              /* preconnect */
+              _href2,
+              crossOrigin
+            );
           }
 
           return;
@@ -116,9 +126,18 @@ if (__DEV__) {
 
           if (_refined2.length === 3) {
             var options = _refined2[2];
-            dispatcher.preload(_href3, as, options);
+            dispatcher.L(
+              /* preload */
+              _href3,
+              as,
+              options
+            );
           } else {
-            dispatcher.preload(_href3, as);
+            dispatcher.L(
+              /* preload */
+              _href3,
+              as
+            );
           }
 
           return;
@@ -129,44 +148,66 @@ if (__DEV__) {
 
           if (typeof _refined3 === "string") {
             var _href4 = _refined3;
-            dispatcher.preloadModule(_href4);
+            dispatcher.m(
+              /* preloadModule */
+              _href4
+            );
           } else {
             var _href5 = _refined3[0];
             var _options = _refined3[1];
-            dispatcher.preloadModule(_href5, _options);
-          }
-
-          return;
-        }
-
-        case "S": {
-          var _refined4 = refineModel(code, model);
-
-          if (typeof _refined4 === "string") {
-            var _href6 = _refined4;
-            dispatcher.preinitStyle(_href6);
-          } else {
-            var _href7 = _refined4[0];
-            var precedence = _refined4[1] === 0 ? undefined : _refined4[1];
-
-            var _options2 = _refined4.length === 3 ? _refined4[2] : undefined;
-
-            dispatcher.preinitStyle(_href7, precedence, _options2);
+            dispatcher.m(
+              /* preloadModule */
+              _href5,
+              _options
+            );
           }
 
           return;
         }
 
         case "X": {
+          var _refined4 = refineModel(code, model);
+
+          if (typeof _refined4 === "string") {
+            var _href6 = _refined4;
+            dispatcher.X(
+              /* preinitScript */
+              _href6
+            );
+          } else {
+            var _href7 = _refined4[0];
+            var _options2 = _refined4[1];
+            dispatcher.X(
+              /* preinitScript */
+              _href7,
+              _options2
+            );
+          }
+
+          return;
+        }
+
+        case "S": {
           var _refined5 = refineModel(code, model);
 
           if (typeof _refined5 === "string") {
             var _href8 = _refined5;
-            dispatcher.preinitScript(_href8);
+            dispatcher.S(
+              /* preinitStyle */
+              _href8
+            );
           } else {
             var _href9 = _refined5[0];
-            var _options3 = _refined5[1];
-            dispatcher.preinitScript(_href9, _options3);
+            var precedence = _refined5[1] === 0 ? undefined : _refined5[1];
+
+            var _options3 = _refined5.length === 3 ? _refined5[2] : undefined;
+
+            dispatcher.S(
+              /* preinitStyle */
+              _href9,
+              precedence,
+              _options3
+            );
           }
 
           return;
@@ -177,11 +218,18 @@ if (__DEV__) {
 
           if (typeof _refined6 === "string") {
             var _href10 = _refined6;
-            dispatcher.preinitModuleScript(_href10);
+            dispatcher.M(
+              /* preinitModuleScript */
+              _href10
+            );
           } else {
             var _href11 = _refined6[0];
             var _options4 = _refined6[1];
-            dispatcher.preinitModuleScript(_href11, _options4);
+            dispatcher.M(
+              /* preinitModuleScript */
+              _href11,
+              _options4
+            );
           }
 
           return;

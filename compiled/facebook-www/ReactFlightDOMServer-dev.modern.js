@@ -166,14 +166,31 @@ if (__DEV__) {
     ReactDOMSharedInternals.d =
       /* ReactDOMCurrentDispatcher */
       {
-        flushSyncWork: previousDispatcher.flushSyncWork,
-        prefetchDNS: prefetchDNS,
-        preconnect: preconnect,
-        preload: preload,
-        preloadModule: preloadModule,
-        preinitStyle: preinitStyle,
-        preinitScript: preinitScript,
-        preinitModuleScript: preinitModuleScript
+        f:
+          /* flushSyncWork */
+          previousDispatcher.f,
+        /* flushSyncWork */
+        D:
+          /* prefetchDNS */
+          prefetchDNS,
+        C:
+          /* preconnect */
+          preconnect,
+        L:
+          /* preload */
+          preload,
+        m:
+          /* preloadModule */
+          preloadModule,
+        X:
+          /* preinitScript */
+          preinitScript,
+        S:
+          /* preinitStyle */
+          preinitStyle,
+        M:
+          /* preinitModuleScript */
+          preinitModuleScript
       };
 
     function prefetchDNS(href) {
@@ -192,7 +209,10 @@ if (__DEV__) {
           hints.add(key);
           emitHint(request, "D", href);
         } else {
-          previousDispatcher.prefetchDNS(href);
+          previousDispatcher.D(
+            /* prefetchDNS */
+            href
+          );
         }
       }
     }
@@ -219,7 +239,11 @@ if (__DEV__) {
             emitHint(request, "C", href);
           }
         } else {
-          previousDispatcher.preconnect(href, crossOrigin);
+          previousDispatcher.C(
+            /* preconnect */
+            href,
+            crossOrigin
+          );
         }
       }
     }
@@ -256,7 +280,12 @@ if (__DEV__) {
             emitHint(request, "L", [href, as]);
           }
         } else {
-          previousDispatcher.preload(href, as, options);
+          previousDispatcher.L(
+            /* preload */
+            href,
+            as,
+            options
+          );
         }
       }
     }
@@ -283,7 +312,11 @@ if (__DEV__) {
             return emitHint(request, "m", href);
           }
         } else {
-          previousDispatcher.preloadModule(href, options);
+          previousDispatcher.m(
+            /* preloadModule */
+            href,
+            options
+          );
         }
       }
     }
@@ -316,7 +349,12 @@ if (__DEV__) {
             return emitHint(request, "S", href);
           }
         } else {
-          previousDispatcher.preinitStyle(href, precedence, options);
+          previousDispatcher.S(
+            /* preinitStyle */
+            href,
+            precedence,
+            options
+          );
         }
       }
     }
@@ -343,7 +381,11 @@ if (__DEV__) {
             return emitHint(request, "X", src);
           }
         } else {
-          previousDispatcher.preinitScript(src, options);
+          previousDispatcher.X(
+            /* preinitScript */
+            src,
+            options
+          );
         }
       }
     }
@@ -370,7 +412,11 @@ if (__DEV__) {
             return emitHint(request, "M", src);
           }
         } else {
-          previousDispatcher.preinitModuleScript(src, options);
+          previousDispatcher.M(
+            /* preinitModuleScript */
+            src,
+            options
+          );
         }
       }
     } // Flight normally encodes undefined as a special character however for directive option

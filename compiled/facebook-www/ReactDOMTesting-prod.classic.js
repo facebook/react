@@ -724,14 +724,14 @@ function noop$3() {}
 var Internals = {
   Events: null,
   d: {
-    flushSyncWork: noop$3,
-    prefetchDNS: noop$3,
-    preconnect: noop$3,
-    preload: noop$3,
-    preloadModule: noop$3,
-    preinitScript: noop$3,
-    preinitStyle: noop$3,
-    preinitModuleScript: noop$3
+    f: noop$3,
+    D: noop$3,
+    C: noop$3,
+    L: noop$3,
+    m: noop$3,
+    X: noop$3,
+    S: noop$3,
+    M: noop$3
   },
   p: 0,
   findDOMNode: null
@@ -12813,7 +12813,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-classic-38b8cfc1"
+    reconcilerVersion: "19.0.0-www-classic-e0b31053"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -15879,14 +15879,14 @@ function getHoistableRoot(container) {
 }
 var previousDispatcher = Internals.d;
 Internals.d = {
-  flushSyncWork: previousDispatcher.flushSyncWork,
-  prefetchDNS: prefetchDNS$1,
-  preconnect: preconnect$1,
-  preload: preload$1,
-  preloadModule: preloadModule$1,
-  preinitStyle: preinitStyle,
-  preinitScript: preinitScript,
-  preinitModuleScript: preinitModuleScript
+  f: previousDispatcher.f,
+  D: prefetchDNS$1,
+  C: preconnect$1,
+  L: preload$1,
+  m: preloadModule$1,
+  X: preinitScript,
+  S: preinitStyle,
+  M: preinitModuleScript
 };
 var globalDocument = "undefined" === typeof document ? null : document;
 function preconnectAs(rel, href, crossOrigin) {
@@ -15909,15 +15909,15 @@ function preconnectAs(rel, href, crossOrigin) {
   }
 }
 function prefetchDNS$1(href) {
-  previousDispatcher.prefetchDNS(href);
+  previousDispatcher.D(href);
   preconnectAs("dns-prefetch", href, null);
 }
 function preconnect$1(href, crossOrigin) {
-  previousDispatcher.preconnect(href, crossOrigin);
+  previousDispatcher.C(href, crossOrigin);
   preconnectAs("preconnect", href, crossOrigin);
 }
 function preload$1(href, as, options) {
-  previousDispatcher.preload(href, as, options);
+  previousDispatcher.L(href, as, options);
   var ownerDocument = globalDocument;
   if (ownerDocument && href && as) {
     var preloadSelector =
@@ -15978,7 +15978,7 @@ function preload$1(href, as, options) {
   }
 }
 function preloadModule$1(href, options) {
-  previousDispatcher.preloadModule(href, options);
+  previousDispatcher.m(href, options);
   var ownerDocument = globalDocument;
   if (ownerDocument && href) {
     var as = options && "string" === typeof options.as ? options.as : "script",
@@ -16022,7 +16022,7 @@ function preloadModule$1(href, options) {
   }
 }
 function preinitStyle(href, precedence, options) {
-  previousDispatcher.preinitStyle(href, precedence, options);
+  previousDispatcher.S(href, precedence, options);
   var ownerDocument = globalDocument;
   if (ownerDocument && href) {
     var styles = getResourcesFromRoot(ownerDocument).hoistableStyles,
@@ -16071,7 +16071,7 @@ function preinitStyle(href, precedence, options) {
   }
 }
 function preinitScript(src, options) {
-  previousDispatcher.preinitScript(src, options);
+  previousDispatcher.X(src, options);
   var ownerDocument = globalDocument;
   if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
@@ -16097,7 +16097,7 @@ function preinitScript(src, options) {
   }
 }
 function preinitModuleScript(src, options) {
-  previousDispatcher.preinitModuleScript(src, options);
+  previousDispatcher.M(src, options);
   var ownerDocument = globalDocument;
   if (ownerDocument && src) {
     var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
@@ -17352,7 +17352,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-38b8cfc1",
+  version: "19.0.0-www-classic-e0b31053",
   rendererPackageName: "react-dom"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17485,7 +17485,7 @@ assign(Internals, {
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-38b8cfc1",
+  version: "19.0.0-www-classic-e0b31053",
   rendererPackageName: "react-dom"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17777,10 +17777,10 @@ exports.preconnect = function (href, options) {
               : ""
             : void 0))
       : (options = null),
-    Internals.d.preconnect(href, options));
+    Internals.d.C(href, options));
 };
 exports.prefetchDNS = function (href) {
-  "string" === typeof href && Internals.d.prefetchDNS(href);
+  "string" === typeof href && Internals.d.D(href);
 };
 exports.preinit = function (href, options) {
   if ("string" === typeof href && options && "string" === typeof options.as) {
@@ -17793,7 +17793,7 @@ exports.preinit = function (href, options) {
           ? options.fetchPriority
           : void 0;
     "style" === as
-      ? Internals.d.preinitStyle(
+      ? Internals.d.S(
           href,
           "string" === typeof options.precedence ? options.precedence : void 0,
           {
@@ -17803,7 +17803,7 @@ exports.preinit = function (href, options) {
           }
         )
       : "script" === as &&
-        Internals.d.preinitScript(href, {
+        Internals.d.X(href, {
           crossOrigin: crossOrigin,
           integrity: integrity,
           fetchPriority: fetchPriority,
@@ -17819,14 +17819,14 @@ exports.preinitModule = function (href, options) {
           options.as,
           options.crossOrigin
         );
-        Internals.d.preinitModuleScript(href, {
+        Internals.d.M(href, {
           crossOrigin: crossOrigin,
           integrity:
             "string" === typeof options.integrity ? options.integrity : void 0,
           nonce: "string" === typeof options.nonce ? options.nonce : void 0
         });
       }
-    } else null == options && Internals.d.preinitModuleScript(href);
+    } else null == options && Internals.d.M(href);
 };
 exports.preload = function (href, options) {
   if (
@@ -17837,7 +17837,7 @@ exports.preload = function (href, options) {
   ) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    Internals.d.preload(href, as, {
+    Internals.d.L(href, as, {
       crossOrigin: crossOrigin,
       integrity:
         "string" === typeof options.integrity ? options.integrity : void 0,
@@ -17863,7 +17863,7 @@ exports.preloadModule = function (href, options) {
   if ("string" === typeof href)
     if (options) {
       var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-      Internals.d.preloadModule(href, {
+      Internals.d.m(href, {
         as:
           "string" === typeof options.as && "script" !== options.as
             ? options.as
@@ -17872,7 +17872,7 @@ exports.preloadModule = function (href, options) {
         integrity:
           "string" === typeof options.integrity ? options.integrity : void 0
       });
-    } else Internals.d.preloadModule(href);
+    } else Internals.d.m(href);
 };
 exports.render = function (element, container, callback) {
   if (!isValidContainerLegacy(container))
@@ -17955,4 +17955,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-38b8cfc1";
+exports.version = "19.0.0-www-classic-e0b31053";
