@@ -36178,7 +36178,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-42767cb4";
+    var ReactVersion = "19.0.0-www-classic-6e6631b7";
 
     function createPortal$1(
       children,
@@ -47694,10 +47694,7 @@ if (__DEV__) {
     }
 
     function queueExplicitHydrationTarget(target) {
-      // TODO: This will read the priority if it's dispatched by the React
-      // event system but not native events. Should read window.event.type, like
-      // we do for updates (getCurrentEventPriority).
-      var updatePriority = getCurrentUpdatePriority();
+      var updatePriority = resolveUpdatePriority();
       var queuedTarget = {
         blockedOn: null,
         target: target,

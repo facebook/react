@@ -671,6 +671,12 @@ function popHostContext(fiber) {
     (HostTransitionContext._currentValue = null));
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty;
+function resolveUpdatePriority() {
+  var updatePriority = Internals.p;
+  if (0 !== updatePriority) return updatePriority;
+  updatePriority = window.event;
+  return void 0 === updatePriority ? 32 : getEventPriority(updatePriority.type);
+}
 function runWithPriority(priority, fn) {
   var previousPriority = Internals.p;
   try {
@@ -13729,14 +13735,7 @@ function requestUpdateLane() {
     var actionScopeLane = currentEntangledLane;
     return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
   }
-  actionScopeLane = Internals.p;
-  0 === actionScopeLane &&
-    ((actionScopeLane = window.event),
-    (actionScopeLane =
-      void 0 === actionScopeLane
-        ? 32
-        : getEventPriority(actionScopeLane.type)));
-  return actionScopeLane;
+  return resolveUpdatePriority();
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -16074,7 +16073,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-c7d8d92e"
+    reconcilerVersion: "19.0.0-www-modern-8fc60976"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16699,7 +16698,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = Internals.p;
+    var updatePriority = resolveUpdatePriority();
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -16776,7 +16775,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-c7d8d92e",
+  version: "19.0.0-www-modern-8fc60976",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16784,7 +16783,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-c7d8d92e",
+  version: "19.0.0-www-modern-8fc60976",
   rendererPackageName: "react-dom"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17202,4 +17201,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-c7d8d92e";
+exports.version = "19.0.0-www-modern-8fc60976";

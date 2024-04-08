@@ -612,6 +612,12 @@ function popHostContext(fiber) {
     (HostTransitionContext._currentValue = null));
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty;
+function resolveUpdatePriority() {
+  var updatePriority = Internals.p;
+  if (0 !== updatePriority) return updatePriority;
+  updatePriority = window.event;
+  return void 0 === updatePriority ? 32 : getEventPriority(updatePriority.type);
+}
 function runWithPriority(priority, fn) {
   var previousPriority = Internals.p;
   try {
@@ -13398,14 +13404,7 @@ function requestUpdateLane() {
     var actionScopeLane = currentEntangledLane;
     return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
   }
-  actionScopeLane = Internals.p;
-  0 === actionScopeLane &&
-    ((actionScopeLane = window.event),
-    (actionScopeLane =
-      void 0 === actionScopeLane
-        ? 32
-        : getEventPriority(actionScopeLane.type)));
-  return actionScopeLane;
+  return resolveUpdatePriority();
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -16267,7 +16266,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = Internals.p;
+    var updatePriority = resolveUpdatePriority();
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -16344,10 +16343,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1720 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-c8552266",
+  version: "19.0.0-www-modern-a0bffb4d",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2162 = {
+var internals$jscomp$inline_2158 = {
   bundleType: devToolsConfig$jscomp$inline_1720.bundleType,
   version: devToolsConfig$jscomp$inline_1720.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1720.rendererPackageName,
@@ -16374,19 +16373,19 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-c8552266"
+  reconcilerVersion: "19.0.0-www-modern-a0bffb4d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2159 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2163.isDisabled &&
-    hook$jscomp$inline_2163.supportsFiber
+    !hook$jscomp$inline_2159.isDisabled &&
+    hook$jscomp$inline_2159.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2163.inject(
-        internals$jscomp$inline_2162
+      (rendererID = hook$jscomp$inline_2159.inject(
+        internals$jscomp$inline_2158
       )),
-        (injectedHook = hook$jscomp$inline_2163);
+        (injectedHook = hook$jscomp$inline_2159);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -16683,4 +16682,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-c8552266";
+exports.version = "19.0.0-www-modern-a0bffb4d";

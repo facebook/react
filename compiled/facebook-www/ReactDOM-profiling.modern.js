@@ -748,6 +748,12 @@ function popHostContext(fiber) {
     (HostTransitionContext._currentValue = null));
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty;
+function resolveUpdatePriority() {
+  var updatePriority = Internals.p;
+  if (0 !== updatePriority) return updatePriority;
+  updatePriority = window.event;
+  return void 0 === updatePriority ? 32 : getEventPriority(updatePriority.type);
+}
 function runWithPriority(priority, fn) {
   var previousPriority = Internals.p;
   try {
@@ -13984,14 +13990,7 @@ function requestUpdateLane() {
     var actionScopeLane = currentEntangledLane;
     return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
   }
-  actionScopeLane = Internals.p;
-  0 === actionScopeLane &&
-    ((actionScopeLane = window.event),
-    (actionScopeLane =
-      void 0 === actionScopeLane
-        ? 32
-        : getEventPriority(actionScopeLane.type)));
-  return actionScopeLane;
+  return resolveUpdatePriority();
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -16998,7 +16997,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = Internals.p;
+    var updatePriority = resolveUpdatePriority();
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -17075,7 +17074,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1806 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-3a232590",
+  version: "19.0.0-www-modern-f5d53e66",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17119,7 +17118,7 @@ var devToolsConfig$jscomp$inline_1806 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-3a232590"
+  reconcilerVersion: "19.0.0-www-modern-f5d53e66"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17415,7 +17414,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-3a232590";
+exports.version = "19.0.0-www-modern-f5d53e66";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

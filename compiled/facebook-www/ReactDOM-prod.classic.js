@@ -736,6 +736,12 @@ var Internals = {
   p: 0,
   findDOMNode: null
 };
+function resolveUpdatePriority() {
+  var updatePriority = Internals.p;
+  if (0 !== updatePriority) return updatePriority;
+  updatePriority = window.event;
+  return void 0 === updatePriority ? 32 : getEventPriority(updatePriority.type);
+}
 function runWithPriority(priority, fn) {
   var previousPriority = Internals.p;
   try {
@@ -10794,19 +10800,14 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
-  if (0 === (fiber.mode & 1)) return 2;
-  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
-    return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== requestCurrentTransition())
-    return (
-      (fiber = currentEntangledLane),
-      0 !== fiber ? fiber : requestTransitionLane()
-    );
-  fiber = Internals.p;
-  0 === fiber &&
-    ((fiber = window.event),
-    (fiber = void 0 === fiber ? 32 : getEventPriority(fiber.type)));
-  return fiber;
+  return 0 === (fiber.mode & 1)
+    ? 2
+    : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+    ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+    : null !== requestCurrentTransition()
+    ? ((fiber = currentEntangledLane),
+      0 !== fiber ? fiber : requestTransitionLane())
+    : resolveUpdatePriority();
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -16904,7 +16905,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = Internals.p;
+    var updatePriority = resolveUpdatePriority();
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -16979,10 +16980,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1727 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-0213c015",
+  version: "19.0.0-www-classic-5535d565",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2160 = {
+var internals$jscomp$inline_2156 = {
   bundleType: devToolsConfig$jscomp$inline_1727.bundleType,
   version: devToolsConfig$jscomp$inline_1727.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1727.rendererPackageName,
@@ -17009,19 +17010,19 @@ var internals$jscomp$inline_2160 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-0213c015"
+  reconcilerVersion: "19.0.0-www-classic-5535d565"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2157 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2161.isDisabled &&
-    hook$jscomp$inline_2161.supportsFiber
+    !hook$jscomp$inline_2157.isDisabled &&
+    hook$jscomp$inline_2157.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2161.inject(
-        internals$jscomp$inline_2160
+      (rendererID = hook$jscomp$inline_2157.inject(
+        internals$jscomp$inline_2156
       )),
-        (injectedHook = hook$jscomp$inline_2161);
+        (injectedHook = hook$jscomp$inline_2157);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17475,4 +17476,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-0213c015";
+exports.version = "19.0.0-www-classic-5535d565";
