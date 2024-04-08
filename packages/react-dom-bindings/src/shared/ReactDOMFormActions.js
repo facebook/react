@@ -13,8 +13,6 @@ import type {Awaited} from 'shared/ReactTypes';
 import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-
 type FormStatusNotPending = {|
   pending: false,
   data: null,
@@ -47,7 +45,7 @@ export const NotPending: FormStatus = __DEV__
 function resolveDispatcher() {
   // Copied from react/src/ReactHooks.js. It's the same thing but in a
   // different package.
-  const dispatcher = ReactCurrentDispatcher.current;
+  const dispatcher = ReactSharedInternals.H;
   if (__DEV__) {
     if (dispatcher === null) {
       console.error(

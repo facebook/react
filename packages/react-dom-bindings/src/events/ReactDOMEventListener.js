@@ -56,8 +56,6 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
-
 // TODO: can we stop exporting these?
 let _enabled: boolean = true;
 
@@ -117,15 +115,15 @@ function dispatchDiscreteEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
@@ -135,15 +133,15 @@ function dispatchContinuousEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 

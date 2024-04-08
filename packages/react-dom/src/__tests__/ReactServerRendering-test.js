@@ -13,7 +13,7 @@
 let React;
 let ReactDOMServer;
 let PropTypes;
-let ReactCurrentDispatcher;
+let ReactSharedInternals;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
@@ -21,9 +21,8 @@ describe('ReactDOMServer', () => {
     React = require('react');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
-    ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
   });
 
   describe('renderToString', () => {
@@ -420,7 +419,7 @@ describe('ReactDOMServer', () => {
       const Context = React.createContext(0);
 
       function readContext(context) {
-        return ReactCurrentDispatcher.current.readContext(context);
+        return ReactSharedInternals.H.readContext(context);
       }
 
       function Consumer(props) {

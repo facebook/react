@@ -108,8 +108,9 @@ import {
   objectName,
 } from 'shared/ReactSerializationErrors';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import ReactServerSharedInternals from './ReactServerSharedInternals';
+import type {SharedStateServer} from 'react/src/ReactSharedInternalsServer';
+import ReactSharedInternalsImpl from 'shared/ReactSharedInternals';
+const ReactSharedInternals: SharedStateServer = (ReactSharedInternalsImpl: any);
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
@@ -154,7 +155,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        const owner: null | ReactComponentInfo = ReactCurrentOwner.current;
+        const owner: null | ReactComponentInfo = ReactSharedInternals.owner;
         emitConsoleChunk(request, id, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
@@ -305,10 +306,7 @@ const {
   TaintRegistryValues,
   TaintRegistryByteLengths,
   TaintRegistryPendingRequests,
-  ReactCurrentCache,
-} = ReactServerSharedInternals;
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+} = ReactSharedInternals;
 
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
@@ -354,14 +352,14 @@ export function createRequest(
   environmentName: void | string,
 ): Request {
   if (
-    ReactCurrentCache.current !== null &&
-    ReactCurrentCache.current !== DefaultCacheDispatcher
+    ReactSharedInternals.C !== null &&
+    ReactSharedInternals.C !== DefaultCacheDispatcher
   ) {
     throw new Error(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
-  ReactCurrentCache.current = DefaultCacheDispatcher;
+  ReactSharedInternals.C = DefaultCacheDispatcher;
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
@@ -644,11 +642,11 @@ function renderFunctionComponent<Props>(
   const secondArg = undefined;
   let result;
   if (__DEV__) {
-    ReactCurrentOwner.current = componentDebugInfo;
+    ReactSharedInternals.owner = componentDebugInfo;
     try {
       result = Component(props, secondArg);
     } finally {
-      ReactCurrentOwner.current = null;
+      ReactSharedInternals.owner = null;
     }
   } else {
     result = Component(props, secondArg);
@@ -2492,8 +2490,8 @@ function retryTask(request: Request, task: Task): void {
 }
 
 function performWork(request: Request): void {
-  const prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = HooksDispatcher;
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
   const prevRequest = currentRequest;
   currentRequest = request;
   prepareToUseHooksForRequest(request);
@@ -2512,7 +2510,7 @@ function performWork(request: Request): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
-    ReactCurrentDispatcher.current = prevDispatcher;
+    ReactSharedInternals.H = prevDispatcher;
     resetHooksForRequest();
     currentRequest = prevRequest;
   }

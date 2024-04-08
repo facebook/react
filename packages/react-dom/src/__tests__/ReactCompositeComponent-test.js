@@ -14,7 +14,7 @@ let MorphingComponent;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactCurrentOwner;
+let ReactSharedInternals;
 let Scheduler;
 let assertLog;
 let act;
@@ -67,9 +67,8 @@ describe('ReactCompositeComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactCurrentOwner =
-      require('react').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentOwner;
+    ReactSharedInternals =
+      require('react').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
     Scheduler = require('scheduler');
     assertLog = require('internal-test-utils').assertLog;
     act = require('internal-test-utils').act;
@@ -545,7 +544,9 @@ describe('ReactCompositeComponent', () => {
     }
 
     const instance = <BadComponent />;
-    expect(ReactCurrentOwner.current).toBe(null);
+    expect(ReactSharedInternals.owner).toBe(
+      __DEV__ || !gate(flags => flags.disableStringRefs) ? null : undefined,
+    );
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await expect(async () => {
@@ -554,7 +555,9 @@ describe('ReactCompositeComponent', () => {
       });
     }).rejects.toThrow();
 
-    expect(ReactCurrentOwner.current).toBe(null);
+    expect(ReactSharedInternals.owner).toBe(
+      __DEV__ || !gate(flags => flags.disableStringRefs) ? null : undefined,
+    );
   });
 
   it('should call componentWillUnmount before unmounting', async () => {

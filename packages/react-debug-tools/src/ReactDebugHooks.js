@@ -37,7 +37,7 @@ import {
 } from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
-type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
+type CurrentDispatcherRef = typeof ReactSharedInternals;
 
 // Used to track hooks called during a render
 
@@ -1075,11 +1075,11 @@ export function inspectHooks<Props>(
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {
-    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    currentDispatcher = ReactSharedInternals;
   }
 
-  const previousDispatcher = currentDispatcher.current;
-  currentDispatcher.current = DispatcherProxy;
+  const previousDispatcher = currentDispatcher.H;
+  currentDispatcher.H = DispatcherProxy;
 
   let readHookLog;
   let ancestorStackError;
@@ -1093,7 +1093,7 @@ export function inspectHooks<Props>(
     readHookLog = hookLog;
     hookLog = [];
     // $FlowFixMe[incompatible-use] found when upgrading Flow
-    currentDispatcher.current = previousDispatcher;
+    currentDispatcher.H = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -1129,9 +1129,9 @@ function inspectHooksOfForwardRef<Props, Ref>(
   ref: Ref,
   currentDispatcher: CurrentDispatcherRef,
 ): HooksTree {
-  const previousDispatcher = currentDispatcher.current;
+  const previousDispatcher = currentDispatcher.H;
   let readHookLog;
-  currentDispatcher.current = DispatcherProxy;
+  currentDispatcher.H = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -1141,7 +1141,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    currentDispatcher.current = previousDispatcher;
+    currentDispatcher.H = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -1169,7 +1169,7 @@ export function inspectHooksOfFiber(
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {
-    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    currentDispatcher = ReactSharedInternals;
   }
 
   if (

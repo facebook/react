@@ -775,8 +775,7 @@ describe('ReactDOMServerHooks', () => {
   describe('readContext', () => {
     function readContext(Context) {
       const dispatcher =
-        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .ReactCurrentDispatcher.current;
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.H;
       return dispatcher.readContext(Context);
     }
 

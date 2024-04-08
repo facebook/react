@@ -16,15 +16,15 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
-import ReactCurrentCache from './ReactCurrentCache';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
 import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
-  const dispatcher = ReactCurrentDispatcher.current;
+  const dispatcher = ReactSharedInternals.H;
   if (__DEV__) {
     if (dispatcher === null) {
       console.error(
@@ -44,7 +44,7 @@ function resolveDispatcher() {
 }
 
 export function getCacheForType<T>(resourceType: () => T): T {
-  const dispatcher = ReactCurrentCache.current;
+  const dispatcher = ReactSharedInternals.C;
   if (!dispatcher) {
     // If there is no dispatcher, then we treat this as not being cached.
     return resourceType();

@@ -26,8 +26,6 @@ import {
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
   let nearestMounted: null | Fiber = fiber;
@@ -91,7 +89,7 @@ export function isFiberMounted(fiber: Fiber): boolean {
 
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
+    const owner = (ReactSharedInternals.owner: any);
     if (owner !== null && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;

@@ -8,8 +8,8 @@
  */
 
 import type {Thenable} from 'shared/ReactTypes';
-import type {RendererTask} from './ReactCurrentActQueue';
-import ReactCurrentActQueue from './ReactCurrentActQueue';
+import type {RendererTask} from './ReactSharedInternalsClient';
+import ReactSharedInternals from './ReactSharedInternalsClient';
 import queueMacrotask from 'shared/enqueueTask';
 
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
@@ -31,7 +31,7 @@ function aggregateErrors(errors: Array<mixed>): mixed {
 
 export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
   if (__DEV__) {
-    // When ReactCurrentActQueue.current is not null, it signals to React that
+    // When ReactSharedInternals.actQueue is not null, it signals to React that
     // we're currently inside an `act` scope. React will push all its tasks to
     // this queue instead of scheduling them with platform APIs.
     //
@@ -41,19 +41,19 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     //
     // If we're already inside an `act` scope, reuse the existing queue.
     const prevIsBatchingLegacy = !disableLegacyMode
-      ? ReactCurrentActQueue.isBatchingLegacy
+      ? ReactSharedInternals.isBatchingLegacy
       : false;
-    const prevActQueue = ReactCurrentActQueue.current;
+    const prevActQueue = ReactSharedInternals.actQueue;
     const prevActScopeDepth = actScopeDepth;
     actScopeDepth++;
-    const queue = (ReactCurrentActQueue.current =
+    const queue = (ReactSharedInternals.actQueue =
       prevActQueue !== null ? prevActQueue : []);
     // Used to reproduce behavior of `batchedUpdates` in legacy mode. Only
     // set to `true` while the given callback is executed, not for updates
     // triggered during an async event, because this is how the legacy
     // implementation of `act` behaved.
     if (!disableLegacyMode) {
-      ReactCurrentActQueue.isBatchingLegacy = true;
+      ReactSharedInternals.isBatchingLegacy = true;
     }
 
     let result;
@@ -65,11 +65,11 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       // only place we ever read this fields is just below, right after running
       // the callback. So we don't need to reset after the callback runs.
       if (!disableLegacyMode) {
-        ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+        ReactSharedInternals.didScheduleLegacyUpdate = false;
       }
       result = callback();
       const didScheduleLegacyUpdate = !disableLegacyMode
-        ? ReactCurrentActQueue.didScheduleLegacyUpdate
+        ? ReactSharedInternals.didScheduleLegacyUpdate
         : false;
 
       // Replicate behavior of original `act` implementation in legacy mode,
@@ -83,22 +83,22 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       // that's how it worked before version 18. Yes, it's confusing! We should
       // delete legacy mode!!
       if (!disableLegacyMode) {
-        ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+        ReactSharedInternals.isBatchingLegacy = prevIsBatchingLegacy;
       }
     } catch (error) {
       // `isBatchingLegacy` gets reset using the regular stack, not the async
       // one used to track `act` scopes. Why, you may be wondering? Because
       // that's how it worked before version 18. Yes, it's confusing! We should
       // delete legacy mode!!
-      ReactCurrentActQueue.thrownErrors.push(error);
+      ReactSharedInternals.thrownErrors.push(error);
     }
-    if (ReactCurrentActQueue.thrownErrors.length > 0) {
+    if (ReactSharedInternals.thrownErrors.length > 0) {
       if (!disableLegacyMode) {
-        ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
+        ReactSharedInternals.isBatchingLegacy = prevIsBatchingLegacy;
       }
       popActScope(prevActQueue, prevActScopeDepth);
-      const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
-      ReactCurrentActQueue.thrownErrors.length = 0;
+      const thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+      ReactSharedInternals.thrownErrors.length = 0;
       throw thrownError;
     }
 
@@ -149,13 +149,13 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
                   // `thenable` might not be a real promise, and `flushActQueue`
                   // might throw, so we need to wrap `flushActQueue` in a
                   // try/catch.
-                  ReactCurrentActQueue.thrownErrors.push(error);
+                  ReactSharedInternals.thrownErrors.push(error);
                 }
-                if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                if (ReactSharedInternals.thrownErrors.length > 0) {
                   const thrownError = aggregateErrors(
-                    ReactCurrentActQueue.thrownErrors,
+                    ReactSharedInternals.thrownErrors,
                   );
-                  ReactCurrentActQueue.thrownErrors.length = 0;
+                  ReactSharedInternals.thrownErrors.length = 0;
                   reject(thrownError);
                 }
               } else {
@@ -164,11 +164,11 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
             },
             error => {
               popActScope(prevActQueue, prevActScopeDepth);
-              if (ReactCurrentActQueue.thrownErrors.length > 0) {
+              if (ReactSharedInternals.thrownErrors.length > 0) {
                 const thrownError = aggregateErrors(
-                  ReactCurrentActQueue.thrownErrors,
+                  ReactSharedInternals.thrownErrors,
                 );
-                ReactCurrentActQueue.thrownErrors.length = 0;
+                ReactSharedInternals.thrownErrors.length = 0;
                 reject(thrownError);
               } else {
                 reject(error);
@@ -222,12 +222,12 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         //
         // TODO: In a future version, consider always requiring all `act` calls
         // to be awaited, regardless of whether the callback is sync or async.
-        ReactCurrentActQueue.current = null;
+        ReactSharedInternals.actQueue = null;
       }
 
-      if (ReactCurrentActQueue.thrownErrors.length > 0) {
-        const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
-        ReactCurrentActQueue.thrownErrors.length = 0;
+      if (ReactSharedInternals.thrownErrors.length > 0) {
+        const thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+        ReactSharedInternals.thrownErrors.length = 0;
         throw thrownError;
       }
 
@@ -237,7 +237,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
           if (prevActScopeDepth === 0) {
             // If the `act` call is awaited, restore the queue we were
             // using before (see long comment above) so we can flush it.
-            ReactCurrentActQueue.current = queue;
+            ReactSharedInternals.actQueue = queue;
             queueMacrotask(() =>
               // Recursively flush tasks scheduled by a microtask.
               recursivelyFlushAsyncActWork(returnValue, resolve, reject),
@@ -275,7 +275,7 @@ function recursivelyFlushAsyncActWork<T>(
 ) {
   if (__DEV__) {
     // Check if any tasks were scheduled asynchronously.
-    const queue = ReactCurrentActQueue.current;
+    const queue = ReactSharedInternals.actQueue;
     if (queue !== null) {
       if (queue.length !== 0) {
         // Async tasks were scheduled, mostly likely in a microtask.
@@ -290,16 +290,16 @@ function recursivelyFlushAsyncActWork<T>(
           return;
         } catch (error) {
           // Leave remaining tasks on the queue if something throws.
-          ReactCurrentActQueue.thrownErrors.push(error);
+          ReactSharedInternals.thrownErrors.push(error);
         }
       } else {
         // The queue is empty. We can finish.
-        ReactCurrentActQueue.current = null;
+        ReactSharedInternals.actQueue = null;
       }
     }
-    if (ReactCurrentActQueue.thrownErrors.length > 0) {
-      const thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
-      ReactCurrentActQueue.thrownErrors.length = 0;
+    if (ReactSharedInternals.thrownErrors.length > 0) {
+      const thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+      ReactSharedInternals.thrownErrors.length = 0;
       reject(thrownError);
     } else {
       resolve(returnValue);
@@ -318,10 +318,10 @@ function flushActQueue(queue: Array<RendererTask>) {
         for (; i < queue.length; i++) {
           let callback: RendererTask = queue[i];
           do {
-            ReactCurrentActQueue.didUsePromise = false;
+            ReactSharedInternals.didUsePromise = false;
             const continuation = callback(false);
             if (continuation !== null) {
-              if (ReactCurrentActQueue.didUsePromise) {
+              if (ReactSharedInternals.didUsePromise) {
                 // The component just suspended. Yield to the main thread in
                 // case the promise is already resolved. If so, it will ping in
                 // a microtask and we can resume without unwinding the stack.
@@ -340,7 +340,7 @@ function flushActQueue(queue: Array<RendererTask>) {
       } catch (error) {
         // If something throws, leave the remaining callbacks on the queue.
         queue.splice(0, i + 1);
-        ReactCurrentActQueue.thrownErrors.push(error);
+        ReactSharedInternals.thrownErrors.push(error);
       } finally {
         isFlushing = false;
       }

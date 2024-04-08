@@ -12,7 +12,7 @@ import {
   enableFetchInstrumentation,
 } from 'shared/ReactFeatureFlags';
 
-import ReactCurrentCache from './ReactCurrentCache';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 function createFetchCache(): Map<string, Array<any>> {
   return new Map();
@@ -46,7 +46,7 @@ if (enableCache && enableFetchInstrumentation) {
       resource: URL | RequestInfo,
       options?: RequestOptions,
     ) {
-      const dispatcher = ReactCurrentCache.current;
+      const dispatcher = ReactSharedInternals.C;
       if (!dispatcher) {
         // We're outside a cached scope.
         return originalFetch(resource, options);
