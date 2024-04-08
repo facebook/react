@@ -90,6 +90,7 @@ import {
   enableScopeAPI,
   enableTrustedTypesIntegration,
   enableAsyncActions,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -100,6 +101,7 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+import {flushSyncWork as flushSyncWorkOnAllRoots} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher =
@@ -1924,6 +1926,9 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
 
 const previousDispatcher = ReactDOMCurrentDispatcher.current;
 ReactDOMCurrentDispatcher.current = {
+  flushSyncWork: disableLegacyMode
+    ? flushSyncWork
+    : previousDispatcher.flushSyncWork,
   prefetchDNS,
   preconnect,
   preload,
@@ -1932,6 +1937,20 @@ ReactDOMCurrentDispatcher.current = {
   preinitScript,
   preinitModuleScript,
 };
+
+function flushSyncWork() {
+  if (disableLegacyMode) {
+    const previousWasRendering = previousDispatcher.flushSyncWork();
+    const wasRendering = flushSyncWorkOnAllRoots();
+    // Since multiple dispatchers can flush sync work during a single flushSync call
+    // we need to return true if any of them were rendering.
+    return previousWasRendering || wasRendering;
+  } else {
+    throw new Error(
+      'flushSyncWork should not be called from builds that support legacy mode. This is a bug in React.',
+    );
+  }
+}
 
 // We expect this to get inlined. It is a function mostly to communicate the special nature of
 // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling

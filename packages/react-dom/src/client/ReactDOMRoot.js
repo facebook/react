@@ -93,7 +93,8 @@ import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  flushSync,
+  updateContainerSync,
+  flushSyncWork,
   isAlreadyRendering,
   defaultOnUncaughtError,
   defaultOnCaughtError,
@@ -161,9 +162,8 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
           );
         }
       }
-      flushSync(() => {
-        updateContainer(null, root, null, null);
-      });
+      updateContainerSync(null, root, null, null);
+      flushSyncWork();
       unmarkContainerAsRoot(container);
     }
   };

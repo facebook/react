@@ -14,6 +14,7 @@ import type {
   CreateRootOptions,
 } from './ReactDOMRoot';
 
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 import {
   createRoot as createRootImpl,
   hydrateRoot as hydrateRootImpl,
@@ -21,9 +22,10 @@ import {
 } from './ReactDOMRoot';
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 import {runWithPriority} from 'react-dom-bindings/src/client/ReactDOMUpdatePriority';
+import {flushSync as flushSyncIsomorphic} from '../shared/ReactDOMFlushSync';
 
 import {
-  flushSync as flushSyncWithoutWarningIfAlreadyRendering,
+  flushSyncFromReconciler as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
   injectIntoDevTools,
   findHostInstance,
@@ -123,11 +125,11 @@ function hydrateRoot(
 
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
-declare function flushSync<R>(fn: () => R): R;
+declare function flushSyncFromReconciler<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSync(): void;
+declare function flushSyncFromReconciler(): void;
 // eslint-disable-next-line no-redeclare
-function flushSync<R>(fn: (() => R) | void): R | void {
+function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   if (__DEV__) {
     if (isAlreadyRendering()) {
       console.error(
@@ -139,6 +141,10 @@ function flushSync<R>(fn: (() => R) | void): R | void {
   }
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
+
+const flushSync: typeof flushSyncIsomorphic = disableLegacyMode
+  ? flushSyncIsomorphic
+  : flushSyncFromReconciler;
 
 function findDOMNode(
   componentOrElement: React$Component<any, any>,
