@@ -89,9 +89,7 @@ if (__DEV__) {
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
+          var stack = ReactSharedInternals.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -1148,19 +1146,10 @@ if (__DEV__) {
       return "\n  " + str;
     }
 
-    var ReactSharedInternals =
+    var ReactSharedInternals$1 =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactSharedServerInternals = // $FlowFixMe: It's defined in the one we resolve to.
-      React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-    if (!ReactSharedServerInternals) {
-      throw new Error(
-        'The "react" package in this environment is not configured correctly. ' +
-          'The "react-server" condition must be enabled in any environment that ' +
-          "runs React Server Components."
-      );
-    }
+    var ReactSharedInternals = ReactSharedInternals$1;
 
     function patchConsole(consoleInst, methodName) {
       var descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
@@ -1204,7 +1193,7 @@ if (__DEV__) {
             // refer to previous logs in debug info to associate them with a component.
 
             var id = request.nextChunkId++;
-            var owner = ReactCurrentOwner.current;
+            var owner = ReactSharedInternals.owner;
             emitConsoleChunk(request, id, methodName, owner, stack, arguments);
           } // $FlowFixMe[prop-missing]
 
@@ -1253,9 +1242,6 @@ if (__DEV__) {
 
     var SEEN_BUT_NOT_YET_OUTLINED = -1;
     var NEVER_OUTLINED = -2;
-    var ReactCurrentCache = ReactSharedServerInternals.ReactCurrentCache;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
     function defaultErrorHandler(error) {
       console["error"](error); // Don't transform to our wrapper
@@ -1277,15 +1263,15 @@ if (__DEV__) {
       environmentName
     ) {
       if (
-        ReactCurrentCache.current !== null &&
-        ReactCurrentCache.current !== DefaultCacheDispatcher
+        ReactSharedInternals.C !== null &&
+        ReactSharedInternals.C !== DefaultCacheDispatcher
       ) {
         throw new Error(
           "Currently React only supports one RSC renderer at a time."
         );
       }
 
-      ReactCurrentCache.current = DefaultCacheDispatcher;
+      ReactSharedInternals.C = DefaultCacheDispatcher;
       var abortSet = new Set();
       var pingedTasks = [];
       var cleanupQueue = [];
@@ -1550,12 +1536,12 @@ if (__DEV__) {
       var result;
 
       {
-        ReactCurrentOwner.current = componentDebugInfo;
+        ReactSharedInternals.owner = componentDebugInfo;
 
         try {
           result = Component(props, secondArg);
         } finally {
-          ReactCurrentOwner.current = null;
+          ReactSharedInternals.owner = null;
         }
       }
 
@@ -3036,8 +3022,8 @@ if (__DEV__) {
     }
 
     function performWork(request) {
-      var prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = HooksDispatcher;
+      var prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = HooksDispatcher;
       var prevRequest = currentRequest;
       currentRequest = request;
       prepareToUseHooksForRequest(request);
@@ -3058,7 +3044,7 @@ if (__DEV__) {
         logRecoverableError(request, error);
         fatalError(request, error);
       } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
+        ReactSharedInternals.H = prevDispatcher;
         resetHooksForRequest();
         currentRequest = prevRequest;
       }

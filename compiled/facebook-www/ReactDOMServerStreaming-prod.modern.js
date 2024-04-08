@@ -3331,8 +3331,6 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
-var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error) {
   console.error(error);
   return null;
@@ -5263,10 +5261,10 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = HooksDispatcher;
-    var prevCacheDispatcher = ReactCurrentCache.current;
-    ReactCurrentCache.current = DefaultCacheDispatcher;
+      prevDispatcher = ReactSharedInternals.H;
+    ReactSharedInternals.H = HooksDispatcher;
+    var prevCacheDispatcher = ReactSharedInternals.C;
+    ReactSharedInternals.C = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5420,8 +5418,8 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactCurrentDispatcher.current = prevDispatcher),
-        (ReactCurrentCache.current = prevCacheDispatcher),
+        (ReactSharedInternals.H = prevDispatcher),
+        (ReactSharedInternals.C = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }

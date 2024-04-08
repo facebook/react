@@ -91,17 +91,8 @@ var isArrayImpl = Array.isArray,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  ReactCurrentDispatcher = { current: null },
-  ReactCurrentCache = { current: null },
-  ReactCurrentBatchConfig = { transition: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentCache: ReactCurrentCache,
-    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: { current: null }
-  },
-  hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+  ReactSharedInternals = { H: null, C: null, T: null, owner: null },
+  hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   enableRefAsProp &&
     ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
@@ -122,7 +113,7 @@ function jsxProd(type, config, maybeKey) {
   void 0 === config.ref ||
     enableRefAsProp ||
     ((ref = config.ref),
-    (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
+    (ref = coerceStringRef(ref, ReactSharedInternals.owner, type)));
   maybeKey = {};
   for (var propName in config)
     "key" === propName ||
@@ -130,7 +121,7 @@ function jsxProd(type, config, maybeKey) {
       (enableRefAsProp && "ref" === propName
         ? (maybeKey.ref = coerceStringRef(
             config[propName],
-            ReactCurrentOwner.current,
+            ReactSharedInternals.owner,
             type
           ))
         : (maybeKey[propName] = config[propName]));
@@ -146,7 +137,7 @@ function jsxProd(type, config, maybeKey) {
     ref,
     void 0,
     void 0,
-    ReactCurrentOwner.current,
+    ReactSharedInternals.owner,
     maybeKey
   );
 }
@@ -472,7 +463,7 @@ exports.cloneElement = function (element, config, children) {
     void 0 !== config.ref &&
       (enableRefAsProp ||
         ((ref = config.ref), (ref = coerceStringRef(ref, owner, element.type))),
-      (owner = ReactCurrentOwner.current));
+      (owner = ReactSharedInternals.owner));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -539,7 +530,7 @@ exports.createElement = function (type, config, children) {
     for (propName in (void 0 === config.ref ||
       enableRefAsProp ||
       ((ref = config.ref),
-      (ref = coerceStringRef(ref, ReactCurrentOwner.current, type))),
+      (ref = coerceStringRef(ref, ReactSharedInternals.owner, type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -550,7 +541,7 @@ exports.createElement = function (type, config, children) {
         (enableRefAsProp && "ref" === propName
           ? (props.ref = coerceStringRef(
               config[propName],
-              ReactCurrentOwner.current,
+              ReactSharedInternals.owner,
               type
             ))
           : (props[propName] = config[propName]));
@@ -571,7 +562,7 @@ exports.createElement = function (type, config, children) {
     ref,
     void 0,
     void 0,
-    ReactCurrentOwner.current,
+    ReactSharedInternals.owner,
     props
   );
 };
@@ -579,7 +570,7 @@ exports.createRef = function () {
   return { current: null };
 };
 exports.experimental_useEffectEvent = function (callback) {
-  return ReactCurrentDispatcher.current.useEffectEvent(callback);
+  return ReactSharedInternals.H.useEffectEvent(callback);
 };
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -603,15 +594,15 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope, options) {
-  var prevTransition = ReactCurrentBatchConfig.transition,
+  var prevTransition = ReactSharedInternals.T,
     callbacks = new Set();
-  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
-  var currentTransition = ReactCurrentBatchConfig.transition;
+  ReactSharedInternals.T = { _callbacks: callbacks };
+  var currentTransition = ReactSharedInternals.T;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
-    ((ReactCurrentBatchConfig.transition.name = options.name),
-    (ReactCurrentBatchConfig.transition.startTime = -1));
+    ((ReactSharedInternals.T.name = options.name),
+    (ReactSharedInternals.T.startTime = -1));
   try {
     var returnValue = scope();
     "object" === typeof returnValue &&
@@ -624,7 +615,7 @@ exports.startTransition = function (scope, options) {
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
@@ -634,80 +625,76 @@ exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_getCacheForType = function (resourceType) {
-  var dispatcher = ReactCurrentCache.current;
+  var dispatcher = ReactSharedInternals.C;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
 exports.unstable_useCacheRefresh = function () {
-  return ReactCurrentDispatcher.current.useCacheRefresh();
+  return ReactSharedInternals.H.useCacheRefresh();
 };
 exports.unstable_useMemoCache = function (size) {
-  return ReactCurrentDispatcher.current.useMemoCache(size);
+  return ReactSharedInternals.H.useMemoCache(size);
 };
 exports.use = function (usable) {
-  return ReactCurrentDispatcher.current.use(usable);
+  return ReactSharedInternals.H.use(usable);
 };
 exports.useActionState = function (action, initialState, permalink) {
-  return ReactCurrentDispatcher.current.useActionState(
-    action,
-    initialState,
-    permalink
-  );
+  return ReactSharedInternals.H.useActionState(action, initialState, permalink);
 };
 exports.useCallback = function (callback, deps) {
-  return ReactCurrentDispatcher.current.useCallback(callback, deps);
+  return ReactSharedInternals.H.useCallback(callback, deps);
 };
 exports.useContext = function (Context) {
-  return ReactCurrentDispatcher.current.useContext(Context);
+  return ReactSharedInternals.H.useContext(Context);
 };
 exports.useDebugValue = function () {};
 exports.useDeferredValue = function (value, initialValue) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
+  return ReactSharedInternals.H.useDeferredValue(value, initialValue);
 };
 exports.useEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useEffect(create, deps);
+  return ReactSharedInternals.H.useEffect(create, deps);
 };
 exports.useId = function () {
-  return ReactCurrentDispatcher.current.useId();
+  return ReactSharedInternals.H.useId();
 };
 exports.useImperativeHandle = function (ref, create, deps) {
-  return ReactCurrentDispatcher.current.useImperativeHandle(ref, create, deps);
+  return ReactSharedInternals.H.useImperativeHandle(ref, create, deps);
 };
 exports.useInsertionEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useInsertionEffect(create, deps);
+  return ReactSharedInternals.H.useInsertionEffect(create, deps);
 };
 exports.useLayoutEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useLayoutEffect(create, deps);
+  return ReactSharedInternals.H.useLayoutEffect(create, deps);
 };
 exports.useMemo = function (create, deps) {
-  return ReactCurrentDispatcher.current.useMemo(create, deps);
+  return ReactSharedInternals.H.useMemo(create, deps);
 };
 exports.useOptimistic = function (passthrough, reducer) {
-  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
+  return ReactSharedInternals.H.useOptimistic(passthrough, reducer);
 };
 exports.useReducer = function (reducer, initialArg, init) {
-  return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
+  return ReactSharedInternals.H.useReducer(reducer, initialArg, init);
 };
 exports.useRef = function (initialValue) {
-  return ReactCurrentDispatcher.current.useRef(initialValue);
+  return ReactSharedInternals.H.useRef(initialValue);
 };
 exports.useState = function (initialState) {
-  return ReactCurrentDispatcher.current.useState(initialState);
+  return ReactSharedInternals.H.useState(initialState);
 };
 exports.useSyncExternalStore = function (
   subscribe,
   getSnapshot,
   getServerSnapshot
 ) {
-  return ReactCurrentDispatcher.current.useSyncExternalStore(
+  return ReactSharedInternals.H.useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   );
 };
 exports.useTransition = function () {
-  return ReactCurrentDispatcher.current.useTransition();
+  return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-c3069b6b";
+exports.version = "19.0.0-www-modern-8ec1e334";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

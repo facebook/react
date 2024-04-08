@@ -64,9 +64,7 @@ if (__DEV__) {
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
+          var stack = ReactSharedInternals.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -10681,7 +10679,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
     function describeBuiltInComponentFrame(name) {
       {
@@ -10735,13 +10732,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher;
+      var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactCurrentDispatcher$1.current; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactCurrentDispatcher$1.current = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -10934,7 +10931,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactCurrentDispatcher$1.current = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -10993,9 +10990,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame; // Linked list representing the identity of a component given the component/tag name and key.
     // The name might be minified but we assume that it's going to be the same generated name. Typically
     // because it's just the same compiled output in practice.
     // resume with segmentID at the index
@@ -13785,22 +13779,22 @@ if (__DEV__) {
       }
 
       var prevContext = getActiveContext();
-      var prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = HooksDispatcher;
-      var prevCacheDispatcher;
+      var prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = HooksDispatcher;
+      var prevCacheDispatcher = null;
 
       {
-        prevCacheDispatcher = ReactCurrentCache.current;
-        ReactCurrentCache.current = DefaultCacheDispatcher;
+        prevCacheDispatcher = ReactSharedInternals.C;
+        ReactSharedInternals.C = DefaultCacheDispatcher;
       }
 
       var prevRequest = currentRequest;
       currentRequest = request;
-      var prevGetCurrentStackImpl;
+      var prevGetCurrentStackImpl = null;
 
       {
-        prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
-        ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+        ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
       }
 
       var prevResumableState = currentResumableState;
@@ -13826,14 +13820,14 @@ if (__DEV__) {
         fatalError(request, error);
       } finally {
         setCurrentResumableState(prevResumableState);
-        ReactCurrentDispatcher.current = prevDispatcher;
+        ReactSharedInternals.H = prevDispatcher;
 
         {
-          ReactCurrentCache.current = prevCacheDispatcher;
+          ReactSharedInternals.C = prevCacheDispatcher;
         }
 
         {
-          ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+          ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
         }
 
         if (prevDispatcher === HooksDispatcher) {

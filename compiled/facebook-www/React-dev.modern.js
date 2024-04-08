@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-7116ae62";
+    var ReactVersion = "19.0.0-www-modern-4ab6e189";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -112,9 +112,7 @@ if (__DEV__) {
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
+          var stack = ReactSharedInternals.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -626,75 +624,38 @@ if (__DEV__) {
       return null;
     }
 
-    /**
-     * Keeps track of the current dispatcher.
-     */
-    var ReactCurrentDispatcher$1 = {
-      current: null
+    var ReactSharedInternals = {
+      H: null,
+      C: null,
+      T: null
     };
-
-    /**
-     * Keeps track of the current Cache dispatcher.
-     */
-    var ReactCurrentCache = {
-      current: null
-    };
-
-    /**
-     * Keeps track of the current batch's configuration such as how long an update
-     * should suspend for if it needs to.
-     */
-    var ReactCurrentBatchConfig = {
-      transition: null
-    };
-
-    var ReactCurrentActQueue = {
-      current: null,
-      // Used to reproduce behavior of `batchedUpdates` in legacy mode.
-      isBatchingLegacy: false,
-      didScheduleLegacyUpdate: false,
-      // Tracks whether something called `use` during the current batch of work.
-      // Determines whether we should yield to microtasks to unwrap already resolved
-      // promises without suspending.
-      didUsePromise: false,
-      // Track first uncaught error within this act
-      thrownErrors: []
-    };
-
-    /**
-     * Keeps track of the current owner.
-     *
-     * The current owner is the component who should own any components that are
-     * currently being constructed.
-     */
-    var ReactCurrentOwner$1 = {
-      /**
-       * @internal
-       * @type {ReactComponent}
-       */
-      current: null
-    };
-
-    var ReactDebugCurrentFrame$1 = {};
-    var currentExtraStackFrame = null;
 
     {
-      ReactDebugCurrentFrame$1.setExtraStackFrame = function (stack) {
-        {
-          currentExtraStackFrame = stack;
-        }
+      ReactSharedInternals.owner = null;
+    }
+
+    {
+      ReactSharedInternals.actQueue = null;
+      ReactSharedInternals.isBatchingLegacy = false;
+      ReactSharedInternals.didScheduleLegacyUpdate = false;
+      ReactSharedInternals.didUsePromise = false;
+      ReactSharedInternals.thrownErrors = [];
+      var currentExtraStackFrame = null;
+
+      ReactSharedInternals.setExtraStackFrame = function (stack) {
+        currentExtraStackFrame = stack;
       }; // Stack implementation injected by the current renderer.
 
-      ReactDebugCurrentFrame$1.getCurrentStack = null;
+      ReactSharedInternals.getCurrentStack = null;
 
-      ReactDebugCurrentFrame$1.getStackAddendum = function () {
+      ReactSharedInternals.getStackAddendum = function () {
         var stack = ""; // Add an extra top frame while an element is being validated
 
         if (currentExtraStackFrame) {
           stack += currentExtraStackFrame;
         } // Delegate to the injected renderer-specific implementation
 
-        var impl = ReactDebugCurrentFrame$1.getCurrentStack;
+        var impl = ReactSharedInternals.getCurrentStack;
 
         if (impl) {
           stack += impl() || "";
@@ -702,18 +663,6 @@ if (__DEV__) {
 
         return stack;
       };
-    }
-
-    var ReactSharedInternals = {
-      ReactCurrentDispatcher: ReactCurrentDispatcher$1,
-      ReactCurrentCache: ReactCurrentCache,
-      ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-      ReactCurrentOwner: ReactCurrentOwner$1
-    };
-
-    {
-      ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$1;
-      ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
     }
 
     // $FlowFixMe[method-unbinding]
@@ -858,7 +807,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
     function describeBuiltInComponentFrame(name) {
       {
@@ -912,13 +860,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher;
+      var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactCurrentDispatcher.current = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -1111,7 +1059,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactCurrentDispatcher.current = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -1341,8 +1289,6 @@ if (__DEV__) {
       return null;
     }
 
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
@@ -1386,12 +1332,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner.current &&
+          ReactSharedInternals.owner &&
           self &&
-          ReactCurrentOwner.current.stateNode !== self
+          ReactSharedInternals.owner.stateNode !== self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner.current.type
+            ReactSharedInternals.owner.type
           );
 
           if (!didWarnAboutStringRefs[componentName]) {
@@ -1402,7 +1348,7 @@ if (__DEV__) {
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
                 "https://react.dev/link/strict-mode-string-ref",
-              getComponentNameFromType(ReactCurrentOwner.current.type),
+              getComponentNameFromType(ReactSharedInternals.owner.type),
               config.ref
             );
 
@@ -1791,7 +1737,7 @@ if (__DEV__) {
             ref = config.ref;
 
             {
-              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+              ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
             }
           }
 
@@ -1825,7 +1771,7 @@ if (__DEV__) {
               if (enableRefAsProp && !disableStringRefs && propName === "ref") {
                 props.ref = coerceStringRef(
                   config[propName],
-                  ReactCurrentOwner.current,
+                  ReactSharedInternals.owner,
                   type
                 );
               } else {
@@ -1869,7 +1815,7 @@ if (__DEV__) {
           ref,
           self,
           source,
-          ReactCurrentOwner.current,
+          ReactSharedInternals.owner,
           props
         );
 
@@ -1955,7 +1901,7 @@ if (__DEV__) {
             ref = config.ref;
 
             {
-              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+              ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
             }
           }
 
@@ -1986,7 +1932,7 @@ if (__DEV__) {
             if (enableRefAsProp && !disableStringRefs && propName === "ref") {
               props.ref = coerceStringRef(
                 config[propName],
-                ReactCurrentOwner.current,
+                ReactSharedInternals.owner,
                 type
               );
             } else {
@@ -2050,7 +1996,7 @@ if (__DEV__) {
         ref,
         undefined,
         undefined,
-        ReactCurrentOwner.current,
+        ReactSharedInternals.owner,
         props
       );
 
@@ -2106,7 +2052,7 @@ if (__DEV__) {
             }
           }
 
-          owner = ReactCurrentOwner.current;
+          owner = ReactSharedInternals.owner;
         }
 
         if (hasValidKey(config)) {
@@ -2199,8 +2145,8 @@ if (__DEV__) {
 
     function getDeclarationErrorAddendum() {
       {
-        if (ReactCurrentOwner.current) {
-          var name = getComponentNameFromType(ReactCurrentOwner.current.type);
+        if (ReactSharedInternals.owner) {
+          var name = getComponentNameFromType(ReactSharedInternals.owner.type);
 
           if (name) {
             return "\n\nCheck the render method of `" + name + "`.";
@@ -2315,7 +2261,7 @@ if (__DEV__) {
         if (
           element &&
           element._owner != null &&
-          element._owner !== ReactCurrentOwner.current
+          element._owner !== ReactSharedInternals.owner
         ) {
           var ownerName = null;
 
@@ -2345,9 +2291,9 @@ if (__DEV__) {
       {
         if (element) {
           var stack = describeUnknownElementTypeFrameInDEV(element.type);
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
+          ReactSharedInternals.setExtraStackFrame(stack);
         } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
+          ReactSharedInternals.setExtraStackFrame(null);
         }
       }
     }
@@ -3249,7 +3195,7 @@ if (__DEV__) {
     var cache = noopCache;
 
     function resolveDispatcher() {
-      var dispatcher = ReactCurrentDispatcher$1.current;
+      var dispatcher = ReactSharedInternals.H;
 
       {
         if (dispatcher === null) {
@@ -3270,7 +3216,7 @@ if (__DEV__) {
     }
 
     function getCacheForType(resourceType) {
-      var dispatcher = ReactCurrentCache.current;
+      var dispatcher = ReactSharedInternals.C;
 
       if (!dispatcher) {
         // If there is no dispatcher, then we treat this as not being cached.
@@ -3427,26 +3373,26 @@ if (__DEV__) {
           };
 
     function startTransition(scope, options) {
-      var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
+      var prevTransition = ReactSharedInternals.T; // Each renderer registers a callback to receive the return value of
       // the scope function. This is used to implement async actions.
 
       var callbacks = new Set();
       var transition = {
         _callbacks: callbacks
       };
-      ReactCurrentBatchConfig.transition = transition;
-      var currentTransition = ReactCurrentBatchConfig.transition;
+      ReactSharedInternals.T = transition;
+      var currentTransition = ReactSharedInternals.T;
 
       {
-        ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+        ReactSharedInternals.T._updatedFibers = new Set();
       }
 
       if (enableTransitionTracing) {
         if (options !== undefined && options.name !== undefined) {
           // $FlowFixMe[incompatible-use] found when upgrading Flow
-          ReactCurrentBatchConfig.transition.name = options.name; // $FlowFixMe[incompatible-use] found when upgrading Flow
+          ReactSharedInternals.T.name = options.name; // $FlowFixMe[incompatible-use] found when upgrading Flow
 
-          ReactCurrentBatchConfig.transition.startTime = -1;
+          ReactSharedInternals.T.startTime = -1;
         }
       }
 
@@ -3468,7 +3414,7 @@ if (__DEV__) {
           reportGlobalError(error);
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-          ReactCurrentBatchConfig.transition = prevTransition;
+          ReactSharedInternals.T = prevTransition;
         }
       }
     }
@@ -3555,7 +3501,7 @@ if (__DEV__) {
 
     function act(callback) {
       {
-        // When ReactCurrentActQueue.current is not null, it signals to React that
+        // When ReactSharedInternals.actQueue is not null, it signals to React that
         // we're currently inside an `act` scope. React will push all its tasks to
         // this queue instead of scheduling them with platform APIs.
         //
@@ -3565,10 +3511,10 @@ if (__DEV__) {
         //
         // If we're already inside an `act` scope, reuse the existing queue.
         var prevIsBatchingLegacy = false;
-        var prevActQueue = ReactCurrentActQueue.current;
+        var prevActQueue = ReactSharedInternals.actQueue;
         var prevActScopeDepth = actScopeDepth;
         actScopeDepth++;
-        var queue = (ReactCurrentActQueue.current =
+        var queue = (ReactSharedInternals.actQueue =
           prevActQueue !== null ? prevActQueue : []); // Used to reproduce behavior of `batchedUpdates` in legacy mode. Only
 
         var result; // This tracks whether the `act` call is awaited. In certain cases, not
@@ -3584,7 +3530,7 @@ if (__DEV__) {
 
           result = callback();
           var didScheduleLegacyUpdate = !disableLegacyMode
-            ? ReactCurrentActQueue.didScheduleLegacyUpdate
+            ? ReactSharedInternals.didScheduleLegacyUpdate
             : false; // Replicate behavior of original `act` implementation in legacy mode,
           // which flushed updates immediately after the scope function exits, even
           // if it's an async function.
@@ -3602,13 +3548,13 @@ if (__DEV__) {
           // one used to track `act` scopes. Why, you may be wondering? Because
           // that's how it worked before version 18. Yes, it's confusing! We should
           // delete legacy mode!!
-          ReactCurrentActQueue.thrownErrors.push(error);
+          ReactSharedInternals.thrownErrors.push(error);
         }
 
-        if (ReactCurrentActQueue.thrownErrors.length > 0) {
+        if (ReactSharedInternals.thrownErrors.length > 0) {
           popActScope(prevActQueue, prevActScopeDepth);
-          var thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
-          ReactCurrentActQueue.thrownErrors.length = 0;
+          var thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+          ReactSharedInternals.thrownErrors.length = 0;
           throw thrownError;
         }
 
@@ -3664,15 +3610,15 @@ if (__DEV__) {
                       // `thenable` might not be a real promise, and `flushActQueue`
                       // might throw, so we need to wrap `flushActQueue` in a
                       // try/catch.
-                      ReactCurrentActQueue.thrownErrors.push(error);
+                      ReactSharedInternals.thrownErrors.push(error);
                     }
 
-                    if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                    if (ReactSharedInternals.thrownErrors.length > 0) {
                       var _thrownError = aggregateErrors(
-                        ReactCurrentActQueue.thrownErrors
+                        ReactSharedInternals.thrownErrors
                       );
 
-                      ReactCurrentActQueue.thrownErrors.length = 0;
+                      ReactSharedInternals.thrownErrors.length = 0;
                       reject(_thrownError);
                     }
                   } else {
@@ -3682,12 +3628,12 @@ if (__DEV__) {
                 function (error) {
                   popActScope(prevActQueue, prevActScopeDepth);
 
-                  if (ReactCurrentActQueue.thrownErrors.length > 0) {
+                  if (ReactSharedInternals.thrownErrors.length > 0) {
                     var _thrownError2 = aggregateErrors(
-                      ReactCurrentActQueue.thrownErrors
+                      ReactSharedInternals.thrownErrors
                     );
 
-                    ReactCurrentActQueue.thrownErrors.length = 0;
+                    ReactSharedInternals.thrownErrors.length = 0;
                     reject(_thrownError2);
                   } else {
                     reject(error);
@@ -3741,15 +3687,15 @@ if (__DEV__) {
             // TODO: In a future version, consider always requiring all `act` calls
             // to be awaited, regardless of whether the callback is sync or async.
 
-            ReactCurrentActQueue.current = null;
+            ReactSharedInternals.actQueue = null;
           }
 
-          if (ReactCurrentActQueue.thrownErrors.length > 0) {
+          if (ReactSharedInternals.thrownErrors.length > 0) {
             var _thrownError3 = aggregateErrors(
-              ReactCurrentActQueue.thrownErrors
+              ReactSharedInternals.thrownErrors
             );
 
-            ReactCurrentActQueue.thrownErrors.length = 0;
+            ReactSharedInternals.thrownErrors.length = 0;
             throw _thrownError3;
           }
 
@@ -3760,7 +3706,7 @@ if (__DEV__) {
               if (prevActScopeDepth === 0) {
                 // If the `act` call is awaited, restore the queue we were
                 // using before (see long comment above) so we can flush it.
-                ReactCurrentActQueue.current = queue;
+                ReactSharedInternals.actQueue = queue;
                 enqueueTask(function () {
                   return (
                     // Recursively flush tasks scheduled by a microtask.
@@ -3792,7 +3738,7 @@ if (__DEV__) {
     function recursivelyFlushAsyncActWork(returnValue, resolve, reject) {
       {
         // Check if any tasks were scheduled asynchronously.
-        var queue = ReactCurrentActQueue.current;
+        var queue = ReactSharedInternals.actQueue;
 
         if (queue !== null) {
           if (queue.length !== 0) {
@@ -3812,17 +3758,17 @@ if (__DEV__) {
               return;
             } catch (error) {
               // Leave remaining tasks on the queue if something throws.
-              ReactCurrentActQueue.thrownErrors.push(error);
+              ReactSharedInternals.thrownErrors.push(error);
             }
           } else {
             // The queue is empty. We can finish.
-            ReactCurrentActQueue.current = null;
+            ReactSharedInternals.actQueue = null;
           }
         }
 
-        if (ReactCurrentActQueue.thrownErrors.length > 0) {
-          var thrownError = aggregateErrors(ReactCurrentActQueue.thrownErrors);
-          ReactCurrentActQueue.thrownErrors.length = 0;
+        if (ReactSharedInternals.thrownErrors.length > 0) {
+          var thrownError = aggregateErrors(ReactSharedInternals.thrownErrors);
+          ReactSharedInternals.thrownErrors.length = 0;
           reject(thrownError);
         } else {
           resolve(returnValue);
@@ -3844,11 +3790,11 @@ if (__DEV__) {
               var callback = queue[i];
 
               do {
-                ReactCurrentActQueue.didUsePromise = false;
+                ReactSharedInternals.didUsePromise = false;
                 var continuation = callback(false);
 
                 if (continuation !== null) {
-                  if (ReactCurrentActQueue.didUsePromise) {
+                  if (ReactSharedInternals.didUsePromise) {
                     // The component just suspended. Yield to the main thread in
                     // case the promise is already resolved. If so, it will ping in
                     // a microtask and we can resume without unwinding the stack.
@@ -3868,7 +3814,7 @@ if (__DEV__) {
           } catch (error) {
             // If something throws, leave the remaining callbacks on the queue.
             queue.splice(0, i + 1);
-            ReactCurrentActQueue.thrownErrors.push(error);
+            ReactSharedInternals.thrownErrors.push(error);
           } finally {
             isFlushing = false;
           }

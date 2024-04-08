@@ -3448,8 +3448,6 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
-var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error) {
   console.error(error);
   return null;
@@ -4961,10 +4959,10 @@ function finishedTask(request, boundary, segment) {
 function performWork(request$jscomp$2) {
   if (2 !== request$jscomp$2.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = HooksDispatcher;
-    var prevCacheDispatcher = ReactCurrentCache.current;
-    ReactCurrentCache.current = DefaultCacheDispatcher;
+      prevDispatcher = ReactSharedInternals.H;
+    ReactSharedInternals.H = HooksDispatcher;
+    var prevCacheDispatcher = ReactSharedInternals.C;
+    ReactSharedInternals.C = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request$jscomp$2;
     var prevResumableState = currentResumableState;
@@ -5117,8 +5115,8 @@ function performWork(request$jscomp$2) {
         fatalError(request$jscomp$2, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactCurrentDispatcher.current = prevDispatcher),
-        (ReactCurrentCache.current = prevCacheDispatcher),
+        (ReactSharedInternals.H = prevDispatcher),
+        (ReactSharedInternals.C = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }
@@ -5677,4 +5675,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-8d6ed462";
+exports.version = "19.0.0-www-classic-cfa5e2a0";

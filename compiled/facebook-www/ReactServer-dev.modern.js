@@ -61,9 +61,7 @@ if (__DEV__) {
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
+          var stack = ReactSharedInternals.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -92,54 +90,32 @@ if (__DEV__) {
 
     var disableStringRefs = false;
 
-    /**
-     * Keeps track of the current Cache dispatcher.
-     */
-    var ReactCurrentCache = {
-      current: null
+    var ReactSharedInternals = {
+      H: null,
+      C: null
     };
-
-    /**
-     * Keeps track of the current dispatcher.
-     */
-    var ReactCurrentDispatcher$1 = {
-      current: null
-    };
-
-    /**
-     * Keeps track of the current owner.
-     *
-     * The current owner is the component who should own any components that are
-     * currently being constructed.
-     */
-    var ReactCurrentOwner$1 = {
-      /**
-       * @internal
-       * @type {ReactComponent}
-       */
-      current: null
-    };
-
-    var ReactDebugCurrentFrame$1 = {};
-    var currentExtraStackFrame = null;
 
     {
-      ReactDebugCurrentFrame$1.setExtraStackFrame = function (stack) {
-        {
-          currentExtraStackFrame = stack;
-        }
+      ReactSharedInternals.owner = null;
+    }
+
+    {
+      var currentExtraStackFrame = null;
+
+      ReactSharedInternals.setExtraStackFrame = function (stack) {
+        currentExtraStackFrame = stack;
       }; // Stack implementation injected by the current renderer.
 
-      ReactDebugCurrentFrame$1.getCurrentStack = null;
+      ReactSharedInternals.getCurrentStack = null;
 
-      ReactDebugCurrentFrame$1.getStackAddendum = function () {
+      ReactSharedInternals.getStackAddendum = function () {
         var stack = ""; // Add an extra top frame while an element is being validated
 
         if (currentExtraStackFrame) {
           stack += currentExtraStackFrame;
         } // Delegate to the injected renderer-specific implementation
 
-        var impl = ReactDebugCurrentFrame$1.getCurrentStack;
+        var impl = ReactSharedInternals.getCurrentStack;
 
         if (impl) {
           stack += impl() || "";
@@ -148,19 +124,6 @@ if (__DEV__) {
         return stack;
       };
     }
-
-    var ReactSharedInternals = {
-      ReactCurrentDispatcher: ReactCurrentDispatcher$1,
-      ReactCurrentOwner: ReactCurrentOwner$1
-    };
-
-    {
-      ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$1;
-    }
-
-    var ReactServerSharedInternals = {
-      ReactCurrentCache: ReactCurrentCache
-    };
 
     var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
 
@@ -568,7 +531,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
     function describeBuiltInComponentFrame(name) {
       {
@@ -622,13 +584,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher;
+      var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactCurrentDispatcher.current = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -821,7 +783,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactCurrentDispatcher.current = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -1051,8 +1013,6 @@ if (__DEV__) {
       return null;
     }
 
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
@@ -1096,12 +1056,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner.current &&
+          ReactSharedInternals.owner &&
           self &&
-          ReactCurrentOwner.current.stateNode !== self
+          ReactSharedInternals.owner.stateNode !== self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner.current.type
+            ReactSharedInternals.owner.type
           );
 
           if (!didWarnAboutStringRefs[componentName]) {
@@ -1112,7 +1072,7 @@ if (__DEV__) {
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
                 "https://react.dev/link/strict-mode-string-ref",
-              getComponentNameFromType(ReactCurrentOwner.current.type),
+              getComponentNameFromType(ReactSharedInternals.owner.type),
               config.ref
             );
 
@@ -1501,7 +1461,7 @@ if (__DEV__) {
             ref = config.ref;
 
             {
-              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+              ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
             }
           }
 
@@ -1535,7 +1495,7 @@ if (__DEV__) {
               if (enableRefAsProp && !disableStringRefs && propName === "ref") {
                 props.ref = coerceStringRef(
                   config[propName],
-                  ReactCurrentOwner.current,
+                  ReactSharedInternals.owner,
                   type
                 );
               } else {
@@ -1579,7 +1539,7 @@ if (__DEV__) {
           ref,
           self,
           source,
-          ReactCurrentOwner.current,
+          ReactSharedInternals.owner,
           props
         );
 
@@ -1665,7 +1625,7 @@ if (__DEV__) {
             ref = config.ref;
 
             {
-              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+              ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
             }
           }
 
@@ -1696,7 +1656,7 @@ if (__DEV__) {
             if (enableRefAsProp && !disableStringRefs && propName === "ref") {
               props.ref = coerceStringRef(
                 config[propName],
-                ReactCurrentOwner.current,
+                ReactSharedInternals.owner,
                 type
               );
             } else {
@@ -1760,7 +1720,7 @@ if (__DEV__) {
         ref,
         undefined,
         undefined,
-        ReactCurrentOwner.current,
+        ReactSharedInternals.owner,
         props
       );
 
@@ -1816,7 +1776,7 @@ if (__DEV__) {
             }
           }
 
-          owner = ReactCurrentOwner.current;
+          owner = ReactSharedInternals.owner;
         }
 
         if (hasValidKey(config)) {
@@ -1909,8 +1869,8 @@ if (__DEV__) {
 
     function getDeclarationErrorAddendum() {
       {
-        if (ReactCurrentOwner.current) {
-          var name = getComponentNameFromType(ReactCurrentOwner.current.type);
+        if (ReactSharedInternals.owner) {
+          var name = getComponentNameFromType(ReactSharedInternals.owner.type);
 
           if (name) {
             return "\n\nCheck the render method of `" + name + "`.";
@@ -2025,7 +1985,7 @@ if (__DEV__) {
         if (
           element &&
           element._owner != null &&
-          element._owner !== ReactCurrentOwner.current
+          element._owner !== ReactSharedInternals.owner
         ) {
           var ownerName = null;
 
@@ -2055,9 +2015,9 @@ if (__DEV__) {
       {
         if (element) {
           var stack = describeUnknownElementTypeFrameInDEV(element.type);
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
+          ReactSharedInternals.setExtraStackFrame(stack);
         } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
+          ReactSharedInternals.setExtraStackFrame(null);
         }
       }
     }
@@ -2618,7 +2578,7 @@ if (__DEV__) {
     }
 
     function resolveDispatcher() {
-      var dispatcher = ReactCurrentDispatcher$1.current;
+      var dispatcher = ReactSharedInternals.H;
 
       {
         if (dispatcher === null) {
@@ -2929,7 +2889,7 @@ if (__DEV__) {
 
     function cache(fn) {
       return function () {
-        var dispatcher = ReactCurrentCache.current;
+        var dispatcher = ReactSharedInternals.C;
 
         if (!dispatcher) {
           // If there is no dispatcher, then we treat this as not being cached.
@@ -3014,14 +2974,6 @@ if (__DEV__) {
       };
     }
 
-    /**
-     * Keeps track of the current batch's configuration such as how long an update
-     * should suspend for if it needs to.
-     */
-    var ReactCurrentBatchConfig = {
-      transition: null
-    };
-
     var reportGlobalError =
       typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
         ? // emulating an uncaught JavaScript error.
@@ -3062,26 +3014,26 @@ if (__DEV__) {
           };
 
     function startTransition(scope, options) {
-      var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
+      var prevTransition = ReactSharedInternals.T; // Each renderer registers a callback to receive the return value of
       // the scope function. This is used to implement async actions.
 
       var callbacks = new Set();
       var transition = {
         _callbacks: callbacks
       };
-      ReactCurrentBatchConfig.transition = transition;
-      var currentTransition = ReactCurrentBatchConfig.transition;
+      ReactSharedInternals.T = transition;
+      var currentTransition = ReactSharedInternals.T;
 
       {
-        ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+        ReactSharedInternals.T._updatedFibers = new Set();
       }
 
       if (enableTransitionTracing) {
         if (options !== undefined && options.name !== undefined) {
           // $FlowFixMe[incompatible-use] found when upgrading Flow
-          ReactCurrentBatchConfig.transition.name = options.name; // $FlowFixMe[incompatible-use] found when upgrading Flow
+          ReactSharedInternals.T.name = options.name; // $FlowFixMe[incompatible-use] found when upgrading Flow
 
-          ReactCurrentBatchConfig.transition.startTime = -1;
+          ReactSharedInternals.T.startTime = -1;
         }
       }
 
@@ -3103,7 +3055,7 @@ if (__DEV__) {
           reportGlobalError(error);
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-          ReactCurrentBatchConfig.transition = prevTransition;
+          ReactSharedInternals.T = prevTransition;
         }
       }
     }
@@ -3131,7 +3083,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-c9d5711a";
+    var ReactVersion = "19.0.0-www-modern-85fbc52f";
 
     // Patch fetch
     var Children = {
@@ -3155,8 +3107,6 @@ if (__DEV__) {
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
       ReactSharedInternals;
-    exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
-      ReactServerSharedInternals;
     exports.cache = cache;
     exports.cloneElement = cloneElement;
     exports.createElement = createElement;
