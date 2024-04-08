@@ -19,26 +19,6 @@ if (__DEV__) {
     var Scheduler = require("scheduler");
     var React = require("react");
 
-    function noop$3() {}
-
-    var DefaultDispatcher = {
-      prefetchDNS: noop$3,
-      preconnect: noop$3,
-      preload: noop$3,
-      preloadModule: noop$3,
-      preinitScript: noop$3,
-      preinitStyle: noop$3,
-      preinitModuleScript: noop$3
-    };
-    var Internals = {
-      usingClientEntryPoint: false,
-      Events: null,
-      ReactDOMCurrentDispatcher: {
-        current: DefaultDispatcher
-      },
-      findDOMNode: null
-    };
-
     // This refers to a WWW module.
     var warningWWW = require("warning");
 
@@ -107,25 +87,6 @@ if (__DEV__) {
       }
     }
 
-    /**
-     * `ReactInstanceMap` maintains a mapping from a public facing stateful
-     * instance (key) and the internal representation (value). This allows public
-     * methods to accept the user facing instance as an argument and map them back
-     * to internal methods.
-     *
-     * Note that this module is currently shared and assumed to be stateless.
-     * If this becomes an actual Map, that will break.
-     */
-    function get(key) {
-      return key._reactInternals;
-    }
-    function set(key, value) {
-      key._reactInternals = value;
-    }
-
-    var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
     // Re-export dynamic flags from the www version.
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
@@ -168,341 +129,7 @@ if (__DEV__) {
     var enableSuspenseCallback = true;
     var disableLegacyMode = true;
 
-    var FunctionComponent = 0;
-    var ClassComponent = 1;
-    var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
-
-    var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
-
-    var HostComponent = 5;
-    var HostText = 6;
-    var Fragment = 7;
-    var Mode = 8;
-    var ContextConsumer = 9;
-    var ContextProvider = 10;
-    var ForwardRef = 11;
-    var Profiler = 12;
-    var SuspenseComponent = 13;
-    var MemoComponent = 14;
-    var SimpleMemoComponent = 15;
-    var LazyComponent = 16;
-    var IncompleteClassComponent = 17;
-    var DehydratedFragment = 18;
-    var SuspenseListComponent = 19;
-    var ScopeComponent = 21;
-    var OffscreenComponent = 22;
-    var LegacyHiddenComponent = 23;
-    var CacheComponent = 24;
-    var TracingMarkerComponent = 25;
-    var HostHoistable = 26;
-    var HostSingleton = 27;
-    var IncompleteFunctionComponent = 28;
-
-    // ATTENTION
-    // When adding new symbols to this file,
-    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-    // The Symbol used to tag the ReactElement-like types.
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
-    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
-
-    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
-    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-    var REACT_MEMO_TYPE = Symbol.for("react.memo");
-    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-    var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-    var FAUX_ITERATOR_SYMBOL = "@@iterator";
-    function getIteratorFn(maybeIterable) {
-      if (maybeIterable === null || typeof maybeIterable !== "object") {
-        return null;
-      }
-
-      var maybeIterator =
-        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-        maybeIterable[FAUX_ITERATOR_SYMBOL];
-
-      if (typeof maybeIterator === "function") {
-        return maybeIterator;
-      }
-
-      return null;
-    }
-
-    function getWrappedName$1(outerType, innerType, wrapperName) {
-      var displayName = outerType.displayName;
-
-      if (displayName) {
-        return displayName;
-      }
-
-      var functionName = innerType.displayName || innerType.name || "";
-      return functionName !== ""
-        ? wrapperName + "(" + functionName + ")"
-        : wrapperName;
-    } // Keep in sync with react-reconciler/getComponentNameFromFiber
-
-    function getContextName$1(type) {
-      return type.displayName || "Context";
-    }
-
-    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
-
-    function getComponentNameFromType(type) {
-      if (type == null) {
-        // Host root, text node or just invalid type.
-        return null;
-      }
-
-      if (typeof type === "function") {
-        if (type.$$typeof === REACT_CLIENT_REFERENCE) {
-          // TODO: Create a convention for naming client references with debug info.
-          return null;
-        }
-
-        return type.displayName || type.name || null;
-      }
-
-      if (typeof type === "string") {
-        return type;
-      }
-
-      switch (type) {
-        case REACT_FRAGMENT_TYPE:
-          return "Fragment";
-
-        case REACT_PORTAL_TYPE:
-          return "Portal";
-
-        case REACT_PROFILER_TYPE:
-          return "Profiler";
-
-        case REACT_STRICT_MODE_TYPE:
-          return "StrictMode";
-
-        case REACT_SUSPENSE_TYPE:
-          return "Suspense";
-
-        case REACT_SUSPENSE_LIST_TYPE:
-          return "SuspenseList";
-        // Fall through
-
-        case REACT_TRACING_MARKER_TYPE:
-          if (enableTransitionTracing) {
-            return "TracingMarker";
-          }
-      }
-
-      if (typeof type === "object") {
-        {
-          if (typeof type.tag === "number") {
-            error(
-              "Received an unexpected object in getComponentNameFromType(). " +
-                "This is likely a bug in React. Please file an issue."
-            );
-          }
-        }
-
-        switch (type.$$typeof) {
-          case REACT_PROVIDER_TYPE:
-            if (enableRenderableContext) {
-              return null;
-            } else {
-              var provider = type;
-              return getContextName$1(provider._context) + ".Provider";
-            }
-
-          case REACT_CONTEXT_TYPE:
-            var context = type;
-
-            if (enableRenderableContext) {
-              return getContextName$1(context) + ".Provider";
-            } else {
-              return getContextName$1(context) + ".Consumer";
-            }
-
-          case REACT_CONSUMER_TYPE:
-            if (enableRenderableContext) {
-              var consumer = type;
-              return getContextName$1(consumer._context) + ".Consumer";
-            } else {
-              return null;
-            }
-
-          case REACT_FORWARD_REF_TYPE:
-            return getWrappedName$1(type, type.render, "ForwardRef");
-
-          case REACT_MEMO_TYPE:
-            var outerName = type.displayName || null;
-
-            if (outerName !== null) {
-              return outerName;
-            }
-
-            return getComponentNameFromType(type.type) || "Memo";
-
-          case REACT_LAZY_TYPE: {
-            var lazyComponent = type;
-            var payload = lazyComponent._payload;
-            var init = lazyComponent._init;
-
-            try {
-              return getComponentNameFromType(init(payload));
-            } catch (x) {
-              return null;
-            }
-          }
-        }
-      }
-
-      return null;
-    }
-
-    function getWrappedName(outerType, innerType, wrapperName) {
-      var functionName = innerType.displayName || innerType.name || "";
-      return (
-        outerType.displayName ||
-        (functionName !== ""
-          ? wrapperName + "(" + functionName + ")"
-          : wrapperName)
-      );
-    } // Keep in sync with shared/getComponentNameFromType
-
-    function getContextName(type) {
-      return type.displayName || "Context";
-    }
-
-    function getComponentNameFromOwner(owner) {
-      if (typeof owner.tag === "number") {
-        return getComponentNameFromFiber(owner);
-      }
-
-      if (typeof owner.name === "string") {
-        return owner.name;
-      }
-
-      return null;
-    }
-    function getComponentNameFromFiber(fiber) {
-      var tag = fiber.tag,
-        type = fiber.type;
-
-      switch (tag) {
-        case CacheComponent:
-          return "Cache";
-
-        case ContextConsumer:
-          if (enableRenderableContext) {
-            var consumer = type;
-            return getContextName(consumer._context) + ".Consumer";
-          } else {
-            var context = type;
-            return getContextName(context) + ".Consumer";
-          }
-
-        case ContextProvider:
-          if (enableRenderableContext) {
-            var _context = type;
-            return getContextName(_context) + ".Provider";
-          } else {
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
-          }
-
-        case DehydratedFragment:
-          return "DehydratedFragment";
-
-        case ForwardRef:
-          return getWrappedName(type, type.render, "ForwardRef");
-
-        case Fragment:
-          return "Fragment";
-
-        case HostHoistable:
-        case HostSingleton:
-        case HostComponent:
-          // Host component type is the display name (e.g. "div", "View")
-          return type;
-
-        case HostPortal:
-          return "Portal";
-
-        case HostRoot:
-          return "Root";
-
-        case HostText:
-          return "Text";
-
-        case LazyComponent:
-          // Name comes from the type in this case; we don't have a tag.
-          return getComponentNameFromType(type);
-
-        case Mode:
-          if (type === REACT_STRICT_MODE_TYPE) {
-            // Don't be less specific than shared/getComponentNameFromType
-            return "StrictMode";
-          }
-
-          return "Mode";
-
-        case OffscreenComponent:
-          return "Offscreen";
-
-        case Profiler:
-          return "Profiler";
-
-        case ScopeComponent:
-          return "Scope";
-
-        case SuspenseComponent:
-          return "Suspense";
-
-        case SuspenseListComponent:
-          return "SuspenseList";
-
-        case TracingMarkerComponent:
-          return "TracingMarker";
-        // The display name for these tags come from the user-provided type:
-
-        case IncompleteClassComponent:
-        case IncompleteFunctionComponent: {
-          break;
-        }
-
-        // Fallthrough
-
-        case ClassComponent:
-        case FunctionComponent:
-        case MemoComponent:
-        case SimpleMemoComponent:
-          if (typeof type === "function") {
-            return type.displayName || type.name || null;
-          }
-
-          if (typeof type === "string") {
-            return type;
-          }
-
-          break;
-
-        case LegacyHiddenComponent: {
-          return "LegacyHidden";
-        }
-      }
-
-      return null;
-    }
+    var assign = Object.assign;
 
     var NoFlags$1 =
       /*                      */
@@ -638,556 +265,6 @@ if (__DEV__) {
 
     var StaticMask =
       LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
-
-    var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
-    function getNearestMountedFiber(fiber) {
-      var node = fiber;
-      var nearestMounted = fiber;
-
-      if (!fiber.alternate) {
-        // If there is no alternate, this might be a new tree that isn't inserted
-        // yet. If it is, then it will have a pending insertion effect on it.
-        var nextNode = node;
-
-        do {
-          node = nextNode;
-
-          if ((node.flags & (Placement | Hydrating)) !== NoFlags$1) {
-            // This is an insertion or in-progress hydration. The nearest possible
-            // mounted fiber is the parent but we need to continue to figure out
-            // if that one is still mounted.
-            nearestMounted = node.return;
-          } // $FlowFixMe[incompatible-type] we bail out when we get a null
-
-          nextNode = node.return;
-        } while (nextNode);
-      } else {
-        while (node.return) {
-          node = node.return;
-        }
-      }
-
-      if (node.tag === HostRoot) {
-        // TODO: Check if this was a nested HostRoot when used with
-        // renderContainerIntoSubtree.
-        return nearestMounted;
-      } // If we didn't hit the root, that means that we're in an disconnected tree
-      // that has been unmounted.
-
-      return null;
-    }
-    function getSuspenseInstanceFromFiber(fiber) {
-      if (fiber.tag === SuspenseComponent) {
-        var suspenseState = fiber.memoizedState;
-
-        if (suspenseState === null) {
-          var current = fiber.alternate;
-
-          if (current !== null) {
-            suspenseState = current.memoizedState;
-          }
-        }
-
-        if (suspenseState !== null) {
-          return suspenseState.dehydrated;
-        }
-      }
-
-      return null;
-    }
-    function getContainerFromFiber(fiber) {
-      return fiber.tag === HostRoot ? fiber.stateNode.containerInfo : null;
-    }
-    function isMounted(component) {
-      {
-        var owner = ReactCurrentOwner$2.current;
-
-        if (owner !== null && owner.tag === ClassComponent) {
-          var ownerFiber = owner;
-          var instance = ownerFiber.stateNode;
-
-          if (!instance._warnedAboutRefsInRender) {
-            error(
-              "%s is accessing isMounted inside its render() function. " +
-                "render() should be a pure function of props and state. It should " +
-                "never access something that requires stale data from the previous " +
-                "render, such as refs. Move this logic to componentDidMount and " +
-                "componentDidUpdate instead.",
-              getComponentNameFromFiber(ownerFiber) || "A component"
-            );
-          }
-
-          instance._warnedAboutRefsInRender = true;
-        }
-      }
-
-      var fiber = get(component);
-
-      if (!fiber) {
-        return false;
-      }
-
-      return getNearestMountedFiber(fiber) === fiber;
-    }
-
-    function assertIsMounted(fiber) {
-      if (getNearestMountedFiber(fiber) !== fiber) {
-        throw new Error("Unable to find node on an unmounted component.");
-      }
-    }
-
-    function findCurrentFiberUsingSlowPath(fiber) {
-      var alternate = fiber.alternate;
-
-      if (!alternate) {
-        // If there is no alternate, then we only need to check if it is mounted.
-        var nearestMounted = getNearestMountedFiber(fiber);
-
-        if (nearestMounted === null) {
-          throw new Error("Unable to find node on an unmounted component.");
-        }
-
-        if (nearestMounted !== fiber) {
-          return null;
-        }
-
-        return fiber;
-      } // If we have two possible branches, we'll walk backwards up to the root
-      // to see what path the root points to. On the way we may hit one of the
-      // special cases and we'll deal with them.
-
-      var a = fiber;
-      var b = alternate;
-
-      while (true) {
-        var parentA = a.return;
-
-        if (parentA === null) {
-          // We're at the root.
-          break;
-        }
-
-        var parentB = parentA.alternate;
-
-        if (parentB === null) {
-          // There is no alternate. This is an unusual case. Currently, it only
-          // happens when a Suspense component is hidden. An extra fragment fiber
-          // is inserted in between the Suspense fiber and its children. Skip
-          // over this extra fragment fiber and proceed to the next parent.
-          var nextParent = parentA.return;
-
-          if (nextParent !== null) {
-            a = b = nextParent;
-            continue;
-          } // If there's no parent, we're at the root.
-
-          break;
-        } // If both copies of the parent fiber point to the same child, we can
-        // assume that the child is current. This happens when we bailout on low
-        // priority: the bailed out fiber's child reuses the current child.
-
-        if (parentA.child === parentB.child) {
-          var child = parentA.child;
-
-          while (child) {
-            if (child === a) {
-              // We've determined that A is the current branch.
-              assertIsMounted(parentA);
-              return fiber;
-            }
-
-            if (child === b) {
-              // We've determined that B is the current branch.
-              assertIsMounted(parentA);
-              return alternate;
-            }
-
-            child = child.sibling;
-          } // We should never have an alternate for any mounting node. So the only
-          // way this could possibly happen is if this was unmounted, if at all.
-
-          throw new Error("Unable to find node on an unmounted component.");
-        }
-
-        if (a.return !== b.return) {
-          // The return pointer of A and the return pointer of B point to different
-          // fibers. We assume that return pointers never criss-cross, so A must
-          // belong to the child set of A.return, and B must belong to the child
-          // set of B.return.
-          a = parentA;
-          b = parentB;
-        } else {
-          // The return pointers point to the same fiber. We'll have to use the
-          // default, slow path: scan the child sets of each parent alternate to see
-          // which child belongs to which set.
-          //
-          // Search parent A's child set
-          var didFindChild = false;
-          var _child = parentA.child;
-
-          while (_child) {
-            if (_child === a) {
-              didFindChild = true;
-              a = parentA;
-              b = parentB;
-              break;
-            }
-
-            if (_child === b) {
-              didFindChild = true;
-              b = parentA;
-              a = parentB;
-              break;
-            }
-
-            _child = _child.sibling;
-          }
-
-          if (!didFindChild) {
-            // Search parent B's child set
-            _child = parentB.child;
-
-            while (_child) {
-              if (_child === a) {
-                didFindChild = true;
-                a = parentB;
-                b = parentA;
-                break;
-              }
-
-              if (_child === b) {
-                didFindChild = true;
-                b = parentB;
-                a = parentA;
-                break;
-              }
-
-              _child = _child.sibling;
-            }
-
-            if (!didFindChild) {
-              throw new Error(
-                "Child was not found in either parent set. This indicates a bug " +
-                  "in React related to the return pointer. Please file an issue."
-              );
-            }
-          }
-        }
-
-        if (a.alternate !== b) {
-          throw new Error(
-            "Return fibers should always be each others' alternates. " +
-              "This error is likely caused by a bug in React. Please file an issue."
-          );
-        }
-      } // If the root is not a host container, we're in a disconnected tree. I.e.
-      // unmounted.
-
-      if (a.tag !== HostRoot) {
-        throw new Error("Unable to find node on an unmounted component.");
-      }
-
-      if (a.stateNode.current === a) {
-        // We've determined that A is the current branch.
-        return fiber;
-      } // Otherwise B has to be current branch.
-
-      return alternate;
-    }
-    function findCurrentHostFiber(parent) {
-      var currentParent = findCurrentFiberUsingSlowPath(parent);
-      return currentParent !== null
-        ? findCurrentHostFiberImpl(currentParent)
-        : null;
-    }
-
-    function findCurrentHostFiberImpl(node) {
-      // Next we'll drill down this component to find the first HostComponent/Text.
-      var tag = node.tag;
-
-      if (
-        tag === HostComponent ||
-        tag === HostHoistable ||
-        tag === HostSingleton ||
-        tag === HostText
-      ) {
-        return node;
-      }
-
-      var child = node.child;
-
-      while (child !== null) {
-        var match = findCurrentHostFiberImpl(child);
-
-        if (match !== null) {
-          return match;
-        }
-
-        child = child.sibling;
-      }
-
-      return null;
-    }
-
-    function isFiberSuspenseAndTimedOut(fiber) {
-      var memoizedState = fiber.memoizedState;
-      return (
-        fiber.tag === SuspenseComponent &&
-        memoizedState !== null &&
-        memoizedState.dehydrated === null
-      );
-    }
-    function doesFiberContain(parentFiber, childFiber) {
-      var node = childFiber;
-      var parentFiberAlternate = parentFiber.alternate;
-
-      while (node !== null) {
-        if (node === parentFiber || node === parentFiberAlternate) {
-          return true;
-        }
-
-        node = node.return;
-      }
-
-      return false;
-    }
-
-    var assign = Object.assign;
-
-    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-    function isArray(a) {
-      return isArrayImpl(a);
-    }
-
-    var ReactCurrentDispatcher$3 = ReactSharedInternals.ReactCurrentDispatcher; // Since the "not pending" value is always the same, we can reuse the
-    // same object across all transitions.
-
-    var sharedNotPendingObject = {
-      pending: false,
-      data: null,
-      method: null,
-      action: null
-    };
-    var NotPending = Object.freeze(sharedNotPendingObject);
-
-    function resolveDispatcher() {
-      // Copied from react/src/ReactHooks.js. It's the same thing but in a
-      // different package.
-      var dispatcher = ReactCurrentDispatcher$3.current;
-
-      {
-        if (dispatcher === null) {
-          error(
-            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
-              " one of the following reasons:\n" +
-              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
-              "2. You might be breaking the Rules of Hooks\n" +
-              "3. You might have more than one copy of React in the same app\n" +
-              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
-          );
-        }
-      } // Will result in a null access error if accessed outside render phase. We
-      // intentionally don't throw our own error because this is in a hot path.
-      // Also helps ensure this is inlined.
-
-      return dispatcher;
-    }
-
-    function useFormStatus() {
-      {
-        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
-
-        return dispatcher.useHostTransitionStatus();
-      }
-    }
-    function useFormState(action, initialState, permalink) {
-      {
-        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-        return dispatcher.useFormState(action, initialState, permalink);
-      }
-    }
-
-    var valueStack = [];
-    var fiberStack;
-
-    {
-      fiberStack = [];
-    }
-
-    var index = -1;
-
-    function createCursor(defaultValue) {
-      return {
-        current: defaultValue
-      };
-    }
-
-    function pop(cursor, fiber) {
-      if (index < 0) {
-        {
-          error("Unexpected pop.");
-        }
-
-        return;
-      }
-
-      {
-        if (fiber !== fiberStack[index]) {
-          error("Unexpected Fiber popped.");
-        }
-      }
-
-      cursor.current = valueStack[index];
-      valueStack[index] = null;
-
-      {
-        fiberStack[index] = null;
-      }
-
-      index--;
-    }
-
-    function push(cursor, value, fiber) {
-      index++;
-      valueStack[index] = cursor.current;
-
-      {
-        fiberStack[index] = fiber;
-      }
-
-      cursor.current = value;
-    }
-
-    var contextStackCursor = createCursor(null);
-    var contextFiberStackCursor = createCursor(null);
-    var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
-    // NOTE: Since forms cannot be nested, and this feature is only implemented by
-    // React DOM, we don't technically need this to be a stack. It could be a single
-    // module variable instead.
-
-    var hostTransitionProviderCursor = createCursor(null); // TODO: This should initialize to NotPendingTransition, a constant
-    // imported from the fiber config. However, because of a cycle in the module
-    // graph, that value isn't defined during this module's initialization. I can't
-    // think of a way to work around this without moving that value out of the
-    // fiber config. For now, the "no provider" case is handled when reading,
-    // inside useHostTransitionStatus.
-
-    var HostTransitionContext = {
-      $$typeof: REACT_CONTEXT_TYPE,
-      Provider: null,
-      Consumer: null,
-      _currentValue: null,
-      _currentValue2: null,
-      _threadCount: 0
-    };
-
-    function requiredContext(c) {
-      {
-        if (c === null) {
-          error(
-            "Expected host context to exist. This error is likely caused by a bug " +
-              "in React. Please file an issue."
-          );
-        }
-      }
-
-      return c;
-    }
-
-    function getCurrentRootHostContainer() {
-      return rootInstanceStackCursor.current;
-    }
-
-    function getRootHostContainer() {
-      var rootInstance = requiredContext(rootInstanceStackCursor.current);
-      return rootInstance;
-    }
-
-    function getHostTransitionProvider() {
-      return hostTransitionProviderCursor.current;
-    }
-
-    function pushHostContainer(fiber, nextRootInstance) {
-      // Push current root instance onto the stack;
-      // This allows us to reset root when portals are popped.
-      push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
-      // This enables us to pop only Fibers that provide unique contexts.
-
-      push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
-      // However, we can't just call getRootHostContext() and push it because
-      // we'd have a different number of entries on the stack depending on
-      // whether getRootHostContext() throws somewhere in renderer code or not.
-      // So we push an empty value first. This lets us safely unwind on errors.
-
-      push(contextStackCursor, null, fiber);
-      var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
-
-      pop(contextStackCursor, fiber);
-      push(contextStackCursor, nextRootContext, fiber);
-    }
-
-    function popHostContainer(fiber) {
-      pop(contextStackCursor, fiber);
-      pop(contextFiberStackCursor, fiber);
-      pop(rootInstanceStackCursor, fiber);
-    }
-
-    function getHostContext() {
-      var context = requiredContext(contextStackCursor.current);
-      return context;
-    }
-
-    function pushHostContext(fiber) {
-      {
-        var stateHook = fiber.memoizedState;
-
-        if (stateHook !== null) {
-          // Only provide context if this fiber has been upgraded by a host
-          // transition. We use the same optimization for regular host context below.
-          push(hostTransitionProviderCursor, fiber, fiber);
-        }
-      }
-
-      var context = requiredContext(contextStackCursor.current);
-      var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
-
-      if (context !== nextContext) {
-        // Track the context and the Fiber that provided it.
-        // This enables us to pop only Fibers that provide unique contexts.
-        push(contextFiberStackCursor, fiber, fiber);
-        push(contextStackCursor, nextContext, fiber);
-      }
-    }
-
-    function popHostContext(fiber) {
-      if (contextFiberStackCursor.current === fiber) {
-        // Do not pop unless this Fiber provided the current context.
-        // pushHostContext() only pushes Fibers that provide unique contexts.
-        pop(contextStackCursor, fiber);
-        pop(contextFiberStackCursor, fiber);
-      }
-
-      {
-        if (hostTransitionProviderCursor.current === fiber) {
-          // Do not pop unless this Fiber provided the current context. This is mostly
-          // a performance optimization, but conveniently it also prevents a potential
-          // data race where a host provider is upgraded (i.e. memoizedState becomes
-          // non-null) during a concurrent event. This is a bit of a flaw in the way
-          // we upgrade host components, but because we're accounting for it here, it
-          // should be fine.
-          pop(hostTransitionProviderCursor, fiber); // When popping the transition provider, we reset the context value back
-          // to `null`. We can do this because you're not allowd to nest forms. If
-          // we allowed for multiple nested host transition providers, then we'd
-          // need to reset this to the parent provider's status.
-
-          {
-            HostTransitionContext._currentValue = null;
-          }
-        }
-      }
-    }
 
     // This module only exists as an ESM wrapper around the external CommonJS
     var scheduleCallback$3 = Scheduler.unstable_scheduleCallback;
@@ -2797,27 +1874,11 @@ if (__DEV__) {
       }
     }
 
+    var NoEventPriority = NoLane;
     var DiscreteEventPriority = SyncLane;
     var ContinuousEventPriority = InputContinuousLane;
     var DefaultEventPriority = DefaultLane;
     var IdleEventPriority = IdleLane;
-    var currentUpdatePriority = NoLane;
-    function getCurrentUpdatePriority() {
-      return currentUpdatePriority;
-    }
-    function setCurrentUpdatePriority(newPriority) {
-      currentUpdatePriority = newPriority;
-    }
-    function runWithPriority(priority, fn) {
-      var previousPriority = currentUpdatePriority;
-
-      try {
-        currentUpdatePriority = priority;
-        return fn();
-      } finally {
-        currentUpdatePriority = previousPriority;
-      }
-    }
     function higherEventPriority(a, b) {
       return a !== 0 && a < b ? a : b;
     }
@@ -2826,6 +1887,9 @@ if (__DEV__) {
     }
     function isHigherEventPriority(a, b) {
       return a !== 0 && a < b;
+    }
+    function eventPriorityToLane(updatePriority) {
+      return updatePriority;
     }
     function lanesToEventPriority(lanes) {
       var lane = getHighestPriorityLane(lanes);
@@ -2843,6 +1907,932 @@ if (__DEV__) {
       }
 
       return IdleEventPriority;
+    }
+
+    function noop$3() {}
+
+    var DefaultDispatcher = {
+      prefetchDNS: noop$3,
+      preconnect: noop$3,
+      preload: noop$3,
+      preloadModule: noop$3,
+      preinitScript: noop$3,
+      preinitStyle: noop$3,
+      preinitModuleScript: noop$3
+    };
+    var Internals = {
+      usingClientEntryPoint: false,
+      Events: null,
+      ReactDOMCurrentDispatcher: {
+        current: DefaultDispatcher
+      },
+      findDOMNode: null,
+      up:
+        /* currentUpdatePriority */
+        NoEventPriority
+    };
+
+    /**
+     * `ReactInstanceMap` maintains a mapping from a public facing stateful
+     * instance (key) and the internal representation (value). This allows public
+     * methods to accept the user facing instance as an argument and map them back
+     * to internal methods.
+     *
+     * Note that this module is currently shared and assumed to be stateless.
+     * If this becomes an actual Map, that will break.
+     */
+    function get(key) {
+      return key._reactInternals;
+    }
+    function set(key, value) {
+      key._reactInternals = value;
+    }
+
+    var ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+    var FunctionComponent = 0;
+    var ClassComponent = 1;
+    var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+
+    var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+
+    var HostComponent = 5;
+    var HostText = 6;
+    var Fragment = 7;
+    var Mode = 8;
+    var ContextConsumer = 9;
+    var ContextProvider = 10;
+    var ForwardRef = 11;
+    var Profiler = 12;
+    var SuspenseComponent = 13;
+    var MemoComponent = 14;
+    var SimpleMemoComponent = 15;
+    var LazyComponent = 16;
+    var IncompleteClassComponent = 17;
+    var DehydratedFragment = 18;
+    var SuspenseListComponent = 19;
+    var ScopeComponent = 21;
+    var OffscreenComponent = 22;
+    var LegacyHiddenComponent = 23;
+    var CacheComponent = 24;
+    var TracingMarkerComponent = 25;
+    var HostHoistable = 26;
+    var HostSingleton = 27;
+    var IncompleteFunctionComponent = 28;
+
+    // ATTENTION
+    // When adding new symbols to this file,
+    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+    // The Symbol used to tag the ReactElement-like types.
+    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
+    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
+    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
+    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
+    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
+    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
+    var REACT_MEMO_TYPE = Symbol.for("react.memo");
+    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
+    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
+    var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+    var FAUX_ITERATOR_SYMBOL = "@@iterator";
+    function getIteratorFn(maybeIterable) {
+      if (maybeIterable === null || typeof maybeIterable !== "object") {
+        return null;
+      }
+
+      var maybeIterator =
+        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+        maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+      if (typeof maybeIterator === "function") {
+        return maybeIterator;
+      }
+
+      return null;
+    }
+
+    function getWrappedName$1(outerType, innerType, wrapperName) {
+      var displayName = outerType.displayName;
+
+      if (displayName) {
+        return displayName;
+      }
+
+      var functionName = innerType.displayName || innerType.name || "";
+      return functionName !== ""
+        ? wrapperName + "(" + functionName + ")"
+        : wrapperName;
+    } // Keep in sync with react-reconciler/getComponentNameFromFiber
+
+    function getContextName$1(type) {
+      return type.displayName || "Context";
+    }
+
+    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+
+    function getComponentNameFromType(type) {
+      if (type == null) {
+        // Host root, text node or just invalid type.
+        return null;
+      }
+
+      if (typeof type === "function") {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE) {
+          // TODO: Create a convention for naming client references with debug info.
+          return null;
+        }
+
+        return type.displayName || type.name || null;
+      }
+
+      if (typeof type === "string") {
+        return type;
+      }
+
+      switch (type) {
+        case REACT_FRAGMENT_TYPE:
+          return "Fragment";
+
+        case REACT_PORTAL_TYPE:
+          return "Portal";
+
+        case REACT_PROFILER_TYPE:
+          return "Profiler";
+
+        case REACT_STRICT_MODE_TYPE:
+          return "StrictMode";
+
+        case REACT_SUSPENSE_TYPE:
+          return "Suspense";
+
+        case REACT_SUSPENSE_LIST_TYPE:
+          return "SuspenseList";
+        // Fall through
+
+        case REACT_TRACING_MARKER_TYPE:
+          if (enableTransitionTracing) {
+            return "TracingMarker";
+          }
+      }
+
+      if (typeof type === "object") {
+        {
+          if (typeof type.tag === "number") {
+            error(
+              "Received an unexpected object in getComponentNameFromType(). " +
+                "This is likely a bug in React. Please file an issue."
+            );
+          }
+        }
+
+        switch (type.$$typeof) {
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName$1(provider._context) + ".Provider";
+            }
+
+          case REACT_CONTEXT_TYPE:
+            var context = type;
+
+            if (enableRenderableContext) {
+              return getContextName$1(context) + ".Provider";
+            } else {
+              return getContextName$1(context) + ".Consumer";
+            }
+
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName$1(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
+
+          case REACT_FORWARD_REF_TYPE:
+            return getWrappedName$1(type, type.render, "ForwardRef");
+
+          case REACT_MEMO_TYPE:
+            var outerName = type.displayName || null;
+
+            if (outerName !== null) {
+              return outerName;
+            }
+
+            return getComponentNameFromType(type.type) || "Memo";
+
+          case REACT_LAZY_TYPE: {
+            var lazyComponent = type;
+            var payload = lazyComponent._payload;
+            var init = lazyComponent._init;
+
+            try {
+              return getComponentNameFromType(init(payload));
+            } catch (x) {
+              return null;
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function getWrappedName(outerType, innerType, wrapperName) {
+      var functionName = innerType.displayName || innerType.name || "";
+      return (
+        outerType.displayName ||
+        (functionName !== ""
+          ? wrapperName + "(" + functionName + ")"
+          : wrapperName)
+      );
+    } // Keep in sync with shared/getComponentNameFromType
+
+    function getContextName(type) {
+      return type.displayName || "Context";
+    }
+
+    function getComponentNameFromOwner(owner) {
+      if (typeof owner.tag === "number") {
+        return getComponentNameFromFiber(owner);
+      }
+
+      if (typeof owner.name === "string") {
+        return owner.name;
+      }
+
+      return null;
+    }
+    function getComponentNameFromFiber(fiber) {
+      var tag = fiber.tag,
+        type = fiber.type;
+
+      switch (tag) {
+        case CacheComponent:
+          return "Cache";
+
+        case ContextConsumer:
+          if (enableRenderableContext) {
+            var consumer = type;
+            return getContextName(consumer._context) + ".Consumer";
+          } else {
+            var context = type;
+            return getContextName(context) + ".Consumer";
+          }
+
+        case ContextProvider:
+          if (enableRenderableContext) {
+            var _context = type;
+            return getContextName(_context) + ".Provider";
+          } else {
+            var provider = type;
+            return getContextName(provider._context) + ".Provider";
+          }
+
+        case DehydratedFragment:
+          return "DehydratedFragment";
+
+        case ForwardRef:
+          return getWrappedName(type, type.render, "ForwardRef");
+
+        case Fragment:
+          return "Fragment";
+
+        case HostHoistable:
+        case HostSingleton:
+        case HostComponent:
+          // Host component type is the display name (e.g. "div", "View")
+          return type;
+
+        case HostPortal:
+          return "Portal";
+
+        case HostRoot:
+          return "Root";
+
+        case HostText:
+          return "Text";
+
+        case LazyComponent:
+          // Name comes from the type in this case; we don't have a tag.
+          return getComponentNameFromType(type);
+
+        case Mode:
+          if (type === REACT_STRICT_MODE_TYPE) {
+            // Don't be less specific than shared/getComponentNameFromType
+            return "StrictMode";
+          }
+
+          return "Mode";
+
+        case OffscreenComponent:
+          return "Offscreen";
+
+        case Profiler:
+          return "Profiler";
+
+        case ScopeComponent:
+          return "Scope";
+
+        case SuspenseComponent:
+          return "Suspense";
+
+        case SuspenseListComponent:
+          return "SuspenseList";
+
+        case TracingMarkerComponent:
+          return "TracingMarker";
+        // The display name for these tags come from the user-provided type:
+
+        case IncompleteClassComponent:
+        case IncompleteFunctionComponent: {
+          break;
+        }
+
+        // Fallthrough
+
+        case ClassComponent:
+        case FunctionComponent:
+        case MemoComponent:
+        case SimpleMemoComponent:
+          if (typeof type === "function") {
+            return type.displayName || type.name || null;
+          }
+
+          if (typeof type === "string") {
+            return type;
+          }
+
+          break;
+
+        case LegacyHiddenComponent: {
+          return "LegacyHidden";
+        }
+      }
+
+      return null;
+    }
+
+    var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
+    function getNearestMountedFiber(fiber) {
+      var node = fiber;
+      var nearestMounted = fiber;
+
+      if (!fiber.alternate) {
+        // If there is no alternate, this might be a new tree that isn't inserted
+        // yet. If it is, then it will have a pending insertion effect on it.
+        var nextNode = node;
+
+        do {
+          node = nextNode;
+
+          if ((node.flags & (Placement | Hydrating)) !== NoFlags$1) {
+            // This is an insertion or in-progress hydration. The nearest possible
+            // mounted fiber is the parent but we need to continue to figure out
+            // if that one is still mounted.
+            nearestMounted = node.return;
+          } // $FlowFixMe[incompatible-type] we bail out when we get a null
+
+          nextNode = node.return;
+        } while (nextNode);
+      } else {
+        while (node.return) {
+          node = node.return;
+        }
+      }
+
+      if (node.tag === HostRoot) {
+        // TODO: Check if this was a nested HostRoot when used with
+        // renderContainerIntoSubtree.
+        return nearestMounted;
+      } // If we didn't hit the root, that means that we're in an disconnected tree
+      // that has been unmounted.
+
+      return null;
+    }
+    function getSuspenseInstanceFromFiber(fiber) {
+      if (fiber.tag === SuspenseComponent) {
+        var suspenseState = fiber.memoizedState;
+
+        if (suspenseState === null) {
+          var current = fiber.alternate;
+
+          if (current !== null) {
+            suspenseState = current.memoizedState;
+          }
+        }
+
+        if (suspenseState !== null) {
+          return suspenseState.dehydrated;
+        }
+      }
+
+      return null;
+    }
+    function getContainerFromFiber(fiber) {
+      return fiber.tag === HostRoot ? fiber.stateNode.containerInfo : null;
+    }
+    function isMounted(component) {
+      {
+        var owner = ReactCurrentOwner$2.current;
+
+        if (owner !== null && owner.tag === ClassComponent) {
+          var ownerFiber = owner;
+          var instance = ownerFiber.stateNode;
+
+          if (!instance._warnedAboutRefsInRender) {
+            error(
+              "%s is accessing isMounted inside its render() function. " +
+                "render() should be a pure function of props and state. It should " +
+                "never access something that requires stale data from the previous " +
+                "render, such as refs. Move this logic to componentDidMount and " +
+                "componentDidUpdate instead.",
+              getComponentNameFromFiber(ownerFiber) || "A component"
+            );
+          }
+
+          instance._warnedAboutRefsInRender = true;
+        }
+      }
+
+      var fiber = get(component);
+
+      if (!fiber) {
+        return false;
+      }
+
+      return getNearestMountedFiber(fiber) === fiber;
+    }
+
+    function assertIsMounted(fiber) {
+      if (getNearestMountedFiber(fiber) !== fiber) {
+        throw new Error("Unable to find node on an unmounted component.");
+      }
+    }
+
+    function findCurrentFiberUsingSlowPath(fiber) {
+      var alternate = fiber.alternate;
+
+      if (!alternate) {
+        // If there is no alternate, then we only need to check if it is mounted.
+        var nearestMounted = getNearestMountedFiber(fiber);
+
+        if (nearestMounted === null) {
+          throw new Error("Unable to find node on an unmounted component.");
+        }
+
+        if (nearestMounted !== fiber) {
+          return null;
+        }
+
+        return fiber;
+      } // If we have two possible branches, we'll walk backwards up to the root
+      // to see what path the root points to. On the way we may hit one of the
+      // special cases and we'll deal with them.
+
+      var a = fiber;
+      var b = alternate;
+
+      while (true) {
+        var parentA = a.return;
+
+        if (parentA === null) {
+          // We're at the root.
+          break;
+        }
+
+        var parentB = parentA.alternate;
+
+        if (parentB === null) {
+          // There is no alternate. This is an unusual case. Currently, it only
+          // happens when a Suspense component is hidden. An extra fragment fiber
+          // is inserted in between the Suspense fiber and its children. Skip
+          // over this extra fragment fiber and proceed to the next parent.
+          var nextParent = parentA.return;
+
+          if (nextParent !== null) {
+            a = b = nextParent;
+            continue;
+          } // If there's no parent, we're at the root.
+
+          break;
+        } // If both copies of the parent fiber point to the same child, we can
+        // assume that the child is current. This happens when we bailout on low
+        // priority: the bailed out fiber's child reuses the current child.
+
+        if (parentA.child === parentB.child) {
+          var child = parentA.child;
+
+          while (child) {
+            if (child === a) {
+              // We've determined that A is the current branch.
+              assertIsMounted(parentA);
+              return fiber;
+            }
+
+            if (child === b) {
+              // We've determined that B is the current branch.
+              assertIsMounted(parentA);
+              return alternate;
+            }
+
+            child = child.sibling;
+          } // We should never have an alternate for any mounting node. So the only
+          // way this could possibly happen is if this was unmounted, if at all.
+
+          throw new Error("Unable to find node on an unmounted component.");
+        }
+
+        if (a.return !== b.return) {
+          // The return pointer of A and the return pointer of B point to different
+          // fibers. We assume that return pointers never criss-cross, so A must
+          // belong to the child set of A.return, and B must belong to the child
+          // set of B.return.
+          a = parentA;
+          b = parentB;
+        } else {
+          // The return pointers point to the same fiber. We'll have to use the
+          // default, slow path: scan the child sets of each parent alternate to see
+          // which child belongs to which set.
+          //
+          // Search parent A's child set
+          var didFindChild = false;
+          var _child = parentA.child;
+
+          while (_child) {
+            if (_child === a) {
+              didFindChild = true;
+              a = parentA;
+              b = parentB;
+              break;
+            }
+
+            if (_child === b) {
+              didFindChild = true;
+              b = parentA;
+              a = parentB;
+              break;
+            }
+
+            _child = _child.sibling;
+          }
+
+          if (!didFindChild) {
+            // Search parent B's child set
+            _child = parentB.child;
+
+            while (_child) {
+              if (_child === a) {
+                didFindChild = true;
+                a = parentB;
+                b = parentA;
+                break;
+              }
+
+              if (_child === b) {
+                didFindChild = true;
+                b = parentB;
+                a = parentA;
+                break;
+              }
+
+              _child = _child.sibling;
+            }
+
+            if (!didFindChild) {
+              throw new Error(
+                "Child was not found in either parent set. This indicates a bug " +
+                  "in React related to the return pointer. Please file an issue."
+              );
+            }
+          }
+        }
+
+        if (a.alternate !== b) {
+          throw new Error(
+            "Return fibers should always be each others' alternates. " +
+              "This error is likely caused by a bug in React. Please file an issue."
+          );
+        }
+      } // If the root is not a host container, we're in a disconnected tree. I.e.
+      // unmounted.
+
+      if (a.tag !== HostRoot) {
+        throw new Error("Unable to find node on an unmounted component.");
+      }
+
+      if (a.stateNode.current === a) {
+        // We've determined that A is the current branch.
+        return fiber;
+      } // Otherwise B has to be current branch.
+
+      return alternate;
+    }
+    function findCurrentHostFiber(parent) {
+      var currentParent = findCurrentFiberUsingSlowPath(parent);
+      return currentParent !== null
+        ? findCurrentHostFiberImpl(currentParent)
+        : null;
+    }
+
+    function findCurrentHostFiberImpl(node) {
+      // Next we'll drill down this component to find the first HostComponent/Text.
+      var tag = node.tag;
+
+      if (
+        tag === HostComponent ||
+        tag === HostHoistable ||
+        tag === HostSingleton ||
+        tag === HostText
+      ) {
+        return node;
+      }
+
+      var child = node.child;
+
+      while (child !== null) {
+        var match = findCurrentHostFiberImpl(child);
+
+        if (match !== null) {
+          return match;
+        }
+
+        child = child.sibling;
+      }
+
+      return null;
+    }
+
+    function isFiberSuspenseAndTimedOut(fiber) {
+      var memoizedState = fiber.memoizedState;
+      return (
+        fiber.tag === SuspenseComponent &&
+        memoizedState !== null &&
+        memoizedState.dehydrated === null
+      );
+    }
+    function doesFiberContain(parentFiber, childFiber) {
+      var node = childFiber;
+      var parentFiberAlternate = parentFiber.alternate;
+
+      while (node !== null) {
+        if (node === parentFiber || node === parentFiberAlternate) {
+          return true;
+        }
+
+        node = node.return;
+      }
+
+      return false;
+    }
+
+    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+    function isArray(a) {
+      return isArrayImpl(a);
+    }
+
+    var ReactCurrentDispatcher$3 = ReactSharedInternals.ReactCurrentDispatcher; // Since the "not pending" value is always the same, we can reuse the
+    // same object across all transitions.
+
+    var sharedNotPendingObject = {
+      pending: false,
+      data: null,
+      method: null,
+      action: null
+    };
+    var NotPending = Object.freeze(sharedNotPendingObject);
+
+    function resolveDispatcher() {
+      // Copied from react/src/ReactHooks.js. It's the same thing but in a
+      // different package.
+      var dispatcher = ReactCurrentDispatcher$3.current;
+
+      {
+        if (dispatcher === null) {
+          error(
+            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
+              " one of the following reasons:\n" +
+              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+              "2. You might be breaking the Rules of Hooks\n" +
+              "3. You might have more than one copy of React in the same app\n" +
+              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
+          );
+        }
+      } // Will result in a null access error if accessed outside render phase. We
+      // intentionally don't throw our own error because this is in a hot path.
+      // Also helps ensure this is inlined.
+
+      return dispatcher;
+    }
+
+    function useFormStatus() {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
+
+        return dispatcher.useHostTransitionStatus();
+      }
+    }
+    function useFormState(action, initialState, permalink) {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+        return dispatcher.useFormState(action, initialState, permalink);
+      }
+    }
+
+    var valueStack = [];
+    var fiberStack;
+
+    {
+      fiberStack = [];
+    }
+
+    var index = -1;
+
+    function createCursor(defaultValue) {
+      return {
+        current: defaultValue
+      };
+    }
+
+    function pop(cursor, fiber) {
+      if (index < 0) {
+        {
+          error("Unexpected pop.");
+        }
+
+        return;
+      }
+
+      {
+        if (fiber !== fiberStack[index]) {
+          error("Unexpected Fiber popped.");
+        }
+      }
+
+      cursor.current = valueStack[index];
+      valueStack[index] = null;
+
+      {
+        fiberStack[index] = null;
+      }
+
+      index--;
+    }
+
+    function push(cursor, value, fiber) {
+      index++;
+      valueStack[index] = cursor.current;
+
+      {
+        fiberStack[index] = fiber;
+      }
+
+      cursor.current = value;
+    }
+
+    var contextStackCursor = createCursor(null);
+    var contextFiberStackCursor = createCursor(null);
+    var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
+    // NOTE: Since forms cannot be nested, and this feature is only implemented by
+    // React DOM, we don't technically need this to be a stack. It could be a single
+    // module variable instead.
+
+    var hostTransitionProviderCursor = createCursor(null); // TODO: This should initialize to NotPendingTransition, a constant
+    // imported from the fiber config. However, because of a cycle in the module
+    // graph, that value isn't defined during this module's initialization. I can't
+    // think of a way to work around this without moving that value out of the
+    // fiber config. For now, the "no provider" case is handled when reading,
+    // inside useHostTransitionStatus.
+
+    var HostTransitionContext = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
+      _currentValue: null,
+      _currentValue2: null,
+      _threadCount: 0
+    };
+
+    function requiredContext(c) {
+      {
+        if (c === null) {
+          error(
+            "Expected host context to exist. This error is likely caused by a bug " +
+              "in React. Please file an issue."
+          );
+        }
+      }
+
+      return c;
+    }
+
+    function getCurrentRootHostContainer() {
+      return rootInstanceStackCursor.current;
+    }
+
+    function getRootHostContainer() {
+      var rootInstance = requiredContext(rootInstanceStackCursor.current);
+      return rootInstance;
+    }
+
+    function getHostTransitionProvider() {
+      return hostTransitionProviderCursor.current;
+    }
+
+    function pushHostContainer(fiber, nextRootInstance) {
+      // Push current root instance onto the stack;
+      // This allows us to reset root when portals are popped.
+      push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
+      // This enables us to pop only Fibers that provide unique contexts.
+
+      push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
+      // However, we can't just call getRootHostContext() and push it because
+      // we'd have a different number of entries on the stack depending on
+      // whether getRootHostContext() throws somewhere in renderer code or not.
+      // So we push an empty value first. This lets us safely unwind on errors.
+
+      push(contextStackCursor, null, fiber);
+      var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
+
+      pop(contextStackCursor, fiber);
+      push(contextStackCursor, nextRootContext, fiber);
+    }
+
+    function popHostContainer(fiber) {
+      pop(contextStackCursor, fiber);
+      pop(contextFiberStackCursor, fiber);
+      pop(rootInstanceStackCursor, fiber);
+    }
+
+    function getHostContext() {
+      var context = requiredContext(contextStackCursor.current);
+      return context;
+    }
+
+    function pushHostContext(fiber) {
+      {
+        var stateHook = fiber.memoizedState;
+
+        if (stateHook !== null) {
+          // Only provide context if this fiber has been upgraded by a host
+          // transition. We use the same optimization for regular host context below.
+          push(hostTransitionProviderCursor, fiber, fiber);
+        }
+      }
+
+      var context = requiredContext(contextStackCursor.current);
+      var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
+
+      if (context !== nextContext) {
+        // Track the context and the Fiber that provided it.
+        // This enables us to pop only Fibers that provide unique contexts.
+        push(contextFiberStackCursor, fiber, fiber);
+        push(contextStackCursor, nextContext, fiber);
+      }
+    }
+
+    function popHostContext(fiber) {
+      if (contextFiberStackCursor.current === fiber) {
+        // Do not pop unless this Fiber provided the current context.
+        // pushHostContext() only pushes Fibers that provide unique contexts.
+        pop(contextStackCursor, fiber);
+        pop(contextFiberStackCursor, fiber);
+      }
+
+      {
+        if (hostTransitionProviderCursor.current === fiber) {
+          // Do not pop unless this Fiber provided the current context. This is mostly
+          // a performance optimization, but conveniently it also prevents a potential
+          // data race where a host provider is upgraded (i.e. memoizedState becomes
+          // non-null) during a concurrent event. This is a bit of a flaw in the way
+          // we upgrade host components, but because we're accounting for it here, it
+          // should be fine.
+          pop(hostTransitionProviderCursor, fiber); // When popping the transition provider, we reset the context value back
+          // to `null`. We can do this because you're not allowd to nest forms. If
+          // we allowed for multiple nested host transition providers, then we'd
+          // need to reset this to the parent provider's status.
+
+          {
+            HostTransitionContext._currentValue = null;
+          }
+        }
+      }
     }
 
     // $FlowFixMe[method-unbinding]
@@ -2975,6 +2965,44 @@ if (__DEV__) {
 
           return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
         }
+      }
+    }
+
+    function setCurrentUpdatePriority(
+      newPriority, // Closure will consistently not inline this function when it has arity 1
+      // however when it has arity 2 even if the second arg is omitted at every
+      // callsite it seems to inline it even when the internal length of the function
+      // is much longer. I hope this is consistent enough to rely on across builds
+      IntentionallyUnusedArgument
+    ) {
+      Internals.up = newPriority;
+    }
+    function getCurrentUpdatePriority() {
+      return Internals.up;
+    }
+    function resolveUpdatePriority() {
+      var updatePriority = Internals.up;
+
+      if (updatePriority !== NoEventPriority) {
+        return updatePriority;
+      }
+
+      var currentEvent = window.event;
+
+      if (currentEvent === undefined) {
+        return DefaultEventPriority;
+      }
+
+      return getEventPriority(currentEvent.type);
+    }
+    function runWithPriority(priority, fn) {
+      var previousPriority = getCurrentUpdatePriority();
+
+      try {
+        setCurrentUpdatePriority(priority);
+        return fn();
+      } finally {
+        setCurrentUpdatePriority(previousPriority);
       }
     }
 
@@ -15449,15 +15477,6 @@ if (__DEV__) {
       ).createTextNode(text);
       precacheFiberNode(internalInstanceHandle, textNode);
       return textNode;
-    }
-    function getCurrentEventPriority() {
-      var currentEvent = window.event;
-
-      if (currentEvent === undefined) {
-        return DefaultEventPriority;
-      }
-
-      return getEventPriority(currentEvent.type);
     }
     var currentPopstateTransitionEvent = null;
     function shouldAttemptEagerTransition() {
@@ -41895,26 +41914,9 @@ if (__DEV__) {
           : // is the first update in that scope. Either way, we need to get a
             // fresh transition lane.
             requestTransitionLane();
-      } // Updates originating inside certain React methods, like flushSync, have
-      // their priority set by tracking it with a context variable.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
+      }
 
-      var updateLane = getCurrentUpdatePriority();
-
-      if (updateLane !== NoLane) {
-        return updateLane;
-      } // This update originated outside React. Ask the host environment for an
-      // appropriate priority, based on the type of event.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
-
-      var eventLane = getCurrentEventPriority();
-      return eventLane;
+      return eventPriorityToLane(resolveUpdatePriority());
     }
 
     function requestRetryLane(fiber) {
@@ -42695,8 +42697,8 @@ if (__DEV__) {
       var previousPriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig$1.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig$1.transition = null;
 
         if (fn) {
           return fn();
@@ -43859,12 +43861,12 @@ if (__DEV__) {
     ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
-      var previousUpdateLanePriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig$1.transition;
+      var previousUpdateLanePriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig$1.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig$1.transition = null;
         commitRootImpl(
           root,
           recoverableErrors,
@@ -44315,8 +44317,8 @@ if (__DEV__) {
         var previousPriority = getCurrentUpdatePriority();
 
         try {
-          ReactCurrentBatchConfig$1.transition = null;
           setCurrentUpdatePriority(priority);
+          ReactCurrentBatchConfig$1.transition = null;
           return flushPassiveEffectsImpl();
         } finally {
           setCurrentUpdatePriority(previousPriority);
@@ -46370,7 +46372,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-42782f6f";
+    var ReactVersion = "19.0.0-www-modern-4ef02bf5";
 
     function createPortal$1(
       children,
@@ -47027,9 +47029,9 @@ if (__DEV__) {
       container,
       nativeEvent
     ) {
-      var previousPriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = null;
+      var previousPriority = getCurrentUpdatePriority();
 
       try {
         setCurrentUpdatePriority(DiscreteEventPriority);
@@ -47046,9 +47048,9 @@ if (__DEV__) {
       container,
       nativeEvent
     ) {
-      var previousPriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = null;
+      var previousPriority = getCurrentUpdatePriority();
 
       try {
         setCurrentUpdatePriority(ContinuousEventPriority);

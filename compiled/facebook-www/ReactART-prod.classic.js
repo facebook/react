@@ -648,7 +648,6 @@ function clearTransitionsForLanes(root, lanes) {
       lanes &= ~lane;
     }
 }
-var currentUpdatePriority = 0;
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
   return 2 < lanes
@@ -826,7 +825,8 @@ function shouldSetTextContent(type, props) {
     "string" === typeof props.children || "number" === typeof props.children
   );
 }
-var valueStack = [],
+var currentUpdatePriority = 0,
+  valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
   return { current: defaultValue };
@@ -8998,16 +8998,14 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
-  if (0 === (fiber.mode & 1)) return 2;
-  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
-    return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== requestCurrentTransition())
-    return (
-      (fiber = currentEntangledLane),
-      0 !== fiber ? fiber : requestTransitionLane()
-    );
-  fiber = currentUpdatePriority;
-  return 0 !== fiber ? fiber : 32;
+  return 0 === (fiber.mode & 1)
+    ? 2
+    : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+    ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+    : null !== requestCurrentTransition()
+    ? ((fiber = currentEntangledLane),
+      0 !== fiber ? fiber : requestTransitionLane())
+    : currentUpdatePriority || 32;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -9352,8 +9350,8 @@ function flushSync(fn) {
     previousPriority = currentUpdatePriority;
   try {
     if (
-      ((ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+      ((currentUpdatePriority = 2),
+      (ReactCurrentBatchConfig.transition = null),
       fn)
     )
       return fn();
@@ -9787,11 +9785,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var previousUpdateLanePriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    previousUpdateLanePriority = currentUpdatePriority;
   try {
-    (ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+    (currentUpdatePriority = 2),
+      (ReactCurrentBatchConfig.transition = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -9905,14 +9903,13 @@ function flushPassiveEffects() {
     var root = rootWithPendingPassiveEffects,
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
-    var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
-    renderPriority = 32 > renderPriority ? 32 : renderPriority;
-    var prevTransition = ReactCurrentBatchConfig.transition,
+    var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
+      prevTransition = ReactCurrentBatchConfig.transition,
       previousPriority = currentUpdatePriority;
     try {
       return (
+        (currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority),
         (ReactCurrentBatchConfig.transition = null),
-        (currentUpdatePriority = renderPriority),
         flushPassiveEffectsImpl()
       );
     } finally {
@@ -10657,7 +10654,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-2b02e6e9",
+    version: "19.0.0-www-classic-ce2e7147",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1315 = {
@@ -10688,7 +10685,7 @@ var internals$jscomp$inline_1315 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-2b02e6e9"
+  reconcilerVersion: "19.0.0-www-classic-ce2e7147"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

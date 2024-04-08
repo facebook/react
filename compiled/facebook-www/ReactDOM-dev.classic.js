@@ -1245,6 +1245,139 @@ if (__DEV__) {
       }
     }
 
+    // $FlowFixMe[method-unbinding]
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    /*
+     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+     *
+     * The functions in this module will throw an easier-to-understand,
+     * easier-to-debug exception with a clear errors message message explaining the
+     * problem. (Instead of a confusing exception thrown inside the implementation
+     * of the `value` object).
+     */
+    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+    function typeName(value) {
+      {
+        // toStringTag is needed for namespaced types like Temporal.Instant
+        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+        var type =
+          (hasToStringTag && value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object"; // $FlowFixMe[incompatible-return]
+
+        return type;
+      }
+    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+
+    function willCoercionThrow(value) {
+      {
+        try {
+          testStringCoercion(value);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+    }
+
+    function testStringCoercion(value) {
+      // If you ended up here by following an exception call stack, here's what's
+      // happened: you supplied an object or symbol value to React (as a prop, key,
+      // DOM attribute, CSS property, string ref, etc.) and when React tried to
+      // coerce it to a string using `'' + value`, an exception was thrown.
+      //
+      // The most common types that will cause this exception are `Symbol` instances
+      // and Temporal objects like `Temporal.Instant`. But any object that has a
+      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+      // exception. (Library authors do this to prevent users from using built-in
+      // numeric operators like `+` or comparison operators like `>=` because custom
+      // methods are needed to perform accurate arithmetic or comparison.)
+      //
+      // To fix the problem, coerce this object or symbol value to a string before
+      // passing it to React. The most reliable way is usually `String(value)`.
+      //
+      // To find which value is throwing, check the browser or debugger console.
+      // Before this exception was thrown, there should be `console.error` output
+      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+      // problem and how that type was used: key, atrribute, input value prop, etc.
+      // In most cases, this console output also shows the component and its
+      // ancestor components where the exception happened.
+      //
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      return "" + value;
+    }
+
+    function checkAttributeStringCoercion(value, attributeName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` attribute is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            attributeName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkKeyStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided key is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkCSSPropertyStringCoercion(value, propName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` CSS property is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            propName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkHtmlStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided HTML markup uses a value of unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkFormFieldValueStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "Form field values (value, checked, defaultValue, or defaultChecked props)" +
+              " must be strings, not %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+
     // This module only exists as an ESM wrapper around the external CommonJS
     var scheduleCallback$3 = Scheduler.unstable_scheduleCallback;
     var cancelCallback$1 = Scheduler.unstable_cancelCallback;
@@ -2853,27 +2986,11 @@ if (__DEV__) {
       }
     }
 
+    var NoEventPriority = NoLane;
     var DiscreteEventPriority = SyncLane;
     var ContinuousEventPriority = InputContinuousLane;
     var DefaultEventPriority = DefaultLane;
     var IdleEventPriority = IdleLane;
-    var currentUpdatePriority = NoLane;
-    function getCurrentUpdatePriority() {
-      return currentUpdatePriority;
-    }
-    function setCurrentUpdatePriority(newPriority) {
-      currentUpdatePriority = newPriority;
-    }
-    function runWithPriority(priority, fn) {
-      var previousPriority = currentUpdatePriority;
-
-      try {
-        currentUpdatePriority = priority;
-        return fn();
-      } finally {
-        currentUpdatePriority = previousPriority;
-      }
-    }
     function higherEventPriority(a, b) {
       return a !== 0 && a < b ? a : b;
     }
@@ -2882,6 +2999,9 @@ if (__DEV__) {
     }
     function isHigherEventPriority(a, b) {
       return a !== 0 && a < b;
+    }
+    function eventPriorityToLane(updatePriority) {
+      return updatePriority;
     }
     function lanesToEventPriority(lanes) {
       var lane = getHighestPriorityLane(lanes);
@@ -2901,136 +3021,64 @@ if (__DEV__) {
       return IdleEventPriority;
     }
 
-    // $FlowFixMe[method-unbinding]
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
+    function noop$3() {}
 
-    /*
-     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-        var type =
-          (hasToStringTag && value[Symbol.toStringTag]) ||
-          value.constructor.name ||
-          "Object"; // $FlowFixMe[incompatible-return]
+    var DefaultDispatcher = {
+      prefetchDNS: noop$3,
+      preconnect: noop$3,
+      preload: noop$3,
+      preloadModule: noop$3,
+      preinitScript: noop$3,
+      preinitStyle: noop$3,
+      preinitModuleScript: noop$3
+    };
+    var Internals = {
+      usingClientEntryPoint: false,
+      Events: null,
+      ReactDOMCurrentDispatcher: {
+        current: DefaultDispatcher
+      },
+      findDOMNode: null,
+      up:
+        /* currentUpdatePriority */
+        NoEventPriority
+    };
 
-        return type;
-      }
-    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
+    function setCurrentUpdatePriority(
+      newPriority, // Closure will consistently not inline this function when it has arity 1
+      // however when it has arity 2 even if the second arg is omitted at every
+      // callsite it seems to inline it even when the internal length of the function
+      // is much longer. I hope this is consistent enough to rely on across builds
+      IntentionallyUnusedArgument
+    ) {
+      Internals.up = newPriority;
     }
-
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return "" + value;
+    function getCurrentUpdatePriority() {
+      return Internals.up;
     }
+    function resolveUpdatePriority() {
+      var updatePriority = Internals.up;
 
-    function checkAttributeStringCoercion(value, attributeName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` attribute is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            attributeName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
+      if (updatePriority !== NoEventPriority) {
+        return updatePriority;
       }
-    }
-    function checkKeyStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided key is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
 
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
+      var currentEvent = window.event;
+
+      if (currentEvent === undefined) {
+        return DefaultEventPriority;
       }
-    }
-    function checkCSSPropertyStringCoercion(value, propName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` CSS property is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            propName,
-            typeName(value)
-          );
 
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
+      return getEventPriority(currentEvent.type);
     }
-    function checkHtmlStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided HTML markup uses a value of unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
+    function runWithPriority(priority, fn) {
+      var previousPriority = getCurrentUpdatePriority();
 
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    function checkFormFieldValueStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "Form field values (value, checked, defaultValue, or defaultChecked props)" +
-              " must be strings, not %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
+      try {
+        setCurrentUpdatePriority(priority);
+        return fn();
+      } finally {
+        setCurrentUpdatePriority(previousPriority);
       }
     }
 
@@ -11195,7 +11243,7 @@ if (__DEV__) {
       return status === "fulfilled" || status === "rejected";
     }
 
-    function noop$3() {}
+    function noop$2() {}
 
     function trackUsedThenable(thenableState, thenable, index) {
       if (ReactCurrentActQueue$3.current !== null) {
@@ -11241,7 +11289,7 @@ if (__DEV__) {
           } // Avoid an unhandled rejection errors for the Promises that we'll
           // intentionally ignore.
 
-          thenable.then(noop$3, noop$3);
+          thenable.then(noop$2, noop$2);
           thenable = previous;
         }
       } // We use an expando to track the status and result of a thenable so that we
@@ -11270,7 +11318,7 @@ if (__DEV__) {
             // some custom userspace implementation. We treat it as "pending".
             // Attach a dummy listener, to ensure that any lazy initialization can
             // happen. Flight lazily parses JSON when the value is actually awaited.
-            thenable.then(noop$3, noop$3);
+            thenable.then(noop$2, noop$2);
           } else {
             // This is an uncached thenable that we haven't seen before.
             // Detect infinite ping loops caused by uncached promises.
@@ -31512,26 +31560,9 @@ if (__DEV__) {
           : // is the first update in that scope. Either way, we need to get a
             // fresh transition lane.
             requestTransitionLane();
-      } // Updates originating inside certain React methods, like flushSync, have
-      // their priority set by tracking it with a context variable.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
+      }
 
-      var updateLane = getCurrentUpdatePriority();
-
-      if (updateLane !== NoLane) {
-        return updateLane;
-      } // This update originated outside React. Ask the host environment for an
-      // appropriate priority, based on the type of event.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
-
-      var eventLane = getCurrentEventPriority();
-      return eventLane;
+      return eventPriorityToLane(resolveUpdatePriority());
     }
 
     function requestRetryLane(fiber) {
@@ -32337,8 +32368,8 @@ if (__DEV__) {
       var previousPriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig$1.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig$1.transition = null;
 
         if (fn) {
           return fn();
@@ -33510,12 +33541,12 @@ if (__DEV__) {
     ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
-      var previousUpdateLanePriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig$1.transition;
+      var previousUpdateLanePriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig$1.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig$1.transition = null;
         commitRootImpl(
           root,
           recoverableErrors,
@@ -33969,8 +34000,8 @@ if (__DEV__) {
         var previousPriority = getCurrentUpdatePriority();
 
         try {
-          ReactCurrentBatchConfig$1.transition = null;
           setCurrentUpdatePriority(priority);
+          ReactCurrentBatchConfig$1.transition = null;
           return flushPassiveEffectsImpl();
         } finally {
           setCurrentUpdatePriority(previousPriority);
@@ -36120,7 +36151,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-42b57943";
+    var ReactVersion = "19.0.0-www-classic-f2dc8e35";
 
     function createPortal$1(
       children,
@@ -40896,7 +40927,7 @@ if (__DEV__) {
       return false;
     }
 
-    function noop$2() {}
+    function noop$1() {}
 
     function trapClickOnNonInteractiveElement(node) {
       // Mobile Safari does not fire properly bubble click events on
@@ -40908,7 +40939,7 @@ if (__DEV__) {
       // bookkeeping for it. Not sure if we need to clear it when the listener is
       // removed.
       // TODO: Only do this for the relevant Safaris maybe?
-      node.onclick = noop$2;
+      node.onclick = noop$1;
     }
     var xlinkNamespace = "http://www.w3.org/1999/xlink";
     var xmlNamespace = "http://www.w3.org/XML/1998/namespace";
@@ -44101,26 +44132,6 @@ if (__DEV__) {
       }
     }
 
-    function noop$1() {}
-
-    var DefaultDispatcher = {
-      prefetchDNS: noop$1,
-      preconnect: noop$1,
-      preload: noop$1,
-      preloadModule: noop$1,
-      preinitScript: noop$1,
-      preinitStyle: noop$1,
-      preinitModuleScript: noop$1
-    };
-    var Internals = {
-      usingClientEntryPoint: false,
-      Events: null,
-      ReactDOMCurrentDispatcher: {
-        current: DefaultDispatcher
-      },
-      findDOMNode: null
-    };
-
     var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher; // Unused
 
     var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
@@ -44527,15 +44538,6 @@ if (__DEV__) {
       ).createTextNode(text);
       precacheFiberNode(internalInstanceHandle, textNode);
       return textNode;
-    }
-    function getCurrentEventPriority() {
-      var currentEvent = window.event;
-
-      if (currentEvent === undefined) {
-        return DefaultEventPriority;
-      }
-
-      return getEventPriority(currentEvent.type);
     }
     var currentPopstateTransitionEvent = null;
     function shouldAttemptEagerTransition() {
@@ -47921,9 +47923,9 @@ if (__DEV__) {
       container,
       nativeEvent
     ) {
-      var previousPriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = null;
+      var previousPriority = getCurrentUpdatePriority();
 
       try {
         setCurrentUpdatePriority(DiscreteEventPriority);
@@ -47940,9 +47942,9 @@ if (__DEV__) {
       container,
       nativeEvent
     ) {
-      var previousPriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = null;
+      var previousPriority = getCurrentUpdatePriority();
 
       try {
         setCurrentUpdatePriority(ContinuousEventPriority);

@@ -437,7 +437,8 @@ function popHostContext(fiber) {
     (pop(hostTransitionProviderCursor),
     (HostTransitionContext._currentValue = null));
 }
-var scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
+var hasOwnProperty = Object.prototype.hasOwnProperty,
+  scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
   requestPaint = Scheduler.unstable_requestPaint,
@@ -717,15 +718,6 @@ function clearTransitionsForLanes(root, lanes) {
       lanes &= ~lane;
     }
 }
-var currentUpdatePriority = 0;
-function runWithPriority(priority, fn) {
-  var previousPriority = currentUpdatePriority;
-  try {
-    return (currentUpdatePriority = priority), fn();
-  } finally {
-    currentUpdatePriority = previousPriority;
-  }
-}
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
   return 2 < lanes
@@ -736,52 +728,77 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty,
-  tagToRoleMappings = {
-    ARTICLE: "article",
-    ASIDE: "complementary",
-    BODY: "document",
-    BUTTON: "button",
-    DATALIST: "listbox",
-    DD: "definition",
-    DETAILS: "group",
-    DIALOG: "dialog",
-    DT: "term",
-    FIELDSET: "group",
-    FIGURE: "figure",
-    FORM: "form",
-    FOOTER: "contentinfo",
-    H1: "heading",
-    H2: "heading",
-    H3: "heading",
-    H4: "heading",
-    H5: "heading",
-    H6: "heading",
-    HEADER: "banner",
-    HR: "separator",
-    LEGEND: "legend",
-    LI: "listitem",
-    MATH: "math",
-    MAIN: "main",
-    MENU: "list",
-    NAV: "navigation",
-    OL: "list",
-    OPTGROUP: "group",
-    OPTION: "option",
-    OUTPUT: "status",
-    PROGRESS: "progressbar",
-    SECTION: "region",
-    SUMMARY: "button",
-    TABLE: "table",
-    TBODY: "rowgroup",
-    TEXTAREA: "textbox",
-    TFOOT: "rowgroup",
-    TD: "cell",
-    TH: "columnheader",
-    THEAD: "rowgroup",
-    TR: "row",
-    UL: "list"
-  };
+function noop$3() {}
+var Internals = {
+  usingClientEntryPoint: !1,
+  Events: null,
+  ReactDOMCurrentDispatcher: {
+    current: {
+      prefetchDNS: noop$3,
+      preconnect: noop$3,
+      preload: noop$3,
+      preloadModule: noop$3,
+      preinitScript: noop$3,
+      preinitStyle: noop$3,
+      preinitModuleScript: noop$3
+    }
+  },
+  findDOMNode: null,
+  up: 0
+};
+function runWithPriority(priority, fn) {
+  var previousPriority = Internals.up;
+  try {
+    return (Internals.up = priority), fn();
+  } finally {
+    Internals.up = previousPriority;
+  }
+}
+var tagToRoleMappings = {
+  ARTICLE: "article",
+  ASIDE: "complementary",
+  BODY: "document",
+  BUTTON: "button",
+  DATALIST: "listbox",
+  DD: "definition",
+  DETAILS: "group",
+  DIALOG: "dialog",
+  DT: "term",
+  FIELDSET: "group",
+  FIGURE: "figure",
+  FORM: "form",
+  FOOTER: "contentinfo",
+  H1: "heading",
+  H2: "heading",
+  H3: "heading",
+  H4: "heading",
+  H5: "heading",
+  H6: "heading",
+  HEADER: "banner",
+  HR: "separator",
+  LEGEND: "legend",
+  LI: "listitem",
+  MATH: "math",
+  MAIN: "main",
+  MENU: "list",
+  NAV: "navigation",
+  OL: "list",
+  OPTGROUP: "group",
+  OPTION: "option",
+  OUTPUT: "status",
+  PROGRESS: "progressbar",
+  SECTION: "region",
+  SUMMARY: "button",
+  TABLE: "table",
+  TBODY: "rowgroup",
+  TEXTAREA: "textbox",
+  TFOOT: "rowgroup",
+  TD: "cell",
+  TH: "columnheader",
+  THEAD: "rowgroup",
+  TR: "row",
+  UL: "list"
+};
 function getImplicitRole(element) {
   var mappedByTag = tagToRoleMappings[element.tagName];
   if (void 0 !== mappedByTag) return mappedByTag;
@@ -1849,7 +1866,7 @@ function prepareToHydrateHostInstance(fiber) {
     ? (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
-      null != props.onClick && (instance.onclick = noop$2),
+      null != props.onClick && (instance.onclick = noop$1),
       (instance = !0))
     : (instance = !1);
   !instance && favorSafetyOverHydrationPerf && throwOnHydrationMismatch(fiber);
@@ -2489,12 +2506,12 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$3() {}
+function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$3, noop$3), (thenable = index));
+    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2504,7 +2521,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         throw Error(formatProdErrorMessage(483));
       throw thenableState;
     default:
-      if ("string" === typeof thenable.status) thenable.then(noop$3, noop$3);
+      if ("string" === typeof thenable.status) thenable.then(noop$2, noop$2);
       else {
         thenableState = workInProgressRoot;
         if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
@@ -4174,8 +4191,8 @@ function startTransition(
   callback,
   options
 ) {
-  var previousPriority = currentUpdatePriority;
-  currentUpdatePriority =
+  var previousPriority = Internals.up;
+  Internals.up =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$3.transition,
     currentTransition = { _callbacks: new Set() };
@@ -4207,7 +4224,7 @@ function startTransition(
       reason: error
     });
   } finally {
-    (currentUpdatePriority = previousPriority),
+    (Internals.up = previousPriority),
       (ReactCurrentBatchConfig$3.transition = prevTransition);
   }
 }
@@ -9135,7 +9152,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
           (parent = parent._reactRootContainer),
           (null !== parent && void 0 !== parent) ||
             null !== before.onclick ||
-            (before.onclick = noop$2));
+            (before.onclick = noop$1));
   else if (4 !== tag && 27 !== tag && ((node = node.child), null !== node))
     for (
       insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -11067,10 +11084,10 @@ function requestUpdateLane(fiber) {
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
     );
-  fiber = currentUpdatePriority;
-  if (0 !== fiber) return fiber;
-  fiber = window.event;
-  fiber = void 0 === fiber ? 32 : getEventPriority(fiber.type);
+  fiber = Internals.up;
+  0 === fiber &&
+    ((fiber = window.event),
+    (fiber = void 0 === fiber ? 32 : getEventPriority(fiber.type)));
   return fiber;
 }
 function requestDeferredLane() {
@@ -11445,16 +11462,12 @@ function flushSync$1(fn) {
   var prevExecutionContext = executionContext;
   executionContext |= 1;
   var prevTransition = ReactCurrentBatchConfig$1.transition,
-    previousPriority = currentUpdatePriority;
+    previousPriority = Internals.up;
   try {
-    if (
-      ((ReactCurrentBatchConfig$1.transition = null),
-      (currentUpdatePriority = 2),
-      fn)
-    )
+    if (((Internals.up = 2), (ReactCurrentBatchConfig$1.transition = null), fn))
       return fn();
   } finally {
-    (currentUpdatePriority = previousPriority),
+    (Internals.up = previousPriority),
       (ReactCurrentBatchConfig$1.transition = prevTransition),
       (executionContext = prevExecutionContext),
       0 === (executionContext & 6) && flushSyncWorkAcrossRoots_impl(!1);
@@ -11889,11 +11902,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var previousUpdateLanePriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig$1.transition;
+  var prevTransition = ReactCurrentBatchConfig$1.transition,
+    previousUpdateLanePriority = Internals.up;
   try {
-    (ReactCurrentBatchConfig$1.transition = null),
-      (currentUpdatePriority = 2),
+    (Internals.up = 2),
+      (ReactCurrentBatchConfig$1.transition = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -11904,7 +11917,7 @@ function commitRoot(
       );
   } finally {
     (ReactCurrentBatchConfig$1.transition = prevTransition),
-      (currentUpdatePriority = previousUpdateLanePriority);
+      (Internals.up = previousUpdateLanePriority);
   }
   return null;
 }
@@ -11949,8 +11962,8 @@ function commitRootImpl(
   if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
     transitions = ReactCurrentBatchConfig$1.transition;
     ReactCurrentBatchConfig$1.transition = null;
-    spawnedLane = currentUpdatePriority;
-    currentUpdatePriority = 2;
+    spawnedLane = Internals.up;
+    Internals.up = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     ReactCurrentOwner.current = null;
@@ -11970,7 +11983,7 @@ function commitRootImpl(
     commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
     requestPaint();
     executionContext = prevExecutionContext;
-    currentUpdatePriority = spawnedLane;
+    Internals.up = spawnedLane;
     ReactCurrentBatchConfig$1.transition = transitions;
   } else root.current = finishedWork;
   rootDoesHavePassiveEffects
@@ -12034,18 +12047,17 @@ function flushPassiveEffects() {
     var root$197 = rootWithPendingPassiveEffects,
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
-    var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
-    renderPriority = 32 > renderPriority ? 32 : renderPriority;
-    var prevTransition = ReactCurrentBatchConfig$1.transition,
-      previousPriority = currentUpdatePriority;
+    var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
+      prevTransition = ReactCurrentBatchConfig$1.transition,
+      previousPriority = Internals.up;
     try {
       return (
+        (Internals.up = 32 > renderPriority ? 32 : renderPriority),
         (ReactCurrentBatchConfig$1.transition = null),
-        (currentUpdatePriority = renderPriority),
         flushPassiveEffectsImpl()
       );
     } finally {
-      (currentUpdatePriority = previousPriority),
+      (Internals.up = previousPriority),
         (ReactCurrentBatchConfig$1.transition = prevTransition),
         releaseRootPooledCache(root$197, remainingLanes);
     }
@@ -13323,14 +13335,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$351;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1512 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1512) {
-      var element$jscomp$inline_1513 = document.createElement("div");
-      element$jscomp$inline_1513.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1512 =
-        "function" === typeof element$jscomp$inline_1513.oninput;
+    var isSupported$jscomp$inline_1522 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1522) {
+      var element$jscomp$inline_1523 = document.createElement("div");
+      element$jscomp$inline_1523.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1522 =
+        "function" === typeof element$jscomp$inline_1523.oninput;
     }
-    JSCompiler_inline_result$jscomp$351 = isSupported$jscomp$inline_1512;
+    JSCompiler_inline_result$jscomp$351 = isSupported$jscomp$inline_1522;
   } else JSCompiler_inline_result$jscomp$351 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$351 &&
@@ -13705,20 +13717,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1553 = 0;
-  i$jscomp$inline_1553 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1553++
+  var i$jscomp$inline_1563 = 0;
+  i$jscomp$inline_1563 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1563++
 ) {
-  var eventName$jscomp$inline_1554 =
-      simpleEventPluginEvents[i$jscomp$inline_1553],
-    domEventName$jscomp$inline_1555 =
-      eventName$jscomp$inline_1554.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1556 =
-      eventName$jscomp$inline_1554[0].toUpperCase() +
-      eventName$jscomp$inline_1554.slice(1);
+  var eventName$jscomp$inline_1564 =
+      simpleEventPluginEvents[i$jscomp$inline_1563],
+    domEventName$jscomp$inline_1565 =
+      eventName$jscomp$inline_1564.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1566 =
+      eventName$jscomp$inline_1564[0].toUpperCase() +
+      eventName$jscomp$inline_1564.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1555,
-    "on" + capitalizedEvent$jscomp$inline_1556
+    domEventName$jscomp$inline_1565,
+    "on" + capitalizedEvent$jscomp$inline_1566
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14561,7 +14573,7 @@ function checkForUnmatchedText(serverText, clientText) {
   clientText = normalizeMarkupForTextOrAttribute(clientText);
   return normalizeMarkupForTextOrAttribute(serverText) === clientText ? !0 : !1;
 }
-function noop$2() {}
+function noop$1() {}
 function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children":
@@ -14659,7 +14671,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       domElement.setAttribute(key, value);
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$2);
+      null != value && (domElement.onclick = noop$1);
       break;
     case "onScroll":
       null != value && listenToNonDelegatedEvent("scroll", domElement);
@@ -14907,7 +14919,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
       null != value && listenToNonDelegatedEvent("scrollend", domElement);
       break;
     case "onClick":
-      null != value && (domElement.onclick = noop$2);
+      null != value && (domElement.onclick = noop$1);
       break;
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
@@ -15483,24 +15495,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         (null == propKey$228 && null == propKey) ||
         setProp(domElement, tag, lastProp, propKey$228, nextProps, propKey);
 }
-function noop$1() {}
-var Internals = {
-    usingClientEntryPoint: !1,
-    Events: null,
-    ReactDOMCurrentDispatcher: {
-      current: {
-        prefetchDNS: noop$1,
-        preconnect: noop$1,
-        preload: noop$1,
-        preloadModule: noop$1,
-        preinitScript: noop$1,
-        preinitStyle: noop$1,
-        preinitModuleScript: noop$1
-      }
-    },
-    findDOMNode: null
-  },
-  ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
+var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
   eventsEnabled = null,
   selectionInformation = null;
 function getOwnerDocumentFromRootContainer(rootContainerElement) {
@@ -16997,14 +16992,14 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent
 ) {
-  var previousPriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
+  var previousPriority = Internals.up;
   try {
-    (currentUpdatePriority = 2),
+    (Internals.up = 2),
       dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
-    (currentUpdatePriority = previousPriority),
+    (Internals.up = previousPriority),
       (ReactCurrentBatchConfig.transition = prevTransition);
   }
 }
@@ -17014,14 +17009,14 @@ function dispatchContinuousEvent(
   container,
   nativeEvent
 ) {
-  var previousPriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
+  var previousPriority = Internals.up;
   try {
-    (currentUpdatePriority = 8),
+    (Internals.up = 8),
       dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
-    (currentUpdatePriority = previousPriority),
+    (Internals.up = previousPriority),
       (ReactCurrentBatchConfig.transition = prevTransition);
   }
 }
@@ -17230,7 +17225,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = currentUpdatePriority;
+    var updatePriority = Internals.up;
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -17303,17 +17298,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1729 = {
+var devToolsConfig$jscomp$inline_1743 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-203d498a",
+  version: "19.0.0-www-classic-a94fe4e6",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2140 = {
-  bundleType: devToolsConfig$jscomp$inline_1729.bundleType,
-  version: devToolsConfig$jscomp$inline_1729.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1729.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1729.rendererConfig,
+var internals$jscomp$inline_2160 = {
+  bundleType: devToolsConfig$jscomp$inline_1743.bundleType,
+  version: devToolsConfig$jscomp$inline_1743.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1743.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1743.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17329,26 +17324,26 @@ var internals$jscomp$inline_2140 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1729.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1743.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-203d498a"
+  reconcilerVersion: "19.0.0-www-classic-a94fe4e6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2141 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2141.isDisabled &&
-    hook$jscomp$inline_2141.supportsFiber
+    !hook$jscomp$inline_2161.isDisabled &&
+    hook$jscomp$inline_2161.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2141.inject(
-        internals$jscomp$inline_2140
+      (rendererID = hook$jscomp$inline_2161.inject(
+        internals$jscomp$inline_2160
       )),
-        (injectedHook = hook$jscomp$inline_2141);
+        (injectedHook = hook$jscomp$inline_2161);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17935,4 +17930,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-203d498a";
+exports.version = "19.0.0-www-classic-a94fe4e6";
