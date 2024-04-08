@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4a679b19e322c1ae35a57c741538ab4c>>
+ * @generated SignedSource<<a92d9c4cf840dc79898b348d098d11ad>>
  */
 
 "use strict";
@@ -897,7 +897,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_271 = {
+var injectedNamesToPlugins$jscomp$inline_272 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -943,32 +943,32 @@ var injectedNamesToPlugins$jscomp$inline_271 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_272 = !1,
-  pluginName$jscomp$inline_273;
-for (pluginName$jscomp$inline_273 in injectedNamesToPlugins$jscomp$inline_271)
+  isOrderingDirty$jscomp$inline_273 = !1,
+  pluginName$jscomp$inline_274;
+for (pluginName$jscomp$inline_274 in injectedNamesToPlugins$jscomp$inline_272)
   if (
-    injectedNamesToPlugins$jscomp$inline_271.hasOwnProperty(
-      pluginName$jscomp$inline_273
+    injectedNamesToPlugins$jscomp$inline_272.hasOwnProperty(
+      pluginName$jscomp$inline_274
     )
   ) {
-    var pluginModule$jscomp$inline_274 =
-      injectedNamesToPlugins$jscomp$inline_271[pluginName$jscomp$inline_273];
+    var pluginModule$jscomp$inline_275 =
+      injectedNamesToPlugins$jscomp$inline_272[pluginName$jscomp$inline_274];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_273) ||
-      namesToPlugins[pluginName$jscomp$inline_273] !==
-        pluginModule$jscomp$inline_274
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_274) ||
+      namesToPlugins[pluginName$jscomp$inline_274] !==
+        pluginModule$jscomp$inline_275
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_273])
+      if (namesToPlugins[pluginName$jscomp$inline_274])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_273 + "`.")
+            (pluginName$jscomp$inline_274 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_273] =
-        pluginModule$jscomp$inline_274;
-      isOrderingDirty$jscomp$inline_272 = !0;
+      namesToPlugins[pluginName$jscomp$inline_274] =
+        pluginModule$jscomp$inline_275;
+      isOrderingDirty$jscomp$inline_273 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_272 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_273 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -2036,7 +2036,6 @@ function movePendingFibersToMemoized(root, lanes) {
       lanes &= ~root;
     }
 }
-var currentUpdatePriority = 0;
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
   return 2 < lanes
@@ -2089,6 +2088,7 @@ function getPublicInstance(instance) {
 }
 var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout,
+  currentUpdatePriority = 0,
   valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
@@ -9727,8 +9727,8 @@ function requestUpdateLane(fiber) {
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
     );
-  fiber = currentUpdatePriority;
-  return 0 !== fiber ? fiber : 32;
+  fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
+  return fiber;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -10550,11 +10550,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var previousUpdateLanePriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    previousUpdateLanePriority = currentUpdatePriority;
   try {
-    (ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+    (currentUpdatePriority = 2),
+      (ReactCurrentBatchConfig.transition = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -10686,18 +10686,17 @@ function flushPassiveEffects() {
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
-      priority = 32 > renderPriority ? 32 : renderPriority;
-    renderPriority = ReactCurrentBatchConfig.transition;
-    var previousPriority = currentUpdatePriority;
+      prevTransition = ReactCurrentBatchConfig.transition,
+      previousPriority = currentUpdatePriority;
     try {
+      currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
       ReactCurrentBatchConfig.transition = null;
-      currentUpdatePriority = priority;
       if (null === rootWithPendingPassiveEffects)
         var JSCompiler_inline_result = !1;
       else {
         var transitions = pendingPassiveTransitions;
         pendingPassiveTransitions = null;
-        priority = rootWithPendingPassiveEffects;
+        renderPriority = rootWithPendingPassiveEffects;
         var lanes = pendingPassiveEffectsLanes;
         rootWithPendingPassiveEffects = null;
         pendingPassiveEffectsLanes = 0;
@@ -10709,10 +10708,10 @@ function flushPassiveEffects() {
           injectedProfilingHooks.markPassiveEffectsStarted(lanes);
         var prevExecutionContext = executionContext;
         executionContext |= 4;
-        commitPassiveUnmountOnFiber(priority.current);
+        commitPassiveUnmountOnFiber(renderPriority.current);
         commitPassiveMountOnFiber(
-          priority,
-          priority.current,
+          renderPriority,
+          renderPriority.current,
           lanes,
           transitions
         );
@@ -10765,9 +10764,9 @@ function flushPassiveEffects() {
           "function" === typeof injectedHook.onPostCommitFiberRoot
         )
           try {
-            injectedHook.onPostCommitFiberRoot(rendererID, priority);
+            injectedHook.onPostCommitFiberRoot(rendererID, renderPriority);
           } catch (err) {}
-        var stateNode = priority.current.stateNode;
+        var stateNode = renderPriority.current.stateNode;
         stateNode.effectDuration = 0;
         stateNode.passiveEffectDuration = 0;
         JSCompiler_inline_result = !0;
@@ -10775,7 +10774,7 @@ function flushPassiveEffects() {
       return JSCompiler_inline_result;
     } finally {
       (currentUpdatePriority = previousPriority),
-        (ReactCurrentBatchConfig.transition = renderPriority),
+        (ReactCurrentBatchConfig.transition = prevTransition),
         releaseRootPooledCache(root, remainingLanes);
     }
   }
@@ -11503,10 +11502,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1244 = {
+  devToolsConfig$jscomp$inline_1246 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-d2e200b3",
+    version: "19.0.0-canary-b2febde1",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11536,10 +11535,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1244.bundleType,
-  version: devToolsConfig$jscomp$inline_1244.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1244.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1244.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1246.bundleType,
+  version: devToolsConfig$jscomp$inline_1246.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1246.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1246.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11555,14 +11554,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1244.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1246.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-d2e200b3"
+  reconcilerVersion: "19.0.0-canary-b2febde1"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

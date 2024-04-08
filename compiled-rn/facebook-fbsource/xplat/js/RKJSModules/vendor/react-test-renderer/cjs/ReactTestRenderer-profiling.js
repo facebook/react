@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b9d1eed3b9bd859cc782a84afe6d9a15>>
+ * @generated SignedSource<<d579b23be98702834f1877ba69ecd091>>
  */
 
 "use strict";
@@ -597,7 +597,6 @@ function markRootEntangled(root, entangledLanes) {
     rootEntangledLanes &= ~lane;
   }
 }
-var currentUpdatePriority = 0;
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
   return 2 < lanes
@@ -639,7 +638,8 @@ function insertBefore(parentInstance, child, beforeChild) {
   beforeChild = parentInstance.children.indexOf(beforeChild);
   parentInstance.children.splice(beforeChild, 0, child);
 }
-var scheduleTimeout = setTimeout,
+var currentUpdatePriority = 0,
+  scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout,
   valueStack = [],
   index = -1;
@@ -7894,8 +7894,8 @@ function requestUpdateLane(fiber) {
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
     );
-  fiber = currentUpdatePriority;
-  return 0 !== fiber ? fiber : 32;
+  fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
+  return fiber;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -8218,8 +8218,8 @@ function flushSync(fn) {
     previousPriority = currentUpdatePriority;
   try {
     if (
-      ((ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+      ((currentUpdatePriority = 2),
+      (ReactCurrentBatchConfig.transition = null),
       fn)
     )
       return fn();
@@ -8711,11 +8711,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var previousUpdateLanePriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    previousUpdateLanePriority = currentUpdatePriority;
   try {
-    (ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+    (currentUpdatePriority = 2),
+      (ReactCurrentBatchConfig.transition = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -8845,18 +8845,17 @@ function flushPassiveEffects() {
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
-      priority = 32 > renderPriority ? 32 : renderPriority;
-    renderPriority = ReactCurrentBatchConfig.transition;
-    var previousPriority = currentUpdatePriority;
+      prevTransition = ReactCurrentBatchConfig.transition,
+      previousPriority = currentUpdatePriority;
     try {
+      currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
       ReactCurrentBatchConfig.transition = null;
-      currentUpdatePriority = priority;
       if (null === rootWithPendingPassiveEffects)
         var JSCompiler_inline_result = !1;
       else {
         var transitions = pendingPassiveTransitions;
         pendingPassiveTransitions = null;
-        priority = rootWithPendingPassiveEffects;
+        renderPriority = rootWithPendingPassiveEffects;
         var lanes = pendingPassiveEffectsLanes;
         rootWithPendingPassiveEffects = null;
         pendingPassiveEffectsLanes = 0;
@@ -8868,10 +8867,10 @@ function flushPassiveEffects() {
           injectedProfilingHooks.markPassiveEffectsStarted(lanes);
         var prevExecutionContext = executionContext;
         executionContext |= 4;
-        commitPassiveUnmountOnFiber(priority.current);
+        commitPassiveUnmountOnFiber(renderPriority.current);
         commitPassiveMountOnFiber(
-          priority,
-          priority.current,
+          renderPriority,
+          renderPriority.current,
           lanes,
           transitions
         );
@@ -8919,9 +8918,9 @@ function flushPassiveEffects() {
           "function" === typeof injectedHook.onPostCommitFiberRoot
         )
           try {
-            injectedHook.onPostCommitFiberRoot(rendererID, priority);
+            injectedHook.onPostCommitFiberRoot(rendererID, renderPriority);
           } catch (err) {}
-        var stateNode = priority.current.stateNode;
+        var stateNode = renderPriority.current.stateNode;
         stateNode.effectDuration = 0;
         stateNode.passiveEffectDuration = 0;
         JSCompiler_inline_result = !0;
@@ -8929,7 +8928,7 @@ function flushPassiveEffects() {
       return JSCompiler_inline_result;
     } finally {
       (currentUpdatePriority = previousPriority),
-        (ReactCurrentBatchConfig.transition = renderPriority),
+        (ReactCurrentBatchConfig.transition = prevTransition),
         releaseRootPooledCache(root, remainingLanes);
     }
   }
@@ -9765,12 +9764,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1078 = {
+var devToolsConfig$jscomp$inline_1080 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-461e8e8d",
+  version: "19.0.0-canary-e4931763",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9787,10 +9786,10 @@ var devToolsConfig$jscomp$inline_1078 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1078.bundleType,
-  version: devToolsConfig$jscomp$inline_1078.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1078.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1078.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1080.bundleType,
+  version: devToolsConfig$jscomp$inline_1080.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1080.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1080.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9807,14 +9806,14 @@ var devToolsConfig$jscomp$inline_1078 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1078.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1080.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-461e8e8d"
+  reconcilerVersion: "19.0.0-canary-e4931763"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

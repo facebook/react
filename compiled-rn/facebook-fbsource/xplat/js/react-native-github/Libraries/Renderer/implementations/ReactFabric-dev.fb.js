@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4a4d1580791e4b04df69f1d39838d86e>>
+ * @generated SignedSource<<6ee9d845426852411c7db2d3c69dc37d>>
  */
 
 "use strict";
@@ -4643,17 +4643,11 @@ to return true:wantsResponderID|                            |
       }
     }
 
+    var NoEventPriority = NoLane;
     var DiscreteEventPriority = SyncLane;
     var ContinuousEventPriority = InputContinuousLane;
     var DefaultEventPriority = DefaultLane;
     var IdleEventPriority = IdleLane;
-    var currentUpdatePriority = NoLane;
-    function getCurrentUpdatePriority() {
-      return currentUpdatePriority;
-    }
-    function setCurrentUpdatePriority(newPriority) {
-      currentUpdatePriority = newPriority;
-    }
     function higherEventPriority(a, b) {
       return a !== 0 && a < b ? a : b;
     }
@@ -4662,6 +4656,9 @@ to return true:wantsResponderID|                            |
     }
     function isHigherEventPriority(a, b) {
       return a !== 0 && a < b;
+    }
+    function eventPriorityToLane(updatePriority) {
+      return updatePriority;
     }
     function lanesToEventPriority(lanes) {
       var lane = getHighestPriorityLane(lanes);
@@ -4904,7 +4901,18 @@ to return true:wantsResponderID|                            |
       // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
       return false;
     }
-    function getCurrentEventPriority() {
+    var currentUpdatePriority = NoEventPriority;
+    function setCurrentUpdatePriority(newPriority) {
+      currentUpdatePriority = newPriority;
+    }
+    function getCurrentUpdatePriority() {
+      return currentUpdatePriority;
+    }
+    function resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
+
       var currentEventPriority = fabricGetCurrentEventPriority
         ? fabricGetCurrentEventPriority()
         : null;
@@ -26029,26 +26037,9 @@ to return true:wantsResponderID|                            |
           : // is the first update in that scope. Either way, we need to get a
             // fresh transition lane.
             requestTransitionLane();
-      } // Updates originating inside certain React methods, like flushSync, have
-      // their priority set by tracking it with a context variable.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
+      }
 
-      var updateLane = getCurrentUpdatePriority();
-
-      if (updateLane !== NoLane) {
-        return updateLane;
-      } // This update originated outside React. Ask the host environment for an
-      // appropriate priority, based on the type of event.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
-
-      var eventLane = getCurrentEventPriority();
-      return eventLane;
+      return eventPriorityToLane(resolveUpdatePriority());
     }
 
     function requestRetryLane(fiber) {
@@ -26791,8 +26782,8 @@ to return true:wantsResponderID|                            |
       var previousPriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig.transition = null;
 
         if (fn) {
           return fn();
@@ -27931,12 +27922,12 @@ to return true:wantsResponderID|                            |
     ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
-      var previousUpdateLanePriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
+      var previousUpdateLanePriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig.transition = null;
         commitRootImpl(
           root,
           recoverableErrors,
@@ -28310,8 +28301,8 @@ to return true:wantsResponderID|                            |
         var previousPriority = getCurrentUpdatePriority();
 
         try {
-          ReactCurrentBatchConfig.transition = null;
           setCurrentUpdatePriority(priority);
+          ReactCurrentBatchConfig.transition = null;
           return flushPassiveEffectsImpl();
         } finally {
           setCurrentUpdatePriority(previousPriority);
@@ -30318,7 +30309,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-86741a5e";
+    var ReactVersion = "19.0.0-canary-59b0731f";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

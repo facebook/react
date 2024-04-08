@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5dd37abeea74ddd8ec0ebe6450152a2d>>
+ * @generated SignedSource<<7d40122affc60fd6dee01dfb5006f923>>
  */
 
 "use strict";
@@ -2316,17 +2316,11 @@ if (__DEV__) {
       }
     }
 
+    var NoEventPriority = NoLane;
     var DiscreteEventPriority = SyncLane;
     var ContinuousEventPriority = InputContinuousLane;
     var DefaultEventPriority = DefaultLane;
     var IdleEventPriority = IdleLane;
-    var currentUpdatePriority = NoLane;
-    function getCurrentUpdatePriority() {
-      return currentUpdatePriority;
-    }
-    function setCurrentUpdatePriority(newPriority) {
-      currentUpdatePriority = newPriority;
-    }
     function higherEventPriority(a, b) {
       return a !== 0 && a < b ? a : b;
     }
@@ -2335,6 +2329,9 @@ if (__DEV__) {
     }
     function isHigherEventPriority(a, b) {
       return a !== 0 && a < b;
+    }
+    function eventPriorityToLane(updatePriority) {
+      return updatePriority;
     }
     function lanesToEventPriority(lanes) {
       var lane = getHighestPriorityLane(lanes);
@@ -2493,7 +2490,18 @@ if (__DEV__) {
         tag: "TEXT"
       };
     }
-    function getCurrentEventPriority() {
+    var currentUpdatePriority = NoEventPriority;
+    function setCurrentUpdatePriority(newPriority) {
+      currentUpdatePriority = newPriority;
+    }
+    function getCurrentUpdatePriority() {
+      return currentUpdatePriority;
+    }
+    function resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
+
       return DefaultEventPriority;
     }
     function shouldAttemptEagerTransition() {
@@ -22567,26 +22575,9 @@ if (__DEV__) {
           : // is the first update in that scope. Either way, we need to get a
             // fresh transition lane.
             requestTransitionLane();
-      } // Updates originating inside certain React methods, like flushSync, have
-      // their priority set by tracking it with a context variable.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
+      }
 
-      var updateLane = getCurrentUpdatePriority();
-
-      if (updateLane !== NoLane) {
-        return updateLane;
-      } // This update originated outside React. Ask the host environment for an
-      // appropriate priority, based on the type of event.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
-
-      var eventLane = getCurrentEventPriority();
-      return eventLane;
+      return eventPriorityToLane(resolveUpdatePriority());
     }
 
     function requestRetryLane(fiber) {
@@ -23292,8 +23283,8 @@ if (__DEV__) {
       var previousPriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig.transition = null;
 
         if (fn) {
           return fn();
@@ -24398,12 +24389,12 @@ if (__DEV__) {
     ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
-      var previousUpdateLanePriority = getCurrentUpdatePriority();
       var prevTransition = ReactCurrentBatchConfig.transition;
+      var previousUpdateLanePriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactCurrentBatchConfig.transition = null;
         commitRootImpl(
           root,
           recoverableErrors,
@@ -24768,8 +24759,8 @@ if (__DEV__) {
         var previousPriority = getCurrentUpdatePriority();
 
         try {
-          ReactCurrentBatchConfig.transition = null;
           setCurrentUpdatePriority(priority);
+          ReactCurrentBatchConfig.transition = null;
           return flushPassiveEffectsImpl();
         } finally {
           setCurrentUpdatePriority(previousPriority);
@@ -26624,7 +26615,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-dd665447";
+    var ReactVersion = "19.0.0-canary-33793d9f";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
