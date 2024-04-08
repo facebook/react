@@ -25,15 +25,15 @@ export function setCurrentUpdatePriority(
   // is much longer. I hope this is consistent enough to rely on across builds
   IntentionallyUnusedArgument?: empty,
 ): void {
-  ReactDOMSharedInternals.up = newPriority;
+  ReactDOMSharedInternals.p /* currentUpdatePriority */ = newPriority;
 }
 
 export function getCurrentUpdatePriority(): EventPriority {
-  return ReactDOMSharedInternals.up;
+  return ReactDOMSharedInternals.p; /* currentUpdatePriority */
 }
 
 export function resolveUpdatePriority(): EventPriority {
-  const updatePriority = ReactDOMSharedInternals.up;
+  const updatePriority = ReactDOMSharedInternals.p; /* currentUpdatePriority */
   if (updatePriority !== NoEventPriority) {
     return updatePriority;
   }
