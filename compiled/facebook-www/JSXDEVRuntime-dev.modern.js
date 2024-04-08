@@ -1412,11 +1412,8 @@ if (__DEV__) {
           props = {};
 
           for (var propName in config) {
-            if (
-              hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-              propName !== "key" &&
-              (enableRefAsProp || propName !== "ref")
-            ) {
+            // Skip over reserved prop names
+            if (propName !== "key" && (enableRefAsProp || propName !== "ref")) {
               if (enableRefAsProp && !disableStringRefs && propName === "ref") {
                 props.ref = coerceStringRef(
                   config[propName],

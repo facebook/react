@@ -82,9 +82,8 @@ function jsxProd(type, config, maybeKey) {
     (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
   maybeKey = {};
   for (var propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      (enableRefAsProp || "ref" !== propName) &&
+    "key" === propName ||
+      (!enableRefAsProp && "ref" === propName) ||
       (enableRefAsProp && "ref" === propName
         ? (maybeKey.ref = coerceStringRef(
             config[propName],
@@ -602,4 +601,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-ea5b7988";
+exports.version = "19.0.0-www-modern-9b5f5653";

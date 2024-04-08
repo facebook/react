@@ -121,9 +121,8 @@ function jsxProd(type, config, maybeKey) {
     (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
   maybeKey = {};
   for (var propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      (enableRefAsProp || "ref" !== propName) &&
+    "key" === propName ||
+      (!enableRefAsProp && "ref" === propName) ||
       (enableRefAsProp && "ref" === propName
         ? (maybeKey.ref = coerceStringRef(
             config[propName],
@@ -704,4 +703,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-classic-36e8d411";
+exports.version = "19.0.0-www-classic-544fd05e";
