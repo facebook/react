@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7d40122affc60fd6dee01dfb5006f923>>
+ * @generated SignedSource<<80d7175505ee7b5092250e0e58c47878>>
  */
 
 "use strict";
@@ -120,6 +120,9 @@ if (__DEV__) {
     }
 
     var assign = Object.assign;
+
+    var LegacyRoot = 0;
+    var ConcurrentRoot = 1;
 
     /**
      * `ReactInstanceMap` maintains a mapping from a public facing stateful
@@ -2866,9 +2869,6 @@ if (__DEV__) {
         );
       }
     }
-
-    var LegacyRoot = 0;
-    var ConcurrentRoot = 1;
 
     // We use the existence of the state object as an indicator that the component
     // is hidden.
@@ -22409,11 +22409,11 @@ if (__DEV__) {
     }
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-      ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
-      ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
+    var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
       /*             */
       0;
@@ -22560,13 +22560,11 @@ if (__DEV__) {
 
       if (transition !== null) {
         {
-          var batchConfigTransition = ReactCurrentBatchConfig.transition;
-
-          if (!batchConfigTransition._updatedFibers) {
-            batchConfigTransition._updatedFibers = new Set();
+          if (!transition._updatedFibers) {
+            transition._updatedFibers = new Set();
           }
 
-          batchConfigTransition._updatedFibers.add(fiber);
+          transition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -23265,7 +23263,7 @@ if (__DEV__) {
     // eslint-disable-next-line no-redeclare
     // eslint-disable-next-line no-redeclare
 
-    function flushSync(fn) {
+    function flushSyncFromReconciler(fn) {
       // In legacy mode, we flush pending passive effects at the beginning of the
       // next event, not at the end of the previous one.
       if (
@@ -23305,6 +23303,16 @@ if (__DEV__) {
           flushSyncWorkOnAllRoots();
         }
       }
+    } // If called outside of a render or commit will flush all sync work on all roots
+    // Returns whether the the call was during a render or not
+
+    function flushSyncWork() {
+      if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+        flushSyncWorkOnAllRoots();
+        return false;
+      }
+
+      return true;
     }
     // hidden subtree. The stack logic is managed there because that's the only
     // place that ever modifies it. Which module it lives in doesn't matter for
@@ -25633,13 +25641,12 @@ if (__DEV__) {
         var staleFamilies = update.staleFamilies,
           updatedFamilies = update.updatedFamilies;
         flushPassiveEffects();
-        flushSync(function () {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies
-          );
-        });
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies
+        );
+        flushSyncWork();
       }
     };
     var scheduleRoot = function (root, element) {
@@ -25651,10 +25658,8 @@ if (__DEV__) {
           return;
         }
 
-        flushPassiveEffects();
-        flushSync(function () {
-          updateContainer(element, root, null, null);
-        });
+        updateContainerSync(element, root, null, null);
+        flushSyncWork();
       }
     };
 
@@ -26615,7 +26620,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-33793d9f";
+    var ReactVersion = "19.0.0-canary-5acb30be";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -26750,12 +26755,51 @@ if (__DEV__) {
       );
     }
     function updateContainer(element, container, parentComponent, callback) {
+      var current = container.current;
+      var lane = requestUpdateLane(current);
+      updateContainerImpl(
+        current,
+        lane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return lane;
+    }
+    function updateContainerSync(
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
+      if (container.tag === LegacyRoot) {
+        flushPassiveEffects();
+      }
+
+      var current = container.current;
+      updateContainerImpl(
+        current,
+        SyncLane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return SyncLane;
+    }
+
+    function updateContainerImpl(
+      rootFiber,
+      lane,
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
       {
         onScheduleRoot(container, element);
       }
-
-      var current$1 = container.current;
-      var lane = requestUpdateLane(current$1);
 
       {
         markRenderScheduled(lane);
@@ -26805,14 +26849,12 @@ if (__DEV__) {
         update.callback = callback;
       }
 
-      var root = enqueueUpdate(current$1, update, lane);
+      var root = enqueueUpdate(rootFiber, update, lane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, current$1, lane);
-        entangleTransitions(root, current$1, lane);
+        scheduleUpdateOnFiber(root, rootFiber, lane);
+        entangleTransitions(root, rootFiber, lane);
       }
-
-      return lane;
     }
     function getPublicRootInstance(container) {
       var containerFiber = container.current;
@@ -27713,7 +27755,7 @@ if (__DEV__) {
 
           return getPublicRootInstance(root);
         },
-        unstable_flushSync: flushSync
+        unstable_flushSync: flushSyncFromReconciler
       };
       Object.defineProperty(entry, "root", {
         configurable: true,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d579b23be98702834f1877ba69ecd091>>
+ * @generated SignedSource<<4431ac600b9b830957ac137277654c1b>>
  */
 
 "use strict";
@@ -8207,7 +8207,7 @@ function performSyncWorkOnRoot(root, lanes) {
   ensureRootIsScheduled(root);
   return null;
 }
-function flushSync(fn) {
+function flushSyncFromReconciler(fn) {
   null !== rootWithPendingPassiveEffects &&
     0 === rootWithPendingPassiveEffects.tag &&
     0 === (executionContext & 6) &&
@@ -9764,12 +9764,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1080 = {
+var devToolsConfig$jscomp$inline_1082 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-e4931763",
+  version: "19.0.0-canary-091aeabc",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9786,10 +9786,10 @@ var devToolsConfig$jscomp$inline_1080 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1080.bundleType,
-  version: devToolsConfig$jscomp$inline_1080.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1080.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1080.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1082.bundleType,
+  version: devToolsConfig$jscomp$inline_1082.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1082.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1082.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9806,14 +9806,14 @@ var devToolsConfig$jscomp$inline_1080 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1080.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1082.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-e4931763"
+  reconcilerVersion: "19.0.0-canary-091aeabc"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
@@ -9912,7 +9912,7 @@ exports.create = function (element, options) {
       }
       return JSCompiler_inline_result;
     },
-    unstable_flushSync: flushSync
+    unstable_flushSync: flushSyncFromReconciler
   };
   Object.defineProperty(element, "root", {
     configurable: !0,

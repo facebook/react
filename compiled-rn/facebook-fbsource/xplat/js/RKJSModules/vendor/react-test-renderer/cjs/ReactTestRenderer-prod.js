@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c59ed5cae3404a53f31f2928d4976364>>
+ * @generated SignedSource<<493cdb9fbf258eb499287015c0434886>>
  */
 
 "use strict";
@@ -7733,7 +7733,7 @@ function performSyncWorkOnRoot(root, lanes) {
   ensureRootIsScheduled(root);
   return null;
 }
-function flushSync(fn) {
+function flushSyncFromReconciler(fn) {
   null !== rootWithPendingPassiveEffects &&
     0 === rootWithPendingPassiveEffects.tag &&
     0 === (executionContext & 6) &&
@@ -9148,19 +9148,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_996 = {
+var devToolsConfig$jscomp$inline_1000 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-a6279bb7",
+  version: "19.0.0-canary-0c75b31c",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1216 = {
-  bundleType: devToolsConfig$jscomp$inline_996.bundleType,
-  version: devToolsConfig$jscomp$inline_996.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_996.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_996.rendererConfig,
+var internals$jscomp$inline_1222 = {
+  bundleType: devToolsConfig$jscomp$inline_1000.bundleType,
+  version: devToolsConfig$jscomp$inline_1000.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1000.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1000.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9177,26 +9177,26 @@ var internals$jscomp$inline_1216 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_996.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1000.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-a6279bb7"
+  reconcilerVersion: "19.0.0-canary-0c75b31c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1217 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1223 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1217.isDisabled &&
-    hook$jscomp$inline_1217.supportsFiber
+    !hook$jscomp$inline_1223.isDisabled &&
+    hook$jscomp$inline_1223.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1217.inject(
-        internals$jscomp$inline_1216
+      (rendererID = hook$jscomp$inline_1223.inject(
+        internals$jscomp$inline_1222
       )),
-        (injectedHook = hook$jscomp$inline_1217);
+        (injectedHook = hook$jscomp$inline_1223);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9296,7 +9296,7 @@ exports.create = function (element, options) {
       }
       return JSCompiler_inline_result;
     },
-    unstable_flushSync: flushSync
+    unstable_flushSync: flushSyncFromReconciler
   };
   Object.defineProperty(element, "root", {
     configurable: !0,

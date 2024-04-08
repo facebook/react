@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2b9f722cc9a17fc6421814a84806b35d>>
+ * @generated SignedSource<<f828e1c945b64be995fff8311e25162e>>
  */
 
 "use strict";
@@ -2662,6 +2662,9 @@ to return true:wantsResponderID|                            |
     ResponderEventPlugin.injection.injectGlobalResponderHandler(
       ReactNativeGlobalResponderHandler
     );
+
+    var LegacyRoot = 0;
+    var ConcurrentRoot = 1;
 
     /**
      * `ReactInstanceMap` maintains a mapping from a public facing stateful
@@ -6306,9 +6309,6 @@ to return true:wantsResponderID|                            |
         );
       }
     }
-
-    var LegacyRoot = 0;
-    var ConcurrentRoot = 1;
 
     // We use the existence of the state object as an indicator that the component
     // is hidden.
@@ -26307,11 +26307,11 @@ to return true:wantsResponderID|                            |
     }
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-      ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
-      ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
+    var ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
       /*             */
       0;
@@ -26462,13 +26462,11 @@ to return true:wantsResponderID|                            |
 
       if (transition !== null) {
         {
-          var batchConfigTransition = ReactCurrentBatchConfig.transition;
-
-          if (!batchConfigTransition._updatedFibers) {
-            batchConfigTransition._updatedFibers = new Set();
+          if (!transition._updatedFibers) {
+            transition._updatedFibers = new Set();
           }
 
-          batchConfigTransition._updatedFibers.add(fiber);
+          transition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -27199,51 +27197,15 @@ to return true:wantsResponderID|                            |
         }
       }
     }
-    // Warning, this opts-out of checking the function body.
-    // eslint-disable-next-line no-unused-vars
-    // eslint-disable-next-line no-redeclare
-    // eslint-disable-next-line no-redeclare
+    // Returns whether the the call was during a render or not
 
-    function flushSync(fn) {
-      // In legacy mode, we flush pending passive effects at the beginning of the
-      // next event, not at the end of the previous one.
-      if (
-        rootWithPendingPassiveEffects !== null &&
-        !disableLegacyMode &&
-        rootWithPendingPassiveEffects.tag === LegacyRoot &&
-        (executionContext & (RenderContext | CommitContext)) === NoContext
-      ) {
-        flushPassiveEffects();
+    function flushSyncWork() {
+      if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+        flushSyncWorkOnAllRoots();
+        return false;
       }
 
-      var prevExecutionContext = executionContext;
-      executionContext |= BatchedContext;
-      var prevTransition = ReactCurrentBatchConfig.transition;
-      var previousPriority = getCurrentUpdatePriority();
-
-      try {
-        setCurrentUpdatePriority(DiscreteEventPriority);
-        ReactCurrentBatchConfig.transition = null;
-
-        if (fn) {
-          return fn();
-        } else {
-          return undefined;
-        }
-      } finally {
-        setCurrentUpdatePriority(previousPriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
-        executionContext = prevExecutionContext; // Flush the immediate callbacks that were scheduled during this batch.
-        // Note that this will happen even if batchedUpdates is higher up
-        // the stack.
-
-        if (
-          (executionContext & (RenderContext | CommitContext)) ===
-          NoContext
-        ) {
-          flushSyncWorkOnAllRoots();
-        }
-      }
+      return true;
     }
     // hidden subtree. The stack logic is managed there because that's the only
     // place that ever modifies it. Which module it lives in doesn't matter for
@@ -29760,13 +29722,12 @@ to return true:wantsResponderID|                            |
         var staleFamilies = update.staleFamilies,
           updatedFamilies = update.updatedFamilies;
         flushPassiveEffects();
-        flushSync(function () {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies
-          );
-        });
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies
+        );
+        flushSyncWork();
       }
     };
     var scheduleRoot = function (root, element) {
@@ -29778,10 +29739,8 @@ to return true:wantsResponderID|                            |
           return;
         }
 
-        flushPassiveEffects();
-        flushSync(function () {
-          updateContainer(element, root, null, null);
-        });
+        updateContainerSync(element, root, null, null);
+        flushSyncWork();
       }
     };
 
@@ -30749,7 +30708,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-4792ea1b";
+    var ReactVersion = "19.0.0-canary-f244dd57";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -30979,12 +30938,51 @@ to return true:wantsResponderID|                            |
       );
     }
     function updateContainer(element, container, parentComponent, callback) {
+      var current = container.current;
+      var lane = requestUpdateLane(current);
+      updateContainerImpl(
+        current,
+        lane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return lane;
+    }
+    function updateContainerSync(
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
+      if (container.tag === LegacyRoot) {
+        flushPassiveEffects();
+      }
+
+      var current = container.current;
+      updateContainerImpl(
+        current,
+        SyncLane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return SyncLane;
+    }
+
+    function updateContainerImpl(
+      rootFiber,
+      lane,
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
       {
         onScheduleRoot(container, element);
       }
-
-      var current$1 = container.current;
-      var lane = requestUpdateLane(current$1);
 
       {
         markRenderScheduled(lane);
@@ -31034,14 +31032,12 @@ to return true:wantsResponderID|                            |
         update.callback = callback;
       }
 
-      var root = enqueueUpdate(current$1, update, lane);
+      var root = enqueueUpdate(rootFiber, update, lane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, current$1, lane);
-        entangleTransitions(root, current$1, lane);
+        scheduleUpdateOnFiber(root, rootFiber, lane);
+        entangleTransitions(root, rootFiber, lane);
       }
-
-      return lane;
     }
     function getPublicRootInstance(container) {
       var containerFiber = container.current;
