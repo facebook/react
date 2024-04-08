@@ -678,7 +678,7 @@ function updateOffscreenComponent(
         // pending work. We can't read `childLanes` from the current Offscreen
         // fiber because we reset it when it was deferred; however, we can read
         // the pending lanes from the child fibers.
-        let currentChildLanes = NoLanes;
+        let currentChildLanes: Lanes = NoLanes;
         while (currentChild !== null) {
           currentChildLanes = mergeLanes(
             mergeLanes(currentChildLanes, currentChild.lanes),

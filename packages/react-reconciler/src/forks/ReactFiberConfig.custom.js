@@ -65,7 +65,9 @@ export const afterActiveInstanceBlur = $$$config.afterActiveInstanceBlur;
 export const preparePortalMount = $$$config.preparePortalMount;
 export const prepareScopeUpdate = $$$config.prepareScopeUpdate;
 export const getInstanceFromScope = $$$config.getInstanceFromScope;
-export const getCurrentEventPriority = $$$config.getCurrentEventPriority;
+export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
+export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
+export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
 export const shouldAttemptEagerTransition =
   $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;

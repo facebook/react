@@ -21,12 +21,14 @@ import type {
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
   ConcurrentRoot,
@@ -512,7 +514,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetAfterCommit(): void {},
 
-    getCurrentEventPriority() {
+    setCurrentUpdatePriority,
+    getCurrentUpdatePriority,
+
+    resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
       return currentEventPriority;
     },
 
@@ -785,6 +793,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const rootContainers = new Map();
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
+
+  let currentUpdatePriority = NoEventPriority;
+  function setCurrentUpdatePriority(newPriority: EventPriority): void {
+    currentUpdatePriority = newPriority;
+  }
+
+  function getCurrentUpdatePriority(): EventPriority {
+    return currentUpdatePriority;
+  }
 
   let currentEventPriority = DefaultEventPriority;
 
@@ -1223,7 +1240,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_flushExpired();
     },
 
-    unstable_runWithPriority: NoopRenderer.runWithPriority,
+    unstable_runWithPriority: function runWithPriority<T>(
+      priority: EventPriority,
+      fn: () => T,
+    ): T {
+      const previousPriority = getCurrentUpdatePriority();
+      try {
+        setCurrentUpdatePriority(priority);
+        return fn();
+      } finally {
+        setCurrentUpdatePriority(previousPriority);
+      }
+    },
 
     batchedUpdates: NoopRenderer.batchedUpdates,
 

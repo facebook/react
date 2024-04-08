@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -29,11 +28,15 @@ import type {
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
+export {
+  setCurrentUpdatePriority,
+  getCurrentUpdatePriority,
+  resolveUpdatePriority,
+} from './ReactDOMUpdatePriority';
 import {
   precacheFiberNode,
   updateFiberProps,
@@ -69,7 +72,6 @@ import {
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
-  getEventPriority,
 } from '../events/ReactDOMEventListener';
 import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import {
@@ -570,14 +572,6 @@ export function createTextInstance(
   ).createTextNode(text);
   precacheFiberNode(internalInstanceHandle, textNode);
   return textNode;
-}
-
-export function getCurrentEventPriority(): EventPriority {
-  const currentEvent = window.event;
-  if (currentEvent === undefined) {
-    return DefaultEventPriority;
-  }
-  return getEventPriority(currentEvent.type);
 }
 
 let currentPopstateTransitionEvent: Event | null = null;

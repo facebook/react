@@ -742,7 +742,7 @@ function bubbleProperties(completedWork: Fiber) {
     completedWork.alternate !== null &&
     completedWork.alternate.child === completedWork.child;
 
-  let newChildLanes = NoLanes;
+  let newChildLanes: Lanes = NoLanes;
   let subtreeFlags = NoFlags;
 
   if (!didBailout) {
