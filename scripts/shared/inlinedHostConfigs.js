@@ -15,6 +15,7 @@ module.exports = [
       'react-dom/unstable_testing',
       'react-dom/src/server/react-dom-server.node.js',
       'react-dom/static.node',
+      'react-dom/test-utils',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
       'react-server-dom-webpack/server.node.unbundled',
@@ -29,6 +30,7 @@ module.exports = [
       'react-dom/server.node',
       'react-dom/static',
       'react-dom/static.node',
+      'react-dom/test-utils',
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
