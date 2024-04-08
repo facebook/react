@@ -81,10 +81,9 @@ if (__DEV__) {
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     // This client file is in the shared folder because it applies to both SSR and browser contexts.
-    var ReactDOMCurrentDispatcher =
-      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
     function dispatchHint(code, model) {
-      var dispatcher = ReactDOMCurrentDispatcher.current;
+      var dispatcher = ReactDOMSharedInternals.d;
+      /* ReactDOMCurrentDispatcher */
 
       switch (code) {
         case "D": {

@@ -14,9 +14,8 @@
 var ReactDOM = require("react-dom");
 require("ReactFeatureFlags");
 var decoderOptions = { stream: !0 },
-  ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      .ReactDOMCurrentDispatcher;
+  ReactDOMSharedInternals =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 function resolveClientReference(moduleMap, metadata) {
   if ("function" === typeof moduleMap.resolveClientReference)
     return moduleMap.resolveClientReference(metadata);
@@ -475,7 +474,7 @@ function startReadingFromStream(response, stream) {
               rowID = rowTag[0];
               rowTag = rowTag.slice(1);
               rowLength = JSON.parse(rowTag, rowLength._fromJSON);
-              rowTag = ReactDOMCurrentDispatcher.current;
+              rowTag = ReactDOMSharedInternals.d;
               switch (rowID) {
                 case "D":
                   rowTag.prefetchDNS(rowLength);

@@ -722,29 +722,26 @@ function lanesToEventPriority(lanes) {
 }
 function noop$3() {}
 var Internals = {
-  usingClientEntryPoint: !1,
   Events: null,
-  ReactDOMCurrentDispatcher: {
-    current: {
-      flushSyncWork: noop$3,
-      prefetchDNS: noop$3,
-      preconnect: noop$3,
-      preload: noop$3,
-      preloadModule: noop$3,
-      preinitScript: noop$3,
-      preinitStyle: noop$3,
-      preinitModuleScript: noop$3
-    }
+  d: {
+    flushSyncWork: noop$3,
+    prefetchDNS: noop$3,
+    preconnect: noop$3,
+    preload: noop$3,
+    preloadModule: noop$3,
+    preinitScript: noop$3,
+    preinitStyle: noop$3,
+    preinitModuleScript: noop$3
   },
-  findDOMNode: null,
-  up: 0
+  p: 0,
+  findDOMNode: null
 };
 function runWithPriority(priority, fn) {
-  var previousPriority = Internals.up;
+  var previousPriority = Internals.p;
   try {
-    return (Internals.up = priority), fn();
+    return (Internals.p = priority), fn();
   } finally {
-    Internals.up = previousPriority;
+    Internals.p = previousPriority;
   }
 }
 var tagToRoleMappings = {
@@ -4184,8 +4181,8 @@ function startTransition(
   callback,
   options
 ) {
-  var previousPriority = Internals.up;
-  Internals.up =
+  var previousPriority = Internals.p;
+  Internals.p =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$3.transition,
     currentTransition = { _callbacks: new Set() };
@@ -4217,7 +4214,7 @@ function startTransition(
       reason: error
     });
   } finally {
-    (Internals.up = previousPriority),
+    (Internals.p = previousPriority),
       (ReactCurrentBatchConfig$3.transition = prevTransition);
   }
 }
@@ -11077,7 +11074,7 @@ function requestUpdateLane(fiber) {
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
     );
-  fiber = Internals.up;
+  fiber = Internals.p;
   0 === fiber &&
     ((fiber = window.event),
     (fiber = void 0 === fiber ? 32 : getEventPriority(fiber.type)));
@@ -11882,9 +11879,9 @@ function commitRoot(
   spawnedLane
 ) {
   var prevTransition = ReactCurrentBatchConfig$1.transition,
-    previousUpdateLanePriority = Internals.up;
+    previousUpdateLanePriority = Internals.p;
   try {
-    (Internals.up = 2),
+    (Internals.p = 2),
       (ReactCurrentBatchConfig$1.transition = null),
       commitRootImpl(
         root,
@@ -11896,7 +11893,7 @@ function commitRoot(
       );
   } finally {
     (ReactCurrentBatchConfig$1.transition = prevTransition),
-      (Internals.up = previousUpdateLanePriority);
+      (Internals.p = previousUpdateLanePriority);
   }
   return null;
 }
@@ -11941,8 +11938,8 @@ function commitRootImpl(
   if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
     transitions = ReactCurrentBatchConfig$1.transition;
     ReactCurrentBatchConfig$1.transition = null;
-    spawnedLane = Internals.up;
-    Internals.up = 2;
+    spawnedLane = Internals.p;
+    Internals.p = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     ReactCurrentOwner.current = null;
@@ -11962,7 +11959,7 @@ function commitRootImpl(
     commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
     requestPaint();
     executionContext = prevExecutionContext;
-    Internals.up = spawnedLane;
+    Internals.p = spawnedLane;
     ReactCurrentBatchConfig$1.transition = transitions;
   } else root.current = finishedWork;
   rootDoesHavePassiveEffects
@@ -12028,15 +12025,15 @@ function flushPassiveEffects() {
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
       prevTransition = ReactCurrentBatchConfig$1.transition,
-      previousPriority = Internals.up;
+      previousPriority = Internals.p;
     try {
       return (
-        (Internals.up = 32 > renderPriority ? 32 : renderPriority),
+        (Internals.p = 32 > renderPriority ? 32 : renderPriority),
         (ReactCurrentBatchConfig$1.transition = null),
         flushPassiveEffectsImpl()
       );
     } finally {
-      (Internals.up = previousPriority),
+      (Internals.p = previousPriority),
         (ReactCurrentBatchConfig$1.transition = prevTransition),
         releaseRootPooledCache(root$197, remainingLanes);
     }
@@ -12785,8 +12782,52 @@ function attemptContinuousHydration(fiber) {
     markRetryLaneIfNotHydrated(fiber, 67108864);
   }
 }
+function findHostInstanceByFiber(fiber) {
+  fiber = findCurrentHostFiber(fiber);
+  return null === fiber ? null : fiber.stateNode;
+}
 function emptyFindFiberByHostInstance() {
   return null;
+}
+function injectIntoDevTools(devToolsConfig) {
+  devToolsConfig = {
+    bundleType: devToolsConfig.bundleType,
+    version: devToolsConfig.version,
+    rendererPackageName: devToolsConfig.rendererPackageName,
+    rendererConfig: devToolsConfig.rendererConfig,
+    overrideHookState: null,
+    overrideHookStateDeletePath: null,
+    overrideHookStateRenamePath: null,
+    overrideProps: null,
+    overridePropsDeletePath: null,
+    overridePropsRenamePath: null,
+    setErrorHandler: null,
+    setSuspenseHandler: null,
+    scheduleUpdate: null,
+    currentDispatcherRef: ReactSharedInternals.ReactCurrentDispatcher,
+    findHostInstanceByFiber: findHostInstanceByFiber,
+    findFiberByHostInstance:
+      devToolsConfig.findFiberByHostInstance || emptyFindFiberByHostInstance,
+    findHostInstancesForRefresh: null,
+    scheduleRefresh: null,
+    scheduleRoot: null,
+    setRefreshHandler: null,
+    getCurrentFiber: null,
+    reconcilerVersion: "19.0.0-www-classic-38b8cfc1"
+  };
+  if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
+    devToolsConfig = !1;
+  else {
+    var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (hook.isDisabled || !hook.supportsFiber) devToolsConfig = !0;
+    else {
+      try {
+        (rendererID = hook.inject(devToolsConfig)), (injectedHook = hook);
+      } catch (err) {}
+      devToolsConfig = hook.checkDCE ? !0 : !1;
+    }
+  }
+  return devToolsConfig;
 }
 var isInsideEventHandler = !1;
 function batchedUpdates(fn, a, b) {
@@ -15481,8 +15522,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         (null == propKey$229 && null == propKey) ||
         setProp(domElement, tag, lastProp, propKey$229, nextProps, propKey);
 }
-var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher,
-  eventsEnabled = null,
+var eventsEnabled = null,
   selectionInformation = null;
 function getOwnerDocumentFromRootContainer(rootContainerElement) {
   return 9 === rootContainerElement.nodeType
@@ -15837,8 +15877,8 @@ function getHoistableRoot(container) {
     ? container.getRootNode()
     : container.ownerDocument;
 }
-var previousDispatcher = ReactDOMCurrentDispatcher$1.current;
-ReactDOMCurrentDispatcher$1.current = {
+var previousDispatcher = Internals.d;
+Internals.d = {
   flushSyncWork: previousDispatcher.flushSyncWork,
   prefetchDNS: prefetchDNS$1,
   preconnect: preconnect$1,
@@ -16981,12 +17021,12 @@ function dispatchDiscreteEvent(
 ) {
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
-  var previousPriority = Internals.up;
+  var previousPriority = Internals.p;
   try {
-    (Internals.up = 2),
+    (Internals.p = 2),
       dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
-    (Internals.up = previousPriority),
+    (Internals.p = previousPriority),
       (ReactCurrentBatchConfig.transition = prevTransition);
   }
 }
@@ -16998,12 +17038,12 @@ function dispatchContinuousEvent(
 ) {
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
-  var previousPriority = Internals.up;
+  var previousPriority = Internals.p;
   try {
-    (Internals.up = 8),
+    (Internals.p = 8),
       dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
-    (Internals.up = previousPriority),
+    (Internals.p = previousPriority),
       (ReactCurrentBatchConfig.transition = prevTransition);
   }
 }
@@ -17237,7 +17277,7 @@ function ReactDOMHydrationRoot(internalRoot) {
 }
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
   if (target) {
-    var updatePriority = Internals.up;
+    var updatePriority = Internals.p;
     target = { blockedOn: null, target: target, priority: updatePriority };
     for (
       var i = 0;
@@ -17296,7 +17336,6 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
 Internals.findDOMNode = function (componentOrElement) {
   return findHostInstance(componentOrElement);
 };
@@ -17310,54 +17349,12 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1754 = {
+injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-152d3b19",
+  version: "19.0.0-www-classic-38b8cfc1",
   rendererPackageName: "react-dom"
-};
-var internals$jscomp$inline_2168 = {
-  bundleType: devToolsConfig$jscomp$inline_1754.bundleType,
-  version: devToolsConfig$jscomp$inline_1754.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1754.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1754.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
-  currentDispatcherRef: ReactSharedInternals.ReactCurrentDispatcher,
-  findHostInstanceByFiber: function (fiber) {
-    fiber = findCurrentHostFiber(fiber);
-    return null === fiber ? null : fiber.stateNode;
-  },
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1754.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-152d3b19"
-};
-if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2169 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
-  if (
-    !hook$jscomp$inline_2169.isDisabled &&
-    hook$jscomp$inline_2169.supportsFiber
-  )
-    try {
-      (rendererID = hook$jscomp$inline_2169.inject(
-        internals$jscomp$inline_2168
-      )),
-        (injectedHook = hook$jscomp$inline_2169);
-    } catch (err) {}
-}
+});
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
   throw Error(formatProdErrorMessage(320));
@@ -17484,6 +17481,12 @@ assign(Internals, {
       return _enabled;
     }
   }
+});
+injectIntoDevTools({
+  findFiberByHostInstance: getClosestInstanceFromNode,
+  bundleType: 0,
+  version: "19.0.0-www-classic-38b8cfc1",
+  rendererPackageName: "react-dom"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createComponentSelector = function (component) {
@@ -17633,14 +17636,14 @@ exports.flushSync = function (fn) {
     var prevExecutionContext = executionContext;
     executionContext |= 1;
     var prevTransition = ReactCurrentBatchConfig$1.transition,
-      previousPriority = Internals.up;
+      previousPriority = Internals.p;
     try {
-      Internals.up = 2;
+      Internals.p = 2;
       ReactCurrentBatchConfig$1.transition = null;
       var JSCompiler_inline_result = fn ? fn() : void 0;
       break a;
     } finally {
-      (Internals.up = previousPriority),
+      (Internals.p = previousPriority),
         (ReactCurrentBatchConfig$1.transition = prevTransition),
         (executionContext = prevExecutionContext),
         0 === (executionContext & 6) && flushSyncWorkAcrossRoots_impl(!1);
@@ -17774,11 +17777,10 @@ exports.preconnect = function (href, options) {
               : ""
             : void 0))
       : (options = null),
-    ReactDOMCurrentDispatcher.current.preconnect(href, options));
+    Internals.d.preconnect(href, options));
 };
 exports.prefetchDNS = function (href) {
-  "string" === typeof href &&
-    ReactDOMCurrentDispatcher.current.prefetchDNS(href);
+  "string" === typeof href && Internals.d.prefetchDNS(href);
 };
 exports.preinit = function (href, options) {
   if ("string" === typeof href && options && "string" === typeof options.as) {
@@ -17791,7 +17793,7 @@ exports.preinit = function (href, options) {
           ? options.fetchPriority
           : void 0;
     "style" === as
-      ? ReactDOMCurrentDispatcher.current.preinitStyle(
+      ? Internals.d.preinitStyle(
           href,
           "string" === typeof options.precedence ? options.precedence : void 0,
           {
@@ -17801,7 +17803,7 @@ exports.preinit = function (href, options) {
           }
         )
       : "script" === as &&
-        ReactDOMCurrentDispatcher.current.preinitScript(href, {
+        Internals.d.preinitScript(href, {
           crossOrigin: crossOrigin,
           integrity: integrity,
           fetchPriority: fetchPriority,
@@ -17817,16 +17819,14 @@ exports.preinitModule = function (href, options) {
           options.as,
           options.crossOrigin
         );
-        ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
+        Internals.d.preinitModuleScript(href, {
           crossOrigin: crossOrigin,
           integrity:
             "string" === typeof options.integrity ? options.integrity : void 0,
           nonce: "string" === typeof options.nonce ? options.nonce : void 0
         });
       }
-    } else
-      null == options &&
-        ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
+    } else null == options && Internals.d.preinitModuleScript(href);
 };
 exports.preload = function (href, options) {
   if (
@@ -17837,7 +17837,7 @@ exports.preload = function (href, options) {
   ) {
     var as = options.as,
       crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    ReactDOMCurrentDispatcher.current.preload(href, as, {
+    Internals.d.preload(href, as, {
       crossOrigin: crossOrigin,
       integrity:
         "string" === typeof options.integrity ? options.integrity : void 0,
@@ -17863,7 +17863,7 @@ exports.preloadModule = function (href, options) {
   if ("string" === typeof href)
     if (options) {
       var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-      ReactDOMCurrentDispatcher.current.preloadModule(href, {
+      Internals.d.preloadModule(href, {
         as:
           "string" === typeof options.as && "script" !== options.as
             ? options.as
@@ -17872,7 +17872,7 @@ exports.preloadModule = function (href, options) {
         integrity:
           "string" === typeof options.integrity ? options.integrity : void 0
       });
-    } else ReactDOMCurrentDispatcher.current.preloadModule(href);
+    } else Internals.d.preloadModule(href);
 };
 exports.render = function (element, container, callback) {
   if (!isValidContainerLegacy(container))
@@ -17955,4 +17955,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-152d3b19";
+exports.version = "19.0.0-www-classic-38b8cfc1";

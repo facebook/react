@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-f5f3f757";
+    var ReactVersion = "19.0.0-www-modern-f0bfd9eb";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2366,19 +2366,21 @@ if (__DEV__) {
     var ReactDOMSharedInternals =
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactDOMCurrentDispatcher =
-      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
-    var previousDispatcher = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = {
-      flushSyncWork: previousDispatcher.flushSyncWork,
-      prefetchDNS: prefetchDNS,
-      preconnect: preconnect,
-      preload: preload,
-      preloadModule: preloadModule,
-      preinitScript: preinitScript,
-      preinitStyle: preinitStyle,
-      preinitModuleScript: preinitModuleScript
-    }; // We make every property of the descriptor optional because it is not a contract that
+    var previousDispatcher = ReactDOMSharedInternals.d;
+    /* ReactDOMCurrentDispatcher */
+
+    ReactDOMSharedInternals.d =
+      /* ReactDOMCurrentDispatcher */
+      {
+        flushSyncWork: previousDispatcher.flushSyncWork,
+        prefetchDNS: prefetchDNS,
+        preconnect: preconnect,
+        preload: preload,
+        preloadModule: preloadModule,
+        preinitScript: preinitScript,
+        preinitStyle: preinitStyle,
+        preinitModuleScript: preinitModuleScript
+      }; // We make every property of the descriptor optional because it is not a contract that
     var ScriptStreamingFormat = 0;
     var DataStreamingFormat = 1;
     var NothingSent =

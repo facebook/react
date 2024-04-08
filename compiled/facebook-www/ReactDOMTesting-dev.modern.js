@@ -1909,28 +1909,27 @@ if (__DEV__) {
       return IdleEventPriority;
     }
 
-    function noop$3() {}
+    function noop$4() {}
 
-    var DefaultDispatcher = {
-      flushSyncWork: noop$3,
-      prefetchDNS: noop$3,
-      preconnect: noop$3,
-      preload: noop$3,
-      preloadModule: noop$3,
-      preinitScript: noop$3,
-      preinitStyle: noop$3,
-      preinitModuleScript: noop$3
+    var DefaultDispatcher$1 = {
+      flushSyncWork: noop$4,
+      prefetchDNS: noop$4,
+      preconnect: noop$4,
+      preload: noop$4,
+      preloadModule: noop$4,
+      preinitScript: noop$4,
+      preinitStyle: noop$4,
+      preinitModuleScript: noop$4
     };
-    var Internals = {
-      usingClientEntryPoint: false,
+    var Internals$1 = {
       Events: null,
-      ReactDOMCurrentDispatcher: {
-        current: DefaultDispatcher
-      },
-      findDOMNode: null,
-      up:
+      d:
+        /* ReactDOMCurrentDispatcher */
+        DefaultDispatcher$1,
+      p:
         /* currentUpdatePriority */
-        NoEventPriority
+        NoEventPriority,
+      findDOMNode: null
     };
 
     /**
@@ -2979,13 +2978,17 @@ if (__DEV__) {
       // is much longer. I hope this is consistent enough to rely on across builds
       IntentionallyUnusedArgument
     ) {
-      Internals.up = newPriority;
+      Internals$1.p =
+        /* currentUpdatePriority */
+        newPriority;
     }
     function getCurrentUpdatePriority() {
-      return Internals.up;
+      return Internals$1.p;
+      /* currentUpdatePriority */
     }
     function resolveUpdatePriority() {
-      var updatePriority = Internals.up;
+      var updatePriority = Internals$1.p;
+      /* currentUpdatePriority */
 
       if (updatePriority !== NoEventPriority) {
         return updatePriority;
@@ -11880,7 +11883,7 @@ if (__DEV__) {
       return false;
     }
 
-    function noop$2() {}
+    function noop$3() {}
 
     function trapClickOnNonInteractiveElement(node) {
       // Mobile Safari does not fire properly bubble click events on
@@ -11892,7 +11895,7 @@ if (__DEV__) {
       // bookkeeping for it. Not sure if we need to clear it when the listener is
       // removed.
       // TODO: Only do this for the relevant Safaris maybe?
-      node.onclick = noop$2;
+      node.onclick = noop$3;
     }
     var xlinkNamespace = "http://www.w3.org/1999/xlink";
     var xmlNamespace = "http://www.w3.org/XML/1998/namespace";
@@ -18163,7 +18166,7 @@ if (__DEV__) {
       return status === "fulfilled" || status === "rejected";
     }
 
-    function noop$1() {}
+    function noop$2() {}
 
     function trackUsedThenable(thenableState, thenable, index) {
       if (ReactCurrentActQueue$4.current !== null) {
@@ -18209,7 +18212,7 @@ if (__DEV__) {
           } // Avoid an unhandled rejection errors for the Promises that we'll
           // intentionally ignore.
 
-          thenable.then(noop$1, noop$1);
+          thenable.then(noop$2, noop$2);
           thenable = previous;
         }
       } // We use an expando to track the status and result of a thenable so that we
@@ -18238,7 +18241,7 @@ if (__DEV__) {
             // some custom userspace implementation. We treat it as "pending".
             // Attach a dummy listener, to ensure that any lazy initialization can
             // happen. Flight lazily parses JSON when the value is actually awaited.
-            thenable.then(noop$1, noop$1);
+            thenable.then(noop$2, noop$2);
           } else {
             // This is an uncached thenable that we haven't seen before.
             // Detect infinite ping loops caused by uncached promises.
@@ -43111,8 +43114,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactDOMCurrentDispatcher$2 = Internals.ReactDOMCurrentDispatcher; // Unused
-
     var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
     var SUSPENSE_START_DATA = "$";
     var SUSPENSE_END_DATA = "/$";
@@ -44663,17 +44664,21 @@ if (__DEV__) {
       return root.ownerDocument || root;
     }
 
-    var previousDispatcher = ReactDOMCurrentDispatcher$2.current;
-    ReactDOMCurrentDispatcher$2.current = {
-      flushSyncWork: flushSyncWork,
-      prefetchDNS: prefetchDNS$1,
-      preconnect: preconnect$1,
-      preload: preload$1,
-      preloadModule: preloadModule$1,
-      preinitStyle: preinitStyle,
-      preinitScript: preinitScript,
-      preinitModuleScript: preinitModuleScript
-    };
+    var previousDispatcher = Internals$1.d;
+    /* ReactDOMCurrentDispatcher */
+
+    Internals$1.d =
+      /* ReactDOMCurrentDispatcher */
+      {
+        flushSyncWork: flushSyncWork,
+        prefetchDNS: prefetchDNS$1,
+        preconnect: preconnect$1,
+        preload: preload$1,
+        preloadModule: preloadModule$1,
+        preinitStyle: preinitStyle,
+        preinitScript: preinitScript,
+        preinitModuleScript: preinitModuleScript
+      };
 
     function flushSyncWork() {
       {
@@ -45931,13 +45936,13 @@ if (__DEV__) {
     // provide the actual unsuspend function and that will get completed when the count
     // hits zero or it will get cancelled if the root starts new work.
 
-    function noop() {}
+    function noop$1() {}
 
     function startSuspendingCommit() {
       suspendedState = {
         stylesheets: null,
         count: 0,
-        unsuspend: noop
+        unsuspend: noop$1
       };
     }
     function suspendResource(hoistableRoot, resource, props) {
@@ -46344,7 +46349,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-38282ccc";
+    var ReactVersion = "19.0.0-www-modern-a48d0d31";
 
     function createPortal$1(
       children,
@@ -48281,16 +48286,15 @@ if (__DEV__) {
     }
 
     var ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
-    var ReactDOMCurrentDispatcher$1 = Internals.ReactDOMCurrentDispatcher;
 
     function flushSyncImpl(fn) {
       var previousTransition = ReactCurrentBatchConfig.transition;
-      var previousUpdatePriority = Internals.up;
+      var previousUpdatePriority = Internals$1.p;
       /* ReactDOMCurrentUpdatePriority */
 
       try {
         ReactCurrentBatchConfig.transition = null;
-        Internals.up =
+        Internals$1.p =
           /* ReactDOMCurrentUpdatePriority */
           DiscreteEventPriority;
 
@@ -48301,10 +48305,12 @@ if (__DEV__) {
         }
       } finally {
         ReactCurrentBatchConfig.transition = previousTransition;
-        Internals.up =
+        Internals$1.p =
           /* ReactDOMCurrentUpdatePriority */
           previousUpdatePriority;
-        var wasInRender = ReactDOMCurrentDispatcher$1.current.flushSyncWork();
+        var wasInRender = Internals$1.d
+          /* ReactDOMCurrentDispatcher */
+          .flushSyncWork();
 
         {
           if (wasInRender) {
@@ -48339,7 +48345,6 @@ if (__DEV__) {
       return undefined;
     }
 
-    var ReactDOMCurrentDispatcher = Internals.ReactDOMCurrentDispatcher;
     function prefetchDNS(href) {
       {
         if (typeof href !== "string" || !href) {
@@ -48368,7 +48373,9 @@ if (__DEV__) {
       }
 
       if (typeof href === "string") {
-        ReactDOMCurrentDispatcher.current.prefetchDNS(href);
+        Internals$1.d
+          /* ReactDOMCurrentDispatcher */
+          .prefetchDNS(href);
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -48397,7 +48404,9 @@ if (__DEV__) {
         var crossOrigin = options
           ? getCrossOriginString(options.crossOrigin)
           : null;
-        ReactDOMCurrentDispatcher.current.preconnect(href, crossOrigin);
+        Internals$1.d
+          /* ReactDOMCurrentDispatcher */
+          .preconnect(href, crossOrigin);
       } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -48441,32 +48450,35 @@ if (__DEV__) {
       ) {
         var as = options.as;
         var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-        ReactDOMCurrentDispatcher.current.preload(href, as, {
-          crossOrigin: crossOrigin,
-          integrity:
-            typeof options.integrity === "string"
-              ? options.integrity
-              : undefined,
-          nonce: typeof options.nonce === "string" ? options.nonce : undefined,
-          type: typeof options.type === "string" ? options.type : undefined,
-          fetchPriority:
-            typeof options.fetchPriority === "string"
-              ? options.fetchPriority
-              : undefined,
-          referrerPolicy:
-            typeof options.referrerPolicy === "string"
-              ? options.referrerPolicy
-              : undefined,
-          imageSrcSet:
-            typeof options.imageSrcSet === "string"
-              ? options.imageSrcSet
-              : undefined,
-          imageSizes:
-            typeof options.imageSizes === "string"
-              ? options.imageSizes
-              : undefined,
-          media: typeof options.media === "string" ? options.media : undefined
-        });
+        Internals$1.d
+          /* ReactDOMCurrentDispatcher */
+          .preload(href, as, {
+            crossOrigin: crossOrigin,
+            integrity:
+              typeof options.integrity === "string"
+                ? options.integrity
+                : undefined,
+            nonce:
+              typeof options.nonce === "string" ? options.nonce : undefined,
+            type: typeof options.type === "string" ? options.type : undefined,
+            fetchPriority:
+              typeof options.fetchPriority === "string"
+                ? options.fetchPriority
+                : undefined,
+            referrerPolicy:
+              typeof options.referrerPolicy === "string"
+                ? options.referrerPolicy
+                : undefined,
+            imageSrcSet:
+              typeof options.imageSrcSet === "string"
+                ? options.imageSrcSet
+                : undefined,
+            imageSizes:
+              typeof options.imageSizes === "string"
+                ? options.imageSizes
+                : undefined,
+            media: typeof options.media === "string" ? options.media : undefined
+          });
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
       // so we favor silent bailout over warning or erroring.
@@ -48512,19 +48524,23 @@ if (__DEV__) {
             options.as,
             options.crossOrigin
           );
-          ReactDOMCurrentDispatcher.current.preloadModule(href, {
-            as:
-              typeof options.as === "string" && options.as !== "script"
-                ? options.as
-                : undefined,
-            crossOrigin: crossOrigin,
-            integrity:
-              typeof options.integrity === "string"
-                ? options.integrity
-                : undefined
-          });
+          Internals$1.d
+            /* ReactDOMCurrentDispatcher */
+            .preloadModule(href, {
+              as:
+                typeof options.as === "string" && options.as !== "script"
+                  ? options.as
+                  : undefined,
+              crossOrigin: crossOrigin,
+              integrity:
+                typeof options.integrity === "string"
+                  ? options.integrity
+                  : undefined
+            });
         } else {
-          ReactDOMCurrentDispatcher.current.preloadModule(href);
+          Internals$1.d
+            /* ReactDOMCurrentDispatcher */
+            .preloadModule(href);
         }
       } // We don't error because preload needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -48565,24 +48581,29 @@ if (__DEV__) {
             : undefined;
 
         if (as === "style") {
-          ReactDOMCurrentDispatcher.current.preinitStyle(
-            href,
-            typeof options.precedence === "string"
-              ? options.precedence
-              : undefined,
-            {
+          Internals$1.d
+            /* ReactDOMCurrentDispatcher */
+            .preinitStyle(
+              href,
+              typeof options.precedence === "string"
+                ? options.precedence
+                : undefined,
+              {
+                crossOrigin: crossOrigin,
+                integrity: integrity,
+                fetchPriority: fetchPriority
+              }
+            );
+        } else if (as === "script") {
+          Internals$1.d
+            /* ReactDOMCurrentDispatcher */
+            .preinitScript(href, {
               crossOrigin: crossOrigin,
               integrity: integrity,
-              fetchPriority: fetchPriority
-            }
-          );
-        } else if (as === "script") {
-          ReactDOMCurrentDispatcher.current.preinitScript(href, {
-            crossOrigin: crossOrigin,
-            integrity: integrity,
-            fetchPriority: fetchPriority,
-            nonce: typeof options.nonce === "string" ? options.nonce : undefined
-          });
+              fetchPriority: fetchPriority,
+              nonce:
+                typeof options.nonce === "string" ? options.nonce : undefined
+            });
         }
       } // We don't error because preinit needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -48649,18 +48670,22 @@ if (__DEV__) {
               options.as,
               options.crossOrigin
             );
-            ReactDOMCurrentDispatcher.current.preinitModuleScript(href, {
-              crossOrigin: crossOrigin,
-              integrity:
-                typeof options.integrity === "string"
-                  ? options.integrity
-                  : undefined,
-              nonce:
-                typeof options.nonce === "string" ? options.nonce : undefined
-            });
+            Internals$1.d
+              /* ReactDOMCurrentDispatcher */
+              .preinitModuleScript(href, {
+                crossOrigin: crossOrigin,
+                integrity:
+                  typeof options.integrity === "string"
+                    ? options.integrity
+                    : undefined,
+                nonce:
+                  typeof options.nonce === "string" ? options.nonce : undefined
+              });
           }
         } else if (options == null) {
-          ReactDOMCurrentDispatcher.current.preinitModuleScript(href);
+          Internals$1.d
+            /* ReactDOMCurrentDispatcher */
+            .preinitModuleScript(href);
         }
       } // We don't error because preinit needs to be resilient to being called in a variety of scopes
       // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -48720,6 +48745,114 @@ if (__DEV__) {
       // $FlowFixMe[incompatible-return] The Flow type is opaque but there's no way to actually create it.
 
       return createPortal$1(children, container, null, key);
+    } // Overload the definition to the two valid signatures.
+
+    var flushSync = flushSync$1;
+
+    function findDOMNode$1(componentOrElement) {
+      return findHostInstance(componentOrElement);
+    } // Expose findDOMNode on internals
+
+    Internals$1.findDOMNode = findDOMNode$1;
+
+    function unstable_batchedUpdates(fn, a) {
+      // batchedUpdates was a legacy mode feature that is a no-op outside of
+      // legacy mode. In 19, we made it an actual no-op, but we're keeping it
+      // for now since there may be libraries that still include it.
+      return fn(a);
+    }
+    // This is an array for better minification.
+
+    Internals$1.Events =
+      /* Events */
+      [
+        getInstanceFromNode$1,
+        getNodeFromInstance,
+        getFiberCurrentPropsFromNode,
+        enqueueStateRestore,
+        restoreStateIfNeeded,
+        unstable_batchedUpdates
+      ];
+    var foundDevTools$1 = injectIntoDevTools({
+      findFiberByHostInstance: getClosestInstanceFromNode,
+      bundleType: 1,
+      version: ReactVersion,
+      rendererPackageName: "react-dom"
+    });
+
+    {
+      if (!foundDevTools$1 && canUseDOM && window.top === window.self) {
+        // If we're in Chrome or Firefox, provide a download link if not installed.
+        if (
+          (navigator.userAgent.indexOf("Chrome") > -1 &&
+            navigator.userAgent.indexOf("Edge") === -1) ||
+          navigator.userAgent.indexOf("Firefox") > -1
+        ) {
+          var protocol$1 = window.location.protocol; // Don't warn in exotic cases like chrome-extension://.
+
+          if (/^(https?|file):$/.test(protocol$1)) {
+            // eslint-disable-next-line react-internal/no-production-logging
+            console.info(
+              "%cDownload the React DevTools " +
+                "for a better development experience: " +
+                "https://react.dev/link/react-devtools" +
+                (protocol$1 === "file:"
+                  ? "\nYou might need to use a local HTTP server (instead of file://): " +
+                    "https://react.dev/link/react-devtools-faq"
+                  : ""),
+              "font-weight:bold"
+            );
+          }
+        }
+      }
+    }
+
+    var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
+
+    if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== "function") {
+      throw new Error(
+        "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
+      );
+    }
+
+    function noop() {}
+
+    var DefaultDispatcher = {
+      flushSyncWork: noop,
+      prefetchDNS: noop,
+      preconnect: noop,
+      preload: noop,
+      preloadModule: noop,
+      preinitScript: noop,
+      preinitStyle: noop,
+      preinitModuleScript: noop
+    };
+    var Internals = {
+      d:
+        /* ReactDOMCurrentDispatcher */
+        DefaultDispatcher,
+      p:
+        /* currentUpdatePriority */
+        NoEventPriority,
+      findDOMNode: null,
+      usingClientEntryPoint: false
+    }; // if (true) {
+
+    {
+      if (
+        typeof Map !== "function" || // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
+        Map.prototype == null ||
+        typeof Map.prototype.forEach !== "function" ||
+        typeof Set !== "function" || // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
+        Set.prototype == null ||
+        typeof Set.prototype.clear !== "function" ||
+        typeof Set.prototype.forEach !== "function"
+      ) {
+        error(
+          "React depends on Map and Set built-in types. Make sure that you load a " +
+            "polyfill in older browsers. https://react.dev/link/react-polyfills"
+        );
+      }
     }
 
     function createRoot$1(container, options) {
@@ -48748,30 +48881,11 @@ if (__DEV__) {
       return hydrateRoot$2(container, initialChildren, options);
     } // Overload the definition to the two valid signatures.
 
-    var flushSync = flushSync$1;
-
     function findDOMNode(componentOrElement) {
       return findHostInstance(componentOrElement);
     } // Expose findDOMNode on internals
 
     Internals.findDOMNode = findDOMNode;
-
-    function unstable_batchedUpdates(fn, a) {
-      // batchedUpdates was a legacy mode feature that is a no-op outside of
-      // legacy mode. In 19, we made it an actual no-op, but we're keeping it
-      // for now since there may be libraries that still include it.
-      return fn(a);
-    }
-    // This is an array for better minification.
-
-    Internals.Events = [
-      getInstanceFromNode$1,
-      getNodeFromInstance,
-      getFiberCurrentPropsFromNode,
-      enqueueStateRestore,
-      restoreStateIfNeeded,
-      unstable_batchedUpdates
-    ];
     var foundDevTools = injectIntoDevTools({
       findFiberByHostInstance: getClosestInstanceFromNode,
       bundleType: 1,
@@ -48806,14 +48920,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
-
-    if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== "function") {
-      throw new Error(
-        "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
-      );
-    }
-
     function createRoot(container, options) {
       {
         Internals.usingClientEntryPoint = true;
@@ -48841,7 +48947,7 @@ if (__DEV__) {
       }
     }
 
-    exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
+    exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals$1;
     exports.createComponentSelector = createComponentSelector;
     exports.createHasPseudoClassSelector = createHasPseudoClassSelector;
     exports.createPortal = createPortal;

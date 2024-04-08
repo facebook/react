@@ -26,11 +26,10 @@ function writeChunkAndReturn(destination, chunk) {
   destination.write(chunk);
   return !0;
 }
-var ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      .ReactDOMCurrentDispatcher,
-  previousDispatcher = ReactDOMCurrentDispatcher.current;
-ReactDOMCurrentDispatcher.current = {
+var ReactDOMSharedInternals =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  previousDispatcher = ReactDOMSharedInternals.d;
+ReactDOMSharedInternals.d = {
   flushSyncWork: previousDispatcher.flushSyncWork,
   prefetchDNS: prefetchDNS,
   preconnect: preconnect,

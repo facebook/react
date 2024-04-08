@@ -160,19 +160,21 @@ if (__DEV__) {
     var ReactDOMSharedInternals =
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactDOMCurrentDispatcher =
-      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
-    var previousDispatcher = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = {
-      flushSyncWork: previousDispatcher.flushSyncWork,
-      prefetchDNS: prefetchDNS,
-      preconnect: preconnect,
-      preload: preload,
-      preloadModule: preloadModule,
-      preinitStyle: preinitStyle,
-      preinitScript: preinitScript,
-      preinitModuleScript: preinitModuleScript
-    };
+    var previousDispatcher = ReactDOMSharedInternals.d;
+    /* ReactDOMCurrentDispatcher */
+
+    ReactDOMSharedInternals.d =
+      /* ReactDOMCurrentDispatcher */
+      {
+        flushSyncWork: previousDispatcher.flushSyncWork,
+        prefetchDNS: prefetchDNS,
+        preconnect: preconnect,
+        preload: preload,
+        preloadModule: preloadModule,
+        preinitStyle: preinitStyle,
+        preinitScript: preinitScript,
+        preinitModuleScript: preinitModuleScript
+      };
 
     function prefetchDNS(href) {
       if (typeof href === "string" && href) {
