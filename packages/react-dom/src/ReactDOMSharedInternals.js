@@ -7,7 +7,10 @@
  * @flow
  */
 
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {HostDispatcher} from './shared/ReactDOMTypes';
+
+import {NoEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 type InternalsType = {
   usingClientEntryPoint: boolean,
@@ -20,6 +23,7 @@ type InternalsType = {
     | ((
         componentOrElement: React$Component<any, any>,
       ) => null | Element | Text),
+  up /* currentUpdatePriority */: EventPriority,
 };
 
 function noop() {}
@@ -34,13 +38,14 @@ const DefaultDispatcher: HostDispatcher = {
   preinitModuleScript: noop,
 };
 
-const Internals: InternalsType = ({
+const Internals: InternalsType = {
   usingClientEntryPoint: false,
-  Events: null,
+  Events: (null: any),
   ReactDOMCurrentDispatcher: {
     current: DefaultDispatcher,
   },
   findDOMNode: null,
-}: any);
+  up /* currentUpdatePriority */: NoEventPriority,
+};
 
 export default Internals;

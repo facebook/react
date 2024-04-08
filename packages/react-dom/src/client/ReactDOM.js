@@ -20,6 +20,7 @@ import {
   isValidContainer,
 } from './ReactDOMRoot';
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
+import {runWithPriority} from 'react-dom-bindings/src/client/ReactDOMUpdatePriority';
 
 import {
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
@@ -27,7 +28,6 @@ import {
   injectIntoDevTools,
   findHostInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';

@@ -15,6 +15,7 @@ let act;
 let ReactFiberReconciler;
 let ConcurrentRoot;
 let DefaultEventPriority;
+let NoEventPriority;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
@@ -26,6 +27,8 @@ describe('ReactFiberHostContext', () => {
       require('react-reconciler/src/ReactRootTags').ConcurrentRoot;
     DefaultEventPriority =
       require('react-reconciler/src/ReactEventPriorities').DefaultEventPriority;
+    NoEventPriority =
+      require('react-reconciler/src/ReactEventPriorities').NoEventPriority;
   });
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -34,6 +37,7 @@ describe('ReactFiberHostContext', () => {
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
     const rootContext = {};
     const childContext = {};
+    let updatePriority: typeof DefaultEventPriority = NoEventPriority;
     const Renderer = ReactFiberReconciler({
       prepareForCommit: function (hostContext) {
         expect(hostContext).toBe(rootContext);
@@ -67,7 +71,16 @@ describe('ReactFiberHostContext', () => {
         return null;
       },
       clearContainer: function () {},
-      getCurrentEventPriority: function () {
+      setCurrentUpdatePriority: function (newPriority: any) {
+        updatePriority = newPriority;
+      },
+      getCurrentUpdatePriority: function () {
+        return updatePriority;
+      },
+      resolveUpdatePriority: function () {
+        if (updatePriority !== NoEventPriority) {
+          return updatePriority;
+        }
         return DefaultEventPriority;
       },
       shouldAttemptEagerTransition() {

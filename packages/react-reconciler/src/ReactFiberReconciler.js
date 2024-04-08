@@ -87,10 +87,6 @@ import {
   higherPriorityLane,
 } from './ReactFiberLane';
 import {
-  getCurrentUpdatePriority,
-  runWithPriority,
-} from './ReactEventPriorities';
-import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
@@ -524,8 +520,6 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
-
-export {getCurrentUpdatePriority, runWithPriority};
 
 export {findHostInstance};
 
