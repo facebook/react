@@ -12,7 +12,7 @@ import {readFileSync} from 'fs';
 import path from 'path';
 import {rimrafSync} from 'rimraf';
 
-describe('x_google_ignoreList source map extension', () => {
+describe('ignoreList source map extension', () => {
   jest.setTimeout(60 * 1000);
 
   const pathToExtensionsPackage = path.resolve(__dirname, '..', '..');
@@ -30,7 +30,7 @@ describe('x_google_ignoreList source map extension', () => {
   });
 
   describe('for dev builds', () => {
-    it('should include only sources with /node_modules/ and /webpack/ in path', async () => {
+    it('should not ignore list anything', async () => {
       await exec('yarn build:chrome:local', {
         cwd: pathToExtensionsPackage,
       });
@@ -38,18 +38,8 @@ describe('x_google_ignoreList source map extension', () => {
       const sourceMapJSON = readFileSync(pathToSourceMap);
       const sourceMap = JSON.parse(sourceMapJSON);
 
-      const {sources, x_google_ignoreList} = sourceMap;
-
-      const expectedIgnoreList = [];
-      for (let sourceIndex = 0; sourceIndex < sources.length; ++sourceIndex) {
-        const source = sources[sourceIndex];
-
-        if (source.includes('/node_modules/') || source.includes('/webpack/')) {
-          expectedIgnoreList.push(sourceIndex);
-        }
-      }
-
-      expect(x_google_ignoreList).toEqual(expectedIgnoreList);
+      const {ignoreList} = sourceMap;
+      expect(ignoreList).toEqual([]);
     });
   });
 
@@ -60,9 +50,9 @@ describe('x_google_ignoreList source map extension', () => {
       const sourceMapJSON = readFileSync(pathToSourceMap);
       const sourceMap = JSON.parse(sourceMapJSON);
 
-      const {sources, x_google_ignoreList} = sourceMap;
+      const {sources, ignoreList} = sourceMap;
 
-      expect(sources.length).toBe(x_google_ignoreList.length);
+      expect(sources.length).toBe(ignoreList.length);
     });
   });
 });
