@@ -15499,15 +15499,28 @@ function getResource(type, currentProps, pendingProps) {
       }
       return null;
     case "script":
-      return "string" === typeof pendingProps.src && !0 === pendingProps.async
-        ? ((pendingProps = getScriptKey(pendingProps.src)),
-          (currentProps = getResourcesFromRoot(currentProps).hoistableScripts),
-          (type = currentProps.get(pendingProps)),
-          type ||
-            ((type = { type: "script", instance: null, count: 0, state: null }),
-            currentProps.set(pendingProps, type)),
-          type)
-        : { type: "void", instance: null, count: 0, state: null };
+      return (
+        (type = pendingProps.async),
+        (pendingProps = pendingProps.src),
+        "string" === typeof pendingProps &&
+        type &&
+        "function" !== typeof type &&
+        "symbol" !== typeof type
+          ? ((pendingProps = getScriptKey(pendingProps)),
+            (currentProps =
+              getResourcesFromRoot(currentProps).hoistableScripts),
+            (type = currentProps.get(pendingProps)),
+            type ||
+              ((type = {
+                type: "script",
+                instance: null,
+                count: 0,
+                state: null
+              }),
+              currentProps.set(pendingProps, type)),
+            type)
+          : { type: "void", instance: null, count: 0, state: null }
+      );
     default:
       throw Error(formatProdErrorMessage(444, type));
   }
@@ -15746,11 +15759,13 @@ function isHostHoistableType(type, props, hostContext) {
       }
     case "script":
       if (
-        !0 === props.async &&
+        props.async &&
+        "function" !== typeof props.async &&
+        "symbol" !== typeof props.async &&
         !props.onLoad &&
         !props.onError &&
-        "string" === typeof props.src &&
-        props.src
+        props.src &&
+        "string" === typeof props.src
       )
         return !0;
   }
@@ -16082,7 +16097,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-319c0d82"
+    reconcilerVersion: "19.0.0-www-modern-ad1a3067"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16784,7 +16799,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-319c0d82",
+  version: "19.0.0-www-modern-ad1a3067",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16792,7 +16807,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-319c0d82",
+  version: "19.0.0-www-modern-ad1a3067",
   rendererPackageName: "react-dom"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17210,4 +17225,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-319c0d82";
+exports.version = "19.0.0-www-modern-ad1a3067";

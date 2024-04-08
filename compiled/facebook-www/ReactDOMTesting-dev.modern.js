@@ -45248,13 +45248,16 @@ if (__DEV__) {
         }
 
         case "script": {
-          if (
-            typeof pendingProps.src === "string" &&
-            pendingProps.async === true
-          ) {
-            var scriptProps = pendingProps;
+          var async = pendingProps.async;
+          var src = pendingProps.src;
 
-            var _key2 = getScriptKey(scriptProps.src);
+          if (
+            typeof src === "string" &&
+            async &&
+            typeof async !== "function" &&
+            typeof async !== "symbol"
+          ) {
+            var _key2 = getScriptKey(src);
 
             var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
 
@@ -45930,16 +45933,21 @@ if (__DEV__) {
         }
 
         case "script": {
+          var isAsync =
+            props.async &&
+            typeof props.async !== "function" &&
+            typeof props.async !== "symbol";
+
           if (
-            props.async !== true ||
+            !isAsync ||
             props.onLoad ||
             props.onError ||
-            typeof props.src !== "string" ||
-            !props.src
+            !props.src ||
+            typeof props.src !== "string"
           ) {
             {
               if (outsideHostContainerContext) {
-                if (props.async !== true) {
+                if (!isAsync) {
                   error(
                     "Cannot render a sync or defer <script> outside the main document without knowing its order." +
                       ' Try adding async="" or moving it into the root <head> tag.'
@@ -46422,7 +46430,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-58b10e2d";
+    var ReactVersion = "19.0.0-www-modern-b1d8ef8c";
 
     function createPortal$1(
       children,
