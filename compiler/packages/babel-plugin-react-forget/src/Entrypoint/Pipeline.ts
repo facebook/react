@@ -64,6 +64,7 @@ import {
   renameVariables,
 } from "../ReactiveScopes";
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
+import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -233,6 +234,15 @@ function* runWithEnvironment(
     value: hir,
   });
 
+  if (env.config.enableAlignReactiveScopesToBlockScopesHIR) {
+    alignReactiveScopesToBlockScopesHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "AlignReactiveScopesToBlockScopesHIR",
+      value: hir,
+    });
+  }
+
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
     kind: "reactive",
@@ -247,12 +257,14 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  alignReactiveScopesToBlockScopes(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "AlignReactiveScopesToBlockScopes",
-    value: reactiveFunction,
-  });
+  if (!env.config.enableAlignReactiveScopesToBlockScopesHIR) {
+    alignReactiveScopesToBlockScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "AlignReactiveScopesToBlockScopes",
+      value: reactiveFunction,
+    });
+  }
 
   mergeOverlappingReactiveScopes(reactiveFunction);
   yield log({
