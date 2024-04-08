@@ -13,7 +13,9 @@ test('smoke test', async ({page}) => {
     pageErrors.push(error.stack);
   });
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('Hello World');
+  await expect(page.getByTestId('promise-as-a-child-test')).toHaveText(
+    'Promise as a child hydrates without errors: deferred text'
+  );
 
   await expect(consoleErrors).toEqual([]);
   await expect(pageErrors).toEqual([]);
