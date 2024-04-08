@@ -25,18 +25,18 @@ export function dispatchHint<Code: HintCode>(
     case 'D': {
       const refined = refineModel(code, model);
       const href = refined;
-      dispatcher.prefetchDNS(href);
+      dispatcher.D(/* prefetchDNS */ href);
       return;
     }
     case 'C': {
       const refined = refineModel(code, model);
       if (typeof refined === 'string') {
         const href = refined;
-        dispatcher.preconnect(href);
+        dispatcher.C(/* preconnect */ href);
       } else {
         const href = refined[0];
         const crossOrigin = refined[1];
-        dispatcher.preconnect(href, crossOrigin);
+        dispatcher.C(/* preconnect */ href, crossOrigin);
       }
       return;
     }
@@ -46,9 +46,9 @@ export function dispatchHint<Code: HintCode>(
       const as = refined[1];
       if (refined.length === 3) {
         const options = refined[2];
-        dispatcher.preload(href, as, options);
+        dispatcher.L(/* preload */ href, as, options);
       } else {
-        dispatcher.preload(href, as);
+        dispatcher.L(/* preload */ href, as);
       }
       return;
     }
@@ -56,24 +56,11 @@ export function dispatchHint<Code: HintCode>(
       const refined = refineModel(code, model);
       if (typeof refined === 'string') {
         const href = refined;
-        dispatcher.preloadModule(href);
+        dispatcher.m(/* preloadModule */ href);
       } else {
         const href = refined[0];
         const options = refined[1];
-        dispatcher.preloadModule(href, options);
-      }
-      return;
-    }
-    case 'S': {
-      const refined = refineModel(code, model);
-      if (typeof refined === 'string') {
-        const href = refined;
-        dispatcher.preinitStyle(href);
-      } else {
-        const href = refined[0];
-        const precedence = refined[1] === 0 ? undefined : refined[1];
-        const options = refined.length === 3 ? refined[2] : undefined;
-        dispatcher.preinitStyle(href, precedence, options);
+        dispatcher.m(/* preloadModule */ href, options);
       }
       return;
     }
@@ -81,11 +68,24 @@ export function dispatchHint<Code: HintCode>(
       const refined = refineModel(code, model);
       if (typeof refined === 'string') {
         const href = refined;
-        dispatcher.preinitScript(href);
+        dispatcher.X(/* preinitScript */ href);
       } else {
         const href = refined[0];
         const options = refined[1];
-        dispatcher.preinitScript(href, options);
+        dispatcher.X(/* preinitScript */ href, options);
+      }
+      return;
+    }
+    case 'S': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.S(/* preinitStyle */ href);
+      } else {
+        const href = refined[0];
+        const precedence = refined[1] === 0 ? undefined : refined[1];
+        const options = refined.length === 3 ? refined[2] : undefined;
+        dispatcher.S(/* preinitStyle */ href, precedence, options);
       }
       return;
     }
@@ -93,11 +93,11 @@ export function dispatchHint<Code: HintCode>(
       const refined = refineModel(code, model);
       if (typeof refined === 'string') {
         const href = refined;
-        dispatcher.preinitModuleScript(href);
+        dispatcher.M(/* preinitModuleScript */ href);
       } else {
         const href = refined[0];
         const options = refined[1];
-        dispatcher.preinitModuleScript(href, options);
+        dispatcher.M(/* preinitModuleScript */ href, options);
       }
       return;
     }
@@ -116,7 +116,7 @@ export function preinitModuleForSSR(
   crossOrigin: ?string,
 ) {
   ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
-    .preinitModuleScript(href, {
+    .M(/* preinitModuleScript */ href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
@@ -128,7 +128,7 @@ export function preinitScriptForSSR(
   crossOrigin: ?string,
 ) {
   ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
-    .preinitScript(href, {
+    .X(/* preinitScript */ href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
