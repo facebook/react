@@ -11,11 +11,30 @@ import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
+import type {
+  Reference,
+  TaintEntry,
+  RequestCleanupQueue,
+} from './ReactTaintRegistry';
+
+import {
+  TaintRegistryObjects,
+  TaintRegistryValues,
+  TaintRegistryByteLengths,
+  TaintRegistryPendingRequests,
+} from './ReactTaintRegistry';
+
+import {disableStringRefs, enableTaint} from 'shared/ReactFeatureFlags';
 
 export type SharedStateServer = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   C: null | CacheDispatcher, // ReactCurrentCache for Cache
+
+  // enableTaint
+  TaintRegistryObjects: WeakMap<Reference, string>,
+  TaintRegistryValues: Map<string | bigint, TaintEntry>,
+  TaintRegistryByteLengths: Set<number>,
+  TaintRegistryPendingRequests: Set<RequestCleanupQueue>,
 
   // DEV-only-ish
   owner: null | ReactComponentInfo, // ReactCurrentOwner is ReactComponentInfo in Flight, null in Fizz. Fiber/Fizz uses SharedStateClient.
@@ -32,6 +51,14 @@ const ReactSharedInternals: SharedStateServer = ({
   H: null,
   C: null,
 }: any);
+
+if (enableTaint) {
+  ReactSharedInternals.TaintRegistryObjects = TaintRegistryObjects;
+  ReactSharedInternals.TaintRegistryValues = TaintRegistryValues;
+  ReactSharedInternals.TaintRegistryByteLengths = TaintRegistryByteLengths;
+  ReactSharedInternals.TaintRegistryPendingRequests =
+    TaintRegistryPendingRequests;
+}
 
 if (__DEV__ || !disableStringRefs) {
   ReactSharedInternals.owner = null;

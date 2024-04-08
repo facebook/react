@@ -46,6 +46,11 @@ function mockReact() {
     );
     return jest.requireActual(resolvedEntryPoint);
   });
+  // Make it possible to import this module inside
+  // the React package itself.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsClient');
+  });
 }
 
 // When we want to unmock React we really need to mock it again.
@@ -54,6 +59,10 @@ global.__unmockReact = mockReact;
 mockReact();
 
 jest.mock('react/react.react-server', () => {
+  // If we're requiring an RSC environment, use those internals instead.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsServer');
+  });
   const resolvedEntryPoint = resolveEntryFork(
     require.resolve('react/src/ReactServer'),
     global.__WWW__
@@ -161,11 +170,13 @@ inlinedHostConfigs.forEach(rendererInfo => {
   });
 });
 
-// Make it possible to import this module inside
-// the React package itself.
-jest.mock('shared/ReactSharedInternals', () =>
-  jest.requireActual('react/src/ReactSharedInternalsClient')
-);
+jest.mock('react-server/src/ReactFlightServer', () => {
+  // If we're requiring an RSC environment, use those internals instead.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsServer');
+  });
+  return jest.requireActual('react-server/src/ReactFlightServer');
+});
 
 // Make it possible to import this module inside
 // the ReactDOM package itself.

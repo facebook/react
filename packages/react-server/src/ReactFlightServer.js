@@ -111,7 +111,6 @@ import {
 import type {SharedStateServer} from 'react/src/ReactSharedInternalsServer';
 import ReactSharedInternalsImpl from 'shared/ReactSharedInternals';
 const ReactSharedInternals: SharedStateServer = (ReactSharedInternalsImpl: any);
-import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
@@ -307,7 +306,7 @@ const {
   TaintRegistryValues,
   TaintRegistryByteLengths,
   TaintRegistryPendingRequests,
-} = ReactServerSharedInternals;
+} = ReactSharedInternals;
 
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
