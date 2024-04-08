@@ -364,12 +364,8 @@ export function jsxProd(type, config, maybeKey) {
     // because in V8 it will deopt the object to dictionary mode.
     props = {};
     for (const propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        // Skip over reserved prop names
-        propName !== 'key' &&
-        (enableRefAsProp || propName !== 'ref')
-      ) {
+      // Skip over reserved prop names
+      if (propName !== 'key' && (enableRefAsProp || propName !== 'ref')) {
         if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
           props.ref = coerceStringRef(
             config[propName],
@@ -603,12 +599,8 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       // because in V8 it will deopt the object to dictionary mode.
       props = {};
       for (const propName in config) {
-        if (
-          hasOwnProperty.call(config, propName) &&
-          // Skip over reserved prop names
-          propName !== 'key' &&
-          (enableRefAsProp || propName !== 'ref')
-        ) {
+        // Skip over reserved prop names
+        if (propName !== 'key' && (enableRefAsProp || propName !== 'ref')) {
           if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
             props.ref = coerceStringRef(
               config[propName],
