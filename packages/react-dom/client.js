@@ -27,13 +27,13 @@ export function createRoot(
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
-    Internals.usingClientEntryPoint = true;
+    (Internals: any).usingClientEntryPoint = true;
   }
   try {
     return createRootImpl(container, options);
   } finally {
     if (__DEV__) {
-      Internals.usingClientEntryPoint = false;
+      (Internals: any).usingClientEntryPoint = false;
     }
   }
 }
@@ -44,13 +44,13 @@ export function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (__DEV__) {
-    Internals.usingClientEntryPoint = true;
+    (Internals: any).usingClientEntryPoint = true;
   }
   try {
     return hydrateRootImpl(container, children, options);
   } finally {
     if (__DEV__) {
-      Internals.usingClientEntryPoint = false;
+      (Internals: any).usingClientEntryPoint = false;
     }
   }
 }

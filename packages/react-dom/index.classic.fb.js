@@ -9,7 +9,7 @@
 
 import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
 
-import Internals from './src/ReactDOMSharedInternals';
+import Internals from './src/ReactDOMSharedInternalsFB';
 
 // For classic WWW builds, include a few internals that are already in use.
 Object.assign((Internals: any), {
@@ -32,7 +32,7 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './src/client/ReactDOMFB';
 
 export {
   createRoot,

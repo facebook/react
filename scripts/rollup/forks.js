@@ -96,7 +96,15 @@ const forks = Object.freeze({
       entry === 'react-dom/src/ReactDOMServer.js' ||
       entry === 'react-dom/unstable_testing'
     ) {
-      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      if (
+        bundleType === FB_WWW_DEV ||
+        bundleType === FB_WWW_PROD ||
+        bundleType === FB_WWW_PROFILING
+      ) {
+        return './packages/react-dom/src/ReactDOMSharedInternalsFB.js';
+      } else {
+        return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      }
     }
     if (
       !entry.startsWith('react-dom/') &&

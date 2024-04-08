@@ -13,8 +13,6 @@
 import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher =
-  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
 import {getCrossOriginString} from './crossOriginStrings';
 
@@ -22,7 +20,7 @@ export function dispatchHint<Code: HintCode>(
   code: Code,
   model: HintModel<Code>,
 ): void {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
+  const dispatcher = ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
   switch (code) {
     case 'D': {
       const refined = refineModel(code, model);
@@ -117,13 +115,11 @@ export function preinitModuleForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitModuleScript(href, {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .preinitModuleScript(href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
-  }
 }
 
 export function preinitScriptForSSR(
@@ -131,11 +127,9 @@ export function preinitScriptForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitScript(href, {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .preinitScript(href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
-  }
 }

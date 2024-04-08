@@ -17,19 +17,17 @@ const ReactCurrentBatchConfig: BatchConfig =
   ReactSharedInternals.ReactCurrentBatchConfig;
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher =
-  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
 declare function flushSyncImpl<R>(fn: () => R): R;
 declare function flushSyncImpl(void): void;
 function flushSyncImpl<R>(fn: (() => R) | void): R | void {
   const previousTransition = ReactCurrentBatchConfig.transition;
   const previousUpdatePriority =
-    ReactDOMSharedInternals.up; /* ReactDOMCurrentUpdatePriority */
+    ReactDOMSharedInternals.p; /* ReactDOMCurrentUpdatePriority */
 
   try {
     ReactCurrentBatchConfig.transition = null;
-    ReactDOMSharedInternals.up /* ReactDOMCurrentUpdatePriority */ =
+    ReactDOMSharedInternals.p /* ReactDOMCurrentUpdatePriority */ =
       DiscreteEventPriority;
     if (fn) {
       return fn();
@@ -38,9 +36,11 @@ function flushSyncImpl<R>(fn: (() => R) | void): R | void {
     }
   } finally {
     ReactCurrentBatchConfig.transition = previousTransition;
-    ReactDOMSharedInternals.up /* ReactDOMCurrentUpdatePriority */ =
+    ReactDOMSharedInternals.p /* ReactDOMCurrentUpdatePriority */ =
       previousUpdatePriority;
-    const wasInRender = ReactDOMCurrentDispatcher.current.flushSyncWork();
+    const wasInRender =
+      ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+        .flushSyncWork();
     if (__DEV__) {
       if (wasInRender) {
         console.error(
