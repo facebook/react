@@ -191,7 +191,7 @@ function getChunk(response, id) {
     chunks.set(id, chunk));
   return chunk;
 }
-function createModelResolver(chunk, parentObject, key, cyclic) {
+function createModelResolver(chunk, parentObject, key, cyclic, response, map) {
   if (initializingChunkBlockedModel) {
     var blocked = initializingChunkBlockedModel;
     cyclic || blocked.deps++;
@@ -201,8 +201,8 @@ function createModelResolver(chunk, parentObject, key, cyclic) {
       value: null
     };
   return function (value) {
-    parentObject[key] = value;
-    "" === key && null === blocked.value && (blocked.value = value);
+    parentObject[key] = map(response, value);
+    "" === key && null === blocked.value && (blocked.value = parentObject[key]);
     blocked.deps--;
     0 === blocked.deps &&
       "blocked" === chunk.status &&
@@ -233,18 +233,52 @@ function createServerReferenceProxy(response, metaData) {
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }
-function getOutlinedModel(response, id) {
-  response = getChunk(response, id);
-  switch (response.status) {
+function getOutlinedModel(response, id, parentObject, key, map) {
+  id = getChunk(response, id);
+  switch (id.status) {
     case "resolved_model":
-      initializeModelChunk(response);
+      initializeModelChunk(id);
+      break;
+    case "resolved_module":
+      initializeModuleChunk(id);
   }
-  switch (response.status) {
+  switch (id.status) {
     case "fulfilled":
-      return response.value;
+      return map(response, id.value);
+    case "pending":
+    case "blocked":
+    case "cyclic":
+      var parentChunk = initializingChunk;
+      id.then(
+        createModelResolver(
+          parentChunk,
+          parentObject,
+          key,
+          "cyclic" === id.status,
+          response,
+          map
+        ),
+        createModelReject(parentChunk)
+      );
+      return null;
     default:
-      throw response.reason;
+      throw id.reason;
   }
+}
+function createMap(response, model) {
+  return new Map(model);
+}
+function createSet(response, model) {
+  return new Set(model);
+}
+function createFormData(response, model) {
+  response = new FormData();
+  for (var i = 0; i < model.length; i++)
+    response.append(model[i][0], model[i][1]);
+  return response;
+}
+function createModel(response, model) {
+  return model;
 }
 function parseModelString(response, parentObject, key, value) {
   if ("$" === value[0]) {
@@ -266,9 +300,14 @@ function parseModelString(response, parentObject, key, value) {
         return Symbol.for(value.slice(2));
       case "F":
         return (
-          (parentObject = parseInt(value.slice(2), 16)),
-          (parentObject = getOutlinedModel(response, parentObject)),
-          createServerReferenceProxy(response, parentObject)
+          (value = parseInt(value.slice(2), 16)),
+          getOutlinedModel(
+            response,
+            value,
+            parentObject,
+            key,
+            createServerReferenceProxy
+          )
         );
       case "T":
         parentObject = parseInt(value.slice(2), 16);
@@ -284,25 +323,21 @@ function parseModelString(response, parentObject, key, value) {
         return response[parentObject];
       case "Q":
         return (
-          (parentObject = parseInt(value.slice(2), 16)),
-          (response = getOutlinedModel(response, parentObject)),
-          new Map(response)
+          (value = parseInt(value.slice(2), 16)),
+          getOutlinedModel(response, value, parentObject, key, createMap)
         );
       case "W":
         return (
-          (parentObject = parseInt(value.slice(2), 16)),
-          (response = getOutlinedModel(response, parentObject)),
-          new Set(response)
+          (value = parseInt(value.slice(2), 16)),
+          getOutlinedModel(response, value, parentObject, key, createSet)
         );
       case "B":
         return;
       case "K":
-        parentObject = parseInt(value.slice(2), 16);
-        response = getOutlinedModel(response, parentObject);
-        parentObject = new FormData();
-        for (key = 0; key < response.length; key++)
-          parentObject.append(response[key][0], response[key][1]);
-        return parentObject;
+        return (
+          (value = parseInt(value.slice(2), 16)),
+          getOutlinedModel(response, value, parentObject, key, createFormData)
+        );
       case "I":
         return Infinity;
       case "-":
@@ -316,37 +351,10 @@ function parseModelString(response, parentObject, key, value) {
       case "n":
         return BigInt(value.slice(2));
       default:
-        value = parseInt(value.slice(1), 16);
-        response = getChunk(response, value);
-        switch (response.status) {
-          case "resolved_model":
-            initializeModelChunk(response);
-            break;
-          case "resolved_module":
-            initializeModuleChunk(response);
-        }
-        switch (response.status) {
-          case "fulfilled":
-            return response.value;
-          case "pending":
-          case "blocked":
-          case "cyclic":
-            return (
-              (value = initializingChunk),
-              response.then(
-                createModelResolver(
-                  value,
-                  parentObject,
-                  key,
-                  "cyclic" === response.status
-                ),
-                createModelReject(value)
-              ),
-              null
-            );
-          default:
-            throw response.reason;
-        }
+        return (
+          (value = parseInt(value.slice(1), 16)),
+          getOutlinedModel(response, value, parentObject, key, createModel)
+        );
     }
   }
   return value;
