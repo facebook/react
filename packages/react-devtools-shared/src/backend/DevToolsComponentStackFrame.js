@@ -86,8 +86,8 @@ export function describeNativeComponentFrame(
   // Note that unlike the code this was forked from (in ReactComponentStackFrame)
   // DevTools should override the dispatcher even when DevTools is compiled in production mode,
   // because the app itself may be in development mode and log errors/warnings.
-  const previousDispatcher = currentDispatcherRef.current;
-  currentDispatcherRef.current = null;
+  const previousDispatcher = currentDispatcherRef.H;
+  currentDispatcherRef.H = null;
   disableLogs();
 
   // NOTE: keep in sync with the implementation in ReactComponentStackFrame
@@ -270,7 +270,7 @@ export function describeNativeComponentFrame(
 
     Error.prepareStackTrace = previousPrepareStackTrace;
 
-    currentDispatcherRef.current = previousDispatcher;
+    currentDispatcherRef.H = previousDispatcher;
     reenableLogs();
   }
   // Fallback to just using the name if we couldn't make it throw.

@@ -110,6 +110,7 @@ import {
   enableRefAsProp,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -297,8 +298,6 @@ import {
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
 export const SelectiveHydrationException: mixed = new Error(
@@ -433,7 +432,7 @@ function updateForwardRef(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
+    ReactSharedInternals.owner = workInProgress;
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -1132,7 +1131,7 @@ function updateFunctionComponent(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
+    ReactSharedInternals.owner = workInProgress;
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -1354,7 +1353,9 @@ function finishClassComponent(
   const instance = workInProgress.stateNode;
 
   // Rerender
-  ReactCurrentOwner.current = workInProgress;
+  if (__DEV__ || !disableStringRefs) {
+    ReactSharedInternals.owner = workInProgress;
+  }
   let nextChildren;
   if (
     didCaptureError &&
@@ -3399,7 +3400,7 @@ function updateContextConsumer(
   }
   let newChildren;
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
+    ReactSharedInternals.owner = workInProgress;
     setIsRendering(true);
     newChildren = render(newValue);
     setIsRendering(false);

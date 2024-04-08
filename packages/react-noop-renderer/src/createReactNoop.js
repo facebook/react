@@ -42,7 +42,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-const ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig;
 
 type Container = {
   rootID: string,
@@ -948,10 +947,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     }
     if (disableLegacyMode) {
-      const previousTransition = ReactCurrentBatchConfig.transition;
+      const previousTransition = ReactSharedInternals.T;
       const preivousEventPriority = currentEventPriority;
       try {
-        ReactCurrentBatchConfig.transition = null;
+        ReactSharedInternals.T = null;
         currentEventPriority = DiscreteEventPriority;
         if (fn) {
           return fn();
@@ -959,7 +958,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return undefined;
         }
       } finally {
-        ReactCurrentBatchConfig.transition = previousTransition;
+        ReactSharedInternals.T = previousTransition;
         currentEventPriority = preivousEventPriority;
         NoopRenderer.flushSyncWork();
       }

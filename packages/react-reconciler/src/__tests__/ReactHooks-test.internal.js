@@ -948,14 +948,13 @@ describe('ReactHooks', () => {
 
   it('warns when reading context inside useMemo', async () => {
     const {useMemo, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     function App() {
       return useMemo(() => {
-        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return ReactSharedInternals.H.readContext(ThemeContext);
       }, []);
     }
 
@@ -968,18 +967,17 @@ describe('ReactHooks', () => {
 
   it('warns when reading context inside useMemo after reading outside it', async () => {
     const {useMemo, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     let firstRead, secondRead;
     function App() {
-      firstRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
+      firstRead = ReactSharedInternals.H.readContext(ThemeContext);
       useMemo(() => {});
-      secondRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
+      secondRead = ReactSharedInternals.H.readContext(ThemeContext);
       return useMemo(() => {
-        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return ReactSharedInternals.H.readContext(ThemeContext);
       }, []);
     }
 
@@ -995,14 +993,13 @@ describe('ReactHooks', () => {
   // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useEffect', async () => {
     const {useEffect, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     function App() {
       useEffect(() => {
-        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        ReactSharedInternals.H.readContext(ThemeContext);
       });
       return null;
     }
@@ -1017,14 +1014,13 @@ describe('ReactHooks', () => {
   // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useLayoutEffect', async () => {
     const {useLayoutEffect, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     function App() {
       useLayoutEffect(() => {
-        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        ReactSharedInternals.H.readContext(ThemeContext);
       });
       return null;
     }
@@ -1041,14 +1037,13 @@ describe('ReactHooks', () => {
 
   it('warns when reading context inside useReducer', async () => {
     const {useReducer, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     function App() {
       const [state, dispatch] = useReducer((s, action) => {
-        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        ReactSharedInternals.H.readContext(ThemeContext);
         return action;
       }, 0);
       if (state === 0) {
@@ -1069,9 +1064,8 @@ describe('ReactHooks', () => {
     const {useState, createContext} = React;
     const ThemeContext = createContext('light');
 
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     let _setState;
     function Fn() {
@@ -1082,9 +1076,7 @@ describe('ReactHooks', () => {
 
     class Cls extends React.Component {
       render() {
-        _setState(() =>
-          ReactCurrentDispatcher.current.readContext(ThemeContext),
-        );
+        _setState(() => ReactSharedInternals.H.readContext(ThemeContext));
 
         return null;
       }
@@ -1162,15 +1154,14 @@ describe('ReactHooks', () => {
   });
 
   it('resets warning internal state when interrupted by an error', async () => {
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = React.createContext('light');
     function App() {
       React.useMemo(() => {
         // Trigger warnings
-        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        ReactSharedInternals.H.readContext(ThemeContext);
         React.useRef();
         // Interrupt exit from a Hook
         throw new Error('No.');
@@ -1251,14 +1242,13 @@ describe('ReactHooks', () => {
 
   it('warns when reading context inside useMemo', async () => {
     const {useMemo, createContext} = React;
-    const ReactCurrentDispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     const ThemeContext = createContext('light');
     function App() {
       return useMemo(() => {
-        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return ReactSharedInternals.H.readContext(ThemeContext);
       }, []);
     }
 

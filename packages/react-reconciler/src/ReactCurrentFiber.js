@@ -13,8 +13,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 
-const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
 
@@ -45,7 +43,7 @@ function getCurrentFiberStackInDev(): string {
 
 export function resetCurrentFiber() {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactSharedInternals.getCurrentStack = null;
     current = null;
     isRendering = false;
   }
@@ -53,7 +51,7 @@ export function resetCurrentFiber() {
 
 export function setCurrentFiber(fiber: Fiber | null) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack =
+    ReactSharedInternals.getCurrentStack =
       fiber === null ? null : getCurrentFiberStackInDev;
     current = fiber;
     isRendering = false;

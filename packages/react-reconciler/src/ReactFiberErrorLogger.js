@@ -17,7 +17,6 @@ import {ClassComponent} from './ReactWorkTags';
 import reportGlobalError from 'shared/reportGlobalError';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-const {ReactCurrentActQueue} = ReactSharedInternals;
 
 // Side-channel since I'm not sure we want to make this part of the public API
 let componentName: null | string = null;
@@ -111,10 +110,10 @@ export function logUncaughtError(
       errorBoundaryName = null;
     }
     const error = (errorInfo.value: any);
-    if (__DEV__ && ReactCurrentActQueue.current !== null) {
+    if (__DEV__ && ReactSharedInternals.actQueue !== null) {
       // For uncaught errors inside act, we track them on the act and then
       // rethrow them into the test.
-      ReactCurrentActQueue.thrownErrors.push(error);
+      ReactSharedInternals.thrownErrors.push(error);
       return;
     }
     const onUncaughtError = root.onUncaughtError;

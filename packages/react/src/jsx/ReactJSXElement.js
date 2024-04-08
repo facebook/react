@@ -27,9 +27,6 @@ import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
 const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
 let specialPropKeyWarningShown;
@@ -71,12 +68,12 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
     if (
       !disableStringRefs &&
       typeof config.ref === 'string' &&
-      ReactCurrentOwner.current &&
+      ReactSharedInternals.owner &&
       self &&
-      ReactCurrentOwner.current.stateNode !== self
+      ReactSharedInternals.owner.stateNode !== self
     ) {
       const componentName = getComponentNameFromType(
-        ReactCurrentOwner.current.type,
+        ReactSharedInternals.owner.type,
       );
 
       if (!didWarnAboutStringRefs[componentName]) {
@@ -87,7 +84,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
             'https://react.dev/link/strict-mode-string-ref',
-          getComponentNameFromType(ReactCurrentOwner.current.type),
+          getComponentNameFromType(ReactSharedInternals.owner.type),
           config.ref,
         );
         didWarnAboutStringRefs[componentName] = true;
@@ -341,7 +338,7 @@ export function jsxProd(type, config, maybeKey) {
     if (!enableRefAsProp) {
       ref = config.ref;
       if (!disableStringRefs) {
-        ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+        ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
       }
     }
   }
@@ -369,7 +366,7 @@ export function jsxProd(type, config, maybeKey) {
         if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
           props.ref = coerceStringRef(
             config[propName],
-            ReactCurrentOwner.current,
+            ReactSharedInternals.owner,
             type,
           );
         } else {
@@ -397,7 +394,7 @@ export function jsxProd(type, config, maybeKey) {
     ref,
     undefined,
     undefined,
-    ReactCurrentOwner.current,
+    ReactSharedInternals.owner,
     props,
   );
 }
@@ -573,7 +570,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       if (!enableRefAsProp) {
         ref = config.ref;
         if (!disableStringRefs) {
-          ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
         }
       }
       if (!disableStringRefs) {
@@ -604,7 +601,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
           if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
             props.ref = coerceStringRef(
               config[propName],
-              ReactCurrentOwner.current,
+              ReactSharedInternals.owner,
               type,
             );
           } else {
@@ -645,7 +642,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       ref,
       self,
       source,
-      ReactCurrentOwner.current,
+      ReactSharedInternals.owner,
       props,
     );
 
@@ -729,7 +726,7 @@ export function createElement(type, config, children) {
       if (!enableRefAsProp) {
         ref = config.ref;
         if (!disableStringRefs) {
-          ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
         }
       }
 
@@ -761,7 +758,7 @@ export function createElement(type, config, children) {
         if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
           props.ref = coerceStringRef(
             config[propName],
-            ReactCurrentOwner.current,
+            ReactSharedInternals.owner,
             type,
           );
         } else {
@@ -819,7 +816,7 @@ export function createElement(type, config, children) {
     ref,
     undefined,
     undefined,
-    ReactCurrentOwner.current,
+    ReactSharedInternals.owner,
     props,
   );
 
@@ -876,7 +873,7 @@ export function cloneElement(element, config, children) {
           ref = coerceStringRef(ref, owner, element.type);
         }
       }
-      owner = ReactCurrentOwner.current;
+      owner = ReactSharedInternals.owner;
     }
     if (hasValidKey(config)) {
       if (__DEV__) {
@@ -963,8 +960,8 @@ export function cloneElement(element, config, children) {
 
 function getDeclarationErrorAddendum() {
   if (__DEV__) {
-    if (ReactCurrentOwner.current) {
-      const name = getComponentNameFromType(ReactCurrentOwner.current.type);
+    if (ReactSharedInternals.owner) {
+      const name = getComponentNameFromType(ReactSharedInternals.owner.type);
       if (name) {
         return '\n\nCheck the render method of `' + name + '`.';
       }
@@ -1068,7 +1065,7 @@ function validateExplicitKey(element, parentType) {
     if (
       element &&
       element._owner != null &&
-      element._owner !== ReactCurrentOwner.current
+      element._owner !== ReactSharedInternals.owner
     ) {
       let ownerName = null;
       if (typeof element._owner.tag === 'number') {
@@ -1099,9 +1096,9 @@ function setCurrentlyValidatingElement(element) {
         element.type,
         owner ? owner.type : null,
       );
-      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+      ReactSharedInternals.setExtraStackFrame(stack);
     } else {
-      ReactDebugCurrentFrame.setExtraStackFrame(null);
+      ReactSharedInternals.setExtraStackFrame(null);
     }
   }
 }

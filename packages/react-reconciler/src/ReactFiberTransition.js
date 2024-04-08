@@ -36,16 +36,14 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {entangleAsyncAction} from './ReactFiberAsyncAction';
 
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
-
 export const NoTransition = null;
 
 export function requestCurrentTransition(): BatchConfigTransition | null {
-  const transition = ReactCurrentBatchConfig.transition;
+  const transition = ReactSharedInternals.T;
   if (transition !== null) {
     // Whenever a transition update is scheduled, register a callback on the
     // transition object so we can get the return value of the scope function.
-    transition._callbacks.add(handleAsyncAction);
+    transition._callbacks.add((handleAsyncAction: any));
   }
   return transition;
 }

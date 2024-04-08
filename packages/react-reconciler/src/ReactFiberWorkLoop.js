@@ -9,7 +9,6 @@
 
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
-import type {BatchConfig} from 'react/src/ReactCurrentBatchConfig';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -42,6 +41,7 @@ import {
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -281,13 +281,6 @@ import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 import {logUncaughtError} from './ReactFiberErrorLogger';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-const ReactCurrentBatchConfig: BatchConfig =
-  ReactSharedInternals.ReactCurrentBatchConfig;
-const ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
 
 type ExecutionContext = number;
 
@@ -628,7 +621,6 @@ export function requestUpdateLane(fiber: Fiber): Lane {
       if (!transition._updatedFibers) {
         transition._updatedFibers = new Set();
       }
-
       transition._updatedFibers.add(fiber);
     }
 
@@ -769,7 +761,7 @@ export function scheduleUpdateOnFiber(
     warnIfUpdatesNotWrappedWithActDEV(fiber);
 
     if (enableTransitionTracing) {
-      const transition = ReactCurrentBatchConfig.transition;
+      const transition = ReactSharedInternals.T;
       if (transition !== null && transition.name != null) {
         if (transition.startTime === -1) {
           transition.startTime = now();
@@ -812,7 +804,7 @@ export function scheduleUpdateOnFiber(
       !disableLegacyMode &&
       (fiber.mode & ConcurrentMode) === NoMode
     ) {
-      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy) {
+      if (__DEV__ && ReactSharedInternals.isBatchingLegacy) {
         // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
       } else {
         // Flush the synchronous work now, unless we're already working or inside
@@ -1431,16 +1423,15 @@ export function getExecutionContext(): ExecutionContext {
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
-  const prevTransition = ReactCurrentBatchConfig.transition;
-
+  const prevTransition = ReactSharedInternals.T;
   const previousPriority = getCurrentUpdatePriority();
   try {
     setCurrentUpdatePriority(DefaultEventPriority);
-    ReactCurrentBatchConfig.transition = null;
+    ReactSharedInternals.T = null;
     return fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
@@ -1461,7 +1452,7 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
       if (
         executionContext === NoContext &&
         // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-        !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+        !(__DEV__ && ReactSharedInternals.isBatchingLegacy)
       ) {
         resetRenderTimer();
         flushSyncWorkOnLegacyRootsOnly();
@@ -1477,15 +1468,15 @@ export function discreteUpdates<A, B, C, D, R>(
   c: C,
   d: D,
 ): R {
-  const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransition = ReactSharedInternals.T;
   const previousPriority = getCurrentUpdatePriority();
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
-    ReactCurrentBatchConfig.transition = null;
+    ReactSharedInternals.T = null;
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
     if (executionContext === NoContext) {
       resetRenderTimer();
     }
@@ -1514,12 +1505,12 @@ export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
-  const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransition = ReactSharedInternals.T;
   const previousPriority = getCurrentUpdatePriority();
 
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
-    ReactCurrentBatchConfig.transition = null;
+    ReactSharedInternals.T = null;
     if (fn) {
       return fn();
     } else {
@@ -1527,7 +1518,7 @@ export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
 
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
@@ -1679,7 +1670,9 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   // when React is executing user code.
   resetHooksAfterThrow();
   resetCurrentDebugFiberInDEV();
-  ReactCurrentOwner.current = null;
+  if (__DEV__ || !disableStringRefs) {
+    ReactSharedInternals.owner = null;
+  }
 
   if (thrownValue === SuspenseException) {
     // This is a special type of exception used for Suspense. For historical
@@ -1852,8 +1845,8 @@ export function shouldRemainOnPreviousScreen(): boolean {
 }
 
 function pushDispatcher(container: any) {
-  const prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
   if (prevDispatcher === null) {
     // The React isomorphic package does not include a default dispatcher.
     // Instead the first renderer will lazily attach one, in order to give
@@ -1865,13 +1858,13 @@ function pushDispatcher(container: any) {
 }
 
 function popDispatcher(prevDispatcher: any) {
-  ReactCurrentDispatcher.current = prevDispatcher;
+  ReactSharedInternals.H = prevDispatcher;
 }
 
 function pushCacheDispatcher() {
   if (enableCache) {
-    const prevCacheDispatcher = ReactCurrentCache.current;
-    ReactCurrentCache.current = DefaultCacheDispatcher;
+    const prevCacheDispatcher = ReactSharedInternals.C;
+    ReactSharedInternals.C = DefaultCacheDispatcher;
     return prevCacheDispatcher;
   } else {
     return null;
@@ -1880,7 +1873,7 @@ function pushCacheDispatcher() {
 
 function popCacheDispatcher(prevCacheDispatcher: any) {
   if (enableCache) {
-    ReactCurrentCache.current = prevCacheDispatcher;
+    ReactSharedInternals.C = prevCacheDispatcher;
   }
 }
 
@@ -2293,7 +2286,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         }
       }
 
-      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+      if (__DEV__ && ReactSharedInternals.actQueue !== null) {
         // `act` special case: If we're inside an `act` scope, don't consult
         // `shouldYield`. Always keep working until the render is complete.
         // This is not just an optimization: in a unit test environment, we
@@ -2379,7 +2372,9 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     workInProgress = next;
   }
 
-  ReactCurrentOwner.current = null;
+  if (__DEV__ || !disableStringRefs) {
+    ReactSharedInternals.owner = null;
+  }
 }
 
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
@@ -2492,7 +2487,9 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     workInProgress = next;
   }
 
-  ReactCurrentOwner.current = null;
+  if (__DEV__ || !disableStringRefs) {
+    ReactSharedInternals.owner = null;
+  }
 }
 
 function throwAndUnwindWorkLoop(
@@ -2710,12 +2707,11 @@ function commitRoot(
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
-  const prevTransition = ReactCurrentBatchConfig.transition;
-
+  const prevTransition = ReactSharedInternals.T;
   const previousUpdateLanePriority = getCurrentUpdatePriority();
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
-    ReactCurrentBatchConfig.transition = null;
+    ReactSharedInternals.T = null;
     commitRootImpl(
       root,
       recoverableErrors,
@@ -2725,7 +2721,7 @@ function commitRoot(
       spawnedLane,
     );
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
 
@@ -2875,8 +2871,8 @@ function commitRootImpl(
     NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = null;
+    const prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
 
@@ -2884,7 +2880,9 @@ function commitRootImpl(
     executionContext |= CommitContext;
 
     // Reset this to null before calling lifecycles
-    ReactCurrentOwner.current = null;
+    if (__DEV__ || !disableStringRefs) {
+      ReactSharedInternals.owner = null;
+    }
 
     // The commit phase is broken into several sub-phases. We do a separate pass
     // of the effect list for each phase: all mutation effects come before all
@@ -2950,7 +2948,7 @@ function commitRootImpl(
 
     // Reset the priority to the previous non-sync value.
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   } else {
     // No effects.
     root.current = finishedWork;
@@ -3180,16 +3178,16 @@ export function flushPassiveEffects(): boolean {
 
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-    const prevTransition = ReactCurrentBatchConfig.transition;
+    const prevTransition = ReactSharedInternals.T;
     const previousPriority = getCurrentUpdatePriority();
 
     try {
       setCurrentUpdatePriority(priority);
-      ReactCurrentBatchConfig.transition = null;
+      ReactSharedInternals.T = null;
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
-      ReactCurrentBatchConfig.transition = prevTransition;
+      ReactSharedInternals.T = prevTransition;
 
       // Once passive effects have run for the tree - giving components a
       // chance to retain cache instances they use - release the pooled
@@ -3921,7 +3919,7 @@ function scheduleCallback(priorityLevel: any, callback) {
   if (__DEV__) {
     // If we're currently inside an `act` scope, bypass Scheduler and push to
     // the `act` queue instead.
-    const actQueue = ReactCurrentActQueue.current;
+    const actQueue = ReactSharedInternals.actQueue;
     if (actQueue !== null) {
       actQueue.push(callback);
       return fakeActCallbackNode;
@@ -3936,7 +3934,7 @@ function scheduleCallback(priorityLevel: any, callback) {
 
 function shouldForceFlushFallbacksInDEV() {
   // Never force flush in production. This function should get stripped out.
-  return __DEV__ && ReactCurrentActQueue.current !== null;
+  return __DEV__ && ReactSharedInternals.actQueue !== null;
 }
 
 function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
@@ -3968,7 +3966,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
       }
     }
 
-    if (ReactCurrentActQueue.current === null) {
+    if (ReactSharedInternals.actQueue === null) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {
         setCurrentDebugFiberInDEV(fiber);
@@ -4001,7 +3999,7 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
     if (
       (disableLegacyMode || root.tag !== LegacyRoot) &&
       isConcurrentActEnvironment() &&
-      ReactCurrentActQueue.current === null
+      ReactSharedInternals.actQueue === null
     ) {
       console.error(
         'A suspended resource finished loading inside a test, but the event ' +

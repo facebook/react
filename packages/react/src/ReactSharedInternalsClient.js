@@ -3,25 +3,88 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
-import ReactCurrentCache from './ReactCurrentCache';
-import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import ReactCurrentActQueue from './ReactCurrentActQueue';
-import ReactCurrentOwner from './ReactCurrentOwner';
-import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-const ReactSharedInternals = {
-  ReactCurrentDispatcher,
-  ReactCurrentCache,
-  ReactCurrentBatchConfig,
-  ReactCurrentOwner,
+import {disableStringRefs} from 'shared/ReactFeatureFlags';
+
+export type SharedStateClient = {
+  H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
+  C: null | CacheDispatcher, // ReactCurrentCache for Cache
+  T: null | BatchConfigTransition, // ReactCurrentBatchConfig for Transitions
+
+  // DEV-only-ish
+  owner: null | Fiber, // ReactCurrentOwner is Fiber on the Client, null in Fizz. Flight uses SharedStateServer.
+
+  // ReactCurrentActQueue
+  actQueue: null | Array<RendererTask>,
+
+  // Used to reproduce behavior of `batchedUpdates` in legacy mode.
+  isBatchingLegacy: boolean,
+  didScheduleLegacyUpdate: boolean,
+
+  // Tracks whether something called `use` during the current batch of work.
+  // Determines whether we should yield to microtasks to unwrap already resolved
+  // promises without suspending.
+  didUsePromise: boolean,
+
+  // Track first uncaught error within this act
+  thrownErrors: Array<mixed>,
+
+  // ReactDebugCurrentFrame
+  setExtraStackFrame: (stack: null | string) => void,
+  getCurrentStack: null | (() => string),
+  getStackAddendum: () => string,
 };
 
+export type RendererTask = boolean => RendererTask | null;
+
+const ReactSharedInternals: SharedStateClient = ({
+  H: null,
+  C: null,
+  T: null,
+}: any);
+
+if (__DEV__ || !disableStringRefs) {
+  ReactSharedInternals.owner = null;
+}
+
 if (__DEV__) {
-  ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
-  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
+  ReactSharedInternals.actQueue = null;
+  ReactSharedInternals.isBatchingLegacy = false;
+  ReactSharedInternals.didScheduleLegacyUpdate = false;
+  ReactSharedInternals.didUsePromise = false;
+  ReactSharedInternals.thrownErrors = [];
+
+  let currentExtraStackFrame = (null: null | string);
+  ReactSharedInternals.setExtraStackFrame = function (stack: null | string) {
+    currentExtraStackFrame = stack;
+  };
+  // Stack implementation injected by the current renderer.
+  ReactSharedInternals.getCurrentStack = (null: null | (() => string));
+
+  ReactSharedInternals.getStackAddendum = function (): string {
+    let stack = '';
+
+    // Add an extra top frame while an element is being validated
+    if (currentExtraStackFrame) {
+      stack += currentExtraStackFrame;
+    }
+
+    // Delegate to the injected renderer-specific implementation
+    const impl = ReactSharedInternals.getCurrentStack;
+    if (impl) {
+      stack += impl() || '';
+    }
+
+    return stack;
+  };
 }
 
 export default ReactSharedInternals;

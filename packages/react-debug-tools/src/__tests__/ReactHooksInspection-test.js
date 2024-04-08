@@ -453,39 +453,6 @@ describe('ReactHooksInspection', () => {
     `);
   });
 
-  it('should support an injected dispatcher', () => {
-    const initial = {
-      useState() {
-        throw new Error("Should've been proxied");
-      },
-    };
-    let current = initial;
-    let getterCalls = 0;
-    const setterCalls = [];
-    const FakeDispatcherRef = {
-      get current() {
-        getterCalls++;
-        return current;
-      },
-      set current(value) {
-        setterCalls.push(value);
-        current = value;
-      },
-    };
-
-    function Foo(props) {
-      const [state] = FakeDispatcherRef.current.useState('hello world');
-      return <div>{state}</div>;
-    }
-
-    ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
-
-    expect(getterCalls).toBe(2);
-    expect(setterCalls).toHaveLength(2);
-    expect(setterCalls[0]).not.toBe(initial);
-    expect(setterCalls[1]).toBe(initial);
-  });
-
   it('should inspect use() calls for Promise and Context', async () => {
     const MyContext = React.createContext('hi');
     const promise = Promise.resolve('world');

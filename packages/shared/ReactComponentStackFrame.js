@@ -23,8 +23,6 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const {ReactCurrentDispatcher} = ReactSharedInternals;
-
 let prefix;
 export function describeBuiltInComponentFrame(name: string): string {
   if (enableComponentStackLocations) {
@@ -86,13 +84,13 @@ export function describeNativeComponentFrame(
   const previousPrepareStackTrace = Error.prepareStackTrace;
   // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
-  let previousDispatcher;
+  let previousDispatcher = null;
 
   if (__DEV__) {
-    previousDispatcher = ReactCurrentDispatcher.current;
+    previousDispatcher = ReactSharedInternals.H;
     // Set the dispatcher in DEV because this might be call in the render function
     // for warnings.
-    ReactCurrentDispatcher.current = null;
+    ReactSharedInternals.H = null;
     disableLogs();
   }
 
@@ -272,7 +270,7 @@ export function describeNativeComponentFrame(
   } finally {
     reentry = false;
     if (__DEV__) {
-      ReactCurrentDispatcher.current = previousDispatcher;
+      ReactSharedInternals.H = previousDispatcher;
       reenableLogs();
     }
     Error.prepareStackTrace = previousPrepareStackTrace;

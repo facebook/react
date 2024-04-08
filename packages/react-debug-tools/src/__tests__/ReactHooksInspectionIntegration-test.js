@@ -2345,61 +2345,6 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  it('should support an injected dispatcher', async () => {
-    function Foo(props) {
-      const [state] = React.useState('hello world');
-      return <div>{state}</div>;
-    }
-
-    const initial = {};
-    let current = initial;
-    let getterCalls = 0;
-    const setterCalls = [];
-    const FakeDispatcherRef = {
-      get current() {
-        getterCalls++;
-        return current;
-      },
-      set current(value) {
-        setterCalls.push(value);
-        current = value;
-      },
-    };
-
-    let renderer;
-    await act(() => {
-      renderer = ReactTestRenderer.create(<Foo />, {
-        unstable_isConcurrent: true,
-      });
-    });
-    const childFiber = renderer.root._currentFiber();
-
-    let didCatch = false;
-
-    try {
-      ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
-    } catch (error) {
-      expect(error.message).toBe('Error rendering inspected component');
-      expect(error.cause).toBeInstanceOf(Error);
-      expect(error.cause.message).toBe(
-        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-          ' one of the following reasons:\n' +
-          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-          '2. You might be breaking the Rules of Hooks\n' +
-          '3. You might have more than one copy of React in the same app\n' +
-          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
-      );
-      didCatch = true;
-    }
-    // avoid false positive if no error was thrown at all
-    expect(didCatch).toBe(true);
-
-    expect(getterCalls).toBe(1);
-    expect(setterCalls).toHaveLength(2);
-    expect(setterCalls[0]).not.toBe(initial);
-    expect(setterCalls[1]).toBe(initial);
-  });
-
   // This test case is based on an open source bug report:
   // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should properly advance the current hook for useContext', async () => {

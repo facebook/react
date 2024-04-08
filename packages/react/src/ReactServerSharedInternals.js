@@ -3,9 +3,16 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-import ReactCurrentCache from './ReactCurrentCache';
+import type {
+  Reference,
+  TaintEntry,
+  RequestCleanupQueue,
+} from './ReactTaintRegistry';
+
 import {
   TaintRegistryObjects,
   TaintRegistryValues,
@@ -15,9 +22,15 @@ import {
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
-const ReactServerSharedInternals = {
-  ReactCurrentCache,
+export type ServerSharedState = {
+  // Taint
+  TaintRegistryObjects: WeakMap<Reference, string>,
+  TaintRegistryValues: Map<string | bigint, TaintEntry>,
+  TaintRegistryByteLengths: Set<number>,
+  TaintRegistryPendingRequests: Set<RequestCleanupQueue>,
 };
+
+const ReactServerSharedInternals: ServerSharedState = ({}: any);
 
 if (enableTaint) {
   ReactServerSharedInternals.TaintRegistryObjects = TaintRegistryObjects;
