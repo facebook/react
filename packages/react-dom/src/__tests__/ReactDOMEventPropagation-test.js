@@ -749,6 +749,57 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onTransitionRun', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionRun',
+        reactEventType: 'transitionrun',
+        nativeEvent: 'transitionrun',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionrun', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionStart', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionStart',
+        reactEventType: 'transitionstart',
+        nativeEvent: 'transitionstart',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionstart', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionCancel', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionCancel',
+        reactEventType: 'transitioncancel',
+        nativeEvent: 'transitioncancel',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitioncancel', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
     it('onTransitionEnd', async () => {
       await testNativeBubblingEvent({
         type: 'div',
@@ -759,7 +810,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitionend', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
