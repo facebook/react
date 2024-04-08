@@ -25,6 +25,9 @@ describe('ReactCache', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
 
     cache = React.cache;
+
+    jest.resetModules();
+    __unmockReact();
   });
 
   // @gate enableCache
