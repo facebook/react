@@ -759,7 +759,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitionrun', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
@@ -776,7 +776,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitionstart', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
@@ -793,7 +793,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitioncancel', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
@@ -810,7 +810,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitionend', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
