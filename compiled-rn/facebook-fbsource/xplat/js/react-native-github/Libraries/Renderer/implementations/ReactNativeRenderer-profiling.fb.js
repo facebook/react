@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<246ff222d964caca595687a09c5fa75f>>
+ * @generated SignedSource<<2934352e960aa81c300ffcd8ccccd03f>>
  */
 
 "use strict";
@@ -3831,9 +3831,7 @@ function findFirstSuspended(row) {
   }
   return null;
 }
-var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
-  renderLanes = 0,
+var renderLanes = 0,
   currentlyRenderingFiber$1 = null,
   currentHook = null,
   workInProgressHook = null,
@@ -3867,7 +3865,7 @@ function renderWithHooks(
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = 0;
-  ReactCurrentDispatcher$1.current =
+  ReactSharedInternals.H =
     null === current || null === current.memoizedState
       ? HooksDispatcherOnMount
       : HooksDispatcherOnUpdate;
@@ -3885,7 +3883,7 @@ function renderWithHooks(
   return current;
 }
 function finishRenderingHooks() {
-  ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
   var didRenderTooFewHooks = null !== currentHook && null !== currentHook.next;
   renderLanes = 0;
   workInProgressHook = currentHook = currentlyRenderingFiber$1 = null;
@@ -3911,14 +3909,14 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
     workInProgress.updateQueue = null;
-    ReactCurrentDispatcher$1.current = HooksDispatcherOnRerender;
+    ReactSharedInternals.H = HooksDispatcherOnRerender;
     var children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
 function TransitionAwareHostComponent() {
   if (!enableAsyncActions) throw Error("Not implemented.");
-  var maybeThenable = ReactCurrentDispatcher$1.current.useState()[0];
+  var maybeThenable = ReactSharedInternals.H.useState()[0];
   return "function" === typeof maybeThenable.then
     ? useThenable(maybeThenable)
     : maybeThenable;
@@ -4009,7 +4007,7 @@ function useThenable(thenable) {
     (null === workInProgressHook
       ? null === currentlyRenderingFiber$1.memoizedState
       : null === workInProgressHook.next) &&
-    (ReactCurrentDispatcher$1.current = HooksDispatcherOnMount);
+    (ReactSharedInternals.H = HooksDispatcherOnMount);
   return thenable;
 }
 function use(usable) {
@@ -4343,9 +4341,9 @@ function dispatchActionState(
 function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
-    prevTransition = ReactCurrentBatchConfig$2.transition,
+    prevTransition = ReactSharedInternals.T,
     currentTransition = { _callbacks: new Set() };
-  ReactCurrentBatchConfig$2.transition = currentTransition;
+  ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
   try {
     var returnValue = action(prevState, payload);
@@ -4378,7 +4376,7 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
     setState({ then: function () {}, status: "rejected", reason: error }),
       finishRunningActionStateAction(actionQueue, setPendingState, setState);
   } finally {
-    ReactCurrentBatchConfig$2.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 function finishRunningActionStateAction(
@@ -4618,14 +4616,14 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$2.transition,
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = { _callbacks: new Set() };
   enableAsyncActions
-    ? ((ReactCurrentBatchConfig$2.transition = currentTransition),
+    ? ((ReactSharedInternals.T = currentTransition),
       dispatchOptimisticSetState(fiber, !1, queue, pendingState))
-    : ((ReactCurrentBatchConfig$2.transition = null),
+    : ((ReactSharedInternals.T = null),
       dispatchSetState(fiber, queue, pendingState),
-      (ReactCurrentBatchConfig$2.transition = currentTransition));
+      (ReactSharedInternals.T = currentTransition));
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
@@ -4652,7 +4650,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
     else throw error;
   } finally {
     (currentUpdatePriority = previousPriority),
-      (ReactCurrentBatchConfig$2.transition = prevTransition);
+      (ReactSharedInternals.T = prevTransition);
   }
 }
 function useHostTransitionStatus() {
@@ -5543,8 +5541,7 @@ function throwException(
   } while (null !== returnFiber);
   return !1;
 }
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-  SelectiveHydrationException = Error(
+var SelectiveHydrationException = Error(
     "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
   ),
   didReceiveUpdate = !1;
@@ -6047,7 +6044,7 @@ function finishClassComponent(
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
   shouldUpdate = workInProgress.stateNode;
-  ReactCurrentOwner$1.current = workInProgress;
+  ReactSharedInternals.owner = workInProgress;
   if (
     didCaptureError &&
     "function" !== typeof Component.getDerivedStateFromError
@@ -7290,9 +7287,8 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
-  var transition = ReactCurrentBatchConfig$1.transition;
+  var transition = ReactSharedInternals.T;
   null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
@@ -9685,10 +9681,6 @@ var DefaultCacheDispatcher = {
     }
   },
   PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
-  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-  ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
   executionContext = 0,
   workInProgressRoot = null,
   workInProgress = null,
@@ -10110,8 +10102,8 @@ function prepareFreshStack(root, lanes) {
 }
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
-  ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
+  ReactSharedInternals.owner = null;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
     var handler = suspenseHandlerStackCursor.current;
@@ -10178,13 +10170,13 @@ function handleThrow(root, thrownValue) {
     }
 }
 function pushDispatcher() {
-  var prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+  var prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
   return null === prevDispatcher ? ContextOnlyDispatcher : prevDispatcher;
 }
 function pushCacheDispatcher() {
-  var prevCacheDispatcher = ReactCurrentCache.current;
-  ReactCurrentCache.current = DefaultCacheDispatcher;
+  var prevCacheDispatcher = ReactSharedInternals.C;
+  ReactSharedInternals.C = DefaultCacheDispatcher;
   return prevCacheDispatcher;
 }
 function renderDidSuspendDelayIfPossible() {
@@ -10246,8 +10238,8 @@ function renderRootSync(root, lanes) {
   lanes && root.shellSuspendCounter++;
   resetContextDependencies();
   executionContext = prevExecutionContext;
-  ReactCurrentDispatcher.current = prevDispatcher;
-  ReactCurrentCache.current = prevCacheDispatcher;
+  ReactSharedInternals.H = prevDispatcher;
+  ReactSharedInternals.C = prevCacheDispatcher;
   if (null !== workInProgress)
     throw Error(
       "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue."
@@ -10364,8 +10356,8 @@ function renderRootConcurrent(root, lanes) {
     }
   while (1);
   resetContextDependencies();
-  ReactCurrentDispatcher.current = prevDispatcher;
-  ReactCurrentCache.current = prevCacheDispatcher;
+  ReactSharedInternals.H = prevDispatcher;
+  ReactSharedInternals.C = prevCacheDispatcher;
   executionContext = prevExecutionContext;
   if (null !== workInProgress)
     return (
@@ -10395,7 +10387,7 @@ function performUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.owner = null;
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate,
@@ -10454,7 +10446,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.owner = null;
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -10550,11 +10542,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var prevTransition = ReactCurrentBatchConfig.transition,
+  var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = currentUpdatePriority;
   try {
     (currentUpdatePriority = 2),
-      (ReactCurrentBatchConfig.transition = null),
+      (ReactSharedInternals.T = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -10564,7 +10556,7 @@ function commitRoot(
         spawnedLane
       );
   } finally {
-    (ReactCurrentBatchConfig.transition = prevTransition),
+    (ReactSharedInternals.T = prevTransition),
       (currentUpdatePriority = previousUpdateLanePriority);
   }
   return null;
@@ -10615,13 +10607,13 @@ function commitRootImpl(
     }));
   transitions = 0 !== (finishedWork.flags & 15990);
   if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-    transitions = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = null;
+    transitions = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
     spawnedLane = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    ReactCurrentOwner.current = null;
+    ReactSharedInternals.owner = null;
     commitBeforeMutationEffects(root, finishedWork);
     commitTime = now();
     commitMutationEffects(root, finishedWork, lanes);
@@ -10636,7 +10628,7 @@ function commitRootImpl(
     requestPaint();
     executionContext = prevExecutionContext;
     currentUpdatePriority = spawnedLane;
-    ReactCurrentBatchConfig.transition = transitions;
+    ReactSharedInternals.T = transitions;
   } else (root.current = finishedWork), (commitTime = now());
   rootDoesHavePassiveEffects
     ? ((rootDoesHavePassiveEffects = !1),
@@ -10686,11 +10678,11 @@ function flushPassiveEffects() {
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
-      prevTransition = ReactCurrentBatchConfig.transition,
+      prevTransition = ReactSharedInternals.T,
       previousPriority = currentUpdatePriority;
     try {
       currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
-      ReactCurrentBatchConfig.transition = null;
+      ReactSharedInternals.T = null;
       if (null === rootWithPendingPassiveEffects)
         var JSCompiler_inline_result = !1;
       else {
@@ -10774,7 +10766,7 @@ function flushPassiveEffects() {
       return JSCompiler_inline_result;
     } finally {
       (currentUpdatePriority = previousPriority),
-        (ReactCurrentBatchConfig.transition = prevTransition),
+        (ReactSharedInternals.T = prevTransition),
         releaseRootPooledCache(root, remainingLanes);
     }
   }
@@ -11505,7 +11497,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1248 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-1ddc5337",
+    version: "19.0.0-canary-4c230c9b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11548,7 +11540,7 @@ var roots = new Map(),
   setErrorHandler: null,
   setSuspenseHandler: null,
   scheduleUpdate: null,
-  currentDispatcherRef: ReactSharedInternals.ReactCurrentDispatcher,
+  currentDispatcherRef: ReactSharedInternals,
   findHostInstanceByFiber: function (fiber) {
     fiber = findCurrentHostFiber(fiber);
     return null === fiber ? null : fiber.stateNode;
@@ -11561,7 +11553,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-1ddc5337"
+  reconcilerVersion: "19.0.0-canary-4c230c9b"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

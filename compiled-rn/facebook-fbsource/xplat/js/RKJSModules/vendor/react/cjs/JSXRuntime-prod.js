@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e9fc6c30cb3a1a336d8532aee527031>>
+ * @generated SignedSource<<6a9bb0dff181629a2d212a3aa8871904>>
  */
 
 "use strict";
@@ -32,8 +32,8 @@ function formatProdErrorMessage(code) {
 }
 var disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  ReactCurrentOwner =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+  ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 function jsxProd(type, config, maybeKey) {
   var key = null,
     ref = null;
@@ -48,7 +48,7 @@ function jsxProd(type, config, maybeKey) {
         null,
         ref,
         type,
-        ReactCurrentOwner.current
+        ReactSharedInternals.owner
       );
     }
   maybeKey = {};
@@ -68,7 +68,7 @@ function jsxProd(type, config, maybeKey) {
     key: key,
     ref: ref,
     props: maybeKey,
-    _owner: ReactCurrentOwner.current
+    _owner: ReactSharedInternals.owner
   };
 }
 function stringRefAsCallbackRef(stringRef, type, owner, value) {

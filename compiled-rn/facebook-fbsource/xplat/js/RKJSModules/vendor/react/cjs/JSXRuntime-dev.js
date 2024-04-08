@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<793e5defde71fd400afe9a6583a3e6cb>>
+ * @generated SignedSource<<b379d10e7a911819a4c1157692e442ed>>
  */
 
 "use strict";
@@ -81,9 +81,7 @@ if (__DEV__) {
       // When changing this logic, you might want to also
       // update consoleWithStackDev.www.js as well.
       {
-        var ReactDebugCurrentFrame =
-          ReactSharedInternals.ReactDebugCurrentFrame;
-        var stack = ReactDebugCurrentFrame.getStackAddendum();
+        var stack = ReactSharedInternals.getStackAddendum();
 
         if (stack !== "") {
           format += "%s";
@@ -477,7 +475,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
     function describeBuiltInComponentFrame(name) {
       if (enableComponentStackLocations) {
@@ -533,13 +530,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher;
+      var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactCurrentDispatcher.current; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactCurrentDispatcher.current = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -732,7 +729,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactCurrentDispatcher.current = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -968,8 +965,6 @@ if (__DEV__) {
       return null;
     }
 
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
@@ -1011,12 +1006,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner.current &&
+          ReactSharedInternals.owner &&
           self &&
-          ReactCurrentOwner.current.stateNode !== self
+          ReactSharedInternals.owner.stateNode !== self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner.current.type
+            ReactSharedInternals.owner.type
           );
 
           if (!didWarnAboutStringRefs[componentName]) {
@@ -1027,7 +1022,7 @@ if (__DEV__) {
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
                 "https://react.dev/link/strict-mode-string-ref",
-              getComponentNameFromType(ReactCurrentOwner.current.type),
+              getComponentNameFromType(ReactSharedInternals.owner.type),
               config.ref
             );
 
@@ -1345,7 +1340,7 @@ if (__DEV__) {
             ref = config.ref;
 
             {
-              ref = coerceStringRef(ref, ReactCurrentOwner.current, type);
+              ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
             }
           }
 
@@ -1406,7 +1401,7 @@ if (__DEV__) {
           ref,
           self,
           source,
-          ReactCurrentOwner.current,
+          ReactSharedInternals.owner,
           props
         );
 
@@ -1420,8 +1415,8 @@ if (__DEV__) {
 
     function getDeclarationErrorAddendum() {
       {
-        if (ReactCurrentOwner.current) {
-          var name = getComponentNameFromType(ReactCurrentOwner.current.type);
+        if (ReactSharedInternals.owner) {
+          var name = getComponentNameFromType(ReactSharedInternals.owner.type);
 
           if (name) {
             return "\n\nCheck the render method of `" + name + "`.";
@@ -1536,7 +1531,7 @@ if (__DEV__) {
         if (
           element &&
           element._owner != null &&
-          element._owner !== ReactCurrentOwner.current
+          element._owner !== ReactSharedInternals.owner
         ) {
           var ownerName = null;
 
@@ -1566,9 +1561,9 @@ if (__DEV__) {
       {
         if (element) {
           var stack = describeUnknownElementTypeFrameInDEV(element.type);
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
+          ReactSharedInternals.setExtraStackFrame(stack);
         } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
+          ReactSharedInternals.setExtraStackFrame(null);
         }
       }
     }
