@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c641be89261f73fa6d57361dd219a15d>>
+ * @generated SignedSource<<0301515ac101d5b3682c687183627ea7>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-33300bbd";
+    var ReactVersion = "19.0.0-canary-91afb935";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1749,11 +1749,8 @@ if (__DEV__) {
           props = {};
 
           for (var propName in config) {
-            if (
-              hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-              propName !== "key" &&
-              propName !== "ref"
-            ) {
+            // Skip over reserved prop names
+            if (propName !== "key" && propName !== "ref") {
               {
                 props[propName] = config[propName];
               }

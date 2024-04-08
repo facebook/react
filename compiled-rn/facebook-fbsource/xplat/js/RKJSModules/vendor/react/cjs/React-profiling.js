@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5a164104e95b6f496fecb7036c4b4780>>
+ * @generated SignedSource<<c327032e795f673af99163be781261f7>>
  */
 
 "use strict";
@@ -121,8 +121,7 @@ function jsxProd(type, config, maybeKey) {
     (ref = coerceStringRef(ref, ReactCurrentOwner.current, type)));
   maybeKey = {};
   for (var propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
+    "key" !== propName &&
       "ref" !== propName &&
       (maybeKey[propName] = config[propName]);
   if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
@@ -689,7 +688,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-canary-cedf8410";
+exports.version = "19.0.0-canary-f3e1f261";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

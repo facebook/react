@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d24a690e1d6994ec3438bae6ba3ca710>>
+ * @generated SignedSource<<8e9fc6c30cb3a1a336d8532aee527031>>
  */
 
 "use strict";
@@ -32,7 +32,6 @@ function formatProdErrorMessage(code) {
 }
 var disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
 function jsxProd(type, config, maybeKey) {
@@ -54,8 +53,7 @@ function jsxProd(type, config, maybeKey) {
     }
   maybeKey = {};
   for (var propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
+    "key" !== propName &&
       "ref" !== propName &&
       (maybeKey[propName] = config[propName]);
   if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
