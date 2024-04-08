@@ -2512,6 +2512,9 @@ var vendorPrefixes = {
     animationend: makePrefixMap("Animation", "AnimationEnd"),
     animationiteration: makePrefixMap("Animation", "AnimationIteration"),
     animationstart: makePrefixMap("Animation", "AnimationStart"),
+    transitionrun: makePrefixMap("Transition", "TransitionRun"),
+    transitionstart: makePrefixMap("Transition", "TransitionStart"),
+    transitioncancel: makePrefixMap("Transition", "TransitionCancel"),
     transitionend: makePrefixMap("Transition", "TransitionEnd")
   },
   prefixedEventNames = {},
@@ -2537,6 +2540,9 @@ function getVendorPrefixedEventName(eventName) {
 var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   ANIMATION_ITERATION = getVendorPrefixedEventName("animationiteration"),
   ANIMATION_START = getVendorPrefixedEventName("animationstart"),
+  TRANSITION_RUN = getVendorPrefixedEventName("transitionrun"),
+  TRANSITION_START = getVendorPrefixedEventName("transitionstart"),
+  TRANSITION_CANCEL = getVendorPrefixedEventName("transitioncancel"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
@@ -2663,6 +2669,9 @@ registerSimpleEvent(ANIMATION_START, "onAnimationStart");
 registerSimpleEvent("dblclick", "onDoubleClick");
 registerSimpleEvent("focusin", "onFocus");
 registerSimpleEvent("focusout", "onBlur");
+registerSimpleEvent(TRANSITION_RUN, "onTransitionRun");
+registerSimpleEvent(TRANSITION_START, "onTransitionStart");
+registerSimpleEvent(TRANSITION_CANCEL, "onTransitionCancel");
 registerSimpleEvent(TRANSITION_END, "onTransitionEnd");
 registerDirectEvent("onMouseEnter", ["mouseout", "mouseover"]);
 registerDirectEvent("onMouseLeave", ["mouseout", "mouseover"]);
@@ -17074,7 +17083,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1806 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-f5d53e66",
+  version: "19.0.0-www-modern-ab892dfe",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17118,7 +17127,7 @@ var devToolsConfig$jscomp$inline_1806 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-f5d53e66"
+  reconcilerVersion: "19.0.0-www-modern-ab892dfe"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17414,7 +17423,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-f5d53e66";
+exports.version = "19.0.0-www-modern-ab892dfe";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

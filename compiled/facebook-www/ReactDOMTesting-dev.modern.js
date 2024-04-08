@@ -10230,6 +10230,9 @@ if (__DEV__) {
       animationend: makePrefixMap("Animation", "AnimationEnd"),
       animationiteration: makePrefixMap("Animation", "AnimationIteration"),
       animationstart: makePrefixMap("Animation", "AnimationStart"),
+      transitionrun: makePrefixMap("Transition", "TransitionRun"),
+      transitionstart: makePrefixMap("Transition", "TransitionStart"),
+      transitioncancel: makePrefixMap("Transition", "TransitionCancel"),
       transitionend: makePrefixMap("Transition", "TransitionEnd")
     };
     /**
@@ -10290,6 +10293,9 @@ if (__DEV__) {
     var ANIMATION_END = getVendorPrefixedEventName("animationend");
     var ANIMATION_ITERATION = getVendorPrefixedEventName("animationiteration");
     var ANIMATION_START = getVendorPrefixedEventName("animationstart");
+    var TRANSITION_RUN = getVendorPrefixedEventName("transitionrun");
+    var TRANSITION_START = getVendorPrefixedEventName("transitionstart");
+    var TRANSITION_CANCEL = getVendorPrefixedEventName("transitioncancel");
     var TRANSITION_END = getVendorPrefixedEventName("transitionend");
 
     var topLevelEventsToReactNames = new Map(); // NOTE: Capitalization is important in this list!
@@ -10330,6 +10336,9 @@ if (__DEV__) {
       registerSimpleEvent("dblclick", "onDoubleClick");
       registerSimpleEvent("focusin", "onFocus");
       registerSimpleEvent("focusout", "onBlur");
+      registerSimpleEvent(TRANSITION_RUN, "onTransitionRun");
+      registerSimpleEvent(TRANSITION_START, "onTransitionStart");
+      registerSimpleEvent(TRANSITION_CANCEL, "onTransitionCancel");
       registerSimpleEvent(TRANSITION_END, "onTransitionEnd");
     }
 
@@ -46413,7 +46422,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-51793702";
+    var ReactVersion = "19.0.0-www-modern-58b10e2d";
 
     function createPortal$1(
       children,
