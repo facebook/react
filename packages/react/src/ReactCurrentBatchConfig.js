@@ -9,7 +9,7 @@
 
 import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
 
-type BatchConfig = {
+export type BatchConfig = {
   transition: BatchConfigTransition | null,
 };
 /**

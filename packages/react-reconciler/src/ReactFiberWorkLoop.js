@@ -9,6 +9,7 @@
 
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
+import type {BatchConfig} from 'react/src/ReactCurrentBatchConfig';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -281,13 +282,12 @@ import {logUncaughtError} from './ReactFiberErrorLogger';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
-const {
-  ReactCurrentDispatcher,
-  ReactCurrentCache,
-  ReactCurrentOwner,
-  ReactCurrentBatchConfig,
-  ReactCurrentActQueue,
-} = ReactSharedInternals;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+const ReactCurrentBatchConfig: BatchConfig =
+  ReactSharedInternals.ReactCurrentBatchConfig;
+const ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
 
 type ExecutionContext = number;
 
@@ -625,12 +625,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   const transition = requestCurrentTransition();
   if (transition !== null) {
     if (__DEV__) {
-      const batchConfigTransition = ReactCurrentBatchConfig.transition;
-      if (!batchConfigTransition._updatedFibers) {
-        batchConfigTransition._updatedFibers = new Set();
+      if (!transition._updatedFibers) {
+        transition._updatedFibers = new Set();
       }
 
-      batchConfigTransition._updatedFibers.add(fiber);
+      transition._updatedFibers.add(fiber);
     }
 
     const actionScopeLane = peekEntangledActionLane();
@@ -776,6 +775,8 @@ export function scheduleUpdateOnFiber(
           transition.startTime = now();
         }
 
+        // $FlowFixMe[prop-missing]: The BatchConfigTransition and Transition types are incompatible but was previously untyped and thus uncaught
+        // $FlowFixMe[incompatible-call]: "
         addTransitionToLanesMap(root, transition, lane);
       }
     }
@@ -1494,11 +1495,11 @@ export function discreteUpdates<A, B, C, D, R>(
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 // eslint-disable-next-line no-unused-vars
-declare function flushSync<R>(fn: () => R): R;
+declare function flushSyncFromReconciler<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSync(void): void;
+declare function flushSyncFromReconciler(void): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync<R>(fn: (() => R) | void): R | void {
+export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1536,6 +1537,16 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
       flushSyncWorkOnAllRoots();
     }
   }
+}
+
+// If called outside of a render or commit will flush all sync work on all roots
+// Returns whether the the call was during a render or not
+export function flushSyncWork(): boolean {
+  if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+    flushSyncWorkOnAllRoots();
+    return false;
+  }
+  return true;
 }
 
 export function isAlreadyRendering(): boolean {

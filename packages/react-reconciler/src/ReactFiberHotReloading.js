@@ -15,12 +15,12 @@ import type {Instance} from './ReactFiberConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
-  flushSync,
+  flushSyncWork,
   scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
-import {updateContainer} from './ReactFiberReconciler';
+import {updateContainerSync} from './ReactFiberReconciler';
 import {emptyContextObject} from './ReactFiberContext';
 import {SyncLane} from './ReactFiberLane';
 import {
@@ -241,13 +241,12 @@ export const scheduleRefresh: ScheduleRefresh = (
     }
     const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
-    flushSync(() => {
-      scheduleFibersWithFamiliesRecursively(
-        root.current,
-        updatedFamilies,
-        staleFamilies,
-      );
-    });
+    scheduleFibersWithFamiliesRecursively(
+      root.current,
+      updatedFamilies,
+      staleFamilies,
+    );
+    flushSyncWork();
   }
 };
 
@@ -262,10 +261,8 @@ export const scheduleRoot: ScheduleRoot = (
       // Just ignore. We'll delete this with _renderSubtree code path later.
       return;
     }
-    flushPassiveEffects();
-    flushSync(() => {
-      updateContainer(element, root, null, null);
-    });
+    updateContainerSync(element, root, null, null);
+    flushSyncWork();
   }
 };
 
