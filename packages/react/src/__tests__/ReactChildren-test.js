@@ -952,36 +952,26 @@ describe('ReactChildren', () => {
     );
   });
 
-  it('should render React.lazy after suspending', async () => {
+  it('should throw on React.lazy', async () => {
     const lazyElement = React.lazy(async () => ({default: <div />}));
-    function Component() {
-      return React.Children.map([lazyElement], c =>
-        React.cloneElement(c, {children: 'hi'}),
-      );
-    }
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component />);
-    });
-
-    expect(container.innerHTML).toBe('<div>hi</div>');
+    await expect(() => {
+      React.Children.forEach([lazyElement], () => {}, null);
+    }).toThrowError(
+      'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+        'We recommend not iterating over children and just rendering them plain.',
+      {withoutStack: true}, // There's nothing on the stack
+    );
   });
 
-  it('should render cached Promises after suspending', async () => {
+  it('should throw on Promises', async () => {
     const promise = Promise.resolve(<div />);
-    function Component() {
-      return React.Children.map([promise], c =>
-        React.cloneElement(c, {children: 'hi'}),
-      );
-    }
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component />);
-    });
-
-    expect(container.innerHTML).toBe('<div>hi</div>');
+    await expect(() => {
+      React.Children.forEach([promise], () => {}, null);
+    }).toThrowError(
+      'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+        'We recommend not iterating over children and just rendering them plain.',
+      {withoutStack: true}, // There's nothing on the stack
+    );
   });
 
   it('should throw on regex', () => {
