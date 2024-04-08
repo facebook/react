@@ -38,7 +38,7 @@ import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 import {dispatchReplayedFormAction} from './plugins/FormActionEventPlugin';
 import {
-  getCurrentUpdatePriority,
+  resolveUpdatePriority,
   runWithPriority as attemptHydrationAtPriority,
 } from '../client/ReactDOMUpdatePriority';
 
@@ -333,10 +333,7 @@ function attemptExplicitHydrationTarget(
 }
 
 export function queueExplicitHydrationTarget(target: Node): void {
-  // TODO: This will read the priority if it's dispatched by the React
-  // event system but not native events. Should read window.event.type, like
-  // we do for updates (getCurrentEventPriority).
-  const updatePriority = getCurrentUpdatePriority();
+  const updatePriority = resolveUpdatePriority();
   const queuedTarget: QueuedHydrationTarget = {
     blockedOn: null,
     target: target,
