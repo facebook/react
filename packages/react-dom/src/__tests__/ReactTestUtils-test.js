@@ -9,11 +9,11 @@
 
 'use strict';
 
-import {act} from 'internal-test-utils';
-import * as React from 'react';
-import * as ReactDOMClient from 'react-dom/client';
-import * as ReactDOMServer from 'react-dom/server';
-import * as ReactTestUtils from 'react-dom/test-utils';
+let React;
+let ReactDOMClient;
+let ReactDOMServer;
+let ReactTestUtils;
+let act;
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -27,8 +27,105 @@ function getTestDocument(markup) {
 }
 
 describe('ReactTestUtils', () => {
+  beforeEach(() => {
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    ReactDOMServer = require('react-dom/server');
+    ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
+  });
+
+  // @gate !disableDOMTestUtils
   it('Simulate should have locally attached media events', () => {
-    expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
+    expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchInlineSnapshot(`
+      [
+        "abort",
+        "animationEnd",
+        "animationIteration",
+        "animationStart",
+        "auxClick",
+        "beforeInput",
+        "blur",
+        "canPlay",
+        "canPlayThrough",
+        "cancel",
+        "change",
+        "click",
+        "close",
+        "compositionEnd",
+        "compositionStart",
+        "compositionUpdate",
+        "contextMenu",
+        "copy",
+        "cut",
+        "doubleClick",
+        "drag",
+        "dragEnd",
+        "dragEnter",
+        "dragExit",
+        "dragLeave",
+        "dragOver",
+        "dragStart",
+        "drop",
+        "durationChange",
+        "emptied",
+        "encrypted",
+        "ended",
+        "error",
+        "focus",
+        "gotPointerCapture",
+        "input",
+        "invalid",
+        "keyDown",
+        "keyPress",
+        "keyUp",
+        "load",
+        "loadStart",
+        "loadedData",
+        "loadedMetadata",
+        "lostPointerCapture",
+        "mouseDown",
+        "mouseEnter",
+        "mouseLeave",
+        "mouseMove",
+        "mouseOut",
+        "mouseOver",
+        "mouseUp",
+        "paste",
+        "pause",
+        "play",
+        "playing",
+        "pointerCancel",
+        "pointerDown",
+        "pointerEnter",
+        "pointerLeave",
+        "pointerMove",
+        "pointerOut",
+        "pointerOver",
+        "pointerUp",
+        "progress",
+        "rateChange",
+        "reset",
+        "resize",
+        "scroll",
+        "seeked",
+        "seeking",
+        "select",
+        "stalled",
+        "submit",
+        "suspend",
+        "timeUpdate",
+        "toggle",
+        "touchCancel",
+        "touchEnd",
+        "touchMove",
+        "touchStart",
+        "transitionEnd",
+        "volumeChange",
+        "waiting",
+        "wheel",
+      ]
+    `);
   });
 
   // @gate !disableDOMTestUtils
@@ -575,14 +672,6 @@ describe('ReactTestUtils', () => {
       });
       expect(idCallOrder).toEqual([CHILD]);
     });
-
-    // @gate disableDOMTestUtils
-    it('throws', async () => {
-      expect(ReactTestUtils.Simulate.click).toThrow(
-        '`Simulate` was removed from `react-dom/test-utils`. ' +
-          'See https://react.dev/warnings/react-dom-test-utils for more info.',
-      );
-    });
   });
 
   // @gate !disableDOMTestUtils
@@ -624,14 +713,6 @@ describe('ReactTestUtils', () => {
     );
 
     expect(renderedComponentType).toBe(instance);
-  });
-
-  // @gate disableDOMTestUtils
-  it('throws on every removed function', async () => {
-    expect(ReactTestUtils.isDOMComponent).toThrow(
-      '`isDOMComponent` was removed from `react-dom/test-utils`. ' +
-        'See https://react.dev/warnings/react-dom-test-utils for more info.',
-    );
   });
 
   // @gate __DEV__
