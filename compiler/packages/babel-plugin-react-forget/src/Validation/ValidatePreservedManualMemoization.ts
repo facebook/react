@@ -439,7 +439,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
             reason:
               "This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized",
             description: null,
-            severity: ErrorSeverity.InvalidReact,
+            severity: ErrorSeverity.CannotPreserveMemoization,
             loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
             suggestions: null,
           });

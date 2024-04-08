@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
   11 |   x.push(props);
   12 |
 > 13 |   return useCallback(() => [x], [x]);
-     |                      ^^^^^^^^^ InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (13:13)
+     |                      ^^^^^^^^^ CannotPreserveMemoization: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (13:13)
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {

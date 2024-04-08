@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 13 |     return identity(val);
      | ^^^^^^^^^^^^^^^^^^^^^^^^^
 > 14 |   }, [val]);
-     | ^^^^ InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:14)
+     | ^^^^ CannotPreserveMemoization: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:14)
   15 | }
   16 |
   17 | export const FIXTURE_ENTRYPOINT = {

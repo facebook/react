@@ -33,9 +33,9 @@ export const FIXTURE_ENTRYPOINT = {
   10 |
   11 |   // makeArray() is captured, but depsList contains [props]
 > 12 |   const cb = useCallback(() => [x], [x]);
-     |                          ^^^^^^^^^ InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:12)
+     |                          ^^^^^^^^^ CannotPreserveMemoization: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:12)
 
-InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:12)
+CannotPreserveMemoization: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (12:12)
   13 |
   14 |   x = makeArray();
   15 |
