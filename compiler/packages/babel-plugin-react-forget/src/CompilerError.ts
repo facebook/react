@@ -15,6 +15,8 @@ export enum ErrorSeverity {
   InvalidReact = "InvalidReact",
   // Incorrect configuration of the compiler.
   InvalidConfig = "InvalidConfig",
+  // Code that can reasonably occur and that doesn't break any rules, but is unsafe to perserve memoization.
+  CannotPreserveMemoization = "CannotPreserveMemoization",
   // Unhandled syntax that we don't support yet.
   Todo = "Todo",
   /*
@@ -219,6 +221,7 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
           return true;
+        case ErrorSeverity.CannotPreserveMemoization:
         case ErrorSeverity.Todo:
           return false;
         default:

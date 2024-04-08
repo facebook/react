@@ -44,6 +44,7 @@ function isReportableDiagnostic(
       break;
     case ErrorSeverity.InvalidConfig:
     case ErrorSeverity.Invariant:
+    case ErrorSeverity.CannotPreserveMemoization:
     case ErrorSeverity.Todo:
       break;
     default:
