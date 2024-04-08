@@ -26,14 +26,14 @@ type ReactDOMInternals = {
 function noop() {}
 
 const DefaultDispatcher: HostDispatcher = {
-  flushSyncWork: noop,
-  prefetchDNS: noop,
-  preconnect: noop,
-  preload: noop,
-  preloadModule: noop,
-  preinitScript: noop,
-  preinitStyle: noop,
-  preinitModuleScript: noop,
+  f /* flushSyncWork */: noop,
+  D /* prefetchDNS */: noop,
+  C /* preconnect */: noop,
+  L /* preload */: noop,
+  m /* preloadModule */: noop,
+  X /* preinitScript */: noop,
+  S /* preinitStyle */: noop,
+  M /* preinitModuleScript */: noop,
 };
 
 const Internals: ReactDOMInternals = {

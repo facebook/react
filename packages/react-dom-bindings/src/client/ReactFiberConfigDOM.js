@@ -1925,21 +1925,21 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
 const previousDispatcher =
   ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
 ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */ = {
-  flushSyncWork: disableLegacyMode
+  f /* flushSyncWork */: disableLegacyMode
     ? flushSyncWork
-    : previousDispatcher.flushSyncWork,
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinitStyle,
-  preinitScript,
-  preinitModuleScript,
+    : previousDispatcher.f /* flushSyncWork */,
+  D /* prefetchDNS */: prefetchDNS,
+  C /* preconnect */: preconnect,
+  L /* preload */: preload,
+  m /* preloadModule */: preloadModule,
+  X /* preinitScript */: preinitScript,
+  S /* preinitStyle */: preinitStyle,
+  M /* preinitModuleScript */: preinitModuleScript,
 };
 
 function flushSyncWork() {
   if (disableLegacyMode) {
-    const previousWasRendering = previousDispatcher.flushSyncWork();
+    const previousWasRendering = previousDispatcher.f(); /* flushSyncWork */
     const wasRendering = flushSyncWorkOnAllRoots();
     // Since multiple dispatchers can flush sync work during a single flushSync call
     // we need to return true if any of them were rendering.
@@ -1990,17 +1990,17 @@ function preconnectAs(
 }
 
 function prefetchDNS(href: string) {
-  previousDispatcher.prefetchDNS(href);
+  previousDispatcher.D(/* prefetchDNS */ href);
   preconnectAs('dns-prefetch', href, null);
 }
 
 function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
-  previousDispatcher.preconnect(href, crossOrigin);
+  previousDispatcher.C(/* preconnect */ href, crossOrigin);
   preconnectAs('preconnect', href, crossOrigin);
 }
 
 function preload(href: string, as: string, options?: ?PreloadImplOptions) {
-  previousDispatcher.preload(href, as, options);
+  previousDispatcher.L(/* preload */ href, as, options);
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && href && as) {
     let preloadSelector = `link[rel="preload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
@@ -2078,7 +2078,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
 }
 
 function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
-  previousDispatcher.preloadModule(href, options);
+  previousDispatcher.m(/* preloadModule */ href, options);
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && href) {
     const as =
@@ -2139,7 +2139,7 @@ function preinitStyle(
   precedence: ?string,
   options?: ?PreinitStyleOptions,
 ) {
-  previousDispatcher.preinitStyle(href, precedence, options);
+  previousDispatcher.S(/* preinitStyle */ href, precedence, options);
 
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && href) {
@@ -2213,7 +2213,7 @@ function preinitStyle(
 }
 
 function preinitScript(src: string, options?: ?PreinitScriptOptions) {
-  previousDispatcher.preinitScript(src, options);
+  previousDispatcher.X(/* preinitScript */ src, options);
 
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && src) {
@@ -2269,7 +2269,7 @@ function preinitModuleScript(
   src: string,
   options?: ?PreinitModuleScriptOptions,
 ) {
-  previousDispatcher.preinitModuleScript(src, options);
+  previousDispatcher.M(/* preinitModuleScript */ src, options);
 
   const ownerDocument = getGlobalDocument();
   if (ownerDocument && src) {

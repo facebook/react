@@ -82,18 +82,25 @@ export type PreinitModuleScriptOptions = {
 };
 
 export type HostDispatcher = {
-  flushSyncWork: () => boolean | void,
-  prefetchDNS: (href: string) => void,
-  preconnect: (href: string, crossOrigin?: ?CrossOriginEnum) => void,
-  preload: (href: string, as: string, options?: ?PreloadImplOptions) => void,
-  preloadModule: (href: string, options?: ?PreloadModuleImplOptions) => void,
-  preinitStyle: (
+  f /* flushSyncWork */: () => boolean | void,
+  D /* prefetchDNS */: (href: string) => void,
+  C /* preconnect */: (href: string, crossOrigin?: ?CrossOriginEnum) => void,
+  L /* preload */: (
+    href: string,
+    as: string,
+    options?: ?PreloadImplOptions,
+  ) => void,
+  m /* preloadModule */: (
+    href: string,
+    options?: ?PreloadModuleImplOptions,
+  ) => void,
+  S /* preinitStyle */: (
     href: string,
     precedence: ?string,
     options?: ?PreinitStyleOptions,
   ) => void,
-  preinitScript: (src: string, options?: ?PreinitScriptOptions) => void,
-  preinitModuleScript: (
+  X /* preinitScript */: (src: string, options?: ?PreinitScriptOptions) => void,
+  M /* preinitModuleScript */: (
     src: string,
     options?: ?PreinitModuleScriptOptions,
   ) => void,
