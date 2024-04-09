@@ -24,7 +24,7 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {currentOwner} from './ReactFiberAsyncDispatcher';
+import {currentOwner} from './ReactFiberCurrentOwner';
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;

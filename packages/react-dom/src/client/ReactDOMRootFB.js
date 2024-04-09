@@ -61,7 +61,7 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
-import {currentOwner} from 'react-reconciler/src/ReactFiberAsyncDispatcher';
+import {currentOwner} from 'react-reconciler/src/ReactFiberCurrentOwner';
 
 import assign from 'shared/assign';
 
