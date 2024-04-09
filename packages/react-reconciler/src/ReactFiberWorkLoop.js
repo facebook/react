@@ -203,7 +203,7 @@ import {
   resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
-import {DefaultAsyncDispatcher} from './ReactFiberCache';
+import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
