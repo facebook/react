@@ -111,7 +111,7 @@ import {
   getActionStateCount,
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
-import {DefaultCacheDispatcher} from './ReactFizzCache';
+import {DefaultAsyncDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
@@ -3791,10 +3791,10 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
-  let prevCacheDispatcher = null;
+  let prevAsyncDispatcher = null;
   if (enableCache) {
-    prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+    prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
 
   const prevRequest = currentRequest;
@@ -3826,7 +3826,7 @@ export function performWork(request: Request): void {
     setCurrentResumableState(prevResumableState);
     ReactSharedInternals.H = prevDispatcher;
     if (enableCache) {
-      ReactSharedInternals.C = prevCacheDispatcher;
+      ReactSharedInternals.A = prevAsyncDispatcher;
     }
 
     if (__DEV__) {

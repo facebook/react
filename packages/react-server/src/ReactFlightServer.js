@@ -89,7 +89,7 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {DefaultCacheDispatcher} from './flight/ReactFlightServerCache';
+import {DefaultAsyncDispatcher} from './flight/ReactFlightServerCache';
 
 import {
   getIteratorFn,
@@ -360,14 +360,14 @@ export function createRequest(
   environmentName: void | string,
 ): Request {
   if (
-    ReactSharedInternals.C !== null &&
-    ReactSharedInternals.C !== DefaultCacheDispatcher
+    ReactSharedInternals.A !== null &&
+    ReactSharedInternals.A !== DefaultAsyncDispatcher
   ) {
     throw new Error(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
-  ReactSharedInternals.C = DefaultCacheDispatcher;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];

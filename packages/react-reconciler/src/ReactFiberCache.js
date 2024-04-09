@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {CacheDispatcher} from './ReactInternalTypes';
+import type {AsyncDispatcher} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
@@ -27,6 +27,6 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
-export const DefaultCacheDispatcher: CacheDispatcher = {
+export const DefaultAsyncDispatcher: AsyncDispatcher = {
   getCacheForType,
 };

@@ -8,7 +8,7 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
@@ -16,7 +16,7 @@ import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
-  C: null | CacheDispatcher, // ReactCurrentCache for Cache
+  A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | BatchConfigTransition, // ReactCurrentBatchConfig for Transitions
 
   // DEV-only-ish
@@ -47,7 +47,7 @@ export type RendererTask = boolean => RendererTask | null;
 
 const ReactSharedInternals: SharedStateClient = ({
   H: null,
-  C: null,
+  A: null,
   T: null,
 }: any);
 
