@@ -59,19 +59,30 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-const ReactSharedInternals = (React: any)
-  .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-function readContext(Context: ReactContext<null>) {
-  const dispatcher = ReactSharedInternals.H;
-  if (dispatcher === null) {
-    throw new Error(
-      'react-cache: read and preload may only be called from within a ' +
-        "component's render. They are not supported in event handlers or " +
-        'lifecycle methods.',
-    );
-  }
-  return dispatcher.readContext(Context);
+let readContext;
+if (typeof React.use === 'function') {
+  readContext = function (Context: ReactContext<null>) {
+    return React.use(Context);
+  };
+} else if (
+  typeof (React: any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ===
+  'object'
+) {
+  const ReactCurrentDispatcher = (React: any)
+    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
+  readContext = function (Context: ReactContext<null>) {
+    const dispatcher = ReactCurrentDispatcher.current;
+    if (dispatcher === null) {
+      throw new Error(
+        'react-cache: read and preload may only be called from within a ' +
+          "component's render. They are not supported in event handlers or " +
+          'lifecycle methods.',
+      );
+    }
+    return dispatcher.readContext(Context);
+  };
+} else {
+  throw new Error('react-cache: Unsupported React version');
 }
 
 const CacheContext = createContext(null);
