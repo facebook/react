@@ -264,14 +264,14 @@ function* runWithEnvironment(
       name: "AlignReactiveScopesToBlockScopes",
       value: reactiveFunction,
     });
-  }
 
-  mergeOverlappingReactiveScopes(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "MergeOverlappingReactiveScopes",
-    value: reactiveFunction,
-  });
+    mergeOverlappingReactiveScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "MergeOverlappingReactiveScopes",
+      value: reactiveFunction,
+    });
+  }
 
   buildReactiveBlocks(reactiveFunction);
   yield log({
