@@ -457,9 +457,10 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      (enableRefAsProp ||
-        ((ref = config.ref), (ref = coerceStringRef(ref, owner, element.type))),
-      (owner = ReactSharedInternals.owner));
+      ((owner = ReactSharedInternals.owner),
+      enableRefAsProp ||
+        ((ref = config.ref),
+        (ref = coerceStringRef(ref, owner, element.type))));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -690,4 +691,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-classic-4b82ed06";
+exports.version = "19.0.0-www-classic-0eabe82a";

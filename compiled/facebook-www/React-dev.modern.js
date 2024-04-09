@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-e655a09b";
+    var ReactVersion = "19.0.0-www-modern-337e1422";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2043,6 +2043,8 @@ if (__DEV__) {
 
       if (config != null) {
         if (hasValidRef(config)) {
+          owner = ReactSharedInternals.owner;
+
           if (!enableRefAsProp) {
             // Silently steal the ref from the parent.
             ref = config.ref;
@@ -2051,8 +2053,6 @@ if (__DEV__) {
               ref = coerceStringRef(ref, owner, element.type);
             }
           }
-
-          owner = ReactSharedInternals.owner;
         }
 
         if (hasValidKey(config)) {

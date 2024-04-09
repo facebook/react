@@ -1767,6 +1767,8 @@ if (__DEV__) {
 
       if (config != null) {
         if (hasValidRef(config)) {
+          owner = ReactSharedInternals.owner;
+
           if (!enableRefAsProp) {
             // Silently steal the ref from the parent.
             ref = config.ref;
@@ -1775,8 +1777,6 @@ if (__DEV__) {
               ref = coerceStringRef(ref, owner, element.type);
             }
           }
-
-          owner = ReactSharedInternals.owner;
         }
 
         if (hasValidKey(config)) {
@@ -3083,7 +3083,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-f42736d9";
+    var ReactVersion = "19.0.0-www-modern-a3494f1d";
 
     // Patch fetch
     var Children = {
