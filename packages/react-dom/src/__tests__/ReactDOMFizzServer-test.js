@@ -104,7 +104,7 @@ describe('ReactDOMFizzServer', () => {
       console.error = (error, ...args) => {
         if (
           typeof error !== 'string' ||
-          error.indexOf('ReactDOM.useFormState has been deprecated') === -1
+          error.indexOf('ReactDOM.useFormState has been renamed') === -1
         ) {
           originalConsoleError(error, ...args);
         }
