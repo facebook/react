@@ -548,4 +548,79 @@ describe('ReactDOMFizzShellHydration', () => {
     ]);
     expect(container.textContent).toBe('Hello world');
   });
+
+  it(
+    'handles suspending while recovering from a hydration error (in the ' +
+      'shell, no Suspense boundary)',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+
+      let isClient = false;
+
+      let resolve;
+      const clientPromise = new Promise(res => {
+        resolve = res;
+      });
+
+      function App() {
+        const state = useSyncExternalStore(
+          function subscribe() {
+            return () => {};
+          },
+          function getSnapshot() {
+            return 'Client';
+          },
+          function getServerSnapshot() {
+            const isHydrating = isClient;
+            if (isHydrating) {
+              // This triggers an error during hydration
+              throw new Error('Oops!');
+            }
+            return 'Server';
+          },
+        );
+
+        if (state === 'Client') {
+          return React.use(clientPromise);
+        }
+
+        return state;
+      }
+
+      // Server render
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertLog([]);
+
+      expect(container.innerHTML).toBe('Server');
+
+      // During hydration, an error is thrown. React attempts to recover by
+      // switching to client render
+      isClient = true;
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            Scheduler.log('onRecoverableError: ' + error.message);
+            if (error.cause) {
+              Scheduler.log('Cause: ' + error.cause.message);
+            }
+          },
+        });
+      });
+      expect(container.innerHTML).toBe('Server'); // Still suspended
+      assertLog([]);
+
+      await clientAct(async () => {
+        resolve('Client');
+      });
+      assertLog([
+        'onRecoverableError: There was an error while hydrating but React was ' +
+          'able to recover by instead client rendering the entire root.',
+        'Cause: Oops!',
+      ]);
+      expect(container.innerHTML).toBe('Client');
+    },
+  );
 });

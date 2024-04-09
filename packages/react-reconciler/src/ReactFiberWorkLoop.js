@@ -931,19 +931,32 @@ export function performConcurrentWorkOnRoot(
 
         // Check if something threw
         if (exitStatus === RootErrored) {
-          const originallyAttemptedLanes = lanes;
+          const lanesThatJustErrored = lanes;
           const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
             root,
-            originallyAttemptedLanes,
+            lanesThatJustErrored,
           );
           if (errorRetryLanes !== NoLanes) {
             lanes = errorRetryLanes;
             exitStatus = recoverFromConcurrentError(
               root,
-              originallyAttemptedLanes,
+              lanesThatJustErrored,
               errorRetryLanes,
             );
             renderWasConcurrent = false;
+            // Need to check the exit status again.
+            if (exitStatus !== RootErrored) {
+              // The root did not error this time. Restart the exit algorithm
+              // from the beginning.
+              // TODO: Refactor the exit algorithm to be less confusing. Maybe
+              // more branches + recursion instead of a loop. I think the only
+              // thing that causes it to be a loop is the RootDidNotComplete
+              // check. If that's true, then we don't need a loop/recursion
+              // at all.
+              continue;
+            } else {
+              // The root errored yet again. Proceed to commit the tree.
+            }
           }
         }
         if (exitStatus === RootFatalErrored) {
