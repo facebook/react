@@ -1018,6 +1018,7 @@ if (__DEV__) {
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
     var didWarnAboutElementRef;
+    var didWarnAboutOldJSXRuntime;
 
     {
       didWarnAboutStringRefs = {};
@@ -1620,6 +1621,27 @@ if (__DEV__) {
       var ref = null;
 
       if (config != null) {
+        {
+          if (
+            !didWarnAboutOldJSXRuntime &&
+            "__self" in config && // Do not assume this is the result of an oudated JSX transform if key
+            // is present, because the modern JSX transform sometimes outputs
+            // createElement to preserve precedence between a static key and a
+            // spread key. To avoid false positive warnings, we never warn if
+            // there's a key.
+            !("key" in config)
+          ) {
+            didWarnAboutOldJSXRuntime = true;
+
+            warn(
+              "Your app (or one of its dependencies) is using an outdated JSX " +
+                "transform. Update to the modern JSX transform for " +
+                "faster performance: " + // TODO: Create a short link for this
+                "https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html"
+            );
+          }
+        }
+
         if (hasValidRef(config)) {
           if (!enableRefAsProp) {
             ref = config.ref;
@@ -3083,7 +3105,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-a3494f1d";
+    var ReactVersion = "19.0.0-www-modern-6d726a4f";
 
     // Patch fetch
     var Children = {

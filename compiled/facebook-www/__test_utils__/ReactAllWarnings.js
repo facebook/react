@@ -345,6 +345,7 @@ export default [
   "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`.",
   "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.",
   "You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one. ",
+  "Your app (or one of its dependencies) is using an outdated JSX transform. Update to the modern JSX transform for faster performance: https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html",
   "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
   "`Infinity` is an invalid value for the `%s` css style property.",
   "`NaN` is an invalid value for the `%s` css style property.",
