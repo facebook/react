@@ -9091,13 +9091,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             root,
             renderWasConcurrent
           );
-          0 !== errorRetryLanes &&
+          if (
+            0 !== errorRetryLanes &&
             ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
               renderWasConcurrent,
               errorRetryLanes
-            )));
+            )),
+            (renderWasConcurrent = !1),
+            2 !== exitStatus)
+          )
+            continue;
         }
         if (1 === exitStatus) {
           prepareFreshStack(root, 0);
@@ -10594,7 +10599,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-e80018a0",
+    version: "19.0.0-www-classic-f1bbc587",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1322 = {
@@ -10625,7 +10630,7 @@ var internals$jscomp$inline_1322 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-e80018a0"
+  reconcilerVersion: "19.0.0-www-classic-f1bbc587"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -10891,13 +10891,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             root,
             renderWasConcurrent
           );
-          0 !== errorRetryLanes &&
+          if (
+            0 !== errorRetryLanes &&
             ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
               renderWasConcurrent,
               errorRetryLanes
-            )));
+            )),
+            (renderWasConcurrent = !1),
+            2 !== exitStatus)
+          )
+            continue;
         }
         if (1 === exitStatus) {
           prepareFreshStack(root, 0);
@@ -16991,7 +16996,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1727 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-007b0a8e",
+  version: "19.0.0-www-classic-1ce9ab8c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2155 = {
@@ -17021,7 +17026,7 @@ var internals$jscomp$inline_2155 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-007b0a8e"
+  reconcilerVersion: "19.0.0-www-classic-1ce9ab8c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2156 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17484,4 +17489,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-007b0a8e";
+exports.version = "19.0.0-www-classic-1ce9ab8c";
