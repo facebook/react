@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2f6df52d0f4a771089641b8f6aacfd39>>
+ * @generated SignedSource<<a3c25968a30f5f8cd268a3314ac130fe>>
  */
 
 "use strict";
@@ -1296,7 +1296,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   log$1 = Scheduler.log,
   unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
   ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   rendererID = null,
   injectedHook = null,
   injectedProfilingHooks = null,
@@ -11277,7 +11277,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-c33d2f1a",
+    version: "19.0.0-canary-7ffb2ad4",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11333,7 +11333,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-c33d2f1a"
+  reconcilerVersion: "19.0.0-canary-7ffb2ad4"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

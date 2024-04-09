@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ca38f577582e221f06ba8c0f86a202c>>
+ * @generated SignedSource<<178370112fe2dafc2dbee6f0ef4ab3c2>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-700d733d";
+    var ReactVersion = "19.0.0-canary-70dcf491";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3789,7 +3789,7 @@ if (__DEV__) {
     exports.PureComponent = PureComponent;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
-    exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+    exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
     exports.act = act;
     exports.cache = cache;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2934352e960aa81c300ffcd8ccccd03f>>
+ * @generated SignedSource<<fd734202c65fd13f05652a451948b4df>>
  */
 
 "use strict";
@@ -1115,7 +1115,7 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler({
   }
 });
 var ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
@@ -11497,7 +11497,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1248 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-4c230c9b",
+    version: "19.0.0-canary-2571bd6c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11553,7 +11553,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-4c230c9b"
+  reconcilerVersion: "19.0.0-canary-2571bd6c"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

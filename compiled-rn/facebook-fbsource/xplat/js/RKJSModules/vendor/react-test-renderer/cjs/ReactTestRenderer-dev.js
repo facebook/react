@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<adb9aab2e8546b87933aac3aac47e82d>>
+ * @generated SignedSource<<fdd11cfd0a9f56383a8f5fff2c50fc9e>>
  */
 
 "use strict";
@@ -21,7 +21,7 @@ if (__DEV__) {
     var Scheduler$1 = require("scheduler");
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     // by calls to these methods by a Babel plugin.
     //
@@ -26590,7 +26590,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-8e2720f2";
+    var ReactVersion = "19.0.0-canary-27752dcf";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

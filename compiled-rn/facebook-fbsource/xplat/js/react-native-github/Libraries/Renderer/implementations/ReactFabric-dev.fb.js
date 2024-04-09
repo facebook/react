@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f6597e9005c61ca92bee97c0ac29c4ba>>
+ * @generated SignedSource<<494d27c89fdf2fb47e01cb552bf35a07>>
  */
 
 "use strict";
@@ -31,7 +31,7 @@ if (__DEV__) {
     var Scheduler = require("scheduler");
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var suppressWarning = false;
     function setSuppressWarning(newSuppressWarning) {
@@ -30237,7 +30237,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-0c451732";
+    var ReactVersion = "19.0.0-canary-d3b8f5e2";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

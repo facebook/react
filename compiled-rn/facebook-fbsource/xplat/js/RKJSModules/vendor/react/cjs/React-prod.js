@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<87e5d01f9dfe9dfb349c364fc2fdafbf>>
+ * @generated SignedSource<<087f252fe5b0c9dfa8cf8dc95115b992>>
  */
 
 "use strict";
@@ -426,7 +426,7 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
   ReactSharedInternals;
 exports.act = function () {
   throw Error("act(...) is not supported in production builds of React.");
@@ -675,4 +675,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-canary-fb236a46";
+exports.version = "19.0.0-canary-d8f6321d";

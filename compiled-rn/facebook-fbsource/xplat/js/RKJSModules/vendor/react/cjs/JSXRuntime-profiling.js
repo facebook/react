@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a9bb0dff181629a2d212a3aa8871904>>
+ * @generated SignedSource<<b4bf34965feaa60392dd96103e5ba9fc>>
  */
 
 "use strict";
@@ -33,7 +33,7 @@ function formatProdErrorMessage(code) {
 var disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 function jsxProd(type, config, maybeKey) {
   var key = null,
     ref = null;

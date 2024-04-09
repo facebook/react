@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a9007ecc9044c458313f7ebb83810ab6>>
+ * @generated SignedSource<<6d9fbd7e5536fb8d847f12abfabf7e26>>
  */
 
 "use strict";
@@ -57,7 +57,7 @@ if (__DEV__) {
     }
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     function error(format) {
       {

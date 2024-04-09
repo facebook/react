@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2aece110942a0616726b0f38c6fd0861>>
+ * @generated SignedSource<<16efbcb0da2cbd078a40efb1a0552fe8>>
  */
 
 "use strict";
@@ -1292,7 +1292,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   log$1 = Scheduler.log,
   unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
   ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   rendererID = null,
   injectedHook = null;
 function onCommitRoot(root) {
@@ -10572,7 +10572,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1099 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-aab30f5e",
+    version: "19.0.0-canary-120922b5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10615,7 +10615,7 @@ var internals$jscomp$inline_1366 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-aab30f5e"
+  reconcilerVersion: "19.0.0-canary-120922b5"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
