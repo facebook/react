@@ -7,12 +7,14 @@
  * @flow
  */
 
-import type {AsyncDispatcher} from './ReactInternalTypes';
+import type {AsyncDispatcher, Fiber} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {CacheContext} from './ReactFiberCacheComponent';
+
+import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
@@ -27,6 +29,13 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
-export const DefaultAsyncDispatcher: AsyncDispatcher = {
+export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getCacheForType,
-};
+}: any);
+
+if (__DEV__ || !disableStringRefs) {
+  DefaultAsyncDispatcher.getOwner = (): null | Fiber => {
+    // TODO
+    return null;
+  };
+}

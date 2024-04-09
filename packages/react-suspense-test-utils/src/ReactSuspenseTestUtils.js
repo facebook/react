@@ -22,6 +22,9 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
       }
       return entry;
     },
+    getOwner(): null {
+      return null;
+    },
   };
   // Not using async/await because we don't compile it.
   return new Promise((resolve, reject) => {
