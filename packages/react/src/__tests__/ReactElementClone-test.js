@@ -388,8 +388,12 @@ describe('ReactElementClone', () => {
     } else if (
       gate(flags => flags.enableRefAsProp && !flags.disableStringRefs)
     ) {
-      expect(clone.ref).toBe(element.ref);
-      expect(clone.props).toEqual({foo: 'ef'});
+      expect(() => {
+        expect(clone.ref).toBe(element.ref);
+      }).toErrorDev('Accessing element.ref was removed in React 19', {
+        withoutStack: true,
+      });
+      expect(clone.props).toEqual({foo: 'ef', ref: element.ref});
     } else {
       // Not going to bother testing every possible combination.
     }
