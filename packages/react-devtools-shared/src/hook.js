@@ -168,7 +168,7 @@ export function installHook(target: any): DevToolsHook | null {
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
               'configure React for production: ' +
-              'https://reactjs.org/link/perf-use-production-build',
+              'https://react.dev/link/perf-use-production-build',
           );
         });
       }

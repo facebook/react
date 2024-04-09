@@ -27,15 +27,11 @@ import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
-import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
-
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
 ): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
@@ -90,7 +86,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
 
 export function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
@@ -236,21 +232,19 @@ export function isChildPublicInstance(
   if (__DEV__) {
     // Paper
     if (
-      parentInstance instanceof ReactNativeFiberHostComponent ||
-      childInstance instanceof ReactNativeFiberHostComponent
+      // $FlowExpectedError[incompatible-type]
+      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+      parentInstance._internalFiberInstanceHandleDEV &&
+      // $FlowExpectedError[incompatible-type]
+      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+      childInstance._internalFiberInstanceHandleDEV
     ) {
-      if (
-        parentInstance instanceof ReactNativeFiberHostComponent &&
-        childInstance instanceof ReactNativeFiberHostComponent
-      ) {
-        return doesFiberContain(
-          parentInstance._internalFiberInstanceHandleDEV,
-          childInstance._internalFiberInstanceHandleDEV,
-        );
-      }
-
-      // Means that one instance is from Fabric and other is from Paper.
-      return false;
+      return doesFiberContain(
+        // $FlowExpectedError[incompatible-call]
+        parentInstance._internalFiberInstanceHandleDEV,
+        // $FlowExpectedError[incompatible-call]
+        childInstance._internalFiberInstanceHandleDEV,
+      );
     }
 
     const parentInternalInstanceHandle =
@@ -271,6 +265,7 @@ export function isChildPublicInstance(
       );
     }
 
+    // Means that one instance is from Fabric and other is from Paper.
     return false;
   } else {
     throw new Error('isChildPublicInstance() is not available in production.');

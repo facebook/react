@@ -13,7 +13,6 @@ import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
-let ReactDOM;
 let ReactDOMClient;
 let useFocusWithin;
 let act;
@@ -25,7 +24,6 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableScopeAPI = true;
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
-  ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   act = require('internal-test-utils').act;
 
@@ -42,6 +40,7 @@ const table = [[forcePointerEvents], [!forcePointerEvents]];
 describe.each(table)(`useFocus`, hasPointerEvents => {
   let container;
   let container2;
+  let root;
 
   beforeEach(() => {
     initializeModules(hasPointerEvents);
@@ -49,10 +48,14 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     document.body.appendChild(container);
     container2 = document.createElement('div');
     document.body.appendChild(container2);
+    root = ReactDOMClient.createRoot(container);
   });
 
-  afterEach(() => {
-    ReactDOM.render(null, container);
+  afterEach(async () => {
+    await act(() => {
+      root.render(null);
+    });
+
     document.body.removeChild(container);
     document.body.removeChild(container2);
     container = null;
@@ -75,7 +78,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         return <div ref={focusWithinRef} />;
       };
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -111,7 +114,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
     };
 
@@ -188,7 +191,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
     };
 
@@ -314,7 +317,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       );
     };
     await act(() => {
-      ReactDOM.render(<Component />, container);
+      root.render(<Component />);
     });
 
     const target = createEventTarget(inputRef.current);
@@ -354,7 +357,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       };
 
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
 
       const inner = innerRef.current;
@@ -363,7 +366,10 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       target.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
-      ReactDOM.render(<Component show={false} />, container);
+      await act(() => {
+        root.render(<Component show={false} />);
+      });
+
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledWith(
@@ -391,7 +397,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       };
 
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
 
       const inner = innerRef.current;
@@ -400,7 +406,11 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       target.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
-      ReactDOM.render(<Component show={false} />, container);
+
+      await act(() => {
+        root.render(<Component show={false} />);
+      });
+
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledWith(
@@ -433,13 +443,16 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       };
 
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
 
       inputRef.current.focus();
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
-      ReactDOM.render(<Component show={false} />, container);
+      await act(() => {
+        root.render(<Component show={false} />);
+      });
+
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
     });
@@ -469,7 +482,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       };
 
       await act(() => {
-        ReactDOM.render(<Component show={true} />, container);
+        root.render(<Component show={true} />);
       });
 
       const inner = innerRef.current;
@@ -477,7 +490,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       target.keydown({key: 'Tab'});
       target.focus();
       await act(() => {
-        ReactDOM.render(<Component show={false} />, container);
+        root.render(<Component show={false} />);
       });
       expect(targetNodes).toEqual([targetNode]);
     });
@@ -512,10 +525,10 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         );
       };
 
-      const root = ReactDOMClient.createRoot(container2);
+      const root2 = ReactDOMClient.createRoot(container2);
 
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
       expect(container2.innerHTML).toBe('<div><input></div>');
 
@@ -528,14 +541,18 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       suspend = true;
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
       expect(container2.innerHTML).toBe(
         '<div><input style="display: none;">Loading...</div>',
       );
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
-      resolve();
+      await act(() => {
+        suspend = false;
+        resolve();
+      });
+      expect(container2.innerHTML).toBe('<div><input style=""></div>');
     });
 
     // @gate www
@@ -569,10 +586,10 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         );
       };
 
-      const root = ReactDOMClient.createRoot(container2);
+      const root2 = ReactDOMClient.createRoot(container2);
 
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
 
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
@@ -580,13 +597,13 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       suspend = true;
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
 
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(0);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(0);
@@ -594,12 +611,16 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       buttonRef.current.focus();
       suspend = false;
       await act(() => {
-        root.render(<Component />);
+        root2.render(<Component />);
       });
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
 
-      resolve();
+      await act(() => {
+        suspend = false;
+        resolve();
+      });
+      expect(container2.innerHTML).toBe('<div><input style=""></div>');
     });
   });
 });

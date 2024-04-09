@@ -9,44 +9,24 @@
 
 'use strict';
 
-const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
-
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let act;
 let SuspenseList;
 
-function initModules() {
-  // Reset warning cache.
-  jest.resetModules();
-
-  React = require('react');
-  ReactDOM = require('react-dom');
-  ReactDOMClient = require('react-dom/client');
-  ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
-  act = require('internal-test-utils').act;
-  if (gate(flags => flags.enableSuspenseList)) {
-    SuspenseList = React.unstable_SuspenseList;
-  }
-
-  // Make them available to the helpers.
-  return {
-    ReactDOM,
-    ReactDOMServer,
-    ReactTestUtils,
-  };
-}
-
-const {itThrowsWhenRendering, resetModules, serverRender} =
-  ReactDOMServerIntegrationUtils(initModules);
-
 describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
-    resetModules();
+    // Reset warning cache.
+    jest.resetModules();
+
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    ReactDOMServer = require('react-dom/server');
+    act = require('internal-test-utils').act;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.unstable_SuspenseList;
+    }
   });
 
   function Text(props) {
@@ -97,42 +77,42 @@ describe('ReactDOMServerSuspense', () => {
   }
 
   it('should render the children when no promise is thrown', async () => {
-    const c = await serverRender(
-      <div>
-        <React.Suspense fallback={<Text text="Fallback" />}>
-          <Text text="Children" />
-        </React.Suspense>
-      </div>,
+    const container = document.createElement('div');
+    const html = ReactDOMServer.renderToString(
+      <React.Suspense fallback={<Text text="Fallback" />}>
+        <Text text="Children" />
+      </React.Suspense>,
     );
-    expect(getVisibleChildren(c)).toEqual(<div>Children</div>);
+    container.innerHTML = html;
+    expect(getVisibleChildren(container)).toEqual(<div>Children</div>);
   });
 
   it('should render the fallback when a promise thrown', async () => {
-    const c = await serverRender(
-      <div>
-        <React.Suspense fallback={<Text text="Fallback" />}>
-          <AsyncText text="Children" />
-        </React.Suspense>
-      </div>,
+    const container = document.createElement('div');
+    const html = ReactDOMServer.renderToString(
+      <React.Suspense fallback={<Text text="Fallback" />}>
+        <AsyncText text="Children" />
+      </React.Suspense>,
     );
-    expect(getVisibleChildren(c)).toEqual(<div>Fallback</div>);
+    container.innerHTML = html;
+    expect(getVisibleChildren(container)).toEqual(<div>Fallback</div>);
   });
 
   it('should work with nested suspense components', async () => {
-    const c = await serverRender(
-      <div>
-        <React.Suspense fallback={<Text text="Fallback" />}>
-          <div>
-            <Text text="Children" />
-            <React.Suspense fallback={<Text text="Fallback" />}>
-              <AsyncText text="Children" />
-            </React.Suspense>
-          </div>
-        </React.Suspense>
-      </div>,
+    const container = document.createElement('div');
+    const html = ReactDOMServer.renderToString(
+      <React.Suspense fallback={<Text text="Fallback" />}>
+        <div>
+          <Text text="Children" />
+          <React.Suspense fallback={<Text text="Fallback" />}>
+            <AsyncText text="Children" />
+          </React.Suspense>
+        </div>
+      </React.Suspense>,
     );
+    container.innerHTML = html;
 
-    expect(getVisibleChildren(c)).toEqual(
+    expect(getVisibleChildren(container)).toEqual(
       <div>
         <div>Children</div>
         <div>Fallback</div>
@@ -152,56 +132,38 @@ describe('ReactDOMServerSuspense', () => {
         </React.Suspense>
       </SuspenseList>
     );
-    const element = await serverRender(example);
-    const parent = element.parentNode;
-    const divA = parent.children[0];
+    const container = document.createElement('div');
+    const html = ReactDOMServer.renderToString(example);
+    container.innerHTML = html;
+
+    const divA = container.children[0];
     expect(divA.tagName).toBe('DIV');
     expect(divA.textContent).toBe('A');
-    const divB = parent.children[1];
+    const divB = container.children[1];
     expect(divB.tagName).toBe('DIV');
     expect(divB.textContent).toBe('B');
 
     await act(() => {
-      ReactDOMClient.hydrateRoot(parent, example);
+      ReactDOMClient.hydrateRoot(container, example);
     });
 
-    const parent2 = element.parentNode;
-    const divA2 = parent2.children[0];
-    const divB2 = parent2.children[1];
+    const divA2 = container.children[0];
+    const divB2 = container.children[1];
     expect(divA).toBe(divA2);
     expect(divB).toBe(divB2);
   });
 
-  // TODO: Remove this in favor of @gate pragma
-  if (__EXPERIMENTAL__) {
-    itThrowsWhenRendering(
-      'a suspending component outside a Suspense node',
-      async render => {
-        await render(
-          <div>
-            <React.Suspense />
-            <AsyncText text="Children" />
-            <React.Suspense />
-          </div>,
-          1,
-        );
-      },
-      'A component suspended while responding to synchronous input.',
-    );
-
-    itThrowsWhenRendering(
-      'a suspending component without a Suspense above',
-      async render => {
-        await render(
-          <div>
-            <AsyncText text="Children" />
-          </div>,
-          1,
-        );
-      },
-      'A component suspended while responding to synchronous input.',
-    );
-  }
+  it('it throws when rendering a suspending component outside a Suspense node', async () => {
+    expect(() => {
+      ReactDOMServer.renderToString(
+        <div>
+          <React.Suspense />
+          <AsyncText text="Children" />
+          <React.Suspense />
+        </div>,
+      );
+    }).toThrow('A component suspended while responding to synchronous input.');
+  });
 
   it('does not get confused by throwing null', () => {
     function Bad() {

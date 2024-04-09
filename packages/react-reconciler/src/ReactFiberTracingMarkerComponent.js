@@ -36,15 +36,18 @@ export type PendingTransitionCallbacks = {
   markerComplete: Map<string, Set<Transition>> | null,
 };
 
+// TODO: Unclear to me why these are separate types
 export type Transition = {
   name: string,
   startTime: number,
+  ...
 };
 
 export type BatchConfigTransition = {
   name?: string,
   startTime?: number,
   _updatedFibers?: Set<Fiber>,
+  _callbacks: Set<(BatchConfigTransition, mixed) => mixed>,
 };
 
 // TODO: Is there a way to not include the tag or name here?

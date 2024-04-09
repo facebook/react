@@ -44,7 +44,7 @@ module.exports = function register() {
       }).body;
     } catch (x) {
       // eslint-disable-next-line react-internal/no-production-logging
-      console.error('Error parsing %s %s', url, x.message);
+      console['error']('Error parsing %s %s', url, x.message);
       return originalCompile.apply(this, arguments);
     }
 

@@ -33,7 +33,7 @@ describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
     jest.resetModules();
     // Simulate the condition resolution
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-turbopack/server', () =>
       require('react-server-dom-turbopack/server.edge'),
     );
@@ -111,7 +111,6 @@ describe('ReactFlightDOMForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
-  // @gate enableFormActions
   it('can submit a passed server action without hydrating it', async () => {
     let foo = null;
 

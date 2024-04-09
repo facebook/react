@@ -119,6 +119,7 @@ const attributes = [
   },
   {name: 'aria', read: getAttribute('aria')},
   {name: 'aria-', read: getAttribute('aria-')},
+  {name: 'aria-hidden', read: getProperty('ariaHidden')},
   {name: 'aria-invalidattribute', read: getAttribute('aria-invalidattribute')},
   {name: 'as', tagName: 'link'},
   {
@@ -905,7 +906,7 @@ const attributes = [
     read: getSVGProperty('height'),
     overrideStringValue: '100%',
   },
-  {name: 'hidden'},
+  {name: 'hidden', overrideStringValue: 'until-found'},
   {name: 'high', tagName: 'meter'},
   {
     name: 'horiz-adv-x',
@@ -968,6 +969,7 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feBlend',
   },
+  {name: 'inert'},
   {
     name: 'in2',
     read: getSVGProperty('in2'),
@@ -977,7 +979,7 @@ const attributes = [
   {name: 'initialChecked', read: getAttribute('initialchecked')},
   {name: 'initialValue', read: getAttribute('initialvalue')},
   {name: 'inlist', read: getAttribute('inlist')},
-  {name: 'inputMode', tagName: 'input', read: getAttribute('inputmode')}, // TODO: Should use property but it's not implemented in Chrome
+  {name: 'inputMode', tagName: 'input'},
   {name: 'integrity', tagName: 'script'},
   {
     name: 'intercept',

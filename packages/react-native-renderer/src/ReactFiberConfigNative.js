@@ -26,6 +26,7 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 import {
   DefaultEventPriority,
+  NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -253,7 +254,19 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
 }
 

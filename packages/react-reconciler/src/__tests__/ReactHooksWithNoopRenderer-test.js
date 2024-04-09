@@ -215,49 +215,11 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     // Confirm that a subsequent hook works properly.
     function GoodCounter(props, ref) {
-      const [count] = useState(props.initialCount);
-      return <Text text={count} />;
-    }
-    ReactNoop.render(<GoodCounter initialCount={10} />);
-    await waitForAll([10]);
-  });
-
-  // @gate !disableModulePatternComponents
-  it('throws inside module-style components', async () => {
-    function Counter() {
-      return {
-        render() {
-          const [count] = useState(0);
-          return <Text text={this.props.label + ': ' + count} />;
-        },
-      };
-    }
-    ReactNoop.render(<Counter />);
-    await expect(
-      async () =>
-        await waitForThrow(
-          'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen ' +
-            'for one of the following reasons:\n' +
-            '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-            '2. You might be breaking the Rules of Hooks\n' +
-            '3. You might have more than one copy of React in the same app\n' +
-            'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-        ),
-    ).toErrorDev(
-      'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
-        'Change Counter to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Counter.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
-
-    // Confirm that a subsequent hook works properly.
-    function GoodCounter(props) {
       const [count] = useState(props.initialCount);
       return <Text text={count} />;
     }
@@ -276,7 +238,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       {withoutStack: true},
     );
   });
@@ -1660,6 +1622,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
     });
 
+    // @gate !disableLegacyMode
     it(
       'in legacy mode, useEffect is deferred and updates finish synchronously ' +
         '(in a single batch)',
@@ -2077,14 +2040,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      await act(async () => {
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 0', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-      });
+      await expect(async () => {
+        await act(async () => {
+          ReactNoop.render(<Counter count={0} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 0', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+        });
+      }).rejects.toThrow('Oops');
 
       assertLog([
         'Mount A [0]',
@@ -2107,7 +2071,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         useEffect(() => {
           if (props.count === 1) {
             Scheduler.log('Oops!');
-            throw new Error('Oops!');
+            throw new Error('Oops error!');
           }
           Scheduler.log(`Mount B [${props.count}]`);
           return () => {
@@ -2126,22 +2090,27 @@ describe('ReactHooksWithNoopRenderer', () => {
         assertLog(['Mount A [0]', 'Mount B [0]']);
       });
 
-      await act(async () => {
-        // This update will trigger an error
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 1', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-        assertLog(['Unmount A [0]', 'Unmount B [0]', 'Mount A [1]', 'Oops!']);
-        expect(ReactNoop).toMatchRenderedOutput(null);
-      });
-      assertLog([
-        // Clean up effect A runs passively on unmount.
-        // There's no effect B to clean-up, because it never mounted.
-        'Unmount A [1]',
-      ]);
+      await expect(async () => {
+        await act(async () => {
+          // This update will trigger an error
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 1', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
+          ReactNoop.flushPassiveEffects();
+          assertLog([
+            'Unmount A [0]',
+            'Unmount B [0]',
+            'Mount A [1]',
+            'Oops!',
+            // Clean up effect A runs passively on unmount.
+            // There's no effect B to clean-up, because it never mounted.
+            'Unmount A [1]',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput(null);
+        });
+      }).rejects.toThrow('Oops error!');
     });
 
     it('handles errors in destroy on update', async () => {
@@ -2151,7 +2120,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           return () => {
             Scheduler.log('Oops!');
             if (props.count === 0) {
-              throw new Error('Oops!');
+              throw new Error('Oops error!');
             }
           };
         });
@@ -2174,26 +2143,34 @@ describe('ReactHooksWithNoopRenderer', () => {
         assertLog(['Mount A [0]', 'Mount B [0]']);
       });
 
-      await act(async () => {
-        // This update will trigger an error during passive effect unmount
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.log('Sync effect'),
-        );
-        await waitFor(['Count: 1', 'Sync effect']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+      await expect(async () => {
+        await act(async () => {
+          // This update will trigger an error during passive effect unmount
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.log('Sync effect'),
+          );
+          await waitFor(['Count: 1', 'Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
+          ReactNoop.flushPassiveEffects();
 
-        // This branch enables a feature flag that flushes all passive destroys in a
-        // separate pass before flushing any passive creates.
-        // A result of this two-pass flush is that an error thrown from unmount does
-        // not block the subsequent create functions from being run.
-        assertLog(['Oops!', 'Unmount B [0]', 'Mount A [1]', 'Mount B [1]']);
-      });
+          // This branch enables a feature flag that flushes all passive destroys in a
+          // separate pass before flushing any passive creates.
+          // A result of this two-pass flush is that an error thrown from unmount does
+          // not block the subsequent create functions from being run.
+          assertLog([
+            'Oops!',
+            'Unmount B [0]',
+            'Mount A [1]',
+            'Mount B [1]',
+            // <Counter> gets unmounted because an error is thrown above.
+            // The remaining destroy functions are run later on unmount, since they're passive.
+            // In this case, one of them throws again (because of how the test is written).
+            'Oops!',
+            'Unmount B [1]',
+          ]);
+        });
+      }).rejects.toThrow('Oops error!');
 
-      // <Counter> gets unmounted because an error is thrown above.
-      // The remaining destroy functions are run later on unmount, since they're passive.
-      // In this case, one of them throws again (because of how the test is written).
-      assertLog(['Oops!', 'Unmount B [1]']);
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
@@ -3712,7 +3689,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useState                   useState\n' +
@@ -3805,11 +3782,11 @@ describe('ReactHooksWithNoopRenderer', () => {
           await waitForThrow(
             'Rendered more hooks than during the previous render.',
           );
-          assertLog([]);
+          assertLog(['Unmount A']);
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             '1. useEffect                  useEffect\n' +

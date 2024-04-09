@@ -13,6 +13,6 @@ export * from 'react-server-dom-fb/src/ReactFlightServerConfigFBBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export * from '../ReactFlightServerConfigDebugNoop';

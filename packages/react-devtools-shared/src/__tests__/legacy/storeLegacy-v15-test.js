@@ -753,37 +753,43 @@ describe('Store (legacy)', () => {
       `);
     });
 
-    it('should support expanding deep parts of the tree', () => {
-      const Wrapper = ({forwardedRef}) => (
-        <Nested depth={3} forwardedRef={forwardedRef} />
-      );
-      const Nested = ({depth, forwardedRef}) =>
-        depth > 0 ? (
-          <Nested depth={depth - 1} forwardedRef={forwardedRef} />
-        ) : (
-          <div ref={forwardedRef} />
+    // TODO: These tests don't work when enableRefAsProp is on because the
+    // JSX runtime that's injected into the test environment by the compiler
+    // is not compatible with older versions of React. Need to configure the
+    // the test environment in such a way that certain test modules like this
+    // one can use an older transform.
+    if (!require('shared/ReactFeatureFlags').enableRefAsProp) {
+      it('should support expanding deep parts of the tree', () => {
+        const Wrapper = ({forwardedRef}) => (
+          <Nested depth={3} forwardedRef={forwardedRef} />
         );
+        const Nested = ({depth, forwardedRef}) =>
+          depth > 0 ? (
+            <Nested depth={depth - 1} forwardedRef={forwardedRef} />
+          ) : (
+            <div ref={forwardedRef} />
+          );
 
-      let ref = null;
-      const refSetter = value => {
-        ref = value;
-      };
+        let ref = null;
+        const refSetter = value => {
+          ref = value;
+        };
 
-      act(() =>
-        ReactDOM.render(
-          <Wrapper forwardedRef={refSetter} />,
-          document.createElement('div'),
-        ),
-      );
-      expect(store).toMatchInlineSnapshot(`
+        act(() =>
+          ReactDOM.render(
+            <Wrapper forwardedRef={refSetter} />,
+            document.createElement('div'),
+          ),
+        );
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
       `);
 
-      const deepestedNodeID = global.agent.getIDForNode(ref);
+        const deepestedNodeID = global.agent.getIDForNode(ref);
 
-      act(() => store.toggleIsCollapsed(deepestedNodeID, false));
-      expect(store).toMatchInlineSnapshot(`
+        act(() => store.toggleIsCollapsed(deepestedNodeID, false));
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
             ▾ <Nested>
@@ -793,16 +799,16 @@ describe('Store (legacy)', () => {
                       <div>
       `);
 
-      const rootID = store.getElementIDAtIndex(0);
+        const rootID = store.getElementIDAtIndex(0);
 
-      act(() => store.toggleIsCollapsed(rootID, true));
-      expect(store).toMatchInlineSnapshot(`
+        act(() => store.toggleIsCollapsed(rootID, true));
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▸ <Wrapper>
       `);
 
-      act(() => store.toggleIsCollapsed(rootID, false));
-      expect(store).toMatchInlineSnapshot(`
+        act(() => store.toggleIsCollapsed(rootID, false));
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
             ▾ <Nested>
@@ -812,17 +818,17 @@ describe('Store (legacy)', () => {
                       <div>
       `);
 
-      const id = store.getElementIDAtIndex(1);
+        const id = store.getElementIDAtIndex(1);
 
-      act(() => store.toggleIsCollapsed(id, true));
-      expect(store).toMatchInlineSnapshot(`
+        act(() => store.toggleIsCollapsed(id, true));
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
             ▸ <Nested>
       `);
 
-      act(() => store.toggleIsCollapsed(id, false));
-      expect(store).toMatchInlineSnapshot(`
+        act(() => store.toggleIsCollapsed(id, false));
+        expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
             ▾ <Nested>
@@ -831,7 +837,8 @@ describe('Store (legacy)', () => {
                   ▾ <Nested>
                       <div>
       `);
-    });
+      });
+    }
 
     it('should support reordering of children', () => {
       const Root = ({children}) => <div>{children}</div>;

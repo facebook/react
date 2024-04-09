@@ -14,11 +14,11 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 export type BrowserTheme = 'dark' | 'light';
 

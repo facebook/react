@@ -93,14 +93,14 @@ export function validateProperties(type, props) {
     if (invalidProps.length === 1) {
       console.error(
         'Invalid aria prop %s on <%s> tag. ' +
-          'For details, see https://reactjs.org/link/invalid-aria-props',
+          'For details, see https://react.dev/link/invalid-aria-props',
         unknownPropString,
         type,
       );
     } else if (invalidProps.length > 1) {
       console.error(
         'Invalid aria props %s on <%s> tag. ' +
-          'For details, see https://reactjs.org/link/invalid-aria-props',
+          'For details, see https://react.dev/link/invalid-aria-props',
         unknownPropString,
         type,
       );

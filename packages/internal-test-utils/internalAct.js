@@ -20,12 +20,22 @@ import * as Scheduler from 'scheduler/unstable_mock';
 
 import enqueueTask from './enqueueTask';
 
-let actingUpdatesScopeDepth: number = 0;
+export let actingUpdatesScopeDepth: number = 0;
+
+export const thrownErrors: Array<mixed> = [];
 
 async function waitForMicrotasks() {
   return new Promise(resolve => {
     enqueueTask(() => resolve());
   });
+}
+
+function aggregateErrors(errors: Array<mixed>): mixed {
+  if (errors.length > 1 && typeof AggregateError === 'function') {
+    // eslint-disable-next-line no-undef
+    return new AggregateError(errors);
+  }
+  return errors[0];
 }
 
 export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
@@ -62,6 +72,28 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
   // scope adding work to the queue synchronously. We don't do this in the
   // public version of `act`, though we maybe should in the future.
   await waitForMicrotasks();
+
+  const errorHandlerDOM = function (event: ErrorEvent) {
+    // Prevent logs from reprinting this error.
+    event.preventDefault();
+    thrownErrors.push(event.error);
+  };
+  const errorHandlerNode = function (err: mixed) {
+    thrownErrors.push(err);
+  };
+  // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
+  if (actingUpdatesScopeDepth === 1) {
+    if (
+      typeof window === 'object' &&
+      typeof window.addEventListener === 'function'
+    ) {
+      // We're in a JS DOM environment.
+      window.addEventListener('error', errorHandlerDOM);
+    } else if (typeof process === 'object') {
+      // Node environment
+      process.on('uncaughtException', errorHandlerNode);
+    }
+  }
 
   try {
     const result = await scope();
@@ -106,10 +138,27 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       Scheduler.unstable_flushUntilNextPaint();
     } while (true);
 
+    if (thrownErrors.length > 0) {
+      // Rethrow any errors logged by the global error handling.
+      const thrownError = aggregateErrors(thrownErrors);
+      thrownErrors.length = 0;
+      throw thrownError;
+    }
+
     return result;
   } finally {
     const depth = actingUpdatesScopeDepth;
     if (depth === 1) {
+      if (
+        typeof window === 'object' &&
+        typeof window.addEventListener === 'function'
+      ) {
+        // We're in a JS DOM environment.
+        window.removeEventListener('error', errorHandlerDOM);
+      } else if (typeof process === 'object') {
+        // Node environment
+        process.off('uncaughtException', errorHandlerNode);
+      }
       global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
     }
     actingUpdatesScopeDepth = depth - 1;

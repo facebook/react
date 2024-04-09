@@ -1,7 +1,6 @@
 const {resolve} = require('path');
 const Webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
-const fs = require('fs');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -17,10 +16,7 @@ const semver = require('semver');
 
 const {SUCCESSFUL_COMPILATION_MESSAGE} = require('./constants');
 
-const ReactVersionSrc = fs.readFileSync(require.resolve('shared/ReactVersion'));
-const currentReactVersion = /export default '([^']+)';/.exec(
-  ReactVersionSrc,
-)[1];
+const {ReactVersion: currentReactVersion} = require('../../ReactVersions');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {

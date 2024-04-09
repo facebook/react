@@ -9,19 +9,19 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
-import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
+import type {Thenable, Usable, ReactComponentInfo} from 'shared/ReactTypes';
 import type {ThenableState} from './ReactFlightThenable';
 import {
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
-import {readContext as readContextImpl} from './ReactFlightNewContext';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
 let thenableState = null;
+let currentComponentDebugInfo = null;
 
 export function prepareToUseHooksForRequest(request: Request) {
   currentRequest = request;
@@ -33,38 +33,28 @@ export function resetHooksForRequest() {
 
 export function prepareToUseHooksForComponent(
   prevThenableState: ThenableState | null,
+  componentDebugInfo: null | ReactComponentInfo,
 ) {
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
+  if (__DEV__) {
+    currentComponentDebugInfo = componentDebugInfo;
+  }
 }
 
-export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
+export function getThenableStateAfterSuspending(): ThenableState {
+  // If you use() to Suspend this should always exist but if you throw a Promise instead,
+  // which is not really supported anymore, it will be empty. We use the empty set as a
+  // marker to know if this was a replay of the same component or first attempt.
+  const state = thenableState || createThenableState();
+  if (__DEV__) {
+    // This is a hack but we stash the debug info here so that we don't need a completely
+    // different data structure just for this in DEV. Not too happy about it.
+    (state: any)._componentDebugInfo = currentComponentDebugInfo;
+    currentComponentDebugInfo = null;
+  }
   thenableState = null;
   return state;
-}
-
-function readContext<T>(context: ReactServerContext<T>): T {
-  if (__DEV__) {
-    if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      if (isClientReference(context)) {
-        console.error('Cannot read a Client Context from a Server Component.');
-      } else {
-        console.error(
-          'Only createServerContext is supported in Server Components.',
-        );
-      }
-    }
-    if (currentRequest === null) {
-      console.error(
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
-    }
-  }
-  return readContextImpl(context);
 }
 
 export const HooksDispatcher: Dispatcher = {
@@ -77,8 +67,8 @@ export const HooksDispatcher: Dispatcher = {
   useDebugValue(): void {},
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
-  readContext,
-  useContext: readContext,
+  readContext: (unsupportedContext: any),
+  useContext: (unsupportedContext: any),
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
@@ -111,6 +101,10 @@ function unsupportedRefresh(): void {
   );
 }
 
+function unsupportedContext(): void {
+  throw new Error('Cannot read a Client Context from a Server Component.');
+}
+
 function useId(): string {
   if (currentRequest === null) {
     throw new Error('useId can only be used while React is rendering');
@@ -138,18 +132,22 @@ function use<T>(usable: Usable<T>): T {
         thenableState = createThenableState();
       }
       return trackUsedThenable(thenableState, thenable, index);
-    } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
-      const context: ReactServerContext<T> = (usable: any);
-      return readContext(context);
+    } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
+      unsupportedContext();
     }
   }
 
-  if (__DEV__) {
-    if (isClientReference(usable)) {
-      console.error('Cannot use() an already resolved Client Reference.');
+  if (isClientReference(usable)) {
+    if (usable.value != null && usable.value.$$typeof === REACT_CONTEXT_TYPE) {
+      // Show a more specific message since it's a common mistake.
+      throw new Error('Cannot read a Client Context from a Server Component.');
+    } else {
+      throw new Error('Cannot use() an already resolved Client Reference.');
     }
+  } else {
+    throw new Error(
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      'An unsupported type was passed to use(): ' + String(usable),
+    );
   }
-
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }

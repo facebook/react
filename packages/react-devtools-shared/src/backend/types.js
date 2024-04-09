@@ -15,7 +15,6 @@
  */
 
 import type {ReactContext, Wakeable} from 'shared/ReactTypes';
-import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -30,6 +29,7 @@ import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 import type Agent from './agent';
 
 type BundleType =
@@ -58,6 +58,7 @@ export type WorkTagMap = {
   HostSingleton: WorkTag,
   HostText: WorkTag,
   IncompleteClassComponent: WorkTag,
+  IncompleteFunctionComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
   LegacyHiddenComponent: WorkTag,
@@ -86,7 +87,12 @@ export type NativeType = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
-export type CurrentDispatcherRef = {current: null | Dispatcher};
+export type LegacyDispatcherRef = {current: null | Dispatcher};
+type SharedInternalsSubset = {
+  H: null | Dispatcher,
+  ...
+};
+export type CurrentDispatcherRef = SharedInternalsSubset;
 
 export type GetDisplayNameForFiberID = (
   id: number,
@@ -154,7 +160,7 @@ export type ReactRenderer = {
   scheduleUpdate?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
   // Only injected by React v16.8+ in order to support hooks inspection.
-  currentDispatcherRef?: CurrentDispatcherRef,
+  currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
@@ -279,8 +285,6 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
-
-  // Location of component in source code.
   source: Source | null,
 
   type: ElementType,
