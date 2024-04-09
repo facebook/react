@@ -537,16 +537,24 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should cleanup even if render() fatals', async () => {
+    const dispatcherEnabled =
+      __DEV__ ||
+      !gate(flags => flags.disableStringRefs) ||
+      gate(flags => flags.enableCache);
+    const ownerEnabled = __DEV__ || !gate(flags => flags.disableStringRefs);
+
+    let stashedDispatcher;
     class BadComponent extends React.Component {
       render() {
+        // Stash the dispatcher that was available in render so we can check
+        // that its internals also reset.
+        stashedDispatcher = ReactSharedInternals.A;
         throw new Error();
       }
     }
 
     const instance = <BadComponent />;
-    expect(ReactSharedInternals.owner).toBe(
-      __DEV__ || !gate(flags => flags.disableStringRefs) ? null : undefined,
-    );
+    expect(ReactSharedInternals.A).toBe(dispatcherEnabled ? null : undefined);
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await expect(async () => {
@@ -555,9 +563,16 @@ describe('ReactCompositeComponent', () => {
       });
     }).rejects.toThrow();
 
-    expect(ReactSharedInternals.owner).toBe(
-      __DEV__ || !gate(flags => flags.disableStringRefs) ? null : undefined,
-    );
+    expect(ReactSharedInternals.A).toBe(dispatcherEnabled ? null : undefined);
+    if (dispatcherEnabled) {
+      if (ownerEnabled) {
+        expect(stashedDispatcher.getOwner()).toBe(null);
+      } else {
+        expect(stashedDispatcher.getOwner).toBe(undefined);
+      }
+    } else {
+      expect(stashedDispatcher).toBe(undefined);
+    }
   });
 
   it('should call componentWillUnmount before unmounting', async () => {
