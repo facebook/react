@@ -1875,7 +1875,7 @@ function popDispatcher(prevDispatcher: any) {
 }
 
 function pushAsyncDispatcher() {
-  if (enableCache) {
+  if (enableCache || __DEV__ || !disableStringRefs) {
     const prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
     return prevAsyncDispatcher;
@@ -1885,7 +1885,7 @@ function pushAsyncDispatcher() {
 }
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
-  if (enableCache) {
+  if (enableCache || __DEV__ || !disableStringRefs) {
     ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
