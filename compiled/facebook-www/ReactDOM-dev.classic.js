@@ -13581,8 +13581,8 @@ if (__DEV__) {
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
@@ -36145,7 +36145,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-62ca9930";
+    var ReactVersion = "19.0.0-www-classic-969b8d04";
 
     function createPortal$1(
       children,

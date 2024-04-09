@@ -7907,8 +7907,8 @@ if (__DEV__) {
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
@@ -26645,7 +26645,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-142ddea8";
+    var ReactVersion = "19.0.0-www-modern-c5e9d708";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

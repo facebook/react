@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-c315fb9e";
+    var ReactVersion = "19.0.0-www-classic-8d7149a6";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -8966,8 +8966,8 @@ if (__DEV__) {
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
