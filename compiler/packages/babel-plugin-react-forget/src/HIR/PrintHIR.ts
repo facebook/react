@@ -633,15 +633,22 @@ function isMutable(range: MutableRange): boolean {
   return range.end > range.start + 1;
 }
 
+const DEBUG_MUTABLE_RANGES = false;
 function printMutableRange(identifier: Identifier): string {
-  const range = identifier.mutableRange;
-  const scopeRange = identifier.scope?.range;
-  if (
-    scopeRange != null &&
-    (scopeRange.start !== range.start || scopeRange.end !== range.end)
-  ) {
-    return `[${range.start}:${range.end}] scope=[${scopeRange.start}:${scopeRange.end}]`;
+  if (DEBUG_MUTABLE_RANGES) {
+    // if debugging, print both the identifier and scope range if they differ
+    const range = identifier.mutableRange;
+    const scopeRange = identifier.scope?.range;
+    if (
+      scopeRange != null &&
+      (scopeRange.start !== range.start || scopeRange.end !== range.end)
+    ) {
+      return `[${range.start}:${range.end}] scope=[${scopeRange.start}:${scopeRange.end}]`;
+    }
+    return isMutable(range) ? `[${range.start}:${range.end}]` : "";
   }
+  // in non-debug mode, prefer the scope range if it exists
+  const range = identifier.scope?.range ?? identifier.mutableRange;
   return isMutable(range) ? `[${range.start}:${range.end}]` : "";
 }
 
