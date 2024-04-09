@@ -395,8 +395,8 @@ function warnOnUseFormStateInDev(): void {
       didWarnAboutUseFormState.add(componentName);
 
       console.error(
-        'ReactDOM.useFormState has been deprecated and replaced by ' +
-          'React.useActionState. Please update %s to use React.useActionState.',
+        'ReactDOM.useFormState has been renamed to React.useActionState. ' +
+          'Please update %s to use React.useActionState.',
         componentName,
       );
     }
