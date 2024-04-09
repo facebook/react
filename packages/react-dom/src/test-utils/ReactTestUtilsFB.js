@@ -27,7 +27,7 @@ import isArray from 'shared/isArray';
 
 // Keep in sync with ReactDOM.js:
 const SecretInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 const EventInternals = SecretInternals.Events;
 const getInstanceFromNode = EventInternals[0];
 const getNodeFromInstance = EventInternals[1];

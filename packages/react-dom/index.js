@@ -9,7 +9,7 @@
 
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './src/ReactDOMSharedInternals';
 export {
   createPortal,
   createRoot,

@@ -11,7 +11,7 @@ import * as React from 'react';
 
 const ReactSharedInternalsServer =
   // $FlowFixMe: It's defined in the one we resolve to.
-  React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 if (!ReactSharedInternalsServer) {
   throw new Error(

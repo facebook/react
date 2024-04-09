@@ -2121,7 +2121,7 @@ describe('ReactDOMComponent', () => {
         componentWillUnmount() {
           // Should not throw
           expect(
-            ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+            ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
               this,
             ).nodeName,
           ).toBe('SPAN');

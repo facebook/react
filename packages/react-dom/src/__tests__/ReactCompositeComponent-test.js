@@ -68,7 +68,7 @@ describe('ReactCompositeComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactSharedInternals =
-      require('react').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      require('react').__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     Scheduler = require('scheduler');
     assertLog = require('internal-test-utils').assertLog;
     act = require('internal-test-utils').act;

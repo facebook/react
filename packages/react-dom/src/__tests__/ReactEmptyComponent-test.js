@@ -27,7 +27,8 @@ describe('ReactEmptyComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     findDOMNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
