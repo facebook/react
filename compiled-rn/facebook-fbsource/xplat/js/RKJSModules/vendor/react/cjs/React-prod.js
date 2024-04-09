@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<087f252fe5b0c9dfa8cf8dc95115b992>>
+ * @generated SignedSource<<a65e947a9aae75cec4e1da93fb16724f>>
  */
 
 "use strict";
@@ -447,9 +447,9 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((ref = config.ref),
-      (ref = coerceStringRef(ref, owner, element.type)),
-      (owner = ReactSharedInternals.owner));
+      ((owner = ReactSharedInternals.owner),
+      (ref = config.ref),
+      (ref = coerceStringRef(ref, owner, element.type)));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -675,4 +675,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-canary-d8f6321d";
+exports.version = "19.0.0-canary-8fa94cdb";

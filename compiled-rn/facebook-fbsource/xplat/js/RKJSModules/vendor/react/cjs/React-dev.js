@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<178370112fe2dafc2dbee6f0ef4ab3c2>>
+ * @generated SignedSource<<1fbc8fa493dfbca4298090a431bfb47d>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-70dcf491";
+    var ReactVersion = "19.0.0-canary-9ab97ea0";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1960,6 +1960,8 @@ if (__DEV__) {
 
       if (config != null) {
         if (hasValidRef(config)) {
+          owner = ReactSharedInternals.owner;
+
           {
             // Silently steal the ref from the parent.
             ref = config.ref;
@@ -1968,8 +1970,6 @@ if (__DEV__) {
               ref = coerceStringRef(ref, owner, element.type);
             }
           }
-
-          owner = ReactSharedInternals.owner;
         }
 
         if (hasValidKey(config)) {
