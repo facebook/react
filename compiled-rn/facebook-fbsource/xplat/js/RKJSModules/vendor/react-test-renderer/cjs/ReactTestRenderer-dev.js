@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fdd11cfd0a9f56383a8f5fff2c50fc9e>>
+ * @generated SignedSource<<881e78352310ebeea1f473a89441e0c9>>
  */
 
 "use strict";
@@ -22773,20 +22773,31 @@ if (__DEV__) {
             } // Check if something threw
 
             if (exitStatus === RootErrored) {
-              var originallyAttemptedLanes = lanes;
+              var lanesThatJustErrored = lanes;
               var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
                 root,
-                originallyAttemptedLanes
+                lanesThatJustErrored
               );
 
               if (errorRetryLanes !== NoLanes) {
                 lanes = errorRetryLanes;
                 exitStatus = recoverFromConcurrentError(
                   root,
-                  originallyAttemptedLanes,
+                  lanesThatJustErrored,
                   errorRetryLanes
                 );
-                renderWasConcurrent = false;
+                renderWasConcurrent = false; // Need to check the exit status again.
+
+                if (exitStatus !== RootErrored) {
+                  // The root did not error this time. Restart the exit algorithm
+                  // from the beginning.
+                  // TODO: Refactor the exit algorithm to be less confusing. Maybe
+                  // more branches + recursion instead of a loop. I think the only
+                  // thing that causes it to be a loop is the RootDidNotComplete
+                  // check. If that's true, then we don't need a loop/recursion
+                  // at all.
+                  continue;
+                }
               }
             }
 
@@ -26590,7 +26601,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-27752dcf";
+    var ReactVersion = "19.0.0-canary-89546c49";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

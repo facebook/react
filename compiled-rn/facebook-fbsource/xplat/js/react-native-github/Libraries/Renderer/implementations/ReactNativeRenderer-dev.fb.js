@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<24fee48abc3bddda74443b28d17bbc3e>>
+ * @generated SignedSource<<a64d4ff9138061f9c517e2327f49b803>>
  */
 
 "use strict";
@@ -26682,20 +26682,31 @@ to return true:wantsResponderID|                            |
             } // Check if something threw
 
             if (exitStatus === RootErrored) {
-              var originallyAttemptedLanes = lanes;
+              var lanesThatJustErrored = lanes;
               var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
                 root,
-                originallyAttemptedLanes
+                lanesThatJustErrored
               );
 
               if (errorRetryLanes !== NoLanes) {
                 lanes = errorRetryLanes;
                 exitStatus = recoverFromConcurrentError(
                   root,
-                  originallyAttemptedLanes,
+                  lanesThatJustErrored,
                   errorRetryLanes
                 );
-                renderWasConcurrent = false;
+                renderWasConcurrent = false; // Need to check the exit status again.
+
+                if (exitStatus !== RootErrored) {
+                  // The root did not error this time. Restart the exit algorithm
+                  // from the beginning.
+                  // TODO: Refactor the exit algorithm to be less confusing. Maybe
+                  // more branches + recursion instead of a loop. I think the only
+                  // thing that causes it to be a loop is the RootDidNotComplete
+                  // check. If that's true, then we don't need a loop/recursion
+                  // at all.
+                  continue;
+                }
               }
             }
 
@@ -30677,7 +30688,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-ae39878d";
+    var ReactVersion = "19.0.0-canary-f860c0a2";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

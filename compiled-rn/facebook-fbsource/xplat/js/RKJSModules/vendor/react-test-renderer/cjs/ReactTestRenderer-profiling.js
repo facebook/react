@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ec92ba0d6674d69f102b6b07bcc607e9>>
+ * @generated SignedSource<<21f520424802b9edb8fc0a8c96178e1c>>
  */
 
 "use strict";
@@ -7966,13 +7966,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             root,
             renderWasConcurrent
           );
-          0 !== errorRetryLanes &&
+          if (
+            0 !== errorRetryLanes &&
             ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
               renderWasConcurrent,
               errorRetryLanes
-            )));
+            )),
+            (renderWasConcurrent = !1),
+            2 !== exitStatus)
+          )
+            continue;
         }
         if (1 === exitStatus) {
           prepareFreshStack(root, 0);
@@ -9757,7 +9762,7 @@ var devToolsConfig$jscomp$inline_1082 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-09ccb82c",
+  version: "19.0.0-canary-12ee58d1",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9801,7 +9806,7 @@ var devToolsConfig$jscomp$inline_1082 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-09ccb82c"
+  reconcilerVersion: "19.0.0-canary-12ee58d1"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
