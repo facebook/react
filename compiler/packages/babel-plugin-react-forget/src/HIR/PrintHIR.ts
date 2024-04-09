@@ -8,6 +8,7 @@
 import generate from "@babel/generator";
 import { printReactiveFunction } from "..";
 import { CompilerError } from "../CompilerError";
+import { printReactiveScopeSummary } from "../ReactiveScopes/PrintReactiveFunction";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 import type {
@@ -124,7 +125,8 @@ export function printMixedHIR(
     case "goto":
     case "do-while":
     case "for-in":
-    case "for-of": {
+    case "for-of":
+    case "scope": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -265,6 +267,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "maybe-throw": {
       value = `MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      break;
+    }
+    case "scope": {
+      value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
+        terminal.block
+      } fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "try": {

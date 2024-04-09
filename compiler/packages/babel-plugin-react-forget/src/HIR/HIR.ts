@@ -347,7 +347,8 @@ export type Terminal =
   | LabelTerminal
   | SequenceTerminal
   | MaybeThrowTerminal
-  | TryTerminal;
+  | TryTerminal
+  | ReactiveScopeTerminal;
 
 function _staticInvariantTerminalHasLocation(
   terminal: Terminal
@@ -539,6 +540,15 @@ export type MaybeThrowTerminal = {
   kind: "maybe-throw";
   continuation: BlockId;
   handler: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type ReactiveScopeTerminal = {
+  kind: "scope";
+  fallthrough: BlockId;
+  block: BlockId;
+  scope: ReactiveScope;
   id: InstructionId;
   loc: SourceLocation;
 };

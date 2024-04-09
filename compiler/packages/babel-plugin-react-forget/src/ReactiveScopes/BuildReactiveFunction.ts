@@ -786,6 +786,37 @@ class Driver {
         }
         break;
       }
+      case "scope": {
+        const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
+        if (fallthroughId !== null) {
+          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          scheduleIds.push(scheduleId);
+        }
+
+        let block: ReactiveBlock;
+        if (this.cx.isScheduled(terminal.block)) {
+          CompilerError.invariant(false, {
+            reason: `Unexpected 'scope' where the block is already scheduled`,
+            loc: terminal.loc,
+          });
+        } else {
+          block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
+        }
+
+        this.cx.unscheduleAll(scheduleIds);
+        blockValue.push({
+          kind: "scope",
+          instructions: block,
+          scope: terminal.scope,
+        });
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
+
+        break;
+      }
       case "unsupported": {
         CompilerError.invariant(false, {
           reason: "Unexpected unsupported terminal",

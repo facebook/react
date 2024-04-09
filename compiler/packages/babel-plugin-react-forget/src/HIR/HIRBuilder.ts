@@ -795,6 +795,10 @@ function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
         visit(terminal.block);
         break;
       }
+      case "scope": {
+        visit(terminal.block);
+        break;
+      }
       case "unsupported": {
         break;
       }

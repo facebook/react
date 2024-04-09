@@ -833,6 +833,18 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
+    case "scope": {
+      const block = fn(terminal.block);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "scope",
+        scope: terminal.scope,
+        block,
+        fallthrough,
+        id: makeInstructionId(0),
+        loc: terminal.loc,
+      };
+    }
     case "unsupported": {
       return terminal;
     }
@@ -872,7 +884,8 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "sequence":
     case "switch":
     case "ternary":
-    case "while": {
+    case "while":
+    case "scope": {
       return terminal.fallthrough;
     }
     default: {
@@ -935,21 +948,31 @@ export function mapOptionalFallthroughs(
       const _: BlockId = terminal.fallthrough;
       break;
     }
+    case "scope": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
     case "switch": {
       if (terminal.fallthrough !== null) {
         terminal.fallthrough = fn(terminal.fallthrough);
+      } else {
+        terminal.fallthrough = null;
       }
       break;
     }
     case "if": {
       if (terminal.fallthrough !== null) {
         terminal.fallthrough = fn(terminal.fallthrough);
+      } else {
+        terminal.fallthrough = null;
       }
       break;
     }
     case "label": {
       if (terminal.fallthrough !== null) {
         terminal.fallthrough = fn(terminal.fallthrough);
+      } else {
+        terminal.fallthrough = null;
       }
       break;
     }
@@ -1050,6 +1073,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.block;
       break;
     }
+    case "scope": {
+      yield terminal.block;
+      break;
+    }
     case "unsupported":
       break;
     default: {
@@ -1109,7 +1136,8 @@ export function mapTerminalOperands(
     case "for-of":
     case "for-in":
     case "goto":
-    case "unsupported": {
+    case "unsupported":
+    case "scope": {
       // no-op
       break;
     }
@@ -1165,7 +1193,8 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "for-of":
     case "for-in":
     case "goto":
-    case "unsupported": {
+    case "unsupported":
+    case "scope": {
       // no-op
       break;
     }
