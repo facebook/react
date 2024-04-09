@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-export const DefaultCacheDispatcher: CacheDispatcher = {
+export const DefaultAsyncDispatcher: AsyncDispatcher = {
   getCacheForType,
 };

@@ -434,6 +434,6 @@ export type Dispatcher = {
   ) => [Awaited<S>, (P) => void, boolean],
 };
 
-export type CacheDispatcher = {
+export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
 };

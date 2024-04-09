@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
 
@@ -19,7 +19,7 @@ function resolveCache(): Map<Function, mixed> {
   return new Map();
 }
 
-export const DefaultCacheDispatcher: CacheDispatcher = {
+export const DefaultAsyncDispatcher: AsyncDispatcher = {
   getCacheForType<T>(resourceType: () => T): T {
     const cache = resolveCache();
     let entry: T | void = (cache.get(resourceType): any);
