@@ -57,8 +57,8 @@ describe('ReactFlight', () => {
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     // This stores the state so we need to preserve it
     const flightModules = require('react-noop-renderer/flight-modules');
-    __unmockReact();
     jest.resetModules();
+    __unmockReact();
     jest.mock('react-noop-renderer/flight-modules', () => flightModules);
     React = require('react');
     startTransition = React.startTransition;
@@ -2161,7 +2161,9 @@ describe('ReactFlight', () => {
       jest.mock('react', () => require('react/react.react-server'));
       ReactServer = require('react');
       ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-      transport = ReactNoopFlightServer.render({root: <ServerComponent />});
+      transport = ReactNoopFlightServer.render({
+        root: ReactServer.createElement(ServerComponent),
+      });
     }).toErrorDev('err');
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
