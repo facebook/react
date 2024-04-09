@@ -89,7 +89,7 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {DefaultAsyncDispatcher} from './flight/ReactFlightServerCache';
+import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 
 import {
   getIteratorFn,

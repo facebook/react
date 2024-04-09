@@ -111,7 +111,7 @@ import {
   getActionStateCount,
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
-import {DefaultAsyncDispatcher} from './ReactFizzCache';
+import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
