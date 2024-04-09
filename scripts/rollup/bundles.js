@@ -328,7 +328,7 @@ const bundles = [
 
   /******* React DOM Fizz Server External Runtime *******/
   {
-    bundleTypes: [BROWSER_SCRIPT],
+    bundleTypes: __EXPERIMENTAL__ ? [BROWSER_SCRIPT] : [],
     moduleType: RENDERER,
     entry: 'react-dom/unstable_server-external-runtime',
     outputPath: 'unstable_server-external-runtime.js',

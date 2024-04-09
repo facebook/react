@@ -235,7 +235,14 @@ function filterOutEntrypoints(name) {
       // Let's remove it.
       files.splice(i, 1);
       i--;
-      unlinkSync(`build/node_modules/${name}/${filename}`);
+      try {
+        unlinkSync(`build/node_modules/${name}/${filename}`);
+      } catch (err) {
+        // If the file doesn't exist we can just move on. Otherwise throw the halt the build
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
       changed = true;
       // Remove it from the exports field too if it exists.
       if (exportsJSON) {
