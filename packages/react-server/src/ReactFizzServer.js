@@ -4057,22 +4057,25 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
+    if (request.pendingRootTasks > 0) {
+      // When there are pending root tasks we don't want to flush anything
+      return;
+    }
+
     let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
       if (completedRootSegment.status === POSTPONED) {
         // We postponed the root, so we write nothing.
         return;
-      } else if (request.pendingRootTasks === 0) {
-        flushPreamble(request, destination, completedRootSegment);
-        flushSegment(request, destination, completedRootSegment, null);
-        request.completedRootSegment = null;
-        writeCompletedRoot(destination, request.renderState);
-      } else {
-        // We haven't flushed the root yet so we don't need to check any other branches further down
-        return;
       }
+
+      flushPreamble(request, destination, completedRootSegment);
+      flushSegment(request, destination, completedRootSegment, null);
+      request.completedRootSegment = null;
+      writeCompletedRoot(destination, request.renderState);
     }
+
     writeHoistables(destination, request.resumableState, request.renderState);
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as

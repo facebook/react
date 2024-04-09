@@ -6926,7 +6926,14 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         {'Loading1'}
-        {'Hello'}
+        {/*
+          This used to show "Hello" in this slot because the boundary was able to be flushed
+          early but we now prevent flushing while pendingRootTasks is not zero. This is how Edge
+          would work anyway because you don't get the stream until the root is unblocked on a resume
+          so Node now aligns with edge bevavior
+          {'Hello'}
+        */}
+        {'Loading2'}
         {'Loading3'}
       </div>,
     );

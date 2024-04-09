@@ -5034,6 +5034,51 @@ body {
     );
   });
 
+  it('should never flush hoistables before the preamble', async () => {
+    let resolve;
+    const promise = new Promise(res => {
+      resolve = res;
+    });
+
+    function App() {
+      ReactDOM.preinit('foo', {as: 'script'});
+      React.use(promise);
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    // we assert the default JSDOM still in tact
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolve();
+    });
+
+    // we assert the DOM was replaced entirely because we streamed an opening html tag
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <script async="" src="foo" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
