@@ -42,6 +42,7 @@ export const StoreConsistency = /*             */ 0b0000000000000100000000000000
 export const ScheduleRetry = StoreConsistency;
 export const ShouldSuspendCommit = Visibility;
 export const DidDefer = ContentReset;
+export const FormReset = Snapshot;
 
 export const LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency;
@@ -95,7 +96,8 @@ export const MutationMask =
   ContentReset |
   Ref |
   Hydrating |
-  Visibility;
+  Visibility |
+  FormReset;
 export const LayoutMask = Update | Callback | Ref | Visibility;
 
 // TODO: Split into PassiveMountMask and PassiveUnmountMask

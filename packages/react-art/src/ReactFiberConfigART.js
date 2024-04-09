@@ -490,3 +490,4 @@ export function waitForCommitToBeReady() {
 }
 
 export const NotPendingTransition = null;
+export function resetFormInstance() {}
