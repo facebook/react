@@ -58,7 +58,9 @@ const forks = Object.freeze({
   './packages/shared/ReactSharedInternals.js': (
     bundleType,
     entry,
-    dependencies
+    dependencies,
+    _moduleType,
+    bundle
   ) => {
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
@@ -68,6 +70,9 @@ const forks = Object.freeze({
       entry === 'react/src/ReactServerFB.js'
     ) {
       return './packages/react/src/ReactSharedInternalsServer.js';
+    }
+    if (bundle.condition === 'react-server') {
+      return './packages/react-server/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
