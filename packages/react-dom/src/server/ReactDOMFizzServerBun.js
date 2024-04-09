@@ -13,6 +13,7 @@ import type {
   HeadersDescriptor,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {ImportMap} from '../shared/ReactDOMTypes';
+import type {ErrorInfo, PostponeInfo} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -39,8 +40,8 @@ type Options = {
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onError?: (error: mixed) => ?string,
-  onPostpone?: (reason: string) => void,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
@@ -145,13 +146,6 @@ function renderToReadableStream(
   });
 }
 
-function renderToNodeStream() {
-  throw new Error(
-    'ReactDOMServer.renderToNodeStream(): The Node Stream API is not available ' +
-      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
-  );
-}
-
 function renderToStaticNodeStream() {
   throw new Error(
     'ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available ' +
@@ -161,7 +155,6 @@ function renderToStaticNodeStream() {
 
 export {
   renderToReadableStream,
-  renderToNodeStream,
   renderToStaticNodeStream,
   ReactVersion as version,
 };

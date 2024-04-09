@@ -12,6 +12,7 @@
 
 const React = require('react');
 const {startTransition, useDeferredValue} = React;
+const chalk = require('chalk');
 const ReactNoop = require('react-noop-renderer');
 const {
   waitFor,
@@ -22,6 +23,11 @@ const {
 } = require('internal-test-utils');
 const act = require('internal-test-utils').act;
 const Scheduler = require('scheduler/unstable_mock');
+const {
+  flushAllUnexpectedConsoleCalls,
+  resetAllUnexpectedConsoleCalls,
+  patchConsoleMethods,
+} = require('../consoleMock');
 
 describe('ReactInternalTestUtils', () => {
   test('waitFor', async () => {
@@ -152,5 +158,146 @@ describe('ReactInternalTestUtils', () => {
       root.render(<App />);
     });
     assertLog(['A', 'B', 'C']);
+  });
+});
+
+describe('ReactInternalTestUtils console mocks', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    patchConsoleMethods({includeLog: true});
+  });
+
+  afterEach(() => {
+    resetAllUnexpectedConsoleCalls();
+    jest.resetAllMocks();
+  });
+
+  describe('console.log', () => {
+    it('should fail if not asserted', () => {
+      expect(() => {
+        console.log('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toThrow(`Expected test not to call ${chalk.bold('console.log()')}.`);
+    });
+
+    // @gate __DEV__
+    it('should not fail if mocked with spyOnDev', () => {
+      spyOnDev(console, 'log').mockImplementation(() => {});
+      expect(() => {
+        console.log('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate !__DEV__
+    it('should not fail if mocked with spyOnProd', () => {
+      spyOnProd(console, 'log').mockImplementation(() => {});
+      expect(() => {
+        console.log('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    it('should not fail if mocked with spyOnDevAndProd', () => {
+      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
+      expect(() => {
+        console.log('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate __DEV__
+    it('should not fail with toLogDev', () => {
+      expect(() => {
+        console.log('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toLogDev(['hit']);
+    });
+  });
+
+  describe('console.warn', () => {
+    it('should fail if not asserted', () => {
+      expect(() => {
+        console.warn('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toThrow(`Expected test not to call ${chalk.bold('console.warn()')}.`);
+    });
+
+    // @gate __DEV__
+    it('should not fail if mocked with spyOnDev', () => {
+      spyOnDev(console, 'warn').mockImplementation(() => {});
+      expect(() => {
+        console.warn('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate !__DEV__
+    it('should not fail if mocked with spyOnProd', () => {
+      spyOnProd(console, 'warn').mockImplementation(() => {});
+      expect(() => {
+        console.warn('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    it('should not fail if mocked with spyOnDevAndProd', () => {
+      spyOnDevAndProd(console, 'warn').mockImplementation(() => {});
+      expect(() => {
+        console.warn('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate __DEV__
+    it('should not fail with toWarnDev', () => {
+      expect(() => {
+        console.warn('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toWarnDev(['hit'], {withoutStack: true});
+    });
+  });
+
+  describe('console.error', () => {
+    it('should fail if console.error is not asserted', () => {
+      expect(() => {
+        console.error('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toThrow(`Expected test not to call ${chalk.bold('console.error()')}.`);
+    });
+
+    // @gate __DEV__
+    it('should not fail if mocked with spyOnDev', () => {
+      spyOnDev(console, 'error').mockImplementation(() => {});
+      expect(() => {
+        console.error('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate !__DEV__
+    it('should not fail if mocked with spyOnProd', () => {
+      spyOnProd(console, 'error').mockImplementation(() => {});
+      expect(() => {
+        console.error('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    it('should not fail if mocked with spyOnDevAndProd', () => {
+      spyOnDevAndProd(console, 'error').mockImplementation(() => {});
+      expect(() => {
+        console.error('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).not.toThrow();
+    });
+
+    // @gate __DEV__
+    it('should not fail with toErrorDev', () => {
+      expect(() => {
+        console.error('hit');
+        flushAllUnexpectedConsoleCalls();
+      }).toErrorDev(['hit'], {withoutStack: true});
+    });
   });
 });

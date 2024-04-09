@@ -8,12 +8,11 @@
  */
 
 // This client file is in the shared folder because it applies to both SSR and browser contexts.
-// It is the configuraiton of the FlightClient behavior which can run in either environment.
+// It is the configuration of the FlightClient behavior which can run in either environment.
 
 import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
 import {getCrossOriginString} from './crossOriginStrings';
 
@@ -21,93 +20,91 @@ export function dispatchHint<Code: HintCode>(
   code: Code,
   model: HintModel<Code>,
 ): void {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    switch (code) {
-      case 'D': {
-        const refined = refineModel(code, model);
+  const dispatcher = ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
+  switch (code) {
+    case 'D': {
+      const refined = refineModel(code, model);
+      const href = refined;
+      dispatcher.D(/* prefetchDNS */ href);
+      return;
+    }
+    case 'C': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
         const href = refined;
-        dispatcher.prefetchDNS(href);
-        return;
-      }
-      case 'C': {
-        const refined = refineModel(code, model);
-        if (typeof refined === 'string') {
-          const href = refined;
-          dispatcher.preconnect(href);
-        } else {
-          const href = refined[0];
-          const crossOrigin = refined[1];
-          dispatcher.preconnect(href, crossOrigin);
-        }
-        return;
-      }
-      case 'L': {
-        const refined = refineModel(code, model);
+        dispatcher.C(/* preconnect */ href);
+      } else {
         const href = refined[0];
-        const as = refined[1];
-        if (refined.length === 3) {
-          const options = refined[2];
-          dispatcher.preload(href, as, options);
-        } else {
-          dispatcher.preload(href, as);
-        }
-        return;
+        const crossOrigin = refined[1];
+        dispatcher.C(/* preconnect */ href, crossOrigin);
       }
-      case 'm': {
-        const refined = refineModel(code, model);
-        if (typeof refined === 'string') {
-          const href = refined;
-          dispatcher.preloadModule(href);
-        } else {
-          const href = refined[0];
-          const options = refined[1];
-          dispatcher.preloadModule(href, options);
-        }
-        return;
+      return;
+    }
+    case 'L': {
+      const refined = refineModel(code, model);
+      const href = refined[0];
+      const as = refined[1];
+      if (refined.length === 3) {
+        const options = refined[2];
+        dispatcher.L(/* preload */ href, as, options);
+      } else {
+        dispatcher.L(/* preload */ href, as);
       }
-      case 'S': {
-        const refined = refineModel(code, model);
-        if (typeof refined === 'string') {
-          const href = refined;
-          dispatcher.preinitStyle(href);
-        } else {
-          const href = refined[0];
-          const precedence = refined[1] === 0 ? undefined : refined[1];
-          const options = refined.length === 3 ? refined[2] : undefined;
-          dispatcher.preinitStyle(href, precedence, options);
-        }
-        return;
+      return;
+    }
+    case 'm': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.m(/* preloadModule */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.m(/* preloadModule */ href, options);
       }
-      case 'X': {
-        const refined = refineModel(code, model);
-        if (typeof refined === 'string') {
-          const href = refined;
-          dispatcher.preinitScript(href);
-        } else {
-          const href = refined[0];
-          const options = refined[1];
-          dispatcher.preinitScript(href, options);
-        }
-        return;
+      return;
+    }
+    case 'X': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.X(/* preinitScript */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.X(/* preinitScript */ href, options);
       }
-      case 'M': {
-        const refined = refineModel(code, model);
-        if (typeof refined === 'string') {
-          const href = refined;
-          dispatcher.preinitModuleScript(href);
-        } else {
-          const href = refined[0];
-          const options = refined[1];
-          dispatcher.preinitModuleScript(href, options);
-        }
-        return;
+      return;
+    }
+    case 'S': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.S(/* preinitStyle */ href);
+      } else {
+        const href = refined[0];
+        const precedence = refined[1] === 0 ? undefined : refined[1];
+        const options = refined.length === 3 ? refined[2] : undefined;
+        dispatcher.S(/* preinitStyle */ href, precedence, options);
       }
+      return;
+    }
+    case 'M': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.M(/* preinitModuleScript */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.M(/* preinitModuleScript */ href, options);
+      }
+      return;
     }
   }
 }
 
-// Flow is having troulbe refining the HintModels so we help it a bit.
+// Flow is having trouble refining the HintModels so we help it a bit.
 // This should be compiled out in the production build.
 function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
   return model;
@@ -118,13 +115,11 @@ export function preinitModuleForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitModuleScript(href, {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .M(/* preinitModuleScript */ href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
-  }
 }
 
 export function preinitScriptForSSR(
@@ -132,11 +127,9 @@ export function preinitScriptForSSR(
   nonce: ?string,
   crossOrigin: ?string,
 ) {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitScript(href, {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .X(/* preinitScript */ href, {
       crossOrigin: getCrossOriginString(crossOrigin),
       nonce,
     });
-  }
 }

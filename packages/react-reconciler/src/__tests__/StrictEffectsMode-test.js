@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
@@ -18,24 +18,16 @@ let assertLog;
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
-    ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
-
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+
+    React = require('react');
+    Scheduler = require('scheduler');
+    ReactNoop = require('react-noop-renderer');
   });
 
-  function supportsDoubleInvokeEffects() {
-    return gate(
-      flags =>
-        flags.build === 'development' &&
-        flags.createRootStrictEffectsByDefault &&
-        flags.dfsEffectsRefactor,
-    );
-  }
-
+  // @gate !disableLegacyMode
   it('should not double invoke effects in legacy mode', async () => {
     function App({text}) {
       React.useEffect(() => {
@@ -51,8 +43,13 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
+      root.render(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
@@ -73,14 +70,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -94,7 +93,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -105,7 +109,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
@@ -126,14 +130,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useEffect One mount',
         'useEffect Two mount',
@@ -147,7 +153,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -158,7 +169,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount(null);
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useEffect One unmount', 'useEffect Two unmount']);
@@ -179,14 +190,16 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
@@ -200,7 +213,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -211,7 +229,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
@@ -230,14 +248,15 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -249,13 +268,17 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([]);
@@ -286,10 +309,14 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'componentWillUnmount',
@@ -319,14 +346,16 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'componentWillUnmount',
@@ -337,13 +366,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -364,32 +398,40 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog(['componentWillUnmount']);
     } else {
       assertLog([]);
     }
 
     await act(() => {
-      renderer.update(<App text={'update'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'update'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
   });
 
+  // @gate !disableLegacyMode
   it('should not double invoke class lifecycles in legacy mode', async () => {
     class App extends React.PureComponent {
       componentDidMount() {
@@ -409,8 +451,13 @@ describe('StrictEffectsMode', () => {
       }
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
+      root.render(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
     assertLog(['componentDidMount']);
@@ -437,12 +484,14 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'mount',
         'useLayoutEffect mount',
@@ -502,10 +551,15 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'App useLayoutEffect mount',
         'App useEffect mount',
@@ -522,7 +576,7 @@ describe('StrictEffectsMode', () => {
       _setShowChild(true);
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
@@ -583,14 +637,16 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'componentDidMount',
         'useLayoutEffect mount',
@@ -611,7 +667,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'mount'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -622,7 +683,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
@@ -664,14 +725,16 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
-    if (supportsDoubleInvokeEffects()) {
+    if (__DEV__) {
       assertLog([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -686,7 +749,12 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(<App text={'mount'} />);
+      ReactNoop.renderToRootWithID(
+        <React.StrictMode>
+          <App text={'mount'} />
+        </React.StrictMode>,
+        'root',
+      );
     });
 
     assertLog([
@@ -697,7 +765,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
@@ -705,5 +773,178 @@ describe('StrictEffectsMode', () => {
       'useLayoutEffect unmount',
       'useEffect unmount',
     ]);
+  });
+
+  // @gate __DEV__
+  it('should double invoke effects after a re-suspend', async () => {
+    // Not using Scheduler.log because it silences double render logs.
+    let log = [];
+    let shouldSuspend = true;
+    let resolve;
+    const suspensePromise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+    function Fallback() {
+      log.push('Fallback');
+      return 'Loading';
+    }
+
+    function Parent({prop}) {
+      log.push('Parent rendered');
+
+      React.useEffect(() => {
+        log.push('Parent create');
+        return () => {
+          log.push('Parent destroy');
+        };
+      }, []);
+
+      React.useEffect(() => {
+        log.push('Parent dep create');
+        return () => {
+          log.push('Parent dep destroy');
+        };
+      }, [prop]);
+
+      return (
+        <React.Suspense fallback={<Fallback />}>
+          <Child prop={prop} />
+        </React.Suspense>
+      );
+    }
+
+    function Child({prop}) {
+      const [count, forceUpdate] = React.useState(0);
+      const ref = React.useRef(null);
+      log.push('Child rendered');
+      React.useEffect(() => {
+        log.push('Child create');
+        return () => {
+          log.push('Child destroy');
+          ref.current = true;
+        };
+      }, []);
+      const key = `${prop}-${count}`;
+      React.useEffect(() => {
+        log.push('Child dep create');
+        if (ref.current === true) {
+          ref.current = false;
+          forceUpdate(c => c + 1);
+          log.push('-----------------------after setState');
+          return;
+        }
+
+        return () => {
+          log.push('Child dep destroy');
+        };
+      }, [key]);
+
+      if (shouldSuspend) {
+        log.push('Child suspended');
+        throw suspensePromise;
+      }
+      return null;
+    }
+
+    // Initial mount
+    shouldSuspend = false;
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>,
+      );
+    });
+
+    // Now re-suspend
+    shouldSuspend = true;
+    log = [];
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>,
+      );
+    });
+
+    // while suspended, update
+    log.push('-----------------------after update');
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Parent prop={'bar'} />
+        </React.StrictMode>,
+      );
+    });
+
+    // Now resolve and commit
+    log.push('-----------------------after suspense');
+
+    await act(() => {
+      resolve();
+      shouldSuspend = false;
+    });
+
+    if (gate(flags => flags.useModernStrictMode)) {
+      expect(log).toEqual([
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        '-----------------------after update',
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        'Parent dep destroy',
+        'Parent dep create',
+        '-----------------------after suspense',
+        'Child rendered',
+        'Child rendered',
+        // !!! Committed, destroy and create effect.
+        // !!! The other effect is not destroyed and created
+        // !!! because the dep didn't change
+        'Child dep destroy',
+        'Child dep create',
+
+        // Double invoke both effects
+        'Child destroy',
+        'Child dep destroy',
+        'Child create',
+        'Child dep create',
+        // Fires setState
+        '-----------------------after setState',
+        'Child rendered',
+        'Child rendered',
+        'Child dep create',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        '-----------------------after update',
+        'Parent rendered',
+        'Parent rendered',
+        'Child rendered',
+        'Child suspended',
+        'Fallback',
+        'Fallback',
+        'Parent dep destroy',
+        'Parent dep create',
+        '-----------------------after suspense',
+        'Child rendered',
+        'Child rendered',
+        'Child dep destroy',
+        'Child dep create',
+      ]);
+    }
   });
 });

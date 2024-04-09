@@ -7,11 +7,9 @@
  * @flow
  */
 
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternalsFB';
 export {
   createPortal,
-  createRoot,
-  hydrateRoot,
   flushSync,
   unstable_batchedUpdates,
   unstable_createEventHandle,
@@ -25,4 +23,6 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './src/client/ReactDOMFB';
+
+export {createRoot, hydrateRoot} from './src/client/ReactDOMRootFB';

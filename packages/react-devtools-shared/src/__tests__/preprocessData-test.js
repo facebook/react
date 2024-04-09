@@ -9,7 +9,12 @@
 
 'use strict';
 
-import {normalizeCodeLocInfo} from './utils';
+import semver from 'semver';
+
+import {getLegacyRenderImplementation, normalizeCodeLocInfo} from './utils';
+import {ReactVersion} from '../../../../ReactVersions';
+
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
 describe('Timeline profiler', () => {
   let React;
@@ -76,6 +81,13 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
+      // Mock react/jsx-dev-runtime for React 16.x
+      // Although there are no tests in this suite which will run for React 16,
+      // Jest will report an error trying to resolve this dependency
+      if (semver.lt(ReactVersionTestingAgainst, '17.0.0')) {
+        jest.mock('react/jsx-dev-runtime', () => {});
+      }
+
       utils = require('./utils');
       utils.beforeEachProfiling();
 
@@ -106,6 +118,8 @@ describe('Timeline profiler', () => {
 
       setPerformanceMock(null);
     });
+
+    const {render: legacyRender} = getLegacyRenderImplementation();
 
     describe('getLanesFromTransportDecimalBitmask', () => {
       let getLanesFromTransportDecimalBitmask;
@@ -614,8 +628,10 @@ describe('Timeline profiler', () => {
         `);
       });
 
+      // @reactVersion <= 18.2
+      // @reactVersion >= 18.0
       it('should process a sample legacy render sequence', async () => {
-        utils.legacyRender(<div />, document.createElement('div'));
+        legacyRender(<div />);
 
         const data = await preprocessData([
           ...createBoilerplateEntries(),
@@ -629,7 +645,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
@@ -637,7 +653,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.006,
                   "type": "render",
                 },
@@ -645,7 +661,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.008,
                   "type": "commit",
                 },
@@ -653,7 +669,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.014,
                   "type": "layout-effects",
                 },
@@ -714,13 +730,12 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => [],
-              1 => [
+              0 => [
                 {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
@@ -728,7 +743,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.006,
                   "type": "render",
                 },
@@ -736,7 +751,7 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.008,
                   "type": "commit",
                 },
@@ -744,11 +759,12 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000001",
+                  "lanes": "0b0000000000000000000000000000000",
                   "timestamp": 0.014,
                   "type": "layout-effects",
                 },
               ],
+              1 => [],
               2 => [],
               3 => [],
               4 => [],
@@ -785,7 +801,7 @@ describe('Timeline profiler', () => {
             "reactVersion": "<filtered-version>",
             "schedulingEvents": [
               {
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000000",
                 "timestamp": 0.005,
                 "type": "schedule-render",
                 "warning": null,
@@ -1132,9 +1148,9 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion <= 18.2
       it('should error if events and measures are incomplete', async () => {
-        const container = document.createElement('div');
-        utils.legacyRender(<div />, container);
+        legacyRender(<div />);
 
         const invalidMarks = clearedMarks.filter(
           mark => !mark.includes('render-stop'),
@@ -1150,9 +1166,9 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion <= 18.2
       it('should error if work is completed without being started', async () => {
-        const container = document.createElement('div');
-        utils.legacyRender(<div />, container);
+        legacyRender(<div />);
 
         const invalidMarks = clearedMarks.filter(
           mark => !mark.includes('render-start'),
@@ -1262,6 +1278,7 @@ describe('Timeline profiler', () => {
       describe('warnings', () => {
         describe('long event handlers', () => {
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {
             function App() {
               return null;
@@ -1275,7 +1292,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1285,6 +1302,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should not warn about long events if the cause was non-React JavaScript', async () => {
             function App() {
               return null;
@@ -1300,7 +1318,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1310,6 +1328,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should warn when React scedules a long (sync) update inside of an event', async () => {
             function App() {
               return null;
@@ -1323,7 +1342,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             clearedMarks.forEach(markName => {
               if (markName === '--render-stop') {
@@ -1929,8 +1948,12 @@ describe('Timeline profiler', () => {
       global.IS_REACT_ACT_ENVIRONMENT = true;
     });
 
+    const {render: legacyRender} = getLegacyRenderImplementation();
+
+    // @reactVersion <= 18.2
+    // @reactVersion >= 18.0
     it('should process a sample legacy render sequence', async () => {
-      utils.legacyRender(<div />, document.createElement('div'));
+      legacyRender(<div />);
       utils.act(() => store.profilerStore.stopProfiling());
 
       const data = store.profilerStore.profilingData?.timelineData;
@@ -1944,7 +1967,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "render-idle",
               },
@@ -1952,7 +1975,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "render",
               },
@@ -1960,7 +1983,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "commit",
               },
@@ -1968,7 +1991,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
@@ -1979,13 +2002,13 @@ describe('Timeline profiler', () => {
           "flamechart": [],
           "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
-            1 => "SyncHydrationLane",
-            2 => "Sync",
-            4 => "InputContinuousHydration",
-            8 => "InputContinuous",
-            16 => "DefaultHydration",
-            32 => "Default",
-            64 => "TransitionHydration",
+            1 => "Sync",
+            2 => "InputContinuousHydration",
+            4 => "InputContinuous",
+            8 => "DefaultHydration",
+            16 => "Default",
+            32 => "TransitionHydration",
+            64 => "Transition",
             128 => "Transition",
             256 => "Transition",
             512 => "Transition",
@@ -2005,20 +2028,19 @@ describe('Timeline profiler', () => {
             8388608 => "Retry",
             16777216 => "Retry",
             33554432 => "Retry",
-            67108864 => "SelectiveHydration",
-            134217728 => "IdleHydration",
-            268435456 => "Idle",
-            536870912 => "Offscreen",
-            1073741824 => "Deferred",
+            67108864 => "Retry",
+            134217728 => "SelectiveHydration",
+            268435456 => "IdleHydration",
+            536870912 => "Idle",
+            1073741824 => "Offscreen",
           },
           "laneToReactMeasureMap": Map {
-            1 => [],
-            2 => [
+            1 => [
               {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "render-idle",
               },
@@ -2026,7 +2048,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "render",
               },
@@ -2034,7 +2056,7 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "commit",
               },
@@ -2042,11 +2064,12 @@ describe('Timeline profiler', () => {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000010",
+                "lanes": "0b0000000000000000000000000000001",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
             ],
+            2 => [],
             4 => [],
             8 => [],
             16 => [],
@@ -2083,7 +2106,7 @@ describe('Timeline profiler', () => {
           "reactVersion": "<filtered-version>",
           "schedulingEvents": [
             {
-              "lanes": "0b0000000000000000000000000000010",
+              "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,

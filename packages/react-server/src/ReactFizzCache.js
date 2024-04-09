@@ -9,15 +9,10 @@
 
 import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
-function getCacheSignal(): AbortSignal {
-  throw new Error('Not implemented.');
-}
-
 function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
 export const DefaultCacheDispatcher: CacheDispatcher = {
-  getCacheSignal,
   getCacheForType,
 };

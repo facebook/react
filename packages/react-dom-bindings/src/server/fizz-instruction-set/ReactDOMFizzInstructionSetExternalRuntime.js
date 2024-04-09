@@ -9,8 +9,6 @@ import {
   listenToFormSubmissionsForReplaying,
 } from './ReactDOMFizzInstructionSetShared';
 
-import {enableFormActions} from 'shared/ReactFeatureFlags';
-
 export {clientRenderBoundary, completeBoundary, completeSegment};
 
 const resourceMap = new Map();
@@ -140,6 +138,4 @@ export function completeBoundaryWithStyles(
   );
 }
 
-if (enableFormActions) {
-  listenToFormSubmissionsForReplaying();
-}
+listenToFormSubmissionsForReplaying();

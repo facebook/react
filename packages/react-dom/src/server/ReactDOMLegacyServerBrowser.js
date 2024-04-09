@@ -39,13 +39,6 @@ function renderToStaticMarkup(
   );
 }
 
-function renderToNodeStream() {
-  throw new Error(
-    'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-      'in the browser. Use ReactDOMServer.renderToString() instead.',
-  );
-}
-
 function renderToStaticNodeStream() {
   throw new Error(
     'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
@@ -56,7 +49,6 @@ function renderToStaticNodeStream() {
 export {
   renderToString,
   renderToStaticMarkup,
-  renderToNodeStream,
   renderToStaticNodeStream,
   version,
 };

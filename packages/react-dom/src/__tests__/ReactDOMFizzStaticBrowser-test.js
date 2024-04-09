@@ -126,15 +126,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       </html>,
     );
     const prelude = await readContent(result.prelude);
-    if (gate(flags => flags.enableFloat)) {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(prelude).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   // @gate experimental
@@ -1418,6 +1412,28 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(slice).toBe(
       '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
     );
+  });
+
+  // @gate experimental
+  it('logs an error if onHeaders throws but continues the prerender', async () => {
+    const errors = [];
+    function onError(error) {
+      errors.push(error.message);
+    }
+
+    function onHeaders(x) {
+      throw new Error('bad onHeaders');
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<div>hello</div>, {
+      onHeaders,
+      onError,
+    });
+    expect(prerendered.postponed).toBe(null);
+    expect(errors).toEqual(['bad onHeaders']);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
   });
 
   // @gate enablePostpone

@@ -9,7 +9,7 @@
 
 export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  act,
   Children,
   Component,
   Fragment,
@@ -28,13 +28,12 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
   unstable_Activity,
   unstable_Scope,
   unstable_SuspenseList,
-  unstable_getCacheSignal,
+  unstable_TracingMarker,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
   unstable_useMemoCache,
@@ -50,11 +49,12 @@ export {
   useLayoutEffect,
   useMemo,
   useOptimistic,
+  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
-  useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
-} from './src/React';
+} from './src/ReactClient';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

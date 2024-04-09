@@ -10,16 +10,21 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
+let act;
+let jsxDEV;
 
 describe('Component stack trace displaying', () => {
   beforeEach(() => {
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
+    jsxDEV = require('react/jsx-dev-runtime').jsxDEV;
   });
 
-  // @gate !enableComponentStackLocations || !__DEV__
-  it('should provide filenames in stack traces', () => {
+  // @gate !enableComponentStackLocations
+  // @gate __DEV__
+  it('should provide filenames in stack traces', async () => {
     class Component extends React.Component {
       render() {
         return [<span>a</span>, <span>b</span>];
@@ -88,15 +93,32 @@ describe('Component stack trace displaying', () => {
       'C:\\funny long (path)/index.js': 'funny long (path)/index.js',
       'C:\\funny long (path)/index.jsx': 'funny long (path)/index.jsx',
     };
-    Object.keys(fileNames).forEach((fileName, i) => {
+
+    const root = ReactDOMClient.createRoot(container);
+
+    let i = 0;
+    for (const fileName in fileNames) {
       Component.displayName = 'Component ' + i;
-      ReactDOM.render(
-        <Component __source={{fileName, lineNumber: i}} />,
-        container,
-      );
-    });
+
+      await act(() => {
+        root.render(
+          // Intentionally inlining a manual jsxDEV() instead of relying on the
+          // compiler so that we can pass a custom source location.
+          jsxDEV(
+            Component,
+            {},
+            undefined,
+            false,
+            {fileName, lineNumber: i},
+            this,
+          ),
+        );
+      });
+
+      i++;
+    }
     if (__DEV__) {
-      let i = 0;
+      i = 0;
       expect(console.error).toHaveBeenCalledTimes(
         Object.keys(fileNames).length,
       );

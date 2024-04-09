@@ -24,6 +24,8 @@ import {
   requireModule,
 } from 'react-client/src/ReactFlightClientConfig';
 
+import {createTemporaryReference} from './ReactFlightServerTemporaryReferences';
+
 export type JSONValue =
   | number
   | null
@@ -394,10 +396,6 @@ function parseModelString(
         const chunk = getChunk(response, id);
         return chunk;
       }
-      case 'S': {
-        // Symbol
-        return Symbol.for(value.slice(2));
-      }
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);
@@ -412,6 +410,10 @@ function parseModelString(
           parentObject,
           key,
         );
+      }
+      case 'T': {
+        // Temporary Reference
+        return createTemporaryReference(value.slice(2));
       }
       case 'Q': {
         // Map

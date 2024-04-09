@@ -125,7 +125,7 @@ export type NativeMethods = $ReadOnly<{|
 |}>;
 
 // This validates that INativeMethods and NativeMethods stay in sync using Flow!
-declare var ensureNativeMethodsAreSynced: NativeMethods;
+declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
@@ -142,11 +142,6 @@ type InspectorDataProps = $ReadOnly<{
   ...
 }>;
 
-type InspectorDataSource = $ReadOnly<{
-  fileName?: string,
-  lineNumber?: number,
-}>;
-
 type InspectorDataGetter = (
   <TElementType: ElementType>(
     componentOrHandle: ElementRef<TElementType> | number,
@@ -154,7 +149,6 @@ type InspectorDataGetter = (
 ) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
   props: InspectorDataProps,
-  source: InspectorDataSource,
 }>;
 
 export type InspectorData = $ReadOnly<{
@@ -165,7 +159,7 @@ export type InspectorData = $ReadOnly<{
   }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
-  source: ?InspectorDataSource,
+  componentStack: string,
 }>;
 
 export type TouchedViewDataAtPoint = $ReadOnly<{
@@ -191,6 +185,10 @@ export type ReactNativeType = {
   findNodeHandle<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
+  isChildPublicInstance(
+    parent: PublicInstance | HostComponent<mixed>,
+    child: PublicInstance | HostComponent<mixed>,
+  ): boolean,
   dispatchCommand(
     handle: ElementRef<HostComponent<mixed>>,
     command: string,
@@ -229,6 +227,7 @@ export type ReactFabricType = {
     command: string,
     args: Array<mixed>,
   ): void,
+  isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   sendAccessibilityEvent(
     handle: ElementRef<HostComponent<mixed>>,
     eventType: string,

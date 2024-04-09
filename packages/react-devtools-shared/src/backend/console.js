@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
+  LegacyDispatcherRef,
   CurrentDispatcherRef,
   ReactRenderer,
   WorkTagMap,
@@ -16,7 +17,7 @@ import type {
 } from './types';
 import {format, formatWithStyles} from './utils';
 
-import {getInternalReactConstants} from './renderer';
+import {getInternalReactConstants, getDispatcherRef} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 import {castBool, castBrowserTheme} from '../utils';
@@ -75,7 +76,7 @@ type OnErrorOrWarning = (
 const injectedRenderers: Map<
   ReactRenderer,
   {
-    currentDispatcherRef: CurrentDispatcherRef,
+    currentDispatcherRef: LegacyDispatcherRef | CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
     onErrorOrWarning: ?OnErrorOrWarning,
     workTagMap: WorkTagMap,
@@ -215,12 +216,9 @@ export function patch({
           // Search for the first renderer that has a current Fiber.
           // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
           // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const {
-            currentDispatcherRef,
-            getCurrentFiber,
-            onErrorOrWarning,
-            workTagMap,
-          } of injectedRenderers.values()) {
+          for (const renderer of injectedRenderers.values()) {
+            const currentDispatcherRef = getDispatcherRef(renderer);
+            const {getCurrentFiber, onErrorOrWarning, workTagMap} = renderer;
             const current: ?Fiber = getCurrentFiber();
             if (current != null) {
               try {
@@ -241,7 +239,7 @@ export function patch({
                   const componentStack = getStackByFiberInDevAndProd(
                     workTagMap,
                     current,
-                    currentDispatcherRef,
+                    (currentDispatcherRef: any),
                   );
                   if (componentStack !== '') {
                     if (isStrictModeOverride(args, method)) {

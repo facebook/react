@@ -15,6 +15,7 @@ import type {
 import {create, diff} from './ReactNativeAttributePayload';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
   type EventPriority,
@@ -47,10 +48,7 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {
-  useMicrotasksForSchedulingInFabric,
-  passChildrenWhenCloningPersistedNodes,
-} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -314,7 +312,20 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
+
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -507,6 +518,10 @@ export const NotPendingTransition: TransitionStatus = null;
 // -------------------
 //     Microtasks
 // -------------------
-export const supportsMicrotasks = useMicrotasksForSchedulingInFabric;
+
+export const supportsMicrotasks: boolean =
+  typeof RN$enableMicrotasksInReact !== 'undefined' &&
+  !!RN$enableMicrotasksInReact;
+
 export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function' ? queueMicrotask : scheduleTimeout;

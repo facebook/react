@@ -8,10 +8,7 @@
  */
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
-import {
-  enableTrustedTypesIntegration,
-  enableCustomElementPropertySupport,
-} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 
@@ -73,25 +70,18 @@ export function getValueForAttributeOnCustomComponent(
           // it would be expected that they end up not having an attribute.
           return expected;
         case 'function':
-          if (enableCustomElementPropertySupport) {
-            return expected;
-          }
-          break;
+          return expected;
         case 'boolean':
-          if (enableCustomElementPropertySupport) {
-            if (expected === false) {
-              return expected;
-            }
+          if (expected === false) {
+            return expected;
           }
       }
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
 
-    if (enableCustomElementPropertySupport) {
-      if (value === '' && expected === true) {
-        return true;
-      }
+    if (value === '' && expected === true) {
+      return true;
     }
 
     if (__DEV__) {

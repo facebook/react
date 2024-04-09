@@ -58,13 +58,21 @@ const forks = Object.freeze({
   './packages/shared/ReactSharedInternals.js': (
     bundleType,
     entry,
-    dependencies
+    dependencies,
+    _moduleType,
+    bundle
   ) => {
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
-    if (entry === 'react/src/ReactSharedSubset.js') {
+    if (
+      entry === 'react/src/ReactServer.js' ||
+      entry === 'react/src/ReactServerFB.js'
+    ) {
       return './packages/react/src/ReactSharedInternalsServer.js';
+    }
+    if (bundle.condition === 'react-server') {
+      return './packages/react-server/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -90,9 +98,18 @@ const forks = Object.freeze({
     if (
       entry === 'react-dom' ||
       entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMSharedSubset.js'
+      entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-dom/unstable_testing'
     ) {
-      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      if (
+        bundleType === FB_WWW_DEV ||
+        bundleType === FB_WWW_PROD ||
+        bundleType === FB_WWW_PROFILING
+      ) {
+        return './packages/react-dom/src/ReactDOMSharedInternalsFB.js';
+      } else {
+        return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      }
     }
     if (
       !entry.startsWith('react-dom/') &&
@@ -149,10 +166,7 @@ const forks = Object.freeze({
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-          case RN_OSS_DEV:
-          case RN_OSS_PROD:
-          case RN_OSS_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native.js';
+            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native-fb.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -217,54 +231,12 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternals.umd.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different wrapping/reporting for caught errors.
-  './packages/shared/invokeGuardedCallbackImpl.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/shared/forks/invokeGuardedCallbackImpl.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different dialogs for caught errors.
-  './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
-    bundleType,
-    entry
-  ) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        // Use the www fork which shows an error dialog.
-        return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
-      case RN_OSS_DEV:
-      case RN_OSS_PROD:
-      case RN_OSS_PROFILING:
-      case RN_FB_DEV:
-      case RN_FB_PROD:
-      case RN_FB_PROFILING:
-        switch (entry) {
-          case 'react-native-renderer':
-          case 'react-native-renderer/fabric':
-            // Use the RN fork which plays well with redbox.
-            return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
-          default:
-            return null;
-        }
+        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }

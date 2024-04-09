@@ -220,20 +220,7 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on A, we can't show an error boundary. We
     // should wait for A to resolve.
-    if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
-      assertLog([
-        'Suspend! [A2]',
-        'Loading...',
-
-        'Error! [B2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [B2]',
-        'Oops!',
-      ]);
-    } else {
-      assertLog(['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']);
-    }
+    assertLog(['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -241,25 +228,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     await act(() => {
       resolveText('A2');
     });
-    if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
-      assertLog([
-        'A2',
-        'Error! [B2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [B2]',
-        'Oops!',
-
-        'A2',
-        'Error! [B2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [B2]',
-        'Oops!',
-      ]);
-    } else {
-      assertLog(['A2', 'Error! [B2]', 'Oops!', 'A2', 'Error! [B2]', 'Oops!']);
-    }
+    assertLog(['A2', 'Error! [B2]', 'Oops!', 'A2', 'Error! [B2]', 'Oops!']);
     // Now we can show the error boundary that's wrapped around B.
     expect(root).toMatchRenderedOutput('A2Oops!');
   });
@@ -323,20 +292,7 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on B, we can't show an error boundary. We
     // should wait for B to resolve.
-    if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
-      assertLog([
-        'Error! [A2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [A2]',
-        'Oops!',
-
-        'Suspend! [B2]',
-        'Loading...',
-      ]);
-    } else {
-      assertLog(['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']);
-    }
+    assertLog(['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -344,25 +300,7 @@ describe('ReactConcurrentErrorRecovery', () => {
     await act(() => {
       resolveText('B2');
     });
-    if (gate(flags => flags.replayFailedUnitOfWorkWithInvokeGuardedCallback)) {
-      assertLog([
-        'Error! [A2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [A2]',
-        'Oops!',
-        'B2',
-
-        'Error! [A2]',
-        // This extra log happens when we replay the error
-        // in invokeGuardedCallback
-        'Error! [A2]',
-        'Oops!',
-        'B2',
-      ]);
-    } else {
-      assertLog(['Error! [A2]', 'Oops!', 'B2', 'Error! [A2]', 'Oops!', 'B2']);
-    }
+    assertLog(['Error! [A2]', 'Oops!', 'B2', 'Error! [A2]', 'Oops!', 'B2']);
     // Now we can show the error boundary that's wrapped around B.
     expect(root).toMatchRenderedOutput('Oops!B2');
   });

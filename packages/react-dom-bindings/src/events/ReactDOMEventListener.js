@@ -34,6 +34,10 @@ import {
 } from '../client/ReactDOMComponentTree';
 
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
+import {
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+} from '../client/ReactDOMUpdatePriority';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -48,13 +52,9 @@ import {
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
-  getCurrentUpdatePriority,
-  setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
-
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 let _enabled: boolean = true;
@@ -115,15 +115,15 @@ function dispatchDiscreteEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
@@ -133,15 +133,15 @@ function dispatchContinuousEvent(
   container: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
+  const prevTransition = ReactSharedInternals.T;
+  ReactSharedInternals.T = null;
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 
