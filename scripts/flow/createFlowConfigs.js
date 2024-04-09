@@ -6,7 +6,7 @@
  */
 
 'use strict';
-
+// This is a test to see if something is changed
 const chalk = require('chalk');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
