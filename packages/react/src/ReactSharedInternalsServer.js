@@ -9,7 +9,6 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 import type {
   Reference,
@@ -24,7 +23,7 @@ import {
   TaintRegistryPendingRequests,
 } from './ReactTaintRegistry';
 
-import {disableStringRefs, enableTaint} from 'shared/ReactFeatureFlags';
+import {enableTaint} from 'shared/ReactFeatureFlags';
 
 export type SharedStateServer = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
@@ -36,8 +35,7 @@ export type SharedStateServer = {
   TaintRegistryByteLengths: Set<number>,
   TaintRegistryPendingRequests: Set<RequestCleanupQueue>,
 
-  // DEV-only-ish
-  owner: null | ReactComponentInfo, // ReactCurrentOwner is ReactComponentInfo in Flight, null in Fizz. Fiber/Fizz uses SharedStateClient.
+  // DEV-only
 
   // ReactDebugCurrentFrame
   setExtraStackFrame: (stack: null | string) => void,
@@ -58,10 +56,6 @@ if (enableTaint) {
   ReactSharedInternals.TaintRegistryByteLengths = TaintRegistryByteLengths;
   ReactSharedInternals.TaintRegistryPendingRequests =
     TaintRegistryPendingRequests;
-}
-
-if (__DEV__ || !disableStringRefs) {
-  ReactSharedInternals.owner = null;
 }
 
 if (__DEV__) {
