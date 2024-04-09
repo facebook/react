@@ -31,7 +31,8 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.hydrateRoot).toBe(undefined);
     expect(ReactDOM.findDOMNode).toBe(undefined);
     expect(
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode,
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode,
     ).toBe(null);
     expect(ReactDOM.hydrate).toBe(undefined);
     expect(ReactDOM.render).toBe(undefined);
