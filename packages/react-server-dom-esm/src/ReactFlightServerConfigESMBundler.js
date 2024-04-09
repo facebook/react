@@ -9,21 +9,16 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
+import type {
+  ClientReference,
+  ServerReference,
+} from './ReactFlightESMReferences';
+
+export type {ClientReference, ServerReference};
+
 export type ClientManifest = string; // base URL on the file system
 
-export type ServerReference<T: Function> = T & {
-  $$typeof: symbol,
-  $$id: string,
-  $$bound: null | Array<ReactClientValue>,
-};
-
 export type ServerReferenceId = string;
-
-// eslint-disable-next-line no-unused-vars
-export type ClientReference<T> = {
-  $$typeof: symbol,
-  $$id: string,
-};
 
 export type ClientReferenceMetadata = [
   string, // module path
@@ -32,21 +27,12 @@ export type ClientReferenceMetadata = [
 
 export type ClientReferenceKey = string;
 
-const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
-const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
+export {isClientReference, isServerReference} from './ReactFlightESMReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
   return reference.$$id;
-}
-
-export function isClientReference(reference: Object): boolean {
-  return reference.$$typeof === CLIENT_REFERENCE_TAG;
-}
-
-export function isServerReference(reference: Object): boolean {
-  return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
 
 export function resolveClientReferenceMetadata<T>(

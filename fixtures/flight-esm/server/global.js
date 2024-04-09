@@ -10,6 +10,7 @@ const compress = require('compression');
 const chalk = require('chalk');
 const express = require('express');
 const http = require('http');
+const React = require('react');
 
 const {renderToPipeableStream} = require('react-dom/server');
 const {createFromNodeStream} = require('react-server-dom-esm/client');
@@ -62,23 +63,39 @@ app.all('/', async function (req, res, next) {
   if (req.accepts('text/html')) {
     try {
       const rscResponse = await promiseForData;
-
       const moduleBaseURL = '/src';
 
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs the local file path
       // to load the source files from as well as the URL path for preloads.
-      const root = await createFromNodeStream(
-        rscResponse,
-        moduleBasePath,
-        moduleBaseURL
-      );
+
+      let root;
+      let Root = () => {
+        if (root) {
+          return React.use(root);
+        }
+
+        return React.use(
+          (root = createFromNodeStream(
+            rscResponse,
+            moduleBasePath,
+            moduleBaseURL
+          ))
+        );
+      };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
-      const {pipe} = renderToPipeableStream(root, {
-        // TODO: bootstrapModules inserts a preload before the importmap which causes
-        // the import map to be invalid. We need to fix that in Float somehow.
-        // bootstrapModules: ['/src/index.js'],
+      const {pipe} = renderToPipeableStream(React.createElement(Root), {
+        importMap: {
+          imports: {
+            react: 'https://esm.sh/react@experimental?pin=v124&dev',
+            'react-dom': 'https://esm.sh/react-dom@experimental?pin=v124&dev',
+            'react-dom/': 'https://esm.sh/react-dom@experimental&pin=v124&dev/',
+            'react-server-dom-esm/client':
+              '/node_modules/react-server-dom-esm/esm/react-server-dom-esm-client.browser.development.js',
+          },
+        },
+        bootstrapModules: ['/src/index.js'],
       });
       pipe(res);
     } catch (e) {
@@ -89,6 +106,7 @@ app.all('/', async function (req, res, next) {
   } else {
     try {
       const rscResponse = await promiseForData;
+
       // For other request, we pass-through the RSC payload.
       res.set('Content-type', 'text/x-component');
       rscResponse.on('data', data => {

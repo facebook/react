@@ -38,7 +38,7 @@ function Example() {
       DisplayName,
       null,
       x(
-        React.SuspenseList,
+        React.unstable_SuspenseList,
         null,
         x(
           NativeClass,

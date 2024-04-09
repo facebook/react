@@ -11,6 +11,7 @@ export type Destination = ReadableStreamController;
 
 export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = Uint8Array;
+export type BinaryChunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -21,7 +22,7 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-const VIEW_SIZE = 512;
+const VIEW_SIZE = 2048;
 let currentView = null;
 let writtenBytes = 0;
 
@@ -32,22 +33,13 @@ export function beginWriting(destination: Destination) {
 
 export function writeChunk(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): void {
-  if (chunk.length === 0) {
+  if (chunk.byteLength === 0) {
     return;
   }
 
-  if (chunk.length > VIEW_SIZE) {
-    if (__DEV__) {
-      if (precomputedChunkSet.has(chunk)) {
-        console.error(
-          'A large precomputed chunk was passed to writeChunk without being copied.' +
-            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
-            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
-        );
-      }
-    }
+  if (chunk.byteLength > VIEW_SIZE) {
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -68,7 +60,7 @@ export function writeChunk(
 
   let bytesToWrite = chunk;
   const allowableBytes = ((currentView: any): Uint8Array).length - writtenBytes;
-  if (allowableBytes < bytesToWrite.length) {
+  if (allowableBytes < bytesToWrite.byteLength) {
     // this chunk would overflow the current view. We enqueue a full view
     // and start a new view with the remaining chunk
     if (allowableBytes === 0) {
@@ -89,12 +81,12 @@ export function writeChunk(
     writtenBytes = 0;
   }
   ((currentView: any): Uint8Array).set(bytesToWrite, writtenBytes);
-  writtenBytes += bytesToWrite.length;
+  writtenBytes += bytesToWrite.byteLength;
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): boolean {
   writeChunk(destination, chunk);
   // in web streams there is no backpressure so we can alwas write more
@@ -119,24 +111,43 @@ export function stringToChunk(content: string): Chunk {
   return textEncoder.encode(content);
 }
 
-const precomputedChunkSet: Set<Chunk> = __DEV__ ? new Set() : (null: any);
-
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
 
   if (__DEV__) {
-    precomputedChunkSet.add(precomputedChunk);
+    if (precomputedChunk.byteLength > VIEW_SIZE) {
+      console.error(
+        'precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.',
+      );
+    }
   }
 
   return precomputedChunk;
 }
 
-export function clonePrecomputedChunk(
-  precomputedChunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return precomputedChunk.length > VIEW_SIZE
-    ? precomputedChunk.slice()
-    : precomputedChunk;
+export function typedArrayToBinaryChunk(
+  content: $ArrayBufferView,
+): BinaryChunk {
+  // Convert any non-Uint8Array array to Uint8Array. We could avoid this for Uint8Arrays.
+  // If we passed through this straight to enqueue we wouldn't have to convert it but since
+  // we need to copy the buffer in that case, we need to convert it to copy it.
+  // When we copy it into another array using set() it needs to be a Uint8Array.
+  const buffer = new Uint8Array(
+    content.buffer,
+    content.byteOffset,
+    content.byteLength,
+  );
+  // We clone large chunks so that we can transfer them when we write them.
+  // Others get copied into the target buffer.
+  return content.byteLength > VIEW_SIZE ? buffer.slice() : buffer;
+}
+
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  return chunk.byteLength;
+}
+
+export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
+  return chunk.byteLength;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
@@ -154,3 +165,5 @@ export function closeWithError(destination: Destination, error: mixed): void {
     destination.close();
   }
 }
+
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';

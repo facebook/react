@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('node:fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
@@ -28,6 +29,22 @@ const __EXPERIMENTAL__ =
     ? RELEASE_CHANNEL === 'experimental'
     : true;
 
+function findNearestExistingForkFile(path, segmentedIdentifier, suffix) {
+  const segments = segmentedIdentifier.split('-');
+  while (segments.length) {
+    const candidate = segments.join('-');
+    const forkPath = path + candidate + suffix;
+    try {
+      fs.statSync(forkPath);
+      return forkPath;
+    } catch (error) {
+      // Try the next candidate.
+    }
+    segments.pop();
+  }
+  return null;
+}
+
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 
@@ -41,10 +58,21 @@ const forks = Object.freeze({
   './packages/shared/ReactSharedInternals.js': (
     bundleType,
     entry,
-    dependencies
+    dependencies,
+    _moduleType,
+    bundle
   ) => {
-    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
-      return './packages/react/src/ReactSharedInternals.js';
+    if (entry === 'react') {
+      return './packages/react/src/ReactSharedInternalsClient.js';
+    }
+    if (
+      entry === 'react/src/ReactServer.js' ||
+      entry === 'react/src/ReactServerFB.js'
+    ) {
+      return './packages/react/src/ReactSharedInternalsServer.js';
+    }
+    if (bundle.condition === 'react-server') {
+      return './packages/react-server/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -67,8 +95,21 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react-dom' || entry === 'react-dom/server-rendering-stub') {
-      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+    if (
+      entry === 'react-dom' ||
+      entry === 'react-dom/server-rendering-stub' ||
+      entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-dom/unstable_testing'
+    ) {
+      if (
+        bundleType === FB_WWW_DEV ||
+        bundleType === FB_WWW_PROD ||
+        bundleType === FB_WWW_PROFILING
+      ) {
+        return './packages/react-dom/src/ReactDOMSharedInternalsFB.js';
+      } else {
+        return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      }
     }
     if (
       !entry.startsWith('react-dom/') &&
@@ -125,10 +166,7 @@ const forks = Object.freeze({
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-          case RN_OSS_DEV:
-          case RN_OSS_PROD:
-          case RN_OSS_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native.js';
+            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native-fb.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -193,54 +231,12 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternals.umd.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different wrapping/reporting for caught errors.
-  './packages/shared/invokeGuardedCallbackImpl.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/shared/forks/invokeGuardedCallbackImpl.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different dialogs for caught errors.
-  './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
-    bundleType,
-    entry
-  ) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        // Use the www fork which shows an error dialog.
-        return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
-      case RN_OSS_DEV:
-      case RN_OSS_PROD:
-      case RN_OSS_PROFILING:
-      case RN_FB_DEV:
-      case RN_FB_PROD:
-      case RN_FB_PROFILING:
-        switch (entry) {
-          case 'react-native-renderer':
-          case 'react-native-renderer/fabric':
-            // Use the RN fork which plays well with redbox.
-            return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
-          default:
-            return null;
-        }
+        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }
@@ -261,7 +257,16 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `./packages/react-reconciler/src/forks/ReactFiberConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-reconciler/src/forks/ReactFiberConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -289,7 +294,16 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactServerStreamConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactServerStreamConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -317,7 +331,16 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactFizzConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactFizzConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -345,7 +368,23 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactFlightServerConfig.${rendererInfo.shortName}.js`;
+        if (rendererInfo.isFlightSupported === false) {
+          return new Error(
+            `Expected not to use ReactFlightServerConfig with "${entry}" entry point ` +
+              'in ./scripts/shared/inlinedHostConfigs.js. Update the renderer config to ' +
+              'activate flight suppport and add a matching fork implementation for ReactFlightServerConfig.'
+          );
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactFlightServerConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -373,7 +412,23 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-client/src/forks/ReactFlightClientConfig.${rendererInfo.shortName}.js`;
+        if (rendererInfo.isFlightSupported === false) {
+          return new Error(
+            `Expected not to use ReactFlightClientConfig with "${entry}" entry point ` +
+              'in ./scripts/shared/inlinedHostConfigs.js. Update the renderer config to ' +
+              'activate flight suppport and add a matching fork implementation for ReactFlightClientConfig.'
+          );
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-client/src/forks/ReactFlightClientConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(

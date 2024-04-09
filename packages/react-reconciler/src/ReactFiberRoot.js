@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   SuspenseHydrationCallbacks,
@@ -17,7 +17,7 @@ import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {Container} from './ReactFiberConfig';
 
-import {noTimeout, supportsHydration} from './ReactFiberConfig';
+import {noTimeout} from './ReactFiberConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {
   NoLane,
@@ -33,6 +33,7 @@ import {
   enableProfilerTimer,
   enableUpdaterTracking,
   enableTransitionTracing,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -51,9 +52,12 @@ function FiberRootNode(
   tag,
   hydrate: any,
   identifierPrefix: any,
+  onUncaughtError: any,
+  onCaughtError: any,
   onRecoverableError: any,
+  formState: ReactFormState<any, any> | null,
 ) {
-  this.tag = tag;
+  this.tag = disableLegacyMode ? ConcurrentRoot : tag;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
   this.current = null;
@@ -72,9 +76,9 @@ function FiberRootNode(
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
+  this.shellSuspendCounter = 0;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
@@ -82,6 +86,8 @@ function FiberRootNode(
   this.hiddenUpdates = createLaneMap(null);
 
   this.identifierPrefix = identifierPrefix;
+  this.onUncaughtError = onUncaughtError;
+  this.onCaughtError = onCaughtError;
   this.onRecoverableError = onRecoverableError;
 
   if (enableCache) {
@@ -89,13 +95,11 @@ function FiberRootNode(
     this.pooledCacheLanes = NoLanes;
   }
 
-  if (supportsHydration) {
-    this.mutableSourceEagerHydrationData = null;
-  }
-
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
   }
+
+  this.formState = formState;
 
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
@@ -120,13 +124,18 @@ function FiberRootNode(
   }
 
   if (__DEV__) {
-    switch (tag) {
-      case ConcurrentRoot:
-        this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
-        break;
-      case LegacyRoot:
-        this._debugRootType = hydrate ? 'hydrate()' : 'render()';
-        break;
+    if (disableLegacyMode) {
+      // TODO: This varies by each renderer.
+      this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
+    } else {
+      switch (tag) {
+        case ConcurrentRoot:
+          this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
+          break;
+        case LegacyRoot:
+          this._debugRootType = hydrate ? 'hydrate()' : 'render()';
+          break;
+      }
     }
   }
 }
@@ -144,8 +153,23 @@ export function createFiberRoot(
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
-  onRecoverableError: null | ((error: mixed) => void),
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
+  formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -153,7 +177,10 @@ export function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
+    formState,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;

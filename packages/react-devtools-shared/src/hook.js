@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {BrowserTheme} from './types';
+import type {BrowserTheme} from './frontend/types';
 import type {
   DevToolsHook,
   Handler,
@@ -168,7 +168,7 @@ export function installHook(target: any): DevToolsHook | null {
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
               'configure React for production: ' +
-              'https://reactjs.org/link/perf-use-production-build',
+              'https://react.dev/link/perf-use-production-build',
           );
         });
       }
@@ -320,7 +320,7 @@ export function installHook(target: any): DevToolsHook | null {
 
   let uidCounter = 0;
 
-  function inject(renderer: ReactRenderer) {
+  function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
     renderers.set(id, renderer);
 

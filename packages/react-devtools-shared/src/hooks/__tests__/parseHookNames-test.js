@@ -70,9 +70,8 @@ describe('parseHookNames', () => {
       const hooksList = flattenHooksList(hooksTree);
 
       // Runs in the UI thread so it can share Network cache:
-      const locationKeyToHookSourceAndMetadata = await loadSourceAndMetadata(
-        hooksList,
-      );
+      const locationKeyToHookSourceAndMetadata =
+        await loadSourceAndMetadata(hooksList);
 
       // Runs in a Worker because it's CPU intensive:
       return parseSourceAndMetadata(
@@ -99,7 +98,7 @@ describe('parseHookNames', () => {
   });
 
   async function getHookNamesForComponent(Component, props = {}) {
-    const hooksTree = inspectHooks(Component, props, undefined, true);
+    const hooksTree = inspectHooks(Component, props, undefined);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }
@@ -929,7 +928,7 @@ describe('parseHookNames worker', () => {
   });
 
   async function getHookNamesForComponent(Component, props = {}) {
-    const hooksTree = inspectHooks(Component, props, undefined, true);
+    const hooksTree = inspectHooks(Component, props, undefined);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }

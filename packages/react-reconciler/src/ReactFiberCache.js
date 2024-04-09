@@ -14,14 +14,6 @@ import {enableCache} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {CacheContext} from './ReactFiberCacheComponent';
 
-function getCacheSignal(): AbortSignal {
-  if (!enableCache) {
-    throw new Error('Not implemented.');
-  }
-  const cache: Cache = readContext(CacheContext);
-  return cache.controller.signal;
-}
-
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
     throw new Error('Not implemented.');
@@ -36,6 +28,5 @@ function getCacheForType<T>(resourceType: () => T): T {
 }
 
 export const DefaultCacheDispatcher: CacheDispatcher = {
-  getCacheSignal,
   getCacheForType,
 };

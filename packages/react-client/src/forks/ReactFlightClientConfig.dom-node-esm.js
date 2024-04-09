@@ -7,7 +7,9 @@
  * @flow
  */
 
-// This should really have a Node and a Browser fork but to avoid too many configs we limit this to build the same for both
-export * from 'react-client/src/ReactFlightClientConfigBrowser';
-export * from 'react-server-dom-esm/src/ReactFlightClientConfigESMBundler';
+export * from 'react-client/src/ReactFlightClientStreamConfigNode';
+export * from 'react-client/src/ReactFlightClientConsoleConfigServer';
+export * from 'react-server-dom-esm/src/ReactFlightClientConfigBundlerESM';
+export * from 'react-server-dom-esm/src/ReactFlightClientConfigTargetESMServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
+export const usedWithSSR = true;

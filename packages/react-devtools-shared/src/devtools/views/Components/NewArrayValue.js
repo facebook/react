@@ -15,7 +15,7 @@ import {smartParse} from '../../utils';
 import {parseHookPathForEdit} from './utils';
 import styles from './NewArrayValue.css';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Props = {

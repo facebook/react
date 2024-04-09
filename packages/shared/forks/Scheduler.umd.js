@@ -36,7 +36,7 @@ const {
   unstable_flushAllWithoutAsserting,
   log,
   unstable_setDisableYieldValue,
-} = ReactInternals.Scheduler;
+} = ((ReactInternals: any).Scheduler: any);
 
 export {
   unstable_cancelCallback,

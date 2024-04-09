@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ImportManifestEntry} from './shared/ReactFlightImportMetadata';
+
 import {join} from 'path';
 import {pathToFileURL} from 'url';
 import asyncLib from 'neo-async';
@@ -221,21 +223,65 @@ export default class ReactFlightWebpackPlugin {
             return;
           }
 
+          const configuredCrossOriginLoading =
+            compilation.outputOptions.crossOriginLoading;
+          const crossOriginMode =
+            typeof configuredCrossOriginLoading === 'string'
+              ? configuredCrossOriginLoading === 'use-credentials'
+                ? configuredCrossOriginLoading
+                : 'anonymous'
+              : null;
+
           const resolvedClientFiles = new Set(
             (resolvedClientReferences || []).map(ref => ref.request),
           );
 
           const clientManifest: {
-            [string]: {chunks: $FlowFixMe, id: string, name: string},
+            [string]: ImportManifestEntry,
           } = {};
-          const ssrManifest: {
+          type SSRModuleMap = {
             [string]: {
               [string]: {specifier: string, name: string},
             },
-          } = {};
+          };
+          const moduleMap: SSRModuleMap = {};
+          const ssrBundleConfig: {
+            moduleLoading: {
+              prefix: string,
+              crossOrigin: string | null,
+            },
+            moduleMap: SSRModuleMap,
+          } = {
+            moduleLoading: {
+              prefix: compilation.outputOptions.publicPath || '',
+              crossOrigin: crossOriginMode,
+            },
+            moduleMap,
+          };
+
+          // We figure out which files are always loaded by any initial chunk (entrypoint).
+          // We use this to filter out chunks that Flight will never need to load
+          const emptySet: Set<string> = new Set();
+          const runtimeChunkFiles: Set<string> = emptySet;
+          compilation.entrypoints.forEach(entrypoint => {
+            const runtimeChunk = entrypoint.getRuntimeChunk();
+            if (runtimeChunk) {
+              runtimeChunk.files.forEach(runtimeFile => {
+                runtimeChunkFiles.add(runtimeFile);
+              });
+            }
+          });
+
           compilation.chunkGroups.forEach(function (chunkGroup) {
-            const chunkIds = chunkGroup.chunks.map(function (c) {
-              return c.id;
+            const chunks: Array<string> = [];
+            chunkGroup.chunks.forEach(function (c) {
+              // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+              for (const file of c.files) {
+                if (!file.endsWith('.js')) return;
+                if (file.endsWith('.hot-update.js')) return;
+                chunks.push(c.id, file);
+                break;
+              }
             });
 
             // $FlowFixMe[missing-local-annot]
@@ -256,7 +302,7 @@ export default class ReactFlightWebpackPlugin {
 
                 clientManifest[href] = {
                   id,
-                  chunks: chunkIds,
+                  chunks,
                   name: '*',
                 };
                 ssrExports['*'] = {
@@ -272,7 +318,7 @@ export default class ReactFlightWebpackPlugin {
                 /*
                 clientManifest[href + '#'] = {
                   id,
-                  chunks: chunkIds,
+                  chunks,
                   name: '',
                 };
                 ssrExports[''] = {
@@ -288,7 +334,7 @@ export default class ReactFlightWebpackPlugin {
                   moduleProvidedExports.forEach(function (name) {
                     clientManifest[href + '#' + name] = {
                       id,
-                      chunks: chunkIds,
+                      chunks,
                       name: name,
                     };
                     ssrExports[name] = {
@@ -299,7 +345,7 @@ export default class ReactFlightWebpackPlugin {
                 }
                 */
 
-                ssrManifest[id] = ssrExports;
+                moduleMap[id] = ssrExports;
               }
             }
 
@@ -326,7 +372,7 @@ export default class ReactFlightWebpackPlugin {
             _this.clientManifestFilename,
             new sources.RawSource(clientOutput, false),
           );
-          const ssrOutput = JSON.stringify(ssrManifest, null, 2);
+          const ssrOutput = JSON.stringify(ssrBundleConfig, null, 2);
           compilation.emitAsset(
             _this.ssrManifestFilename,
             new sources.RawSource(ssrOutput, false),

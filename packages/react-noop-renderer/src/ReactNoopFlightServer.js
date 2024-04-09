@@ -15,13 +15,14 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
 
-type Destination = Array<string>;
+type Destination = Array<Uint8Array>;
+
+const textEncoder = new TextEncoder();
 
 const ReactNoopFlightServer = ReactFlightServer({
   scheduleWork(callback: () => void) {
@@ -39,14 +40,11 @@ const ReactNoopFlightServer = ReactFlightServer({
   close(destination: Destination): void {},
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
-  stringToChunk(content: string): string {
-    return content;
+  stringToChunk(content: string): Uint8Array {
+    return textEncoder.encode(content);
   },
-  stringToPrecomputedChunk(content: string): string {
-    return content;
-  },
-  clonePrecomputedChunk(chunk: string): string {
-    return chunk;
+  stringToPrecomputedChunk(content: string): Uint8Array {
+    return textEncoder.encode(content);
   },
   isClientReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.client.reference');
@@ -63,13 +61,13 @@ const ReactNoopFlightServer = ReactFlightServer({
   ) {
     return saveModule(reference.value);
   },
-  prepareHostDispatcher() {},
 });
 
 type Options = {
-  onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
+  environmentName?: string,
   identifierPrefix?: string,
+  onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
 };
 
 function render(model: ReactClientValue, options?: Options): Destination {
@@ -79,8 +77,9 @@ function render(model: ReactClientValue, options?: Options): Destination {
     model,
     bundlerConfig,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

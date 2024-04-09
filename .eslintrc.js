@@ -326,6 +326,8 @@ module.exports = {
         'packages/react-refresh/**/*.js',
         'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
+        'packages/react-server-dom-turbopack/**/*.js',
+        'packages/react-server-dom-fb/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
         'packages/react-devtools-extensions/**/*.js',
@@ -380,6 +382,13 @@ module.exports = {
       },
     },
     {
+      // disable no focused tests for test setup helper files even if they are inside __tests__ directory
+      files: ['**/setupTests.js'],
+      rules: {
+        'jest/no-focused-tests': OFF,
+      },
+    },
+    {
       files: [
         '**/__tests__/**/*.js',
         'scripts/**/*.js',
@@ -415,11 +424,10 @@ module.exports = {
       },
     },
     {
-      files: [
-        'packages/react-native-renderer/**/*.js',
-      ],
+      files: ['packages/react-native-renderer/**/*.js'],
       globals: {
         nativeFabricUIManager: 'readonly',
+        RN$enableMicrotasksInReact: 'readonly',
       },
     },
     {
@@ -430,9 +438,31 @@ module.exports = {
       },
     },
     {
+      files: ['packages/react-server-dom-turbopack/**/*.js'],
+      globals: {
+        __turbopack_load__: 'readonly',
+        __turbopack_require__: 'readonly',
+      },
+    },
+    {
       files: ['packages/scheduler/**/*.js'],
       globals: {
         TaskController: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-devtools-extensions/**/*.js'],
+      globals: {
+        __IS_CHROME__: 'readonly',
+        __IS_FIREFOX__: 'readonly',
+        __IS_EDGE__: 'readonly',
+        __IS_INTERNAL_VERSION__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-devtools-shared/**/*.js'],
+      globals: {
+        __IS_INTERNAL_VERSION__: 'readonly',
       },
     },
   ],
@@ -454,11 +484,15 @@ module.exports = {
     $PropertyType: 'readonly',
     $ReadOnly: 'readonly',
     $ReadOnlyArray: 'readonly',
+    $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
+    ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
     bigint: 'readonly',
     BigInt: 'readonly',
+    BigInt64Array: 'readonly',
+    BigUint64Array: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',
@@ -485,11 +519,9 @@ module.exports = {
     React$Node: 'readonly',
     React$Portal: 'readonly',
     React$Ref: 'readonly',
-    React$StatelessFunctionalComponent: 'readonly',
     ReadableStreamController: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
-    ResponseState: 'readonly',
     StoreAsGlobal: 'readonly',
     symbol: 'readonly',
     SyntheticEvent: 'readonly',
@@ -497,6 +529,7 @@ module.exports = {
     Thenable: 'readonly',
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
+    FinalizationRegistry: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
@@ -508,10 +541,12 @@ module.exports = {
     __TEST__: 'readonly',
     __UMD__: 'readonly',
     __VARIANT__: 'readonly',
+    __unmockReact: 'readonly',
     gate: 'readonly',
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
     globalThis: 'readonly',
   },
 };

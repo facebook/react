@@ -31,7 +31,7 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {StyleAndLayout as StyleAndLayoutBackend} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 import type {StyleAndLayout as StyleAndLayoutFrontend} from './types';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {
   Resource,
   Thenable,

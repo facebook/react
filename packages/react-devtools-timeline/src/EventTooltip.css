@@ -75,7 +75,6 @@
   margin-right: 0.25rem;
 }
 
-.InfoText,
 .WarningText {
   color: var(--color-warning-text-color);
 }

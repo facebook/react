@@ -7,47 +7,50 @@
  * @flow
  */
 
-import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
-import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
-  enableFloat,
-  enableHostSingletons,
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
-
-import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
-const {Dispatcher} = ReactDOMSharedInternals;
-if (enableFloat && typeof document !== 'undefined') {
-  // Set the default dispatcher to the client dispatcher
-  Dispatcher.current = ReactDOMClientDispatcher;
-}
 
 export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
   _internalRoot: FiberRoot | null,
-  ...
 };
+
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
-  ...
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
 };
 
 export type HydrateRootOptions = {
   // Hydration options
-  hydratedSources?: Array<MutableSource<any>>,
   onHydrated?: (suspenseNode: Comment) => void,
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
@@ -55,8 +58,22 @@ export type HydrateRootOptions = {
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
-  ...
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  formState?: ReactFormState<any, any> | null,
 };
 
 import {
@@ -76,24 +93,14 @@ import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  findHostInstanceWithNoPortals,
-  registerMutableSourceForHydration,
-  flushSync,
+  updateContainerSync,
+  flushSyncWork,
   isAlreadyRendering,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-
-/* global reportError */
-const defaultOnRecoverableError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
 
 // $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {
@@ -112,7 +119,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     if (__DEV__) {
       if (typeof arguments[1] === 'function') {
         console.error(
-          'render(...): does not support the second callback argument. ' +
+          'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       } else if (isValidContainer(arguments[1])) {
@@ -126,26 +133,6 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
             'one argument.',
         );
       }
-
-      const container = root.containerInfo;
-
-      if (
-        !enableFloat &&
-        !enableHostSingletons &&
-        container.nodeType !== COMMENT_NODE
-      ) {
-        const hostInstance = findHostInstanceWithNoPortals(root.current);
-        if (hostInstance) {
-          if (hostInstance.parentNode !== container) {
-            console.error(
-              'render(...): It looks like the React-rendered content of the ' +
-                'root container was removed without using React. This is not ' +
-                'supported and will cause errors. Instead, call ' +
-                "root.unmount() to empty a root's container.",
-            );
-          }
-        }
-      }
     }
     updateContainer(children, root, null, null);
   };
@@ -157,7 +144,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
     if (__DEV__) {
       if (typeof arguments[0] === 'function') {
         console.error(
-          'unmount(...): does not support a callback argument. ' +
+          'does not support a callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
       }
@@ -175,9 +162,8 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
           );
         }
       }
-      flushSync(() => {
-        updateContainer(null, root, null, null);
-      });
+      updateContainerSync(null, root, null, null);
+      flushSyncWork();
       unmarkContainerAsRoot(container);
     }
   };
@@ -187,7 +173,7 @@ export function createRoot(
   options?: CreateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('createRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);
@@ -195,6 +181,8 @@ export function createRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
 
@@ -232,6 +220,12 @@ export function createRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
@@ -247,11 +241,12 @@ export function createRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
-  Dispatcher.current = ReactDOMClientDispatcher;
 
   const rootContainerElement: Document | Element | DocumentFragment =
     container.nodeType === COMMENT_NODE
@@ -281,7 +276,7 @@ export function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
-    throw new Error('hydrateRoot(...): Target container is not a DOM element.');
+    throw new Error('Target container is not a DOM element.');
   }
 
   warnIfReactDOMContainerInDEV(container);
@@ -298,14 +293,15 @@ export function hydrateRoot(
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
-  // TODO: Delete this option
-  const mutableSources = (options != null && options.hydratedSources) || null;
 
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let formState = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -319,11 +315,22 @@ export function hydrateRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
+    }
+    if (enableAsyncActions) {
+      if (options.formState !== undefined) {
+        formState = options.formState;
+      }
     }
   }
 
@@ -336,20 +343,15 @@ export function hydrateRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
+    formState,
   );
   markContainerAsRoot(root.current, container);
-  Dispatcher.current = ReactDOMClientDispatcher;
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
-
-  if (mutableSources) {
-    for (let i = 0; i < mutableSources.length; i++) {
-      const mutableSource = mutableSources[i];
-      registerMutableSourceForHydration(root, mutableSource);
-    }
-  }
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);
@@ -382,20 +384,6 @@ export function isValidContainerLegacy(node: any): boolean {
 
 function warnIfReactDOMContainerInDEV(container: any) {
   if (__DEV__) {
-    if (
-      !enableHostSingletons &&
-      container.nodeType === ELEMENT_NODE &&
-      ((container: any): Element).tagName &&
-      ((container: any): Element).tagName.toUpperCase() === 'BODY'
-    ) {
-      console.error(
-        'createRoot(): Creating roots directly with document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try using a container element created ' +
-          'for your app.',
-      );
-    }
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(

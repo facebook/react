@@ -23,12 +23,6 @@ export function renderToStaticMarkup() {
     arguments,
   );
 }
-export function renderToNodeStream() {
-  return require('./src/server/ReactDOMLegacyServerBrowser').renderToNodeStream.apply(
-    this,
-    arguments,
-  );
-}
 export function renderToStaticNodeStream() {
   return require('./src/server/ReactDOMLegacyServerBrowser').renderToStaticNodeStream.apply(
     this,
@@ -37,7 +31,14 @@ export function renderToStaticNodeStream() {
 }
 
 export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerBrowser').renderToReadableStream.apply(
+  return require('./src/server/react-dom-server.browser').renderToReadableStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resume() {
+  return require('./src/server/react-dom-server.browser').resume.apply(
     this,
     arguments,
   );
