@@ -29,13 +29,18 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
+export let currentOwner: Fiber | null = null;
+
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getCacheForType,
 }: any);
 
 if (__DEV__ || !disableStringRefs) {
   DefaultAsyncDispatcher.getOwner = (): null | Fiber => {
-    // TODO
-    return null;
+    return currentOwner;
   };
+}
+
+export function setCurrentOwner(fiber: null | Fiber) {
+  currentOwner = fiber;
 }
