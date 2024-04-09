@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6e42bfca9701ca8864d4f9604499cd79>>
+ * @generated SignedSource<<adb9aab2e8546b87933aac3aac47e82d>>
  */
 
 "use strict";
@@ -7956,8 +7956,8 @@ if (__DEV__) {
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
@@ -26590,7 +26590,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-0c4d3f45";
+    var ReactVersion = "19.0.0-canary-8e2720f2";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

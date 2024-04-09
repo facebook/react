@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a0e1a9af73fac74c9f89c71717150eae>>
+ * @generated SignedSource<<37233a4ad08d9bcf021f585ac680bdb6>>
  */
 
 "use strict";
@@ -11682,8 +11682,8 @@ to return true:wantsResponderID|                            |
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
@@ -30677,7 +30677,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-e9c8d4c9";
+    var ReactVersion = "19.0.0-canary-94b5e823";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
