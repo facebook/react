@@ -144,6 +144,7 @@ import {
   enableRenderableContext,
   enableRefAsProp,
   disableDefaultPropsExceptForClasses,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -3664,7 +3665,7 @@ export function performWork(request: Request): void {
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
   let prevAsyncDispatcher = null;
-  if (enableCache) {
+  if (enableCache || __DEV__ || !disableStringRefs) {
     prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
