@@ -83,6 +83,15 @@ function getTestFlags() {
       enableSuspenseList: releaseChannel === 'experimental' || www,
       enableLegacyHidden: www,
 
+      // This flag is used to determine whether we should run Fizz tests using
+      // the external runtime or the inline script runtime.
+      // For Meta we use variant to gate the feature. For OSS we use experimental
+      shouldUseFizzExternalRuntime: !featureFlags.enableFizzExternalRuntime
+        ? false
+        : www
+        ? __VARIANT__
+        : __EXPERIMENTAL__,
+
       // This is used by useSyncExternalStoresShared-test.js to decide whether
       // to test the shim or the native implementation of useSES.
       // TODO: It's disabled when enableRefAsProp is on because the JSX
