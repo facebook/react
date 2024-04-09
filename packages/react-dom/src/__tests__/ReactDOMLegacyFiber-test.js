@@ -112,7 +112,7 @@ describe('ReactDOMLegacyFiber', () => {
     );
 
     const textNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         instance,
       );
     expect(textNode).toBe(container.firstChild);
@@ -134,7 +134,7 @@ describe('ReactDOMLegacyFiber', () => {
     expect(container.childNodes.length).toBe(2);
 
     const firstNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         instance,
       );
     expect(firstNode).toBe(container.firstChild);
@@ -166,7 +166,7 @@ describe('ReactDOMLegacyFiber', () => {
     expect(container.childNodes.length).toBe(2);
 
     const firstNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         instance,
       );
     expect(firstNode).toBe(container.firstChild);
@@ -193,7 +193,7 @@ describe('ReactDOMLegacyFiber', () => {
     expect(container.childNodes.length).toBe(2);
 
     const firstNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         instance,
       );
     expect(firstNode).toBe(container.firstChild);
@@ -891,7 +891,7 @@ describe('ReactDOMLegacyFiber', () => {
 
     const myNodeA = ReactDOM.render(<MyNode />, container);
     const a =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         myNodeA,
       );
     expect(a.tagName).toBe('DIV');
@@ -900,7 +900,7 @@ describe('ReactDOMLegacyFiber', () => {
     expect(myNodeA === myNodeB).toBe(true);
 
     const b =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
         myNodeB,
       );
     expect(b.tagName).toBe('SPAN');

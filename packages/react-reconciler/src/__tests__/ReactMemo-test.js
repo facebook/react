@@ -138,7 +138,9 @@ describe('memo', () => {
 
         function readContext(Context) {
           const dispatcher =
-            React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.H;
+            React
+              .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+              .H;
           return dispatcher.readContext(Context);
         }
 
