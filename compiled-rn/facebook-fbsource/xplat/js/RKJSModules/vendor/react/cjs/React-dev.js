@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1fbc8fa493dfbca4298090a431bfb47d>>
+ * @generated SignedSource<<832479729fc2cc71c00f35327562558b>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-9ab97ea0";
+    var ReactVersion = "19.0.0-canary-2b42919c";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1306,6 +1306,7 @@ if (__DEV__) {
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
+    var didWarnAboutOldJSXRuntime;
 
     {
       didWarnAboutStringRefs = {};
@@ -1819,6 +1820,27 @@ if (__DEV__) {
       var ref = null;
 
       if (config != null) {
+        {
+          if (
+            !didWarnAboutOldJSXRuntime &&
+            "__self" in config && // Do not assume this is the result of an oudated JSX transform if key
+            // is present, because the modern JSX transform sometimes outputs
+            // createElement to preserve precedence between a static key and a
+            // spread key. To avoid false positive warnings, we never warn if
+            // there's a key.
+            !("key" in config)
+          ) {
+            didWarnAboutOldJSXRuntime = true;
+
+            warn(
+              "Your app (or one of its dependencies) is using an outdated JSX " +
+                "transform. Update to the modern JSX transform for " +
+                "faster performance: " + // TODO: Create a short link for this
+                "https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html"
+            );
+          }
+        }
+
         if (hasValidRef(config)) {
           {
             ref = config.ref;
