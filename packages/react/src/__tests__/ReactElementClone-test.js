@@ -292,7 +292,9 @@ describe('ReactElementClone', () => {
     }
   });
 
-  it('should steal the ref if a new string ref is specified', async () => {
+  it('should steal the ref if a new string ref is specified without an owner', async () => {
+    // Regression test for this specific feature combination calling cloneElement on an element
+    // without an owner
     if (gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)) {
       await expect(async () => {
         // create an element without an owner
