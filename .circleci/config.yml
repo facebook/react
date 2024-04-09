@@ -2,7 +2,7 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/openjdk:18.0-node
+    - image: cimg/node:18.20.1-browsers
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -246,8 +246,7 @@ jobs:
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
   run_fixtures_flight_tests:
-    docker:
-      - image: cimg/openjdk:20.0-node
+    docker: *docker
     environment: *environment
     steps:
       - checkout
