@@ -203,10 +203,8 @@ import {
   resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
-import {
-  DefaultAsyncDispatcher,
-  setCurrentOwner,
-} from './ReactFiberAsyncDispatcher';
+import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
+import {setCurrentOwner} from './ReactFiberCurrentOwner';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
