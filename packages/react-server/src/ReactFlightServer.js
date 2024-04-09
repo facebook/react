@@ -89,7 +89,11 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
+import {
+  DefaultAsyncDispatcher,
+  currentOwner,
+  setCurrentOwner,
+} from './flight/ReactFlightAsyncDispatcher';
 
 import {
   getIteratorFn,
@@ -158,7 +162,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        const owner: null | ReactComponentInfo = ReactSharedInternals.owner;
+        const owner: null | ReactComponentInfo = currentOwner;
         emitConsoleChunk(request, id, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
@@ -854,11 +858,11 @@ function renderFunctionComponent<Props>(
   const secondArg = undefined;
   let result;
   if (__DEV__) {
-    ReactSharedInternals.owner = componentDebugInfo;
+    setCurrentOwner(componentDebugInfo);
     try {
       result = Component(props, secondArg);
     } finally {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     }
   } else {
     result = Component(props, secondArg);
