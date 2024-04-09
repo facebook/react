@@ -47,8 +47,4 @@ const Internals: ReactDOMInternals = {
   usingClientEntryPoint: false,
 };
 
-// if (__DEV__) {
-//   (Internals: any).usingClientEntryPoint = false;
-// }
-
 export default Internals;

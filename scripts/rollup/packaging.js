@@ -213,6 +213,18 @@ function filterOutEntrypoints(name) {
       hasBundle =
         entryPointsToHasBundle.get(entry + '.node') ||
         entryPointsToHasBundle.get(entry + '.browser');
+
+      // The .react-server and .rsc suffixes may not have a bundle representation but
+      // should infer their bundle status from the non-suffixed entry point.
+      if (entry.endsWith('.react-server')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.react-server'.length * -1)
+        );
+      } else if (entry.endsWith('.rsc')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.rsc'.length * -1)
+        );
+      }
     }
     if (hasBundle === undefined) {
       // This doesn't exist in the bundles. It's an extra file.
