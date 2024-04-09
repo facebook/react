@@ -274,8 +274,22 @@ describe('ReactElementClone', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(<Grandparent />));
-    expect(component.childRef).toEqual({current: null});
-    expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    if (gate(flags => flags.enableRefAsProp && flags.disableStringRefs)) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else if (
+      gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else if (
+      gate(flags => flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else {
+      // Not going to bother testing every possible combination.
+    }
   });
 
   it('should overwrite props', async () => {
@@ -368,6 +382,11 @@ describe('ReactElementClone', () => {
       expect(clone.props).toEqual({foo: 'ef', ref: '34'});
     } else if (
       gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(clone.ref).toBe(element.ref);
+      expect(clone.props).toEqual({foo: 'ef'});
+    } else if (
+      gate(flags => flags.enableRefAsProp && !flags.disableStringRefs)
     ) {
       expect(clone.ref).toBe(element.ref);
       expect(clone.props).toEqual({foo: 'ef'});
