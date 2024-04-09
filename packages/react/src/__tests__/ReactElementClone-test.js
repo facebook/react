@@ -292,6 +292,39 @@ describe('ReactElementClone', () => {
     }
   });
 
+  it('should steal the ref if a new string ref is specified', async () => {
+    if (gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)) {
+      await expect(async () => {
+        // create an element without an owner
+        const element = React.createElement('div', {id: 'some-id'});
+        class Parent extends React.Component {
+          render() {
+            return <Child>{element}</Child>;
+          }
+        }
+        let child;
+        class Child extends React.Component {
+          render() {
+            child = this;
+            const clone = React.cloneElement(this.props.children, {
+              ref: 'xyz',
+            });
+            return <div>{clone}</div>;
+          }
+        }
+
+        const root = ReactDOMClient.createRoot(document.createElement('div'));
+        await act(() => root.render(<Parent />));
+        expect(child.refs.xyz.tagName).toBe('DIV');
+      }).toErrorDev([
+        'Warning: Component "Child" contains the string ref "xyz". Support for ' +
+          'string refs will be removed in a future major release. We recommend ' +
+          'using useRef() or createRef() instead. Learn more about using refs ' +
+          'safely here: https://react.dev/link/strict-mode-string-ref',
+      ]);
+    }
+  });
+
   it('should overwrite props', async () => {
     class Component extends React.Component {
       render() {
