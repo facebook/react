@@ -46397,7 +46397,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-0db632cf";
+    var ReactVersion = "19.0.0-www-modern-cb18514c";
 
     function createPortal$1(
       children,
@@ -48926,7 +48926,7 @@ if (__DEV__) {
         NoEventPriority,
       findDOMNode: null,
       usingClientEntryPoint: false
-    }; // if (true) {
+    };
 
     {
       if (
