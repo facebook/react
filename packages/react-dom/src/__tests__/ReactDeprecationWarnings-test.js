@@ -91,6 +91,9 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  // Disabling this until #28732 lands so we can assert on the warning message.
+  // (It's already disabled in all but the Meta builds, anyway. Nbd.)
+  // @gate TODO || !__DEV__
   // @gate !disableStringRefs
   it('should warn when owner and self are the same for string refs', async () => {
     class RefComponent extends React.Component {
@@ -114,8 +117,11 @@ describe('ReactDeprecationWarnings', () => {
     await waitForAll([]);
   });
 
+  // Disabling this until #28732 lands so we can assert on the warning message.
+  // (It's already disabled in all but the Meta builds, anyway. Nbd.)
+  // @gate TODO || !__DEV__
   // @gate !disableStringRefs
-  it('should warn when owner and self are different for string refs', async () => {
+  it('should warn when owner and self are different for string refs (createElement)', async () => {
     class RefComponent extends React.Component {
       render() {
         return null;
@@ -143,7 +149,7 @@ describe('ReactDeprecationWarnings', () => {
 
   // @gate __DEV__
   // @gate !disableStringRefs
-  it('should warn when owner and self are different for string refs', async () => {
+  it('should warn when owner and self are different for string refs (jsx)', async () => {
     class RefComponent extends React.Component {
       render() {
         return null;
