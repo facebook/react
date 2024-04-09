@@ -29,6 +29,17 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 
 const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
+function getOwner() {
+  if (__DEV__ || !disableStringRefs) {
+    const dispatcher = ReactSharedInternals.A;
+    if (dispatcher === null) {
+      return null;
+    }
+    return dispatcher.getOwner();
+  }
+  return null;
+}
+
 let specialPropKeyWarningShown;
 let specialPropRefWarningShown;
 let didWarnAboutStringRefs;
@@ -66,16 +77,15 @@ function hasValidKey(config) {
 
 function warnIfStringRefCannotBeAutoConverted(config, self) {
   if (__DEV__) {
+    let owner;
     if (
       !disableStringRefs &&
       typeof config.ref === 'string' &&
-      ReactSharedInternals.owner &&
+      (owner = getOwner()) &&
       self &&
-      ReactSharedInternals.owner.stateNode !== self
+      owner.stateNode !== self
     ) {
-      const componentName = getComponentNameFromType(
-        ReactSharedInternals.owner.type,
-      );
+      const componentName = getComponentNameFromType(owner.type);
 
       if (!didWarnAboutStringRefs[componentName]) {
         console.error(
@@ -85,7 +95,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
             'https://react.dev/link/strict-mode-string-ref',
-          getComponentNameFromType(ReactSharedInternals.owner.type),
+          getComponentNameFromType(owner.type),
           config.ref,
         );
         didWarnAboutStringRefs[componentName] = true;
@@ -339,7 +349,7 @@ export function jsxProd(type, config, maybeKey) {
     if (!enableRefAsProp) {
       ref = config.ref;
       if (!disableStringRefs) {
-        ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
+        ref = coerceStringRef(ref, getOwner(), type);
       }
     }
   }
@@ -365,11 +375,7 @@ export function jsxProd(type, config, maybeKey) {
       // Skip over reserved prop names
       if (propName !== 'key' && (enableRefAsProp || propName !== 'ref')) {
         if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
-          props.ref = coerceStringRef(
-            config[propName],
-            ReactSharedInternals.owner,
-            type,
-          );
+          props.ref = coerceStringRef(config[propName], getOwner(), type);
         } else {
           props[propName] = config[propName];
         }
@@ -389,15 +395,7 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  return ReactElement(
-    type,
-    key,
-    ref,
-    undefined,
-    undefined,
-    ReactSharedInternals.owner,
-    props,
-  );
+  return ReactElement(type, key, ref, undefined, undefined, getOwner(), props);
 }
 
 // While `jsxDEV` should never be called when running in production, we do
@@ -571,7 +569,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       if (!enableRefAsProp) {
         ref = config.ref;
         if (!disableStringRefs) {
-          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
+          ref = coerceStringRef(ref, getOwner(), type);
         }
       }
       if (!disableStringRefs) {
@@ -600,11 +598,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
         // Skip over reserved prop names
         if (propName !== 'key' && (enableRefAsProp || propName !== 'ref')) {
           if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
-            props.ref = coerceStringRef(
-              config[propName],
-              ReactSharedInternals.owner,
-              type,
-            );
+            props.ref = coerceStringRef(config[propName], getOwner(), type);
           } else {
             props[propName] = config[propName];
           }
@@ -643,7 +637,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       ref,
       self,
       source,
-      ReactSharedInternals.owner,
+      getOwner(),
       props,
     );
 
@@ -747,7 +741,7 @@ export function createElement(type, config, children) {
       if (!enableRefAsProp) {
         ref = config.ref;
         if (!disableStringRefs) {
-          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
+          ref = coerceStringRef(ref, getOwner(), type);
         }
       }
 
@@ -777,11 +771,7 @@ export function createElement(type, config, children) {
         propName !== '__source'
       ) {
         if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
-          props.ref = coerceStringRef(
-            config[propName],
-            ReactSharedInternals.owner,
-            type,
-          );
+          props.ref = coerceStringRef(config[propName], getOwner(), type);
         } else {
           props[propName] = config[propName];
         }
@@ -837,7 +827,7 @@ export function createElement(type, config, children) {
     ref,
     undefined,
     undefined,
-    ReactSharedInternals.owner,
+    getOwner(),
     props,
   );
 
@@ -887,7 +877,7 @@ export function cloneElement(element, config, children) {
 
   if (config != null) {
     if (hasValidRef(config)) {
-      owner = ReactSharedInternals.owner;
+      owner = __DEV__ || !disableStringRefs ? getOwner() : undefined;
       if (!enableRefAsProp) {
         // Silently steal the ref from the parent.
         ref = config.ref;
@@ -981,8 +971,9 @@ export function cloneElement(element, config, children) {
 
 function getDeclarationErrorAddendum() {
   if (__DEV__) {
-    if (ReactSharedInternals.owner) {
-      const name = getComponentNameFromType(ReactSharedInternals.owner.type);
+    const owner = getOwner();
+    if (owner) {
+      const name = getComponentNameFromType(owner.type);
       if (name) {
         return '\n\nCheck the render method of `' + name + '`.';
       }
@@ -1085,11 +1076,7 @@ function validateExplicitKey(element, parentType) {
     // property, it may be the creator of the child that's responsible for
     // assigning it a key.
     let childOwner = '';
-    if (
-      element &&
-      element._owner != null &&
-      element._owner !== ReactSharedInternals.owner
-    ) {
+    if (element && element._owner != null && element._owner !== getOwner()) {
       let ownerName = null;
       if (typeof element._owner.tag === 'number') {
         ownerName = getComponentNameFromType(element._owner.type);
