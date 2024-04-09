@@ -403,29 +403,41 @@
                 }
             }
         },
-        "ce8ed914-8d7d-4dc0-8444-b79daa353895": {
-            "name": "*",
+        "49f57445-e2c1-4274-948a-c68f68203c36": {
+            "name": "60",
             "rule": {
                 "type": "regex",
-                "regex": "/*"
+                "regex": "60"
             },
             "actions": {
                 "ide": {
-                    "doc_id": "mjvylggw",
-                    "message": "*"
+                    "doc_id": "f88lm942",
+                    "message": "m60"
                 }
             }
         },
-        "d2938acd-b6d4-4cc6-9518-d3ccdb1c4013": {
-            "name": "75",
+        "2e8a1261-1d00-4e63-81e9-3e1c19e24243": {
+            "name": "artifacts",
             "rule": {
                 "type": "regex",
-                "regex": "75"
+                "regex": "artifacts'\\)"
             },
             "actions": {
                 "ide": {
-                    "doc_id": "y09ov8r6",
-                    "message": "m75"
+                    "doc_id": "y09ov8r6"
+                }
+            }
+        },
+        "b8fa75e6-836c-449a-ac23-b1409c4f9ee7": {
+            "name": "version2",
+            "rule": {
+                "type": "regex",
+                "regex": "version"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "xwcabyqp",
+                    "message": "mver"
                 }
             }
         }
@@ -462,7 +474,8 @@
         "f40ccb9a-0b4c-4bab-8253-2e341d098811",
         "84b8f245-07f5-4ffd-9cb6-2a58d79d1efd",
         "18e4d9e8-25c0-47af-9855-20d1a35cc364",
-        "ce8ed914-8d7d-4dc0-8444-b79daa353895",
-        "d2938acd-b6d4-4cc6-9518-d3ccdb1c4013"
+        "49f57445-e2c1-4274-948a-c68f68203c36",
+        "2e8a1261-1d00-4e63-81e9-3e1c19e24243",
+        "b8fa75e6-836c-449a-ac23-b1409c4f9ee7"
     ]
 }
