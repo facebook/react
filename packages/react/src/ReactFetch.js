@@ -46,7 +46,7 @@ if (enableCache && enableFetchInstrumentation) {
       resource: URL | RequestInfo,
       options?: RequestOptions,
     ) {
-      const dispatcher = ReactSharedInternals.C;
+      const dispatcher = ReactSharedInternals.A;
       if (!dispatcher) {
         // We're outside a cached scope.
         return originalFetch(resource, options);

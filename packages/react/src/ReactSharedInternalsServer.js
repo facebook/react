@@ -8,7 +8,7 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 import type {
@@ -28,7 +28,7 @@ import {disableStringRefs, enableTaint} from 'shared/ReactFeatureFlags';
 
 export type SharedStateServer = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
-  C: null | CacheDispatcher, // ReactCurrentCache for Cache
+  A: null | AsyncDispatcher, // ReactCurrentCache for Cache
 
   // enableTaint
   TaintRegistryObjects: WeakMap<Reference, string>,
@@ -49,7 +49,7 @@ export type RendererTask = boolean => RendererTask | null;
 
 const ReactSharedInternals: SharedStateServer = ({
   H: null,
-  C: null,
+  A: null,
 }: any);
 
 if (enableTaint) {
