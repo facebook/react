@@ -203,7 +203,10 @@ import {
   resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
-import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
+import {
+  DefaultAsyncDispatcher,
+  setCurrentOwner,
+} from './ReactFiberAsyncDispatcher';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
@@ -1684,7 +1687,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   resetHooksAfterThrow();
   resetCurrentDebugFiberInDEV();
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 
   if (thrownValue === SuspenseException) {
@@ -2386,7 +2389,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   }
 
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -2501,7 +2504,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   }
 
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -2894,7 +2897,7 @@ function commitRootImpl(
 
     // Reset this to null before calling lifecycles
     if (__DEV__ || !disableStringRefs) {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     }
 
     // The commit phase is broken into several sub-phases. We do a separate pass
