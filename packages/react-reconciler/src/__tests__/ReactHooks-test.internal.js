@@ -949,7 +949,7 @@ describe('ReactHooks', () => {
   it('warns when reading context inside useMemo', async () => {
     const {useMemo, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     function App() {
@@ -968,7 +968,7 @@ describe('ReactHooks', () => {
   it('warns when reading context inside useMemo after reading outside it', async () => {
     const {useMemo, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     let firstRead, secondRead;
@@ -994,7 +994,7 @@ describe('ReactHooks', () => {
   it('throws when reading context inside useEffect', async () => {
     const {useEffect, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     function App() {
@@ -1015,7 +1015,7 @@ describe('ReactHooks', () => {
   it('throws when reading context inside useLayoutEffect', async () => {
     const {useLayoutEffect, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     function App() {
@@ -1038,7 +1038,7 @@ describe('ReactHooks', () => {
   it('warns when reading context inside useReducer', async () => {
     const {useReducer, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     function App() {
@@ -1065,7 +1065,7 @@ describe('ReactHooks', () => {
     const ThemeContext = createContext('light');
 
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     let _setState;
     function Fn() {
@@ -1155,7 +1155,7 @@ describe('ReactHooks', () => {
 
   it('resets warning internal state when interrupted by an error', async () => {
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = React.createContext('light');
     function App() {
@@ -1243,7 +1243,7 @@ describe('ReactHooks', () => {
   it('warns when reading context inside useMemo', async () => {
     const {useMemo, createContext} = React;
     const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     const ThemeContext = createContext('light');
     function App() {

@@ -45,7 +45,7 @@ const Resolved = 1;
 const Rejected = 2;
 
 const SharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 function readContext(Context: ReactContext<mixed>) {
   const dispatcher = SharedInternals.H;
