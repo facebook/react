@@ -2,8 +2,8 @@
 name: 'Manage stale issues and PRs'
 on:
   schedule:
-    # Run daily at 2AM
-    - cron: '0 2 * * *'
+    # Run hourly
+    - cron: '0 * * * *'
 
 jobs:
   stale:
@@ -16,7 +16,7 @@ jobs:
           days-before-stale: 90
           # Number of days of inactivity before a stale issue or PR is closed
           days-before-close: 7
-          # Number of issues or PRs to process per day
+          # API calls per run
           operations-per-run: 100
 
           # --- Issues ---
