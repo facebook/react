@@ -33,7 +33,7 @@ function formatProdErrorMessage(code) {
   );
 }
 var ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
@@ -16991,7 +16991,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1727 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-6a81abec",
+  version: "19.0.0-www-classic-007b0a8e",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2155 = {
@@ -17021,7 +17021,7 @@ var internals$jscomp$inline_2155 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-6a81abec"
+  reconcilerVersion: "19.0.0-www-classic-007b0a8e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2156 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17163,7 +17163,8 @@ assign(Internals, {
     }
   }
 });
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
+exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
+  Internals;
 exports.createPortal = function (children, container) {
   var key =
     2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null;
@@ -17483,4 +17484,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-6a81abec";
+exports.version = "19.0.0-www-classic-007b0a8e";

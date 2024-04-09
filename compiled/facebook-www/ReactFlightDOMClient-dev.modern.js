@@ -78,7 +78,7 @@ if (__DEV__) {
     }
 
     var ReactDOMSharedInternals =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     // This client file is in the shared folder because it applies to both SSR and browser contexts.
     function dispatchHint(code, model) {

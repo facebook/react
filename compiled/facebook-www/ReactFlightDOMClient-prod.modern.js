@@ -15,7 +15,7 @@ var ReactDOM = require("react-dom");
 require("ReactFeatureFlags");
 var decoderOptions = { stream: !0 },
   ReactDOMSharedInternals =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 function resolveClientReference(moduleMap, metadata) {
   if ("function" === typeof moduleMap.resolveClientReference)
     return moduleMap.resolveClientReference(metadata);

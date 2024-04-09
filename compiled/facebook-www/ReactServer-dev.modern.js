@@ -58,7 +58,7 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
           var stack = ReactSharedInternals.getStackAddendum();
@@ -3083,7 +3083,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-15824b86";
+    var ReactVersion = "19.0.0-www-modern-f42736d9";
 
     // Patch fetch
     var Children = {
@@ -3105,7 +3105,7 @@ if (__DEV__) {
     exports.Profiler = REACT_PROFILER_TYPE;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
-    exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+    exports.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
     exports.cache = cache;
     exports.cloneElement = cloneElement;

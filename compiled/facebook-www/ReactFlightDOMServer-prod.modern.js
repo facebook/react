@@ -27,7 +27,7 @@ function writeChunkAndReturn(destination, chunk) {
   return !0;
 }
 var ReactDOMSharedInternals =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
   f: previousDispatcher.f,
@@ -431,7 +431,7 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
     : "\n  " + str;
 }
 var ReactSharedInternalsServer =
-  React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 if (!ReactSharedInternalsServer)
   throw Error(
     'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'

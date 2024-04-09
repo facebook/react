@@ -68,7 +68,7 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
           var stack = ReactSharedInternals.getStackAddendum();
@@ -1963,7 +1963,7 @@ if (__DEV__) {
     }
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
@@ -46397,7 +46397,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-ba8ee814";
+    var ReactVersion = "19.0.0-www-modern-0db632cf";
 
     function createPortal$1(
       children,
@@ -49037,7 +49037,8 @@ if (__DEV__) {
       }
     }
 
-    exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals$1;
+    exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
+      Internals$1;
     exports.createComponentSelector = createComponentSelector;
     exports.createHasPseudoClassSelector = createHasPseudoClassSelector;
     exports.createPortal = createPortal;

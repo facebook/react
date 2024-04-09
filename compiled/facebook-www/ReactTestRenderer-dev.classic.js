@@ -62,7 +62,7 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
           var stack = ReactSharedInternals.getStackAddendum();
@@ -132,7 +132,7 @@ if (__DEV__) {
     }
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var debugRenderPhaseSideEffectsForStrictMode = false;
     var enableSchedulingProfiler = false;
@@ -26645,7 +26645,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-c5e9d708";
+    var ReactVersion = "19.0.0-www-classic-9f2c63be";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
