@@ -153,7 +153,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     renderOptions = {};
-    if (gate(flags => flags.enableFizzExternalRuntime)) {
+    if (gate(flags => flags.shouldUseFizzExternalRuntime)) {
       renderOptions.unstable_externalRuntimeSrc =
         'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
     }
@@ -610,7 +610,7 @@ describe('ReactDOMFizzServer', () => {
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(6);
+      ).toEqual(gate(flags => flags.shouldUseFizzExternalRuntime) ? 6 : 5);
 
       await act(() => {
         resolve({default: Text});
@@ -4292,7 +4292,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFizzExternalRuntime
+  // @gate shouldUseFizzExternalRuntime
   it('does not send script tags for SSR instructions when using the external runtime', async () => {
     function App() {
       return (

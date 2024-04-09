@@ -97,7 +97,7 @@ describe('ReactDOMFloat', () => {
     });
 
     renderOptions = {};
-    if (gate(flags => flags.enableFizzExternalRuntime)) {
+    if (gate(flags => flags.shouldUseFizzExternalRuntime)) {
       renderOptions.unstable_externalRuntimeSrc =
         'react-dom/unstable_server-external-runtime';
     }
