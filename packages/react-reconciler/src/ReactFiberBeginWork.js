@@ -296,7 +296,7 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
-import {setCurrentOwner} from './ReactFiberAsyncDispatcher';
+import {setCurrentOwner} from './ReactFiberCurrentOwner';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.

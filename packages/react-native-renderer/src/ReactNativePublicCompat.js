@@ -25,7 +25,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import {currentOwner} from 'react-reconciler/src/ReactFiberAsyncDispatcher';
+import {currentOwner} from 'react-reconciler/src/ReactFiberCurrentOwner';
 
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
