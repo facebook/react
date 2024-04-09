@@ -430,9 +430,13 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
       "\n  " + str + "\n  " + objectOrArray)
     : "\n  " + str;
 }
-var ReactSharedInternals$1 =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  ObjectPrototype = Object.prototype,
+var ReactSharedInternalsServer =
+  React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+if (!ReactSharedInternalsServer)
+  throw Error(
+    'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
+  );
+var ObjectPrototype = Object.prototype,
   stringify = JSON.stringify;
 function defaultErrorHandler(error) {
   console.error(error);
@@ -1018,8 +1022,8 @@ function retryTask(request, task) {
     }
 }
 function performWork(request) {
-  var prevDispatcher = ReactSharedInternals$1.H;
-  ReactSharedInternals$1.H = HooksDispatcher;
+  var prevDispatcher = ReactSharedInternalsServer.H;
+  ReactSharedInternalsServer.H = HooksDispatcher;
   var prevRequest = currentRequest;
   currentRequest$1 = currentRequest = request;
   try {
@@ -1032,7 +1036,7 @@ function performWork(request) {
   } catch (error) {
     logRecoverableError(request, error), fatalError(request, error);
   } finally {
-    (ReactSharedInternals$1.H = prevDispatcher),
+    (ReactSharedInternalsServer.H = prevDispatcher),
       (currentRequest$1 = null),
       (currentRequest = prevRequest);
   }
@@ -1085,11 +1089,11 @@ exports.renderToDestination = function (destination, model, options) {
     );
   var onError = options ? options.onError : void 0;
   if (
-    null !== ReactSharedInternals$1.C &&
-    ReactSharedInternals$1.C !== DefaultCacheDispatcher
+    null !== ReactSharedInternalsServer.C &&
+    ReactSharedInternalsServer.C !== DefaultCacheDispatcher
   )
     throw Error("Currently React only supports one RSC renderer at a time.");
-  ReactSharedInternals$1.C = DefaultCacheDispatcher;
+  ReactSharedInternalsServer.C = DefaultCacheDispatcher;
   var abortSet = new Set();
   options = [];
   var hints = new Set();

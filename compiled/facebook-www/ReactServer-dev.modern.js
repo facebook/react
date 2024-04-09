@@ -3083,7 +3083,7 @@ if (__DEV__) {
 
     function noop() {}
 
-    var ReactVersion = "19.0.0-www-modern-85fbc52f";
+    var ReactVersion = "19.0.0-www-modern-15824b86";
 
     // Patch fetch
     var Children = {
@@ -3105,7 +3105,7 @@ if (__DEV__) {
     exports.Profiler = REACT_PROFILER_TYPE;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
-    exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+    exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
       ReactSharedInternals;
     exports.cache = cache;
     exports.cloneElement = cloneElement;

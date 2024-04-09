@@ -278,9 +278,13 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
-var ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  sharedNotPendingObject = {
+var ReactSharedInternalsServer =
+  React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+if (!ReactSharedInternalsServer)
+  throw Error(
+    'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
+  );
+var sharedNotPendingObject = {
     pending: !1,
     data: null,
     method: null,
@@ -5261,10 +5265,10 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactSharedInternals.H;
-    ReactSharedInternals.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+      prevDispatcher = ReactSharedInternalsServer.H;
+    ReactSharedInternalsServer.H = HooksDispatcher;
+    var prevCacheDispatcher = ReactSharedInternalsServer.C;
+    ReactSharedInternalsServer.C = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5418,8 +5422,8 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactSharedInternals.H = prevDispatcher),
-        (ReactSharedInternals.C = prevCacheDispatcher),
+        (ReactSharedInternalsServer.H = prevDispatcher),
+        (ReactSharedInternalsServer.C = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }

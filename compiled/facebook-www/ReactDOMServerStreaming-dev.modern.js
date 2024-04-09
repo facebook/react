@@ -2345,8 +2345,16 @@ if (__DEV__) {
         : 'something with type "' + typeof thing + '"';
     }
 
-    var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    var ReactSharedInternalsServer = // $FlowFixMe: It's defined in the one we resolve to.
+      React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+    if (!ReactSharedInternalsServer) {
+      throw new Error(
+        'The "react" package in this environment is not configured correctly. ' +
+          'The "react-server" condition must be enabled in any environment that ' +
+          "runs React Server Components."
+      );
+    }
 
     // same object across all transitions.
 
@@ -10735,10 +10743,10 @@ if (__DEV__) {
       var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternalsServer.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactSharedInternals.H = null;
+        ReactSharedInternalsServer.H = null;
         disableLogs();
       }
       /**
@@ -10931,7 +10939,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactSharedInternals.H = previousDispatcher;
+          ReactSharedInternalsServer.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -13779,13 +13787,13 @@ if (__DEV__) {
       }
 
       var prevContext = getActiveContext();
-      var prevDispatcher = ReactSharedInternals.H;
-      ReactSharedInternals.H = HooksDispatcher;
+      var prevDispatcher = ReactSharedInternalsServer.H;
+      ReactSharedInternalsServer.H = HooksDispatcher;
       var prevCacheDispatcher = null;
 
       {
-        prevCacheDispatcher = ReactSharedInternals.C;
-        ReactSharedInternals.C = DefaultCacheDispatcher;
+        prevCacheDispatcher = ReactSharedInternalsServer.C;
+        ReactSharedInternalsServer.C = DefaultCacheDispatcher;
       }
 
       var prevRequest = currentRequest;
@@ -13793,8 +13801,8 @@ if (__DEV__) {
       var prevGetCurrentStackImpl = null;
 
       {
-        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-        ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+        prevGetCurrentStackImpl = ReactSharedInternalsServer.getCurrentStack;
+        ReactSharedInternalsServer.getCurrentStack = getCurrentStackInDEV;
       }
 
       var prevResumableState = currentResumableState;
@@ -13820,14 +13828,14 @@ if (__DEV__) {
         fatalError(request, error);
       } finally {
         setCurrentResumableState(prevResumableState);
-        ReactSharedInternals.H = prevDispatcher;
+        ReactSharedInternalsServer.H = prevDispatcher;
 
         {
-          ReactSharedInternals.C = prevCacheDispatcher;
+          ReactSharedInternalsServer.C = prevCacheDispatcher;
         }
 
         {
-          ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+          ReactSharedInternalsServer.getCurrentStack = prevGetCurrentStackImpl;
         }
 
         if (prevDispatcher === HooksDispatcher) {

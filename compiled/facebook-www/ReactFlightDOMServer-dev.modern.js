@@ -1146,10 +1146,18 @@ if (__DEV__) {
       return "\n  " + str;
     }
 
-    var ReactSharedInternals$1 =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    var ReactSharedInternalsServer = // $FlowFixMe: It's defined in the one we resolve to.
+      React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var ReactSharedInternals = ReactSharedInternals$1;
+    if (!ReactSharedInternalsServer) {
+      throw new Error(
+        'The "react" package in this environment is not configured correctly. ' +
+          'The "react-server" condition must be enabled in any environment that ' +
+          "runs React Server Components."
+      );
+    }
+
+    var ReactSharedInternals = ReactSharedInternalsServer;
 
     function patchConsole(consoleInst, methodName) {
       var descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
