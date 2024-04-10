@@ -4261,6 +4261,38 @@ body {
     );
   });
 
+  // Fixes: https://github.com/facebook/react/issues/27910
+  it('omits preloads for images inside noscript tags', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <img src="foo" />
+            <noscript>
+              <img src="bar" />
+            </noscript>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="image" />
+        </head>
+        <body>
+          <img src="foo" />
+          <noscript>&lt;img src="bar"&gt;</noscript>
+        </body>
+      </html>,
+    );
+  });
+
   it('should handle media on image preload', async () => {
     function App({isClient}) {
       ReactDOM.preload('/server', {
