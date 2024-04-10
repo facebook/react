@@ -188,7 +188,7 @@ export function processReply(
       formData = new FormData();
     }
     formData.append(formFieldPrefix + blobId, blob);
-    return '$Y' + tag + blobId.toString(16);
+    return '$' + tag + blobId.toString(16);
   }
 
   function resolveToJSON(
@@ -389,11 +389,11 @@ export function processReply(
         }
         if (value instanceof Int8Array) {
           // char
-          return serializeTypedArray('C', value);
+          return serializeTypedArray('O', value);
         }
         if (value instanceof Uint8Array) {
           // unsigned char
-          return serializeTypedArray('c', value);
+          return serializeTypedArray('o', value);
         }
         if (value instanceof Uint8ClampedArray) {
           // unsigned clamped char
@@ -417,15 +417,15 @@ export function processReply(
         }
         if (value instanceof Float32Array) {
           // float
-          return serializeTypedArray('F', value);
+          return serializeTypedArray('G', value);
         }
         if (value instanceof Float64Array) {
           // double
-          return serializeTypedArray('d', value);
+          return serializeTypedArray('g', value);
         }
         if (value instanceof BigInt64Array) {
           // number
-          return serializeTypedArray('N', value);
+          return serializeTypedArray('M', value);
         }
         if (value instanceof BigUint64Array) {
           // unsigned number

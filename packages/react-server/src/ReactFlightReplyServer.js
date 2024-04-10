@@ -387,7 +387,7 @@ function parseTypedArray(
   parentObject: Object,
   parentKey: string,
 ): null {
-  const id = parseInt(reference.slice(3), 16);
+  const id = parseInt(reference.slice(2), 16);
   const prefix = response._prefix;
   const key = prefix + id;
   // We should have this backingEntry in the store already because we emitted
@@ -508,58 +508,50 @@ function parseModelString(
       }
     }
     if (enableBinaryFlight) {
-      if (value[1] === 'Y')
-        switch (value[2]) {
-          case 'A':
-            return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
-          case 'C':
-            return parseTypedArray(response, value, Int8Array, 1, obj, key);
-          case 'c':
-            return parseTypedArray(response, value, Uint8Array, 1, obj, key);
-          case 'U':
-            return parseTypedArray(
-              response,
-              value,
-              Uint8ClampedArray,
-              1,
-              obj,
-              key,
-            );
-          case 'S':
-            return parseTypedArray(response, value, Int16Array, 2, obj, key);
-          case 's':
-            return parseTypedArray(response, value, Uint16Array, 2, obj, key);
-          case 'L':
-            return parseTypedArray(response, value, Int32Array, 4, obj, key);
-          case 'l':
-            return parseTypedArray(response, value, Uint32Array, 4, obj, key);
-          case 'F':
-            return parseTypedArray(response, value, Float32Array, 4, obj, key);
-          case 'd':
-            return parseTypedArray(response, value, Float64Array, 8, obj, key);
-          case 'N':
-            return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
-          case 'm':
-            return parseTypedArray(
-              response,
-              value,
-              BigUint64Array,
-              8,
-              obj,
-              key,
-            );
-          case 'V':
-            return parseTypedArray(response, value, DataView, 1, obj, key);
+      switch (value[1]) {
+        case 'A':
+          return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
+        case 'O':
+          return parseTypedArray(response, value, Int8Array, 1, obj, key);
+        case 'o':
+          return parseTypedArray(response, value, Uint8Array, 1, obj, key);
+        case 'U':
+          return parseTypedArray(
+            response,
+            value,
+            Uint8ClampedArray,
+            1,
+            obj,
+            key,
+          );
+        case 'S':
+          return parseTypedArray(response, value, Int16Array, 2, obj, key);
+        case 's':
+          return parseTypedArray(response, value, Uint16Array, 2, obj, key);
+        case 'L':
+          return parseTypedArray(response, value, Int32Array, 4, obj, key);
+        case 'l':
+          return parseTypedArray(response, value, Uint32Array, 4, obj, key);
+        case 'G':
+          return parseTypedArray(response, value, Float32Array, 4, obj, key);
+        case 'g':
+          return parseTypedArray(response, value, Float64Array, 8, obj, key);
+        case 'M':
+          return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
+        case 'm':
+          return parseTypedArray(response, value, BigUint64Array, 8, obj, key);
+        case 'V':
+          return parseTypedArray(response, value, DataView, 1, obj, key);
+        case 'B': {
+          // Blob
+          const id = parseInt(value.slice(2), 16);
+          const prefix = response._prefix;
+          const blobKey = prefix + id;
+          // We should have this backingEntry in the store already because we emitted
+          // it before referencing it. It should be a Blob.
+          const backingEntry: Blob = (response._formData.get(blobKey): any);
+          return backingEntry;
         }
-      if (value[1] === 'B') {
-        // Blob
-        const id = parseInt(value.slice(2), 16);
-        const prefix = response._prefix;
-        const key = prefix + id;
-        // We should have this backingEntry in the store already because we emitted
-        // it before referencing it. It should be a Blob.
-        const backingEntry: Blob = (response._formData.get(key): any);
-        return backingEntry;
       }
     }
 
