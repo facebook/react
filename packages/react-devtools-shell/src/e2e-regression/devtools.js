@@ -46,7 +46,13 @@ function init(appIframe, devtoolsContainer, appSource) {
 const iframe = document.getElementById('iframe');
 const devtoolsContainer = document.getElementById('devtools');
 
-init(iframe, devtoolsContainer, 'dist/e2e-app-regression.js');
+const {protocol, hostname} = window.location;
+const port = 8181; // secondary webpack server port
+init(
+  iframe,
+  devtoolsContainer,
+  `${protocol}//${hostname}:${port}/dist/e2e-app-regression.js`,
+);
 
 // ReactDOM Test Selector APIs used by Playwright e2e tests
 window.parent.REACT_DOM_DEVTOOLS = ReactDOM;

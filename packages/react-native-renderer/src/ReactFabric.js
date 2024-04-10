@@ -20,6 +20,9 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -39,14 +42,63 @@ import {
   dispatchCommand,
   sendAccessibilityEvent,
   getNodeFromInternalInstanceHandle,
+  isChildPublicInstance,
 } from './ReactNativePublicCompat';
 import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFabric';
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
+// Module provided by RN:
+import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+
+if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
+  throw new Error(
+    'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+  );
+}
+
+function nativeOnUncaughtError(
+  error: mixed,
+  errorInfo: {+componentStack?: ?string},
+): void {
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialog.showErrorDialog({
+    errorBoundary: null,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnUncaughtError(error, errorInfo);
+}
+function nativeOnCaughtError(
+  error: mixed,
+  errorInfo: {
+    +componentStack?: ?string,
+    +errorBoundary?: ?React$Component<any, any>,
+  },
+): void {
+  const errorBoundary = errorInfo.errorBoundary;
+  const componentStack =
+    errorInfo.componentStack != null ? errorInfo.componentStack : '';
+  const logError = ReactFiberErrorDialog.showErrorDialog({
+    errorBoundary,
+    error,
+    componentStack,
+  });
+
+  // Allow injected showErrorDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  defaultOnCaughtError(error, errorInfo);
 }
 
 function render(
@@ -55,6 +107,10 @@ function render(
   callback: ?() => void,
   concurrentRoot: ?boolean,
 ): ?ElementRef<ElementType> {
+  if (disableLegacyMode && !concurrentRoot) {
+    throw new Error('render: Unsupported Legacy Mode API.');
+  }
+
   let root = roots.get(containerTag);
 
   if (!root) {
@@ -67,7 +123,9 @@ function render(
       false,
       null,
       '',
-      onRecoverableError,
+      nativeOnUncaughtError,
+      nativeOnCaughtError,
+      defaultOnRecoverableError,
       null,
     );
     roots.set(containerTag, root);
@@ -128,6 +186,8 @@ export {
   // instance handles we use to dispatch events. This provides a way to access
   // the public instances we created from them (potentially created lazily).
   getPublicInstanceFromInternalInstanceHandle,
+  // DEV-only:
+  isChildPublicInstance,
 };
 
 injectIntoDevTools({
@@ -137,6 +197,7 @@ injectIntoDevTools({
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',
   rendererConfig: {
+    getInspectorDataForInstance,
     getInspectorDataForViewTag: getInspectorDataForViewTag,
     getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
       null,

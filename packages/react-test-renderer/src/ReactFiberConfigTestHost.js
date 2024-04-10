@@ -8,7 +8,11 @@
  */
 
 import isArray from 'shared/isArray';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  NoEventPriority,
+  type EventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
@@ -51,12 +55,10 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 const nodeToInstanceMap = new WeakMap<any, Instance>();
 
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 export function getPublicInstance(inst: Instance | TextInstance): $FlowFixMe {
@@ -183,17 +185,6 @@ export function finalizeInitialChildren(
   return false;
 }
 
-export function prepareUpdate(
-  testElement: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  rootContainerInstance: Container,
-  hostContext: Object,
-): null | {...} {
-  return UPDATE_SIGNAL;
-}
-
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
@@ -211,7 +202,19 @@ export function createTextInstance(
   };
 }
 
-export function getCurrentEventPriority(): * {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
 }
 export function shouldAttemptEagerTransition(): boolean {

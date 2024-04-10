@@ -14,10 +14,28 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-const {ReactCurrentActQueue} = ReactSharedInternals;
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
-export opaque type ThenableState = Array<Thenable<any>>;
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+opaque type ThenableStateDev = {
+  didWarnAboutUncachedPromise: boolean,
+  thenables: Array<Thenable<any>>,
+};
+
+opaque type ThenableStateProd = Array<Thenable<any>>;
+
+export opaque type ThenableState = ThenableStateDev | ThenableStateProd;
+
+function getThenablesFromState(state: ThenableState): Array<Thenable<any>> {
+  if (__DEV__) {
+    const devState: ThenableStateDev = (state: any);
+    return devState.thenables;
+  } else {
+    const prodState = (state: any);
+    return prodState;
+  }
+}
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
@@ -40,12 +58,28 @@ export const SuspenseyCommitException: mixed = new Error(
 // TODO: It would be better to refactor throwException into multiple functions
 // so we can trigger a fallback directly without having to check the type. But
 // for now this will do.
-export const noopSuspenseyCommitThenable = {then() {}};
+export const noopSuspenseyCommitThenable = {
+  then() {
+    if (__DEV__) {
+      console.error(
+        'Internal React error: A listener was unexpectedly attached to a ' +
+          '"noop" thenable. This is a bug in React. Please file an issue.',
+      );
+    }
+  },
+};
 
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
-  return [];
+  if (__DEV__) {
+    return {
+      didWarnAboutUncachedPromise: false,
+      thenables: [],
+    };
+  } else {
+    return [];
+  }
 }
 
 export function isThenableResolved(thenable: Thenable<mixed>): boolean {
@@ -60,17 +94,46 @@ export function trackUsedThenable<T>(
   thenable: Thenable<T>,
   index: number,
 ): T {
-  if (__DEV__ && ReactCurrentActQueue.current !== null) {
-    ReactCurrentActQueue.didUsePromise = true;
+  if (__DEV__ && ReactSharedInternals.actQueue !== null) {
+    ReactSharedInternals.didUsePromise = true;
   }
-
-  const previous = thenableState[index];
+  const trackedThenables = getThenablesFromState(thenableState);
+  const previous = trackedThenables[index];
   if (previous === undefined) {
-    thenableState.push(thenable);
+    trackedThenables.push(thenable);
   } else {
     if (previous !== thenable) {
       // Reuse the previous thenable, and drop the new one. We can assume
       // they represent the same value, because components are idempotent.
+
+      if (__DEV__) {
+        const thenableStateDev: ThenableStateDev = (thenableState: any);
+        if (!thenableStateDev.didWarnAboutUncachedPromise) {
+          // We should only warn the first time an uncached thenable is
+          // discovered per component, because if there are multiple, the
+          // subsequent ones are likely derived from the first.
+          //
+          // We track this on the thenableState instead of deduping using the
+          // component name like we usually do, because in the case of a
+          // promise-as-React-node, the owner component is likely different from
+          // the parent that's currently being reconciled. We'd have to track
+          // the owner using state, which we're trying to move away from. Though
+          // since this is dev-only, maybe that'd be OK.
+          //
+          // However, another benefit of doing it this way is we might
+          // eventually have a thenableState per memo/Forget boundary instead
+          // of per component, so this would allow us to have more
+          // granular warnings.
+          thenableStateDev.didWarnAboutUncachedPromise = true;
+
+          // TODO: This warning should link to a corresponding docs page.
+          console.error(
+            'A component was suspended by an uncached promise. Creating ' +
+              'promises inside a Client Component or hook is not yet ' +
+              'supported, except via a Suspense-compatible library or framework.',
+          );
+        }
+      }
 
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.
@@ -92,6 +155,7 @@ export function trackUsedThenable<T>(
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(rejectedError);
       throw rejectedError;
     }
     default: {
@@ -103,6 +167,32 @@ export function trackUsedThenable<T>(
         // happen. Flight lazily parses JSON when the value is actually awaited.
         thenable.then(noop, noop);
       } else {
+        // This is an uncached thenable that we haven't seen before.
+
+        // Detect infinite ping loops caused by uncached promises.
+        const root = getWorkInProgressRoot();
+        if (root !== null && root.shellSuspendCounter > 100) {
+          // This root has suspended repeatedly in the shell without making any
+          // progress (i.e. committing something). This is highly suggestive of
+          // an infinite ping loop, often caused by an accidental Async Client
+          // Component.
+          //
+          // During a transition, we can suspend the work loop until the promise
+          // to resolve, but this is a sync render, so that's not an option. We
+          // also can't show a fallback, because none was provided. So our last
+          // resort is to throw an error.
+          //
+          // TODO: Remove this error in a future release. Other ways of handling
+          // this case include forcing a concurrent render, or putting the whole
+          // root into offscreen mode.
+          throw new Error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        }
+
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
@@ -131,7 +221,9 @@ export function trackUsedThenable<T>(
         }
         case 'rejected': {
           const rejectedThenable: RejectedThenable<T> = (thenable: any);
-          throw rejectedThenable.reason;
+          const rejectedError = rejectedThenable.reason;
+          checkIfUseWrappedInAsyncCatch(rejectedError);
+          throw rejectedError;
         }
       }
 
@@ -194,4 +286,21 @@ export function checkIfUseWrappedInTryCatch(): boolean {
     }
   }
   return false;
+}
+
+export function checkIfUseWrappedInAsyncCatch(rejectedReason: any) {
+  // This check runs in prod, too, because it prevents a more confusing
+  // downstream error, where SuspenseException is caught by a promise and
+  // thrown asynchronously.
+  // TODO: Another way to prevent SuspenseException from leaking into an async
+  // execution context is to check the dispatcher every time `use` is called,
+  // or some equivalent. That might be preferable for other reasons, too, since
+  // it matches how we prevent similar mistakes for other hooks.
+  if (rejectedReason === SuspenseException) {
+    throw new Error(
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    );
+  }
 }

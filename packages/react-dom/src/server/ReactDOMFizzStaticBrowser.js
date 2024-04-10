@@ -8,19 +8,31 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {
+  BootstrapScriptDescriptor,
+  HeadersDescriptor,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {
+  PostponedState,
+  ErrorInfo,
+  PostponeInfo,
+} from 'react-server/src/ReactFizzServer';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
+  getPostponedState,
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -32,11 +44,16 @@ type Options = {
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onError?: (error: mixed) => ?string,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
+  onHeaders?: (headers: Headers) => void,
+  maxHeadersLength?: number,
 };
 
 type StaticResult = {
+  postponed: null | PostponedState,
   prelude: ReadableStream,
 };
 
@@ -54,25 +71,47 @@ function prerender(
           pull: (controller): ?Promise<void> => {
             startFlowing(request, controller);
           },
+          cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
+            abort(request, reason);
+          },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
         {highWaterMark: 0},
       );
 
       const result = {
+        postponed: getPostponedState(request),
         prelude: stream,
       };
       resolve(result);
     }
-    const request = createRequest(
+
+    const onHeaders = options ? options.onHeaders : undefined;
+    let onHeadersImpl;
+    if (onHeaders) {
+      onHeadersImpl = (headersDescriptor: HeadersDescriptor) => {
+        onHeaders(new Headers(headersDescriptor));
+      };
+    }
+
+    const resources = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    );
+    const request = createPrerenderRequest(
       children,
-      createResponseState(
-        options ? options.identifierPrefix : undefined,
-        undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
+      resources,
+      createRenderState(
+        resources,
+        undefined, // nonce is not compatible with prerendered bootstrap scripts
         options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
+        onHeadersImpl,
+        options ? options.maxHeadersLength : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -81,6 +120,7 @@ function prerender(
       undefined,
       undefined,
       onFatalError,
+      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

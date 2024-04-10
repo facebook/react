@@ -62,15 +62,9 @@ describe('ReactDOMFizzServerBrowser', () => {
       </html>,
     );
     const result = await readResult(stream);
-    if (gate(flags => flags.enableFloat)) {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(result).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(result).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -84,7 +78,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -342,7 +336,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(isComplete).toBe(false);
 
     const reader = stream.getReader();
-    reader.cancel();
+    await reader.read();
+    await reader.cancel();
 
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
@@ -355,6 +350,10 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 
   it('should stream large contents that might overlow individual buffers', async () => {
@@ -500,7 +499,46 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
     );
+  });
+
+  // @gate enablePostpone
+  it('errors if trying to postpone outside a Suspense boundary', async () => {
+    function Postponed() {
+      React.unstable_postpone('testing postpone');
+      return 'client only';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Postponed />
+        </div>
+      );
+    }
+
+    const errors = [];
+    const postponed = [];
+
+    let caughtError = null;
+    try {
+      await ReactDOMFizzServer.renderToReadableStream(<App />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+        onPostpone(reason) {
+          postponed.push(reason);
+        },
+      });
+    } catch (error) {
+      caughtError = error;
+    }
+
+    // Postponing is not logged as an error but as a postponed reason.
+    expect(errors).toEqual([]);
+    expect(postponed).toEqual(['testing postpone']);
+    // However, it does error the shell.
+    expect(caughtError.message).toEqual('testing postpone');
   });
 });

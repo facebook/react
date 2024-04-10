@@ -8,46 +8,128 @@
  */
 
 // This client file is in the shared folder because it applies to both SSR and browser contexts.
-// It is the configuraiton of the FlightClient behavior which can run in either environment.
+// It is the configuration of the FlightClient behavior which can run in either environment.
 
-import type {HintModel} from '../server/ReactFlightServerConfigDOM';
+import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
-export function dispatchHint(code: string, model: HintModel): void {
-  const dispatcher = ReactDOMCurrentDispatcher.current;
-  if (dispatcher) {
-    let href, options;
-    if (typeof model === 'string') {
-      href = model;
-    } else {
-      href = model[0];
-      options = model[1];
+import {getCrossOriginString} from './crossOriginStrings';
+
+export function dispatchHint<Code: HintCode>(
+  code: Code,
+  model: HintModel<Code>,
+): void {
+  const dispatcher = ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
+  switch (code) {
+    case 'D': {
+      const refined = refineModel(code, model);
+      const href = refined;
+      dispatcher.D(/* prefetchDNS */ href);
+      return;
     }
-    switch (code) {
-      case 'D': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        dispatcher.prefetchDNS(href, options);
-        return;
+    case 'C': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.C(/* preconnect */ href);
+      } else {
+        const href = refined[0];
+        const crossOrigin = refined[1];
+        dispatcher.C(/* preconnect */ href, crossOrigin);
       }
-      case 'C': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        dispatcher.preconnect(href, options);
-        return;
+      return;
+    }
+    case 'L': {
+      const refined = refineModel(code, model);
+      const href = refined[0];
+      const as = refined[1];
+      if (refined.length === 3) {
+        const options = refined[2];
+        dispatcher.L(/* preload */ href, as, options);
+      } else {
+        dispatcher.L(/* preload */ href, as);
       }
-      case 'L': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preload(href, options);
-        return;
+      return;
+    }
+    case 'm': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.m(/* preloadModule */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.m(/* preloadModule */ href, options);
       }
-      case 'I': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preinit(href, options);
-        return;
+      return;
+    }
+    case 'X': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.X(/* preinitScript */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.X(/* preinitScript */ href, options);
       }
+      return;
+    }
+    case 'S': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.S(/* preinitStyle */ href);
+      } else {
+        const href = refined[0];
+        const precedence = refined[1] === 0 ? undefined : refined[1];
+        const options = refined.length === 3 ? refined[2] : undefined;
+        dispatcher.S(/* preinitStyle */ href, precedence, options);
+      }
+      return;
+    }
+    case 'M': {
+      const refined = refineModel(code, model);
+      if (typeof refined === 'string') {
+        const href = refined;
+        dispatcher.M(/* preinitModuleScript */ href);
+      } else {
+        const href = refined[0];
+        const options = refined[1];
+        dispatcher.M(/* preinitModuleScript */ href, options);
+      }
+      return;
     }
   }
+}
+
+// Flow is having trouble refining the HintModels so we help it a bit.
+// This should be compiled out in the production build.
+function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
+  return model;
+}
+
+export function preinitModuleForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .M(/* preinitModuleScript */ href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
+}
+
+export function preinitScriptForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .X(/* preinitScript */ href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
 }

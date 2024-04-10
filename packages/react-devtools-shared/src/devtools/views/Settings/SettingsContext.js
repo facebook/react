@@ -34,7 +34,7 @@ import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
-import type {BrowserTheme} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 
 export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';

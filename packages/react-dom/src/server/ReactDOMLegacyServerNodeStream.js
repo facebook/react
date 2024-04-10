@@ -19,7 +19,8 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
@@ -58,10 +59,9 @@ function onError() {
   // Non-fatal errors are ignored.
 }
 
-function renderToNodeStreamImpl(
+function renderToStaticNodeStream(
   children: ReactNodeList,
-  options: void | ServerOptions,
-  generateStaticMarkup: boolean,
+  options?: ServerOptions,
 ): Readable {
   function onAllReady() {
     // We wait until everything has loaded before starting to write.
@@ -70,13 +70,19 @@ function renderToNodeStreamImpl(
     startFlowing(request, destination);
   }
   const destination = new ReactMarkupReadableStream();
+  const resumableState = createResumableState(
+    options ? options.identifierPrefix : undefined,
+    undefined,
+  );
   const request = createRequest(
     children,
-    createResponseState(false, options ? options.identifierPrefix : undefined),
+    resumableState,
+    createRenderState(resumableState, true),
     createRootFormatContext(),
     Infinity,
     onError,
     onAllReady,
+    undefined,
     undefined,
     undefined,
   );
@@ -85,23 +91,4 @@ function renderToNodeStreamImpl(
   return destination;
 }
 
-function renderToNodeStream(
-  children: ReactNodeList,
-  options?: ServerOptions,
-): Readable {
-  if (__DEV__) {
-    console.error(
-      'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-    );
-  }
-  return renderToNodeStreamImpl(children, options, false);
-}
-
-function renderToStaticNodeStream(
-  children: ReactNodeList,
-  options?: ServerOptions,
-): Readable {
-  return renderToNodeStreamImpl(children, options, true);
-}
-
-export {renderToNodeStream, renderToStaticNodeStream};
+export {renderToStaticNodeStream};

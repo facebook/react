@@ -13,23 +13,20 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModules();
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -164,8 +161,8 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('readContext() in different components', async render => {
       function readContext(Ctx) {
         const dispatcher =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-            .ReactCurrentDispatcher.current;
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+            .H;
         return dispatcher.readContext(Ctx);
       }
 
@@ -297,104 +294,35 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#language3').textContent).toBe('french');
     });
 
-    itRenders(
-      'should warn with an error message when using Context as consumer in DEV',
-      async render => {
-        const Theme = React.createContext('dark');
-        const Language = React.createContext('french');
+    itRenders('should treat Context as Context.Provider', async render => {
+      // The `itRenders` helpers don't work with the gate pragma, so we have to do
+      // this instead.
+      if (gate(flags => !flags.enableRenderableContext)) {
+        return;
+      }
 
-        const App = () => (
-          <div>
-            <Theme.Provider value="light">
-              <Language.Provider value="english">
-                <Theme.Provider value="dark">
-                  <Theme>{theme => <div id="theme1">{theme}</div>}</Theme>
-                </Theme.Provider>
-              </Language.Provider>
-            </Theme.Provider>
-          </div>
-        );
-        // We expect 1 error.
-        await render(<App />, 1);
-      },
-    );
+      const Theme = React.createContext('dark');
+      const Language = React.createContext('french');
 
-    // False positive regression test.
-    itRenders(
-      'should not warn when using Consumer from React < 16.6 with newer renderer',
-      async render => {
-        const Theme = React.createContext('dark');
-        const Language = React.createContext('french');
-        // React 16.5 and earlier didn't have a separate object.
-        Theme.Consumer = Theme;
+      expect(Theme.Provider).toBe(Theme);
 
-        const App = () => (
-          <div>
-            <Theme.Provider value="light">
-              <Language.Provider value="english">
-                <Theme.Provider value="dark">
-                  <Theme>{theme => <div id="theme1">{theme}</div>}</Theme>
-                </Theme.Provider>
-              </Language.Provider>
-            </Theme.Provider>
-          </div>
-        );
-        // We expect 0 errors.
-        await render(<App />, 0);
-      },
-    );
+      const App = () => (
+        <div>
+          <Theme value="light">
+            <Language value="english">
+              <Theme value="dark">
+                <Theme.Consumer>
+                  {theme => <div id="theme1">{theme}</div>}
+                </Theme.Consumer>
+              </Theme>
+            </Language>
+          </Theme>
+        </div>
+      );
 
-    itRenders(
-      'should warn with an error message when using nested context consumers in DEV',
-      async render => {
-        const App = () => {
-          const Theme = React.createContext('dark');
-          const Language = React.createContext('french');
-
-          return (
-            <div>
-              <Theme.Provider value="light">
-                <Language.Provider value="english">
-                  <Theme.Provider value="dark">
-                    <Theme.Consumer.Consumer>
-                      {theme => <div id="theme1">{theme}</div>}
-                    </Theme.Consumer.Consumer>
-                  </Theme.Provider>
-                </Language.Provider>
-              </Theme.Provider>
-            </div>
-          );
-        };
-        // We expect 1 error.
-        await render(<App />, 1);
-      },
-    );
-
-    itRenders(
-      'should warn with an error message when using Context.Consumer.Provider DEV',
-      async render => {
-        const App = () => {
-          const Theme = React.createContext('dark');
-          const Language = React.createContext('french');
-
-          return (
-            <div>
-              <Theme.Provider value="light">
-                <Language.Provider value="english">
-                  <Theme.Consumer.Provider value="dark">
-                    <Theme.Consumer>
-                      {theme => <div id="theme1">{theme}</div>}
-                    </Theme.Consumer>
-                  </Theme.Consumer.Provider>
-                </Language.Provider>
-              </Theme.Provider>
-            </div>
-          );
-        };
-        // We expect 1 error.
-        await render(<App />, 1);
-      },
-    );
+      const e = await render(<App />, 0);
+      expect(e.textContent).toBe('dark');
+    });
 
     it('does not pollute parallel node streams', () => {
       const LoggedInUser = React.createContext();
@@ -410,24 +338,12 @@ describe('ReactDOMServerIntegration', () => {
         </LoggedInUser.Provider>
       );
 
-      let streamAmy;
-      let streamBob;
-      expect(() => {
-        streamAmy = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Amy'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-      expect(() => {
-        streamBob = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Bob'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
+      const streamAmy = ReactDOMServer.renderToStaticNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+      const streamBob = ReactDOMServer.renderToStaticNodeStream(
+        AppWithUser('Bob'),
+      ).setEncoding('utf8');
 
       // Testing by filling the buffer using internal _read() with a small
       // number of bytes to avoid a test case which needs to align to a
@@ -462,14 +378,9 @@ describe('ReactDOMServerIntegration', () => {
       const streamCount = 34;
 
       for (let i = 0; i < streamCount; i++) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
+        streams[i] = ReactDOMServer.renderToStaticNodeStream(
+          NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
+        ).setEncoding('utf8');
       }
 
       // Testing by filling the buffer using internal _read() with a small
@@ -486,14 +397,9 @@ describe('ReactDOMServerIntegration', () => {
 
       // Recreate those same streams.
       for (let i = 0; i < streamCount; i += 2) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
+        streams[i] = ReactDOMServer.renderToStaticNodeStream(
+          NthRender(i),
+        ).setEncoding('utf8');
       }
 
       // Read a bit from all streams again.

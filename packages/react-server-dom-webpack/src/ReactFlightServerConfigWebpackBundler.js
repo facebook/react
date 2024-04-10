@@ -8,50 +8,38 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
+import type {
+  ImportMetadata,
+  ImportManifestEntry,
+} from './shared/ReactFlightImportMetadata';
+
+import type {
+  ClientReference,
+  ServerReference,
+} from './ReactFlightWebpackReferences';
+
+export type {ClientReference, ServerReference};
 
 export type ClientManifest = {
-  [id: string]: ClientReferenceMetadata,
-};
-
-export type ServerReference<T: Function> = T & {
-  $$typeof: symbol,
-  $$id: string,
-  $$bound: null | Array<ReactClientValue>,
+  [id: string]: ClientReferenceManifestEntry,
 };
 
 export type ServerReferenceId = string;
 
-// eslint-disable-next-line no-unused-vars
-export type ClientReference<T> = {
-  $$typeof: symbol,
-  $$id: string,
-  $$async: boolean,
-};
-
-export type ClientReferenceMetadata = {
-  id: string,
-  chunks: Array<string>,
-  name: string,
-  async: boolean,
-};
+export type ClientReferenceMetadata = ImportMetadata;
+export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
 
 export type ClientReferenceKey = string;
 
-const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
-const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
+export {
+  isClientReference,
+  isServerReference,
+} from './ReactFlightWebpackReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
   return reference.$$async ? reference.$$id + '#async' : reference.$$id;
-}
-
-export function isClientReference(reference: Object): boolean {
-  return reference.$$typeof === CLIENT_REFERENCE_TAG;
-}
-
-export function isServerReference(reference: Object): boolean {
-  return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
 
 export function resolveClientReferenceMetadata<T>(
@@ -83,12 +71,11 @@ export function resolveClientReferenceMetadata<T>(
       );
     }
   }
-  return {
-    id: resolvedModuleData.id,
-    chunks: resolvedModuleData.chunks,
-    name: name,
-    async: !!clientReference.$$async,
-  };
+  if (clientReference.$$async === true) {
+    return [resolvedModuleData.id, resolvedModuleData.chunks, name, 1];
+  } else {
+    return [resolvedModuleData.id, resolvedModuleData.chunks, name];
+  }
 }
 
 export function getServerReferenceId<T>(

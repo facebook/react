@@ -56,7 +56,6 @@ import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
   setValueForStyles,
-  validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
 import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import isCustomElement from '../shared/isCustomElement';
@@ -68,14 +67,9 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
-  enableCustomElementPropertySupport,
-  enableClientRenderFallbackOnTextMismatch,
-  enableFormActions,
-  enableHostSingletons,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -84,13 +78,14 @@ import {
 
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
-let didWarnInvalidHydration = false;
 let didWarnFormActionType = false;
 let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
+let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
+  didWarnForNewBooleanPropsWithEmptyValue = {};
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -229,11 +224,9 @@ function warnForPropDifference(
   propName: string,
   serverValue: mixed,
   clientValue: mixed,
-) {
+  serverDifferences: {[propName: string]: mixed},
+): void {
   if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
     if (serverValue === clientValue) {
       return;
     }
@@ -244,27 +237,23 @@ function warnForPropDifference(
     if (normalizedServerValue === normalizedClientValue) {
       return;
     }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Prop `%s` did not match. Server: %s Client: %s',
-      propName,
-      JSON.stringify(normalizedServerValue),
-      JSON.stringify(normalizedClientValue),
-    );
+
+    serverDifferences[propName] = serverValue;
   }
 }
 
-function warnForExtraAttributes(attributeNames: Set<string>) {
+function warnForExtraAttributes(
+  domElement: Element,
+  attributeNames: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
+) {
   if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    const names = [];
-    attributeNames.forEach(function (name) {
-      names.push(name);
+    attributeNames.forEach(function (attributeName) {
+      serverDifferences[getPropNameFromAttributeName(attributeName)] =
+        attributeName === 'style'
+          ? getStylesObjectFromElement(domElement)
+          : domElement.getAttribute(attributeName);
     });
-    console.error('Extra attributes from the server: %s', names);
   }
 }
 
@@ -328,36 +317,16 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
 }
 
-export function checkForUnmatchedText(
+function checkForUnmatchedText(
   serverText: string,
-  clientText: string | number,
-  isConcurrentMode: boolean,
-  shouldWarnDev: boolean,
+  clientText: string | number | bigint,
 ) {
   const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
   const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
   if (normalizedServerText === normalizedClientText) {
-    return;
+    return true;
   }
-
-  if (shouldWarnDev) {
-    if (__DEV__) {
-      if (!didWarnInvalidHydration) {
-        didWarnInvalidHydration = true;
-        console.error(
-          'Text content did not match. Server: "%s" Client: "%s"',
-          normalizedServerText,
-          normalizedClientText,
-        );
-      }
-    }
-  }
-
-  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
-    // In concurrent roots, we throw when there's a text mismatch and revert to
-    // client rendering, up to the nearest Suspense boundary.
-    throw new Error('Text content does not match server-rendered HTML.');
-  }
+  return false;
 }
 
 function noop() {}
@@ -397,17 +366,18 @@ function setProp(
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
         const canSetTextContent =
-          (!enableHostSingletons || tag !== 'body') &&
-          (tag !== 'textarea' || value !== '');
+          tag !== 'body' && (tag !== 'textarea' || value !== '');
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (typeof value === 'number') {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
         }
-        const canSetTextContent = !enableHostSingletons || tag !== 'body';
+        const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
       }
@@ -442,7 +412,11 @@ function setProp(
     case 'src':
     case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && key === 'href')
+        ) {
           if (__DEV__) {
             if (key === 'src') {
               console.error(
@@ -493,71 +467,54 @@ function setProp(
       if (__DEV__) {
         validateFormActionInDevelopment(tag, key, value, props);
       }
-      if (enableFormActions) {
-        if (typeof value === 'function') {
-          // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
-          // because we'll preventDefault, but it can happen if a form is manually submitted or
-          // if someone calls stopPropagation before React gets the event.
-          // If CSP is used to block javascript: URLs that's fine too. It just won't show this
-          // error message but the URL will be logged.
-          domElement.setAttribute(
-            key,
-            // eslint-disable-next-line no-script-url
-            "javascript:throw new Error('" +
-              'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
-              "consider using form.requestSubmit() instead. If you're trying to use " +
-              'event.stopPropagation() in a submit event handler, consider also calling ' +
-              'event.preventDefault().' +
-              "')",
-          );
-          break;
-        } else if (typeof prevValue === 'function') {
-          // When we're switching off a Server Action that was originally hydrated.
-          // The server control these fields during SSR that are now trailing.
-          // The regular diffing doesn't apply since we compare against the previous props.
-          // Instead, we need to force them to be set to whatever they should be now.
-          // This would be a lot cleaner if we did this whole fork in the per-tag approach.
-          if (key === 'formAction') {
-            if (tag !== 'input') {
-              // Setting the name here isn't completely safe for inputs if this is switching
-              // to become a radio button. In that case we let the tag based override take
-              // control.
-              setProp(domElement, tag, 'name', props.name, props, null);
-            }
-            setProp(
-              domElement,
-              tag,
-              'formEncType',
-              props.formEncType,
-              props,
-              null,
-            );
-            setProp(
-              domElement,
-              tag,
-              'formMethod',
-              props.formMethod,
-              props,
-              null,
-            );
-            setProp(
-              domElement,
-              tag,
-              'formTarget',
-              props.formTarget,
-              props,
-              null,
-            );
-          } else {
-            setProp(domElement, tag, 'encType', props.encType, props, null);
-            setProp(domElement, tag, 'method', props.method, props, null);
-            setProp(domElement, tag, 'target', props.target, props, null);
+      if (typeof value === 'function') {
+        // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
+        // because we'll preventDefault, but it can happen if a form is manually submitted or
+        // if someone calls stopPropagation before React gets the event.
+        // If CSP is used to block javascript: URLs that's fine too. It just won't show this
+        // error message but the URL will be logged.
+        domElement.setAttribute(
+          key,
+          // eslint-disable-next-line no-script-url
+          "javascript:throw new Error('" +
+            'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
+            "consider using form.requestSubmit() instead. If you\\'re trying to use " +
+            'event.stopPropagation() in a submit event handler, consider also calling ' +
+            'event.preventDefault().' +
+            "')",
+        );
+        break;
+      } else if (typeof prevValue === 'function') {
+        // When we're switching off a Server Action that was originally hydrated.
+        // The server control these fields during SSR that are now trailing.
+        // The regular diffing doesn't apply since we compare against the previous props.
+        // Instead, we need to force them to be set to whatever they should be now.
+        // This would be a lot cleaner if we did this whole fork in the per-tag approach.
+        if (key === 'formAction') {
+          if (tag !== 'input') {
+            // Setting the name here isn't completely safe for inputs if this is switching
+            // to become a radio button. In that case we let the tag based override take
+            // control.
+            setProp(domElement, tag, 'name', props.name, props, null);
           }
+          setProp(
+            domElement,
+            tag,
+            'formEncType',
+            props.formEncType,
+            props,
+            null,
+          );
+          setProp(domElement, tag, 'formMethod', props.formMethod, props, null);
+          setProp(domElement, tag, 'formTarget', props.formTarget, props, null);
+        } else {
+          setProp(domElement, tag, 'encType', props.encType, props, null);
+          setProp(domElement, tag, 'method', props.method, props, null);
+          setProp(domElement, tag, 'target', props.target, props, null);
         }
       }
       if (
         value == null ||
-        (!enableFormActions && typeof value === 'function') ||
         typeof value === 'symbol' ||
         typeof value === 'boolean'
       ) {
@@ -594,12 +551,21 @@ function setProp(
       }
       break;
     }
+    case 'onScrollEnd': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scrollend', domElement);
+      }
+      break;
+    }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -635,7 +601,9 @@ function setProp(
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
+      // TODO: `ref` is pretty common, should we move it up?
       // Noop
       break;
     }
@@ -699,6 +667,21 @@ function setProp(
       break;
     }
     // Boolean
+    case 'inert': {
+      if (__DEV__) {
+        if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[key]) {
+          didWarnForNewBooleanPropsWithEmptyValue[key] = true;
+          console.error(
+            'Received an empty string for a boolean attribute `%s`. ' +
+              'This will treat the attribute as if it were false. ' +
+              'Either pass `false` to silence this warning, or ' +
+              'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+            key,
+          );
+        }
+      }
+    }
+    // Fallthrough for boolean props that don't have a warning for empty strings.
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -881,9 +864,7 @@ function setProp(
     }
     case 'innerText':
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (
@@ -925,7 +906,7 @@ function setPropOnCustomElement(
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
             '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'Please visit https://react.dev/link/dangerously-set-inner-html ' +
               'for more information.',
           );
         }
@@ -948,7 +929,8 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (typeof value === 'number') {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
       break;
@@ -959,6 +941,15 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scroll', domElement);
+      }
+      break;
+    }
+    case 'onScrollEnd': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scrollend', domElement);
       }
       break;
     }
@@ -974,15 +965,14 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
       // Noop
       break;
     }
     case 'innerText': // Properties
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
@@ -990,15 +980,7 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (enableCustomElementPropertySupport) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
-        } else {
-          if (typeof value === 'boolean') {
-            // Special case before the new flag is on
-            value = '' + (value: any);
-          }
-          setValueForAttribute(domElement, key, value);
-        }
+        setValueForPropertyOnCustomComponent(domElement, key, value);
       }
     }
   }
@@ -1316,7 +1298,7 @@ export function setInitialProperties(
             continue;
           }
           const propValue = props[propKey];
-          if (propValue == null) {
+          if (propValue === undefined) {
             continue;
           }
           setPropOnCustomElement(
@@ -1325,7 +1307,7 @@ export function setInitialProperties(
             propKey,
             propValue,
             props,
-            null,
+            undefined,
           );
         }
         return;
@@ -1343,119 +1325,6 @@ export function setInitialProperties(
     }
     setProp(domElement, tag, propKey, propValue, props, null);
   }
-}
-
-// Calculate the diff between the two objects.
-export function diffProperties(
-  domElement: Element,
-  tag: string,
-  lastProps: Object,
-  nextProps: Object,
-): null | Array<mixed> {
-  if (__DEV__) {
-    validatePropertiesInDevelopment(tag, nextProps);
-  }
-
-  let updatePayload: null | Array<any> = null;
-
-  let propKey;
-  let styleName;
-  let styleUpdates = null;
-  for (propKey in lastProps) {
-    if (
-      nextProps.hasOwnProperty(propKey) ||
-      !lastProps.hasOwnProperty(propKey) ||
-      lastProps[propKey] == null
-    ) {
-      continue;
-    }
-    switch (propKey) {
-      case 'style': {
-        const lastStyle = lastProps[propKey];
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            if (!styleUpdates) {
-              styleUpdates = ({}: {[string]: $FlowFixMe});
-            }
-            styleUpdates[styleName] = '';
-          }
-        }
-        break;
-      }
-      default: {
-        // For all other deleted properties we add it to the queue. We use
-        // the allowed property list in the commit phase instead.
-        (updatePayload = updatePayload || []).push(propKey, null);
-      }
-    }
-  }
-  for (propKey in nextProps) {
-    const nextProp = nextProps[propKey];
-    const lastProp = lastProps != null ? lastProps[propKey] : undefined;
-    if (
-      nextProps.hasOwnProperty(propKey) &&
-      nextProp !== lastProp &&
-      (nextProp != null || lastProp != null)
-    ) {
-      switch (propKey) {
-        case 'style': {
-          if (lastProp) {
-            // Unset styles on `lastProp` but not on `nextProp`.
-            for (styleName in lastProp) {
-              if (
-                lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = ({}: {[string]: string});
-                }
-                styleUpdates[styleName] = '';
-              }
-            }
-            // Update styles that changed since `lastProp`.
-            for (styleName in nextProp) {
-              if (
-                nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = ({}: {[string]: $FlowFixMe});
-                }
-                styleUpdates[styleName] = nextProp[styleName];
-              }
-            }
-          } else {
-            // Relies on `updateStylesByID` not mutating `styleUpdates`.
-            if (!styleUpdates) {
-              if (!updatePayload) {
-                updatePayload = [];
-              }
-              updatePayload.push(propKey, styleUpdates);
-            }
-            styleUpdates = nextProp;
-          }
-          break;
-        }
-        case 'is':
-          if (__DEV__) {
-            console.error(
-              'Cannot update the "is" prop after it has been initialized.',
-            );
-          }
-        // Fall through
-        default: {
-          (updatePayload = updatePayload || []).push(propKey, nextProp);
-        }
-      }
-    }
-  }
-  if (styleUpdates) {
-    if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
-    }
-    (updatePayload = updatePayload || []).push('style', styleUpdates);
-  }
-  return updatePayload;
 }
 
 export function updateProperties(
@@ -1588,7 +1457,7 @@ export function updateProperties(
               'This is likely caused by the value changing from undefined to ' +
               'a defined value, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnUncontrolledToControlled = true;
         }
@@ -1602,7 +1471,7 @@ export function updateProperties(
               'This is likely caused by the value changing from a defined to ' +
               'undefined, which should not happen. ' +
               'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+              'element for the lifetime of the component. More info: https://react.dev/link/controlled-components',
           );
           didWarnControlledToUncontrolled = true;
         }
@@ -1869,14 +1738,14 @@ export function updateProperties(
           const lastProp = lastProps[propKey];
           if (
             lastProps.hasOwnProperty(propKey) &&
-            lastProp != null &&
+            lastProp !== undefined &&
             !nextProps.hasOwnProperty(propKey)
           ) {
             setPropOnCustomElement(
               domElement,
               tag,
               propKey,
-              null,
+              undefined,
               nextProps,
               lastProp,
             );
@@ -1888,7 +1757,7 @@ export function updateProperties(
           if (
             nextProps.hasOwnProperty(propKey) &&
             nextProp !== lastProp &&
-            (nextProp != null || lastProp != null)
+            (nextProp !== undefined || lastProp !== undefined)
           ) {
             setPropOnCustomElement(
               domElement,
@@ -1928,305 +1797,6 @@ export function updateProperties(
   }
 }
 
-// Apply the diff.
-export function updatePropertiesWithDiff(
-  domElement: Element,
-  updatePayload: Array<any>,
-  tag: string,
-  lastProps: Object,
-  nextProps: Object,
-): void {
-  switch (tag) {
-    case 'div':
-    case 'span':
-    case 'svg':
-    case 'path':
-    case 'a':
-    case 'g':
-    case 'p':
-    case 'li': {
-      // Fast track the most common tag types
-      break;
-    }
-    case 'input': {
-      const name = nextProps.name;
-      const type = nextProps.type;
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      const lastDefaultValue = lastProps.defaultValue;
-      const checked = nextProps.checked;
-      const defaultChecked = nextProps.defaultChecked;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'type': {
-            break;
-          }
-          case 'name': {
-            break;
-          }
-          case 'checked': {
-            break;
-          }
-          case 'defaultChecked': {
-            break;
-          }
-          case 'value': {
-            break;
-          }
-          case 'defaultValue': {
-            break;
-          }
-          case 'children':
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              throw new Error(
-                `${tag} is a void element tag and must neither have \`children\` nor ` +
-                  'use `dangerouslySetInnerHTML`.',
-              );
-            }
-            break;
-          }
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-
-      if (__DEV__) {
-        const wasControlled =
-          lastProps.type === 'checkbox' || lastProps.type === 'radio'
-            ? lastProps.checked != null
-            : lastProps.value != null;
-        const isControlled =
-          nextProps.type === 'checkbox' || nextProps.type === 'radio'
-            ? nextProps.checked != null
-            : nextProps.value != null;
-
-        if (
-          !wasControlled &&
-          isControlled &&
-          !didWarnUncontrolledToControlled
-        ) {
-          console.error(
-            'A component is changing an uncontrolled input to be controlled. ' +
-              'This is likely caused by the value changing from undefined to ' +
-              'a defined value, which should not happen. ' +
-              'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-          );
-          didWarnUncontrolledToControlled = true;
-        }
-        if (
-          wasControlled &&
-          !isControlled &&
-          !didWarnControlledToUncontrolled
-        ) {
-          console.error(
-            'A component is changing a controlled input to be uncontrolled. ' +
-              'This is likely caused by the value changing from a defined to ' +
-              'undefined, which should not happen. ' +
-              'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-          );
-          didWarnControlledToUncontrolled = true;
-        }
-      }
-
-      // Update the wrapper around inputs *after* updating props. This has to
-      // happen after updating the rest of props. Otherwise HTML5 input validations
-      // raise warnings and prevent the new value from being assigned.
-      updateInput(
-        domElement,
-        value,
-        defaultValue,
-        lastDefaultValue,
-        checked,
-        defaultChecked,
-        type,
-        name,
-      );
-      return;
-    }
-    case 'select': {
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      const multiple = nextProps.multiple;
-      const wasMultiple = lastProps.multiple;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'value': {
-            // This is handled by updateWrapper below.
-            break;
-          }
-          // defaultValue are ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      // <select> value update needs to occur after <option> children
-      // reconciliation
-      updateSelect(domElement, value, defaultValue, multiple, wasMultiple);
-      return;
-    }
-    case 'textarea': {
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'value': {
-            // This is handled by updateWrapper below.
-            break;
-          }
-          case 'children': {
-            // TODO: This doesn't actually do anything if it updates.
-            break;
-          }
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              // TODO: Do we really need a special error message for this. It's also pretty blunt.
-              throw new Error(
-                '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
-              );
-            }
-            break;
-          }
-          // defaultValue is ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      updateTextarea(domElement, value, defaultValue);
-      return;
-    }
-    case 'option': {
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'selected': {
-            // TODO: Remove support for selected on option.
-            (domElement: any).selected =
-              propValue &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol';
-            break;
-          }
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      return;
-    }
-    case 'img':
-    case 'link':
-    case 'area':
-    case 'base':
-    case 'br':
-    case 'col':
-    case 'embed':
-    case 'hr':
-    case 'keygen':
-    case 'meta':
-    case 'param':
-    case 'source':
-    case 'track':
-    case 'wbr':
-    case 'menuitem': {
-      // Void elements
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'children':
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              // TODO: Can we make this a DEV warning to avoid this deny list?
-              throw new Error(
-                `${tag} is a void element tag and must neither have \`children\` nor ` +
-                  'use `dangerouslySetInnerHTML`.',
-              );
-            }
-            break;
-          }
-          // defaultChecked and defaultValue are ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      return;
-    }
-    default: {
-      if (isCustomElement(tag, nextProps)) {
-        for (let i = 0; i < updatePayload.length; i += 2) {
-          const propKey = updatePayload[i];
-          const propValue = updatePayload[i + 1];
-          setPropOnCustomElement(
-            domElement,
-            tag,
-            propKey,
-            propValue,
-            nextProps,
-            lastProps[propKey],
-          );
-        }
-        return;
-      }
-    }
-  }
-
-  // Apply the diff.
-  for (let i = 0; i < updatePayload.length; i += 2) {
-    const propKey = updatePayload[i];
-    const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, nextProps, lastProps[propKey]);
-  }
-}
-
 function getPossibleStandardName(propName: string): string | null {
   if (__DEV__) {
     const lowerCasedName = propName.toLowerCase();
@@ -2238,18 +1808,81 @@ function getPossibleStandardName(propName: string): string | null {
   return null;
 }
 
-function diffHydratedStyles(domElement: Element, value: mixed) {
+function getPropNameFromAttributeName(attrName: string): string {
+  switch (attrName) {
+    case 'class':
+      return 'className';
+    case 'for':
+      return 'htmlFor';
+    // TODO: The rest of the aliases.
+    default:
+      return attrName;
+  }
+}
+
+export function getPropsFromElement(domElement: Element): Object {
+  const serverDifferences: {[propName: string]: mixed} = {};
+  const attributes = domElement.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    const attr = attributes[i];
+    serverDifferences[getPropNameFromAttributeName(attr.name)] =
+      attr.name.toLowerCase() === 'style'
+        ? getStylesObjectFromElement(domElement)
+        : attr.value;
+  }
+  return serverDifferences;
+}
+
+function getStylesObjectFromElement(domElement: Element): {
+  [styleName: string]: string,
+} {
+  const serverValueInObjectForm: {[prop: string]: string} = {};
+  const style = ((domElement: any): HTMLElement).style;
+  for (let i = 0; i < style.length; i++) {
+    const styleName: string = style[i];
+    // TODO: We should use the original prop value here if it is equivalent.
+    // TODO: We could use the original client capitalization if the equivalent
+    // other capitalization exists in the DOM.
+    serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
+  }
+  return serverValueInObjectForm;
+}
+
+function diffHydratedStyles(
+  domElement: Element,
+  value: mixed,
+  serverDifferences: {[propName: string]: mixed},
+): void {
   if (value != null && typeof value !== 'object') {
-    throw new Error(
-      'The `style` prop expects a mapping from style properties to values, ' +
-        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-        'using JSX.',
-    );
+    if (__DEV__) {
+      console.error(
+        'The `style` prop expects a mapping from style properties to values, ' +
+          "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+          'using JSX.',
+      );
+    }
+    return;
   }
   if (canDiffStyleForHydrationWarning) {
-    const expectedStyle = createDangerousStringForStyles(value);
+    // First we compare the string form and see if it's equivalent.
+    // This lets us bail out on anything that used to pass in this form.
+    // It also lets us compare anything that's not parsed by this browser.
+    const clientValue = createDangerousStringForStyles(value);
     const serverValue = domElement.getAttribute('style');
-    warnForPropDifference('style', serverValue, expectedStyle);
+
+    if (serverValue === clientValue) {
+      return;
+    }
+    const normalizedClientValue =
+      normalizeMarkupForTextOrAttribute(clientValue);
+    const normalizedServerValue =
+      normalizeMarkupForTextOrAttribute(serverValue);
+    if (normalizedServerValue === normalizedClientValue) {
+      return;
+    }
+
+    // Otherwise, we create the object from the DOM for the diff view.
+    serverDifferences.style = getStylesObjectFromElement(domElement);
   }
 }
 
@@ -2259,6 +1892,7 @@ function hydrateAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2291,7 +1925,7 @@ function hydrateAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydrateBooleanAttribute(
@@ -2300,6 +1934,7 @@ function hydrateBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2327,7 +1962,7 @@ function hydrateBooleanAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydrateOverloadedBooleanAttribute(
@@ -2336,6 +1971,7 @@ function hydrateOverloadedBooleanAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2375,7 +2011,7 @@ function hydrateOverloadedBooleanAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydrateBooleanishAttribute(
@@ -2384,6 +2020,7 @@ function hydrateBooleanishAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2414,7 +2051,7 @@ function hydrateBooleanishAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydrateNumericAttribute(
@@ -2423,6 +2060,7 @@ function hydrateNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2464,7 +2102,7 @@ function hydrateNumericAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydratePositiveNumericAttribute(
@@ -2473,6 +2111,7 @@ function hydratePositiveNumericAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2514,7 +2153,7 @@ function hydratePositiveNumericAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function hydrateSanitizedAttribute(
@@ -2523,6 +2162,7 @@ function hydrateSanitizedAttribute(
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ): void {
   extraAttributes.delete(attributeName);
   const serverValue = domElement.getAttribute(attributeName);
@@ -2556,7 +2196,7 @@ function hydrateSanitizedAttribute(
       }
     }
   }
-  warnForPropDifference(propKey, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value, serverDifferences);
 }
 
 function diffHydratedCustomComponent(
@@ -2565,6 +2205,7 @@ function diffHydratedCustomComponent(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2586,12 +2227,24 @@ function diffHydratedCustomComponent(
     }
     // Validate that the properties correspond to their expected values.
     switch (propKey) {
-      case 'children': // Checked above already
+      case 'children': {
+        if (typeof value === 'string' || typeof value === 'number') {
+          warnForPropDifference(
+            'children',
+            domElement.textContent,
+            value,
+            serverDifferences,
+          );
+        }
+        continue;
+      }
+      // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2599,12 +2252,17 @@ function diffHydratedCustomComponent(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+          warnForPropDifference(
+            propKey,
+            serverHTML,
+            expectedHTML,
+            serverDifferences,
+          );
         }
         continue;
       case 'style':
         extraAttributes.delete(propKey);
-        diffHydratedStyles(domElement, value);
+        diffHydratedStyles(domElement, value, serverDifferences);
         continue;
       case 'offsetParent':
       case 'offsetTop':
@@ -2614,30 +2272,30 @@ function diffHydratedCustomComponent(
       case 'isContentEditable':
       case 'outerText':
       case 'outerHTML':
-        if (enableCustomElementPropertySupport) {
-          extraAttributes.delete(propKey.toLowerCase());
-          if (__DEV__) {
-            console.error(
-              'Assignment to read-only property will result in a no-op: `%s`',
-              propKey,
-            );
-          }
-          continue;
+        extraAttributes.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error(
+            'Assignment to read-only property will result in a no-op: `%s`',
+            propKey,
+          );
         }
+        continue;
       // Fall through
       case 'className':
-        if (enableCustomElementPropertySupport) {
-          // className is a special cased property on the server to render as an attribute.
-          extraAttributes.delete('class');
-          const serverValue = getValueForAttributeOnCustomComponent(
-            domElement,
-            'class',
-            value,
-          );
-          warnForPropDifference('className', serverValue, value);
-          continue;
-        }
-      // Fall through
+        // className is a special cased property on the server to render as an attribute.
+        extraAttributes.delete('class');
+        const serverValue = getValueForAttributeOnCustomComponent(
+          domElement,
+          'class',
+          value,
+        );
+        warnForPropDifference(
+          'className',
+          serverValue,
+          value,
+          serverDifferences,
+        );
+        continue;
       default: {
         // This is a DEV-only path
         const hostContextDev: HostContextDev = (hostContext: any);
@@ -2651,12 +2309,17 @@ function diffHydratedCustomComponent(
         } else {
           extraAttributes.delete(propKey);
         }
-        const serverValue = getValueForAttributeOnCustomComponent(
+        const valueOnCustomComponent = getValueForAttributeOnCustomComponent(
           domElement,
           propKey,
           value,
         );
-        warnForPropDifference(propKey, serverValue, value);
+        warnForPropDifference(
+          propKey,
+          valueOnCustomComponent,
+          value,
+          serverDifferences,
+        );
       }
     }
   }
@@ -2667,7 +2330,7 @@ function diffHydratedCustomComponent(
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 function diffHydratedGenericElement(
   domElement: Element,
@@ -2675,6 +2338,7 @@ function diffHydratedGenericElement(
   props: Object,
   hostContext: HostContext,
   extraAttributes: Set<string>,
+  serverDifferences: {[propName: string]: mixed},
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -2696,7 +2360,18 @@ function diffHydratedGenericElement(
     }
     // Validate that the properties correspond to their expected values.
     switch (propKey) {
-      case 'children': // Checked above already
+      case 'children': {
+        if (typeof value === 'string' || typeof value === 'number') {
+          warnForPropDifference(
+            'children',
+            domElement.textContent,
+            value,
+            serverDifferences,
+          );
+        }
+        continue;
+      }
+      // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
       case 'value': // Controlled attributes are not validated
@@ -2705,6 +2380,7 @@ function diffHydratedGenericElement(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2712,11 +2388,22 @@ function diffHydratedGenericElement(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+          if (serverHTML !== expectedHTML) {
+            serverDifferences[propKey] = {
+              __html: serverHTML,
+            };
+          }
         }
         continue;
       case 'className':
-        hydrateAttribute(domElement, propKey, 'class', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'class',
+          value,
+          extraAttributes,
+          serverDifferences,
+        );
         continue;
       case 'tabIndex':
         hydrateAttribute(
@@ -2725,34 +2412,39 @@ function diffHydratedGenericElement(
           'tabindex',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'style':
         extraAttributes.delete(propKey);
-        diffHydratedStyles(domElement, value);
+        diffHydratedStyles(domElement, value, serverDifferences);
         continue;
       case 'multiple': {
         extraAttributes.delete(propKey);
         const serverValue = (domElement: any).multiple;
-        warnForPropDifference(propKey, serverValue, value);
+        warnForPropDifference(propKey, serverValue, value, serverDifferences);
         continue;
       }
       case 'muted': {
         extraAttributes.delete(propKey);
         const serverValue = (domElement: any).muted;
-        warnForPropDifference(propKey, serverValue, value);
+        warnForPropDifference(propKey, serverValue, value, serverDifferences);
         continue;
       }
       case 'autoFocus': {
         extraAttributes.delete('autofocus');
         const serverValue = (domElement: any).autofocus;
-        warnForPropDifference(propKey, serverValue, value);
+        warnForPropDifference(propKey, serverValue, value, serverDifferences);
         continue;
       }
       case 'src':
       case 'href':
         if (enableFilterEmptyStringAttributesDOM) {
-          if (value === '') {
+          if (
+            value === '' &&
+            // <a href=""> is fine for "reload" links.
+            !(tag === 'a' && propKey === 'href')
+          ) {
             if (__DEV__) {
               if (propKey === 'src') {
                 console.error(
@@ -2779,6 +2471,7 @@ function diffHydratedGenericElement(
               propKey,
               null,
               extraAttributes,
+              serverDifferences,
             );
             continue;
           }
@@ -2789,38 +2482,37 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'action':
-      case 'formAction':
-        if (enableFormActions) {
-          const serverValue = domElement.getAttribute(propKey);
-          if (typeof value === 'function') {
-            extraAttributes.delete(propKey.toLowerCase());
-            // The server can set these extra properties to implement actions.
-            // So we remove them from the extra attributes warnings.
-            if (propKey === 'formAction') {
-              extraAttributes.delete('name');
-              extraAttributes.delete('formenctype');
-              extraAttributes.delete('formmethod');
-              extraAttributes.delete('formtarget');
-            } else {
-              extraAttributes.delete('enctype');
-              extraAttributes.delete('method');
-              extraAttributes.delete('target');
-            }
-            // Ideally we should be able to warn if the server value was not a function
-            // however since the function can return any of these attributes any way it
-            // wants as a custom progressive enhancement, there's nothing to compare to.
-            // We can check if the function has the $FORM_ACTION property on the client
-            // and if it's not, warn, but that's an unnecessary constraint that they
-            // have to have the extra extension that doesn't do anything on the client.
-            continue;
-          } else if (serverValue === EXPECTED_FORM_ACTION_URL) {
-            extraAttributes.delete(propKey.toLowerCase());
-            warnForPropDifference(propKey, 'function', value);
-            continue;
+      case 'formAction': {
+        const serverValue = domElement.getAttribute(propKey);
+        if (typeof value === 'function') {
+          extraAttributes.delete(propKey.toLowerCase());
+          // The server can set these extra properties to implement actions.
+          // So we remove them from the extra attributes warnings.
+          if (propKey === 'formAction') {
+            extraAttributes.delete('name');
+            extraAttributes.delete('formenctype');
+            extraAttributes.delete('formmethod');
+            extraAttributes.delete('formtarget');
+          } else {
+            extraAttributes.delete('enctype');
+            extraAttributes.delete('method');
+            extraAttributes.delete('target');
           }
+          // Ideally we should be able to warn if the server value was not a function
+          // however since the function can return any of these attributes any way it
+          // wants as a custom progressive enhancement, there's nothing to compare to.
+          // We can check if the function has the $FORM_ACTION property on the client
+          // and if it's not, warn, but that's an unnecessary constraint that they
+          // have to have the extra extension that doesn't do anything on the client.
+          continue;
+        } else if (serverValue === EXPECTED_FORM_ACTION_URL) {
+          extraAttributes.delete(propKey.toLowerCase());
+          warnForPropDifference(propKey, 'function', value, serverDifferences);
+          continue;
         }
         hydrateSanitizedAttribute(
           domElement,
@@ -2828,8 +2520,10 @@ function diffHydratedGenericElement(
           propKey.toLowerCase(),
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
+      }
       case 'xlinkHref':
         hydrateSanitizedAttribute(
           domElement,
@@ -2837,6 +2531,7 @@ function diffHydratedGenericElement(
           'xlink:href',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'contentEditable': {
@@ -2847,6 +2542,7 @@ function diffHydratedGenericElement(
           'contenteditable',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2858,6 +2554,7 @@ function diffHydratedGenericElement(
           'spellcheck',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2873,6 +2570,7 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2905,6 +2603,7 @@ function diffHydratedGenericElement(
           propKey.toLowerCase(),
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2916,6 +2615,7 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2929,6 +2629,7 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2939,6 +2640,7 @@ function diffHydratedGenericElement(
           'rowspan',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2949,6 +2651,7 @@ function diffHydratedGenericElement(
           propKey,
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       }
@@ -2959,6 +2662,7 @@ function diffHydratedGenericElement(
           'x-height',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkActuate':
@@ -2968,6 +2672,7 @@ function diffHydratedGenericElement(
           'xlink:actuate',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkArcrole':
@@ -2977,6 +2682,7 @@ function diffHydratedGenericElement(
           'xlink:arcrole',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkRole':
@@ -2986,6 +2692,7 @@ function diffHydratedGenericElement(
           'xlink:role',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkShow':
@@ -2995,6 +2702,7 @@ function diffHydratedGenericElement(
           'xlink:show',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkTitle':
@@ -3004,6 +2712,7 @@ function diffHydratedGenericElement(
           'xlink:title',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xlinkType':
@@ -3013,6 +2722,7 @@ function diffHydratedGenericElement(
           'xlink:type',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xmlBase':
@@ -3022,6 +2732,7 @@ function diffHydratedGenericElement(
           'xml:base',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xmlLang':
@@ -3031,6 +2742,7 @@ function diffHydratedGenericElement(
           'xml:lang',
           value,
           extraAttributes,
+          serverDifferences,
         );
         continue;
       case 'xmlSpace':
@@ -3040,6 +2752,32 @@ function diffHydratedGenericElement(
           'xml:space',
           value,
           extraAttributes,
+          serverDifferences,
+        );
+        continue;
+      case 'inert':
+        if (__DEV__) {
+          if (
+            value === '' &&
+            !didWarnForNewBooleanPropsWithEmptyValue[propKey]
+          ) {
+            didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
+            console.error(
+              'Received an empty string for a boolean attribute `%s`. ' +
+                'This will treat the attribute as if it were false. ' +
+                'Either pass `false` to silence this warning, or ' +
+                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+              propKey,
+            );
+          }
+        }
+        hydrateBooleanAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+          serverDifferences,
         );
         continue;
       default: {
@@ -3084,21 +2822,19 @@ function diffHydratedGenericElement(
           value,
         );
         if (!isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, value);
+          warnForPropDifference(propKey, serverValue, value, serverDifferences);
         }
       }
     }
   }
 }
 
-export function diffHydratedProperties(
+export function hydrateProperties(
   domElement: Element,
   tag: string,
   props: Object,
-  isConcurrentMode: boolean,
-  shouldWarnDev: boolean,
   hostContext: HostContext,
-): null | Array<mixed> {
+): boolean {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
@@ -3196,8 +2932,6 @@ export function diffHydratedProperties(
       break;
   }
 
-  let updatePayload = null;
-
   const children = props.children;
   // For text content children we compare against textContent. This
   // might match additional HTML that is hidden when we read it using
@@ -3208,30 +2942,18 @@ export function diffHydratedProperties(
   // even listeners these nodes might be wired up to.
   // TODO: Warn if there is more than a single textNode as a child.
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
-  if (typeof children === 'string' || typeof children === 'number') {
-    if (domElement.textContent !== '' + children) {
-      if (props.suppressHydrationWarning !== true) {
-        checkForUnmatchedText(
-          domElement.textContent,
-          children,
-          isConcurrentMode,
-          shouldWarnDev,
-        );
-      }
-      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        if (diffInCommitPhase) {
-          // We really should be patching this in the commit phase but since
-          // this only affects legacy mode hydration which is deprecated anyway
-          // we can get away with it.
-          // Host singletons get their children appended and don't use the text
-          // content mechanism.
-          if (!enableHostSingletons || tag !== 'body') {
-            domElement.textContent = (children: any);
-          }
-        } else {
-          updatePayload = ['children', children];
-        }
-      }
+  if (
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    typeof children === 'bigint'
+  ) {
+    if (
+      // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+      domElement.textContent !== '' + children &&
+      props.suppressHydrationWarning !== true &&
+      !checkForUnmatchedText(domElement.textContent, children)
+    ) {
+      return false;
     }
   }
 
@@ -3239,12 +2961,26 @@ export function diffHydratedProperties(
     listenToNonDelegatedEvent('scroll', domElement);
   }
 
+  if (props.onScrollEnd != null) {
+    listenToNonDelegatedEvent('scrollend', domElement);
+  }
+
   if (props.onClick != null) {
     // TODO: This cast may not be sound for SVG, MathML or custom elements.
     trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
   }
 
-  if (__DEV__ && shouldWarnDev) {
+  return true;
+}
+
+export function diffHydratedProperties(
+  domElement: Element,
+  tag: string,
+  props: Object,
+  hostContext: HostContext,
+): null | Object {
+  const serverDifferences: {[propName: string]: mixed} = {};
+  if (__DEV__) {
     const extraAttributes: Set<string> = new Set();
     const attributes = domElement.attributes;
     for (let i = 0; i < attributes.length; i++) {
@@ -3271,6 +3007,7 @@ export function diffHydratedProperties(
         props,
         hostContext,
         extraAttributes,
+        serverDifferences,
       );
     } else {
       diffHydratedGenericElement(
@@ -3279,99 +3016,47 @@ export function diffHydratedProperties(
         props,
         hostContext,
         extraAttributes,
+        serverDifferences,
       );
     }
     if (extraAttributes.size > 0 && props.suppressHydrationWarning !== true) {
-      warnForExtraAttributes(extraAttributes);
+      warnForExtraAttributes(domElement, extraAttributes, serverDifferences);
     }
   }
-
-  return updatePayload;
+  if (Object.keys(serverDifferences).length === 0) {
+    return null;
+  }
+  return serverDifferences;
 }
 
-export function diffHydratedText(
+export function hydrateText(
   textNode: Text,
   text: string,
-  isConcurrentMode: boolean,
+  parentProps: null | Object,
 ): boolean {
   const isDifferent = textNode.nodeValue !== text;
-  return isDifferent;
+  if (
+    isDifferent &&
+    (parentProps === null || parentProps.suppressHydrationWarning !== true) &&
+    !checkForUnmatchedText(textNode.nodeValue, text)
+  ) {
+    return false;
+  }
+  return true;
 }
 
-export function warnForDeletedHydratableElement(
-  parentNode: Element | Document | DocumentFragment,
-  child: Element,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
-    );
+export function diffHydratedText(textNode: Text, text: string): null | string {
+  if (textNode.nodeValue === text) {
+    return null;
   }
-}
-
-export function warnForDeletedHydratableText(
-  parentNode: Element | Document | DocumentFragment,
-  child: Text,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
-    );
+  const normalizedClientText = normalizeMarkupForTextOrAttribute(text);
+  const normalizedServerText = normalizeMarkupForTextOrAttribute(
+    textNode.nodeValue,
+  );
+  if (normalizedServerText === normalizedClientText) {
+    return null;
   }
-}
-
-export function warnForInsertedHydratedElement(
-  parentNode: Element | Document | DocumentFragment,
-  tag: string,
-  props: Object,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Expected server HTML to contain a matching <%s> in <%s>.',
-      tag,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForInsertedHydratedText(
-  parentNode: Element | Document | DocumentFragment,
-  text: string,
-) {
-  if (__DEV__) {
-    if (text === '') {
-      // We expect to insert empty text nodes since they're not represented in
-      // the HTML.
-      // TODO: Remove this special case if we can just avoid inserting empty
-      // text nodes.
-      return;
-    }
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-      text,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
+  return textNode.nodeValue;
 }
 
 export function restoreControlledState(

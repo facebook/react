@@ -9,7 +9,8 @@
 
 import * as React from 'react';
 
-const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const ReactInternals =
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 const {
   unstable_cancelCallback,
@@ -36,7 +37,7 @@ const {
   unstable_flushAllWithoutAsserting,
   log,
   unstable_setDisableYieldValue,
-} = ReactInternals.Scheduler;
+} = ((ReactInternals: any).Scheduler: any);
 
 export {
   unstable_cancelCallback,

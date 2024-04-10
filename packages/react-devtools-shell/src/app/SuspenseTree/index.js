@@ -8,7 +8,12 @@
  */
 
 import * as React from 'react';
-import {Fragment, Suspense, SuspenseList, useState} from 'react';
+import {
+  Fragment,
+  Suspense,
+  unstable_SuspenseList as SuspenseList,
+  useState,
+} from 'react';
 
 function SuspenseTree(): React.Node {
   return (

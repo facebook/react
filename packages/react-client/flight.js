@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFlightClientStream';
+export * from './src/ReactFlightClient';

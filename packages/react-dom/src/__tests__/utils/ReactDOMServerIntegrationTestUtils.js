@@ -10,16 +10,19 @@
 'use strict';
 
 const stream = require('stream');
-const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgnoreConsoleError');
+const shouldIgnoreConsoleError = require('internal-test-utils/shouldIgnoreConsoleError');
 
 module.exports = function (initModules) {
   let ReactDOM;
+  let ReactDOMClient;
   let ReactDOMServer;
   let act;
+  let ReactFeatureFlags;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer} = initModules());
+    ({ReactDOM, ReactDOMClient, ReactDOMServer} = initModules());
     act = require('internal-test-utils').act;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
   }
 
   function shouldUseDocument(reactElement) {
@@ -51,11 +54,29 @@ module.exports = function (initModules) {
   async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     if (forceHydrate) {
       await act(() => {
-        ReactDOM.hydrate(reactElement, domElement);
+        ReactDOMClient.hydrateRoot(domElement, reactElement, {
+          onRecoverableError(e) {
+            if (
+              e.message.startsWith(
+                'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+              )
+            ) {
+              // We ignore this extra error because it shouldn't really need to be there if
+              // a hydration mismatch is the cause of it.
+            } else {
+              console.error(e);
+            }
+          },
+        });
       });
     } else {
       await act(() => {
-        ReactDOM.render(reactElement, domElement);
+        if (ReactDOMClient) {
+          const root = ReactDOMClient.createRoot(domElement);
+          root.render(reactElement);
+        } else {
+          ReactDOM.render(reactElement, domElement);
+        }
       });
     }
   }
@@ -253,8 +274,10 @@ module.exports = function (initModules) {
     const cleanTextContent =
       (cleanContainer.lastChild && cleanContainer.lastChild.textContent) || '';
 
-    // The only guarantee is that text content has been patched up if needed.
-    expect(hydratedTextContent).toBe(cleanTextContent);
+    if (ReactFeatureFlags.favorSafetyOverHydrationPerf) {
+      // The only guarantee is that text content has been patched up if needed.
+      expect(hydratedTextContent).toBe(cleanTextContent);
+    }
 
     // Abort any further expects. All bets are off at this point.
     throw new BadMarkupExpected();

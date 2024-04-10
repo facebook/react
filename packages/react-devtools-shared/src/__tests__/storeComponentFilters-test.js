@@ -10,23 +10,18 @@
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {
+  getLegacyRenderImplementation,
+  getVersionedRenderImplementation,
+} from './utils';
+
 describe('Store component filters', () => {
   let React;
   let Types;
   let bridge: FrontendBridge;
-  let legacyRender;
   let store: Store;
   let utils;
-
-  const act = async (callback: Function) => {
-    if (React.unstable_act != null) {
-      await React.unstable_act(callback);
-    } else {
-      callback();
-    }
-
-    jest.runAllTimers(); // Flush Bridge operations
-  };
+  let actAsync;
 
   beforeEach(() => {
     bridge = global.bridge;
@@ -36,15 +31,17 @@ describe('Store component filters', () => {
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    Types = require('react-devtools-shared/src/types');
+    Types = require('react-devtools-shared/src/frontend/types');
     utils = require('./utils');
 
-    legacyRender = utils.legacyRender;
+    actAsync = utils.actAsync;
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >= 16.0
   it('should throw if filters are updated while profiling', async () => {
-    await act(async () => store.profilerStore.startProfiling());
+    await actAsync(async () => store.profilerStore.startProfiling());
     expect(() => (store.componentFilters = [])).toThrow(
       'Cannot modify filter preferences while profiling',
     );
@@ -59,12 +56,11 @@ describe('Store component filters', () => {
     }
     const FunctionComponent = () => <div>Hi</div>;
 
-    await act(async () =>
-      legacyRender(
+    await actAsync(async () =>
+      render(
         <ClassComponent>
           <FunctionComponent />
         </ClassComponent>,
-        document.createElement('div'),
       ),
     );
     expect(store).toMatchInlineSnapshot(`
@@ -75,7 +71,7 @@ describe('Store component filters', () => {
                 <div>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeHostComponent),
@@ -87,7 +83,7 @@ describe('Store component filters', () => {
             <FunctionComponent>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass),
@@ -100,7 +96,7 @@ describe('Store component filters', () => {
               <div>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass),
@@ -113,7 +109,7 @@ describe('Store component filters', () => {
             <div>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass, false),
@@ -128,7 +124,7 @@ describe('Store component filters', () => {
                 <div>
     `);
 
-    await act(async () => (store.componentFilters = []));
+    await actAsync(async () => (store.componentFilters = []));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <ClassComponent>
@@ -142,16 +138,14 @@ describe('Store component filters', () => {
   it('should ignore invalid ElementTypeRoot filter', async () => {
     const Component = () => <div>Hi</div>;
 
-    await act(async () =>
-      legacyRender(<Component />, document.createElement('div')),
-    );
+    await actAsync(async () => render(<Component />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component>
             <div>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeRoot),
@@ -172,14 +166,13 @@ describe('Store component filters', () => {
     const Bar = () => <Text label="bar" />;
     const Baz = () => <Text label="baz" />;
 
-    await act(async () =>
-      legacyRender(
+    await actAsync(async () =>
+      render(
         <React.Fragment>
           <Foo />
           <Bar />
           <Baz />
         </React.Fragment>,
-        document.createElement('div'),
       ),
     );
     expect(store).toMatchInlineSnapshot(`
@@ -192,7 +185,7 @@ describe('Store component filters', () => {
             <Text>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [utils.createDisplayNameFilter('Foo')]),
     );
@@ -205,7 +198,7 @@ describe('Store component filters', () => {
             <Text>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [utils.createDisplayNameFilter('Ba')]),
     );
@@ -217,7 +210,7 @@ describe('Store component filters', () => {
           <Text>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [utils.createDisplayNameFilter('B.z')]),
     );
@@ -231,20 +224,23 @@ describe('Store component filters', () => {
     `);
   });
 
+  // Disabled: filtering by path was removed, source is now determined lazily, including symbolication if applicable
   // @reactVersion >= 16.0
-  it('should filter by path', async () => {
-    const Component = () => <div>Hi</div>;
+  xit('should filter by path', async () => {
+    // This component should use props object in order to throw for component stack generation
+    // See ReactComponentStackFrame:155 or DevToolsComponentStackFrame:147
+    const Component = props => {
+      return <div>{props.message}</div>;
+    };
 
-    await act(async () =>
-      legacyRender(<Component />, document.createElement('div')),
-    );
+    await actAsync(async () => render(<Component message="Hi" />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component>
             <div>
     `);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createLocationFilter(__filename.replace(__dirname, '')),
@@ -253,7 +249,7 @@ describe('Store component filters', () => {
 
     expect(store).toMatchInlineSnapshot(`[root]`);
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createLocationFilter('this:is:a:made:up:path'),
@@ -275,7 +271,7 @@ describe('Store component filters', () => {
     const Bar = () => <Foo />;
     Bar.displayName = 'Bar(Foo(Component))';
 
-    await act(async () => legacyRender(<Bar />, document.createElement('div')));
+    await actAsync(async () => render(<Bar />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component> [Bar][Foo]
@@ -284,7 +280,7 @@ describe('Store component filters', () => {
                 <div>
     `);
 
-    await act(
+    await actAsync(
       async () => (store.componentFilters = [utils.createHOCFilter(true)]),
     );
     expect(store).toMatchInlineSnapshot(`
@@ -293,7 +289,7 @@ describe('Store component filters', () => {
             <div>
     `);
 
-    await act(
+    await actAsync(
       async () => (store.componentFilters = [utils.createHOCFilter(false)]),
     );
     expect(store).toMatchInlineSnapshot(`
@@ -307,7 +303,7 @@ describe('Store component filters', () => {
 
   // @reactVersion >= 16.0
   it('should not send a bridge update if the set of enabled filters has not changed', async () => {
-    await act(
+    await actAsync(
       async () => (store.componentFilters = [utils.createHOCFilter(true)]),
     );
 
@@ -315,21 +311,21 @@ describe('Store component filters', () => {
       throw Error('Unexpected component update');
     });
 
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createHOCFilter(false),
           utils.createHOCFilter(true),
         ]),
     );
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createHOCFilter(true),
           utils.createLocationFilter('abc', false),
         ]),
     );
-    await act(
+    await actAsync(
       async () =>
         (store.componentFilters = [
           utils.createHOCFilter(true),
@@ -361,10 +357,7 @@ describe('Store component filters', () => {
       utils.createElementTypeFilter(Types.ElementTypeSuspense),
     ];
 
-    const container = document.createElement('div');
-    await act(async () =>
-      legacyRender(<Wrapper shouldSuspend={true} />, container),
-    );
+    await actAsync(async () => render(<Wrapper shouldSuspend={true} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
@@ -372,18 +365,14 @@ describe('Store component filters', () => {
               <div>
     `);
 
-    await act(async () =>
-      legacyRender(<Wrapper shouldSuspend={false} />, container),
-    );
+    await actAsync(async () => render(<Wrapper shouldSuspend={false} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
             <Component>
     `);
 
-    await act(async () =>
-      legacyRender(<Wrapper shouldSuspend={true} />, container),
-    );
+    await actAsync(async () => render(<Wrapper shouldSuspend={true} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
@@ -393,8 +382,11 @@ describe('Store component filters', () => {
   });
 
   describe('inline errors and warnings', () => {
+    const {render: legacyRender} = getLegacyRenderImplementation();
+
     // @reactVersion >= 17.0
-    it('only counts for unfiltered components', async () => {
+    // @reactVersion <= 18.2
+    it('only counts for unfiltered components (legacy render)', async () => {
       function ComponentWithWarning() {
         console.warn('test-only: render warning');
         return null;
@@ -409,15 +401,7 @@ describe('Store component filters', () => {
         return null;
       }
 
-      // HACK This require() is needed (somewhere in the test) for this case to pass.
-      // Without it, the legacyRender() call below causes this test to fail
-      // because it requires "react-dom" for the first time,
-      // which causes the console error() and warn() methods to be overridden again,
-      // effectively disconnecting the DevTools override in 'react-devtools-shared/src/backend/console'.
-      require('react-dom');
-
-      const container = document.createElement('div');
-      await act(
+      await actAsync(
         async () =>
           (store.componentFilters = [
             utils.createDisplayNameFilter('Warning'),
@@ -431,7 +415,6 @@ describe('Store component filters', () => {
             <ComponentWithWarning />
             <ComponentWithWarningAndError />
           </React.Fragment>,
-          container,
         );
       });
 
@@ -439,7 +422,7 @@ describe('Store component filters', () => {
       expect(store.errorCount).toBe(0);
       expect(store.warningCount).toBe(0);
 
-      await act(async () => (store.componentFilters = []));
+      await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
         [root]
@@ -448,7 +431,7 @@ describe('Store component filters', () => {
             <ComponentWithWarningAndError> ✕⚠
       `);
 
-      await act(
+      await actAsync(
         async () =>
           (store.componentFilters = [utils.createDisplayNameFilter('Warning')]),
       );
@@ -458,7 +441,7 @@ describe('Store component filters', () => {
             <ComponentWithError> ✕
       `);
 
-      await act(
+      await actAsync(
         async () =>
           (store.componentFilters = [utils.createDisplayNameFilter('Error')]),
       );
@@ -468,7 +451,7 @@ describe('Store component filters', () => {
             <ComponentWithWarning> ⚠
       `);
 
-      await act(
+      await actAsync(
         async () =>
           (store.componentFilters = [
             utils.createDisplayNameFilter('Warning'),
@@ -479,7 +462,97 @@ describe('Store component filters', () => {
       expect(store.errorCount).toBe(0);
       expect(store.warningCount).toBe(0);
 
-      await act(async () => (store.componentFilters = []));
+      await actAsync(async () => (store.componentFilters = []));
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <ComponentWithError> ✕
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+    });
+
+    // @reactVersion >= 18
+    it('only counts for unfiltered components (createRoot)', async () => {
+      function ComponentWithWarning() {
+        console.warn('test-only: render warning');
+        return null;
+      }
+      function ComponentWithError() {
+        console.error('test-only: render error');
+        return null;
+      }
+      function ComponentWithWarningAndError() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createDisplayNameFilter('Warning'),
+            utils.createDisplayNameFilter('Error'),
+          ]),
+      );
+
+      utils.withErrorsOrWarningsIgnored(['test-only:'], () => {
+        utils.act(() => {
+          render(
+            <React.Fragment>
+              <ComponentWithError />
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+          );
+        }, false);
+      });
+
+      expect(store).toMatchInlineSnapshot(``);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
+
+      await actAsync(async () => (store.componentFilters = []));
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <ComponentWithError> ✕
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [utils.createDisplayNameFilter('Warning')]),
+      );
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+            <ComponentWithError> ✕
+      `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [utils.createDisplayNameFilter('Error')]),
+      );
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 0, ⚠ 1
+        [root]
+            <ComponentWithWarning> ⚠
+      `);
+
+      await actAsync(
+        async () =>
+          (store.componentFilters = [
+            utils.createDisplayNameFilter('Warning'),
+            utils.createDisplayNameFilter('Error'),
+          ]),
+      );
+      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
+
+      await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
         ✕ 2, ⚠ 2
         [root]

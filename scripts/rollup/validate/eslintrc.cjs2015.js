@@ -14,9 +14,24 @@ module.exports = {
     Symbol: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+
+    Int8Array: 'readonly',
+    Uint8Array: 'readonly',
+    Uint8ClampedArray: 'readonly',
+    Int16Array: 'readonly',
     Uint16Array: 'readonly',
+    Int32Array: 'readonly',
+    Uint32Array: 'readonly',
+    Float32Array: 'readonly',
+    Float64Array: 'readonly',
+    BigInt64Array: 'readonly',
+    BigUint64Array: 'readonly',
+    DataView: 'readonly',
+    ArrayBuffer: 'readonly',
+
     Reflect: 'readonly',
     globalThis: 'readonly',
+    FinalizationRegistry: 'readonly',
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
@@ -28,23 +43,24 @@ module.exports = {
     trustedTypes: 'readonly',
 
     // Scheduler profiling
-    Int32Array: 'readonly',
-    ArrayBuffer: 'readonly',
-
     TaskController: 'readonly',
     reportError: 'readonly',
     AggregateError: 'readonly',
 
     // Flight
-    Uint8Array: 'readonly',
     Promise: 'readonly',
 
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
     __webpack_require__: 'readonly',
+
+    // Flight Turbopack
+    __turbopack_load__: 'readonly',
+    __turbopack_require__: 'readonly',
 
     // jest
     expect: 'readonly',
@@ -52,6 +68,8 @@ module.exports = {
 
     // act
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+
+    Bun: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 2015,

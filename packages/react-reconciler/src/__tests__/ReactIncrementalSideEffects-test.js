@@ -464,13 +464,9 @@ describe('ReactIncrementalSideEffects', () => {
       </div>,
     );
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="World" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="World" />);
-    }
+    });
 
     // Flush some of the work without committing
     await waitFor(['Foo', 'Bar']);
@@ -703,13 +699,9 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.log('Foo ' + props.step);
       return <span prop={props.step} />;
     }
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={1} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     await waitFor(['Foo 1']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -718,26 +710,18 @@ describe('ReactIncrementalSideEffects', () => {
     await waitForPaint([]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={2} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={2} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     await waitFor(['Foo 2']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={3} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={3} />);
-    }
+    });
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.
@@ -1312,16 +1296,22 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo show={true} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n\n' +
-        'Check the render method ' +
-        'of `Foo`.\n' +
-        '    in FunctionComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
-    );
+
+    if (gate(flags => flags.enableRefAsProp)) {
+      await waitForAll([]);
+    } else {
+      await expect(async () => await waitForAll([])).toErrorDev(
+        'Warning: Function components cannot be given refs. ' +
+          'Attempts to access this ref will fail. ' +
+          'Did you mean to use React.forwardRef()?\n\n' +
+          'Check the render method ' +
+          'of `Foo`.\n' +
+          '    in FunctionComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
+      );
+    }
+
     expect(ops).toEqual([
       classInstance,
       // no call for function components
@@ -1356,6 +1346,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
+  // @gate !disableStringRefs
   it('supports string refs', async () => {
     let fooInstance = null;
 
@@ -1382,7 +1373,8 @@ describe('ReactIncrementalSideEffects', () => {
       'Warning: Component "Foo" contains the string ref "bar". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in Bar (at **)\n' +
         '    in Foo (at **)',
     ]);
     expect(fooInstance.refs.bar.test).toEqual('test');

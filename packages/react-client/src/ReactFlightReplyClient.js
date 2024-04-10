@@ -7,16 +7,22 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
+  ReactCustomFormAction,
+} from 'shared/ReactTypes';
+import type {LazyComponent} from 'react/src/ReactLazy';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {
-  knownServerReferences,
-  createServerReference,
-} from './ReactFlightServerReferenceRegistry';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_CONTEXT_TYPE,
   REACT_PROVIDER_TYPE,
   getIteratorFn,
 } from 'shared/ReactSymbols';
@@ -27,7 +33,14 @@ import {
   objectName,
 } from 'shared/ReactSerializationErrors';
 
+import {writeTemporaryReference} from './ReactFlightTemporaryReferences';
+
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
+
+const ObjectPrototype = Object.prototype;
+
+import {usedWithSSR} from './ReactFlightClientConfig';
 
 type ReactJSONValue =
   | string
@@ -39,6 +52,20 @@ type ReactJSONValue =
 
 export opaque type ServerReference<T> = T;
 
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+
+export type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
+
+export type ServerReferenceId = any;
+
+const knownServerReferences: WeakMap<
+  Function,
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+> = new WeakMap();
+
 // Serializable values
 export type ReactServerValue =
   // References are passed by their value
@@ -48,19 +75,23 @@ export type ReactServerValue =
   | string
   | boolean
   | number
-  | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactServerValue>
   | Array<ReactServerValue>
+  | Map<ReactServerValue, ReactServerValue>
+  | Set<ReactServerValue>
+  | FormData
+  | Date
   | ReactServerObject
   | Promise<ReactServerValue>; // Thenable<ReactServerValue>
 
 type ReactServerObject = {+[key: string]: ReactServerValue};
 
-// function serializeByValueID(id: number): string {
-//   return '$' + id.toString(16);
-// }
+function serializeByValueID(id: number): string {
+  return '$' + id.toString(16);
+}
 
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
@@ -70,8 +101,8 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
-function serializeSymbolReference(name: string): string {
-  return '$S' + name;
+function serializeTemporaryReferenceID(id: number): string {
+  return '$T' + id.toString(16);
 }
 
 function serializeFormDataReference(id: number): string {
@@ -111,6 +142,14 @@ function serializeBigInt(n: bigint): string {
   return '$n' + n.toString(10);
 }
 
+function serializeMapID(id: number): string {
+  return '$Q' + id.toString(16);
+}
+
+function serializeSetID(id: number): string {
+  return '$W' + id.toString(16);
+}
+
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use those to encode
@@ -124,6 +163,7 @@ function escapeStringValue(value: string): string {
 export function processReply(
   root: ReactServerValue,
   formFieldPrefix: string,
+  temporaryReferences: void | TemporaryReferenceSet,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
 ): void {
@@ -172,6 +212,81 @@ export function processReply(
     }
 
     if (typeof value === 'object') {
+      switch ((value: any).$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          if (temporaryReferences === undefined) {
+            throw new Error(
+              'React Element cannot be passed to Server Functions from the Client without a ' +
+                'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+                (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
+            );
+          }
+          return serializeTemporaryReferenceID(
+            writeTemporaryReference(temporaryReferences, value),
+          );
+        }
+        case REACT_LAZY_TYPE: {
+          // Resolve lazy as if it wasn't here. In the future this will be encoded as a Promise.
+          const lazy: LazyComponent<any, any> = (value: any);
+          const payload = lazy._payload;
+          const init = lazy._init;
+          if (formData === null) {
+            // Upgrade to use FormData to allow us to stream this value.
+            formData = new FormData();
+          }
+          pendingParts++;
+          try {
+            const resolvedModel = init(payload);
+            // We always outline this as a separate part even though we could inline it
+            // because it ensures a more deterministic encoding.
+            const lazyId = nextPartId++;
+            const partJSON = JSON.stringify(resolvedModel, resolveToJSON);
+            // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+            const data: FormData = formData;
+            // eslint-disable-next-line react-internal/safe-string-coercion
+            data.append(formFieldPrefix + lazyId, partJSON);
+            return serializeByValueID(lazyId);
+          } catch (x) {
+            if (
+              typeof x === 'object' &&
+              x !== null &&
+              typeof x.then === 'function'
+            ) {
+              // Suspended
+              pendingParts++;
+              const lazyId = nextPartId++;
+              const thenable: Thenable<any> = (x: any);
+              const retry = function () {
+                // While the first promise resolved, its value isn't necessarily what we'll
+                // resolve into because we might suspend again.
+                try {
+                  const partJSON = JSON.stringify(value, resolveToJSON);
+                  // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+                  const data: FormData = formData;
+                  // eslint-disable-next-line react-internal/safe-string-coercion
+                  data.append(formFieldPrefix + lazyId, partJSON);
+                  pendingParts--;
+                  if (pendingParts === 0) {
+                    resolve(data);
+                  }
+                } catch (reason) {
+                  reject(reason);
+                }
+              };
+              thenable.then(retry, retry);
+              return serializeByValueID(lazyId);
+            } else {
+              // In the future we could consider serializing this as an error
+              // that throws on the server instead.
+              reject(x);
+              return null;
+            }
+          } finally {
+            pendingParts--;
+          }
+        }
+      }
+
       // $FlowFixMe[method-unbinding]
       if (typeof value.then === 'function') {
         // We assume that any object with a .then property is a "Thenable" type,
@@ -185,14 +300,18 @@ export function processReply(
         const thenable: Thenable<any> = (value: any);
         thenable.then(
           partValue => {
-            const partJSON = JSON.stringify(partValue, resolveToJSON);
-            // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
-            const data: FormData = formData;
-            // eslint-disable-next-line react-internal/safe-string-coercion
-            data.append(formFieldPrefix + promiseId, partJSON);
-            pendingParts--;
-            if (pendingParts === 0) {
-              resolve(data);
+            try {
+              const partJSON = JSON.stringify(partValue, resolveToJSON);
+              // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
+              const data: FormData = formData;
+              // eslint-disable-next-line react-internal/safe-string-coercion
+              data.append(formFieldPrefix + promiseId, partJSON);
+              pendingParts--;
+              if (pendingParts === 0) {
+                resolve(data);
+              }
+            } catch (reason) {
+              reject(reason);
             }
           },
           reason => {
@@ -202,6 +321,10 @@ export function processReply(
           },
         );
         return serializePromiseID(promiseId);
+      }
+      if (isArray(value)) {
+        // $FlowFixMe[incompatible-return]
+        return value;
       }
       // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
       if (value instanceof FormData) {
@@ -221,54 +344,77 @@ export function processReply(
         });
         return serializeFormDataReference(refId);
       }
-      if (!isArray(value)) {
-        const iteratorFn = getIteratorFn(value);
-        if (iteratorFn) {
-          return Array.from((value: any));
+      if (value instanceof Map) {
+        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        if (formData === null) {
+          formData = new FormData();
         }
+        const mapId = nextPartId++;
+        formData.append(formFieldPrefix + mapId, partJSON);
+        return serializeMapID(mapId);
+      }
+      if (value instanceof Set) {
+        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        if (formData === null) {
+          formData = new FormData();
+        }
+        const setId = nextPartId++;
+        formData.append(formFieldPrefix + setId, partJSON);
+        return serializeSetID(setId);
+      }
+      const iteratorFn = getIteratorFn(value);
+      if (iteratorFn) {
+        return Array.from((value: any));
       }
 
+      // Verify that this is a simple plain object.
+      const proto = getPrototypeOf(value);
+      if (
+        proto !== ObjectPrototype &&
+        (proto === null || getPrototypeOf(proto) !== null)
+      ) {
+        if (temporaryReferences === undefined) {
+          throw new Error(
+            'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
+              'Classes or null prototypes are not supported.',
+          );
+        }
+        // We can serialize class instances as temporary references.
+        return serializeTemporaryReferenceID(
+          writeTemporaryReference(temporaryReferences, value),
+        );
+      }
       if (__DEV__) {
-        if (value !== null && !isArray(value)) {
-          // Verify that this is a simple plain object.
-          if ((value: any).$$typeof === REACT_ELEMENT_TYPE) {
+        if (
+          (value: any).$$typeof ===
+          (enableRenderableContext ? REACT_CONTEXT_TYPE : REACT_PROVIDER_TYPE)
+        ) {
+          console.error(
+            'React Context Providers cannot be passed to Server Functions from the Client.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (objectName(value) !== 'Object') {
+          console.error(
+            'Only plain objects can be passed to Server Functions from the Client. ' +
+              '%s objects are not supported.%s',
+            objectName(value),
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (!isSimpleObject(value)) {
+          console.error(
+            'Only plain objects can be passed to Server Functions from the Client. ' +
+              'Classes or other objects with methods are not supported.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (Object.getOwnPropertySymbols) {
+          const symbols = Object.getOwnPropertySymbols(value);
+          if (symbols.length > 0) {
             console.error(
-              'React Element cannot be passed to Server Functions from the Client.%s',
+              'Only plain objects can be passed to Server Functions from the Client. ' +
+                'Objects with symbol properties like %s are not supported.%s',
+              symbols[0].description,
               describeObjectForErrorMessage(parent, key),
             );
-          } else if ((value: any).$$typeof === REACT_LAZY_TYPE) {
-            console.error(
-              'React Lazy cannot be passed to Server Functions from the Client.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
-            console.error(
-              'React Context Providers cannot be passed to Server Functions from the Client.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if (objectName(value) !== 'Object') {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                '%s objects are not supported.%s',
-              objectName(value),
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if (!isSimpleObject(value)) {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                'Classes or other objects with methods are not supported.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if (Object.getOwnPropertySymbols) {
-            const symbols = Object.getOwnPropertySymbols(value);
-            if (symbols.length > 0) {
-              console.error(
-                'Only plain objects can be passed to Client Components from Server Components. ' +
-                  'Objects with symbol properties like %s are not supported.%s',
-                symbols[0].description,
-                describeObjectForErrorMessage(parent, key),
-              );
-            }
           }
         }
       }
@@ -283,7 +429,6 @@ export function processReply(
         // Possibly a Date, whose toJSON automatically calls toISOString
         // $FlowFixMe[incompatible-use]
         const originalValue = parent[key];
-        // $FlowFixMe[method-unbinding]
         if (originalValue instanceof Date) {
           return serializeDateFromDateJSON(value);
         }
@@ -318,25 +463,28 @@ export function processReply(
         formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
-      throw new Error(
-        'Client Functions cannot be passed directly to Server Functions. ' +
-          'Only Functions passed from the Server can be passed back again.',
+      if (temporaryReferences === undefined) {
+        throw new Error(
+          'Client Functions cannot be passed directly to Server Functions. ' +
+            'Only Functions passed from the Server can be passed back again.',
+        );
+      }
+      return serializeTemporaryReferenceID(
+        writeTemporaryReference(temporaryReferences, value),
       );
     }
 
     if (typeof value === 'symbol') {
-      // $FlowFixMe[incompatible-type] `description` might be undefined
-      const name: string = value.description;
-      if (Symbol.for(name) !== value) {
+      if (temporaryReferences === undefined) {
         throw new Error(
-          'Only global symbols received from Symbol.for(...) can be passed to Server Functions. ' +
-            `The symbol Symbol.for(${
-              // $FlowFixMe[incompatible-type] `description` might be undefined
-              value.description
-            }) cannot be found among global symbols.`,
+          'Symbols cannot be passed to a Server Function without a ' +
+            'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+            (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
         );
       }
-      return serializeSymbolReference(name);
+      return serializeTemporaryReferenceID(
+        writeTemporaryReference(temporaryReferences, value),
+      );
     }
 
     if (typeof value === 'bigint') {
@@ -363,4 +511,260 @@ export function processReply(
   }
 }
 
-export {createServerReference};
+const boundCache: WeakMap<
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  Thenable<FormData>,
+> = new WeakMap();
+
+function encodeFormData(reference: any): Thenable<FormData> {
+  let resolve, reject;
+  // We need to have a handle on the thenable so that we can synchronously set
+  // its status from processReply, when it can complete synchronously.
+  const thenable: Thenable<FormData> = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  processReply(
+    reference,
+    '',
+    undefined, // TODO: This means React Elements can't be used as state in progressive enhancement.
+    (body: string | FormData) => {
+      if (typeof body === 'string') {
+        const data = new FormData();
+        data.append('0', body);
+        body = data;
+      }
+      const fulfilled: FulfilledThenable<FormData> = (thenable: any);
+      fulfilled.status = 'fulfilled';
+      fulfilled.value = body;
+      resolve(body);
+    },
+    e => {
+      const rejected: RejectedThenable<FormData> = (thenable: any);
+      rejected.status = 'rejected';
+      rejected.reason = e;
+      reject(e);
+    },
+  );
+  return thenable;
+}
+
+function defaultEncodeFormAction(
+  this: any => Promise<any>,
+  identifierPrefix: string,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  let data: null | FormData = null;
+  let name;
+  const boundPromise = reference.bound;
+  if (boundPromise !== null) {
+    let thenable = boundCache.get(reference);
+    if (!thenable) {
+      thenable = encodeFormData(reference);
+      boundCache.set(reference, thenable);
+    }
+    if (thenable.status === 'rejected') {
+      throw thenable.reason;
+    } else if (thenable.status !== 'fulfilled') {
+      throw thenable;
+    }
+    const encodedFormData = thenable.value;
+    // This is hacky but we need the identifier prefix to be added to
+    // all fields but the suspense cache would break since we might get
+    // a new identifier each time. So we just append it at the end instead.
+    const prefixedData = new FormData();
+    // $FlowFixMe[prop-missing]
+    encodedFormData.forEach((value: string | File, key: string) => {
+      prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
+    });
+    data = prefixedData;
+    // We encode the name of the prefix containing the data.
+    name = '$ACTION_REF_' + identifierPrefix;
+  } else {
+    // This is the simple case so we can just encode the ID.
+    name = '$ACTION_ID_' + reference.id;
+  }
+  return {
+    name: name,
+    method: 'POST',
+    encType: 'multipart/form-data',
+    data: data,
+  };
+}
+
+function customEncodeFormAction(
+  proxy: any => Promise<any>,
+  identifierPrefix: string,
+  encodeFormAction: EncodeFormActionCallback,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(proxy);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  let boundPromise: Promise<Array<any>> = (reference.bound: any);
+  if (boundPromise === null) {
+    boundPromise = Promise.resolve([]);
+  }
+  return encodeFormAction(reference.id, boundPromise);
+}
+
+function isSignatureEqual(
+  this: any => Promise<any>,
+  referenceId: ServerReferenceId,
+  numberOfBoundArgs: number,
+): boolean {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  if (reference.id !== referenceId) {
+    // These are different functions.
+    return false;
+  }
+  // Now check if the number of bound arguments is the same.
+  const boundPromise = reference.bound;
+  if (boundPromise === null) {
+    // No bound arguments.
+    return numberOfBoundArgs === 0;
+  }
+  // Unwrap the bound arguments array by suspending, if necessary. As with
+  // encodeFormData, this means isSignatureEqual can only be called while React
+  // is rendering.
+  switch (boundPromise.status) {
+    case 'fulfilled': {
+      const boundArgs = boundPromise.value;
+      return boundArgs.length === numberOfBoundArgs;
+    }
+    case 'pending': {
+      throw boundPromise;
+    }
+    case 'rejected': {
+      throw boundPromise.reason;
+    }
+    default: {
+      if (typeof boundPromise.status === 'string') {
+        // Only instrument the thenable if the status if not defined.
+      } else {
+        const pendingThenable: PendingThenable<Array<any>> =
+          (boundPromise: any);
+        pendingThenable.status = 'pending';
+        pendingThenable.then(
+          (boundArgs: Array<any>) => {
+            const fulfilledThenable: FulfilledThenable<Array<any>> =
+              (boundPromise: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = boundArgs;
+          },
+          (error: mixed) => {
+            const rejectedThenable: RejectedThenable<number> =
+              (boundPromise: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          },
+        );
+      }
+      throw boundPromise;
+    }
+  }
+}
+
+export function registerServerReference(
+  proxy: any,
+  reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  encodeFormAction: void | EncodeFormActionCallback,
+) {
+  // Expose encoder for use by SSR, as well as a special bind that can be used to
+  // keep server capabilities.
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    const $$FORM_ACTION =
+      encodeFormAction === undefined
+        ? defaultEncodeFormAction
+        : function (
+            this: any => Promise<any>,
+            identifierPrefix: string,
+          ): ReactCustomFormAction {
+            return customEncodeFormAction(
+              this,
+              identifierPrefix,
+              encodeFormAction,
+            );
+          };
+    Object.defineProperties((proxy: any), {
+      $$FORM_ACTION: {value: $$FORM_ACTION},
+      $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+      bind: {value: bind},
+    });
+  }
+  knownServerReferences.set(proxy, reference);
+}
+
+// $FlowFixMe[method-unbinding]
+const FunctionBind = Function.prototype.bind;
+// $FlowFixMe[method-unbinding]
+const ArraySlice = Array.prototype.slice;
+function bind(this: Function): Function {
+  // $FlowFixMe[unsupported-syntax]
+  const newFn = FunctionBind.apply(this, arguments);
+  const reference = knownServerReferences.get(this);
+  if (reference) {
+    if (__DEV__) {
+      const thisBind = arguments[0];
+      if (thisBind != null) {
+        // This doesn't warn in browser environments since it's not instrumented outside
+        // usedWithSSR. This makes this an SSR only warning which we don't generally do.
+        // TODO: Consider a DEV only instrumentation in the browser.
+        console.error(
+          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        );
+      }
+    }
+    const args = ArraySlice.call(arguments, 1);
+    let boundPromise = null;
+    if (reference.bound !== null) {
+      boundPromise = Promise.resolve((reference.bound: any)).then(boundArgs =>
+        boundArgs.concat(args),
+      );
+    } else {
+      boundPromise = Promise.resolve(args);
+    }
+    // Expose encoder for use by SSR, as well as a special bind that can be used to
+    // keep server capabilities.
+    if (usedWithSSR) {
+      // Only expose this in builds that would actually use it. Not needed on the client.
+      Object.defineProperties((newFn: any), {
+        $$FORM_ACTION: {value: this.$$FORM_ACTION},
+        $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+        bind: {value: bind},
+      });
+    }
+    knownServerReferences.set(newFn, {id: reference.id, bound: boundPromise});
+  }
+  return newFn;
+}
+
+export function createServerReference<A: Iterable<any>, T>(
+  id: ServerReferenceId,
+  callServer: CallServerCallback,
+  encodeFormAction?: EncodeFormActionCallback,
+): (...A) => Promise<T> {
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    return callServer(id, args);
+  };
+  registerServerReference(proxy, {id, bound: null}, encodeFormAction);
+  return proxy;
+}

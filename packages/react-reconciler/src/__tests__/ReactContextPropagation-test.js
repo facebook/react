@@ -23,7 +23,7 @@ describe('ReactLazyContextPropagation', () => {
     useContext = React.useContext;
     Suspense = React.Suspense;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
 
     const InternalTestUtils = require('internal-test-utils');
@@ -489,7 +489,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   test('context is propagated across retries (legacy)', async () => {
     const root = ReactNoop.createLegacyRoot();
 

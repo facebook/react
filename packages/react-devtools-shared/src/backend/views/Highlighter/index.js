@@ -46,7 +46,7 @@ export default function setupHighlighter(
       window.addEventListener('mouseover', onMouseEvent, true);
       window.addEventListener('mouseup', onMouseEvent, true);
       window.addEventListener('pointerdown', onPointerDown, true);
-      window.addEventListener('pointerover', onPointerOver, true);
+      window.addEventListener('pointermove', onPointerMove, true);
       window.addEventListener('pointerup', onPointerUp, true);
     } else {
       agent.emit('startInspectingNative');
@@ -74,7 +74,7 @@ export default function setupHighlighter(
       window.removeEventListener('mouseover', onMouseEvent, true);
       window.removeEventListener('mouseup', onMouseEvent, true);
       window.removeEventListener('pointerdown', onPointerDown, true);
-      window.removeEventListener('pointerover', onPointerOver, true);
+      window.removeEventListener('pointermove', onPointerMove, true);
       window.removeEventListener('pointerup', onPointerUp, true);
     } else {
       agent.emit('stopInspectingNative');
@@ -104,14 +104,20 @@ export default function setupHighlighter(
     const renderer = agent.rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+
+      hideOverlay(agent);
+      return;
     }
 
-    let nodes: ?Array<HTMLElement> = null;
-    if (renderer != null) {
-      nodes = ((renderer.findNativeNodesForFiberID(
-        id,
-      ): any): ?Array<HTMLElement>);
+    // In some cases fiber may already be unmounted
+    if (!renderer.hasFiberWithId(id)) {
+      hideOverlay(agent);
+      return;
     }
+
+    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForFiberID(
+      id,
+    ): any);
 
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];
@@ -151,14 +157,17 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    selectFiberForNode(((event.target: any): HTMLElement));
+    selectFiberForNode(getEventTarget(event));
   }
 
-  function onPointerOver(event: MouseEvent) {
+  let lastHoveredNode: HTMLElement | null = null;
+  function onPointerMove(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
 
-    const target = ((event.target: any): HTMLElement);
+    const target: HTMLElement = getEventTarget(event);
+    if (lastHoveredNode === target) return;
+    lastHoveredNode = target;
 
     if (target.tagName === 'IFRAME') {
       const iframe: HTMLIFrameElement = (target: any);
@@ -197,4 +206,12 @@ export default function setupHighlighter(
     // because those are usually unintentional as you lift the cursor.
     {leading: false},
   );
+
+  function getEventTarget(event: MouseEvent): HTMLElement {
+    if (event.composed) {
+      return (event.composedPath()[0]: any);
+    }
+
+    return (event.target: any);
+  }
 }

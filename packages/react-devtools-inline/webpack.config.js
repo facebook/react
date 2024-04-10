@@ -1,5 +1,5 @@
 const {resolve} = require('path');
-const {DefinePlugin} = require('webpack');
+const Webpack = require('webpack');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -43,10 +43,12 @@ module.exports = {
   },
   output: {
     path: __dirname + '/dist',
+    publicPath: '/dist/',
     filename: '[name].js',
     chunkFilename: '[name].chunk.js',
-    library: '[name]',
-    libraryTarget: 'commonjs2',
+    library: {
+      type: 'commonjs2',
+    },
   },
   externals: {
     react: 'react',
@@ -56,9 +58,7 @@ module.exports = {
     scheduler: 'scheduler',
   },
   node: {
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
+    global: false,
   },
   resolve: {
     alias: {
@@ -69,7 +69,11 @@ module.exports = {
     minimize: false,
   },
   plugins: [
-    new DefinePlugin({
+    new Webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+    new Webpack.DefinePlugin({
       __DEV__,
       __EXPERIMENTAL__: true,
       __EXTENSION__: false,

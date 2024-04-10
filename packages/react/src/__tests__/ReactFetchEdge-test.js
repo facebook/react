@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -48,12 +48,18 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
-    if (gate(flags => !flags.www)) {
-      jest.mock('react', () => require('react/react.shared-subset'));
-    }
+    jest.mock('react', () => require('react/react.react-server'));
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.edge'),
+    );
+    require('react-server-dom-webpack/src/__tests__/utils/WebpackMock');
 
     React = require('react');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+
+    jest.resetModules();
+    __unmockReact();
+    jest.unmock('react-server-dom-webpack/server');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });

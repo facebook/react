@@ -41,7 +41,7 @@ import {
 import {setSuppressWarning} from 'shared/consoleWithStackDev';
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
+declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
 let rendererID = null;
 let injectedHook = null;
@@ -68,7 +68,7 @@ export function injectInternals(internals: Object): boolean {
       console.error(
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
-          'https://reactjs.org/link/react-devtools',
+          'https://react.dev/link/react-devtools',
       );
     }
     // DevTools exists, even though it doesn't support Fiber.

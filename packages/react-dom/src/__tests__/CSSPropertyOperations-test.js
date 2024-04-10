@@ -10,8 +10,9 @@
 'use strict';
 
 const React = require('react');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
 const ReactDOMServer = require('react-dom/server');
+const act = require('internal-test-utils').act;
 
 describe('CSSPropertyOperations', () => {
   it('should automatically append `px` to relevant styles', () => {
@@ -66,15 +67,19 @@ describe('CSSPropertyOperations', () => {
     expect(html).toContain('"--someColor:#000000"');
   });
 
-  it('should set style attribute when styles exist', () => {
+  it('should set style attribute when styles exist', async () => {
     const styles = {
       backgroundColor: '#000',
       display: 'none',
     };
-    let div = <div style={styles} />;
-    const root = document.createElement('div');
-    div = ReactDOM.render(div, root);
-    expect(/style=".*"/.test(root.innerHTML)).toBe(true);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div style={styles} />);
+    });
+
+    const div = container.firstChild;
+    expect(/style=".*"/.test(container.innerHTML)).toBe(true);
   });
 
   it('should not set style attribute when no styles exist', () => {
@@ -87,7 +92,7 @@ describe('CSSPropertyOperations', () => {
     expect(/style=/.test(html)).toBe(false);
   });
 
-  it('should warn when using hyphenated style names', () => {
+  it('should warn when using hyphenated style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -96,16 +101,20 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    const root = document.createElement('div');
-
-    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp />);
+      });
+    }).toErrorDev(
       'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );
   });
 
-  it('should warn when updating hyphenated style names', () => {
+  it('should warn when updating hyphenated style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -118,10 +127,16 @@ describe('CSSPropertyOperations', () => {
       '-ms-transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
-    const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
-
-    expect(() => ReactDOM.render(<Comp style={styles} />, root)).toErrorDev([
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Comp />);
+    });
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp style={styles} />);
+      });
+    }).toErrorDev([
       'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -131,7 +146,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('warns when miscapitalizing vendored style names', () => {
+  it('warns when miscapitalizing vendored style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -148,9 +163,13 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    const root = document.createElement('div');
-
-    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev([
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp />);
+      });
+    }).toErrorDev([
       // msTransform is correct already and shouldn't warn
       'Warning: Unsupported vendor-prefixed style property oTransform. ' +
         'Did you mean OTransform?' +
@@ -163,7 +182,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('should warn about style having a trailing semicolon', () => {
+  it('should warn about style having a trailing semicolon', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -181,9 +200,13 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    const root = document.createElement('div');
-
-    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev([
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp />);
+      });
+    }).toErrorDev([
       "Warning: Style property values shouldn't contain a semicolon. " +
         'Try "backgroundColor: blue" instead.' +
         '\n    in div (at **)' +
@@ -195,7 +218,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('should warn about style containing a NaN value', () => {
+  it('should warn about style containing a NaN value', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -204,27 +227,34 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    const root = document.createElement('div');
-
-    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp />);
+      });
+    }).toErrorDev(
       'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );
   });
 
-  it('should not warn when setting CSS custom properties', () => {
+  it('should not warn when setting CSS custom properties', async () => {
     class Comp extends React.Component {
       render() {
         return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
       }
     }
 
-    const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Comp />);
+    });
   });
 
-  it('should warn about style containing an Infinity value', () => {
+  it('should warn about style containing an Infinity value', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -233,25 +263,32 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    const root = document.createElement('div');
-
-    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Comp />);
+      });
+    }).toErrorDev(
       'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );
   });
 
-  it('should not add units to CSS custom properties', () => {
+  it('should not add units to CSS custom properties', async () => {
     class Comp extends React.Component {
       render() {
         return <div style={{'--foo': '5'}} />;
       }
     }
 
-    const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Comp />);
+    });
 
-    expect(root.children[0].style.getPropertyValue('--foo')).toEqual('5');
+    expect(container.children[0].style.getPropertyValue('--foo')).toEqual('5');
   });
 });

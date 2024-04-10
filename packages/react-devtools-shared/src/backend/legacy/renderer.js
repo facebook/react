@@ -13,7 +13,7 @@ import {
   ElementTypeRoot,
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
@@ -50,7 +50,7 @@ import type {
 import type {
   ComponentFilter,
   ElementType,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {InspectedElement, SerializedElement} from '../types';
 
 export type InternalInstance = Object;
@@ -244,7 +244,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -281,7 +280,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -318,7 +316,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -350,7 +347,6 @@ export function attach(
 
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -777,12 +773,10 @@ export function attach(
     let owners = null;
     let props = null;
     let state = null;
-    let source = null;
 
     const element = internalInstance._currentElement;
     if (element !== null) {
       props = element.props;
-      source = element._source != null ? element._source : null;
 
       let owner = element._owner;
       if (owner) {
@@ -834,6 +828,7 @@ export function attach(
 
       // Can view component source location.
       canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
+      source: null,
 
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
@@ -854,9 +849,6 @@ export function attach(
 
       // List of owners
       owners,
-
-      // Location of component in source code.
-      source,
 
       rootType: null,
       rendererPackageName: null,
@@ -1105,6 +1097,10 @@ export function attach(
 
   function unpatchConsoleForStrictMode() {}
 
+  function hasFiberWithId(id: number): boolean {
+    return idToInternalInstanceMap.has(id);
+  }
+
   return {
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
@@ -1128,6 +1124,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
+    hasFiberWithId,
     inspectElement,
     logElementToConsole,
     overrideError,

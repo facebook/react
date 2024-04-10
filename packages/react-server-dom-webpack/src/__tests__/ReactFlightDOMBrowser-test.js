@@ -28,21 +28,37 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
 let use;
+let ReactServer;
+let ReactServerDOM;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-    act = require('internal-test-utils').act;
+
+    // Simulate the condition resolution
+
+    jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactServerDOM = require('react-dom');
+
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
+    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+
+    __unmockReact();
+    jest.resetModules();
+
+    act = require('internal-test-utils').act;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server.browser');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
     use = React.use;
@@ -567,19 +583,42 @@ describe('ReactFlightDOMBrowser', () => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
-      ? '<p>Error: for reasons + a dev digest</p>'
+      ? '<p>for reasons + a dev digest</p>'
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
+  it('should warn in DEV a child is missing keys', async () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientExports(ParentClient);
+    const ParentModule = clientExports({Parent: ParentClient});
+    await expect(async () => {
+      const stream = ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      );
+      await ReactServerDOMClient.createFromReadableStream(stream);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.',
+    );
+  });
+
   it('basic use(promise)', async () => {
     function Server() {
       return (
-        use(Promise.resolve('A')) +
-        use(Promise.resolve('B')) +
-        use(Promise.resolve('C'))
+        ReactServer.use(Promise.resolve('A')) +
+        ReactServer.use(Promise.resolve('B')) +
+        ReactServer.use(Promise.resolve('C'))
       );
     }
 
@@ -602,47 +641,23 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
-  it('basic use(context)', async () => {
-    const ContextA = React.createServerContext('ContextA', '');
-    const ContextB = React.createServerContext('ContextB', 'B');
-
-    function ServerComponent() {
-      return use(ContextA) + use(ContextB);
-    }
-    function Server() {
-      return (
-        <ContextA.Provider value="A">
-          <ServerComponent />
-        </ContextA.Provider>
-      );
-    }
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      // Client uses a different renderer.
-      // We reset _currentRenderer here to not trigger a warning about multiple
-      // renderers concurrently using this context
-      ContextA._currentRenderer = null;
-      root.render(<Client />);
-    });
-    expect(container.innerHTML).toBe('AB');
-  });
-
   it('use(promise) in multiple components', async () => {
     function Child({prefix}) {
-      return prefix + use(Promise.resolve('C')) + use(Promise.resolve('D'));
+      return (
+        prefix +
+        ReactServer.use(Promise.resolve('C')) +
+        ReactServer.use(Promise.resolve('D'))
+      );
     }
 
     function Parent() {
       return (
-        <Child prefix={use(Promise.resolve('A')) + use(Promise.resolve('B'))} />
+        <Child
+          prefix={
+            ReactServer.use(Promise.resolve('A')) +
+            ReactServer.use(Promise.resolve('B'))
+          }
+        />
       );
     }
 
@@ -675,7 +690,11 @@ describe('ReactFlightDOMBrowser', () => {
     await expect(promiseB).rejects.toThrow('Oops!');
 
     function Server() {
-      return use(promiseA) + use(promiseB) + use(promiseC);
+      return (
+        ReactServer.use(promiseA) +
+        ReactServer.use(promiseB) +
+        ReactServer.use(promiseC)
+      );
     }
 
     const reportedErrors = [];
@@ -735,7 +754,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     // This will never suspend because the thenable already resolved
     function Server() {
-      return use(thenable);
+      return ReactServer.use(thenable);
     }
 
     const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
@@ -763,7 +782,7 @@ describe('ReactFlightDOMBrowser', () => {
         },
       };
       try {
-        return use(thenable);
+        return ReactServer.use(thenable);
       } catch {
         throw new Error(
           '`use` should not suspend because the thenable resolved synchronously.',
@@ -967,7 +986,7 @@ describe('ReactFlightDOMBrowser', () => {
     const ClientRef = clientExports(Client);
 
     const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={greet.bind(null, 'Hello', 'World')} />,
+      <ClientRef action={greet.bind(null, 'Hello').bind(null, 'World')} />,
       webpackMap,
     );
 
@@ -1059,6 +1078,58 @@ describe('ReactFlightDOMBrowser', () => {
     }
   });
 
+  it('can use the same function twice as a server action', async () => {
+    let actionProxy1;
+    let actionProxy2;
+
+    function Client({action1, action2}) {
+      actionProxy1 = action1;
+      actionProxy2 = action2;
+      return 'Click Me';
+    }
+
+    function greet(text) {
+      return 'Hello ' + text;
+    }
+
+    const ServerModule = serverExports({
+      greet,
+      greet2: greet,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action1={ServerModule.greet} action2={ServerModule.greet2} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy1).toBe('function');
+    expect(actionProxy1).not.toBe(greet);
+
+    // TODO: Ideally flight would be encoding this the same.
+    expect(actionProxy1).not.toBe(actionProxy2);
+
+    const result = await actionProxy1('world');
+    expect(result).toBe('Hello world');
+  });
+
   it('supports Float hints before the first await in server components in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1067,9 +1138,9 @@ describe('ReactFlightDOMBrowser', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      ReactServerDOM.preload('before', {as: 'style'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      ReactServerDOM.preload('after', {as: 'style'});
       return <ClientComponent />;
     }
 
@@ -1101,7 +1172,19 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link href="before" rel="preload" as="style">',
+      // Currently the react-dom entrypoint loads the fiber implementation
+      // even if you never pull in the the client APIs. this causes the fiber
+      // dispatcher to be present even for Flight ReactDOM calls. This is not what
+      // you would have in a real application but given we're runnign flight and
+      // fiber the in the same scope it's unavoidable until we make the entrypoint
+      // not automatically pull in the fiber implementation. This test currently
+      // asserts this be demonstrating that the preload call after the await point
+      // is written to the document before the call before it. We still demonstrate that
+      // flight handled the sync call because if the fiber implementation did it would appear
+      // before the after call. In the future we will change this assertion once the fiber
+      // implementation no long automatically gets pulled in
+      '<link rel="preload" href="after" as="style"><link rel="preload" href="before" as="style">',
+      // '<link rel="preload" href="before" as="style">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
@@ -1171,5 +1254,156 @@ describe('ReactFlightDOMBrowser', () => {
       '<!DOCTYPE html><html><head>' +
         '</head><body><p>hello world</p></body></html>',
     );
+  });
+
+  // @gate enablePostpone
+  it('supports postpone in Server Components', async () => {
+    function Server() {
+      React.unstable_postpone('testing postpone');
+      return 'Not shown';
+    }
+
+    let postponed = null;
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onPostpone(reason) {
+          postponed = reason;
+        },
+      },
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
+  });
+
+  it('should not continue rendering after the reader cancels', async () => {
+    let hasLoaded = false;
+    let resolve;
+    let rendered = false;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      rendered = true;
+      return 'Done';
+    }
+    const errors = [];
+    const stream = await ReactServerDOMServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <Wait />
+        </Suspense>
+      </div>,
+      null,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    expect(rendered).toBe(false);
+
+    const reader = stream.getReader();
+    await reader.read();
+    await reader.cancel();
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    hasLoaded = true;
+    resolve();
+
+    await jest.runAllTimers();
+
+    expect(rendered).toBe(false);
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
+  });
+
+  // @gate enablePostpone
+  it('postpones when abort passes a postpone signal', async () => {
+    const infinitePromise = new Promise(() => {});
+    function Server() {
+      return infinitePromise;
+    }
+
+    let postponed = null;
+    let error = null;
+
+    const controller = new AbortController();
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onError(x) {
+          error = x;
+        },
+        onPostpone(reason) {
+          postponed = reason;
+        },
+        signal: controller.signal,
+      },
+    );
+
+    try {
+      React.unstable_postpone('testing postpone');
+    } catch (reason) {
+      controller.abort(reason);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
+    expect(error).toBe(null);
   });
 });

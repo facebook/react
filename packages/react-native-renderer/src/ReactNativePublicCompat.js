@@ -16,22 +16,22 @@ import {
   legacySendAccessibilityEvent,
   getNodeFromPublicInstance,
   getNativeTagFromPublicInstance,
+  getInternalInstanceHandleFromPublicInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {
   findHostInstance,
   findHostInstanceWithWarning,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
 ): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
@@ -86,7 +86,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
 
 export function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    const owner = ReactCurrentOwner.current;
+    const owner = ReactSharedInternals.owner;
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
@@ -142,11 +142,12 @@ export function findNodeHandle(componentOrHandle: any): ?number {
   }
 
   if (hostInstance == null) {
+    // $FlowFixMe[incompatible-return] Flow limitation in refining an opaque type
     return hostInstance;
   }
 
-  // $FlowFixMe[incompatible-type] For compatibility with legacy renderer instances
   if (hostInstance._nativeTag != null) {
+    // $FlowFixMe[incompatible-return] For compatibility with legacy renderer instances
     return hostInstance._nativeTag;
   }
 
@@ -216,4 +217,57 @@ export function getNodeFromInternalInstanceHandle(
     // $FlowExpectedError[incompatible-use]
     internalInstanceHandle.stateNode.node
   );
+}
+
+// Should have been PublicInstance from ReactFiberConfigFabric
+type FabricPublicInstance = mixed;
+// Should have been PublicInstance from ReactFiberConfigNative
+type PaperPublicInstance = HostComponent<mixed>;
+
+// Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
+export function isChildPublicInstance(
+  parentInstance: FabricPublicInstance | PaperPublicInstance,
+  childInstance: FabricPublicInstance | PaperPublicInstance,
+): boolean {
+  if (__DEV__) {
+    // Paper
+    if (
+      // $FlowExpectedError[incompatible-type]
+      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+      parentInstance._internalFiberInstanceHandleDEV &&
+      // $FlowExpectedError[incompatible-type]
+      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+      childInstance._internalFiberInstanceHandleDEV
+    ) {
+      return doesFiberContain(
+        // $FlowExpectedError[incompatible-call]
+        parentInstance._internalFiberInstanceHandleDEV,
+        // $FlowExpectedError[incompatible-call]
+        childInstance._internalFiberInstanceHandleDEV,
+      );
+    }
+
+    const parentInternalInstanceHandle =
+      // $FlowExpectedError[incompatible-call] Type for parentInstance should have been PublicInstance from ReactFiberConfigFabric.
+      getInternalInstanceHandleFromPublicInstance(parentInstance);
+    const childInternalInstanceHandle =
+      // $FlowExpectedError[incompatible-call] Type for childInstance should have been PublicInstance from ReactFiberConfigFabric.
+      getInternalInstanceHandleFromPublicInstance(childInstance);
+
+    // Fabric
+    if (
+      parentInternalInstanceHandle != null &&
+      childInternalInstanceHandle != null
+    ) {
+      return doesFiberContain(
+        parentInternalInstanceHandle,
+        childInternalInstanceHandle,
+      );
+    }
+
+    // Means that one instance is from Fabric and other is from Paper.
+    return false;
+  } else {
+    throw new Error('isChildPublicInstance() is not available in production.');
+  }
 }

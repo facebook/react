@@ -8,9 +8,6 @@
   justify-content: center;
 }
 
-.Paragraph {
-  text-align: center;
-}
 
 .ErrorMessage {
   margin: 0.5rem 0;
@@ -34,29 +31,4 @@
 .Header {
   font-size: var(--font-size-sans-large);
   margin-bottom: 0.5rem;
-}
-
-.WelcomeInstructionsList {
-}
-
-.WelcomeInstructionsListItem {
-  display: flex;
-  align-items: center;
-  line-height: 1.5rem;
-  counter-increment: li;
-}
-
-.WelcomeInstructionsListItem::before {
-  content: counter(li);
-  margin-right: 0.5rem;
-}
-
-.WelcomeInstructionsListItemLink {
-  color: var(--color-link);
-  margin-left: 0.25rem;
-  margin-right: 0.25rem;
-}
-
-.ImportButtonLabel {
-  margin-left: 0.25rem;
 }

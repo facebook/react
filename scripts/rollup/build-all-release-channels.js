@@ -8,12 +8,12 @@ const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
-
+const shell = require('shelljs');
 const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
-  nextChannelLabel,
+  canaryChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -115,11 +115,7 @@ function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
     // Identical to `oss-stable` but with real, semver versions. This is what
     // will get published to @latest.
-    spawnSync('cp', [
-      '-r',
-      buildDir + '/node_modules',
-      buildDir + '/oss-stable-semver',
-    ]);
+    shell.cp('-r', buildDir + '/node_modules', buildDir + '/oss-stable-semver');
 
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
@@ -127,7 +123,7 @@ function processStable(buildDir) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        version + '-' + canaryChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -140,7 +136,7 @@ function processStable(buildDir) {
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/oss-stable',
-      ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+      ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
     );
 
     // Now do the semver ones
@@ -162,25 +158,35 @@ function processStable(buildDir) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    const hash = crypto.createHash('sha1');
     for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
-        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
+      ReactVersion + '-www-classic-%FILEHASH%'
     );
   }
 
-  // Update remaining placeholders with next channel version
+  [
+    buildDir + '/react-native/implementations/',
+    buildDir + '/facebook-react-native/',
+  ].forEach(reactNativeBuildDir => {
+    if (fs.existsSync(reactNativeBuildDir)) {
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        reactNativeBuildDir,
+        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
+      );
+    }
+  });
+
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {
@@ -216,25 +222,35 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    const hash = crypto.createHash('sha1');
     for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
-        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
+      ReactVersion + '-www-modern-%FILEHASH%'
     );
   }
 
-  // Update remaining placeholders with next channel version
+  [
+    buildDir + '/react-native/implementations/',
+    buildDir + '/facebook-react-native/',
+  ].forEach(reactNativeBuildDir => {
+    if (fs.existsSync(reactNativeBuildDir)) {
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        reactNativeBuildDir,
+        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
+      );
+    }
+  });
+
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {
@@ -346,9 +362,11 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
+    const fileHash = crypto.createHash('sha1');
+    fileHash.update(originalText);
     const replacedText = originalText.replaceAll(
       PLACEHOLDER_REACT_VERSION,
-      newVersion
+      newVersion.replace(/%FILEHASH%/g, fileHash.digest('hex').slice(0, 8))
     );
     fs.writeFileSync(artifactFilename, replacedText);
   }

@@ -244,7 +244,12 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
     case 'select':
-      return tag === 'option' || tag === 'optgroup' || tag === '#text';
+      return (
+        tag === 'hr' ||
+        tag === 'option' ||
+        tag === 'optgroup' ||
+        tag === '#text'
+      );
     case 'optgroup':
       return tag === 'option' || tag === '#text';
     // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
@@ -436,7 +441,7 @@ const didWarn: {[string]: boolean} = {};
 function validateDOMNesting(
   childTag: string,
   ancestorInfo: AncestorInfoDev,
-): void {
+): boolean {
   if (__DEV__) {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     const parentInfo = ancestorInfo.current;
@@ -450,7 +455,7 @@ function validateDOMNesting(
       : findInvalidAncestorForTag(childTag, ancestorInfo);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
-      return;
+      return true;
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
@@ -459,7 +464,7 @@ function validateDOMNesting(
       // eslint-disable-next-line react-internal/safe-string-coercion
       String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
 
@@ -472,49 +477,56 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s',
+        'In HTML, %s cannot be a child of <%s>.%s\n' +
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
         info,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.',
+        'In HTML, %s cannot be a descendant of <%s>.\n' +
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
       );
     }
+    return false;
   }
+  return true;
 }
 
-function validateTextNesting(childText: string, parentTag: string): void {
+function validateTextNesting(childText: string, parentTag: string): boolean {
   if (__DEV__) {
     if (isTagValidWithParent('#text', parentTag)) {
-      return;
+      return true;
     }
 
     // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey = '#text|' + parentTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
 
     if (/\S/.test(childText)) {
       console.error(
-        'validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.',
+        'In HTML, text nodes cannot be a child of <%s>.\n' +
+          'This will cause a hydration error.',
         parentTag,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. ' +
+        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.',
+          'each line of your source code.\n' +
+          'This will cause a hydration error.',
         parentTag,
       );
     }
+    return false;
   }
+  return true;
 }
 
 export {updatedAncestorInfoDev, validateDOMNesting, validateTextNesting};

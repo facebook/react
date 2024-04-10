@@ -104,7 +104,6 @@ export default function SearchInput({
           <div className={styles.LeftVRule} />
           <Button
             data-testname={testName ? `${testName}-PreviousButton` : undefined}
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={goToPreviousResult}
             title={
@@ -117,7 +116,6 @@ export default function SearchInput({
           </Button>
           <Button
             data-testname={testName ? `${testName}-NextButton` : undefined}
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={goToNextResult}
             title={
@@ -129,7 +127,6 @@ export default function SearchInput({
           </Button>
           <Button
             data-testname={testName ? `${testName}-ResetButton` : undefined}
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={resetSearch}
             title="Reset search">

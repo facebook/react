@@ -15,20 +15,21 @@ import {
 } from 'react-devtools-shared/src/backendAPI';
 import {fillInPath} from 'react-devtools-shared/src/hydration';
 
-import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {LRUCache} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 import type {
   Element,
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
-import UserError from 'react-devtools-shared/src/errors/UserError';
-import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
+  InspectedElementPath,
+} from 'react-devtools-shared/src/frontend/types';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -44,24 +45,18 @@ const inspectedElementCache: LRUCache<number, InspectedElementFrontend> =
     max: 25,
   });
 
-type Path = Array<string | number>;
-
 type InspectElementReturnType = [
   InspectedElementFrontend,
   InspectedElementResponseType,
 ];
 
-export function inspectElement({
-  bridge,
-  element,
-  path,
-  rendererID,
-}: {
+export function inspectElement(
   bridge: FrontendBridge,
   element: Element,
-  path: Path | null,
+  path: InspectedElementPath | null,
   rendererID: number,
-}): Promise<InspectElementReturnType> {
+  shouldListenToPauseEvents: boolean = false,
+): Promise<InspectElementReturnType> {
   const {id} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.
@@ -69,13 +64,14 @@ export function inspectElement({
   // In this case, we need to tell it to resend the full data.
   const forceFullData = !inspectedElementCache.has(id);
 
-  return inspectElementAPI({
+  return inspectElementAPI(
     bridge,
     forceFullData,
     id,
     path,
     rendererID,
-  }).then((data: any) => {
+    shouldListenToPauseEvents,
+  ).then((data: any) => {
     const {type} = data;
 
     let inspectedElement;
@@ -141,12 +137,14 @@ export function inspectElement({
           inspectedElement = {...inspectedElement};
 
           // Merge hydrated data
-          fillInPath(
-            inspectedElement,
-            value,
-            ((path: any): Path),
-            hydrateHelper(value, ((path: any): Path)),
-          );
+          if (path != null) {
+            fillInPath(
+              inspectedElement,
+              value,
+              path,
+              hydrateHelper(value, path),
+            );
+          }
 
           inspectedElementCache.set(id, inspectedElement);
 

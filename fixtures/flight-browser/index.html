@@ -73,12 +73,6 @@
         let data = ReactServerDOMClient.createFromFetch(
           fetch(url)
         );
-        // The client also supports XHR streaming.
-        // var xhr = new XMLHttpRequest();
-        // xhr.open('GET', url);
-        // let data = ReactServerDOMClient.createFromXHR(xhr);
-        // xhr.send();
-
         renderResult(data);
       }
 

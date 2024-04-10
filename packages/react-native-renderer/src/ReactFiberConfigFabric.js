@@ -7,13 +7,20 @@
  * @flow
  */
 
-import type {TouchedViewDataAtPoint, ViewConfig} from './ReactNativeTypes';
+import type {
+  InspectorData,
+  TouchedViewDataAtPoint,
+  ViewConfig,
+} from './ReactNativeTypes';
 import {create, diff} from './ReactNativeAttributePayload';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
+  type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 
 // Modules provided by RN:
@@ -28,7 +35,6 @@ import {
 
 const {
   createNode,
-  cloneNode,
   cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps,
   cloneNodeWithNewProps,
@@ -42,7 +48,7 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {diffInCommitPhase} from 'shared/ReactFeatureFlags';
+import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -82,7 +88,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
-export type ChildSet = Object;
+export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
 }>;
@@ -93,6 +99,7 @@ export type NoTimeout = -1;
 export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
+  getInspectorDataForInstance?: (instance: Fiber | null) => InspectorData,
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
   getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
@@ -115,7 +122,6 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoMicrotasks';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
@@ -270,37 +276,26 @@ function getPublicTextInstance(
 export function getPublicInstanceFromInternalInstanceHandle(
   internalInstanceHandle: InternalInstanceHandle,
 ): null | PublicInstance | PublicTextInstance {
+  const instance = internalInstanceHandle.stateNode;
+
+  // React resets all the fields in the fiber when the component is unmounted
+  // to prevent memory leaks.
+  if (instance == null) {
+    return null;
+  }
+
   if (internalInstanceHandle.tag === HostText) {
-    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    const textInstance: TextInstance = instance;
     return getPublicTextInstance(textInstance, internalInstanceHandle);
   }
 
-  const instance: Instance = internalInstanceHandle.stateNode;
-  return getPublicInstance(instance);
+  const elementInstance: Instance = internalInstanceHandle.stateNode;
+  return getPublicInstance(elementInstance);
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
   return null;
-}
-
-export function prepareUpdate(
-  instance: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  hostContext: HostContext,
-): null | Object {
-  if (diffInCommitPhase) {
-    return null;
-  }
-  const viewConfig = instance.canonical.viewConfig;
-  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
-  // TODO: If the event handlers have changed, we need to update the current props
-  // in the commit phase but there is no host config hook to do it yet.
-  // So instead we hack it by updating it in the render phase.
-  instance.canonical.currentProps = newProps;
-  return updatePayload;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -317,7 +312,20 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): * {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
+
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -357,22 +365,18 @@ export const supportsPersistence = true;
 
 export function cloneInstance(
   instance: Instance,
-  updatePayload: null | Object,
   type: string,
   oldProps: Props,
   newProps: Props,
-  internalInstanceHandle: InternalInstanceHandle,
   keepChildren: boolean,
-  recyclableInstance: null | Instance,
+  newChildSet: ?ChildSet,
 ): Instance {
-  if (diffInCommitPhase) {
-    const viewConfig = instance.canonical.viewConfig;
-    updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
-    // TODO: If the event handlers have changed, we need to update the current props
-    // in the commit phase but there is no host config hook to do it yet.
-    // So instead we hack it by updating it in the render phase.
-    instance.canonical.currentProps = newProps;
-  }
+  const viewConfig = instance.canonical.viewConfig;
+  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
+  // TODO: If the event handlers have changed, we need to update the current props
+  // in the commit phase but there is no host config hook to do it yet.
+  // So instead we hack it by updating it in the render phase.
+  instance.canonical.currentProps = newProps;
 
   const node = instance.node;
   let clone;
@@ -380,20 +384,30 @@ export function cloneInstance(
     if (updatePayload !== null) {
       clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      if (diffInCommitPhase) {
-        // No changes
-        return instance;
-      } else {
-        clone = cloneNode(node);
-      }
+      // No changes
+      return instance;
     }
   } else {
-    if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+    // If passChildrenWhenCloningPersistedNodes is enabled, children will be non-null
+    if (newChildSet != null) {
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(
+          node,
+          newChildSet,
+          updatePayload,
+        );
+      } else {
+        clone = cloneNodeWithNewChildren(node, newChildSet);
+      }
     } else {
-      clone = cloneNodeWithNewChildren(node);
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+      } else {
+        clone = cloneNodeWithNewChildren(node);
+      }
     }
   }
+
   return {
     node: clone,
     canonical: instance.canonical,
@@ -404,7 +418,6 @@ export function cloneHiddenInstance(
   instance: Instance,
   type: string,
   props: Props,
-  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
@@ -421,20 +434,27 @@ export function cloneHiddenInstance(
 export function cloneHiddenTextInstance(
   instance: Instance,
   text: string,
-  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   throw new Error('Not yet implemented.');
 }
 
-export function createContainerChildSet(container: Container): ChildSet {
-  return createChildNodeSet(container);
+export function createContainerChildSet(): ChildSet {
+  if (passChildrenWhenCloningPersistedNodes) {
+    return [];
+  } else {
+    return createChildNodeSet();
+  }
 }
 
 export function appendChildToContainerChildSet(
   childSet: ChildSet,
   child: Instance | TextInstance,
 ): void {
-  appendChildNodeToSet(childSet, child.node);
+  if (passChildrenWhenCloningPersistedNodes) {
+    childSet.push(child.node);
+  } else {
+    appendChildNodeToSet(childSet, child.node);
+  }
 }
 
 export function finalizeContainerChildren(
@@ -447,7 +467,9 @@ export function finalizeContainerChildren(
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
-): void {}
+): void {
+  // Noop - children will be replaced in finalizeContainerChildren
+}
 
 export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');
@@ -492,3 +514,14 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+
+// -------------------
+//     Microtasks
+// -------------------
+
+export const supportsMicrotasks: boolean =
+  typeof RN$enableMicrotasksInReact !== 'undefined' &&
+  !!RN$enableMicrotasksInReact;
+
+export const scheduleMicrotask: any =
+  typeof queueMicrotask === 'function' ? queueMicrotask : scheduleTimeout;

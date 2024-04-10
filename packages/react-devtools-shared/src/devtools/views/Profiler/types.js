@@ -7,8 +7,10 @@
  * @flow
  */
 
-import type {ElementType} from 'react-devtools-shared/src/types';
-import type {SerializedElement} from '../Components/types';
+import type {
+  ElementType,
+  SerializedElement,
+} from 'react-devtools-shared/src/frontend/types';
 import type {
   TimelineData,
   TimelineDataExport,

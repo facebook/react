@@ -8,7 +8,7 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
@@ -16,6 +16,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -25,11 +26,23 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
+
+export {
+  registerServerReference,
+  registerClientReference,
+  createClientModuleProxy,
+} from './ReactFlightWebpackReferences';
+
 type Options = {
+  environmentName?: string,
   identifierPrefix?: string,
   signal?: AbortSignal,
-  context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
 };
 
 function renderToReadableStream(
@@ -41,8 +54,9 @@ function renderToReadableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -65,7 +79,10 @@ function renderToReadableStream(
       pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel: (reason): ?Promise<void> => {},
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
     {highWaterMark: 0},
@@ -83,8 +100,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(webpackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
-export {renderToReadableStream, decodeReply};
+export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};

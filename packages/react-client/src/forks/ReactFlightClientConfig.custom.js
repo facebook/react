@@ -23,10 +23,10 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$config: any;
+declare const $$$config: any;
 
-export type Response = any;
-export opaque type SSRManifest = mixed;
+export opaque type ModuleLoading = mixed;
+export opaque type SSRModuleMap = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;
@@ -36,15 +36,16 @@ export const resolveServerReference = $$$config.resolveServerReference;
 export const preloadModule = $$$config.preloadModule;
 export const requireModule = $$$config.requireModule;
 export const dispatchHint = $$$config.dispatchHint;
+export const prepareDestinationForModule =
+  $$$config.prepareDestinationForModule;
+export const usedWithSSR = true;
 
 export opaque type Source = mixed;
 
-export type UninitializedModel = string;
-export const parseModel = $$$config.parseModel;
-
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
-export const supportsBinaryStreams = $$$config.supportsBinaryStreams;
 export const createStringDecoder = $$$config.createStringDecoder;
 export const readPartialStringChunk = $$$config.readPartialStringChunk;
 export const readFinalStringChunk = $$$config.readFinalStringChunk;
+
+export const printToConsole = $$$config.printToConsole;

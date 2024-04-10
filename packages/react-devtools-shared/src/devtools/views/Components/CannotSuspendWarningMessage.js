@@ -13,7 +13,7 @@ import {StoreContext} from '../context';
 import {
   ComponentFilterElementType,
   ElementTypeSuspense,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 export default function CannotSuspendWarningMessage(): React.Node {
   const store = useContext(StoreContext);

@@ -14,7 +14,6 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {
   ClassComponent,
   HostRoot,
@@ -36,6 +35,7 @@ import {
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
@@ -103,7 +103,6 @@ function unwindWork(
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
       if (
         (flags & ShouldCapture) !== NoFlags &&
@@ -162,7 +161,12 @@ function unwindWork(
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      const context: ReactContext<any> = workInProgress.type._context;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
@@ -234,7 +238,6 @@ function unwindInterruptedWork(
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
-      resetMutableSourceWorkInProgressVersions();
       break;
     }
     case HostHoistable:
@@ -253,7 +256,12 @@ function unwindInterruptedWork(
       popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
-      const context: ReactContext<any> = interruptedWork.type._context;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = interruptedWork.type;
+      } else {
+        context = interruptedWork.type._context;
+      }
       popProvider(context, interruptedWork);
       break;
     case OffscreenComponent:

@@ -140,6 +140,7 @@ function extractEvents(
       SyntheticEventCtor = SyntheticTransitionEvent;
       break;
     case 'scroll':
+    case 'scrollend':
       SyntheticEventCtor = SyntheticUIEvent;
       break;
     case 'wheel':
@@ -199,7 +200,7 @@ function extractEvents(
       // nonDelegatedEvents list in DOMPluginEventSystem.
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
-      domEventName === 'scroll';
+      (domEventName === 'scroll' || domEventName === 'scrollend');
 
     const listeners = accumulateSinglePhaseListeners(
       targetInst,

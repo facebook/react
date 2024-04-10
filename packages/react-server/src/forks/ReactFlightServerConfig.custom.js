@@ -6,21 +6,23 @@
  *
  * @flow
  */
+
 import type {Request} from 'react-server/src/ReactFlightServer';
 
-export * from '../ReactFlightServerConfigStream';
 export * from '../ReactFlightServerConfigBundlerCustom';
 
-export type Hints = null;
-export type HintModel = '';
+export * from '../ReactFlightServerConfigDebugNoop';
+
+export type Hints = any;
+export type HintCode = any;
+// eslint-disable-next-line no-unused-vars
+export type HintModel<T: any> = any;
 
 export const isPrimaryRenderer = false;
 
-export const prepareHostDispatcher = () => {};
-
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
-export function createHints(): null {
+export function createHints(): any {
   return null;
 }

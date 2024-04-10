@@ -14,8 +14,26 @@ module.exports = {
     Proxy: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+
+    Int8Array: 'readonly',
+    Uint8Array: 'readonly',
+    Uint8ClampedArray: 'readonly',
+    Int16Array: 'readonly',
+    Uint16Array: 'readonly',
+    Int32Array: 'readonly',
+    Uint32Array: 'readonly',
+    Float32Array: 'readonly',
+    Float64Array: 'readonly',
+    BigInt64Array: 'readonly',
+    BigUint64Array: 'readonly',
+    DataView: 'readonly',
+    ArrayBuffer: 'readonly',
+
     Reflect: 'readonly',
     globalThis: 'readonly',
+
+    FinalizationRegistry: 'readonly',
+
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
@@ -24,20 +42,23 @@ module.exports = {
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
     nativeFabricUIManager: 'readonly',
+    // RN flag to enable microtasks
+    RN$enableMicrotasksInReact: 'readonly',
     // Trusted Types
     trustedTypes: 'readonly',
     // RN supports this
     setImmediate: 'readonly',
     // Scheduler profiling
-    Int32Array: 'readonly',
-    ArrayBuffer: 'readonly',
-
     TaskController: 'readonly',
     reportError: 'readonly',
     AggregateError: 'readonly',
 
+    // Node Feature Detection
+    process: 'readonly',
+
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // jest
     jest: 'readonly',
