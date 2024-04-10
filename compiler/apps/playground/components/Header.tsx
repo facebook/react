@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RefreshIcon, ShareIcon, TrashIcon } from "@heroicons/react/outline";
+import { RefreshIcon, ShareIcon } from "@heroicons/react/outline";
 import { CheckIcon } from "@heroicons/react/solid";
 import clsx from "clsx";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
-import { defaultStore, minimalStore } from "../lib/defaultStore";
+import { defaultStore } from "../lib/defaultStore";
 import Logo from "./Logo";
 import { useStoreDispatch } from "./StoreContext";
 
@@ -30,13 +30,6 @@ export default function Header() {
       */
       closeSnackbar();
       dispatchStore({ type: "setStore", payload: { store: defaultStore } });
-    }
-  };
-
-  const handleWipe = () => {
-    if (confirm("Are you sure you want to wipe the playground?")) {
-      closeSnackbar();
-      dispatchStore({ type: "setStore", payload: { store: minimalStore } });
     }
   };
 
@@ -61,14 +54,6 @@ export default function Header() {
         <p className="hidden select-none sm:block">React Compiler Playground</p>
       </div>
       <div className="flex items-center text-[15px] gap-4">
-        <button
-          title="Wipe Playground"
-          className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
-          onClick={handleWipe}
-        >
-          <TrashIcon className="w-5 h-5" />
-          <p className="hidden sm:block">Wipe</p>
-        </button>
         <button
           title="Reset Playground"
           className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
