@@ -1007,367 +1007,6 @@ if (__DEV__) {
       return event === currentReplayingEvent;
     }
 
-    // same object across all transitions.
-
-    var sharedNotPendingObject = {
-      pending: false,
-      data: null,
-      method: null,
-      action: null
-    };
-    var NotPending = Object.freeze(sharedNotPendingObject);
-
-    function resolveDispatcher() {
-      // Copied from react/src/ReactHooks.js. It's the same thing but in a
-      // different package.
-      var dispatcher = ReactSharedInternals.H;
-
-      {
-        if (dispatcher === null) {
-          error(
-            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
-              " one of the following reasons:\n" +
-              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
-              "2. You might be breaking the Rules of Hooks\n" +
-              "3. You might have more than one copy of React in the same app\n" +
-              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
-          );
-        }
-      } // Will result in a null access error if accessed outside render phase. We
-      // intentionally don't throw our own error because this is in a hot path.
-      // Also helps ensure this is inlined.
-
-      return dispatcher;
-    }
-
-    function useFormStatus() {
-      {
-        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
-
-        return dispatcher.useHostTransitionStatus();
-      }
-    }
-    function useFormState(action, initialState, permalink) {
-      {
-        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-        return dispatcher.useFormState(action, initialState, permalink);
-      }
-    }
-
-    var valueStack = [];
-    var fiberStack;
-
-    {
-      fiberStack = [];
-    }
-
-    var index = -1;
-
-    function createCursor(defaultValue) {
-      return {
-        current: defaultValue
-      };
-    }
-
-    function pop(cursor, fiber) {
-      if (index < 0) {
-        {
-          error("Unexpected pop.");
-        }
-
-        return;
-      }
-
-      {
-        if (fiber !== fiberStack[index]) {
-          error("Unexpected Fiber popped.");
-        }
-      }
-
-      cursor.current = valueStack[index];
-      valueStack[index] = null;
-
-      {
-        fiberStack[index] = null;
-      }
-
-      index--;
-    }
-
-    function push(cursor, value, fiber) {
-      index++;
-      valueStack[index] = cursor.current;
-
-      {
-        fiberStack[index] = fiber;
-      }
-
-      cursor.current = value;
-    }
-
-    var contextStackCursor$1 = createCursor(null);
-    var contextFiberStackCursor = createCursor(null);
-    var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
-    // NOTE: Since forms cannot be nested, and this feature is only implemented by
-    // React DOM, we don't technically need this to be a stack. It could be a single
-    // module variable instead.
-
-    var hostTransitionProviderCursor = createCursor(null); // TODO: This should initialize to NotPendingTransition, a constant
-    // imported from the fiber config. However, because of a cycle in the module
-    // graph, that value isn't defined during this module's initialization. I can't
-    // think of a way to work around this without moving that value out of the
-    // fiber config. For now, the "no provider" case is handled when reading,
-    // inside useHostTransitionStatus.
-
-    var HostTransitionContext = {
-      $$typeof: REACT_CONTEXT_TYPE,
-      Provider: null,
-      Consumer: null,
-      _currentValue: null,
-      _currentValue2: null,
-      _threadCount: 0
-    };
-
-    function requiredContext(c) {
-      {
-        if (c === null) {
-          error(
-            "Expected host context to exist. This error is likely caused by a bug " +
-              "in React. Please file an issue."
-          );
-        }
-      }
-
-      return c;
-    }
-
-    function getCurrentRootHostContainer() {
-      return rootInstanceStackCursor.current;
-    }
-
-    function getRootHostContainer() {
-      var rootInstance = requiredContext(rootInstanceStackCursor.current);
-      return rootInstance;
-    }
-
-    function getHostTransitionProvider() {
-      return hostTransitionProviderCursor.current;
-    }
-
-    function pushHostContainer(fiber, nextRootInstance) {
-      // Push current root instance onto the stack;
-      // This allows us to reset root when portals are popped.
-      push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
-      // This enables us to pop only Fibers that provide unique contexts.
-
-      push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
-      // However, we can't just call getRootHostContext() and push it because
-      // we'd have a different number of entries on the stack depending on
-      // whether getRootHostContext() throws somewhere in renderer code or not.
-      // So we push an empty value first. This lets us safely unwind on errors.
-
-      push(contextStackCursor$1, null, fiber);
-      var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
-
-      pop(contextStackCursor$1, fiber);
-      push(contextStackCursor$1, nextRootContext, fiber);
-    }
-
-    function popHostContainer(fiber) {
-      pop(contextStackCursor$1, fiber);
-      pop(contextFiberStackCursor, fiber);
-      pop(rootInstanceStackCursor, fiber);
-    }
-
-    function getHostContext() {
-      var context = requiredContext(contextStackCursor$1.current);
-      return context;
-    }
-
-    function pushHostContext(fiber) {
-      {
-        var stateHook = fiber.memoizedState;
-
-        if (stateHook !== null) {
-          // Only provide context if this fiber has been upgraded by a host
-          // transition. We use the same optimization for regular host context below.
-          push(hostTransitionProviderCursor, fiber, fiber);
-        }
-      }
-
-      var context = requiredContext(contextStackCursor$1.current);
-      var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
-
-      if (context !== nextContext) {
-        // Track the context and the Fiber that provided it.
-        // This enables us to pop only Fibers that provide unique contexts.
-        push(contextFiberStackCursor, fiber, fiber);
-        push(contextStackCursor$1, nextContext, fiber);
-      }
-    }
-
-    function popHostContext(fiber) {
-      if (contextFiberStackCursor.current === fiber) {
-        // Do not pop unless this Fiber provided the current context.
-        // pushHostContext() only pushes Fibers that provide unique contexts.
-        pop(contextStackCursor$1, fiber);
-        pop(contextFiberStackCursor, fiber);
-      }
-
-      {
-        if (hostTransitionProviderCursor.current === fiber) {
-          // Do not pop unless this Fiber provided the current context. This is mostly
-          // a performance optimization, but conveniently it also prevents a potential
-          // data race where a host provider is upgraded (i.e. memoizedState becomes
-          // non-null) during a concurrent event. This is a bit of a flaw in the way
-          // we upgrade host components, but because we're accounting for it here, it
-          // should be fine.
-          pop(hostTransitionProviderCursor, fiber); // When popping the transition provider, we reset the context value back
-          // to `null`. We can do this because you're not allowd to nest forms. If
-          // we allowed for multiple nested host transition providers, then we'd
-          // need to reset this to the parent provider's status.
-
-          {
-            HostTransitionContext._currentValue = null;
-          }
-        }
-      }
-    }
-
-    // $FlowFixMe[method-unbinding]
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-    /*
-     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-        var type =
-          (hasToStringTag && value[Symbol.toStringTag]) ||
-          value.constructor.name ||
-          "Object"; // $FlowFixMe[incompatible-return]
-
-        return type;
-      }
-    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
-    }
-
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return "" + value;
-    }
-
-    function checkAttributeStringCoercion(value, attributeName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` attribute is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            attributeName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    function checkKeyStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided key is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    function checkCSSPropertyStringCoercion(value, propName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` CSS property is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            propName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    function checkHtmlStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided HTML markup uses a value of unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-    function checkFormFieldValueStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "Form field values (value, checked, defaultValue, or defaultChecked props)" +
-              " must be strings, not %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-
     // This module only exists as an ESM wrapper around the external CommonJS
     var scheduleCallback$3 = Scheduler.unstable_scheduleCallback;
     var cancelCallback$1 = Scheduler.unstable_cancelCallback;
@@ -3017,6 +2656,9 @@ if (__DEV__) {
       f:
         /* flushSyncWork */
         noop$4,
+      r:
+        /* requestFormReset */
+        noop$4,
       D:
         /* prefetchDNS */
         noop$4,
@@ -3049,6 +2691,367 @@ if (__DEV__) {
         NoEventPriority,
       findDOMNode: null
     };
+
+    // same object across all transitions.
+
+    var sharedNotPendingObject = {
+      pending: false,
+      data: null,
+      method: null,
+      action: null
+    };
+    var NotPending = Object.freeze(sharedNotPendingObject);
+
+    function resolveDispatcher() {
+      // Copied from react/src/ReactHooks.js. It's the same thing but in a
+      // different package.
+      var dispatcher = ReactSharedInternals.H;
+
+      {
+        if (dispatcher === null) {
+          error(
+            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
+              " one of the following reasons:\n" +
+              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+              "2. You might be breaking the Rules of Hooks\n" +
+              "3. You might have more than one copy of React in the same app\n" +
+              "See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
+          );
+        }
+      } // Will result in a null access error if accessed outside render phase. We
+      // intentionally don't throw our own error because this is in a hot path.
+      // Also helps ensure this is inlined.
+
+      return dispatcher;
+    }
+
+    function useFormStatus() {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
+
+        return dispatcher.useHostTransitionStatus();
+      }
+    }
+    function useFormState(action, initialState, permalink) {
+      {
+        var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+        return dispatcher.useFormState(action, initialState, permalink);
+      }
+    }
+
+    var valueStack = [];
+    var fiberStack;
+
+    {
+      fiberStack = [];
+    }
+
+    var index = -1;
+
+    function createCursor(defaultValue) {
+      return {
+        current: defaultValue
+      };
+    }
+
+    function pop(cursor, fiber) {
+      if (index < 0) {
+        {
+          error("Unexpected pop.");
+        }
+
+        return;
+      }
+
+      {
+        if (fiber !== fiberStack[index]) {
+          error("Unexpected Fiber popped.");
+        }
+      }
+
+      cursor.current = valueStack[index];
+      valueStack[index] = null;
+
+      {
+        fiberStack[index] = null;
+      }
+
+      index--;
+    }
+
+    function push(cursor, value, fiber) {
+      index++;
+      valueStack[index] = cursor.current;
+
+      {
+        fiberStack[index] = fiber;
+      }
+
+      cursor.current = value;
+    }
+
+    var contextStackCursor$1 = createCursor(null);
+    var contextFiberStackCursor = createCursor(null);
+    var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
+    // NOTE: Since forms cannot be nested, and this feature is only implemented by
+    // React DOM, we don't technically need this to be a stack. It could be a single
+    // module variable instead.
+
+    var hostTransitionProviderCursor = createCursor(null); // TODO: This should initialize to NotPendingTransition, a constant
+    // imported from the fiber config. However, because of a cycle in the module
+    // graph, that value isn't defined during this module's initialization. I can't
+    // think of a way to work around this without moving that value out of the
+    // fiber config. For now, the "no provider" case is handled when reading,
+    // inside useHostTransitionStatus.
+
+    var HostTransitionContext = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      Provider: null,
+      Consumer: null,
+      _currentValue: null,
+      _currentValue2: null,
+      _threadCount: 0
+    };
+
+    function requiredContext(c) {
+      {
+        if (c === null) {
+          error(
+            "Expected host context to exist. This error is likely caused by a bug " +
+              "in React. Please file an issue."
+          );
+        }
+      }
+
+      return c;
+    }
+
+    function getCurrentRootHostContainer() {
+      return rootInstanceStackCursor.current;
+    }
+
+    function getRootHostContainer() {
+      var rootInstance = requiredContext(rootInstanceStackCursor.current);
+      return rootInstance;
+    }
+
+    function getHostTransitionProvider() {
+      return hostTransitionProviderCursor.current;
+    }
+
+    function pushHostContainer(fiber, nextRootInstance) {
+      // Push current root instance onto the stack;
+      // This allows us to reset root when portals are popped.
+      push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
+      // This enables us to pop only Fibers that provide unique contexts.
+
+      push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
+      // However, we can't just call getRootHostContext() and push it because
+      // we'd have a different number of entries on the stack depending on
+      // whether getRootHostContext() throws somewhere in renderer code or not.
+      // So we push an empty value first. This lets us safely unwind on errors.
+
+      push(contextStackCursor$1, null, fiber);
+      var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
+
+      pop(contextStackCursor$1, fiber);
+      push(contextStackCursor$1, nextRootContext, fiber);
+    }
+
+    function popHostContainer(fiber) {
+      pop(contextStackCursor$1, fiber);
+      pop(contextFiberStackCursor, fiber);
+      pop(rootInstanceStackCursor, fiber);
+    }
+
+    function getHostContext() {
+      var context = requiredContext(contextStackCursor$1.current);
+      return context;
+    }
+
+    function pushHostContext(fiber) {
+      {
+        var stateHook = fiber.memoizedState;
+
+        if (stateHook !== null) {
+          // Only provide context if this fiber has been upgraded by a host
+          // transition. We use the same optimization for regular host context below.
+          push(hostTransitionProviderCursor, fiber, fiber);
+        }
+      }
+
+      var context = requiredContext(contextStackCursor$1.current);
+      var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
+
+      if (context !== nextContext) {
+        // Track the context and the Fiber that provided it.
+        // This enables us to pop only Fibers that provide unique contexts.
+        push(contextFiberStackCursor, fiber, fiber);
+        push(contextStackCursor$1, nextContext, fiber);
+      }
+    }
+
+    function popHostContext(fiber) {
+      if (contextFiberStackCursor.current === fiber) {
+        // Do not pop unless this Fiber provided the current context.
+        // pushHostContext() only pushes Fibers that provide unique contexts.
+        pop(contextStackCursor$1, fiber);
+        pop(contextFiberStackCursor, fiber);
+      }
+
+      {
+        if (hostTransitionProviderCursor.current === fiber) {
+          // Do not pop unless this Fiber provided the current context. This is mostly
+          // a performance optimization, but conveniently it also prevents a potential
+          // data race where a host provider is upgraded (i.e. memoizedState becomes
+          // non-null) during a concurrent event. This is a bit of a flaw in the way
+          // we upgrade host components, but because we're accounting for it here, it
+          // should be fine.
+          pop(hostTransitionProviderCursor, fiber); // When popping the transition provider, we reset the context value back
+          // to `null`. We can do this because you're not allowd to nest forms. If
+          // we allowed for multiple nested host transition providers, then we'd
+          // need to reset this to the parent provider's status.
+
+          {
+            HostTransitionContext._currentValue = null;
+          }
+        }
+      }
+    }
+
+    // $FlowFixMe[method-unbinding]
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    /*
+     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+     *
+     * The functions in this module will throw an easier-to-understand,
+     * easier-to-debug exception with a clear errors message message explaining the
+     * problem. (Instead of a confusing exception thrown inside the implementation
+     * of the `value` object).
+     */
+    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+    function typeName(value) {
+      {
+        // toStringTag is needed for namespaced types like Temporal.Instant
+        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+        var type =
+          (hasToStringTag && value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object"; // $FlowFixMe[incompatible-return]
+
+        return type;
+      }
+    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+
+    function willCoercionThrow(value) {
+      {
+        try {
+          testStringCoercion(value);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+    }
+
+    function testStringCoercion(value) {
+      // If you ended up here by following an exception call stack, here's what's
+      // happened: you supplied an object or symbol value to React (as a prop, key,
+      // DOM attribute, CSS property, string ref, etc.) and when React tried to
+      // coerce it to a string using `'' + value`, an exception was thrown.
+      //
+      // The most common types that will cause this exception are `Symbol` instances
+      // and Temporal objects like `Temporal.Instant`. But any object that has a
+      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+      // exception. (Library authors do this to prevent users from using built-in
+      // numeric operators like `+` or comparison operators like `>=` because custom
+      // methods are needed to perform accurate arithmetic or comparison.)
+      //
+      // To fix the problem, coerce this object or symbol value to a string before
+      // passing it to React. The most reliable way is usually `String(value)`.
+      //
+      // To find which value is throwing, check the browser or debugger console.
+      // Before this exception was thrown, there should be `console.error` output
+      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+      // problem and how that type was used: key, atrribute, input value prop, etc.
+      // In most cases, this console output also shows the component and its
+      // ancestor components where the exception happened.
+      //
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      return "" + value;
+    }
+
+    function checkAttributeStringCoercion(value, attributeName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` attribute is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            attributeName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkKeyStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided key is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkCSSPropertyStringCoercion(value, propName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` CSS property is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            propName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkHtmlStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided HTML markup uses a value of unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+    function checkFormFieldValueStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "Form field values (value, checked, defaultValue, or defaultChecked props)" +
+              " must be strings, not %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
 
     function setCurrentUpdatePriority(
       newPriority, // Closure will consistently not inline this function when it has arity 1
@@ -16044,13 +16047,13 @@ if (__DEV__) {
         // once more of this function is implemented.
         function () {
           // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
+          requestFormResetImpl(formFiber);
           return callback(formData);
         }
       );
     }
 
-    function requestFormReset(formFiber) {
+    function requestFormResetImpl(formFiber) {
       var transition = requestCurrentTransition();
 
       {
@@ -36839,7 +36842,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-cc9b0875";
+    var ReactVersion = "19.0.0-www-classic-ca4f5be1";
 
     function createPortal$1(
       children,
@@ -46422,6 +46425,7 @@ if (__DEV__) {
           /* flushSyncWork */
           previousDispatcher.f,
         /* flushSyncWork */
+        r: requestFormReset$1,
         D:
           /* prefetchDNS */
           prefetchDNS$1,
@@ -46444,6 +46448,26 @@ if (__DEV__) {
           /* preinitModuleScript */
           preinitModuleScript
       };
+
+    function requestFormReset$1(form) {
+      var formInst = getInstanceFromNode(form);
+
+      if (
+        formInst !== null &&
+        formInst.tag === HostComponent &&
+        formInst.type === "form"
+      );
+      else {
+        // This form was either not rendered by this React renderer (or it's an
+        // invalid type). Try the next one.
+        //
+        // The last implementation in the sequence will throw an error.
+        previousDispatcher.r(
+          /* requestFormReset */
+          form
+        );
+      }
+    } // We expect this to get inlined. It is a function mostly to communicate the special nature of
     // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
     // these methods outside of render there is no way to know which Document or ShadowRoot is 'scoped'
     // and so we have to fall back to something universal. Currently we just refer to the global document.
@@ -50474,10 +50498,20 @@ if (__DEV__) {
 
     function noop() {}
 
+    function requestFormReset(element) {
+      throw new Error(
+        "Invalid form element. requestFormReset must be passed a form that was " +
+          "rendered by React."
+      );
+    }
+
     var DefaultDispatcher = {
       f:
         /* flushSyncWork */
         noop,
+      r:
+        /* requestFormReset */
+        requestFormReset,
       D:
         /* prefetchDNS */
         noop,

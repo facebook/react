@@ -335,6 +335,7 @@ var Internals = {
   Events: null,
   d: {
     f: noop$3,
+    r: noop$3,
     D: noop$3,
     C: noop$3,
     L: noop$3,
@@ -15198,6 +15199,7 @@ function getHoistableRoot(container) {
 var previousDispatcher = Internals.d;
 Internals.d = {
   f: flushSyncWork,
+  r: requestFormReset,
   D: prefetchDNS$1,
   C: preconnect$1,
   L: preload$1,
@@ -15210,6 +15212,11 @@ function flushSyncWork() {
   var previousWasRendering = previousDispatcher.f(),
     wasRendering = flushSyncWork$1();
   return previousWasRendering || wasRendering;
+}
+function requestFormReset(form) {
+  var formInst = getInstanceFromNode$1(form);
+  (null !== formInst && 5 === formInst.tag && "form" === formInst.type) ||
+    previousDispatcher.r(form);
 }
 var globalDocument = "undefined" === typeof document ? null : document;
 function preconnectAs(rel, href, crossOrigin) {
@@ -16101,7 +16108,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-4ee88fe7"
+    reconcilerVersion: "19.0.0-www-modern-29122695"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16799,7 +16806,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-4ee88fe7",
+  version: "19.0.0-www-modern-29122695",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16807,7 +16814,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-4ee88fe7",
+  version: "19.0.0-www-modern-29122695",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -17221,4 +17228,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-4ee88fe7";
+exports.version = "19.0.0-www-modern-29122695";

@@ -471,6 +471,7 @@ var Internals = {
   Events: null,
   d: {
     f: noop$3,
+    r: noop$3,
     D: noop$3,
     C: noop$3,
     L: noop$3,
@@ -15531,6 +15532,7 @@ function getHoistableRoot(container) {
 var previousDispatcher = Internals.d;
 Internals.d = {
   f: flushSyncWork,
+  r: requestFormReset,
   D: prefetchDNS$1,
   C: preconnect$1,
   L: preload$1,
@@ -15543,6 +15545,11 @@ function flushSyncWork() {
   var previousWasRendering = previousDispatcher.f(),
     wasRendering = flushSyncWork$1();
   return previousWasRendering || wasRendering;
+}
+function requestFormReset(form) {
+  var formInst = getInstanceFromNode$1(form);
+  (null !== formInst && 5 === formInst.tag && "form" === formInst.type) ||
+    previousDispatcher.r(form);
 }
 var globalDocument = "undefined" === typeof document ? null : document;
 function preconnectAs(rel, href, crossOrigin) {
@@ -17098,7 +17105,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1814 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-f6515b25",
+  version: "19.0.0-www-modern-e3932806",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17142,7 +17149,7 @@ var devToolsConfig$jscomp$inline_1814 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-f6515b25"
+  reconcilerVersion: "19.0.0-www-modern-e3932806"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17397,6 +17404,9 @@ exports.preloadModule = function (href, options) {
       });
     } else Internals.d.m(href);
 };
+exports.requestFormReset = function (form) {
+  Internals.d.r(form);
+};
 exports.unstable_batchedUpdates = unstable_batchedUpdates;
 exports.unstable_createEventHandle = function (type, options) {
   function eventHandle(target, callback) {
@@ -17434,7 +17444,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-f6515b25";
+exports.version = "19.0.0-www-modern-e3932806";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

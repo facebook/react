@@ -168,6 +168,10 @@ if (__DEV__) {
           /* flushSyncWork */
           previousDispatcher.f,
         /* flushSyncWork */
+        r:
+          /* requestFormReset */
+          previousDispatcher.r,
+        /* requestFormReset */
         D:
           /* prefetchDNS */
           prefetchDNS,

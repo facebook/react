@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-79e731cd";
+    var ReactVersion = "19.0.0-www-modern-d8e2224b";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2351,6 +2351,9 @@ if (__DEV__) {
     var ReactSharedInternals =
       React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
+    var ReactDOMSharedInternals =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
     // same object across all transitions.
 
     var sharedNotPendingObject = {
@@ -2360,9 +2363,6 @@ if (__DEV__) {
       action: null
     };
     var NotPending = Object.freeze(sharedNotPendingObject);
-
-    var ReactDOMSharedInternals =
-      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var previousDispatcher = ReactDOMSharedInternals.d;
     /* ReactDOMCurrentDispatcher */
@@ -2374,6 +2374,10 @@ if (__DEV__) {
           /* flushSyncWork */
           previousDispatcher.f,
         /* flushSyncWork */
+        r:
+          /* requestFormReset */
+          previousDispatcher.r,
+        /* requestFormReset */
         D:
           /* prefetchDNS */
           prefetchDNS,

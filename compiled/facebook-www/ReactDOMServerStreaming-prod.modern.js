@@ -284,17 +284,18 @@ if (!ReactSharedInternalsServer)
   throw Error(
     'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
   );
-var sharedNotPendingObject = {
+var ReactDOMSharedInternals =
+    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  sharedNotPendingObject = {
     pending: !1,
     data: null,
     method: null,
     action: null
   },
-  ReactDOMSharedInternals =
-    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
   f: previousDispatcher.f,
+  r: previousDispatcher.r,
   D: prefetchDNS,
   C: preconnect,
   L: preload,

@@ -1923,6 +1923,9 @@ if (__DEV__) {
       f:
         /* flushSyncWork */
         noop$3,
+      r:
+        /* requestFormReset */
+        noop$3,
       D:
         /* prefetchDNS */
         noop$3,
@@ -2678,6 +2681,14 @@ if (__DEV__) {
 
         return dispatcher.useFormState(action, initialState, permalink);
       }
+    }
+    function requestFormReset$1(form) {
+      Internals.d
+        /* ReactDOMCurrentDispatcher */
+        .r(
+          /* requestFormReset */
+          form
+        );
     }
 
     var valueStack = [];
@@ -23459,13 +23470,13 @@ if (__DEV__) {
         // once more of this function is implemented.
         function () {
           // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
+          requestFormResetImpl(formFiber);
           return callback(formData);
         }
       );
     }
 
-    function requestFormReset(formFiber) {
+    function requestFormResetImpl(formFiber) {
       var transition = requestCurrentTransition();
 
       {
@@ -43975,6 +43986,7 @@ if (__DEV__) {
           /* flushSyncWork */
           flushSyncWork,
         /* flushSyncWork */
+        r: requestFormReset,
         D:
           /* prefetchDNS */
           prefetchDNS$1,
@@ -44007,6 +44019,26 @@ if (__DEV__) {
         // we need to return true if any of them were rendering.
 
         return previousWasRendering || wasRendering;
+      }
+    }
+
+    function requestFormReset(form) {
+      var formInst = getInstanceFromNode$1(form);
+
+      if (
+        formInst !== null &&
+        formInst.tag === HostComponent &&
+        formInst.type === "form"
+      );
+      else {
+        // This form was either not rendered by this React renderer (or it's an
+        // invalid type). Try the next one.
+        //
+        // The last implementation in the sequence will throw an error.
+        previousDispatcher.r(
+          /* requestFormReset */
+          form
+        );
       }
     } // We expect this to get inlined. It is a function mostly to communicate the special nature of
     // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
@@ -45709,7 +45741,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-b8d3ecdc";
+    var ReactVersion = "19.0.0-www-modern-b64de750";
 
     function createPortal$1(
       children,
@@ -48274,6 +48306,7 @@ if (__DEV__) {
     exports.preinitModule = preinitModule;
     exports.preload = preload;
     exports.preloadModule = preloadModule;
+    exports.requestFormReset = requestFormReset$1;
     exports.unstable_batchedUpdates = unstable_batchedUpdates;
     exports.unstable_createEventHandle = createEventHandle;
     exports.unstable_runWithPriority = runWithPriority;

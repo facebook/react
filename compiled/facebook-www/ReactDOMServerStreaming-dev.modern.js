@@ -2356,6 +2356,9 @@ if (__DEV__) {
       );
     }
 
+    var ReactDOMSharedInternals =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
     // same object across all transitions.
 
     var sharedNotPendingObject = {
@@ -2365,9 +2368,6 @@ if (__DEV__) {
       action: null
     };
     var NotPending = Object.freeze(sharedNotPendingObject);
-
-    var ReactDOMSharedInternals =
-      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var previousDispatcher = ReactDOMSharedInternals.d;
     /* ReactDOMCurrentDispatcher */
@@ -2379,6 +2379,10 @@ if (__DEV__) {
           /* flushSyncWork */
           previousDispatcher.f,
         /* flushSyncWork */
+        r:
+          /* requestFormReset */
+          previousDispatcher.r,
+        /* requestFormReset */
         D:
           /* prefetchDNS */
           prefetchDNS,

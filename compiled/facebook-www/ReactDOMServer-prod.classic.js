@@ -288,17 +288,18 @@ function sanitizeURL(url) {
 }
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  ReactDOMSharedInternals =
+    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   sharedNotPendingObject = {
     pending: !1,
     data: null,
     method: null,
     action: null
   },
-  ReactDOMSharedInternals =
-    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
   f: previousDispatcher.f,
+  r: previousDispatcher.r,
   D: prefetchDNS,
   C: preconnect,
   L: preload,
@@ -5675,4 +5676,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-507463a5";
+exports.version = "19.0.0-www-classic-b2292b3c";

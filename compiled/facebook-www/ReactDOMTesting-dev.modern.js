@@ -1915,6 +1915,9 @@ if (__DEV__) {
       f:
         /* flushSyncWork */
         noop$4,
+      r:
+        /* requestFormReset */
+        noop$4,
       D:
         /* prefetchDNS */
         noop$4,
@@ -23596,13 +23599,13 @@ if (__DEV__) {
         // once more of this function is implemented.
         function () {
           // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
+          requestFormResetImpl(formFiber);
           return callback(formData);
         }
       );
     }
 
-    function requestFormReset(formFiber) {
+    function requestFormResetImpl(formFiber) {
       var transition = requestCurrentTransition();
 
       {
@@ -44731,6 +44734,7 @@ if (__DEV__) {
           /* flushSyncWork */
           flushSyncWork,
         /* flushSyncWork */
+        r: requestFormReset$1,
         D:
           /* prefetchDNS */
           prefetchDNS$1,
@@ -44763,6 +44767,26 @@ if (__DEV__) {
         // we need to return true if any of them were rendering.
 
         return previousWasRendering || wasRendering;
+      }
+    }
+
+    function requestFormReset$1(form) {
+      var formInst = getInstanceFromNode$1(form);
+
+      if (
+        formInst !== null &&
+        formInst.tag === HostComponent &&
+        formInst.type === "form"
+      );
+      else {
+        // This form was either not rendered by this React renderer (or it's an
+        // invalid type). Try the next one.
+        //
+        // The last implementation in the sequence will throw an error.
+        previousDispatcher.r(
+          /* requestFormReset */
+          form
+        );
       }
     } // We expect this to get inlined. It is a function mostly to communicate the special nature of
     // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
@@ -46465,7 +46489,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-73131b69";
+    var ReactVersion = "19.0.0-www-modern-fc98b3e6";
 
     function createPortal$1(
       children,
@@ -48959,10 +48983,20 @@ if (__DEV__) {
 
     function noop() {}
 
+    function requestFormReset(element) {
+      throw new Error(
+        "Invalid form element. requestFormReset must be passed a form that was " +
+          "rendered by React."
+      );
+    }
+
     var DefaultDispatcher = {
       f:
         /* flushSyncWork */
         noop,
+      r:
+        /* requestFormReset */
+        requestFormReset,
       D:
         /* prefetchDNS */
         noop,

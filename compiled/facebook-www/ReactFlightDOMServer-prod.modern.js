@@ -31,6 +31,7 @@ var ReactDOMSharedInternals =
   previousDispatcher = ReactDOMSharedInternals.d;
 ReactDOMSharedInternals.d = {
   f: previousDispatcher.f,
+  r: previousDispatcher.r,
   D: prefetchDNS,
   C: preconnect,
   L: preload,
