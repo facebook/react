@@ -8,9 +8,11 @@
 import { RefreshIcon, ShareIcon } from "@heroicons/react/outline";
 import { CheckIcon } from "@heroicons/react/solid";
 import clsx from "clsx";
+import Link from "next/link";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { defaultStore } from "../lib/defaultStore";
+import { IconGitHub } from "./Icons/IconGitHub";
 import Logo from "./Logo";
 import { useStoreDispatch } from "./StoreContext";
 
@@ -75,6 +77,15 @@ export default function Header() {
           )}
           <p className="hidden sm:block">Share</p>
         </button>
+        <Link
+          href="https://github.com/facebook/react"
+          target="_blank"
+          rel="noreferrer noopener"
+          aria-label="Open on GitHub"
+          className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
+        >
+          <IconGitHub />
+        </Link>
       </div>
     </div>
   );
