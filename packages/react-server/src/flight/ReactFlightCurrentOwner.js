@@ -9,8 +9,22 @@
 
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-export let currentOwner: ReactComponentInfo | null = null;
+import {
+  supportsComponentStorage,
+  componentStorage,
+} from '../ReactFlightServerConfig';
+
+let currentOwner: ReactComponentInfo | null = null;
 
 export function setCurrentOwner(componentInfo: null | ReactComponentInfo) {
   currentOwner = componentInfo;
+}
+
+export function resolveOwner(): null | ReactComponentInfo {
+  if (currentOwner) return currentOwner;
+  if (supportsComponentStorage) {
+    const owner = componentStorage.getStore();
+    if (owner) return owner;
+  }
+  return null;
 }
