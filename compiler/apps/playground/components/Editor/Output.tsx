@@ -224,7 +224,7 @@ function TextTabContent({
   diff: string | null;
   showInfoPanel: boolean;
 }) {
-  const [value, setValue] = useState(output);
+  const [diffMode, setDiffMode] = useState(false);
   return (
     // Restrict MonacoEditor's height, since the config autoLayout:true
     // will grow the editor to fit within parent element
@@ -234,11 +234,9 @@ function TextTabContent({
           {diff != null && output !== diff ? (
             <button
               className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
-              onClick={() =>
-                value === output ? setValue(diff) : setValue(output)
-              }
+              onClick={() => setDiffMode((diffMode) => !diffMode)}
             >
-              {value === output ? (
+              {!diffMode ? (
                 <>
                   <DocumentAddIcon className="w-5 h-5" /> Show Diff
                 </>
@@ -258,7 +256,7 @@ function TextTabContent({
           )}
         </div>
       ) : null}
-      {diff != null && value !== output ? (
+      {diff != null && diffMode ? (
         <DiffEditor
           original={diff}
           modified={output}
