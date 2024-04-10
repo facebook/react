@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 import { RefreshIcon, ShareIcon, TrashIcon } from "@heroicons/react/outline";
 import { CheckIcon } from "@heroicons/react/solid";
 import clsx from "clsx";
@@ -18,7 +17,7 @@ import { useStoreDispatch } from "./StoreContext";
 export default function Header() {
   const [showCheck, setShowCheck] = useState(false);
   const dispatchStore = useStoreDispatch();
-  const { closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleReset = () => {
     if (confirm("Are you sure you want to reset the playground?")) {
@@ -43,6 +42,7 @@ export default function Header() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(location.href).then(() => {
+      enqueueSnackbar("URL copied to clipboard");
       setShowCheck(true);
       // Show the check mark icon briefly after URL is copied
       setTimeout(() => setShowCheck(false), 1000);
