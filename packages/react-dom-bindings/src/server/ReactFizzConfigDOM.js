@@ -2762,7 +2762,7 @@ function pushImg(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  pictureTagInScope: boolean,
+  pictureOrNoScriptTagInScope: boolean,
 ): null {
   const {src, srcSet} = props;
   if (
@@ -2771,7 +2771,7 @@ function pushImg(
     (typeof src === 'string' || src == null) &&
     (typeof srcSet === 'string' || srcSet == null) &&
     props.fetchPriority !== 'low' &&
-    pictureTagInScope === false &&
+    pictureOrNoScriptTagInScope === false &&
     // We exclude data URIs in src and srcSet since these should not be preloaded
     !(
       typeof src === 'string' &&
@@ -3599,7 +3599,7 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
-        !!(formatContext.tagScope & PICTURE_SCOPE),
+        !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE)),
       );
     }
     // Omitted close tags
