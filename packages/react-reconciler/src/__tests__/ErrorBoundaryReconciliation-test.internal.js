@@ -66,7 +66,10 @@ describe('ErrorBoundaryReconciliation', () => {
           </ErrorBoundary>,
         );
       });
-    }).toErrorDev(['invalid']);
+    }).toErrorDev([
+      'invalid',
+      ...(gate(flags => flags.enableUnifiedSyncLane) ? [] : ['invalid']),
+    ]);
     const Fallback = fallbackTagName;
     expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
   }

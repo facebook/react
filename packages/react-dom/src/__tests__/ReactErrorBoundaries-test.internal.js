@@ -675,9 +675,13 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      'BrokenRender constructor',
-      'BrokenRender componentWillMount',
-      'BrokenRender render [!]',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+          ]),
     ]);
     await act(async () => {
       root3.render(
@@ -743,6 +747,21 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -772,6 +791,20 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -799,6 +832,19 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenConstructor constructor [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -827,6 +873,20 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenComponentWillMount constructor',
+            'BrokenComponentWillMount componentWillMount [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -888,6 +948,24 @@ describe('ReactErrorBoundaries', () => {
       'ErrorMessage constructor',
       'ErrorMessage componentWillMount',
       'ErrorMessage render',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+            'ErrorMessage constructor',
+            'ErrorMessage componentWillMount',
+            'ErrorMessage render',
+          ]),
+
       'ErrorMessage componentDidMount',
       'ErrorBoundary componentDidMount',
     ]);
@@ -933,6 +1011,30 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'RetryErrorBoundary constructor',
+            'RetryErrorBoundary componentWillMount',
+            'RetryErrorBoundary render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'RetryErrorBoundary static getDerivedStateFromError [!]',
+            'RetryErrorBoundary componentWillMount',
+            'RetryErrorBoundary render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -961,6 +1063,20 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenComponentWillMountErrorBoundary constructor',
+            'BrokenComponentWillMountErrorBoundary componentWillMount [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -999,6 +1115,27 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRenderErrorBoundary constructor',
+            'BrokenRenderErrorBoundary componentWillMount',
+            'BrokenRenderErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'BrokenRenderErrorBoundary static getDerivedStateFromError',
+            'BrokenRenderErrorBoundary componentWillMount',
+            'BrokenRenderErrorBoundary render error [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -1036,6 +1173,24 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'Normal constructor',
+            'Normal componentWillMount',
+            'Normal render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
 
@@ -1073,6 +1228,21 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'Error message ref is set to [object HTMLDivElement]',
       'ErrorBoundary componentDidMount',
     ]);
@@ -1110,6 +1280,21 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary constructor',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillMount',
+            'ErrorBoundary render error',
+          ]),
+
       'ErrorBoundary componentDidMount',
     ]);
     expect(errorMessageRef.current.toString()).toEqual(
@@ -1182,6 +1367,25 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'Normal componentWillReceiveProps',
+            'Normal componentWillUpdate',
+            'Normal render',
+            'Normal2 constructor',
+            'Normal2 componentWillMount',
+            'Normal2 render',
+            'BrokenConstructor constructor [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       'Normal componentWillUnmount',
       'ErrorBoundary componentDidUpdate',
     ]);
@@ -1231,6 +1435,26 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'Normal componentWillReceiveProps',
+            'Normal componentWillUpdate',
+            'Normal render',
+            'Normal2 constructor',
+            'Normal2 componentWillMount',
+            'Normal2 render',
+            'BrokenComponentWillMount constructor',
+            'BrokenComponentWillMount componentWillMount [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       'Normal componentWillUnmount',
       'ErrorBoundary componentDidUpdate',
     ]);
@@ -1275,6 +1499,22 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'Normal componentWillReceiveProps',
+            'Normal componentWillUpdate',
+            'Normal render',
+            'BrokenComponentWillReceiveProps componentWillReceiveProps [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       'Normal componentWillUnmount',
       'BrokenComponentWillReceiveProps componentWillUnmount',
       'ErrorBoundary componentDidUpdate',
@@ -1320,6 +1560,23 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'Normal componentWillReceiveProps',
+            'Normal componentWillUpdate',
+            'Normal render',
+            'BrokenComponentWillUpdate componentWillReceiveProps',
+            'BrokenComponentWillUpdate componentWillUpdate [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       'Normal componentWillUnmount',
       'BrokenComponentWillUpdate componentWillUnmount',
       'ErrorBoundary componentDidUpdate',
@@ -1370,6 +1627,27 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'Normal componentWillReceiveProps',
+            'Normal componentWillUpdate',
+            'Normal render',
+            'Normal2 constructor',
+            'Normal2 componentWillMount',
+            'Normal2 render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       'Normal componentWillUnmount',
       'ErrorBoundary componentDidUpdate',
     ]);
@@ -1428,6 +1706,21 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'ErrorBoundary componentWillReceiveProps',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render success',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'ErrorBoundary static getDerivedStateFromError',
+            'ErrorBoundary componentWillUpdate',
+            'ErrorBoundary render error',
+          ]),
+
       // Update Child1 ref since Child1 has been unmounted
       // Child2 ref is never set because its mounting aborted
       'Child1 ref is set to null',
@@ -2229,6 +2522,22 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // logs for error retry
+            'NoopErrorBoundary constructor',
+            'NoopErrorBoundary componentWillMount',
+            'NoopErrorBoundary render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+            'NoopErrorBoundary static getDerivedStateFromError',
+            'NoopErrorBoundary render',
+            'BrokenRender constructor',
+            'BrokenRender componentWillMount',
+            'BrokenRender render [!]',
+          ]),
     ]);
   });
 

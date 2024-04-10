@@ -1297,6 +1297,13 @@ describe('ReactDOMSelect', () => {
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+                ' must be strings, not TemporalLike. ' +
+                'This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1320,6 +1327,12 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'The provided `value` attribute is an unsupported type TemporalLike.' +
+                ' This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1344,6 +1357,12 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'The provided `value` attribute is an unsupported type TemporalLike.' +
+                ' This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1476,6 +1495,13 @@ describe('ReactDOMSelect', () => {
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+                ' must be strings, not TemporalLike. ' +
+                'This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1500,6 +1526,12 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'The provided `value` attribute is an unsupported type TemporalLike.' +
+                ' This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1523,6 +1555,12 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'The provided `value` attribute is an unsupported type TemporalLike.' +
+                ' This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1557,6 +1595,13 @@ describe('ReactDOMSelect', () => {
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+                ' must be strings, not TemporalLike. ' +
+                'This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 
@@ -1593,6 +1638,12 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'The provided `value` attribute is an unsupported type TemporalLike.' +
+                ' This value must be coerced to a string before using it here.',
+            ]),
       ]);
     });
 

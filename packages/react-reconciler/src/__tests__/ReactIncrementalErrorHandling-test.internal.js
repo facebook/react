@@ -699,6 +699,15 @@ describe('ReactIncrementalErrorHandling', () => {
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries one more time in non-blocking updates
+            'RethrowErrorBoundary render',
+            'BrokenRender',
+
+            // Errored again on retry. Now handle it.
+          ]),
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -886,7 +895,16 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<BrokenRender />);
     await waitForThrow('Hello');
     ReactNoop.render(<Foo />);
-    assertLog(['BrokenRender']);
+    assertLog([
+      'BrokenRender',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries one more time in non-blocking updates
+            'BrokenRender',
+            // Errored again on retry
+          ]),
+    ]);
     await waitForAll(['Foo']);
   });
 
@@ -909,7 +927,16 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.render(<BrokenRender shouldThrow={true} />);
     await waitForThrow('Hello');
-    assertLog(['BrokenRender']);
+    assertLog([
+      'BrokenRender',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries one more time in non-blocking updates
+            'BrokenRender',
+            // Errored again on retry
+          ]),
+    ]);
 
     ReactNoop.render(<Foo />);
     await waitForAll(['Foo']);
@@ -1224,6 +1251,12 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: React.jsx: type is invalid -- expected a string',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries once on error on non blocking updates
+            'Warning: React.jsx: type is invalid -- expected a string',
+          ]),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <span
@@ -1273,6 +1306,12 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     await expect(async () => await waitForAll([])).toErrorDev([
       'Warning: React.jsx: type is invalid -- expected a string',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries once on error in non-blocking updates
+            'Warning: React.jsx: type is invalid -- expected a string',
+          ]),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <span
@@ -1475,6 +1514,17 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (try)',
       'Indirection',
       'BadRender',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries one more time in non-blocking updates
+            'ErrorBoundary (try)',
+            'Indirection',
+            'BadRender',
+
+            // Errored again on retry. Now handle it.
+          ]),
+
       'componentDidCatch',
       'ErrorBoundary (catch)',
     ]);
@@ -1540,7 +1590,16 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (try)',
       'throw',
       // Continue rendering siblings after BadRender throws
-      // Recover from the error
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React retries one more time
+            'ErrorBoundary (try)',
+            'throw',
+
+            // Errored again on retry. Now handle it.
+          ]),
+
       'componentDidCatch',
       'ErrorBoundary (catch)',
       'ErrorMessage',
@@ -1582,6 +1641,9 @@ describe('ReactIncrementalErrorHandling', () => {
     await waitFor([
       'render',
       'throw',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : ['render', 'throw']),
       'did catch',
       'render error message',
       'did update',

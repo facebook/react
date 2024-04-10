@@ -180,6 +180,17 @@ describe('forwardRef', () => {
       'ErrorBoundary.render: try',
       'Wrapper',
       'BadRender throw',
+
+      ...(gate(flags => !flags.enableUnifiedSyncLane)
+        ? [
+            // React retries one more time since the default lane is not considered blocking.
+            'ErrorBoundary.render: try',
+            'Wrapper',
+            'BadRender throw',
+
+            // Errored again on retry. Now handle it.
+          ]
+        : []),
       'ErrorBoundary.componentDidCatch',
       'ErrorBoundary.render: catch',
     ]);

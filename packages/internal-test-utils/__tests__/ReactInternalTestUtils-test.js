@@ -108,7 +108,17 @@ describe('ReactInternalTestUtils', () => {
     root.render(<App />);
 
     await waitForThrow('Oh no!');
-    assertLog(['A', 'B']);
+    assertLog([
+      'A',
+      'B',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // React will try one more time in non-blocking updates before giving up.
+            'A',
+            'B',
+          ]),
+    ]);
   });
 
   test('waitForPaint', async () => {

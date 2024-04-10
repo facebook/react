@@ -672,6 +672,11 @@ describe('ReactDOMTextarea', () => {
         }).rejects.toThrow('<textarea> can only have at most one child');
       }).toErrorDev([
         'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+            ]),
       ]);
 
       let node;

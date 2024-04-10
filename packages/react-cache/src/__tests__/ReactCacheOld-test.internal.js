@@ -153,7 +153,11 @@ describe('ReactCache', () => {
     // Should throw again on a subsequent read
     root.render(<App />);
     await waitForThrow('Failed to load: Hi');
-    assertLog(['Error! [Hi]']);
+    assertLog(
+      gate(flags => flags.enableUnifiedSyncLane)
+        ? ['Error! [Hi]']
+        : ['Error! [Hi]', 'Error! [Hi]'],
+    );
   });
 
   it('warns if non-primitive key is passed to a resource without a hash function', async () => {
