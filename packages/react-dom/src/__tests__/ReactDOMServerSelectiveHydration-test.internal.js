@@ -1114,14 +1114,16 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Outer was hydrated earlier
       OuterTestUtils.assertLog([]);
 
+      // First Inner Mouse Enter fires then Outer Mouse Enter
+      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
+
       await act(() => {
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
         InnerScheduler.unstable_flushAllWithoutAsserting();
       });
 
-      // First Inner Mouse Enter fires then Outer Mouse Enter
-      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
+      assertLog([]);
     });
   });
 
