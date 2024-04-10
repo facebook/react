@@ -89,11 +89,9 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {
-  DefaultAsyncDispatcher,
-  currentOwner,
-  setCurrentOwner,
-} from './flight/ReactFlightAsyncDispatcher';
+import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
+
+import {currentOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {
   getIteratorFn,
