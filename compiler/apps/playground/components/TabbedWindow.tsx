@@ -63,7 +63,7 @@ function TabbedWindowItem({
       nextState.add(name);
     }
     setTabsOpen(nextState);
-  }, [tabsOpen, name, isShow, setTabsOpen]);
+  }, [tabsOpen, name, setTabsOpen]);
 
   return (
     <div key={name} className="flex flex-row">
@@ -71,20 +71,20 @@ function TabbedWindowItem({
         <div className="border-r" style={{ minWidth: 550, overflow: "hidden" }}>
           <h2
             onClick={toggleTabs}
-            className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 text-secondary hover:text-link"
+            className="p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 font-medium text-secondary hover:text-link"
           >
             - {name}
           </h2>
           {tabs.get(name) ?? <div>No output for {name}</div>}
         </div>
       ) : (
-        <div className="relative items-center h-full px-1 py-8 align-middle border-r border-grey-200">
+        <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
           <button
             style={{ transform: "rotate(90deg) translate(-50%)" }}
             onClick={toggleTabs}
-            className="flex-grow-0 w-5 transition-colors duration-150 ease-in text-secondary hover:text-link"
+            className="flex-grow-0 w-5 transition-colors duration-150 ease-in font-medium text-secondary hover:text-link"
           >
-            {`+${name}`}
+            {name}
           </button>
         </div>
       )}
