@@ -58,6 +58,7 @@ export default function Header() {
       <div className="flex items-center text-[15px] gap-4">
         <button
           title="Reset Playground"
+          aria-label="Reset Playground"
           className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
           onClick={handleReset}
         >
@@ -66,6 +67,7 @@ export default function Header() {
         </button>
         <button
           title="Copy sharable URL"
+          aria-label="Copy sharable URL"
           className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
           onClick={handleShare}
           disabled={showCheck}
