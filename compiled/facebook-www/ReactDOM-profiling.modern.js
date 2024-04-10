@@ -6066,10 +6066,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   return children;
 }
 function TransitionAwareHostComponent() {
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function checkDidRenderIdHook() {
   var didRenderIdHook = 0 !== localIdCounter;
@@ -6869,9 +6875,23 @@ function startHostTransition(formFiber, pendingState, callback, formData) {
       queue: newQueue,
       next: null
     };
+    var initialResetState = {};
+    newQueue.next = {
+      memoizedState: initialResetState,
+      baseState: initialResetState,
+      baseQueue: null,
+      queue: {
+        pending: null,
+        lanes: 0,
+        dispatch: null,
+        lastRenderedReducer: basicStateReducer,
+        lastRenderedState: initialResetState
+      },
+      next: null
+    };
     formFiber.memoizedState = newQueue;
-    var alternate = formFiber.alternate;
-    null !== alternate && (alternate.memoizedState = newQueue);
+    initialResetState = formFiber.alternate;
+    null !== initialResetState && (initialResetState.memoizedState = newQueue);
   } else queue = formFiber.memoizedState.queue;
   startTransition(
     formFiber,
@@ -6879,6 +6899,8 @@ function startHostTransition(formFiber, pendingState, callback, formData) {
     pendingState,
     sharedNotPendingObject,
     function () {
+      requestCurrentTransition();
+      dispatchSetState(formFiber, formFiber.memoizedState.next.queue, {});
       return callback(formData);
     }
   );
@@ -10101,6 +10123,7 @@ function resolveClassComponentProps(
 }
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
+  needsFormReset = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
@@ -11330,7 +11353,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -11387,11 +11410,11 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
         null !== finishedWork &&
-          ((current = finishedWork.callbacks),
-          null !== current &&
-            ((flags = finishedWork.shared.hiddenCallbacks),
+          ((flags = finishedWork.callbacks),
+          null !== flags &&
+            ((current = finishedWork.shared.hiddenCallbacks),
             (finishedWork.shared.hiddenCallbacks =
-              null === flags ? current : flags.concat(current)))));
+              null === current ? flags : current.concat(flags)))));
       break;
     case 26:
       var hoistableRoot = currentHoistableRoot;
@@ -11409,10 +11432,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           if (null === flags)
             if (null === finishedWork.stateNode) {
               a: {
-                current = finishedWork.type;
-                flags = finishedWork.memoizedProps;
+                flags = finishedWork.type;
+                current = finishedWork.memoizedProps;
                 root = hoistableRoot.ownerDocument || hoistableRoot;
-                b: switch (current) {
+                b: switch (flags) {
                   case "title":
                     hoistableRoot = root.getElementsByTagName("title")[0];
                     if (
@@ -11423,42 +11446,42 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                         hoistableRoot.namespaceURI ||
                       hoistableRoot.hasAttribute("itemprop")
                     )
-                      (hoistableRoot = root.createElement(current)),
+                      (hoistableRoot = root.createElement(flags)),
                         root.head.insertBefore(
                           hoistableRoot,
                           root.querySelector("head > title")
                         );
-                    setInitialProperties(hoistableRoot, current, flags);
+                    setInitialProperties(hoistableRoot, flags, current);
                     hoistableRoot[internalInstanceKey] = finishedWork;
                     markNodeAsHoistable(hoistableRoot);
-                    current = hoistableRoot;
+                    flags = hoistableRoot;
                     break a;
                   case "link":
                     var maybeNodes = getHydratableHoistableCache(
                       "link",
                       "href",
                       root
-                    ).get(current + (flags.href || ""));
+                    ).get(flags + (current.href || ""));
                     if (maybeNodes)
                       for (var i = 0; i < maybeNodes.length; i++)
                         if (
                           ((hoistableRoot = maybeNodes[i]),
                           hoistableRoot.getAttribute("href") ===
-                            (null == flags.href ? null : flags.href) &&
+                            (null == current.href ? null : current.href) &&
                             hoistableRoot.getAttribute("rel") ===
-                              (null == flags.rel ? null : flags.rel) &&
+                              (null == current.rel ? null : current.rel) &&
                             hoistableRoot.getAttribute("title") ===
-                              (null == flags.title ? null : flags.title) &&
+                              (null == current.title ? null : current.title) &&
                             hoistableRoot.getAttribute("crossorigin") ===
-                              (null == flags.crossOrigin
+                              (null == current.crossOrigin
                                 ? null
-                                : flags.crossOrigin))
+                                : current.crossOrigin))
                         ) {
                           maybeNodes.splice(i, 1);
                           break b;
                         }
-                    hoistableRoot = root.createElement(current);
-                    setInitialProperties(hoistableRoot, current, flags);
+                    hoistableRoot = root.createElement(flags);
+                    setInitialProperties(hoistableRoot, flags, current);
                     root.head.appendChild(hoistableRoot);
                     break;
                   case "meta":
@@ -11467,43 +11490,45 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                         "meta",
                         "content",
                         root
-                      ).get(current + (flags.content || "")))
+                      ).get(flags + (current.content || "")))
                     )
                       for (i = 0; i < maybeNodes.length; i++)
                         if (
                           ((hoistableRoot = maybeNodes[i]),
                           hoistableRoot.getAttribute("content") ===
-                            (null == flags.content
+                            (null == current.content
                               ? null
-                              : "" + flags.content) &&
+                              : "" + current.content) &&
                             hoistableRoot.getAttribute("name") ===
-                              (null == flags.name ? null : flags.name) &&
+                              (null == current.name ? null : current.name) &&
                             hoistableRoot.getAttribute("property") ===
-                              (null == flags.property
+                              (null == current.property
                                 ? null
-                                : flags.property) &&
+                                : current.property) &&
                             hoistableRoot.getAttribute("http-equiv") ===
-                              (null == flags.httpEquiv
+                              (null == current.httpEquiv
                                 ? null
-                                : flags.httpEquiv) &&
+                                : current.httpEquiv) &&
                             hoistableRoot.getAttribute("charset") ===
-                              (null == flags.charSet ? null : flags.charSet))
+                              (null == current.charSet
+                                ? null
+                                : current.charSet))
                         ) {
                           maybeNodes.splice(i, 1);
                           break b;
                         }
-                    hoistableRoot = root.createElement(current);
-                    setInitialProperties(hoistableRoot, current, flags);
+                    hoistableRoot = root.createElement(flags);
+                    setInitialProperties(hoistableRoot, flags, current);
                     root.head.appendChild(hoistableRoot);
                     break;
                   default:
-                    throw Error(formatProdErrorMessage(468, current));
+                    throw Error(formatProdErrorMessage(468, flags));
                 }
                 hoistableRoot[internalInstanceKey] = finishedWork;
                 markNodeAsHoistable(hoistableRoot);
-                current = hoistableRoot;
+                flags = hoistableRoot;
               }
-              finishedWork.stateNode = current;
+              finishedWork.stateNode = flags;
             } else
               mountHoistable(
                 hoistableRoot,
@@ -11591,18 +11616,19 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$207);
         }
       }
-      if (flags & 4 && ((flags = finishedWork.stateNode), null != flags)) {
-        root = finishedWork.memoizedProps;
-        current = null !== current ? current.memoizedProps : root;
-        hoistableRoot = finishedWork.type;
+      if (flags & 4 && ((root = finishedWork.stateNode), null != root)) {
+        hoistableRoot = finishedWork.memoizedProps;
+        current = null !== current ? current.memoizedProps : hoistableRoot;
+        maybeNodes = finishedWork.type;
         finishedWork.updateQueue = null;
         try {
-          updateProperties(flags, hoistableRoot, current, root),
-            (flags[internalPropsKey] = root);
+          updateProperties(root, maybeNodes, current, hoistableRoot),
+            (root[internalPropsKey] = hoistableRoot);
         } catch (error$210) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$210);
         }
       }
+      flags & 1024 && (needsFormReset = !0);
       break;
     case 6:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -11610,10 +11636,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (flags & 4) {
         if (null === finishedWork.stateNode)
           throw Error(formatProdErrorMessage(162));
-        current = finishedWork.stateNode;
-        flags = finishedWork.memoizedProps;
+        flags = finishedWork.stateNode;
+        current = finishedWork.memoizedProps;
         try {
-          current.nodeValue = flags;
+          flags.nodeValue = current;
         } catch (error$211) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$211);
         }
@@ -11632,15 +11658,17 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         } catch (error$212) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$212);
         }
+      needsFormReset &&
+        ((needsFormReset = !1), recursivelyResetForms(finishedWork));
       break;
     case 4:
-      current = currentHoistableRoot;
+      flags = currentHoistableRoot;
       currentHoistableRoot = getHoistableRoot(
         finishedWork.stateNode.containerInfo
       );
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
-      currentHoistableRoot = current;
+      currentHoistableRoot = flags;
       break;
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -11663,10 +11691,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         } catch (error$214) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error$214);
         }
-        current = finishedWork.updateQueue;
-        null !== current &&
+        flags = finishedWork.updateQueue;
+        null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, current));
+          attachSuspenseRetryListeners(finishedWork, flags));
       }
       break;
     case 22:
@@ -11764,21 +11792,21 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           root = root.sibling;
         }
       flags & 4 &&
-        ((current = finishedWork.updateQueue),
-        null !== current &&
-          ((flags = current.retryQueue),
-          null !== flags &&
-            ((current.retryQueue = null),
-            attachSuspenseRetryListeners(finishedWork, flags))));
+        ((flags = finishedWork.updateQueue),
+        null !== flags &&
+          ((current = flags.retryQueue),
+          null !== current &&
+            ((flags.retryQueue = null),
+            attachSuspenseRetryListeners(finishedWork, current))));
       break;
     case 19:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 4 &&
-        ((current = finishedWork.updateQueue),
-        null !== current &&
+        ((flags = finishedWork.updateQueue),
+        null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, current)));
+          attachSuspenseRetryListeners(finishedWork, flags)));
       break;
     case 21:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -11842,6 +11870,15 @@ function commitReconciliationEffects(finishedWork) {
     finishedWork.flags &= -3;
   }
   flags & 4096 && (finishedWork.flags &= -4097);
+}
+function recursivelyResetForms(parentFiber) {
+  if (parentFiber.subtreeFlags & 1024)
+    for (parentFiber = parentFiber.child; null !== parentFiber; ) {
+      var fiber = parentFiber;
+      recursivelyResetForms(fiber);
+      5 === fiber.tag && fiber.flags & 1024 && fiber.stateNode.reset();
+      parentFiber = parentFiber.sibling;
+    }
 }
 function commitLayoutEffects(finishedWork, root, committedLanes) {
   inProgressLanes = committedLanes;
@@ -17058,10 +17095,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   unstable_batchedUpdates
 ];
-var devToolsConfig$jscomp$inline_1806 = {
+var devToolsConfig$jscomp$inline_1814 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-0707c07d",
+  version: "19.0.0-www-modern-f6515b25",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17079,10 +17116,10 @@ var devToolsConfig$jscomp$inline_1806 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1806.bundleType,
-  version: devToolsConfig$jscomp$inline_1806.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1806.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1806.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1814.bundleType,
+  version: devToolsConfig$jscomp$inline_1814.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1814.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1814.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17098,14 +17135,14 @@ var devToolsConfig$jscomp$inline_1806 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1806.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1814.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-0707c07d"
+  reconcilerVersion: "19.0.0-www-modern-f6515b25"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17397,7 +17434,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-0707c07d";
+exports.version = "19.0.0-www-modern-f6515b25";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

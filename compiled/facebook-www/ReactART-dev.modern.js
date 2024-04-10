@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-bf3441a6";
+    var ReactVersion = "19.0.0-www-modern-2b9608d3";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -588,6 +588,7 @@ if (__DEV__) {
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
     var DidDefer = ContentReset;
+    var FormReset = Snapshot;
 
     var HostEffectMask =
       /*               */
@@ -655,7 +656,8 @@ if (__DEV__) {
       ContentReset |
       Ref |
       Hydrating |
-      Visibility;
+      Visibility |
+      FormReset;
     var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
 
     var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
@@ -9135,13 +9137,29 @@ if (__DEV__) {
       var _dispatcher$useState = dispatcher.useState(),
         maybeThenable = _dispatcher$useState[0];
 
+      var nextState;
+
       if (typeof maybeThenable.then === "function") {
         var thenable = maybeThenable;
-        return useThenable(thenable);
+        nextState = useThenable(thenable);
       } else {
         var status = maybeThenable;
-        return status;
+        nextState = status;
+      } // The "reset state" is an object. If it changes, that means something
+      // requested that we reset the form.
+
+      var _dispatcher$useState2 = dispatcher.useState(),
+        nextResetState = _dispatcher$useState2[0];
+
+      var prevResetState =
+        currentHook !== null ? currentHook.memoizedState : null;
+
+      if (prevResetState !== nextResetState) {
+        // Schedule a form reset
+        currentlyRenderingFiber$1.flags |= FormReset;
       }
+
+      return nextState;
     }
     function bailoutHooks(current, workInProgress, lanes) {
       workInProgress.updateQueue = current.updateQueue; // TODO: Don't need to reset the flags here, because they're reset in the
@@ -20632,7 +20650,7 @@ if (__DEV__) {
     // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 
     var offscreenSubtreeIsHidden = false;
-    var offscreenSubtreeWasHidden = false;
+    var offscreenSubtreeWasHidden = false; // Used to track if a form needs to be reset at the end of the mutation phase.
     var PossiblyWeakSet = typeof WeakSet === "function" ? WeakSet : Set;
     var nextEffect = null; // Used for Profiling builds to track updaters.
 
@@ -22954,6 +22972,19 @@ if (__DEV__) {
                     finishedWork,
                     finishedWork.return,
                     error
+                  );
+                }
+              }
+            }
+
+            if (flags & FormReset) {
+              {
+                if (finishedWork.type !== "form") {
+                  // Paranoid coding. In case we accidentally start using the
+                  // FormReset bit for something else.
+                  error(
+                    "Unexpected host component type. Expected a form. This is a " +
+                      "bug in React."
                   );
                 }
               }

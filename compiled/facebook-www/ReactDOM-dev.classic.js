@@ -551,6 +551,7 @@ if (__DEV__) {
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
     var DidDefer = ContentReset;
+    var FormReset = Snapshot;
     var LifecycleEffectMask =
       Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -620,7 +621,8 @@ if (__DEV__) {
       ContentReset |
       Ref |
       Hydrating |
-      Visibility;
+      Visibility |
+      FormReset;
     var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
 
     var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
@@ -13938,13 +13940,29 @@ if (__DEV__) {
       var _dispatcher$useState = dispatcher.useState(),
         maybeThenable = _dispatcher$useState[0];
 
+      var nextState;
+
       if (typeof maybeThenable.then === "function") {
         var thenable = maybeThenable;
-        return useThenable(thenable);
+        nextState = useThenable(thenable);
       } else {
         var status = maybeThenable;
-        return status;
+        nextState = status;
+      } // The "reset state" is an object. If it changes, that means something
+      // requested that we reset the form.
+
+      var _dispatcher$useState2 = dispatcher.useState(),
+        nextResetState = _dispatcher$useState2[0];
+
+      var prevResetState =
+        currentHook !== null ? currentHook.memoizedState : null;
+
+      if (prevResetState !== nextResetState) {
+        // Schedule a form reset
+        currentlyRenderingFiber$1.flags |= FormReset;
       }
+
+      return nextState;
     }
     function checkDidRenderIdHook() {
       // This should be called immediately after every renderWithHooks call.
@@ -15844,7 +15862,29 @@ if (__DEV__) {
           baseQueue: null,
           queue: newQueue,
           next: null
-        }; // Add the state hook to both fiber alternates. The idea is that the fiber
+        }; // We use another state hook to track whether the form needs to be reset.
+        // The state is an empty object. To trigger a reset, we update the state
+        // to a new object. Then during rendering, we detect that the state has
+        // changed and schedule a commit effect.
+
+        var initialResetState = {};
+        var newResetStateQueue = {
+          pending: null,
+          lanes: NoLanes,
+          // We're going to cheat and intentionally not create a bound dispatch
+          // method, because we can call it directly in startTransition.
+          dispatch: null,
+          lastRenderedReducer: basicStateReducer,
+          lastRenderedState: initialResetState
+        };
+        var resetStateHook = {
+          memoizedState: initialResetState,
+          baseState: initialResetState,
+          baseQueue: null,
+          queue: newResetStateQueue,
+          next: null
+        };
+        stateHook.next = resetStateHook; // Add the hook list to both fiber alternates. The idea is that the fiber
         // had this hook all along.
 
         formFiber.memoizedState = stateHook;
@@ -15866,9 +15906,38 @@ if (__DEV__) {
         NotPendingTransition, // TODO: We can avoid this extra wrapper, somehow. Figure out layering
         // once more of this function is implemented.
         function () {
+          // Automatically reset the form when the action completes.
+          requestFormReset(formFiber);
           return callback(formData);
         }
       );
+    }
+
+    function requestFormReset(formFiber) {
+      var transition = requestCurrentTransition();
+
+      {
+        if (transition === null) {
+          // An optimistic update occurred, but startTransition is not on the stack.
+          // The form reset will be scheduled at default (sync) priority, which
+          // is probably not what the user intended. Most likely because the
+          // requestFormReset call happened after an `await`.
+          // TODO: Theoretically, requestFormReset is still useful even for
+          // non-transition updates because it allows you to update defaultValue
+          // synchronously and then wait to reset until after the update commits.
+          // I've chosen to warn anyway because it's more likely the `await` mistake
+          // described above. But arguably we shouldn't.
+          error(
+            "requestFormReset was called outside a transition or action. To " +
+              "fix, move to an action, or wrap with startTransition."
+          );
+        }
+      }
+
+      var newResetState = {};
+      var resetStateHook = formFiber.memoizedState.next;
+      var resetStateQueue = resetStateHook.queue;
+      dispatchSetState(formFiber, resetStateQueue, newResetState);
     }
 
     function mountTransition() {
@@ -26557,7 +26626,9 @@ if (__DEV__) {
     // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 
     var offscreenSubtreeIsHidden = false;
-    var offscreenSubtreeWasHidden = false;
+    var offscreenSubtreeWasHidden = false; // Used to track if a form needs to be reset at the end of the mutation phase.
+
+    var needsFormReset = false;
     var PossiblyWeakSet = typeof WeakSet === "function" ? WeakSet : Set;
     var nextEffect = null; // Used for Profiling builds to track updaters.
 
@@ -29153,6 +29224,21 @@ if (__DEV__) {
                 }
               }
             }
+
+            if (flags & FormReset) {
+              needsFormReset = true;
+
+              {
+                if (finishedWork.type !== "form") {
+                  // Paranoid coding. In case we accidentally start using the
+                  // FormReset bit for something else.
+                  error(
+                    "Unexpected host component type. Expected a form. This is a " +
+                      "bug in React."
+                  );
+                }
+              }
+            }
           }
 
           return;
@@ -29221,6 +29307,20 @@ if (__DEV__) {
                 }
               }
             }
+          }
+
+          if (needsFormReset) {
+            // A form component requested to be reset during this commit. We do this
+            // after all mutations in the rest of the tree so that `defaultValue`
+            // will already be updated. This way you can update `defaultValue` using
+            // data sent by the server as a result of the form submission.
+            //
+            // Theoretically we could check finishedWork.subtreeFlags & FormReset,
+            // but the FormReset bit is overloaded with other flags used by other
+            // fiber types. So this extra variable lets us skip traversing the tree
+            // except when a form was actually submitted.
+            needsFormReset = false;
+            recursivelyResetForms(finishedWork);
           }
 
           return;
@@ -29447,6 +29547,26 @@ if (__DEV__) {
 
       if (flags & Hydrating) {
         finishedWork.flags &= ~Hydrating;
+      }
+    }
+
+    function recursivelyResetForms(parentFiber) {
+      if (parentFiber.subtreeFlags & FormReset) {
+        var child = parentFiber.child;
+
+        while (child !== null) {
+          resetFormOnFiber(child);
+          child = child.sibling;
+        }
+      }
+    }
+
+    function resetFormOnFiber(fiber) {
+      recursivelyResetForms(fiber);
+
+      if (fiber.tag === HostComponent && fiber.flags & FormReset) {
+        var formInstance = fiber.stateNode;
+        resetFormInstance(formInstance);
       }
     }
 
@@ -36095,7 +36215,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-204bdccf";
+    var ReactVersion = "19.0.0-www-classic-a7365ec3";
 
     function createPortal$1(
       children,
@@ -47111,6 +47231,9 @@ if (__DEV__) {
     }
 
     var NotPendingTransition = NotPending;
+    function resetFormInstance(form) {
+      form.reset();
+    }
 
     var randomKey = Math.random().toString(36).slice(2);
     var internalInstanceKey = "__reactFiber$" + randomKey;
