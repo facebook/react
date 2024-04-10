@@ -15,6 +15,7 @@ import type {
   ChildSet,
   UpdatePayload,
   HoistableRoot,
+  FormInstance,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -97,6 +98,7 @@ import {
   Visibility,
   ShouldSuspendCommit,
   MaySuspendCommit,
+  FormReset,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -163,6 +165,7 @@ import {
   prepareToCommitHoistables,
   suspendInstance,
   suspendResource,
+  resetFormInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -225,6 +228,9 @@ if (__DEV__) {
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 let offscreenSubtreeIsHidden: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
+
+// Used to track if a form needs to be reset at the end of the mutation phase.
+let needsFormReset = false;
 
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
@@ -2776,6 +2782,20 @@ function commitMutationEffectsOnFiber(
             }
           }
         }
+
+        if (flags & FormReset) {
+          needsFormReset = true;
+          if (__DEV__) {
+            if (finishedWork.type !== 'form') {
+              // Paranoid coding. In case we accidentally start using the
+              // FormReset bit for something else.
+              console.error(
+                'Unexpected host component type. Expected a form. This is a ' +
+                  'bug in React.',
+              );
+            }
+          }
+        }
       }
       return;
     }
@@ -2852,6 +2872,21 @@ function commitMutationEffectsOnFiber(
           }
         }
       }
+
+      if (needsFormReset) {
+        // A form component requested to be reset during this commit. We do this
+        // after all mutations in the rest of the tree so that `defaultValue`
+        // will already be updated. This way you can update `defaultValue` using
+        // data sent by the server as a result of the form submission.
+        //
+        // Theoretically we could check finishedWork.subtreeFlags & FormReset,
+        // but the FormReset bit is overloaded with other flags used by other
+        // fiber types. So this extra variable lets us skip traversing the tree
+        // except when a form was actually submitted.
+        needsFormReset = false;
+        recursivelyResetForms(finishedWork);
+      }
+
       return;
     }
     case HostPortal: {
@@ -3088,6 +3123,24 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   }
   if (flags & Hydrating) {
     finishedWork.flags &= ~Hydrating;
+  }
+}
+
+function recursivelyResetForms(parentFiber: Fiber) {
+  if (parentFiber.subtreeFlags & FormReset) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      resetFormOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function resetFormOnFiber(fiber: Fiber) {
+  recursivelyResetForms(fiber);
+  if (fiber.tag === HostComponent && fiber.flags & FormReset) {
+    const formInstance: FormInstance = fiber.stateNode;
+    resetFormInstance(formInstance);
   }
 }
 
