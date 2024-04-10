@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5fa81808919e6dc188f7876d0baea787>>
+ * @generated SignedSource<<af1fcef0c4010cdf26edb595f0e40146>>
  */
 
 "use strict";
@@ -3863,10 +3863,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
 }
 function TransitionAwareHostComponent() {
   if (!enableAsyncActions) throw Error("Not implemented.");
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -7269,7 +7275,7 @@ function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
   for (current = completedWork.child; null !== current; ) {
-    if (0 !== (current.flags & 12854) || 0 !== (current.subtreeFlags & 12854))
+    if (0 !== (current.flags & 13878) || 0 !== (current.subtreeFlags & 13878))
       return !0;
     current = current.sibling;
   }
@@ -8668,7 +8674,7 @@ function recursivelyTraverseMutationEffects(root, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root),
         (parentFiber = parentFiber.sibling);
@@ -11282,7 +11288,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-0d80c3d3",
+    version: "19.0.0-canary-44ca6760",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11338,7 +11344,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-0d80c3d3"
+  reconcilerVersion: "19.0.0-canary-44ca6760"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

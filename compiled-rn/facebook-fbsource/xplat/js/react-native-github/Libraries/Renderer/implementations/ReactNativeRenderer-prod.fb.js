@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<be6315c6d94122ce59e8cac641a06317>>
+ * @generated SignedSource<<c7bdc54fb54df3d44ebc0b6d4da343c3>>
  */
 
 "use strict";
@@ -3794,10 +3794,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
 }
 function TransitionAwareHostComponent() {
   if (!enableAsyncActions) throw Error("Not implemented.");
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -8259,7 +8265,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -10796,7 +10802,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1168 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-fd8b4cb6",
+    version: "19.0.0-canary-90370fe7",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10839,7 +10845,7 @@ var internals$jscomp$inline_1452 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-fd8b4cb6"
+  reconcilerVersion: "19.0.0-canary-90370fe7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1453 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

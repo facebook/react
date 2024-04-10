@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e33e857cb3eee98d5e57d1509811f8c>>
+ * @generated SignedSource<<acaefb2daefd1d22c7e94851b8d92a8a>>
  */
 
 "use strict";
@@ -3741,10 +3741,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
 }
 function TransitionAwareHostComponent() {
   if (!enableAsyncActions) throw Error("Not implemented.");
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -7039,7 +7045,7 @@ function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
   for (current = completedWork.child; null !== current; ) {
-    if (0 !== (current.flags & 12854) || 0 !== (current.subtreeFlags & 12854))
+    if (0 !== (current.flags & 13878) || 0 !== (current.subtreeFlags & 13878))
       return !0;
     current = current.sibling;
   }
@@ -8202,7 +8208,7 @@ function recursivelyTraverseMutationEffects(root, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root),
         (parentFiber = parentFiber.sibling);
@@ -10577,7 +10583,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1099 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-a19c8da4",
+    version: "19.0.0-canary-f39e5a74",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10620,7 +10626,7 @@ var internals$jscomp$inline_1366 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-a19c8da4"
+  reconcilerVersion: "19.0.0-canary-f39e5a74"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

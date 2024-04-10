@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5159750d4ca65c393d679d370a71d7cb>>
+ * @generated SignedSource<<b41ef07452ddc0ccf5f4ca65890007ab>>
  */
 
 "use strict";
@@ -2217,10 +2217,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   return children;
 }
 function TransitionAwareHostComponent() {
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -6508,7 +6514,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -9124,7 +9130,7 @@ var devToolsConfig$jscomp$inline_1019 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-df9de31a",
+  version: "19.0.0-canary-ffe8e2ea",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1238 = {
@@ -9155,7 +9161,7 @@ var internals$jscomp$inline_1238 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-df9de31a"
+  reconcilerVersion: "19.0.0-canary-ffe8e2ea"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

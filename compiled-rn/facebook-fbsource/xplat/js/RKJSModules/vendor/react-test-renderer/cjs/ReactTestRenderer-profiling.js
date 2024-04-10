@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<21f520424802b9edb8fc0a8c96178e1c>>
+ * @generated SignedSource<<c75c1cb22c2153409d78bbb0e058c921>>
  */
 
 "use strict";
@@ -2305,10 +2305,16 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   return children;
 }
 function TransitionAwareHostComponent() {
-  var maybeThenable = ReactSharedInternals.H.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -6934,7 +6940,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -9762,7 +9768,7 @@ var devToolsConfig$jscomp$inline_1082 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-12ee58d1",
+  version: "19.0.0-canary-1a91a1bd",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9806,7 +9812,7 @@ var devToolsConfig$jscomp$inline_1082 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-12ee58d1"
+  reconcilerVersion: "19.0.0-canary-1a91a1bd"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

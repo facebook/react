@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a64d4ff9138061f9c517e2327f49b803>>
+ * @generated SignedSource<<a692379e5803d0e9a48edb485ea597ad>>
  */
 
 "use strict";
@@ -3061,6 +3061,7 @@ to return true:wantsResponderID|                            |
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
     var DidDefer = ContentReset;
+    var FormReset = Snapshot;
     var LifecycleEffectMask =
       Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -3119,7 +3120,8 @@ to return true:wantsResponderID|                            |
       ContentReset |
       Ref |
       Hydrating |
-      Visibility;
+      Visibility |
+      FormReset;
     var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
 
     var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
@@ -12086,13 +12088,29 @@ to return true:wantsResponderID|                            |
       var _dispatcher$useState = dispatcher.useState(),
         maybeThenable = _dispatcher$useState[0];
 
+      var nextState;
+
       if (typeof maybeThenable.then === "function") {
         var thenable = maybeThenable;
-        return useThenable(thenable);
+        nextState = useThenable(thenable);
       } else {
         var status = maybeThenable;
-        return status;
+        nextState = status;
+      } // The "reset state" is an object. If it changes, that means something
+      // requested that we reset the form.
+
+      var _dispatcher$useState2 = dispatcher.useState(),
+        nextResetState = _dispatcher$useState2[0];
+
+      var prevResetState =
+        currentHook !== null ? currentHook.memoizedState : null;
+
+      if (prevResetState !== nextResetState) {
+        // Schedule a form reset
+        currentlyRenderingFiber$1.flags |= FormReset;
       }
+
+      return nextState;
     }
     function bailoutHooks(current, workInProgress, lanes) {
       workInProgress.updateQueue = current.updateQueue; // TODO: Don't need to reset the flags here, because they're reset in the
@@ -22677,7 +22695,7 @@ to return true:wantsResponderID|                            |
     // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 
     var offscreenSubtreeIsHidden = false;
-    var offscreenSubtreeWasHidden = false;
+    var offscreenSubtreeWasHidden = false; // Used to track if a form needs to be reset at the end of the mutation phase.
     var PossiblyWeakSet = typeof WeakSet === "function" ? WeakSet : Set;
     var nextEffect = null; // Used for Profiling builds to track updaters.
 
@@ -24619,6 +24637,19 @@ to return true:wantsResponderID|                            |
                     finishedWork,
                     finishedWork.return,
                     error
+                  );
+                }
+              }
+            }
+
+            if (flags & FormReset) {
+              {
+                if (finishedWork.type !== "form") {
+                  // Paranoid coding. In case we accidentally start using the
+                  // FormReset bit for something else.
+                  error(
+                    "Unexpected host component type. Expected a form. This is a " +
+                      "bug in React."
                   );
                 }
               }
@@ -30688,7 +30719,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-f860c0a2";
+    var ReactVersion = "19.0.0-canary-8aa4061e";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
