@@ -115,17 +115,14 @@ describe('ReactEmptyComponent', () => {
         root1.render(instance1);
       });
 
+      assertLog(['mount undefined', 'update DIV']);
+
       const root2 = ReactDOMClient.createRoot(container2);
       await act(() => {
         root2.render(instance2);
       });
 
-      assertLog([
-        'mount undefined',
-        'update DIV',
-        'mount DIV',
-        'update undefined',
-      ]);
+      assertLog(['mount DIV', 'update undefined']);
     });
 
     it('should be able to switch in a list of children', async () => {
