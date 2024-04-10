@@ -2747,7 +2747,7 @@ if (__DEV__) {
         return dispatcher.useFormState(action, initialState, permalink);
       }
     }
-    function requestFormReset$1(form) {
+    function requestFormReset$2(form) {
       Internals.d
         /* ReactDOMCurrentDispatcher */
         .r(
@@ -15848,68 +15848,8 @@ if (__DEV__) {
         );
       }
 
-      var queue;
-
-      if (formFiber.memoizedState === null) {
-        // Upgrade this host component fiber to be stateful. We're going to pretend
-        // it was stateful all along so we can reuse most of the implementation
-        // for function components and useTransition.
-        //
-        // Create the state hook used by TransitionAwareHostComponent. This is
-        // essentially an inlined version of mountState.
-        var newQueue = {
-          pending: null,
-          lanes: NoLanes,
-          // We're going to cheat and intentionally not create a bound dispatch
-          // method, because we can call it directly in startTransition.
-          dispatch: null,
-          lastRenderedReducer: basicStateReducer,
-          lastRenderedState: NotPendingTransition
-        };
-        queue = newQueue;
-        var stateHook = {
-          memoizedState: NotPendingTransition,
-          baseState: NotPendingTransition,
-          baseQueue: null,
-          queue: newQueue,
-          next: null
-        }; // We use another state hook to track whether the form needs to be reset.
-        // The state is an empty object. To trigger a reset, we update the state
-        // to a new object. Then during rendering, we detect that the state has
-        // changed and schedule a commit effect.
-
-        var initialResetState = {};
-        var newResetStateQueue = {
-          pending: null,
-          lanes: NoLanes,
-          // We're going to cheat and intentionally not create a bound dispatch
-          // method, because we can call it directly in startTransition.
-          dispatch: null,
-          lastRenderedReducer: basicStateReducer,
-          lastRenderedState: initialResetState
-        };
-        var resetStateHook = {
-          memoizedState: initialResetState,
-          baseState: initialResetState,
-          baseQueue: null,
-          queue: newResetStateQueue,
-          next: null
-        };
-        stateHook.next = resetStateHook; // Add the hook list to both fiber alternates. The idea is that the fiber
-        // had this hook all along.
-
-        formFiber.memoizedState = stateHook;
-        var alternate = formFiber.alternate;
-
-        if (alternate !== null) {
-          alternate.memoizedState = stateHook;
-        }
-      } else {
-        // This fiber was already upgraded to be stateful.
-        var _stateHook = formFiber.memoizedState;
-        queue = _stateHook.queue;
-      }
-
+      var stateHook = ensureFormComponentIsStateful(formFiber);
+      var queue = stateHook.queue;
       startTransition(
         formFiber,
         queue,
@@ -15918,13 +15858,76 @@ if (__DEV__) {
         // once more of this function is implemented.
         function () {
           // Automatically reset the form when the action completes.
-          requestFormResetImpl(formFiber);
+          requestFormReset$1(formFiber);
           return callback(formData);
         }
       );
     }
 
-    function requestFormResetImpl(formFiber) {
+    function ensureFormComponentIsStateful(formFiber) {
+      var existingStateHook = formFiber.memoizedState;
+
+      if (existingStateHook !== null) {
+        // This fiber was already upgraded to be stateful.
+        return existingStateHook;
+      } // Upgrade this host component fiber to be stateful. We're going to pretend
+      // it was stateful all along so we can reuse most of the implementation
+      // for function components and useTransition.
+      //
+      // Create the state hook used by TransitionAwareHostComponent. This is
+      // essentially an inlined version of mountState.
+
+      var newQueue = {
+        pending: null,
+        lanes: NoLanes,
+        // We're going to cheat and intentionally not create a bound dispatch
+        // method, because we can call it directly in startTransition.
+        dispatch: null,
+        lastRenderedReducer: basicStateReducer,
+        lastRenderedState: NotPendingTransition
+      };
+      var stateHook = {
+        memoizedState: NotPendingTransition,
+        baseState: NotPendingTransition,
+        baseQueue: null,
+        queue: newQueue,
+        next: null
+      }; // We use another state hook to track whether the form needs to be reset.
+      // The state is an empty object. To trigger a reset, we update the state
+      // to a new object. Then during rendering, we detect that the state has
+      // changed and schedule a commit effect.
+
+      var initialResetState = {};
+      var newResetStateQueue = {
+        pending: null,
+        lanes: NoLanes,
+        // We're going to cheat and intentionally not create a bound dispatch
+        // method, because we can call it directly in startTransition.
+        dispatch: null,
+        lastRenderedReducer: basicStateReducer,
+        lastRenderedState: initialResetState
+      };
+      var resetStateHook = {
+        memoizedState: initialResetState,
+        baseState: initialResetState,
+        baseQueue: null,
+        queue: newResetStateQueue,
+        next: null
+      };
+      stateHook.next = resetStateHook; // Add the hook list to both fiber alternates. The idea is that the fiber
+      // had this hook all along.
+
+      formFiber.memoizedState = stateHook;
+      var alternate = formFiber.alternate;
+
+      if (alternate !== null) {
+        alternate.memoizedState = stateHook;
+      }
+
+      return stateHook;
+    }
+
+    function requestFormReset$1(formFiber) {
       var transition = requestCurrentTransition();
 
       {
@@ -15945,8 +15948,9 @@ if (__DEV__) {
         }
       }
 
+      var stateHook = ensureFormComponentIsStateful(formFiber);
       var newResetState = {};
-      var resetStateHook = formFiber.memoizedState.next;
+      var resetStateHook = stateHook.next;
       var resetStateQueue = resetStateHook.queue;
       dispatchSetState(formFiber, resetStateQueue, newResetState);
     }
@@ -36226,7 +36230,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-c937066f";
+    var ReactVersion = "19.0.0-www-classic-3b25da96";
 
     function createPortal$1(
       children,
@@ -45708,8 +45712,9 @@ if (__DEV__) {
         formInst !== null &&
         formInst.tag === HostComponent &&
         formInst.type === "form"
-      );
-      else {
+      ) {
+        requestFormReset$1(formInst);
+      } else {
         // This form was either not rendered by this React renderer (or it's an
         // invalid type). Try the next one.
         //
@@ -49788,7 +49793,7 @@ if (__DEV__) {
     exports.preload = preload;
     exports.preloadModule = preloadModule;
     exports.render = render;
-    exports.requestFormReset = requestFormReset$1;
+    exports.requestFormReset = requestFormReset$2;
     exports.unmountComponentAtNode = unmountComponentAtNode;
     exports.unstable_batchedUpdates = batchedUpdates$1;
     exports.unstable_createEventHandle = createEventHandle;
