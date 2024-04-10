@@ -90,6 +90,8 @@ type SuspenseyCommitSubscription = {
 
 export type TransitionStatus = mixed;
 
+export type FormInstance = Instance;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 if (__DEV__) {
@@ -632,6 +634,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     waitForCommitToBeReady,
 
     NotPendingTransition: (null: TransitionStatus),
+
+    resetFormInstance(form: Instance) {},
   };
 
   const hostConfig = useMutation

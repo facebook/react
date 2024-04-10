@@ -515,6 +515,9 @@ export function waitForCommitToBeReady(): null {
 
 export const NotPendingTransition: TransitionStatus = null;
 
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}
+
 // -------------------
 //     Microtasks
 // -------------------

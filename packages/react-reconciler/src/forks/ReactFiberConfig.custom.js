@@ -39,6 +39,7 @@ export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
 export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
 export opaque type TransitionStatus = mixed; // eslint-disable-line no-undef
+export opaque type FormInstance = mixed; // eslint-disable-line no-undef
 export type EventResponder = any;
 
 export const getPublicInstance = $$$config.getPublicInstance;
@@ -78,6 +79,7 @@ export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
+export const resetFormInstance = $$$config.resetFormInstance;
 
 // -------------------
 //      Microtasks
