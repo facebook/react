@@ -66,7 +66,7 @@ describe('ErrorBoundaryReconciliation', () => {
           </ErrorBoundary>,
         );
       });
-    }).toErrorDev(['invalid', 'invalid']);
+    }).toErrorDev(['invalid']);
     const Fallback = fallbackTagName;
     expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
   }

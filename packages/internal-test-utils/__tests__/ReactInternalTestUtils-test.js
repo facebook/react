@@ -108,13 +108,7 @@ describe('ReactInternalTestUtils', () => {
     root.render(<App />);
 
     await waitForThrow('Oh no!');
-    assertLog([
-      'A',
-      'B',
-      // React will try one more time before giving up.
-      'A',
-      'B',
-    ]);
+    assertLog(['A', 'B']);
   });
 
   test('waitForPaint', async () => {

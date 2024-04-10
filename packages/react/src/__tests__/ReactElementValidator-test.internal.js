@@ -308,10 +308,6 @@ describe('ReactElementValidator', () => {
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.\n' +
         '    in ParentComp (at **)',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.\n' +
-        '    in ParentComp (at **)',
     ]);
   });
 

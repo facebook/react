@@ -1297,9 +1297,6 @@ describe('ReactDOMSelect', () => {
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
-        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
-          ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
       ]);
     });
 
@@ -1321,8 +1318,6 @@ describe('ReactDOMSelect', () => {
           }),
         ).rejects.toThrowError(new TypeError('prod message'));
       }).toErrorDev([
-        'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
       ]);
@@ -1347,8 +1342,6 @@ describe('ReactDOMSelect', () => {
           }),
         ).rejects.toThrowError(new TypeError('prod message'));
       }).toErrorDev([
-        'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
       ]);
@@ -1483,9 +1476,6 @@ describe('ReactDOMSelect', () => {
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
-        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
-          ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
       ]);
     });
 
@@ -1510,8 +1500,6 @@ describe('ReactDOMSelect', () => {
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
-        'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
       ]);
     });
 
@@ -1533,8 +1521,6 @@ describe('ReactDOMSelect', () => {
           }),
         ).rejects.toThrowError(new TypeError('prod message'));
       }).toErrorDev([
-        'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
       ]);
@@ -1568,9 +1554,6 @@ describe('ReactDOMSelect', () => {
           }),
         ).rejects.toThrowError(new TypeError('prod message'));
       }).toErrorDev([
-        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
-          ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
           'This value must be coerced to a string before using it here.',
@@ -1608,8 +1591,6 @@ describe('ReactDOMSelect', () => {
           }),
         ).rejects.toThrowError(new TypeError('prod message'));
       }).toErrorDev([
-        'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',
       ]);

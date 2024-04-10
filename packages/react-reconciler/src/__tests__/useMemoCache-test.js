@@ -276,8 +276,8 @@ describe('useMemoCache()', () => {
       // this triggers a throw.
       setN(1);
     });
-    expect(root).toMatchRenderedOutput('Count 0 (n=1)');
-    expect(Text).toBeCalledTimes(2);
+    expect(root).toMatchRenderedOutput(<h1>Something went wrong.</h1>);
+    expect(Text).toBeCalledTimes(1);
     expect(data).toBe(data0);
     const data1 = data;
 
@@ -286,8 +286,8 @@ describe('useMemoCache()', () => {
     await act(() => {
       setN(2);
     });
-    expect(root).toMatchRenderedOutput('Count 0 (n=2)');
-    expect(Text).toBeCalledTimes(3);
+    expect(root).toMatchRenderedOutput(<h1>Something went wrong.</h1>);
+    expect(Text).toBeCalledTimes(1);
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 

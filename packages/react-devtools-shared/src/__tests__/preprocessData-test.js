@@ -1792,7 +1792,7 @@ describe('Timeline profiler', () => {
             testMarks.push(...createUserTimingData(clearedMarks));
 
             const data = await preprocessData(testMarks);
-            expect(data.thrownErrors).toHaveLength(2);
+            expect(data.thrownErrors).toHaveLength(1);
             expect(data.thrownErrors[0].message).toMatchInlineSnapshot(
               '"Expected error"',
             );

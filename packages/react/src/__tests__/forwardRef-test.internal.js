@@ -180,13 +180,6 @@ describe('forwardRef', () => {
       'ErrorBoundary.render: try',
       'Wrapper',
       'BadRender throw',
-
-      // React retries one more time
-      'ErrorBoundary.render: try',
-      'Wrapper',
-      'BadRender throw',
-
-      // Errored again on retry. Now handle it.
       'ErrorBoundary.componentDidCatch',
       'ErrorBoundary.render: catch',
     ]);

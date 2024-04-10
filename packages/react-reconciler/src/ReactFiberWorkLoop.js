@@ -929,8 +929,14 @@ export function performConcurrentWorkOnRoot(
           continue;
         }
 
-        // Check if something threw
-        if (exitStatus === RootErrored) {
+        // Check if something threw.
+        // We only need to retry during hydration or concurrent render.
+        // A sync render does not need to recover.
+        const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
+        if (
+          exitStatus === RootErrored &&
+          (renderWasConcurrent || wasRootDehydrated)
+        ) {
           const lanesThatJustErrored = lanes;
           const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
             root,
