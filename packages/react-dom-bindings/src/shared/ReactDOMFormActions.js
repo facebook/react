@@ -12,6 +12,7 @@ import type {Awaited} from 'shared/ReactTypes';
 
 import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 type FormStatusNotPending = {|
   pending: false,
@@ -86,4 +87,9 @@ export function useFormState<S, P>(
     // $FlowFixMe[not-a-function] This is unstable, thus optional
     return dispatcher.useFormState(action, initialState, permalink);
   }
+}
+
+export function requestFormReset(form: HTMLFormElement) {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .r(/* requestFormReset */ form);
 }

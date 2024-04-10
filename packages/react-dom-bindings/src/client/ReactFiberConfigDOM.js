@@ -102,6 +102,7 @@ import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
 import {flushSyncWork as flushSyncWorkOnAllRoots} from 'react-reconciler/src/ReactFiberWorkLoop';
+import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/ReactFiberHooks';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
@@ -1928,6 +1929,7 @@ ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */ = {
   f /* flushSyncWork */: disableLegacyMode
     ? flushSyncWork
     : previousDispatcher.f /* flushSyncWork */,
+  r: requestFormReset,
   D /* prefetchDNS */: prefetchDNS,
   C /* preconnect */: preconnect,
   L /* preload */: preload,
@@ -1948,6 +1950,23 @@ function flushSyncWork() {
     throw new Error(
       'flushSyncWork should not be called from builds that support legacy mode. This is a bug in React.',
     );
+  }
+}
+
+function requestFormReset(form: HTMLFormElement) {
+  const formInst = getInstanceFromNodeDOMTree(form);
+  if (
+    formInst !== null &&
+    formInst.tag === HostComponent &&
+    formInst.type === 'form'
+  ) {
+    requestFormResetOnFiber(formInst);
+  } else {
+    // This form was either not rendered by this React renderer (or it's an
+    // invalid type). Try the next one.
+    //
+    // The last implementation in the sequence will throw an error.
+    previousDispatcher.r(/* requestFormReset */ form);
   }
 }
 
