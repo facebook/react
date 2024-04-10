@@ -116,8 +116,6 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
-
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
 /**
@@ -190,6 +188,9 @@ export const disableDOMTestUtils = true;
 
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = true;
+
+// Enables the `initialValue` option for `useDeferredValue`
+export const enableUseDeferredValueInitialArg = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
