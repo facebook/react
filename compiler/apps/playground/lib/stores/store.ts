@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 import invariant from "invariant";
+import {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent,
+} from "lz-string";
 import { defaultStore } from "../defaultStore";
-import { codec } from "../utils";
 
 /**
  * Global Store for Playground
@@ -21,9 +23,9 @@ export interface Store {
  * Serialize, encode, and save @param store to localStorage and update URL.
  */
 export function saveStore(store: Store) {
-  const base64 = codec.utoa(JSON.stringify(store));
-  localStorage.setItem("playgroundStore", base64);
-  history.replaceState({}, "", `#${base64}`);
+  const hash = compressToEncodedURIComponent(JSON.stringify(store));
+  localStorage.setItem("playgroundStore", hash);
+  history.replaceState({}, "", `#${hash}`);
 }
 
 /**
@@ -52,7 +54,7 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   // Initialize with the default store.
   if (!encodedSource) return defaultStore;
 
-  const raw = JSON.parse(codec.atou(encodedSource));
+  const raw = JSON.parse(decompressFromEncodedURIComponent(encodedSource));
 
   invariant(isValidStore(raw), "Invalid Store");
   return raw;

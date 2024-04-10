@@ -27,6 +27,7 @@
     "babel-plugin-react-forget": "*",
     "hermes-eslint": "^0.14.0",
     "invariant": "^2.2.4",
+    "lz-string": "^1.5.0",
     "monaco-editor": "^0.34.1",
     "next": "^13.5.6",
     "notistack": "^3.0.0-alpha.7",
