@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-classic-444ca498";
+    var ReactVersion = "19.0.0-www-classic-464a0920";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -5021,7 +5021,7 @@ if (__DEV__) {
       props,
       resumableState,
       renderState,
-      pictureTagInScope
+      pictureOrNoScriptTagInScope
     ) {
       var src = props.src,
         srcSet = props.srcSet;
@@ -5032,7 +5032,7 @@ if (__DEV__) {
         (typeof src === "string" || src == null) &&
         (typeof srcSet === "string" || srcSet == null) &&
         props.fetchPriority !== "low" &&
-        pictureTagInScope === false && // We exclude data URIs in src and srcSet since these should not be preloaded
+        pictureOrNoScriptTagInScope === false && // We exclude data URIs in src and srcSet since these should not be preloaded
         !(
           typeof src === "string" &&
           src[4] === ":" &&
@@ -5878,7 +5878,7 @@ if (__DEV__) {
             props,
             resumableState,
             renderState,
-            !!(formatContext.tagScope & PICTURE_SCOPE)
+            !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE))
           );
         }
         // Omitted close tags

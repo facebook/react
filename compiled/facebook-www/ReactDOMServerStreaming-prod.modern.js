@@ -1571,7 +1571,7 @@ function pushStartInstance(
           ("string" !== typeof srcSet && null != srcSet)
         ) &&
         "low" !== props.fetchPriority &&
-        !1 === !!(formatContext.tagScope & 2) &&
+        !1 === !!(formatContext.tagScope & 3) &&
         ("string" !== typeof src ||
           ":" !== src[4] ||
           ("d" !== src[0] && "D" !== src[0]) ||
