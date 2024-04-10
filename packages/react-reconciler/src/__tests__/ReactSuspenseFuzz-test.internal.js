@@ -115,24 +115,19 @@ describe('ReactSuspenseFuzz', () => {
               setTimeout(() => {
                 cache.set(fullText, fullText);
                 pendingTasks.delete(task);
-                Scheduler.log(task.label);
                 resolve();
               }, delay);
             },
           };
           cache.set(fullText, thenable);
-          Scheduler.log(`Suspended! [${fullText}]`);
           throw thenable;
         } else if (typeof resolvedText.then === 'function') {
-          const thenable = resolvedText;
-          Scheduler.log(`Suspended! [${fullText}]`);
-          throw thenable;
+          throw resolvedText;
         }
       } else {
         resolvedText = fullText;
       }
 
-      Scheduler.log(resolvedText);
       return resolvedText;
     }
 
