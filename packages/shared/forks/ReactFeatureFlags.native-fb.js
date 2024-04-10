@@ -98,6 +98,7 @@ export const enableServerComponentLogs = true;
 // because JSX is an extremely hot path.
 export const enableRefAsProp = false;
 export const disableStringRefs = false;
+export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;

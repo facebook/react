@@ -22,6 +22,7 @@ import {
   enableRefAsProp,
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
+  enableFastJSX,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
@@ -50,6 +51,10 @@ if (__DEV__) {
   didWarnAboutStringRefs = {};
   didWarnAboutElementRef = {};
 }
+
+const enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp;
+const enableFastJSXWithoutStringRefs =
+  enableFastJSXWithStringRefs && disableStringRefs;
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -355,7 +360,11 @@ export function jsxProd(type, config, maybeKey) {
   }
 
   let props;
-  if (enableRefAsProp && disableStringRefs && !('key' in config)) {
+  if (
+    (enableFastJSXWithoutStringRefs ||
+      (enableFastJSXWithStringRefs && !('ref' in config))) &&
+    !('key' in config)
+  ) {
     // If key was not spread in, we can reuse the original props object. This
     // only works for `jsx`, not `createElement`, because `jsx` is a compiler
     // target and the compiler always passes a new object. For `createElement`,
@@ -578,7 +587,11 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     }
 
     let props;
-    if (enableRefAsProp && disableStringRefs && !('key' in config)) {
+    if (
+      (enableFastJSXWithoutStringRefs ||
+        (enableFastJSXWithStringRefs && !('ref' in config))) &&
+      !('key' in config)
+    ) {
       // If key was not spread in, we can reuse the original props object. This
       // only works for `jsx`, not `createElement`, because `jsx` is a compiler
       // target and the compiler always passes a new object. For `createElement`,
