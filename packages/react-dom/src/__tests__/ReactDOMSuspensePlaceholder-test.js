@@ -132,7 +132,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(window.getComputedStyle(divs[0].current).display).toEqual('none');
     expect(window.getComputedStyle(divs[1].current).display).toEqual('none');
     expect(window.getComputedStyle(divs[2].current).display).toEqual('none');
-
+    assertLog(['A', 'Suspend! [B]', 'C', 'Loading...']);
     await act(async () => {
       await resolveText('B');
     });
@@ -141,6 +141,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(window.getComputedStyle(divs[1].current).display).toEqual('block');
     // This div's display was set with a prop.
     expect(window.getComputedStyle(divs[2].current).display).toEqual('inline');
+    assertLog(['B']);
   });
 
   it('hides and unhides timed out text nodes', async () => {
@@ -203,6 +204,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         '<span style="display: none;">Sibling</span><span style=' +
           '"display: none;"></span>Loading...',
       );
+      assertLog(['Suspend! [Async]', 'Loading...']);
 
       // Update the inline display style. It will be overridden because it's
       // inside a hidden fallback.
@@ -211,6 +213,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         '<span style="display: none;">Sibling</span><span style=' +
           '"display: none;"></span>Loading...',
       );
+      assertLog(['Suspend! [Async]']);
 
       // Unsuspend. The style should now match the inline prop.
       await act(() => resolveText('Async'));
