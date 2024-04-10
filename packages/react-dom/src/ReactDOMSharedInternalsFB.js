@@ -27,6 +27,7 @@ function noop() {}
 
 const DefaultDispatcher: HostDispatcher = {
   f /* flushSyncWork */: noop,
+  r /* requestFormReset */: noop,
   D /* prefetchDNS */: noop,
   C /* preconnect */: noop,
   L /* preload */: noop,

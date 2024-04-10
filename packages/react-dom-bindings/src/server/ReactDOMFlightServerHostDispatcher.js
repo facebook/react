@@ -28,6 +28,7 @@ const previousDispatcher =
   ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
 ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */ = {
   f /* flushSyncWork */: previousDispatcher.f /* flushSyncWork */,
+  r /* requestFormReset */: previousDispatcher.r /* requestFormReset */,
   D /* prefetchDNS */: prefetchDNS,
   C /* preconnect */: preconnect,
   L /* preload */: preload,

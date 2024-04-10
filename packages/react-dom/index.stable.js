@@ -16,6 +16,7 @@ export {
   unstable_batchedUpdates,
   useFormStatus,
   useFormState,
+  requestFormReset,
   prefetchDNS,
   preconnect,
   preload,
