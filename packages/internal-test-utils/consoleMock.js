@@ -299,31 +299,28 @@ export function createLogAssertion(
 
       const withoutStack = options.withoutStack;
 
+      // Warn about invalid global withoutStack values.
       if (consoleMethod === 'log' && withoutStack !== undefined) {
-        // We don't expect any console.log calls to have a stack.
         throwFormattedError(
           `Do not pass withoutStack to assertConsoleLogDev, console.log does not have component stacks.`,
         );
-      } else if (
-        withoutStack !== undefined &&
-        typeof withoutStack !== 'number' &&
-        withoutStack !== true
-      ) {
+      } else if (withoutStack !== undefined && withoutStack !== true) {
+        // withoutStack can only have a value true.
         throwFormattedError(
-          `The second argument for ${matcherName}(), when specified, must be an object. It may have a ` +
-            `property called "withoutStack" whose value may be a boolean or number. ` +
-            `Instead received ${typeof withoutStack}.`,
+          `The second argument must be {withoutStack: true}.` +
+            `\n\nInstead received ${JSON.stringify(options)}.`,
         );
       }
 
       const observedLogs = clearObservedErrors();
-      const unexpectedLogs = [];
       const receivedLogs = [];
-      const logsWithoutComponentStack = [];
-      const logsWithComponentStack = [];
+      const missingExpectedLogs = Array.from(expectedMessages);
+
+      const unexpectedLogs = [];
+      const unexpectedMissingComponentStack = [];
+      const unexpectedIncludingComponentStack = [];
       const logsMismatchingFormat = [];
       const logsWithExtraComponentStack = [];
-      const missingExpectedLogs = Array.from(expectedMessages);
 
       // Loop over all the observed logs to determine:
       //   - Which expected logs are missing
@@ -342,7 +339,77 @@ export function createLogAssertion(
           return;
         }
 
-        const expectedMessage = replaceComponentStack(expectedMessages[index]);
+        let expectedMessage;
+        let expectedWithoutStack;
+        const expectedMessageOrArray = expectedMessages[index];
+        if (
+          expectedMessageOrArray != null &&
+          Array.isArray(expectedMessageOrArray)
+        ) {
+          // Should be in the local form assert([['log', {withoutStack: true}]])
+
+          // Some validations for common mistakes.
+          if (expectedMessageOrArray.length === 1) {
+            throwFormattedError(
+              `Did you forget to remove the array around the log?` +
+                `\n\nThe expected message for ${matcherName}() must be a string or an array of length 2, but there's only one item in the array. If this is intentional, remove the extra array.`,
+            );
+          } else if (expectedMessageOrArray.length !== 2) {
+            throwFormattedError(
+              `The expected message for ${matcherName}() must be a string or an array of length 2. ` +
+                `Instead received ${expectedMessageOrArray}.`,
+            );
+          } else if (consoleMethod === 'log') {
+            // We don't expect any console.log calls to have a stack.
+            throwFormattedError(
+              `Do not pass withoutStack to assertConsoleLogDev logs, console.log does not have component stacks.`,
+            );
+          }
+
+          // Format is correct, check the values.
+          const currentExpectedMessage = expectedMessageOrArray[0];
+          const currentExpectedOptions = expectedMessageOrArray[1];
+          if (
+            typeof currentExpectedMessage !== 'string' ||
+            typeof currentExpectedOptions !== 'object' ||
+            currentExpectedOptions.withoutStack !== true
+          ) {
+            throwFormattedError(
+              `Log entries that are arrays must be of the form [string, {withoutStack: true}]` +
+                `\n\nInstead received [${typeof currentExpectedMessage}, ${JSON.stringify(
+                  currentExpectedOptions,
+                )}].`,
+            );
+          }
+
+          expectedMessage = replaceComponentStack(currentExpectedMessage);
+          expectedWithoutStack = expectedMessageOrArray[1].withoutStack;
+        } else if (typeof expectedMessageOrArray === 'string') {
+          // Should be in the form assert(['log']) or assert(['log'], {withoutStack: true})
+          expectedMessage = replaceComponentStack(expectedMessageOrArray[0]);
+          if (consoleMethod === 'log') {
+            expectedWithoutStack = true;
+          } else {
+            expectedWithoutStack = withoutStack;
+          }
+        } else if (
+          typeof expectedMessageOrArray === 'object' &&
+          expectedMessageOrArray != null &&
+          expectedMessageOrArray.withoutStack != null
+        ) {
+          // Special case for common case of a wrong withoutStack value.
+          throwFormattedError(
+            `Did you forget to wrap a log with withoutStack in an array?` +
+              `\n\nThe expected message for ${matcherName}() must be a string or an array of length 2.` +
+              `\n\nInstead received ${JSON.stringify(expectedMessageOrArray)}.`,
+          );
+        } else if (expectedMessageOrArray != null) {
+          throwFormattedError(
+            `The expected message for ${matcherName}() must be a string or an array of length 2. ` +
+              `Instead received ${JSON.stringify(expectedMessageOrArray)}.`,
+          );
+        }
+
         const normalizedMessage = replaceComponentStack(message);
         receivedLogs.push(normalizedMessage);
 
@@ -371,15 +438,17 @@ export function createLogAssertion(
           });
         }
 
-        // Check if log is expected, and if it has a component stack.
+        // Main logic to check if log is expected, with the component stack.
         if (
           normalizedMessage === expectedMessage ||
           normalizedMessage.includes(expectedMessage)
         ) {
           if (isLikelyAComponentStack(normalizedMessage)) {
-            logsWithComponentStack.push(normalizedMessage);
-          } else {
-            logsWithoutComponentStack.push(normalizedMessage);
+            if (expectedWithoutStack === true) {
+              unexpectedIncludingComponentStack.push(normalizedMessage);
+            }
+          } else if (expectedWithoutStack !== true) {
+            unexpectedMissingComponentStack.push(normalizedMessage);
           }
 
           // Found expected log, remove it from missing.
@@ -419,53 +488,34 @@ export function createLogAssertion(
         );
       }
 
-      // Any unexpected component stacks are a failure.
-      if (consoleMethod !== 'log') {
-        if (typeof withoutStack === 'number') {
-          // We're expecting a particular number of warnings without stacks.
-          if (withoutStack !== logsWithoutComponentStack.length) {
-            throwFormattedError(
-              `Expected ${withoutStack} ${logName()}s without a component stack but received ${
-                logsWithoutComponentStack.length
-              }:\n${printDiff()}`,
-            );
-          }
-        } else if (withoutStack === true) {
-          // We're expecting that all warnings won't have the stack.
-          // If some warnings have it, it's an error.
-          if (logsWithComponentStack.length > 0) {
-            throwFormattedError(
-              `${logsWithComponentStack
-                .map(
-                  stack =>
-                    `Unexpected component stack for:\n  ${printReceived(
-                      stack,
-                    )}`,
-                )
-                .join(
-                  '\n\n',
-                )}\n\nIf this ${logName()} intentionally includes the component stack, remove ` +
-                `{withoutStack: true} from the ${matcherName}() call.\nIf you have a mix of ` +
-                `${logName()}s with and without stack in one ${matcherName}() call, pass ` +
-                `{withoutStack: N} where N is the number of ${logName()}s without stacks.`,
-            );
-          }
-        } else if (withoutStack === undefined) {
-          // We're expecting that all warnings *do* have the stack (default).
-          // If some warnings don't have it, it's an error.
-          if (logsWithoutComponentStack.length > 0) {
-            throwFormattedError(
-              `${logsWithoutComponentStack
-                .map(
-                  stack =>
-                    `Missing component stack for:\n  ${printReceived(stack)}`,
-                )
-                .join(
-                  '\n\n',
-                )}\n\nIf this ${logName()} intentionally omits the component stack, add {withoutStack: true} to the ${matcherName} call.`,
-            );
-          }
-        }
+      // Any logs that include a component stack but shouldn't.
+      if (unexpectedIncludingComponentStack.length > 0) {
+        throwFormattedError(
+          `${unexpectedIncludingComponentStack
+            .map(
+              stack =>
+                `Unexpected component stack for:\n  ${printReceived(stack)}`,
+            )
+            .join(
+              '\n\n',
+            )}\n\nIf this ${logName()} should include a component stack, remove {withoutStack: true} from this ${logName()}.` +
+            `\nIf all ${logName()}s should include the component stack, you may need to remove {withoutStack: true} from the ${matcherName} call.`,
+        );
+      }
+
+      // Any logs that are missing a component stack without withoutStack.
+      if (unexpectedMissingComponentStack.length > 0) {
+        throwFormattedError(
+          `${unexpectedMissingComponentStack
+            .map(
+              stack =>
+                `Missing component stack for:\n  ${printReceived(stack)}`,
+            )
+            .join(
+              '\n\n',
+            )}\n\nIf this ${logName()} should omit a component stack, pass [log, {withoutStack: true}].` +
+            `\nIf all ${logName()}s should omit the component stack, add {withoutStack: true} to the ${matcherName} call.`,
+        );
       }
 
       // Wrong %s formatting is a failure.
