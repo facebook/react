@@ -506,5 +506,6 @@
   "518": "Saw multiple hydration diff roots in a pass. This is a bug in React.",
   "519": "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React.",
   "520": "There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.",
-  "521": "flushSyncWork should not be called from builds that support legacy mode. This is a bug in React."
+  "521": "flushSyncWork should not be called from builds that support legacy mode. This is a bug in React.",
+  "522": "Invalid form element. requestFormReset must be passed a form that was rendered by React."
 }

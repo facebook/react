@@ -29,8 +29,16 @@ export type ReactDOMInternalsDev = ReactDOMInternals & {
 
 function noop() {}
 
+function requestFormReset(element: HTMLFormElement) {
+  throw new Error(
+    'Invalid form element. requestFormReset must be passed a form that was ' +
+      'rendered by React.',
+  );
+}
+
 const DefaultDispatcher: HostDispatcher = {
   f /* flushSyncWork */: noop,
+  r /* requestFormReset */: requestFormReset,
   D /* prefetchDNS */: noop,
   C /* preconnect */: noop,
   L /* preload */: noop,

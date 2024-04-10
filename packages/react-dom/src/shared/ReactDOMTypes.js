@@ -83,6 +83,7 @@ export type PreinitModuleScriptOptions = {
 
 export type HostDispatcher = {
   f /* flushSyncWork */: () => boolean | void,
+  r /* requestFormReset */: (form: HTMLFormElement) => void,
   D /* prefetchDNS */: (href: string) => void,
   C /* preconnect */: (href: string, crossOrigin?: ?CrossOriginEnum) => void,
   L /* preload */: (

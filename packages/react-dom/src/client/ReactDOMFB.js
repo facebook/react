@@ -48,6 +48,7 @@ export {
 export {
   useFormStatus,
   useFormState,
+  requestFormReset,
 } from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 if (__DEV__) {

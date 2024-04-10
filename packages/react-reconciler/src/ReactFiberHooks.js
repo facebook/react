@@ -3008,13 +3008,18 @@ export function startHostTransition<F>(
     // once more of this function is implemented.
     () => {
       // Automatically reset the form when the action completes.
-      requestFormReset(formFiber);
+      requestFormResetImpl(formFiber);
       return callback(formData);
     },
   );
 }
 
-function requestFormReset(formFiber: Fiber) {
+export function requestFormReset(formFiber: Fiber) {
+  // TODO: Not yet implemented. Need to upgrade the fiber to be stateful
+  // before scheduling the form reset.
+}
+
+function requestFormResetImpl(formFiber: Fiber) {
   const transition = requestCurrentTransition();
 
   if (__DEV__) {
