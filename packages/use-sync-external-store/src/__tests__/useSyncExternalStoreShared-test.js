@@ -660,14 +660,17 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     // Object.is algorithm to compare values.
     await act(() => root.render(<App />));
     expect(container.textContent).toEqual('NaN');
+    assertLog([NaN]);
 
     // Update to real number
     await act(() => store.set(123));
     expect(container.textContent).toEqual('123');
+    assertLog([123]);
 
     // Update back to NaN
     await act(() => store.set('not a number'));
     expect(container.textContent).toEqual('NaN');
+    assertLog([NaN]);
   });
 
   describe('extra features implemented in user-space', () => {
@@ -968,6 +971,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         ),
       );
 
+      assertLog(['A']);
       expect(container.textContent).toEqual('A');
 
       if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
@@ -1017,6 +1021,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         ),
       );
 
+      assertLog(['A']);
       expect(container.textContent).toEqual('A');
 
       if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {

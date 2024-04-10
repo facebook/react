@@ -913,15 +913,13 @@ describe('ReactCompositeComponent', () => {
     await act(() => {
       root.render(<Wrapper name="A" />);
     });
+
+    assertLog(['A componentWillMount', 'A render', 'A componentDidMount']);
     await act(() => {
       root.render(<Wrapper name="B" />);
     });
 
     assertLog([
-      'A componentWillMount',
-      'A render',
-      'A componentDidMount',
-
       'B componentWillMount',
       'B render',
       'A componentWillUnmount',
