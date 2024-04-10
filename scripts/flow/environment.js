@@ -332,6 +332,31 @@ declare module 'node:worker_threads' {
   }
 }
 
+declare module 'jest-diff' {
+  declare type CompareKeys = ((a: string, b: string) => number) | void;
+  declare type DiffOptions = {
+    aAnnotation?: string,
+    aColor?: (arg: string) => string,
+    aIndicator?: string,
+    bAnnotation?: string,
+    bColor?: (arg: string) => string,
+    bIndicator?: string,
+    changeColor?: (arg: string) => string,
+    changeLineTrailingSpaceColor?: (arg: string) => string,
+    commonColor?: (arg: string) => string,
+    commonIndicator?: string,
+    commonLineTrailingSpaceColor?: (arg: string) => string,
+    contextLines?: number,
+    emptyFirstOrLastLinePlaceholder?: string,
+    expand?: boolean,
+    includeChangeCounts?: boolean,
+    omitAnnotationLines?: boolean,
+    patchColor?: (arg: string) => string,
+    compareKeys?: CompareKeys,
+  };
+  declare function diff(a: any, b: any, options?: DiffOptions): string;
+}
+
 declare const Bun: {
   hash(
     input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
