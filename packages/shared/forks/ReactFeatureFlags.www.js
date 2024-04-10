@@ -15,7 +15,6 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableDebugTracing,
   enableLazyContextPropagation,
@@ -49,6 +48,7 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
+export const disableIEWorkarounds = true;
 export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
