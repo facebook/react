@@ -58,7 +58,7 @@ export default function Header() {
             process.env.NODE_ENV === "development" && "text-yellow-600",
           )}
         />
-        <p className="hidden select-none sm:block">React Forget Playground</p>
+        <p className="hidden select-none sm:block">React Compiler Playground</p>
       </div>
       <div className="flex items-center text-[15px] gap-4">
         <button

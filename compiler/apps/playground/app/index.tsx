@@ -17,8 +17,8 @@ const Home: NextPage = () => {
       <Head>
         <title>
           {process.env.NODE_ENV === "development"
-            ? "[DEV] React Forget Playground"
-            : "React Forget Playground"}
+            ? "[DEV] React Compiler Playground"
+            : "React Compiler Playground"}
         </title>
         <meta
           name="viewport"

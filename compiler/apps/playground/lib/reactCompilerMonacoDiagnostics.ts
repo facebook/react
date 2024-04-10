@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 import { Monaco } from "@monaco-editor/react";
 import {
   CompilerErrorDetail,
@@ -13,7 +12,7 @@ import {
 } from "babel-plugin-react-forget/src";
 import { MarkerSeverity, type editor } from "monaco-editor";
 
-function mapForgetSeverityToMonaco(
+function mapReactCompilerSeverityToMonaco(
   level: ErrorSeverity,
   monaco: Monaco,
 ): MarkerSeverity {
@@ -25,14 +24,14 @@ function mapForgetSeverityToMonaco(
   }
 }
 
-function mapForgetDiagnosticToMonacoMarker(
+function mapReactCompilerDiagnosticToMonacoMarker(
   detail: CompilerErrorDetail,
   monaco: Monaco,
 ): editor.IMarkerData | null {
   if (detail.loc == null || typeof detail.loc === "symbol") {
     return null;
   }
-  const severity = mapForgetSeverityToMonaco(detail.severity, monaco);
+  const severity = mapReactCompilerSeverityToMonaco(detail.severity, monaco);
   let message = detail.printErrorMessage();
   return {
     severity,
@@ -44,20 +43,20 @@ function mapForgetDiagnosticToMonacoMarker(
   };
 }
 
-type ForgetMarkerConfig = {
+type ReactCompilerMarkerConfig = {
   monaco: Monaco;
   model: editor.ITextModel;
   details: CompilerErrorDetail[];
 };
 let decorations: string[] = [];
-export function renderForgetMarkers({
+export function renderReactCompilerMarkers({
   monaco,
   model,
   details,
-}: ForgetMarkerConfig): void {
+}: ReactCompilerMarkerConfig): void {
   let markers = [];
   for (const detail of details) {
-    const marker = mapForgetDiagnosticToMonacoMarker(detail, monaco);
+    const marker = mapReactCompilerDiagnosticToMonacoMarker(detail, monaco);
     if (marker == null) {
       continue;
     }
