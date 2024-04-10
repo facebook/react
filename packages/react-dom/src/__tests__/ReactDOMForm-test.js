@@ -43,6 +43,7 @@ describe('ReactDOMForm', () => {
   let textCache;
   let useFormStatus;
   let useActionState;
+  let requestFormReset;
 
   beforeEach(() => {
     jest.resetModules();
@@ -58,6 +59,7 @@ describe('ReactDOMForm', () => {
     startTransition = React.startTransition;
     use = React.use;
     useFormStatus = ReactDOM.useFormStatus;
+    requestFormReset = ReactDOM.requestFormReset;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -1413,5 +1415,352 @@ describe('ReactDOMForm', () => {
     // The form was reset to the new value from the server.
     expect(inputRef.current.value).toBe('acdlite');
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
+  });
+
+  test('requestFormReset schedules a form reset after transition completes', async () => {
+    // This is the same as the previous test, except the form is updated with
+    // a userspace action instead of a built-in form action.
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const divRef = React.createRef();
+
+    function App({promiseForUsername}) {
+      // Make this suspensey to simulate RSC streaming.
+      const username = use(promiseForUsername);
+
+      return (
+        <form ref={formRef}>
+          <input
+            ref={inputRef}
+            text="text"
+            name="username"
+            defaultValue={username}
+          />
+          <div ref={divRef}>
+            <Text text={'Current username: ' + username} />
+          </div>
+        </form>
+      );
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    const promiseForInitialUsername = getText('(empty)');
+    await resolveText('(empty)');
+    await act(() =>
+      root.render(<App promiseForUsername={promiseForInitialUsername} />),
+    );
+    assertLog(['Current username: (empty)']);
+    expect(divRef.current.textContent).toEqual('Current username: (empty)');
+
+    // Dirty the uncontrolled input
+    inputRef.current.value = '  AcdLite  ';
+
+    // This is a userspace action. It does not trigger a real form submission.
+    // The practical use case is implementing a custom action prop using
+    // onSubmit without losing the built-in form resetting behavior.
+    await act(() => {
+      startTransition(async () => {
+        const form = formRef.current;
+        const formData = new FormData(form);
+        requestFormReset(form);
+
+        const rawUsername = formData.get('username');
+        const normalizedUsername = rawUsername.trim().toLowerCase();
+
+        Scheduler.log(`Async action started`);
+        await getText('Wait');
+
+        // Update the app with new data. This is analagous to re-rendering
+        // from the root with a new RSC payload.
+        startTransition(() => {
+          root.render(<App promiseForUsername={getText(normalizedUsername)} />);
+        });
+      });
+    });
+    assertLog(['Async action started']);
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+
+    // Finish the async action. This will trigger a re-render from the root with
+    // new data from the "server", which suspends.
+    //
+    // The form should not reset yet because we need to update `defaultValue`
+    // first. So we wait for the render to complete.
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    // The DOM input is still dirty.
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+    // The React tree is suspended.
+    expect(divRef.current.textContent).toEqual('Current username: (empty)');
+
+    // Unsuspend and finish rendering. Now the form should be reset.
+    await act(() => resolveText('acdlite'));
+    assertLog(['Current username: acdlite']);
+    // The form was reset to the new value from the server.
+    expect(inputRef.current.value).toBe('acdlite');
+    expect(divRef.current.textContent).toEqual('Current username: acdlite');
+  });
+
+  test(
+    'requestFormReset works with inputs that are not descendants ' +
+      'of the form element',
+    async () => {
+      // This is the same as the previous test, except the input is not a child
+      // of the form; it's linked with <input form="myform" />
+
+      const formRef = React.createRef();
+      const inputRef = React.createRef();
+      const divRef = React.createRef();
+
+      function App({promiseForUsername}) {
+        // Make this suspensey to simulate RSC streaming.
+        const username = use(promiseForUsername);
+
+        return (
+          <>
+            <form id="myform" ref={formRef} />
+            <input
+              form="myform"
+              ref={inputRef}
+              text="text"
+              name="username"
+              defaultValue={username}
+            />
+            <div ref={divRef}>
+              <Text text={'Current username: ' + username} />
+            </div>
+          </>
+        );
+      }
+
+      // Initial render
+      const root = ReactDOMClient.createRoot(container);
+      const promiseForInitialUsername = getText('(empty)');
+      await resolveText('(empty)');
+      await act(() =>
+        root.render(<App promiseForUsername={promiseForInitialUsername} />),
+      );
+      assertLog(['Current username: (empty)']);
+      expect(divRef.current.textContent).toEqual('Current username: (empty)');
+
+      // Dirty the uncontrolled input
+      inputRef.current.value = '  AcdLite  ';
+
+      // This is a userspace action. It does not trigger a real form submission.
+      // The practical use case is implementing a custom action prop using
+      // onSubmit without losing the built-in form resetting behavior.
+      await act(() => {
+        startTransition(async () => {
+          const form = formRef.current;
+          const formData = new FormData(form);
+          requestFormReset(form);
+
+          const rawUsername = formData.get('username');
+          const normalizedUsername = rawUsername.trim().toLowerCase();
+
+          Scheduler.log(`Async action started`);
+          await getText('Wait');
+
+          // Update the app with new data. This is analagous to re-rendering
+          // from the root with a new RSC payload.
+          startTransition(() => {
+            root.render(
+              <App promiseForUsername={getText(normalizedUsername)} />,
+            );
+          });
+        });
+      });
+      assertLog(['Async action started']);
+      expect(inputRef.current.value).toBe('  AcdLite  ');
+
+      // Finish the async action. This will trigger a re-render from the root with
+      // new data from the "server", which suspends.
+      //
+      // The form should not reset yet because we need to update `defaultValue`
+      // first. So we wait for the render to complete.
+      await act(() => resolveText('Wait'));
+      assertLog([]);
+      // The DOM input is still dirty.
+      expect(inputRef.current.value).toBe('  AcdLite  ');
+      // The React tree is suspended.
+      expect(divRef.current.textContent).toEqual('Current username: (empty)');
+
+      // Unsuspend and finish rendering. Now the form should be reset.
+      await act(() => resolveText('acdlite'));
+      assertLog(['Current username: acdlite']);
+      // The form was reset to the new value from the server.
+      expect(inputRef.current.value).toBe('acdlite');
+      expect(divRef.current.textContent).toEqual('Current username: acdlite');
+    },
+  );
+
+  test('reset multiple forms in the same transition', async () => {
+    const formRefA = React.createRef();
+    const formRefB = React.createRef();
+
+    function App({promiseForA, promiseForB}) {
+      // Make these suspensey to simulate RSC streaming.
+      const a = use(promiseForA);
+      const b = use(promiseForB);
+      return (
+        <>
+          <form ref={formRefA}>
+            <input type="text" name="inputName" defaultValue={a} />
+          </form>
+          <form ref={formRefB}>
+            <input type="text" name="inputName" defaultValue={b} />
+          </form>
+        </>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    const initialPromiseForA = getText('A1');
+    const initialPromiseForB = getText('B1');
+    await resolveText('A1');
+    await resolveText('B1');
+    await act(() =>
+      root.render(
+        <App
+          promiseForA={initialPromiseForA}
+          promiseForB={initialPromiseForB}
+        />,
+      ),
+    );
+
+    // Dirty the uncontrolled inputs
+    formRefA.current.elements.inputName.value = '       A2       ';
+    formRefB.current.elements.inputName.value = '       B2       ';
+
+    // Trigger an async action that updates and reset both forms.
+    await act(() => {
+      startTransition(async () => {
+        const currentA = formRefA.current.elements.inputName.value;
+        const currentB = formRefB.current.elements.inputName.value;
+
+        requestFormReset(formRefA.current);
+        requestFormReset(formRefB.current);
+
+        Scheduler.log('Async action started');
+        await getText('Wait');
+
+        // Pretend the server did something with the data.
+        const normalizedA = currentA.trim();
+        const normalizedB = currentB.trim();
+
+        // Update the app with new data. This is analagous to re-rendering
+        // from the root with a new RSC payload.
+        startTransition(() => {
+          root.render(
+            <App
+              promiseForA={getText(normalizedA)}
+              promiseForB={getText(normalizedB)}
+            />,
+          );
+        });
+      });
+    });
+    assertLog(['Async action started']);
+
+    // Finish the async action. This will trigger a re-render from the root with
+    // new data from the "server", which suspends.
+    //
+    // The forms should not reset yet because we need to update `defaultValue`
+    // first. So we wait for the render to complete.
+    await act(() => resolveText('Wait'));
+
+    // The DOM inputs are still dirty.
+    expect(formRefA.current.elements.inputName.value).toBe('       A2       ');
+    expect(formRefB.current.elements.inputName.value).toBe('       B2       ');
+
+    // Unsuspend and finish rendering. Now the forms should be reset.
+    await act(() => {
+      resolveText('A2');
+      resolveText('B2');
+    });
+    // The forms were reset to the new value from the server.
+    expect(formRefA.current.elements.inputName.value).toBe('A2');
+    expect(formRefB.current.elements.inputName.value).toBe('B2');
+  });
+
+  test('requestFormReset throws if the form is not managed by React', async () => {
+    container.innerHTML = `
+      <form id="myform">
+        <input id="input" type="text" name="greeting" />
+      </form>
+    `;
+
+    const form = document.getElementById('myform');
+    const input = document.getElementById('input');
+
+    input.value = 'Hi!!!!!!!!!!!!!';
+
+    expect(() => requestFormReset(form)).toThrow('Invalid form element.');
+    // The form was not reset.
+    expect(input.value).toBe('Hi!!!!!!!!!!!!!');
+
+    // Just confirming a regular form reset works fine.
+    form.reset();
+    expect(input.value).toBe('');
+  });
+
+  test('requestFormReset throws on a non-form DOM element', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    const ref = React.createRef();
+    await act(() => root.render(<div ref={ref}>Hi</div>));
+    const div = ref.current;
+    expect(div.textContent).toBe('Hi');
+
+    expect(() => requestFormReset(div)).toThrow('Invalid form element.');
+  });
+
+  test('warns if requestFormReset is called outside of a transition', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    function App() {
+      return (
+        <form ref={formRef}>
+          <input ref={inputRef} type="text" defaultValue="Initial" />
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+
+    // Dirty the uncontrolled input
+    inputRef.current.value = '  Updated  ';
+
+    // Trigger an async action that updates and reset both forms.
+    await act(() => {
+      startTransition(async () => {
+        Scheduler.log('Action started');
+        await getText('Wait 1');
+        Scheduler.log('Request form reset');
+
+        // This happens after an `await`, and is not wrapped in startTransition,
+        // so it will be scheduled synchronously instead of with the transition.
+        // This is almost certainly a mistake, so we log a warning in dev.
+        requestFormReset(formRef.current);
+
+        await getText('Wait 2');
+        Scheduler.log('Action finished');
+      });
+    });
+    assertLog(['Action started']);
+    expect(inputRef.current.value).toBe('  Updated  ');
+
+    // This triggers a synchronous requestFormReset, and a warning
+    await expect(async () => {
+      await act(() => resolveText('Wait 1'));
+    }).toErrorDev(['requestFormReset was called outside a transition'], {
+      withoutStack: true,
+    });
+    assertLog(['Request form reset']);
+
+    // The form was reset even though the action didn't finish.
+    expect(inputRef.current.value).toBe('Initial');
   });
 });
