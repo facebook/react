@@ -28,7 +28,7 @@ export default function ContextMenuItem({
 }: Props): React.Node {
   const {hideMenu} = useContext<RegistryContextType>(RegistryContext);
 
-  const handleClick = event => {
+  const handleClick = (event: any) => {
     onClick();
     hideMenu();
   };

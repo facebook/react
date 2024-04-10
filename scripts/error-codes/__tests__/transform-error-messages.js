@@ -157,4 +157,12 @@ let val =
 `)
     ).toMatchSnapshot();
   });
+
+  it('should support extra arguments to error constructor', () => {
+    expect(
+      transform(`
+new Error(\`Expected \${foo} target to \` + \`be an array; got \${bar}\`, {cause: error});
+`)
+    ).toMatchSnapshot();
+  });
 });

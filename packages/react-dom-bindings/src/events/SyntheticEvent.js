@@ -42,6 +42,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
    * normalizing browser quirks. Subclasses do not necessarily have to implement a
    * DOM interface; custom application-specific events can also subclass this.
    */
+  // $FlowFixMe[missing-this-annot]
   function SyntheticBaseEvent(
     reactName: string | null,
     reactEventType: string,
@@ -83,7 +84,8 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
   assign(SyntheticBaseEvent.prototype, {
-    preventDefault: function() {
+    // $FlowFixMe[missing-this-annot]
+    preventDefault: function () {
       this.defaultPrevented = true;
       const event = this.nativeEvent;
       if (!event) {
@@ -92,14 +94,15 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
 
       if (event.preventDefault) {
         event.preventDefault();
-        // $FlowFixMe - flow is not aware of `unknown` in IE
+        // $FlowFixMe[illegal-typeof] - flow is not aware of `unknown` in IE
       } else if (typeof event.returnValue !== 'unknown') {
         event.returnValue = false;
       }
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
 
-    stopPropagation: function() {
+    // $FlowFixMe[missing-this-annot]
+    stopPropagation: function () {
       const event = this.nativeEvent;
       if (!event) {
         return;
@@ -107,7 +110,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
 
       if (event.stopPropagation) {
         event.stopPropagation();
-        // $FlowFixMe - flow is not aware of `unknown` in IE
+        // $FlowFixMe[illegal-typeof] - flow is not aware of `unknown` in IE
       } else if (typeof event.cancelBubble !== 'unknown') {
         // The ChangeEventPlugin registers a "propertychange" event for
         // IE. This event does not support bubbling or cancelling, and
@@ -125,7 +128,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
      * them back into the pool. This allows a way to hold onto a reference that
      * won't be added back into the pool.
      */
-    persist: function() {
+    persist: function () {
       // Modern event system doesn't use pooling.
     },
 
@@ -147,7 +150,7 @@ const EventInterface = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
-  timeStamp: function(event) {
+  timeStamp: function (event: {[propName: string]: mixed}) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: 0,
@@ -160,20 +163,19 @@ const UIEventInterface: EventInterfaceType = {
   view: 0,
   detail: 0,
 };
-export const SyntheticUIEvent: $FlowFixMe = createSyntheticEvent(
-  UIEventInterface,
-);
+export const SyntheticUIEvent: $FlowFixMe =
+  createSyntheticEvent(UIEventInterface);
 
 let lastMovementX;
 let lastMovementY;
 let lastMouseEvent;
 
-function updateMouseMovementPolyfillState(event) {
+function updateMouseMovementPolyfillState(event: {[propName: string]: mixed}) {
   if (event !== lastMouseEvent) {
     if (lastMouseEvent && event.type === 'mousemove') {
-      // $FlowFixMe assuming this is a number
+      // $FlowFixMe[unsafe-arithmetic] assuming this is a number
       lastMovementX = event.screenX - lastMouseEvent.screenX;
-      // $FlowFixMe assuming this is a number
+      // $FlowFixMe[unsafe-arithmetic] assuming this is a number
       lastMovementY = event.screenY - lastMouseEvent.screenY;
     } else {
       lastMovementX = 0;
@@ -202,7 +204,7 @@ const MouseEventInterface: EventInterfaceType = {
   getModifierState: getEventModifierState,
   button: 0,
   buttons: 0,
-  relatedTarget: function(event) {
+  relatedTarget: function (event) {
     if (event.relatedTarget === undefined)
       return event.fromElement === event.srcElement
         ? event.toElement
@@ -210,14 +212,14 @@ const MouseEventInterface: EventInterfaceType = {
 
     return event.relatedTarget;
   },
-  movementX: function(event) {
+  movementX: function (event) {
     if ('movementX' in event) {
       return event.movementX;
     }
     updateMouseMovementPolyfillState(event);
     return lastMovementX;
   },
-  movementY: function(event) {
+  movementY: function (event) {
     if ('movementY' in event) {
       return event.movementY;
     }
@@ -227,9 +229,8 @@ const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
-export const SyntheticMouseEvent: $FlowFixMe = createSyntheticEvent(
-  MouseEventInterface,
-);
+export const SyntheticMouseEvent: $FlowFixMe =
+  createSyntheticEvent(MouseEventInterface);
 
 /**
  * @interface DragEvent
@@ -239,9 +240,8 @@ const DragEventInterface: EventInterfaceType = {
   ...MouseEventInterface,
   dataTransfer: 0,
 };
-export const SyntheticDragEvent: $FlowFixMe = createSyntheticEvent(
-  DragEventInterface,
-);
+export const SyntheticDragEvent: $FlowFixMe =
+  createSyntheticEvent(DragEventInterface);
 
 /**
  * @interface FocusEvent
@@ -251,9 +251,8 @@ const FocusEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   relatedTarget: 0,
 };
-export const SyntheticFocusEvent: $FlowFixMe = createSyntheticEvent(
-  FocusEventInterface,
-);
+export const SyntheticFocusEvent: $FlowFixMe =
+  createSyntheticEvent(FocusEventInterface);
 
 /**
  * @interface Event
@@ -276,7 +275,7 @@ export const SyntheticAnimationEvent: $FlowFixMe = createSyntheticEvent(
  */
 const ClipboardEventInterface: EventInterfaceType = {
   ...EventInterface,
-  clipboardData: function(event) {
+  clipboardData: function (event) {
     return 'clipboardData' in event
       ? event.clipboardData
       : window.clipboardData;
@@ -373,7 +372,7 @@ const translateToKey = {
  * @param {object} nativeEvent Native browser event.
  * @return {string} Normalized `key` property.
  */
-function getEventKey(nativeEvent) {
+function getEventKey(nativeEvent: {[propName: string]: mixed}) {
   if (nativeEvent.key) {
     // Normalize inconsistent values reported by browsers due to
     // implementations of a working draft specification.
@@ -381,7 +380,7 @@ function getEventKey(nativeEvent) {
     // FireFox implements `key` but returns `MozPrintableKey` for all
     // printable characters (normalized to `Unidentified`), ignore it.
     const key =
-      // $FlowFixMe unable to index with a `mixed` value
+      // $FlowFixMe[invalid-computed-prop] unable to index with a `mixed` value
       normalizeKey[nativeEvent.key] || nativeEvent.key;
     if (key !== 'Unidentified') {
       return key;
@@ -391,7 +390,7 @@ function getEventKey(nativeEvent) {
   // Browser does not implement `key`, polyfill as much of it as we can.
   if (nativeEvent.type === 'keypress') {
     const charCode = getEventCharCode(
-      // $FlowFixMe unable to narrow to `KeyboardEvent`
+      // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
       nativeEvent,
     );
 
@@ -402,7 +401,7 @@ function getEventKey(nativeEvent) {
   if (nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup') {
     // While user keyboard layout determines the actual meaning of each
     // `keyCode` value, almost all function keys have a universal value.
-    // $FlowFixMe unable to index with a `mixed` value
+    // $FlowFixMe[invalid-computed-prop] unable to index with a `mixed` value
     return translateToKey[nativeEvent.keyCode] || 'Unidentified';
   }
   return '';
@@ -422,6 +421,8 @@ const modifierKeyToProp = {
 // Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
 // getModifierState. If getModifierState is not supported, we map it to a set of
 // modifier keys exposed by the event. In this case, Lock-keys are not supported.
+// $FlowFixMe[missing-local-annot]
+// $FlowFixMe[missing-this-annot]
 function modifierStateGetter(keyArg) {
   const syntheticEvent = this;
   const nativeEvent = syntheticEvent.nativeEvent;
@@ -432,7 +433,7 @@ function modifierStateGetter(keyArg) {
   return keyProp ? !!nativeEvent[keyProp] : false;
 }
 
-function getEventModifierState(nativeEvent) {
+function getEventModifierState(nativeEvent: {[propName: string]: mixed}) {
   return modifierStateGetter;
 }
 
@@ -453,7 +454,7 @@ const KeyboardEventInterface = {
   locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
-  charCode: function(event) {
+  charCode: function (event: {[propName: string]: mixed}) {
     // `charCode` is the result of a KeyPress event and represents the value of
     // the actual printable character.
 
@@ -461,13 +462,13 @@ const KeyboardEventInterface = {
     // implemented in any major browser. Only KeyPress has charCode.
     if (event.type === 'keypress') {
       return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
         event,
       );
     }
     return 0;
   },
-  keyCode: function(event) {
+  keyCode: function (event: {[propName: string]: mixed}) {
     // `keyCode` is the result of a KeyDown/Up event and represents the value of
     // physical keyboard key.
 
@@ -480,12 +481,12 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-  which: function(event) {
+  which: function (event: {[propName: string]: mixed}) {
     // `which` is an alias for either `keyCode` or `charCode` depending on the
     // type of the event.
     if (event.type === 'keypress') {
       return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
         event,
       );
     }
@@ -535,9 +536,8 @@ const TouchEventInterface = {
   shiftKey: 0,
   getModifierState: getEventModifierState,
 };
-export const SyntheticTouchEvent: $FlowFixMe = createSyntheticEvent(
-  TouchEventInterface,
-);
+export const SyntheticTouchEvent: $FlowFixMe =
+  createSyntheticEvent(TouchEventInterface);
 
 /**
  * @interface Event
@@ -560,25 +560,25 @@ export const SyntheticTransitionEvent: $FlowFixMe = createSyntheticEvent(
  */
 const WheelEventInterface = {
   ...MouseEventInterface,
-  deltaX(event) {
+  deltaX(event: {[propName: string]: mixed}) {
     return 'deltaX' in event
       ? event.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
       'wheelDeltaX' in event
-      ? // $FlowFixMe assuming this is a number
+      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
         -event.wheelDeltaX
       : 0;
   },
-  deltaY(event) {
+  deltaY(event: {[propName: string]: mixed}) {
     return 'deltaY' in event
       ? event.deltaY
       : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
       'wheelDeltaY' in event
-      ? // $FlowFixMe assuming this is a number
+      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
         -event.wheelDeltaY
       : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
       'wheelDelta' in event
-      ? // $FlowFixMe assuming this is a number
+      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
         -event.wheelDelta
       : 0;
   },
@@ -590,6 +590,5 @@ const WheelEventInterface = {
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: 0,
 };
-export const SyntheticWheelEvent: $FlowFixMe = createSyntheticEvent(
-  WheelEventInterface,
-);
+export const SyntheticWheelEvent: $FlowFixMe =
+  createSyntheticEvent(WheelEventInterface);

@@ -13,7 +13,7 @@ import {
   getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 
-import type {Wall} from 'react-devtools-shared/src/types';
+import type {Wall} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
@@ -37,6 +37,7 @@ export function createBridge(contentWindow: any, wall?: Wall): FrontendBridge {
   if (wall == null) {
     wall = {
       listen(fn) {
+        // $FlowFixMe[missing-local-annot]
         const onMessage = ({data}) => {
           fn(data);
         };
@@ -62,7 +63,6 @@ export function initialize(
   }: {
     bridge?: FrontendBridge,
     store?: Store,
-    // $FlowFixMe[incompatible-exact]
   } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {

@@ -8,7 +8,12 @@
  */
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import {withErrorsOrWarningsIgnored} from 'react-devtools-shared/src/__tests__/utils';
+import {
+  withErrorsOrWarningsIgnored,
+  getLegacyRenderImplementation,
+  getModernRenderImplementation,
+  getVersionedRenderImplementation,
+} from 'react-devtools-shared/src/__tests__/utils';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
@@ -33,7 +38,6 @@ describe('InspectedElement', () => {
   let TestUtilsAct;
   let TestRendererAct;
 
-  let legacyRender;
   let testRendererInstance;
 
   let ErrorBoundary;
@@ -45,8 +49,6 @@ describe('InspectedElement', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    legacyRender = utils.legacyRender;
-
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -55,22 +57,22 @@ describe('InspectedElement', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
-    TestUtilsAct = require('jest-react').act;
+    TestUtilsAct = require('internal-test-utils').act;
     TestRenderer = utils.requireTestRenderer();
-    TestRendererAct = require('jest-react').act;
+    TestRendererAct = require('internal-test-utils').act;
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
-      .BridgeContext;
-    InspectedElementContext = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
-      .InspectedElementContext;
-    InspectedElementContextController = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
-      .InspectedElementContextController;
-    SettingsContextController = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext')
-      .SettingsContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context')
-      .StoreContext;
-    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
-      .TreeContextController;
+    BridgeContext =
+      require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    InspectedElementContext =
+      require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext').InspectedElementContext;
+    InspectedElementContextController =
+      require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext').InspectedElementContextController;
+    SettingsContextController =
+      require('react-devtools-shared/src/devtools/views/Settings/SettingsContext').SettingsContextController;
+    StoreContext =
+      require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeContextController;
 
     // Used by inspectElementAtIndex() helper function
     utils.act(() => {
@@ -100,6 +102,10 @@ describe('InspectedElement', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  const {render: legacyRender} = getLegacyRenderImplementation();
+  const {render: modernRender} = getModernRenderImplementation();
+  const {render} = getVersionedRenderImplementation();
 
   const Contexts = ({
     children,
@@ -173,25 +179,27 @@ describe('InspectedElement', () => {
     return inspectedElement;
   }
 
-  it('should inspect the currently selected element', async () => {
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
+  // @reactVersion <= 18.2
+  xit('should inspect the currently selected element (legacy render)', async () => {
     const Example = () => {
       const [count] = React.useState(1);
       return count;
     };
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example a={1} b="abc" />, container),
-    );
+    await utils.actAsync(() => {
+      legacyRender(<Example a={1} b="abc" />);
+    });
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
+      {
         "context": null,
         "events": undefined,
-        "hooks": Array [
-          Object {
-            "hookSource": Object {
+        "hooks": [
+          {
+            "debugInfo": null,
+            "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
               "functionName": "Example",
@@ -200,17 +208,60 @@ describe('InspectedElement', () => {
             "id": 0,
             "isStateEditable": true,
             "name": "State",
-            "subHooks": Array [],
+            "subHooks": [],
             "value": 1,
           },
         ],
         "id": 2,
         "owners": null,
-        "props": Object {
+        "props": {
           "a": 1,
           "b": "abc",
         },
         "rootType": "render()",
+        "state": null,
+      }
+    `);
+  });
+
+  it('should inspect the currently selected element (createRoot)', async () => {
+    const Example = () => {
+      const [count] = React.useState(1);
+      return count;
+    };
+
+    await utils.actAsync(() => {
+      modernRender(<Example a={1} b="abc" />);
+    });
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      {
+        "context": null,
+        "events": undefined,
+        "hooks": [
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": "removed by Jest serializer",
+              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+              "functionName": "Example",
+              "lineNumber": "removed by Jest serializer",
+            },
+            "id": 0,
+            "isStateEditable": true,
+            "name": "State",
+            "subHooks": [],
+            "value": 1,
+          },
+        ],
+        "id": 2,
+        "owners": null,
+        "props": {
+          "a": 1,
+          "b": "abc",
+        },
+        "rootType": "createRoot()",
         "state": null,
       }
     `);
@@ -256,9 +307,8 @@ describe('InspectedElement', () => {
     const ModernContext = React.createContext();
     ModernContext.displayName = 'ModernContext';
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <React.Fragment>
           <LegacyContextProvider>
             <LegacyContextConsumer />
@@ -269,7 +319,6 @@ describe('InspectedElement', () => {
             <ModernContext.Consumer>{value => null}</ModernContext.Consumer>
           </ModernContext.Provider>
         </React.Fragment>,
-        container,
       ),
     );
 
@@ -303,7 +352,7 @@ describe('InspectedElement', () => {
       // from props like defaultSelectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
-      utils.withErrorsOrWarningsIgnored(
+      withErrorsOrWarningsIgnored(
         ['An update to %s inside a test was not wrapped in act'],
         () => {
           testRendererInstance = TestRenderer.create(null, {
@@ -322,24 +371,17 @@ describe('InspectedElement', () => {
   it('should poll for updates for the currently selected element', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
-    await utils.actAsync(
-      () => legacyRender(<Example a={1} b="abc" />, container),
-      false,
-    );
+    await utils.actAsync(() => render(<Example a={1} b="abc" />), false);
 
     let inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "a": 1,
         "b": "abc",
       }
     `);
 
-    await utils.actAsync(
-      () => legacyRender(<Example a={2} b="def" />, container),
-      false,
-    );
+    await utils.actAsync(() => render(<Example a={2} b="def" />), false);
 
     // TODO (cache)
     // This test only passes if both the check-for-updates poll AND the test renderer.update() call are included below.
@@ -353,7 +395,7 @@ describe('InspectedElement', () => {
 
     inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "a": 2,
         "b": "def",
       }
@@ -371,22 +413,22 @@ describe('InspectedElement', () => {
       return null;
     });
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Wrapper>
           <Target a={1} b="abc" />
         </Wrapper>,
-        container,
       ),
     );
 
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "a": 1,
         "b": "abc",
       }
@@ -403,11 +445,10 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(
       () =>
-        legacyRender(
+        render(
           <Wrapper>
             <Target a={2} b="def" />
           </Wrapper>,
-          container,
         ),
       false,
     );
@@ -416,7 +457,7 @@ describe('InspectedElement', () => {
     inspectedElement = await inspectElementAtIndex(1);
     expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "a": 2,
         "b": "def",
       }
@@ -435,22 +476,22 @@ describe('InspectedElement', () => {
       return null;
     });
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Wrapper>
           <Target a={1} b="abc" />
         </Wrapper>,
-        container,
       ),
     );
 
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "a": 1,
         "b": "abc",
       }
@@ -461,15 +502,11 @@ describe('InspectedElement', () => {
     // This test causes an intermediate error to be logged but we can ignore it.
     jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Wait for our check-for-updates poll to get the new data.
-    jest.runOnlyPendingTimers();
-    await Promise.resolve();
-
     // Clear the frontend cache to simulate DevTools being closed and re-opened.
     // The backend still thinks the most recently-inspected element is still cached,
     // so the frontend needs to tell it to resend a full value.
     // We can verify this by asserting that the component is re-rendered again.
-    utils.withErrorsOrWarningsIgnored(
+    withErrorsOrWarningsIgnored(
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
@@ -507,9 +544,7 @@ describe('InspectedElement', () => {
       return null;
     });
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await utils.actAsync(() => root.render(<Target a={1} b="abc" />));
+    await utils.actAsync(() => render(<Target a={1} b="abc" />));
 
     expect(targetRenderCount).toBe(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -524,7 +559,9 @@ describe('InspectedElement', () => {
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement).not.toBe(null);
-    expect(targetRenderCount).toBe(2);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(3);
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.log).toHaveBeenCalledTimes(1);
@@ -534,9 +571,8 @@ describe('InspectedElement', () => {
   it('should support simple data types', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           boolean_false={false}
           boolean_true={true}
@@ -550,14 +586,13 @@ describe('InspectedElement', () => {
           value_null={null}
           value_undefined={undefined}
         />,
-        container,
       ),
     );
 
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "boolean_false": false,
         "boolean_true": true,
         "float": 1.23,
@@ -616,16 +651,15 @@ describe('InspectedElement', () => {
     const instance = new Class();
 
     const proxyInstance = new Proxy(() => {}, {
-      get: function(_, name) {
-        return function() {
+      get: function (_, name) {
+        return function () {
           return null;
         };
       },
     });
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           anonymous_fn={instance.anonymousFunction}
           array_buffer={arrayBuffer}
@@ -650,14 +684,13 @@ describe('InspectedElement', () => {
           symbol={Symbol('symbol')}
           typed_array={typedArray}
         />,
-        container,
       ),
     );
 
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "anonymous_fn": Dehydrated {
           "preview_short": ƒ () {},
           "preview_long": ƒ () {},
@@ -666,7 +699,7 @@ describe('InspectedElement', () => {
           "preview_short": ArrayBuffer(3),
           "preview_long": ArrayBuffer(3),
         },
-        "array_of_arrays": Array [
+        "array_of_arrays": [
           Dehydrated {
             "preview_short": Array(2),
             "preview_long": [Array(3), Array(0)],
@@ -696,7 +729,7 @@ describe('InspectedElement', () => {
           "preview_short": <div />,
           "preview_long": <div />,
         },
-        "immutable": Object {
+        "immutable": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["a", List(3)],
@@ -710,7 +743,7 @@ describe('InspectedElement', () => {
             "preview_long": ["c", Map(2)],
           },
         },
-        "map": Object {
+        "map": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["name", "Brian"],
@@ -720,7 +753,7 @@ describe('InspectedElement', () => {
             "preview_long": ["food", "sushi"],
           },
         },
-        "map_of_maps": Object {
+        "map_of_maps": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["first", Map(2)],
@@ -730,13 +763,13 @@ describe('InspectedElement', () => {
             "preview_long": ["second", Map(2)],
           },
         },
-        "object_of_objects": Object {
+        "object_of_objects": {
           "inner": Dehydrated {
             "preview_short": {…},
             "preview_long": {boolean: true, number: 123, string: "abc"},
           },
         },
-        "object_with_symbol": Object {
+        "object_with_symbol": {
           "Symbol(name)": "hello",
         },
         "proxy": Dehydrated {
@@ -751,11 +784,11 @@ describe('InspectedElement', () => {
           "preview_short": /abc/giu,
           "preview_long": /abc/giu,
         },
-        "set": Object {
+        "set": {
           "0": "abc",
           "1": 123,
         },
-        "set_of_sets": Object {
+        "set_of_sets": {
           "0": Dehydrated {
             "preview_short": Set(3),
             "preview_long": Set(3) {"a", "b", "c"},
@@ -769,7 +802,7 @@ describe('InspectedElement', () => {
           "preview_short": Symbol(symbol),
           "preview_long": Symbol(symbol),
         },
-        "typed_array": Object {
+        "typed_array": {
           "0": 100,
           "1": -100,
           "2": 0,
@@ -785,16 +818,12 @@ describe('InspectedElement', () => {
       throw Error('Should not be consumed!');
     }
 
-    const container = document.createElement('div');
-
     const iterable = generator();
-    await utils.actAsync(() =>
-      legacyRender(<Example prop={iterable} />, container),
-    );
+    await utils.actAsync(() => render(<Example prop={iterable} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "prop": Dehydrated {
           "preview_short": Generator,
           "preview_long": Generator,
@@ -811,15 +840,12 @@ describe('InspectedElement', () => {
     object.number = 123;
     object.boolean = true;
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example object={object} />, container),
-    );
+    await utils.actAsync(() => render(<Example object={object} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "object": Object {
+      {
+        "object": {
           "boolean": true,
           "number": 123,
           "string": "abc",
@@ -836,16 +862,13 @@ describe('InspectedElement', () => {
       hasOwnProperty: true,
     };
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example object={object} />, container),
-    );
+    await utils.actAsync(() => render(<Example object={object} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "object": Object {
+      {
+        "object": {
           "hasOwnProperty": true,
           "name": "blah",
         },
@@ -873,15 +896,12 @@ describe('InspectedElement', () => {
 
     const Example = () => null;
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example data={new CustomData()} />, container),
-    );
+    await utils.actAsync(() => render(<Example data={new CustomData()} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "data": Object {
+      {
+        "data": {
           "_number": 42,
           "number": 42,
         },
@@ -952,15 +972,12 @@ describe('InspectedElement', () => {
       },
     });
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example object={object} />, container),
-    );
+    await utils.actAsync(() => render(<Example object={object} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "object": Object {
+      {
+        "object": {
           "123": 3,
           "Symbol(enumerableSymbol)": 3,
           "Symbol(enumerableSymbolBase)": 1,
@@ -1007,15 +1024,13 @@ describe('InspectedElement', () => {
       },
     );
     const Example = ({data}) => null;
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example data={testData} />, container),
-    );
+
+    await utils.actAsync(() => render(<Example data={testData} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "data": Object {
+      {
+        "data": {
           "a": undefined,
           "b": Infinity,
           "c": NaN,
@@ -1038,9 +1053,8 @@ describe('InspectedElement', () => {
       return state.foo.bar.baz;
     };
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           nestedObject={{
             a: {
@@ -1056,7 +1070,6 @@ describe('InspectedElement', () => {
             },
           }}
         />,
-        container,
       ),
     );
 
@@ -1069,10 +1082,9 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1080,8 +1092,8 @@ describe('InspectedElement', () => {
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
+      {
+        "nestedObject": {
           "a": Dehydrated {
             "preview_short": {…},
             "preview_long": {b: {…}},
@@ -1093,10 +1105,10 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'a']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "c": Dehydrated {
                 "preview_short": Array(1),
                 "preview_long": [{…}],
@@ -1110,12 +1122,12 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'a', 'b', 'c']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
-              "c": Array [
-                Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
+              "c": [
+                {
                   "d": Dehydrated {
                     "preview_short": {…},
                     "preview_long": {e: {…}},
@@ -1131,14 +1143,14 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'a', 'b', 'c', 0, 'd']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
-              "c": Array [
-                Object {
-                  "d": Object {
-                    "e": Object {},
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
+              "c": [
+                {
+                  "d": {
+                    "e": {},
                   },
                 },
               ],
@@ -1151,9 +1163,10 @@ describe('InspectedElement', () => {
     await loadPath(['hooks', 0, 'value']);
 
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "hookSource": Object {
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
             "functionName": "Example",
@@ -1162,9 +1175,9 @@ describe('InspectedElement', () => {
           "id": 0,
           "isStateEditable": true,
           "name": "State",
-          "subHooks": Array [],
-          "value": Object {
-            "foo": Object {
+          "subHooks": [],
+          "value": {
+            "foo": {
               "bar": Dehydrated {
                 "preview_short": {…},
                 "preview_long": {baz: "hi"},
@@ -1178,9 +1191,10 @@ describe('InspectedElement', () => {
     await loadPath(['hooks', 0, 'value', 'foo', 'bar']);
 
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "hookSource": Object {
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
             "functionName": "Example",
@@ -1189,10 +1203,10 @@ describe('InspectedElement', () => {
           "id": 0,
           "isStateEditable": true,
           "name": "State",
-          "subHooks": Array [],
-          "value": Object {
-            "foo": Object {
-              "bar": Object {
+          "subHooks": [],
+          "value": {
+            "foo": {
+              "bar": {
                 "baz": "hi",
               },
             },
@@ -1205,13 +1219,11 @@ describe('InspectedElement', () => {
   it('should dehydrate complex nested values when requested', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           set_of_sets={new Set([new Set([1, 2, 3]), new Set(['a', 'b', 'c'])])}
         />,
-        container,
       ),
     );
 
@@ -1224,10 +1236,9 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1235,8 +1246,8 @@ describe('InspectedElement', () => {
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "set_of_sets": Object {
+      {
+        "set_of_sets": {
           "0": Dehydrated {
             "preview_short": Set(3),
             "preview_long": Set(3) {1, 2, 3},
@@ -1252,9 +1263,9 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'set_of_sets', 0]);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "set_of_sets": Object {
-          "0": Object {
+      {
+        "set_of_sets": {
+          "0": {
             "0": 1,
             "1": 2,
             "2": 3,
@@ -1271,9 +1282,8 @@ describe('InspectedElement', () => {
   it('should include updates for nested values that were previously hydrated', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           nestedObject={{
             a: {
@@ -1293,7 +1303,6 @@ describe('InspectedElement', () => {
             },
           }}
         />,
-        container,
       ),
     );
 
@@ -1306,10 +1315,9 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1317,8 +1325,8 @@ describe('InspectedElement', () => {
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
+      {
+        "nestedObject": {
           "a": Dehydrated {
             "preview_short": {…},
             "preview_long": {b: {…}, value: 1},
@@ -1334,10 +1342,10 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'a']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 1,
             },
             "value": 1,
@@ -1353,16 +1361,16 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'c']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 1,
             },
             "value": 1,
           },
-          "c": Object {
-            "d": Object {
+          "c": {
+            "d": {
               "e": Dehydrated {
                 "preview_short": {…},
                 "preview_long": {value: 1},
@@ -1375,9 +1383,9 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestRendererAct(() => {
-      TestUtilsAct(() => {
-        legacyRender(
+    await TestRendererAct(async () => {
+      await TestUtilsAct(async () => {
+        render(
           <Example
             nestedObject={{
               a: {
@@ -1397,7 +1405,6 @@ describe('InspectedElement', () => {
               },
             }}
           />,
-          container,
         );
       });
     });
@@ -1408,16 +1415,16 @@ describe('InspectedElement', () => {
     inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 2,
             },
             "value": 2,
           },
-          "c": Object {
-            "d": Object {
+          "c": {
+            "d": {
               "e": Dehydrated {
                 "preview_short": {…},
                 "preview_long": {value: 2},
@@ -1434,9 +1441,8 @@ describe('InspectedElement', () => {
   it('should return a full update if a path is inspected for an object that has other pending changes', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           nestedObject={{
             a: {
@@ -1456,7 +1462,6 @@ describe('InspectedElement', () => {
             },
           }}
         />,
-        container,
       ),
     );
 
@@ -1469,10 +1474,9 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(() => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1480,8 +1484,8 @@ describe('InspectedElement', () => {
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
+      {
+        "nestedObject": {
           "a": Dehydrated {
             "preview_short": {…},
             "preview_long": {b: {…}, value: 1},
@@ -1497,10 +1501,10 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'a']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 1,
             },
             "value": 1,
@@ -1513,9 +1517,9 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestRendererAct(() => {
-      TestUtilsAct(() => {
-        legacyRender(
+    await TestRendererAct(async () => {
+      await TestUtilsAct(async () => {
+        render(
           <Example
             nestedObject={{
               a: {
@@ -1535,7 +1539,6 @@ describe('InspectedElement', () => {
               },
             }}
           />,
-          container,
         );
       });
     });
@@ -1543,16 +1546,16 @@ describe('InspectedElement', () => {
     await loadPath(['props', 'nestedObject', 'c']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 2,
             },
             "value": 2,
           },
-          "c": Object {
-            "d": Object {
+          "c": {
+            "d": {
               "e": Dehydrated {
                 "preview_short": {…},
                 "preview_long": {value: 2},
@@ -1569,9 +1572,8 @@ describe('InspectedElement', () => {
   it('should not tear if hydration is requested after an update', async () => {
     const Example = () => null;
 
-    const container = document.createElement('div');
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           nestedObject={{
             value: 1,
@@ -1583,7 +1585,6 @@ describe('InspectedElement', () => {
             },
           }}
         />,
-        container,
       ),
     );
 
@@ -1596,10 +1597,9 @@ describe('InspectedElement', () => {
     });
 
     async function loadPath(path) {
-      TestUtilsAct(() => {
-        TestRendererAct(() => {
+      await TestUtilsAct(async () => {
+        await TestRendererAct(() => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1607,8 +1607,8 @@ describe('InspectedElement', () => {
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
+      {
+        "nestedObject": {
           "a": Dehydrated {
             "preview_short": {…},
             "preview_long": {b: {…}, value: 1},
@@ -1618,8 +1618,8 @@ describe('InspectedElement', () => {
       }
     `);
 
-    TestUtilsAct(() => {
-      legacyRender(
+    await TestUtilsAct(async () => {
+      render(
         <Example
           nestedObject={{
             value: 2,
@@ -1631,17 +1631,16 @@ describe('InspectedElement', () => {
             },
           }}
         />,
-        container,
       );
     });
 
     await loadPath(['props', 'nestedObject', 'a']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "value": 2,
             },
             "value": 2,
@@ -1652,26 +1651,26 @@ describe('InspectedElement', () => {
     `);
   });
 
-  it('should inspect hooks for components that only use context', async () => {
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
+  // @reactVersion <= 18.2
+  xit('should inspect hooks for components that only use context (legacy render)', async () => {
     const Context = React.createContext(true);
     const Example = () => {
       const value = React.useContext(Context);
       return value;
     };
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example a={1} b="abc" />, container),
-    );
+    await utils.actAsync(() => legacyRender(<Example a={1} b="abc" />));
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
+      {
         "context": null,
         "events": undefined,
-        "hooks": Array [
-          Object {
-            "hookSource": Object {
+        "hooks": [
+          {
+            "debugInfo": null,
+            "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
               "functionName": "Example",
@@ -1680,17 +1679,59 @@ describe('InspectedElement', () => {
             "id": null,
             "isStateEditable": false,
             "name": "Context",
-            "subHooks": Array [],
+            "subHooks": [],
             "value": true,
           },
         ],
         "id": 2,
         "owners": null,
-        "props": Object {
+        "props": {
           "a": 1,
           "b": "abc",
         },
         "rootType": "render()",
+        "state": null,
+      }
+    `);
+  });
+
+  it('should inspect hooks for components that only use context (createRoot)', async () => {
+    const Context = React.createContext(true);
+    const Example = () => {
+      const value = React.useContext(Context);
+      return value;
+    };
+
+    await utils.actAsync(() => modernRender(<Example a={1} b="abc" />));
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      {
+        "context": null,
+        "events": undefined,
+        "hooks": [
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": "removed by Jest serializer",
+              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+              "functionName": "Example",
+              "lineNumber": "removed by Jest serializer",
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "Context",
+            "subHooks": [],
+            "value": true,
+          },
+        ],
+        "id": 2,
+        "owners": null,
+        "props": {
+          "a": 1,
+          "b": "abc",
+        },
+        "rootType": "createRoot()",
         "state": null,
       }
     `);
@@ -1711,12 +1752,7 @@ describe('InspectedElement', () => {
       },
     };
 
-    await utils.actAsync(() =>
-      legacyRender(
-        <Example nestedObject={nestedObject} />,
-        document.createElement('div'),
-      ),
-    );
+    await utils.actAsync(() => render(<Example nestedObject={nestedObject} />));
 
     let storeAsGlobal: StoreAsGlobal = ((null: any): StoreAsGlobal);
 
@@ -1770,14 +1806,10 @@ describe('InspectedElement', () => {
       },
     };
 
-    await utils.actAsync(() =>
-      legacyRender(
-        <Example nestedObject={nestedObject} />,
-        document.createElement('div'),
-      ),
-    );
+    await utils.actAsync(() => render(<Example nestedObject={nestedObject} />));
 
-    let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
+    let copyPath: CopyInspectedElementPath =
+      ((null: any): CopyInspectedElementPath);
 
     const id = ((store.getElementIDAtIndex(0): any): number);
     await inspectElementAtIndex(0, () => {
@@ -1802,7 +1834,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject),
+      JSON.stringify(nestedObject, undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -1812,7 +1844,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject.a.b),
+      JSON.stringify(nestedObject.a.b, undefined, 2),
     );
   });
 
@@ -1842,11 +1874,10 @@ describe('InspectedElement', () => {
         xyz: 1,
       },
     });
-    // $FlowFixMe
     const bigInt = BigInt(123); // eslint-disable-line no-undef
 
     await utils.actAsync(() =>
-      legacyRender(
+      render(
         <Example
           arrayBuffer={arrayBuffer}
           dataView={dataView}
@@ -1858,13 +1889,13 @@ describe('InspectedElement', () => {
           immutable={immutable}
           bigInt={bigInt}
         />,
-        document.createElement('div'),
       ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
-    let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
+    let copyPath: CopyInspectedElementPath =
+      ((null: any): CopyInspectedElementPath);
 
     await inspectElementAtIndex(0, () => {
       copyPath = (path: Array<string | number>) => {
@@ -1895,7 +1926,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify('123n'),
+      JSON.stringify('123n', undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -1905,13 +1936,11 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify({0: 100, 1: -100, 2: 0}),
+      JSON.stringify({0: 100, 1: -100, 2: 0}, undefined, 2),
     );
   });
 
   it('should display complex values of useDebugValue', async () => {
-    const container = document.createElement('div');
-
     function useDebuggableHook() {
       React.useDebugValue({foo: 2});
       React.useState(1);
@@ -1922,15 +1951,14 @@ describe('InspectedElement', () => {
       return null;
     }
 
-    await utils.actAsync(() =>
-      legacyRender(<DisplayedComplexValue />, container),
-    );
+    await utils.actAsync(() => render(<DisplayedComplexValue />));
 
     const {hooks} = await inspectElementAtIndex(0);
     expect(hooks).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "hookSource": Object {
+      [
+        {
+          "debugInfo": null,
+          "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
             "functionName": "DisplayedComplexValue",
@@ -1939,9 +1967,10 @@ describe('InspectedElement', () => {
           "id": null,
           "isStateEditable": false,
           "name": "DebuggableHook",
-          "subHooks": Array [
-            Object {
-              "hookSource": Object {
+          "subHooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
                 "functionName": "useDebuggableHook",
@@ -1950,11 +1979,11 @@ describe('InspectedElement', () => {
               "id": 0,
               "isStateEditable": true,
               "name": "State",
-              "subHooks": Array [],
+              "subHooks": [],
               "value": 1,
             },
           ],
-          "value": Object {
+          "value": {
             "foo": 2,
           },
         },
@@ -1975,16 +2004,13 @@ describe('InspectedElement', () => {
       },
     );
 
-    const container = document.createElement('div');
-    await utils.actAsync(() =>
-      legacyRender(<Example proxy={proxy} />, container),
-    );
+    await utils.actAsync(() => render(<Example proxy={proxy} />));
 
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "proxy": Object {
+      {
+        "proxy": {
           "$$typeof": Dehydrated {
             "preview_short": ƒ () {},
             "preview_long": ƒ () {},
@@ -2002,23 +2028,24 @@ describe('InspectedElement', () => {
     `);
   });
 
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // Regression test for github.com/facebook/react/issues/22099
-  it('should not error when an unchanged component is re-inspected after component filters changed', async () => {
+  // @reactVersion <= 18.2
+  xit('should not error when an unchanged component is re-inspected after component filters changed (legacy render)', async () => {
     const Example = () => <div />;
 
-    const container = document.createElement('div');
-    await utils.actAsync(() => legacyRender(<Example />, container));
+    await utils.actAsync(() => legacyRender(<Example />));
 
     // Select/inspect element
     let inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
+      {
         "context": null,
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {},
+        "props": {},
         "rootType": "render()",
         "state": null,
       }
@@ -2026,7 +2053,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(async () => {
       // Ignore transient warning this causes
-      utils.withErrorsOrWarningsIgnored(['No element found with id'], () => {
+      withErrorsOrWarningsIgnored(['No element found with id'], () => {
         store.componentFilters = [];
 
         // Flush events to the renderer.
@@ -2038,7 +2065,7 @@ describe('InspectedElement', () => {
     // from props like defaultSelectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
-    utils.withErrorsOrWarningsIgnored(
+    withErrorsOrWarningsIgnored(
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
@@ -2050,27 +2077,89 @@ describe('InspectedElement', () => {
     // Select/inspect the same element again
     inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
+      {
         "context": null,
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {},
+        "props": {},
         "rootType": "render()",
         "state": null,
       }
     `);
   });
 
-  it('should display the root type for ReactDOM.hydrate', async () => {
+  // Regression test for github.com/facebook/react/issues/22099
+  it('should not error when an unchanged component is re-inspected after component filters changed (createRoot)', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => modernRender(<Example />));
+
+    // Select/inspect element
+    let inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      {
+        "context": null,
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": {},
+        "rootType": "createRoot()",
+        "state": null,
+      }
+    `);
+
+    await utils.actAsync(async () => {
+      // Ignore transient warning this causes
+      withErrorsOrWarningsIgnored(['No element found with id'], () => {
+        store.componentFilters = [];
+
+        // Flush events to the renderer.
+        jest.runOnlyPendingTimers();
+      });
+    }, false);
+
+    // HACK: Recreate TestRenderer instance because we rely on default state values
+    // from props like defaultSelectedElementID and it's easier to reset here than
+    // to read the TreeDispatcherContext and update the selected ID that way.
+    // We're testing the inspected values here, not the context wiring, so that's ok.
+    withErrorsOrWarningsIgnored(
+      ['An update to %s inside a test was not wrapped in act'],
+      () => {
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+      },
+    );
+
+    // Select/inspect the same element again
+    inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      {
+        "context": null,
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": {},
+        "rootType": "createRoot()",
+        "state": null,
+      }
+    `);
+  });
+
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
+  // @reactVersion <= 18.2
+  xit('should display the root type for ReactDOM.hydrate', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
       withErrorsOrWarningsIgnored(
-        ['ReactDOM.hydrate is no longer supported in React 18'],
+        ['ReactDOM.hydrate has not been supported since React 18'],
         () => {
           ReactDOM.hydrate(<Example />, container);
         },
@@ -2081,12 +2170,13 @@ describe('InspectedElement', () => {
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrate()"`);
   });
 
-  it('should display the root type for ReactDOM.render', async () => {
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
+  // @reactVersion <= 18.2
+  xit('should display the root type for ReactDOM.render', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
-      const container = document.createElement('div');
-      legacyRender(<Example />, container);
+      legacyRender(<Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
@@ -2119,7 +2209,7 @@ describe('InspectedElement', () => {
   });
 
   it('should gracefully surface backend errors on the frontend rather than timing out', async () => {
-    spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     let shouldThrow = false;
 
@@ -2134,8 +2224,7 @@ describe('InspectedElement', () => {
     };
 
     await utils.actAsync(() => {
-      const container = document.createElement('div');
-      ReactDOMClient.createRoot(container).render(<Example />);
+      render(<Example />);
     }, false);
 
     shouldThrow = true;
@@ -2156,18 +2245,16 @@ describe('InspectedElement', () => {
         return count;
       };
 
-      const container = document.createElement('div');
-      await utils.actAsync(() =>
-        legacyRender(<Example a={1} b="abc" />, container),
-      );
+      await utils.actAsync(() => render(<Example a={1} b="abc" />));
 
       await inspectElementAtIndex(0);
 
       expect(global.$r).toMatchInlineSnapshot(`
-        Object {
-          "hooks": Array [
-            Object {
-              "hookSource": Object {
+        {
+          "hooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
                 "functionName": "Example",
@@ -2176,11 +2263,11 @@ describe('InspectedElement', () => {
               "id": 0,
               "isStateEditable": true,
               "name": "State",
-              "subHooks": Array [],
+              "subHooks": [],
               "value": 1,
             },
           ],
-          "props": Object {
+          "props": {
             "a": 1,
             "b": "abc",
           },
@@ -2195,18 +2282,16 @@ describe('InspectedElement', () => {
         return count;
       });
 
-      const container = document.createElement('div');
-      await utils.actAsync(() =>
-        legacyRender(<Example a={1} b="abc" />, container),
-      );
+      await utils.actAsync(() => render(<Example a={1} b="abc" />));
 
       await inspectElementAtIndex(0);
 
       expect(global.$r).toMatchInlineSnapshot(`
-        Object {
-          "hooks": Array [
-            Object {
-              "hookSource": Object {
+        {
+          "hooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
                 "functionName": "Example",
@@ -2215,11 +2300,11 @@ describe('InspectedElement', () => {
               "id": 0,
               "isStateEditable": true,
               "name": "State",
-              "subHooks": Array [],
+              "subHooks": [],
               "value": 1,
             },
           ],
-          "props": Object {
+          "props": {
             "a": 1,
             "b": "abc",
           },
@@ -2234,18 +2319,16 @@ describe('InspectedElement', () => {
         return count;
       });
 
-      const container = document.createElement('div');
-      await utils.actAsync(() =>
-        legacyRender(<Example a={1} b="abc" />, container),
-      );
+      await utils.actAsync(() => render(<Example a={1} b="abc" />));
 
       await inspectElementAtIndex(0);
 
       expect(global.$r).toMatchInlineSnapshot(`
-        Object {
-          "hooks": Array [
-            Object {
-              "hookSource": Object {
+        {
+          "hooks": [
+            {
+              "debugInfo": null,
+              "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
                 "functionName": "Example",
@@ -2254,11 +2337,11 @@ describe('InspectedElement', () => {
               "id": 0,
               "isStateEditable": true,
               "name": "State",
-              "subHooks": Array [],
+              "subHooks": [],
               "value": 1,
             },
           ],
-          "props": Object {
+          "props": {
             "a": 1,
             "b": "abc",
           },
@@ -2277,21 +2360,18 @@ describe('InspectedElement', () => {
         }
       }
 
-      const container = document.createElement('div');
-      await utils.actAsync(() =>
-        legacyRender(<Example a={1} b="abc" />, container),
-      );
+      await utils.actAsync(() => render(<Example a={1} b="abc" />));
 
       await inspectElementAtIndex(0);
 
       expect(global.$r.props).toMatchInlineSnapshot(`
-              Object {
+              {
                 "a": 1,
                 "b": "abc",
               }
             `);
       expect(global.$r.state).toMatchInlineSnapshot(`
-              Object {
+              {
                 "count": 0,
               }
             `);
@@ -2342,25 +2422,21 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-
       await withErrorsOrWarningsIgnored(['test-only: '], async () => {
-        await utils.actAsync(() =>
-          legacyRender(<Example repeatWarningCount={1} />, container),
-        );
+        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [
-            Array [
+        {
+          "errors": [
+            [
               "test-only: render error",
               1,
             ],
           ],
-          "warnings": Array [
-            Array [
+          "warnings": [
+            [
               "test-only: render warning",
               1,
             ],
@@ -2379,23 +2455,20 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          legacyRender(<Example repeatWarningCount={1} />, container),
-        );
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
       });
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [
-            Array [
+        {
+          "errors": [
+            [
               "test-only: render error",
               2,
             ],
           ],
-          "warnings": Array [
-            Array [
+          "warnings": [
+            [
               "test-only: render warning",
               3,
             ],
@@ -2415,24 +2488,21 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          legacyRender(<Example repeatWarningCount={1} />, container),
-        );
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [
-            Array [
+        {
+          "errors": [
+            [
               "test-only: useLayoutEffect error",
               1,
             ],
           ],
-          "warnings": Array [
-            Array [
+          "warnings": [
+            [
               "test-only: useLayoutEffect warning",
               1,
             ],
@@ -2452,24 +2522,21 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          legacyRender(<Example repeatWarningCount={1} />, container),
-        );
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [
-            Array [
+        {
+          "errors": [
+            [
               "test-only: useEffect error",
               1,
             ],
           ],
-          "warnings": Array [
-            Array [
+          "warnings": [
+            [
               "test-only: useEffect warning",
               1,
             ],
@@ -2483,27 +2550,26 @@ describe('InspectedElement', () => {
         return [<div />];
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(
+      await withErrorsOrWarningsIgnored(
         ['Warning: Each child in a list should have a unique "key" prop.'],
         async () => {
           await utils.actAsync(() =>
-            legacyRender(<Example repeatWarningCount={1} />, container),
+            render(<Example repeatWarningCount={1} />),
           );
         },
       );
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [
-            Array [
-              "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.
+        {
+          "errors": [
+            [
+              "Warning: Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
             at Example",
               1,
             ],
           ],
-          "warnings": Array [],
+          "warnings": [],
         }
       `);
     });
@@ -2515,11 +2581,8 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
-        await utils.actAsync(() =>
-          legacyRender(<Example repeatWarningCount={1} />, container),
-        );
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() => render(<Example repeatWarningCount={1} />));
       });
 
       const {
@@ -2532,9 +2595,9 @@ describe('InspectedElement', () => {
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchInlineSnapshot(`
-        Object {
-          "errors": Array [],
-          "warnings": Array [],
+        {
+          "errors": [],
+          "warnings": [],
         }
       `);
     });
@@ -2546,15 +2609,13 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await utils.actAsync(() =>
-          legacyRender(
+          render(
             <React.Fragment>
               <Example id={1} />
               <Example id={2} />
             </React.Fragment>,
-            container,
           ),
         );
       });
@@ -2575,29 +2636,29 @@ describe('InspectedElement', () => {
         await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "errors": Array [
-              Array [
+        [
+          {
+            "errors": [
+              [
                 "test-only: render error #1",
                 1,
               ],
             ],
-            "warnings": Array [
-              Array [
+            "warnings": [
+              [
                 "test-only: render warning #1",
                 1,
               ],
             ],
           },
-          Object {
-            "errors": Array [
-              Array [
+          {
+            "errors": [
+              [
                 "test-only: render error #2",
                 1,
               ],
             ],
-            "warnings": Array [],
+            "warnings": [],
           },
         ]
       `);
@@ -2613,24 +2674,24 @@ describe('InspectedElement', () => {
         await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "errors": Array [
-              Array [
+        [
+          {
+            "errors": [
+              [
                 "test-only: render error #1",
                 1,
               ],
             ],
-            "warnings": Array [],
+            "warnings": [],
           },
-          Object {
-            "errors": Array [
-              Array [
+          {
+            "errors": [
+              [
                 "test-only: render error #2",
                 1,
               ],
             ],
-            "warnings": Array [],
+            "warnings": [],
           },
         ]
       `);
@@ -2643,15 +2704,13 @@ describe('InspectedElement', () => {
         return null;
       };
 
-      const container = document.createElement('div');
-      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+      await withErrorsOrWarningsIgnored(['test-only:'], async () => {
         await utils.actAsync(() =>
-          legacyRender(
+          render(
             <React.Fragment>
               <Example id={1} />
               <Example id={2} />
             </React.Fragment>,
-            container,
           ),
         );
       });
@@ -2672,25 +2731,25 @@ describe('InspectedElement', () => {
         await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "errors": Array [
-              Array [
+        [
+          {
+            "errors": [
+              [
                 "test-only: render error #1",
                 1,
               ],
             ],
-            "warnings": Array [
-              Array [
+            "warnings": [
+              [
                 "test-only: render warning #1",
                 1,
               ],
             ],
           },
-          Object {
-            "errors": Array [],
-            "warnings": Array [
-              Array [
+          {
+            "errors": [],
+            "warnings": [
+              [
                 "test-only: render warning #2",
                 1,
               ],
@@ -2710,20 +2769,20 @@ describe('InspectedElement', () => {
         await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "errors": Array [],
-            "warnings": Array [
-              Array [
+        [
+          {
+            "errors": [],
+            "warnings": [
+              [
                 "test-only: render warning #1",
                 1,
               ],
             ],
           },
-          Object {
-            "errors": Array [],
-            "warnings": Array [
-              Array [
+          {
+            "errors": [],
+            "warnings": [
+              [
                 "test-only: render warning #2",
                 1,
               ],
@@ -2734,9 +2793,11 @@ describe('InspectedElement', () => {
     });
   });
 
-  it('inspecting nested renderers should not throw', async () => {
+  // TODO(hoxyq): Enable this test for versions ~18, currently broken
+  // @reactVersion <= 18.2
+  xit('inspecting nested renderers should not throw (legacy render)', async () => {
     // Ignoring react art warnings
-    spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const ReactArt = require('react-art');
     const ArtSVGMode = require('art/modes/svg');
     const ARTCurrentMode = require('art/modes/current');
@@ -2757,7 +2818,7 @@ describe('InspectedElement', () => {
     }
 
     await utils.actAsync(() => {
-      legacyRender(<App />, document.createElement('div'));
+      legacyRender(<App />);
     });
     expect(store).toMatchInlineSnapshot(`
       [root]
@@ -2771,18 +2832,78 @@ describe('InspectedElement', () => {
 
     const inspectedElement = await inspectElementAtIndex(4);
     expect(inspectedElement.owners).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
+          "compiledWithForget": false,
           "displayName": "Child",
           "hocDisplayNames": null,
           "id": 3,
           "key": null,
           "type": 5,
         },
-        Object {
+        {
+          "compiledWithForget": false,
           "displayName": "App",
           "hocDisplayNames": null,
           "id": 2,
+          "key": null,
+          "type": 5,
+        },
+      ]
+    `);
+  });
+
+  it('inspecting nested renderers should not throw (createRoot)', async () => {
+    // Ignoring react art warnings
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const ReactArt = require('react-art');
+    const ArtSVGMode = require('art/modes/svg');
+    const ARTCurrentMode = require('art/modes/current');
+    store.componentFilters = [];
+
+    ARTCurrentMode.setCurrent(ArtSVGMode);
+    const {Surface, Group} = ReactArt;
+
+    function Child() {
+      return (
+        <Surface width={1} height={1}>
+          <Group />
+        </Surface>
+      );
+    }
+    function App() {
+      return <Child />;
+    }
+
+    await utils.actAsync(() => {
+      modernRender(<App />);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Child>
+            ▾ <Surface>
+                <svg>
+      [root]
+          <Group>
+    `);
+
+    const inspectedElement = await inspectElementAtIndex(4);
+    expect(inspectedElement.owners).toMatchInlineSnapshot(`
+      [
+        {
+          "compiledWithForget": false,
+          "displayName": "Child",
+          "hocDisplayNames": null,
+          "id": 5,
+          "key": null,
+          "type": 5,
+        },
+        {
+          "compiledWithForget": false,
+          "displayName": "App",
+          "hocDisplayNames": null,
+          "id": 4,
           "key": null,
           "type": 5,
         },
@@ -2806,11 +2927,10 @@ describe('InspectedElement', () => {
       const Example = () => 'example';
 
       await utils.actAsync(() =>
-        legacyRender(
+        render(
           <LocalErrorBoundary>
             <Example />
           </LocalErrorBoundary>,
-          document.createElement('div'),
         ),
       );
 
@@ -2819,7 +2939,7 @@ describe('InspectedElement', () => {
       ): any): number);
       const inspect = index => {
         // HACK: Recreate TestRenderer instance so we can inspect different elements
-        utils.withErrorsOrWarningsIgnored(
+        withErrorsOrWarningsIgnored(
           ['An update to %s inside a test was not wrapped in act'],
           () => {
             testRendererInstance = TestRenderer.create(null, {
@@ -2831,7 +2951,7 @@ describe('InspectedElement', () => {
       };
       const toggleError = async forceError => {
         await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
-          await TestUtilsAct(() => {
+          await TestUtilsAct(async () => {
             bridge.send('overrideError', {
               id: targetErrorBoundaryID,
               rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
@@ -2840,7 +2960,7 @@ describe('InspectedElement', () => {
           });
         });
 
-        TestUtilsAct(() => {
+        await TestUtilsAct(async () => {
           jest.runOnlyPendingTimers();
         });
       };

@@ -21,12 +21,12 @@ import {
 } from './legacy-events/EventPluginRegistry';
 import {batchedUpdates} from './legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from './legacy-events/EventBatching';
-import getListeners from './ReactNativeGetListeners';
+import getListener from './ReactNativeGetListener';
 import accumulateInto from './legacy-events/accumulateInto';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 
-export {getListeners, registrationNameModules as registrationNames};
+export {getListener, registrationNameModules as registrationNames};
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -43,13 +43,14 @@ const EMPTY_NATIVE_EVENT = (({}: any): AnyNativeEvent);
  * @param {Array<number>} indices Indices by which to pull subsequence.
  * @return {Array<Touch>} Subsequence of touch objects.
  */
-const touchSubsequence = function(touches, indices) {
+// $FlowFixMe[missing-local-annot]
+function touchSubsequence(touches, indices) {
   const ret = [];
   for (let i = 0; i < indices.length; i++) {
     ret.push(touches[indices[i]]);
   }
   return ret;
-};
+}
 
 /**
  * TODO: Pool all of this.
@@ -62,7 +63,7 @@ const touchSubsequence = function(touches, indices) {
  * @param {Array<number>} indices Indices to remove from `touches`.
  * @return {Array<Touch>} Subsequence of removed touch objects.
  */
-const removeTouchesAtIndices = function(
+function removeTouchesAtIndices(
   touches: Array<Object>,
   indices: Array<number>,
 ): Array<Object> {
@@ -84,7 +85,7 @@ const removeTouchesAtIndices = function(
   }
   temp.length = fillAt;
   return rippedOut;
-};
+}
 
 /**
  * Internal version of `receiveEvent` in terms of normalized (non-tag)
@@ -109,7 +110,7 @@ function _receiveRootNodeIDEvent(
     target = inst.stateNode;
   }
 
-  batchedUpdates(function() {
+  batchedUpdates(function () {
     runExtractedPluginEventsInBatch(topLevelType, inst, nativeEvent, target);
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
@@ -129,7 +130,7 @@ function extractPluginEvents(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
-  let events = null;
+  let events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null = null;
   const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
   for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
@@ -234,7 +235,7 @@ export function receiveTouches(
         rootNodeID = target;
       }
     }
-    // $FlowFixMe Shouldn't we *not* call it if rootNodeID is null?
+    // $FlowFixMe[incompatible-call] Shouldn't we *not* call it if rootNodeID is null?
     _receiveRootNodeIDEvent(rootNodeID, eventTopLevelType, nativeEvent);
   }
 }

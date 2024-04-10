@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,8 @@
  * @flow
  */
 
-import {
-  type ConsolePatchSettings,
-  writeConsolePatchSettingsToWindow,
-} from 'react-devtools-shared/src/backend/console';
+import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/types';
+import {writeConsolePatchSettingsToWindow} from 'react-devtools-shared/src/backend/console';
 import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';
 
 // Note: all keys should be optional in this type, because users can use newer
@@ -33,7 +31,8 @@ function initializeConsolePatchSettings(
   if (devToolsSettingsManager.getConsolePatchSettings == null) {
     return;
   }
-  const consolePatchSettingsString = devToolsSettingsManager.getConsolePatchSettings();
+  const consolePatchSettingsString =
+    devToolsSettingsManager.getConsolePatchSettings();
   if (consolePatchSettingsString == null) {
     return;
   }

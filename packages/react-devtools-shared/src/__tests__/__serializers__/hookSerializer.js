@@ -13,7 +13,7 @@ function serializeHook(hook) {
   // Remove user-specific portions of this file path.
   let fileName = hook.hookSource.fileName;
   const index = fileName.lastIndexOf('/react-devtools-shared/');
-  fileName = fileName.substring(index + 1);
+  fileName = fileName.slice(index + 1);
 
   let subHooks = hook.subHooks;
   if (subHooks) {

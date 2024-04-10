@@ -211,19 +211,19 @@ describe('ReactNativeAttributePayload', () => {
     expect(
       diff(
         {
-          a: function() {
+          a: function () {
             return 1;
           },
-          b: function() {
+          b: function () {
             return 2;
           },
           c: 3,
         },
         {
-          b: function() {
+          b: function () {
             return 9;
           },
-          c: function() {
+          c: function () {
             return 3;
           },
         },
@@ -236,12 +236,12 @@ describe('ReactNativeAttributePayload', () => {
     expect(
       diff(
         {
-          a: function() {
+          a: function () {
             return 1;
           },
         },
         {
-          a: function() {
+          a: function () {
             return 9;
           },
         },
@@ -255,14 +255,14 @@ describe('ReactNativeAttributePayload', () => {
       diff(
         {
           wrapper: {
-            a: function() {
+            a: function () {
               return 1;
             },
           },
         },
         {
           wrapper: {
-            a: function() {
+            a: function () {
               return 9;
             },
           },

@@ -7,16 +7,30 @@
  * @flow
  */
 
+/**
+ * WARNING:
+ * This file contains types that are conceptually related to React internals and
+ * DevTools backends, but can be passed to frontend via the bridge.
+ * Be mindful of backwards compatibility when making changes.
+ */
+
 import type {ReactContext, Wakeable} from 'shared/ReactTypes';
-import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
   ElementType,
   Plugins,
-} from 'react-devtools-shared/src/types';
-import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ResolveNativeStyle,
+  SetupNativeStyleEditor,
+} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {Source} from 'react-devtools-shared/src/shared/types';
+import type Agent from './agent';
 
 type BundleType =
   | 0 // PROD
@@ -40,8 +54,11 @@ export type WorkTagMap = {
   HostComponent: WorkTag,
   HostPortal: WorkTag,
   HostRoot: WorkTag,
+  HostHoistable: WorkTag,
+  HostSingleton: WorkTag,
   HostText: WorkTag,
   IncompleteClassComponent: WorkTag,
+  IncompleteFunctionComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
   LegacyHiddenComponent: WorkTag,
@@ -70,7 +87,12 @@ export type NativeType = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
-export type CurrentDispatcherRef = {current: null | Dispatcher};
+export type LegacyDispatcherRef = {current: null | Dispatcher};
+type SharedInternalsSubset = {
+  H: null | Dispatcher,
+  ...
+};
+export type CurrentDispatcherRef = SharedInternalsSubset;
 
 export type GetDisplayNameForFiberID = (
   id: number,
@@ -138,7 +160,7 @@ export type ReactRenderer = {
   scheduleUpdate?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
   // Only injected by React v16.8+ in order to support hooks inspection.
-  currentDispatcherRef?: CurrentDispatcherRef,
+  currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
@@ -263,8 +285,6 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
-
-  // Location of component in source code.
   source: Source | null,
 
   type: ElementType,
@@ -340,7 +360,6 @@ export type RendererInterface = {
   clearErrorsAndWarnings: () => void,
   clearErrorsForFiberID: (id: number) => void,
   clearWarningsForFiberID: (id: number) => void,
-  copyElementPath: (id: number, path: Array<string | number>) => void,
   deletePath: (
     type: Type,
     id: number,
@@ -357,9 +376,14 @@ export type RendererInterface = {
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
+  getSerializedElementValueByPath: (
+    id: number,
+    path: Array<string | number>,
+  ) => ?string,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,
+  hasFiberWithId: (id: number) => boolean,
   inspectElement: (
     requestID: number,
     id: number,
@@ -451,10 +475,18 @@ export type DevToolsProfilingHooks = {
   markComponentPassiveEffectUnmountStopped: () => void,
 };
 
+export type DevToolsBackend = {
+  Agent: Class<Agent>,
+  Bridge: Class<BackendBridge>,
+  initBackend: InitBackend,
+  setupNativeStyleEditor?: SetupNativeStyleEditor,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,
   getFiberRoots: (rendererID: RendererID) => Set<Object>,
@@ -489,4 +521,12 @@ export type DevToolsHook = {
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
 
   ...
+};
+
+export type ConsolePatchSettings = {
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
 };

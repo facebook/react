@@ -12,23 +12,20 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -44,7 +41,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('refs', function() {
+  describe('refs', function () {
     it('should not run ref code on server', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
@@ -79,6 +76,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(refElement).toBe(e);
     });
 
+    // @gate !disableStringRefs
     it('should have string refs on client when rendered over server markup', async () => {
       class RefsComponent extends React.Component {
         render() {
@@ -91,11 +89,20 @@ describe('ReactDOMServerIntegration', () => {
       root.innerHTML = markup;
       let component = null;
       resetModules();
-      await asyncReactDOMRender(
-        <RefsComponent ref={e => (component = e)} />,
-        root,
-        true,
-      );
+      await expect(async () => {
+        await asyncReactDOMRender(
+          <RefsComponent ref={e => (component = e)} />,
+          root,
+          true,
+        );
+      }).toErrorDev([
+        'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+          '    in div (at **)\n' +
+          '    in RefsComponent (at **)',
+      ]);
       expect(component.refs.myDiv).toBe(root.firstChild);
     });
   });

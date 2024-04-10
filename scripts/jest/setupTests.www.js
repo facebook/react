@@ -6,17 +6,16 @@ jest.mock('shared/ReactFeatureFlags', () => {
     () => jest.requireActual('shared/forks/ReactFeatureFlags.www-dynamic'),
     {virtual: true}
   );
+  const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
 
-  const wwwFlags = jest.requireActual('shared/forks/ReactFeatureFlags.www');
-  const defaultFlags = jest.requireActual('shared/ReactFeatureFlags');
+  // This flag is only used by tests, it should never be set elsewhere.
+  actual.forceConcurrentByDefaultForTesting = !__VARIANT__;
 
-  // TODO: Many tests were written before we started running them against the
-  // www configuration. Update those tests so that they work against the www
-  // configuration, too. Then remove these overrides.
-  wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
-  wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
+  // Flags that aren't currently used, but we still want to force variants to keep the
+  // code live.
+  actual.disableInputAttributeSyncing = __VARIANT__;
 
-  return wwwFlags;
+  return actual;
 });
 
 jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
@@ -29,9 +28,15 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
       ),
     {virtual: true}
   );
-  return jest.requireActual(
+  const actual = jest.requireActual(
     schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www'
   );
+
+  // These flags are not a dynamic on www, but we still want to run
+  // tests in both versions.
+  actual.enableSchedulerDebugging = __VARIANT__;
+
+  return actual;
 });
 
 global.__WWW__ = true;

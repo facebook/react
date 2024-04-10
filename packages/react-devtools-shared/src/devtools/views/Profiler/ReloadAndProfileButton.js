@@ -44,10 +44,8 @@ export default function ReloadAndProfileButton({
     }),
     [store],
   );
-  const {
-    recordChangeDescriptions,
-    supportsReloadAndProfile,
-  } = useSubscription<SubscriptionData>(subscription);
+  const {recordChangeDescriptions, supportsReloadAndProfile} =
+    useSubscription<SubscriptionData>(subscription);
 
   const reloadAndProfile = useCallback(() => {
     // TODO If we want to support reload-and-profile for e.g. React Native,

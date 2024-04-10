@@ -22,9 +22,9 @@ if (__DEV__) {
   ReactFabric = require('../implementations/ReactFabric-prod');
 }
 
-if (global.RN$Bridgeless) {
-  global.RN$stopSurface = ReactFabric.stopSurface;
-} else {
+global.RN$stopSurface = ReactFabric.stopSurface;
+
+if (global.RN$Bridgeless !== true) {
   BatchedBridge.registerCallableModule('ReactFabric', ReactFabric);
 }
 

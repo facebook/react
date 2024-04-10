@@ -21,8 +21,12 @@ export type ViewRefs = {
   hoveredView: View | null,
 };
 
-// hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-function configureRetinaCanvas(canvas, height, width) {
+// hidpi canvas: https://web.dev/articles/canvas-hidipi
+function configureRetinaCanvas(
+  canvas: HTMLCanvasElement,
+  height: number,
+  width: number,
+) {
   canvas.width = width * DPR;
   canvas.height = height * DPR;
   canvas.style.width = `${width}px`;

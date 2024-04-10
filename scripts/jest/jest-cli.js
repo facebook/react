@@ -45,7 +45,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'www-modern',
+      default: 'experimental',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -92,11 +92,6 @@ const argv = yargs
       requiresArg: false,
       type: 'boolean',
       default: false,
-    },
-    deprecated: {
-      describe: 'Print deprecation message for command.',
-      requiresArg: true,
-      type: 'string',
     },
     compactConsole: {
       alias: 'c',
@@ -255,7 +250,7 @@ function validateOptions() {
     const buildDir = path.resolve('./build');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
@@ -349,11 +344,6 @@ function getEnvars() {
 }
 
 function main() {
-  if (argv.deprecated) {
-    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
-    return;
-  }
-
   validateOptions();
 
   const args = getCommandArgs();

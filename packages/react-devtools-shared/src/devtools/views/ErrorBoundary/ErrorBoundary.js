@@ -56,9 +56,7 @@ const InitialState: State = {
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = InitialState;
 
-  static getDerivedStateFromError(
-    error: any,
-  ): {
+  static getDerivedStateFromError(error: any): {
     callStack: string | null,
     errorMessage: string | null,
     hasError: boolean,
@@ -84,10 +82,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       typeof error === 'object' &&
       error !== null &&
       typeof error.stack === 'string'
-        ? error.stack
-            .split('\n')
-            .slice(1)
-            .join('\n')
+        ? error.stack.split('\n').slice(1).join('\n')
         : null;
 
     return {

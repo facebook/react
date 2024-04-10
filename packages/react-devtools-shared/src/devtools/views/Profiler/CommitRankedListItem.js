@@ -21,7 +21,6 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
-  ...
 };
 
 function CommitRankedListItem({data, index, style}: Props) {
@@ -40,7 +39,7 @@ function CommitRankedListItem({data, index, style}: Props) {
   const {lineHeight} = useContext(SettingsContext);
 
   const handleClick = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       event.stopPropagation();
       const {id, name} = node;
       selectFiber(id, name);

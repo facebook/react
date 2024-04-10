@@ -11,7 +11,7 @@
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const ReactNativeGlobalResponderHandler = {
-  onChange: function(from: any, to: any, blockNativeResponder: boolean) {
+  onChange: function (from: any, to: any, blockNativeResponder: boolean) {
     if (to !== null) {
       const tag = to.stateNode._nativeTag;
       UIManager.setJSResponder(tag, blockNativeResponder);

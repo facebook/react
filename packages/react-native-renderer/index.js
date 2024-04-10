@@ -10,7 +10,7 @@
 import type {ReactNativeType} from './src/ReactNativeTypes';
 import * as ReactNative from './src/ReactNativeRenderer';
 // Assert that the exports line up with the type we're going to expose.
-// eslint-disable-next-line no-unused-expressions
+// eslint-disable-next-line ft-flow/no-unused-expressions
 (ReactNative: ReactNativeType);
 
 export * from './src/ReactNativeRenderer';

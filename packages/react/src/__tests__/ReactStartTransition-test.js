@@ -22,12 +22,12 @@ describe('ReactStartTransition', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useState = React.useState;
     useTransition = React.useTransition;
   });
 
-  it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
+  it('Warns if a suspicious number of fibers are updated inside startTransition', async () => {
     const subs = new Set();
     const useUserSpaceSubscription = () => {
       const setState = useState(0)[1];
@@ -47,14 +47,14 @@ describe('ReactStartTransition', () => {
       return null;
     };
 
-    act(() => {
+    await act(() => {
       ReactTestRenderer.create(<Component level={0} />, {
         unstable_isConcurrent: true,
       });
     });
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(() => {
         React.startTransition(() => {
           subs.forEach(setState => {
             setState(state => state + 1);
@@ -70,8 +70,8 @@ describe('ReactStartTransition', () => {
       {withoutStack: true},
     );
 
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(() => {
         triggerHookTransition(() => {
           subs.forEach(setState => {
             setState(state => state + 1);

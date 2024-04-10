@@ -29,7 +29,7 @@ function _inheritsLoose(subClass, superClass) {
 
 // Compile this with Babel.
 // babel --config-file ./babel.config.json BabelClasses.js --out-file BabelClasses-compiled.js --source-maps
-let BabelClass = /*#__PURE__*/ (function(_React$Component) {
+let BabelClass = /*#__PURE__*/ (function (_React$Component) {
   _inheritsLoose(BabelClass, _React$Component);
 
   function BabelClass() {
@@ -45,7 +45,7 @@ let BabelClass = /*#__PURE__*/ (function(_React$Component) {
   return BabelClass;
 })(React.Component);
 
-let BabelClassWithFields = /*#__PURE__*/ (function(_React$Component2) {
+let BabelClassWithFields = /*#__PURE__*/ (function (_React$Component2) {
   _inheritsLoose(BabelClassWithFields, _React$Component2);
 
   function BabelClassWithFields(...args) {

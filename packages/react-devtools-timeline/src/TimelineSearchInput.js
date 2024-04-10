@@ -26,7 +26,8 @@ export default function TimelineSearchInput(props: Props): React.Node {
     return null;
   }
 
-  const search = text => dispatch({type: 'SET_SEARCH_TEXT', payload: text});
+  const search = (text: string) =>
+    dispatch({type: 'SET_SEARCH_TEXT', payload: text});
   const goToNextResult = () => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'});
   const goToPreviousResult = () =>
     dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'});

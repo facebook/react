@@ -16,8 +16,6 @@ import preprocessData from './preprocessData';
 import {readInputData} from './readInputData';
 import InvalidProfileError from './InvalidProfileError';
 
-declare var self: DedicatedWorkerGlobalScope;
-
 export async function importFile(file: File): Promise<ImportWorkerOutputData> {
   try {
     const readFile = await readInputData(file);

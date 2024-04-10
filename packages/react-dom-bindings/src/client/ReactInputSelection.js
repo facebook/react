@@ -8,7 +8,7 @@
 import getActiveElement from './getActiveElement';
 
 import {getOffsets, setOffsets} from './ReactDOMSelection';
-import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
+import {ELEMENT_NODE, TEXT_NODE} from './HTMLNodeType';
 
 function isTextNode(node) {
   return node && node.nodeType === TEXT_NODE;

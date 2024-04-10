@@ -13,10 +13,10 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethods,
+  INativeMethods,
   ViewConfig,
 } from './ReactNativeTypes';
-import type {Instance} from './ReactNativeHostConfig';
+import type {Instance} from './ReactFiberConfigNative';
 
 // Modules provided by RN:
 import {
@@ -30,7 +30,7 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-class ReactNativeFiberHostComponent {
+class ReactNativeFiberHostComponent implements INativeMethods {
   _children: Array<Instance | number>;
   _nativeTag: number;
   _internalFiberInstanceHandleDEV: Object;
@@ -82,7 +82,8 @@ class ReactNativeFiberHostComponent {
       // Already a node handle
       relativeNode = relativeToNativeNode;
     } else {
-      const nativeNode: ReactNativeFiberHostComponent = (relativeToNativeNode: any);
+      const nativeNode: ReactNativeFiberHostComponent =
+        (relativeToNativeNode: any);
       if (nativeNode._nativeTag) {
         relativeNode = nativeNode._nativeTag;
       }
@@ -125,10 +126,5 @@ class ReactNativeFiberHostComponent {
     }
   }
 }
-
-// eslint-disable-next-line no-unused-expressions
-// $FlowFixMe[class-object-subtyping] found when upgrading Flow
-// $FlowFixMe[method-unbinding] found when upgrading Flow
-(ReactNativeFiberHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export default ReactNativeFiberHostComponent;

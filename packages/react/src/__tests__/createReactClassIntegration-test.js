@@ -9,19 +9,20 @@
 
 'use strict';
 
+let act;
+
 let PropTypes;
 let React;
-let ReactDOM;
-let ReactTestUtils;
+let ReactDOMClient;
 let createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
     jest.resetModules();
+    ({act} = require('internal-test-utils'));
     PropTypes = require('prop-types');
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
     createReactClass = require('create-react-class/factory')(
       React.Component,
       React.isValidElement,
@@ -30,11 +31,9 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw when `render` is not specified', () => {
-    expect(function() {
+    expect(function () {
       createReactClass({});
-    }).toThrowError(
-      'createClass(...): Class specification must implement a `render` method.',
-    );
+    }).toThrowError('Class specification must implement a `render` method.');
   });
 
   it('should copy prop types onto the Constructor', () => {
@@ -43,7 +42,7 @@ describe('create-react-class-integration', () => {
       propTypes: {
         value: propValidator,
       },
-      render: function() {
+      render: function () {
         return <div />;
       },
     });
@@ -59,7 +58,7 @@ describe('create-react-class-integration', () => {
         propTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -77,7 +76,7 @@ describe('create-react-class-integration', () => {
         contextTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -95,7 +94,7 @@ describe('create-react-class-integration', () => {
         childContextTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -109,10 +108,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling shouldComponentUpdate', () => {
     expect(() =>
       createReactClass({
-        componentShouldUpdate: function() {
+        componentShouldUpdate: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -126,10 +125,10 @@ describe('create-react-class-integration', () => {
     expect(() =>
       createReactClass({
         displayName: 'NamedComponent',
-        componentShouldUpdate: function() {
+        componentShouldUpdate: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -144,10 +143,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
-        componentWillRecieveProps: function() {
+        componentWillRecieveProps: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -161,10 +160,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
-        UNSAFE_componentWillRecieveProps: function() {
+        UNSAFE_componentWillRecieveProps: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -176,17 +175,17 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw if a reserved property is in statics', () => {
-    expect(function() {
+    expect(function () {
       createReactClass({
         statics: {
-          getDefaultProps: function() {
+          getDefaultProps: function () {
             return {
               foo: 0,
             };
           },
         },
 
-        render: function() {
+        render: function () {
           return <span />;
         },
       });
@@ -212,40 +211,45 @@ describe('create-react-class-integration', () => {
         childContextTypes: {
           foo: PropTypes.string,
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
     ).toErrorDev([
-      'createClass(...): `mixins` is now a static property and should ' +
+      '`mixins` is now a static property and should ' +
         'be defined inside "statics".',
-      'createClass(...): `propTypes` is now a static property and should ' +
+      '`propTypes` is now a static property and should ' +
         'be defined inside "statics".',
-      'createClass(...): `contextTypes` is now a static property and ' +
+      '`contextTypes` is now a static property and ' +
         'should be defined inside "statics".',
-      'createClass(...): `childContextTypes` is now a static property and ' +
+      '`childContextTypes` is now a static property and ' +
         'should be defined inside "statics".',
     ]);
   });
 
-  it('should support statics', () => {
+  it('should support statics', async () => {
     const Component = createReactClass({
       statics: {
         abc: 'def',
         def: 0,
         ghi: null,
         jkl: 'mno',
-        pqr: function() {
+        pqr: function () {
           return this;
         },
       },
 
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
-    let instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
+    });
+
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
     expect(instance.constructor.def).toBe(0);
@@ -258,40 +262,50 @@ describe('create-react-class-integration', () => {
     expect(Component.pqr()).toBe(Component);
   });
 
-  it('should work with object getInitialState() return values', () => {
+  it('should work with object getInitialState() return values', async () => {
     const Component = createReactClass({
-      getInitialState: function() {
+      getInitialState: function () {
         return {
           occupation: 'clown',
         };
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
-    let instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
+    });
+
     expect(instance.state.occupation).toEqual('clown');
   });
 
-  it('should work with getDerivedStateFromProps() return values', () => {
+  it('should work with getDerivedStateFromProps() return values', async () => {
     const Component = createReactClass({
       getInitialState() {
         return {};
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
     Component.getDerivedStateFromProps = () => {
       return {occupation: 'clown'};
     };
-    let instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    let instance;
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
+    });
     expect(instance.state.occupation).toEqual('clown');
   });
 
-  it('renders based on context getInitialState', () => {
+  // @gate !disableLegacyContext
+  it('renders based on context getInitialState', async () => {
     const Foo = createReactClass({
       contextTypes: {
         className: PropTypes.string,
@@ -317,41 +331,52 @@ describe('create-react-class-integration', () => {
     });
 
     const container = document.createElement('div');
-    ReactDOM.render(<Outer />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Outer />);
+    });
     expect(container.firstChild.className).toBe('foo');
   });
 
-  it('should throw with non-object getInitialState() return values', () => {
-    [['an array'], 'a string', 1234].forEach(function(state) {
+  it('should throw with non-object getInitialState() return values', async () => {
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const state of [['an array'], 'a string', 1234]) {
       const Component = createReactClass({
-        getInitialState: function() {
+        getInitialState: function () {
           return state;
         },
-        render: function() {
+        render: function () {
           return <span />;
         },
       });
-      let instance = <Component />;
-      expect(function() {
-        instance = ReactTestUtils.renderIntoDocument(instance);
-      }).toThrowError(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(
+        act(() => {
+          root.render(<Component />);
+        }),
+      ).rejects.toThrowError(
         'Component.getInitialState(): must return an object or null',
       );
-    });
+    }
   });
 
-  it('should work with a null getInitialState() return value', () => {
+  it('should work with a null getInitialState() return value', async () => {
     const Component = createReactClass({
-      getInitialState: function() {
+      getInitialState: function () {
         return null;
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component />),
-    ).not.toThrow();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<Component />);
+      }),
+    ).resolves.not.toThrow();
   });
 
   it('should throw when using legacy factories', () => {
@@ -361,16 +386,14 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    expect(() =>
-      expect(() => Component()).toThrow(),
-    ).toErrorDev(
+    expect(() => expect(() => Component()).toThrow()).toErrorDev(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory',
       {withoutStack: true},
     );
   });
 
-  it('replaceState and callback works', () => {
+  it('replaceState and callback works', async () => {
     const ops = [];
     const Component = createReactClass({
       getInitialState() {
@@ -382,14 +405,23 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
-    instance.replaceState({step: 1}, () => {
-      ops.push('Callback: ' + instance.state.step);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
     });
+
+    await act(() => {
+      instance.replaceState({step: 1}, () => {
+        ops.push('Callback: ' + instance.state.step);
+      });
+    });
+
     expect(ops).toEqual(['Render: 0', 'Render: 1', 'Callback: 1']);
   });
 
-  it('getDerivedStateFromProps updates state when props change', () => {
+  it('getDerivedStateFromProps updates state when props change', async () => {
     const Component = createReactClass({
       getInitialState() {
         return {
@@ -405,27 +437,30 @@ describe('create-react-class-integration', () => {
     });
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      <div>
-        <Component incrementBy={0} />
-      </div>,
-      container,
-    );
-    expect(instance.textContent).toEqual('count:1');
-    ReactDOM.render(
-      <div>
-        <Component incrementBy={2} />
-      </div>,
-      container,
-    );
-    expect(instance.textContent).toEqual('count:3');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <Component incrementBy={0} />
+        </div>,
+      );
+    });
+    expect(container.firstChild.textContent).toEqual('count:1');
+    await act(() => {
+      root.render(
+        <div>
+          <Component incrementBy={2} />
+        </div>,
+      );
+    });
+    expect(container.firstChild.textContent).toEqual('count:3');
   });
 
-  it('should support the new static getDerivedStateFromProps method', () => {
+  it('should support the new static getDerivedStateFromProps method', async () => {
     let instance;
     const Component = createReactClass({
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return {foo: 'bar'};
         },
       },
@@ -434,16 +469,19 @@ describe('create-react-class-integration', () => {
         return {};
       },
 
-      render: function() {
+      render: function () {
         instance = this;
         return null;
       },
     });
-    ReactDOM.render(<Component />, document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<Component />);
+    });
     expect(instance.state.foo).toBe('bar');
   });
 
-  it('warns if getDerivedStateFromProps is not static', () => {
+  it('warns if getDerivedStateFromProps is not static', async () => {
     const Foo = createReactClass({
       displayName: 'Foo',
       getDerivedStateFromProps() {
@@ -453,15 +491,18 @@ describe('create-react-class-integration', () => {
         return <div />;
       },
     });
-    expect(() =>
-      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<Foo foo="foo" />);
+      });
+    }).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
   });
 
-  it('warns if getDerivedStateFromError is not static', () => {
+  it('warns if getDerivedStateFromError is not static', async () => {
     const Foo = createReactClass({
       displayName: 'Foo',
       getDerivedStateFromError() {
@@ -471,19 +512,22 @@ describe('create-react-class-integration', () => {
         return <div />;
       },
     });
-    expect(() =>
-      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<Foo foo="foo" />);
+      });
+    }).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
   });
 
-  it('warns if getSnapshotBeforeUpdate is static', () => {
+  it('warns if getSnapshotBeforeUpdate is static', async () => {
     const Foo = createReactClass({
       displayName: 'Foo',
       statics: {
-        getSnapshotBeforeUpdate: function() {
+        getSnapshotBeforeUpdate: function () {
           return null;
         },
       },
@@ -491,29 +535,35 @@ describe('create-react-class-integration', () => {
         return <div />;
       },
     });
-    expect(() =>
-      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<Foo foo="foo" />);
+      });
+    }).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
     );
   });
 
-  it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
+  it('should warn if state is not properly initialized before getDerivedStateFromProps', async () => {
     const Component = createReactClass({
       displayName: 'Component',
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return null;
         },
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
-    expect(() =>
-      ReactDOM.render(<Component />, document.createElement('div')),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(<Component />);
+      });
+    }).toErrorDev(
       '`Component` uses `getDerivedStateFromProps` but its initial state is ' +
         'null. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Component`. ' +
@@ -521,33 +571,36 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', async () => {
     const Component = createReactClass({
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return null;
         },
       },
-      componentWillMount: function() {
+      componentWillMount: function () {
         throw Error('unexpected');
       },
-      componentWillReceiveProps: function() {
+      componentWillReceiveProps: function () {
         throw Error('unexpected');
       },
-      componentWillUpdate: function() {
+      componentWillUpdate: function () {
         throw Error('unexpected');
       },
-      getInitialState: function() {
+      getInitialState: function () {
         return {};
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
 
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<Component />, document.createElement('div'));
+    await expect(async () => {
+      await expect(async () => {
+        const root = ReactDOMClient.createRoot(document.createElement('div'));
+        await act(() => {
+          root.render(<Component />);
+        });
       }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
@@ -555,7 +608,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -565,32 +618,38 @@ describe('create-react-class-integration', () => {
       ],
       {withoutStack: true},
     );
-    ReactDOM.render(<Component foo={1} />, document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<Component foo={1} />);
+    });
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', async () => {
     const Component = createReactClass({
-      getSnapshotBeforeUpdate: function() {
+      getSnapshotBeforeUpdate: function () {
         return null;
       },
-      componentWillMount: function() {
+      componentWillMount: function () {
         throw Error('unexpected');
       },
-      componentWillReceiveProps: function() {
+      componentWillReceiveProps: function () {
         throw Error('unexpected');
       },
-      componentWillUpdate: function() {
+      componentWillUpdate: function () {
         throw Error('unexpected');
       },
-      componentDidUpdate: function() {},
-      render: function() {
+      componentDidUpdate: function () {},
+      render: function () {
         return null;
       },
     });
 
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<Component />, document.createElement('div'));
+    await expect(async () => {
+      await expect(async () => {
+        const root = ReactDOMClient.createRoot(document.createElement('div'));
+        await act(() => {
+          root.render(<Component />);
+        });
       }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'Component uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
@@ -598,7 +657,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://reactjs.org/link/unsafe-component-lifecycles',
+          'https://react.dev/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -608,42 +667,50 @@ describe('create-react-class-integration', () => {
       ],
       {withoutStack: true},
     );
-    ReactDOM.render(<Component foo={1} />, document.createElement('div'));
+    await act(() => {
+      const root2 = ReactDOMClient.createRoot(document.createElement('div'));
+      root2.render(<Component foo={1} />);
+    });
   });
 
-  it('should invoke both deprecated and new lifecycles if both are present', () => {
+  it('should invoke both deprecated and new lifecycles if both are present', async () => {
     const log = [];
 
     const Component = createReactClass({
       mixins: [
         {
-          componentWillMount: function() {
+          componentWillMount: function () {
             log.push('componentWillMount');
           },
-          componentWillReceiveProps: function() {
+          componentWillReceiveProps: function () {
             log.push('componentWillReceiveProps');
           },
-          componentWillUpdate: function() {
+          componentWillUpdate: function () {
             log.push('componentWillUpdate');
           },
         },
       ],
-      UNSAFE_componentWillMount: function() {
+      UNSAFE_componentWillMount: function () {
         log.push('UNSAFE_componentWillMount');
       },
-      UNSAFE_componentWillReceiveProps: function() {
+      UNSAFE_componentWillReceiveProps: function () {
         log.push('UNSAFE_componentWillReceiveProps');
       },
-      UNSAFE_componentWillUpdate: function() {
+      UNSAFE_componentWillUpdate: function () {
         log.push('UNSAFE_componentWillUpdate');
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<Component foo="bar" />, div)).toWarnDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component foo="bar" />);
+      });
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -655,7 +722,9 @@ describe('create-react-class-integration', () => {
 
     log.length = 0;
 
-    ReactDOM.render(<Component foo="baz" />, div);
+    await act(() => {
+      root.render(<Component foo="baz" />);
+    });
     expect(log).toEqual([
       'componentWillReceiveProps',
       'UNSAFE_componentWillReceiveProps',
@@ -664,7 +733,7 @@ describe('create-react-class-integration', () => {
     ]);
   });
 
-  it('isMounted works', () => {
+  it('isMounted works', async () => {
     const ops = [];
     let instance;
     const Component = createReactClass({
@@ -717,11 +786,13 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
 
-    expect(() =>
-      ReactDOM.render(<Component />, container),
-    ).toErrorDev(
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component />);
+      });
+    }).toErrorDev(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
@@ -729,9 +800,14 @@ describe('create-react-class-integration', () => {
     );
 
     // Dedupe
-    ReactDOM.render(<Component />, container);
 
-    ReactDOM.unmountComponentAtNode(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
+    await act(() => {
+      root.unmount();
+    });
     instance.log('after unmount');
     expect(ops).toEqual([
       'getInitialState: false',

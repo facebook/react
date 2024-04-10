@@ -249,37 +249,36 @@ export default class ProfilerStore extends EventEmitter<{
     }
   };
 
-  onBridgeProfilingData: (
-    dataBackend: ProfilingDataBackend,
-  ) => void = dataBackend => {
-    if (this._isProfiling) {
-      // This should never happen, but if it does- ignore previous profiling data.
-      return;
-    }
+  onBridgeProfilingData: (dataBackend: ProfilingDataBackend) => void =
+    dataBackend => {
+      if (this._isProfiling) {
+        // This should never happen, but if it does- ignore previous profiling data.
+        return;
+      }
 
-    const {rendererID} = dataBackend;
+      const {rendererID} = dataBackend;
 
-    if (!this._rendererQueue.has(rendererID)) {
-      throw Error(
-        `Unexpected profiling data update from renderer "${rendererID}"`,
-      );
-    }
+      if (!this._rendererQueue.has(rendererID)) {
+        throw Error(
+          `Unexpected profiling data update from renderer "${rendererID}"`,
+        );
+      }
 
-    this._dataBackends.push(dataBackend);
-    this._rendererQueue.delete(rendererID);
+      this._dataBackends.push(dataBackend);
+      this._rendererQueue.delete(rendererID);
 
-    if (this._rendererQueue.size === 0) {
-      this._dataFrontend = prepareProfilingDataFrontendFromBackendAndStore(
-        this._dataBackends,
-        this._inProgressOperationsByRootID,
-        this._initialSnapshotsByRootID,
-      );
+      if (this._rendererQueue.size === 0) {
+        this._dataFrontend = prepareProfilingDataFrontendFromBackendAndStore(
+          this._dataBackends,
+          this._inProgressOperationsByRootID,
+          this._initialSnapshotsByRootID,
+        );
 
-      this._dataBackends.splice(0);
+        this._dataBackends.splice(0);
 
-      this.emit('isProcessingData');
-    }
-  };
+        this.emit('isProcessingData');
+      }
+    };
 
   onBridgeShutdown: () => void = () => {
     this._bridge.removeListener('operations', this.onBridgeOperations);
@@ -309,7 +308,7 @@ export default class ProfilerStore extends EventEmitter<{
       // Record snapshot of tree at the time profiling is started.
       // This info is required to handle cases of e.g. nodes being removed during profiling.
       this._store.roots.forEach(rootID => {
-        const profilingSnapshots = new Map();
+        const profilingSnapshots = new Map<number, SnapshotNode>();
         this._initialSnapshotsByRootID.set(rootID, profilingSnapshots);
         this._takeProfilingSnapshotRecursive(rootID, profilingSnapshots);
       });

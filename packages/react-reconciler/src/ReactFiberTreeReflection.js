@@ -8,8 +8,8 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {Container, SuspenseInstance} from './ReactFiberConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -17,7 +17,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import {
   ClassComponent,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostRoot,
   HostPortal,
@@ -25,9 +25,6 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
-
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
@@ -92,7 +89,7 @@ export function isFiberMounted(fiber: Fiber): boolean {
 
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
-    const owner = (ReactCurrentOwner.current: any);
+    const owner = (ReactSharedInternals.owner: any);
     if (owner !== null && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
@@ -117,7 +114,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
   return getNearestMountedFiber(fiber) === fiber;
 }
 
-function assertIsMounted(fiber) {
+function assertIsMounted(fiber: Fiber) {
   if (getNearestMountedFiber(fiber) !== fiber) {
     throw new Error('Unable to find node on an unmounted component.');
   }
@@ -275,13 +272,13 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberImpl(node: Fiber) {
+function findCurrentHostFiberImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
-    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostHoistable ||
+    tag === HostSingleton ||
     tag === HostText
   ) {
     return node;
@@ -306,13 +303,13 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
     : null;
 }
 
-function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
+function findCurrentHostFiberWithNoPortalsImpl(node: Fiber): Fiber | null {
   // Next we'll drill down this component to find the first HostComponent/Text.
   const tag = node.tag;
   if (
     tag === HostComponent ||
-    (enableFloat ? tag === HostResource : false) ||
-    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostHoistable ||
+    tag === HostSingleton ||
     tag === HostText
   ) {
     return node;

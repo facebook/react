@@ -43,7 +43,10 @@ type UseEditableValueState = {
   parsedValue: any,
 };
 
-function useEditableValueReducer(state, action) {
+function useEditableValueReducer(
+  state: UseEditableValueState,
+  action: UseEditableValueAction,
+) {
   switch (action.type) {
     case 'RESET':
       return {
@@ -165,7 +168,7 @@ export function useLocalStorage<T>(
   const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
 
   const setValue = useCallback(
-    value => {
+    (value: $FlowFixMe) => {
       try {
         const valueToStore =
           value instanceof Function ? (value: any)(storedValue) : value;
@@ -188,6 +191,7 @@ export function useLocalStorage<T>(
   // Listen for changes to this local storage value made from other windows.
   // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
   useLayoutEffect(() => {
+    // $FlowFixMe[missing-local-annot]
     const onStorage = event => {
       const newValue = getValueFromLocalStorage();
       if (key === event.key && storedValue !== newValue) {
@@ -215,15 +219,18 @@ export function useModalDismissSignal(
       return () => {};
     }
 
-    const handleDocumentKeyDown = (event: any) => {
+    const handleRootNodeKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         dismissCallback();
       }
     };
 
-    const handleDocumentClick = (event: any) => {
+    const handleRootNodeClick: MouseEventHandler = event => {
       if (
         modalRef.current !== null &&
+        /* $FlowExpectedError[incompatible-call] Instead of dealing with possibly multiple realms
+         and multiple Node references to comply with Flow (e.g. checking with `event.target instanceof Node`)
+         just delegate it to contains call */
         !modalRef.current.contains(event.target)
       ) {
         event.stopPropagation();
@@ -233,7 +240,7 @@ export function useModalDismissSignal(
       }
     };
 
-    let ownerDocument = null;
+    let modalRootNode = null;
 
     // Delay until after the current call stack is empty,
     // in case this effect is being run while an event is currently bubbling.
@@ -244,12 +251,12 @@ export function useModalDismissSignal(
       // It's important to listen to the ownerDocument to support the browser extension.
       // Here we use portals to render individual tabs (e.g. Profiler),
       // and the root document might belong to a different window.
-      const div = modalRef.current;
-      if (div != null) {
-        ownerDocument = div.ownerDocument;
-        ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+      const modalDOMElement = modalRef.current;
+      if (modalDOMElement != null) {
+        modalRootNode = modalDOMElement.getRootNode();
+        modalRootNode.addEventListener('keydown', handleRootNodeKeyDown);
         if (dismissOnClickOutside) {
-          ownerDocument.addEventListener('click', handleDocumentClick, true);
+          modalRootNode.addEventListener('click', handleRootNodeClick, true);
         }
       }
     }, 0);
@@ -259,9 +266,9 @@ export function useModalDismissSignal(
         clearTimeout(timeoutID);
       }
 
-      if (ownerDocument !== null) {
-        ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick, true);
+      if (modalRootNode !== null) {
+        modalRootNode.removeEventListener('keydown', handleRootNodeKeyDown);
+        modalRootNode.removeEventListener('click', handleRootNodeClick, true);
       }
     };
   }, [modalRef, dismissCallback, dismissOnClickOutside]);

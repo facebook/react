@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@ import {
   enableFetchInstrumentation,
 } from 'shared/ReactFeatureFlags';
 
-import ReactCurrentCache from './ReactCurrentCache';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 function createFetchCache(): Map<string, Array<any>> {
   return new Map();
@@ -46,17 +46,13 @@ if (enableCache && enableFetchInstrumentation) {
       resource: URL | RequestInfo,
       options?: RequestOptions,
     ) {
-      const dispatcher = ReactCurrentCache.current;
+      const dispatcher = ReactSharedInternals.C;
       if (!dispatcher) {
         // We're outside a cached scope.
         return originalFetch(resource, options);
       }
-      if (
-        options &&
-        options.signal &&
-        options.signal !== dispatcher.getCacheSignal()
-      ) {
-        // If we're passed a signal that is not ours, then we assume that
+      if (options && options.signal) {
+        // If we're passed a signal, then we assume that
         // someone else controls the lifetime of this object and opts out of
         // caching. It's effectively the opt-out mechanism.
         // Ideally we should be able to check this on the Request but
@@ -74,10 +70,16 @@ if (enableCache && enableFetchInstrumentation) {
         url = resource;
       } else {
         // Normalize the request.
-        const request = new Request(resource, options);
+        // if resource is not a string or a URL (its an instance of Request)
+        // then do not instantiate a new Request but instead
+        // reuse the request as to not disturb the body in the event it's a ReadableStream.
+        const request =
+          typeof resource === 'string' || resource instanceof URL
+            ? new Request(resource, options)
+            : resource;
         if (
           (request.method !== 'GET' && request.method !== 'HEAD') ||
-          // $FlowFixMe: keepalive is real
+          // $FlowFixMe[prop-missing]: keepalive is real
           request.keepalive
         ) {
           // We currently don't dedupe requests that might have side-effects. Those

@@ -8,8 +8,9 @@
  */
 
 import type {Writable} from 'stream';
+
 import {TextEncoder} from 'util';
-import {AsyncLocalStorage} from 'async_hooks';
+import {createHash} from 'crypto';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -19,6 +20,7 @@ export type Destination = Writable & MightBeFlushable;
 
 export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = string;
+export type BinaryChunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
@@ -33,11 +35,6 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
-
-export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;
@@ -76,11 +73,15 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   writtenBytes += written;
 
   if (read < stringChunk.length) {
-    writeToDestination(destination, (currentView: any));
+    writeToDestination(
+      destination,
+      (currentView: any).subarray(0, writtenBytes),
+    );
     currentView = new Uint8Array(VIEW_SIZE);
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
-    writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
-      .written;
+    writtenBytes = textEncoder.encodeInto(
+      stringChunk.slice(read),
+      (currentView: any),
+    ).written;
   }
 
   if (writtenBytes === VIEW_SIZE) {
@@ -90,7 +91,10 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   }
 }
 
-function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
+function writeViewChunk(
+  destination: Destination,
+  chunk: PrecomputedChunk | BinaryChunk,
+) {
   if (chunk.byteLength === 0) {
     return;
   }
@@ -144,16 +148,19 @@ function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
 
 export function writeChunk(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): void {
   if (typeof chunk === 'string') {
     writeStringChunk(destination, chunk);
   } else {
-    writeViewChunk(destination, ((chunk: any): PrecomputedChunk));
+    writeViewChunk(destination, ((chunk: any): PrecomputedChunk | BinaryChunk));
   }
 }
 
-function writeToDestination(destination: Destination, view: Uint8Array) {
+function writeToDestination(
+  destination: Destination,
+  view: string | Uint8Array,
+) {
   const currentHasCapacity = destination.write(view);
   destinationHasCapacity = destinationHasCapacity && currentHasCapacity;
 }
@@ -186,10 +193,43 @@ export function stringToChunk(content: string): Chunk {
 }
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
-  return textEncoder.encode(content);
+  const precomputedChunk = textEncoder.encode(content);
+
+  if (__DEV__) {
+    if (precomputedChunk.byteLength > VIEW_SIZE) {
+      console.error(
+        'precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.',
+      );
+    }
+  }
+
+  return precomputedChunk;
+}
+
+export function typedArrayToBinaryChunk(
+  content: $ArrayBufferView,
+): BinaryChunk {
+  // Convert any non-Uint8Array array to Uint8Array. We could avoid this for Uint8Arrays.
+  return new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+}
+
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  return typeof chunk === 'string'
+    ? Buffer.byteLength(chunk, 'utf8')
+    : chunk.byteLength;
+}
+
+export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
+  return chunk.byteLength;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
-  // $FlowFixMe: This is an Error object or the destination accepts other types.
+  // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
+}
+
+export function createFastHash(input: string): string | number {
+  const hash = createHash('md5');
+  hash.update(input);
+  return hash.digest('hex');
 }

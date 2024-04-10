@@ -65,7 +65,7 @@ export class NativeEventsView extends View {
       if (!this._depthToNativeEvent.has(depth)) {
         this._depthToNativeEvent.set(depth, [event]);
       } else {
-        // $FlowFixMe This is unnecessary.
+        // $FlowFixMe[incompatible-use] This is unnecessary.
         this._depthToNativeEvent.get(depth).push(event);
       }
     });

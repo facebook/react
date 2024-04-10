@@ -1,17 +1,12 @@
 // copied from scripts/jest/matchers/toWarnDev.js
 'use strict';
 
-const jestDiff = require('jest-diff').default;
+const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
 
 function shouldIgnoreConsoleError(format, args) {
   if (__DEV__) {
     if (typeof format === 'string') {
-      if (format.indexOf('Error: Uncaught [') === 0) {
-        // This looks like an uncaught error from invokeGuardedCallback() wrapper
-        // in development that is reported by jsdom. Ignore because it's noisy.
-        return true;
-      }
       if (format.indexOf('The above error occurred') === 0) {
         // This looks like an error addendum from ReactFiberErrorLogger.
         // Ignore it too.

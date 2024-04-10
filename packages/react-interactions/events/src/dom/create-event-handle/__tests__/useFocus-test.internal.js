@@ -13,9 +13,9 @@ import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
-let ReactDOM;
+let ReactDOMClient;
 let useFocus;
-let Scheduler;
+let act;
 
 function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
@@ -23,9 +23,8 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
-  ReactDOM = require('react-dom');
-  Scheduler = require('scheduler');
-
+  ReactDOMClient = require('react-dom/client');
+  act = require('internal-test-utils').act;
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
   if (__EXPERIMENTAL__ || global.__WWW__) {
@@ -46,7 +45,6 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   });
 
   afterEach(() => {
-    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });
@@ -54,7 +52,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   describe('disabled', () => {
     let onBlur, onFocus, ref;
 
-    const componentInit = () => {
+    const componentInit = async () => {
       onBlur = jest.fn();
       onFocus = jest.fn();
       ref = React.createRef();
@@ -66,13 +64,15 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         });
         return <div ref={ref} />;
       };
-      ReactDOM.render(<Component />, container);
-      Scheduler.unstable_flushAll();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Component />);
+      });
     };
 
     // @gate www
-    it('does not call callbacks', () => {
-      componentInit();
+    it('does not call callbacks', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       target.blur();
@@ -84,7 +84,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   describe('onBlur', () => {
     let onBlur, ref;
 
-    const componentInit = () => {
+    const componentInit = async () => {
       onBlur = jest.fn();
       ref = React.createRef();
       const Component = () => {
@@ -93,13 +93,15 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         });
         return <div ref={ref} />;
       };
-      ReactDOM.render(<Component />, container);
-      Scheduler.unstable_flushAll();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Component />);
+      });
     };
 
     // @gate www
-    it('is called after "blur" event', () => {
-      componentInit();
+    it('is called after "blur" event', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       target.blur();
@@ -110,7 +112,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   describe('onFocus', () => {
     let onFocus, ref, innerRef;
 
-    const componentInit = () => {
+    const componentInit = async () => {
       onFocus = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -124,21 +126,23 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
-      ReactDOM.render(<Component />, container);
-      Scheduler.unstable_flushAll();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Component />);
+      });
     };
 
     // @gate www
-    it('is called after "focus" event', () => {
-      componentInit();
+    it('is called after "focus" event', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       expect(onFocus).toHaveBeenCalledTimes(1);
     });
 
     // @gate www
-    it('is not called if descendants of target receive focus', () => {
-      componentInit();
+    it('is not called if descendants of target receive focus', async () => {
+      await componentInit();
       const target = createEventTarget(innerRef.current);
       target.focus();
       expect(onFocus).not.toBeCalled();
@@ -148,7 +152,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   describe('onFocusChange', () => {
     let onFocusChange, ref, innerRef;
 
-    const componentInit = () => {
+    const componentInit = async () => {
       onFocusChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -162,13 +166,15 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
-      ReactDOM.render(<Component />, container);
-      Scheduler.unstable_flushAll();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Component />);
+      });
     };
 
     // @gate www
-    it('is called after "blur" and "focus" events', () => {
-      componentInit();
+    it('is called after "blur" and "focus" events', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(1);
@@ -179,8 +185,8 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is not called after "blur" and "focus" events on descendants', () => {
-      componentInit();
+    it('is not called after "blur" and "focus" events on descendants', async () => {
+      await componentInit();
       const target = createEventTarget(innerRef.current);
       target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(0);
@@ -192,7 +198,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   describe('onFocusVisibleChange', () => {
     let onFocusVisibleChange, ref, innerRef;
 
-    const componentInit = () => {
+    const componentInit = async () => {
       onFocusVisibleChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -206,13 +212,15 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
-      ReactDOM.render(<Component />, container);
-      Scheduler.unstable_flushAll();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Component />);
+      });
     };
 
     // @gate www
-    it('is called after "focus" and "blur" if keyboard navigation is active', () => {
-      componentInit();
+    it('is called after "focus" and "blur" if keyboard navigation is active', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       // use keyboard first
@@ -226,8 +234,8 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
-      componentInit();
+    it('is called if non-keyboard event is dispatched on target previously focused with keyboard', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       // use keyboard first
@@ -245,8 +253,8 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is not called after "focus" and "blur" events without keyboard', () => {
-      componentInit();
+    it('is not called after "focus" and "blur" events without keyboard', async () => {
+      await componentInit();
       const target = createEventTarget(ref.current);
       const containerTarget = createEventTarget(container);
       target.pointerdown();
@@ -257,8 +265,8 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
     });
 
     // @gate www
-    it('is not called after "blur" and "focus" events on descendants', () => {
-      componentInit();
+    it('is not called after "blur" and "focus" events on descendants', async () => {
+      await componentInit();
       const innerTarget = createEventTarget(innerRef.current);
       const containerTarget = createEventTarget(container);
       containerTarget.keydown({key: 'Tab'});
@@ -271,7 +279,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
 
   describe('nested Focus components', () => {
     // @gate www
-    it('propagates events in the correct order', () => {
+    it('propagates events in the correct order', async () => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();
@@ -301,9 +309,10 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         );
       };
 
-      ReactDOM.render(<Outer />, container);
-      Scheduler.unstable_flushAll();
-
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Outer />);
+      });
       const innerTarget = createEventTarget(innerRef.current);
       const outerTarget = createEventTarget(outerRef.current);
 

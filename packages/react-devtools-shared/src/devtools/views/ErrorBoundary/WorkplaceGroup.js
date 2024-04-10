@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
-import {REACT_DEVTOOLS_WORKPLACE_URL} from 'react-devtools-shared/src/constants';
+import {REACT_DEVTOOLS_WORKPLACE_URL} from 'react-devtools-shared/src/devtools/constants';
 import Icon from '../Icon';
 import styles from './shared.css';
 

@@ -31,7 +31,7 @@ import {
   HostRoot,
   HostPortal,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostText,
   ScopeComponent,
@@ -43,7 +43,7 @@ import {
   getEventListenerSet,
   getEventHandlerListeners,
 } from '../client/ReactDOMComponentTree';
-import {COMMENT_NODE, DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {COMMENT_NODE, DOCUMENT_NODE} from '../client/HTMLNodeType';
 import {batchedUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
@@ -52,13 +52,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFloat,
-  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
-import {
-  invokeGuardedCallbackAndCatchFirstError,
-  rethrowCaughtError,
-} from 'shared/ReactErrorUtils';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
   removeEventListener,
@@ -72,6 +66,9 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
+
+import reportGlobalError from 'shared/reportGlobalError';
 
 type DispatchListener = {
   instance: null | Fiber,
@@ -173,6 +170,15 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
+    FormActionEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
   }
 }
 
@@ -213,6 +219,7 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   'invalid',
   'load',
   'scroll',
+  'scrollend',
   'toggle',
   // In order to reduce bytes, we insert the above array of media events
   // into this Set. Note: the "error" event isn't an exclusive media event,
@@ -226,9 +233,12 @@ function executeDispatch(
   listener: Function,
   currentTarget: EventTarget,
 ): void {
-  const type = event.type || 'unknown-event';
   event.currentTarget = currentTarget;
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  try {
+    listener(event);
+  } catch (error) {
+    reportGlobalError(error);
+  }
   event.currentTarget = null;
 }
 
@@ -269,8 +279,6 @@ export function processDispatchQueue(
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
     //  event system doesn't use pooling.
   }
-  // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
 }
 
 function dispatchEventsForPlugins(
@@ -378,11 +386,7 @@ export function listenToNativeEventForNonManagedEventTarget(
   }
 }
 
-const listeningMarker =
-  '_reactListening' +
-  Math.random()
-    .toString(36)
-    .slice(2);
+const listeningMarker = '_reactListening' + Math.random().toString(36).slice(2);
 
 export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
   if (!(rootContainerElement: any)[listeningMarker]) {
@@ -462,7 +466,8 @@ function addTrappedEventListener(
   // need support for such browsers.
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
-    listener = function(...p) {
+    // $FlowFixMe[missing-this-annot]
+    listener = function (...p) {
       removeEventListener(
         targetContainer,
         domEventName,
@@ -625,8 +630,8 @@ export function dispatchEventForPluginEventSystem(
             if (
               parentTag === HostComponent ||
               parentTag === HostText ||
-              (enableFloat ? parentTag === HostResource : false) ||
-              (enableHostSingletons ? parentTag === HostSingleton : false)
+              parentTag === HostHoistable ||
+              parentTag === HostSingleton
             ) {
               node = ancestorInst = parentNode;
               continue mainLoop;
@@ -683,17 +688,16 @@ export function accumulateSinglePhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       lastHostComponent = stateNode;
 
       // createEventHandle listeners
       if (enableCreateEventHandleAPI) {
-        const eventHandlerListeners = getEventHandlerListeners(
-          lastHostComponent,
-        );
+        const eventHandlerListeners =
+          getEventHandlerListeners(lastHostComponent);
         if (eventHandlerListeners !== null) {
           eventHandlerListeners.forEach(entry => {
             if (
@@ -730,9 +734,8 @@ export function accumulateSinglePhaseListeners(
     ) {
       // Scopes
       const reactScopeInstance = stateNode;
-      const eventHandlerListeners = getEventHandlerListeners(
-        reactScopeInstance,
-      );
+      const eventHandlerListeners =
+        getEventHandlerListeners(reactScopeInstance);
       if (eventHandlerListeners !== null) {
         eventHandlerListeners.forEach(entry => {
           if (
@@ -799,8 +802,8 @@ export function accumulateTwoPhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;
@@ -834,11 +837,7 @@ function getParent(inst: Fiber | null): Fiber | null {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (
-    inst &&
-    inst.tag !== HostComponent &&
-    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
-  );
+  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
   if (inst) {
     return inst;
   }
@@ -906,8 +905,8 @@ function accumulateEnterLeaveListenersForEvent(
     }
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostResource : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostHoistable ||
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;

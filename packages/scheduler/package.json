@@ -2,7 +2,6 @@
   "name": "scheduler",
   "version": "0.23.0",
   "description": "Cooperative scheduler for the browser environment.",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -15,22 +14,15 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
-  "dependencies": {
-    "loose-envify": "^1.1.0"
-  },
+  "homepage": "https://react.dev/",
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
+    "index.native.js",
     "unstable_mock.js",
     "unstable_post_task.js",
     "cjs/",
     "umd/"
-  ],
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
-  }
+  ]
 }

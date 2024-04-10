@@ -24,7 +24,7 @@ export default function enqueueTask(task: () => void): void {
       // we're in a browser
       // we can't use regular timers because they may still be faked
       // so we try MessageChannel+postMessage instead
-      enqueueTaskImpl = function(callback: () => void) {
+      enqueueTaskImpl = function (callback: () => void) {
         if (__DEV__) {
           if (didWarnAboutMessageChannel === false) {
             didWarnAboutMessageChannel = true;

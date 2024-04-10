@@ -54,9 +54,8 @@ type Props = {
 };
 
 export default function ContextMenu({children, id}: Props): React.Node {
-  const {hideMenu, registerMenu} = useContext<RegistryContextType>(
-    RegistryContext,
-  );
+  const {hideMenu, registerMenu} =
+    useContext<RegistryContextType>(RegistryContext);
 
   const [state, setState] = useState(HIDDEN_STATE);
 
@@ -81,7 +80,15 @@ export default function ContextMenu({children, id}: Props): React.Node {
   }, []);
 
   useEffect(() => {
-    const showMenuFn = ({data, pageX, pageY}) => {
+    const showMenuFn = ({
+      data,
+      pageX,
+      pageY,
+    }: {
+      data: any,
+      pageX: number,
+      pageY: number,
+    }) => {
       setState({data, isVisible: true, pageX, pageY});
     };
     const hideMenuFn = () => setState(HIDDEN_STATE);
@@ -96,6 +103,7 @@ export default function ContextMenu({children, id}: Props): React.Node {
     const menu = ((menuRef.current: any): HTMLElement);
     const container = containerRef.current;
     if (container !== null) {
+      // $FlowFixMe[missing-local-annot]
       const hideUnlessContains = event => {
         if (!menu.contains(event.target)) {
           hideMenu();

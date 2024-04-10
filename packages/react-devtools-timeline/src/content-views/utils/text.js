@@ -12,7 +12,7 @@ import type {Rect} from '../../view-base';
 import {rectEqualToRect} from '../../view-base';
 import {COLORS, FONT_SIZE, TEXT_PADDING} from '../constants';
 
-const cachedTextWidths = new Map();
+const cachedTextWidths = new Map<string, number>();
 
 export function getTextWidth(
   context: CanvasRenderingContext2D,
@@ -45,7 +45,7 @@ export function trimText(
   while (startIndex <= stopIndex) {
     const currentIndex = Math.floor((startIndex + stopIndex) / 2);
     const trimmedText =
-      currentIndex === maxIndex ? text : text.substr(0, currentIndex) + '…';
+      currentIndex === maxIndex ? text : text.slice(0, currentIndex) + '…';
 
     if (getTextWidth(context, trimmedText) <= width) {
       if (longestValidIndex < currentIndex) {

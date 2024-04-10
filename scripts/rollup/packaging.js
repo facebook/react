@@ -7,6 +7,7 @@ const {
   readFileSync,
   writeFileSync,
 } = require('fs');
+const path = require('path');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -14,16 +15,20 @@ const {
   asyncExtractTar,
   asyncRimRaf,
 } = require('./utils');
+const {getSigningToken, signFile} = require('signedsource');
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -47,8 +52,12 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_ES2015:
       return `build/node_modules/${packageName}/cjs/${filename}`;
-    case NODE_ESM:
+    case ESM_DEV:
+    case ESM_PROD:
       return `build/node_modules/${packageName}/esm/${filename}`;
+    case BUN_DEV:
+    case BUN_PROD:
+      return `build/node_modules/${packageName}/cjs/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -84,8 +93,6 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
             /\.js$/,
             '.fb.js'
           )}`;
-        case 'react-server-native-relay':
-          return `build/facebook-relay/flight/${filename}`;
         default:
           throw new Error('Unknown RN package.');
       }
@@ -127,6 +134,24 @@ async function copyRNShims() {
     require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
     'build/react-native/shims/ReactNativeTypes.js'
   );
+  processGenerated('build/react-native/shims');
+}
+
+function processGenerated(directory) {
+  const files = readdirSync(directory)
+    .filter(dir => dir.endsWith('.js'))
+    .map(file => path.join(directory, file));
+
+  files.forEach(file => {
+    const originalContents = readFileSync(file, 'utf8');
+    const contents = originalContents
+      // Replace {@}format with {@}noformat
+      .replace(/(\r?\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
+      // Add {@}nolint and {@}generated
+      .replace(/(\r?\n\s*\*)\//, `$1 @nolint$1 ${getSigningToken()}$1/`);
+    const signedContents = signFile(contents);
+    writeFileSync(file, signedContents, 'utf8');
+  });
 }
 
 async function copyAllShims() {
@@ -145,7 +170,7 @@ function getTarOptions(tgzName, packageName) {
       entries: [CONTENTS_FOLDER],
       map(header) {
         if (header.name.indexOf(CONTENTS_FOLDER + '/') === 0) {
-          header.name = header.name.substring(CONTENTS_FOLDER.length + 1);
+          header.name = header.name.slice(CONTENTS_FOLDER.length + 1);
         }
       },
     },
@@ -188,6 +213,18 @@ function filterOutEntrypoints(name) {
       hasBundle =
         entryPointsToHasBundle.get(entry + '.node') ||
         entryPointsToHasBundle.get(entry + '.browser');
+
+      // The .react-server and .rsc suffixes may not have a bundle representation but
+      // should infer their bundle status from the non-suffixed entry point.
+      if (entry.endsWith('.react-server')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.react-server'.length * -1)
+        );
+      } else if (entry.endsWith('.rsc')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.rsc'.length * -1)
+        );
+      }
     }
     if (hasBundle === undefined) {
       // This doesn't exist in the bundles. It's an extra file.
@@ -198,7 +235,14 @@ function filterOutEntrypoints(name) {
       // Let's remove it.
       files.splice(i, 1);
       i--;
-      unlinkSync(`build/node_modules/${name}/${filename}`);
+      try {
+        unlinkSync(`build/node_modules/${name}/${filename}`);
+      } catch (err) {
+        // If the file doesn't exist we can just move on. Otherwise throw the halt the build
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
       changed = true;
       // Remove it from the exports field too if it exists.
       if (exportsJSON) {

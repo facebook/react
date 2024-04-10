@@ -9,7 +9,12 @@
 
 'use strict';
 
-import {normalizeCodeLocInfo} from './utils';
+import semver from 'semver';
+
+import {getLegacyRenderImplementation, normalizeCodeLocInfo} from './utils';
+import {ReactVersion} from '../../../../ReactVersions';
+
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
 describe('Timeline profiler', () => {
   let React;
@@ -17,6 +22,8 @@ describe('Timeline profiler', () => {
   let ReactDOMClient;
   let Scheduler;
   let utils;
+  let assertLog;
+  let waitFor;
 
   describe('User Timing API', () => {
     let clearedMarks;
@@ -74,6 +81,13 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
+      // Mock react/jsx-dev-runtime for React 16.x
+      // Although there are no tests in this suite which will run for React 16,
+      // Jest will report an error trying to resolve this dependency
+      if (semver.lt(ReactVersionTestingAgainst, '17.0.0')) {
+        jest.mock('react/jsx-dev-runtime', () => {});
+      }
+
       utils = require('./utils');
       utils.beforeEachProfiling();
 
@@ -82,8 +96,12 @@ describe('Timeline profiler', () => {
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
-      setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
-        .setPerformanceMock_ONLY_FOR_TESTING;
+      const InternalTestUtils = require('internal-test-utils');
+      assertLog = InternalTestUtils.assertLog;
+      waitFor = InternalTestUtils.waitFor;
+
+      setPerformanceMock =
+        require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
 
       const store = global.store;
@@ -101,12 +119,14 @@ describe('Timeline profiler', () => {
       setPerformanceMock(null);
     });
 
+    const {render: legacyRender} = getLegacyRenderImplementation();
+
     describe('getLanesFromTransportDecimalBitmask', () => {
       let getLanesFromTransportDecimalBitmask;
 
       beforeEach(() => {
-        getLanesFromTransportDecimalBitmask = require('react-devtools-timeline/src/import-worker/preprocessData')
-          .getLanesFromTransportDecimalBitmask;
+        getLanesFromTransportDecimalBitmask =
+          require('react-devtools-timeline/src/import-worker/preprocessData').getLanesFromTransportDecimalBitmask;
       });
 
       // @reactVersion >= 18.0
@@ -115,11 +135,7 @@ describe('Timeline profiler', () => {
         expect(getLanesFromTransportDecimalBitmask('512')).toEqual([9]);
         expect(getLanesFromTransportDecimalBitmask('3')).toEqual([0, 1]);
         expect(getLanesFromTransportDecimalBitmask('1234')).toEqual([
-          1,
-          4,
-          6,
-          7,
-          10,
+          1, 4, 6, 7, 10,
         ]); // 2 + 16 + 64 + 128 + 1024
         expect(
           getLanesFromTransportDecimalBitmask('1073741824'), // 0b1000000000000000000000000000000
@@ -139,8 +155,8 @@ describe('Timeline profiler', () => {
 
       // @reactVersion >= 18.0
       it('should ignore lanes outside REACT_TOTAL_NUM_LANES', () => {
-        const REACT_TOTAL_NUM_LANES = require('react-devtools-timeline/src/constants')
-          .REACT_TOTAL_NUM_LANES;
+        const REACT_TOTAL_NUM_LANES =
+          require('react-devtools-timeline/src/constants').REACT_TOTAL_NUM_LANES;
 
         // Sanity check; this test may need to be updated when the no. of fiber lanes are changed.
         expect(REACT_TOTAL_NUM_LANES).toBe(31);
@@ -157,8 +173,8 @@ describe('Timeline profiler', () => {
       let preprocessData;
 
       beforeEach(() => {
-        preprocessData = require('react-devtools-timeline/src/import-worker/preprocessData')
-          .default;
+        preprocessData =
+          require('react-devtools-timeline/src/import-worker/preprocessData').default;
       });
 
       // These should be dynamic to mimic a real profile,
@@ -177,8 +193,8 @@ describe('Timeline profiler', () => {
       }
 
       function createProfilerVersionEntry() {
-        const SCHEDULING_PROFILER_VERSION = require('react-devtools-timeline/src/constants')
-          .SCHEDULING_PROFILER_VERSION;
+        const SCHEDULING_PROFILER_VERSION =
+          require('react-devtools-timeline/src/constants').SCHEDULING_PROFILER_VERSION;
         return createUserTimingEntry({
           cat: 'blink.user_timing',
           name: '--profiler-version-' + SCHEDULING_PROFILER_VERSION,
@@ -195,8 +211,7 @@ describe('Timeline profiler', () => {
       function createLaneLabelsEntry() {
         return createUserTimingEntry({
           cat: 'blink.user_timing',
-          name:
-            '--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen',
+          name: '--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen',
         });
       }
 
@@ -327,11 +342,11 @@ describe('Timeline profiler', () => {
           randomSample,
         ]);
         expect(data).toMatchInlineSnapshot(`
-                Object {
+                {
                   "batchUIDToMeasuresMap": Map {},
-                  "componentMeasures": Array [],
+                  "componentMeasures": [],
                   "duration": 0.005,
-                  "flamechart": Array [],
+                  "flamechart": [],
                   "internalModuleSourceToRanges": Map {},
                   "laneToLabelMap": Map {
                     0 => "Sync",
@@ -367,48 +382,48 @@ describe('Timeline profiler', () => {
                     30 => "Offscreen",
                   },
                   "laneToReactMeasureMap": Map {
-                    0 => Array [],
-                    1 => Array [],
-                    2 => Array [],
-                    3 => Array [],
-                    4 => Array [],
-                    5 => Array [],
-                    6 => Array [],
-                    7 => Array [],
-                    8 => Array [],
-                    9 => Array [],
-                    10 => Array [],
-                    11 => Array [],
-                    12 => Array [],
-                    13 => Array [],
-                    14 => Array [],
-                    15 => Array [],
-                    16 => Array [],
-                    17 => Array [],
-                    18 => Array [],
-                    19 => Array [],
-                    20 => Array [],
-                    21 => Array [],
-                    22 => Array [],
-                    23 => Array [],
-                    24 => Array [],
-                    25 => Array [],
-                    26 => Array [],
-                    27 => Array [],
-                    28 => Array [],
-                    29 => Array [],
-                    30 => Array [],
+                    0 => [],
+                    1 => [],
+                    2 => [],
+                    3 => [],
+                    4 => [],
+                    5 => [],
+                    6 => [],
+                    7 => [],
+                    8 => [],
+                    9 => [],
+                    10 => [],
+                    11 => [],
+                    12 => [],
+                    13 => [],
+                    14 => [],
+                    15 => [],
+                    16 => [],
+                    17 => [],
+                    18 => [],
+                    19 => [],
+                    20 => [],
+                    21 => [],
+                    22 => [],
+                    23 => [],
+                    24 => [],
+                    25 => [],
+                    26 => [],
+                    27 => [],
+                    28 => [],
+                    29 => [],
+                    30 => [],
                   },
-                  "nativeEvents": Array [],
-                  "networkMeasures": Array [],
-                  "otherUserTimingMarks": Array [],
+                  "nativeEvents": [],
+                  "networkMeasures": [],
+                  "otherUserTimingMarks": [],
                   "reactVersion": "<filtered-version>",
-                  "schedulingEvents": Array [],
+                  "schedulingEvents": [],
                   "snapshotHeight": 0,
-                  "snapshots": Array [],
+                  "snapshots": [],
                   "startTime": 1,
-                  "suspenseEvents": Array [],
-                  "thrownErrors": Array [],
+                  "suspenseEvents": [],
+                  "thrownErrors": [],
                 }
           `);
       });
@@ -452,10 +467,10 @@ describe('Timeline profiler', () => {
           }),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.005,
@@ -463,7 +478,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -471,7 +486,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -479,7 +494,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -489,9 +504,9 @@ describe('Timeline profiler', () => {
                 },
               ],
             },
-            "componentMeasures": Array [],
+            "componentMeasures": [],
             "duration": 0.011,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {},
             "laneToLabelMap": Map {
               0 => "Sync",
@@ -527,17 +542,17 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [],
-              1 => Array [],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [],
-              5 => Array [],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [
-                Object {
+              0 => [],
+              1 => [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.005,
@@ -545,7 +560,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -553,7 +568,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
@@ -561,7 +576,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -570,34 +585,34 @@ describe('Timeline profiler', () => {
                   "type": "layout-effects",
                 },
               ],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
+            "schedulingEvents": [
+              {
                 "lanes": "0b0000000000000000000000000001001",
                 "timestamp": 0.005,
                 "type": "schedule-render",
@@ -605,27 +620,28 @@ describe('Timeline profiler', () => {
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 1,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
 
+      // @reactVersion <= 18.2
       // @reactVersion >= 18.0
       it('should process a sample legacy render sequence', async () => {
-        utils.legacyRender(<div />, document.createElement('div'));
+        legacyRender(<div />);
 
         const data = await preprocessData([
           ...createBoilerplateEntries(),
           ...createUserTimingData(clearedMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
@@ -633,7 +649,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -641,7 +657,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -649,7 +665,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -659,19 +675,19 @@ describe('Timeline profiler', () => {
                 },
               ],
             },
-            "componentMeasures": Array [],
+            "componentMeasures": [],
             "duration": 0.016,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {
-              undefined => Array [
-                Array [
-                  Object {
+              undefined => [
+                [
+                  {
                     "columnNumber": 0,
                     "functionName": "filtered",
                     "lineNumber": 0,
                     "source": "  at filtered (<anonymous>:0:0)",
                   },
-                  Object {
+                  {
                     "columnNumber": 1,
                     "functionName": "filtered",
                     "lineNumber": 1,
@@ -714,8 +730,8 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
@@ -723,7 +739,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
@@ -731,7 +747,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
@@ -739,7 +755,7 @@ describe('Timeline profiler', () => {
                   "timestamp": 0.008,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
@@ -748,43 +764,43 @@ describe('Timeline profiler', () => {
                   "type": "layout-effects",
                 },
               ],
-              1 => Array [],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [],
-              5 => Array [],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              1 => [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
+            "schedulingEvents": [
+              {
                 "lanes": "0b0000000000000000000000000000000",
                 "timestamp": 0.005,
                 "type": "schedule-render",
@@ -792,15 +808,14 @@ describe('Timeline profiler', () => {
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 4,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
 
-      // @reactVersion >= 18.0
       it('should process a sample createRoot render sequence', async () => {
         function App() {
           const [didMount, setDidMount] = React.useState(false);
@@ -820,116 +835,116 @@ describe('Timeline profiler', () => {
           ...createUserTimingData(clearedMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
-          Object {
+          {
             "batchUIDToMeasuresMap": Map {
-              0 => Array [
-                Object {
+              0 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.01,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.016,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.019,
                   "type": "passive-effects",
                 },
               ],
-              1 => Array [
-                Object {
+              1 => [
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.024,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.024,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.028,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.034,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.037,
                   "type": "passive-effects",
                 },
               ],
             },
-            "componentMeasures": Array [
-              Object {
+            "componentMeasures": [
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.007,
                 "type": "render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.002,
                 "timestamp": 0.02,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.025,
                 "type": "render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
                 "duration": 0.001,
                 "timestamp": 0.038,
@@ -938,17 +953,17 @@ describe('Timeline profiler', () => {
               },
             ],
             "duration": 0.04,
-            "flamechart": Array [],
+            "flamechart": [],
             "internalModuleSourceToRanges": Map {
-              undefined => Array [
-                Array [
-                  Object {
+              undefined => [
+                [
+                  {
                     "columnNumber": 0,
                     "functionName": "filtered",
                     "lineNumber": 0,
                     "source": "  at filtered (<anonymous>:0:0)",
                   },
-                  Object {
+                  {
                     "columnNumber": 1,
                     "functionName": "filtered",
                     "lineNumber": 1,
@@ -991,158 +1006,158 @@ describe('Timeline profiler', () => {
               30 => "Offscreen",
             },
             "laneToReactMeasureMap": Map {
-              0 => Array [],
-              1 => Array [],
-              2 => Array [],
-              3 => Array [],
-              4 => Array [
-                Object {
+              0 => [],
+              1 => [],
+              2 => [],
+              3 => [],
+              4 => [],
+              5 => [
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.006,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.006,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.01,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.016,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.019,
                   "type": "passive-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.024,
                   "type": "render-idle",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.024,
                   "type": "render",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.028,
                   "type": "commit",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.034,
                   "type": "layout-effects",
                 },
-                Object {
+                {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": "0b0000000000000000000000000000100",
+                  "lanes": "0b0000000000000000000000000000101",
                   "timestamp": 0.037,
                   "type": "passive-effects",
                 },
               ],
-              5 => Array [],
-              6 => Array [],
-              7 => Array [],
-              8 => Array [],
-              9 => Array [],
-              10 => Array [],
-              11 => Array [],
-              12 => Array [],
-              13 => Array [],
-              14 => Array [],
-              15 => Array [],
-              16 => Array [],
-              17 => Array [],
-              18 => Array [],
-              19 => Array [],
-              20 => Array [],
-              21 => Array [],
-              22 => Array [],
-              23 => Array [],
-              24 => Array [],
-              25 => Array [],
-              26 => Array [],
-              27 => Array [],
-              28 => Array [],
-              29 => Array [],
-              30 => Array [],
+              6 => [],
+              7 => [],
+              8 => [],
+              9 => [],
+              10 => [],
+              11 => [],
+              12 => [],
+              13 => [],
+              14 => [],
+              15 => [],
+              16 => [],
+              17 => [],
+              18 => [],
+              19 => [],
+              20 => [],
+              21 => [],
+              22 => [],
+              23 => [],
+              24 => [],
+              25 => [],
+              26 => [],
+              27 => [],
+              28 => [],
+              29 => [],
+              30 => [],
             },
-            "nativeEvents": Array [],
-            "networkMeasures": Array [],
-            "otherUserTimingMarks": Array [],
+            "nativeEvents": [],
+            "networkMeasures": [],
+            "otherUserTimingMarks": [],
             "reactVersion": "<filtered-version>",
-            "schedulingEvents": Array [
-              Object {
-                "lanes": "0b0000000000000000000000000000100",
+            "schedulingEvents": [
+              {
+                "lanes": "0b0000000000000000000000000000101",
                 "timestamp": 0.005,
                 "type": "schedule-render",
                 "warning": null,
               },
-              Object {
+              {
                 "componentName": "App",
-                "lanes": "0b0000000000000000000000000000100",
+                "lanes": "0b0000000000000000000000000000101",
                 "timestamp": 0.021,
                 "type": "schedule-state-update",
                 "warning": null,
               },
             ],
             "snapshotHeight": 0,
-            "snapshots": Array [],
+            "snapshots": [],
             "startTime": 4,
-            "suspenseEvents": Array [],
-            "thrownErrors": Array [],
+            "suspenseEvents": [],
+            "thrownErrors": [],
           }
         `);
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion <= 18.2
       it('should error if events and measures are incomplete', async () => {
-        const container = document.createElement('div');
-        utils.legacyRender(<div />, container);
+        legacyRender(<div />);
 
         const invalidMarks = clearedMarks.filter(
           mark => !mark.includes('render-stop'),
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
@@ -1151,16 +1166,16 @@ describe('Timeline profiler', () => {
       });
 
       // @reactVersion >= 18.0
+      // @reactVersion <= 18.2
       it('should error if work is completed without being started', async () => {
-        const container = document.createElement('div');
-        utils.legacyRender(<div />, container);
+        legacyRender(<div />);
 
         const invalidMarks = clearedMarks.filter(
           mark => !mark.includes('render-start'),
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
 
-        const error = spyOn(console, 'error');
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
         preprocessData([
           ...createBoilerplateEntries(),
           ...invalidUserTimingData,
@@ -1201,16 +1216,16 @@ describe('Timeline profiler', () => {
           ...userTimingData,
         ]);
         expect(data.otherUserTimingMarks).toMatchInlineSnapshot(`
-                Array [
-                  Object {
+                [
+                  {
                     "name": "VCWithoutImage: root",
                     "timestamp": 0.003,
                   },
-                  Object {
+                  {
                     "name": "--a-mark-that-looks-like-one-of-ours",
                     "timestamp": 0.004,
                   },
-                  Object {
+                  {
                     "name": "Some other mark",
                     "timestamp": 0.005,
                   },
@@ -1263,6 +1278,7 @@ describe('Timeline profiler', () => {
       describe('warnings', () => {
         describe('long event handlers', () => {
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {
             function App() {
               return null;
@@ -1276,7 +1292,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1286,6 +1302,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should not warn about long events if the cause was non-React JavaScript', async () => {
             function App() {
               return null;
@@ -1301,7 +1318,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1311,6 +1328,7 @@ describe('Timeline profiler', () => {
           });
 
           // @reactVersion >= 18.0
+          // @reactVersion <= 18.2
           it('should warn when React scedules a long (sync) update inside of an event', async () => {
             function App() {
               return null;
@@ -1324,7 +1342,7 @@ describe('Timeline profiler', () => {
 
             clearPendingMarks();
 
-            utils.legacyRender(<App />, document.createElement('div'));
+            legacyRender(<App />);
 
             clearedMarks.forEach(markName => {
               if (markName === '--render-stop') {
@@ -1350,10 +1368,10 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
             function Yield({id, value}) {
-              Scheduler.unstable_yieldValue(`${id}:${value}`);
+              Scheduler.log(`${id}:${value}`);
               return null;
             }
 
@@ -1379,28 +1397,29 @@ describe('Timeline profiler', () => {
                   <Yield id="B" value={1} />
                 </>,
               );
-              expect(Scheduler).toFlushAndYieldThrough(['A:1']);
-
-              testMarks.push(...createUserTimingData(clearedMarks));
-              clearPendingMarks();
-
-              // Advance the clock some more to make the pending React update seem long.
-              startTime += 20000;
-
-              // Fake a long "click" event in the middle
-              // and schedule a sync update that will also flush the previous work.
-              testMarks.push(createNativeEventEntry('click', 25000));
-              ReactDOM.flushSync(() => {
-                root.render(
-                  <>
-                    <Yield id="A" value={2} />
-                    <Yield id="B" value={2} />
-                  </>,
-                );
-              });
             });
 
-            expect(Scheduler).toHaveYielded(['A:2', 'B:2']);
+            await waitFor(['A:1']);
+
+            testMarks.push(...createUserTimingData(clearedMarks));
+            clearPendingMarks();
+
+            // Advance the clock some more to make the pending React update seem long.
+            startTime += 20000;
+
+            // Fake a long "click" event in the middle
+            // and schedule a sync update that will also flush the previous work.
+            testMarks.push(createNativeEventEntry('click', 25000));
+            ReactDOM.flushSync(() => {
+              root.render(
+                <>
+                  <Yield id="A" value={2} />
+                  <Yield id="B" value={2} />
+                </>,
+              );
+            });
+
+            assertLog(['A:2', 'B:2']);
 
             testMarks.push(...createUserTimingData(clearedMarks));
 
@@ -1411,13 +1430,11 @@ describe('Timeline profiler', () => {
         });
 
         describe('nested updates', () => {
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               React.useLayoutEffect(() => {
                 setDidMount(true);
               }, []);
@@ -1431,10 +1448,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1447,7 +1461,7 @@ describe('Timeline profiler', () => {
             expect(event.warning).toBe(null);
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about short (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1456,7 +1470,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1470,10 +1484,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
@@ -1491,9 +1502,7 @@ describe('Timeline profiler', () => {
           it.skip('should warn about long nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
-              Scheduler.unstable_yieldValue(
-                `Component ${didMount ? 'update' : 'mount'}`,
-              );
+              Scheduler.log(`Component ${didMount ? 'update' : 'mount'}`);
               // Fake a long render
               startTime += 20000;
               React.useLayoutEffect(() => {
@@ -1511,10 +1520,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1558,7 +1564,7 @@ describe('Timeline profiler', () => {
                 this.forceUpdate();
               }
               render() {
-                Scheduler.unstable_yieldValue(
+                Scheduler.log(
                   `Component ${this._didMount ? 'update' : 'mount'}`,
                 );
                 return null;
@@ -1574,10 +1580,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
-              'Component mount',
-              'Component update',
-            ]);
+            assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
             clearedMarks.forEach(markName => {
@@ -1611,20 +1614,18 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about transition updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);
               // eslint-disable-next-line no-unused-vars
               const [isPending, startTransition] = React.useTransition();
 
-              Scheduler.unstable_yieldValue(
-                `Component rendered with value ${value}`,
-              );
+              Scheduler.log(`Component rendered with value ${value}`);
 
               // Fake a long render
               if (value !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1646,7 +1647,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0',
               'Component rendered with value 0',
               'Component rendered with value 1',
@@ -1689,13 +1690,13 @@ describe('Timeline profiler', () => {
               const [value, setValue] = React.useState(0);
               const deferredValue = React.useDeferredValue(value);
 
-              Scheduler.unstable_yieldValue(
+              Scheduler.log(
                 `Component rendered with value ${value} and deferredValue ${deferredValue}`,
               );
 
               // Fake a long render
               if (deferredValue !== 0) {
-                Scheduler.unstable_yieldValue('Long render');
+                Scheduler.log('Long render');
                 startTime += 20000;
               }
 
@@ -1715,7 +1716,7 @@ describe('Timeline profiler', () => {
               root.render(<Component />);
             });
 
-            expect(Scheduler).toHaveYielded([
+            assertLog([
               'Component rendered with value 0 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 0',
               'Component rendered with value 1 and deferredValue 1',
@@ -1755,7 +1756,7 @@ describe('Timeline profiler', () => {
         describe('errors thrown while rendering', () => {
           // @reactVersion >= 18.0
           it('shoult parse Errors thrown during render', async () => {
-            spyOn(console, 'error');
+            jest.spyOn(console, 'error');
 
             class ErrorBoundary extends React.Component {
               state = {error: null};
@@ -1799,10 +1800,10 @@ describe('Timeline profiler', () => {
         });
 
         describe('suspend during an update', () => {
-          // This also tests an edge case where the a component suspends while profiling
+          // This also tests an edge case where a component suspends while profiling
           // before the first commit is logged (so the lane-to-labels map will not yet exist).
-          // @reactVersion >= 18.0
-          it('should warn about suspending during an udpate', async () => {
+          // @reactVersion >= 18.2
+          it('should warn about suspending during an update', async () => {
             let promise = null;
             let resolvedValue = null;
             function readValue(value) {
@@ -1817,7 +1818,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }
@@ -1859,7 +1860,7 @@ describe('Timeline profiler', () => {
             );
           });
 
-          // @reactVersion >= 18.0
+          // @reactVersion >= 18.2
           it('should not warn about suspending during an transition', async () => {
             let promise = null;
             let resolvedValue = null;
@@ -1875,7 +1876,7 @@ describe('Timeline profiler', () => {
             }
 
             function Component({shouldSuspend}) {
-              Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+              Scheduler.log(`Component ${shouldSuspend}`);
               if (shouldSuspend) {
                 readValue(123);
               }
@@ -1947,19 +1948,22 @@ describe('Timeline profiler', () => {
       global.IS_REACT_ACT_ENVIRONMENT = true;
     });
 
+    const {render: legacyRender} = getLegacyRenderImplementation();
+
+    // @reactVersion <= 18.2
     // @reactVersion >= 18.0
     it('should process a sample legacy render sequence', async () => {
-      utils.legacyRender(<div />, document.createElement('div'));
+      legacyRender(<div />);
       utils.act(() => store.profilerStore.stopProfiling());
 
       const data = store.profilerStore.profilingData?.timelineData;
       expect(data).toHaveLength(1);
       const timelineData = data[0];
       expect(timelineData).toMatchInlineSnapshot(`
-        Object {
+        {
           "batchUIDToMeasuresMap": Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1967,7 +1971,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1975,7 +1979,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -1983,7 +1987,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -1993,9 +1997,9 @@ describe('Timeline profiler', () => {
               },
             ],
           },
-          "componentMeasures": Array [],
+          "componentMeasures": [],
           "duration": 20,
-          "flamechart": Array [],
+          "flamechart": [],
           "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             1 => "Sync",
@@ -2031,8 +2035,8 @@ describe('Timeline profiler', () => {
             1073741824 => "Offscreen",
           },
           "laneToReactMeasureMap": Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2040,7 +2044,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2048,7 +2052,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2056,7 +2060,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2065,43 +2069,43 @@ describe('Timeline profiler', () => {
                 "type": "layout-effects",
               },
             ],
-            2 => Array [],
-            4 => Array [],
-            8 => Array [],
-            16 => Array [],
-            32 => Array [],
-            64 => Array [],
-            128 => Array [],
-            256 => Array [],
-            512 => Array [],
-            1024 => Array [],
-            2048 => Array [],
-            4096 => Array [],
-            8192 => Array [],
-            16384 => Array [],
-            32768 => Array [],
-            65536 => Array [],
-            131072 => Array [],
-            262144 => Array [],
-            524288 => Array [],
-            1048576 => Array [],
-            2097152 => Array [],
-            4194304 => Array [],
-            8388608 => Array [],
-            16777216 => Array [],
-            33554432 => Array [],
-            67108864 => Array [],
-            134217728 => Array [],
-            268435456 => Array [],
-            536870912 => Array [],
-            1073741824 => Array [],
+            2 => [],
+            4 => [],
+            8 => [],
+            16 => [],
+            32 => [],
+            64 => [],
+            128 => [],
+            256 => [],
+            512 => [],
+            1024 => [],
+            2048 => [],
+            4096 => [],
+            8192 => [],
+            16384 => [],
+            32768 => [],
+            65536 => [],
+            131072 => [],
+            262144 => [],
+            524288 => [],
+            1048576 => [],
+            2097152 => [],
+            4194304 => [],
+            8388608 => [],
+            16777216 => [],
+            33554432 => [],
+            67108864 => [],
+            134217728 => [],
+            268435456 => [],
+            536870912 => [],
+            1073741824 => [],
           },
-          "nativeEvents": Array [],
-          "networkMeasures": Array [],
-          "otherUserTimingMarks": Array [],
+          "nativeEvents": [],
+          "networkMeasures": [],
+          "otherUserTimingMarks": [],
           "reactVersion": "<filtered-version>",
-          "schedulingEvents": Array [
-            Object {
+          "schedulingEvents": [
+            {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "schedule-render",
@@ -2109,15 +2113,14 @@ describe('Timeline profiler', () => {
             },
           ],
           "snapshotHeight": 0,
-          "snapshots": Array [],
+          "snapshots": [],
           "startTime": -10,
-          "suspenseEvents": Array [],
-          "thrownErrors": Array [],
+          "suspenseEvents": [],
+          "thrownErrors": [],
         }
       `);
     });
 
-    // @reactVersion >= 18.0
     it('should process a sample createRoot render sequence', async () => {
       function App() {
         const [didMount, setDidMount] = React.useState(false);
@@ -2146,116 +2149,116 @@ describe('Timeline profiler', () => {
       });
 
       expect(timelineData).toMatchInlineSnapshot(`
-        Object {
+        {
           "batchUIDToMeasuresMap": Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
             ],
-            2 => Array [
-              Object {
+            2 => [
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
             ],
           },
-          "componentMeasures": Array [
-            Object {
+          "componentMeasures": [
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "duration": 0,
               "timestamp": 10,
@@ -2264,16 +2267,16 @@ describe('Timeline profiler', () => {
             },
           ],
           "duration": 20,
-          "flamechart": Array [],
+          "flamechart": [],
           "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
-            1 => "Sync",
-            2 => "InputContinuousHydration",
-            4 => "InputContinuous",
-            8 => "DefaultHydration",
-            16 => "Default",
-            32 => "TransitionHydration",
-            64 => "Transition",
+            1 => "SyncHydrationLane",
+            2 => "Sync",
+            4 => "InputContinuousHydration",
+            8 => "InputContinuous",
+            16 => "DefaultHydration",
+            32 => "Default",
+            64 => "TransitionHydration",
             128 => "Transition",
             256 => "Transition",
             512 => "Transition",
@@ -2293,152 +2296,152 @@ describe('Timeline profiler', () => {
             8388608 => "Retry",
             16777216 => "Retry",
             33554432 => "Retry",
-            67108864 => "Retry",
-            134217728 => "SelectiveHydration",
-            268435456 => "IdleHydration",
-            536870912 => "Idle",
-            1073741824 => "Offscreen",
+            67108864 => "SelectiveHydration",
+            134217728 => "IdleHydration",
+            268435456 => "Idle",
+            536870912 => "Offscreen",
+            1073741824 => "Deferred",
           },
           "laneToReactMeasureMap": Map {
-            1 => Array [],
-            2 => Array [],
-            4 => Array [],
-            8 => Array [],
-            16 => Array [
-              Object {
+            1 => [],
+            2 => [],
+            4 => [],
+            8 => [],
+            16 => [],
+            32 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
             ],
-            32 => Array [],
-            64 => Array [],
-            128 => Array [],
-            256 => Array [],
-            512 => Array [],
-            1024 => Array [],
-            2048 => Array [],
-            4096 => Array [],
-            8192 => Array [],
-            16384 => Array [],
-            32768 => Array [],
-            65536 => Array [],
-            131072 => Array [],
-            262144 => Array [],
-            524288 => Array [],
-            1048576 => Array [],
-            2097152 => Array [],
-            4194304 => Array [],
-            8388608 => Array [],
-            16777216 => Array [],
-            33554432 => Array [],
-            67108864 => Array [],
-            134217728 => Array [],
-            268435456 => Array [],
-            536870912 => Array [],
-            1073741824 => Array [],
+            64 => [],
+            128 => [],
+            256 => [],
+            512 => [],
+            1024 => [],
+            2048 => [],
+            4096 => [],
+            8192 => [],
+            16384 => [],
+            32768 => [],
+            65536 => [],
+            131072 => [],
+            262144 => [],
+            524288 => [],
+            1048576 => [],
+            2097152 => [],
+            4194304 => [],
+            8388608 => [],
+            16777216 => [],
+            33554432 => [],
+            67108864 => [],
+            134217728 => [],
+            268435456 => [],
+            536870912 => [],
+            1073741824 => [],
           },
-          "nativeEvents": Array [],
-          "networkMeasures": Array [],
-          "otherUserTimingMarks": Array [],
+          "nativeEvents": [],
+          "networkMeasures": [],
+          "otherUserTimingMarks": [],
           "reactVersion": "<filtered-version>",
-          "schedulingEvents": Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          "schedulingEvents": [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "App",
               "componentStack": "
             in App (at **)",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
             },
           ],
           "snapshotHeight": 0,
-          "snapshots": Array [],
+          "snapshots": [],
           "startTime": -10,
-          "suspenseEvents": Array [],
-          "thrownErrors": Array [],
+          "suspenseEvents": [],
+          "thrownErrors": [],
         }
       `);
     });

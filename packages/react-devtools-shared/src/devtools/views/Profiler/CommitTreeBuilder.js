@@ -17,18 +17,18 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from 'react-devtools-shared/src/constants';
-import {utfDecodeString} from 'react-devtools-shared/src/utils';
-import {ElementTypeRoot} from 'react-devtools-shared/src/types';
+import {utfDecodeStringWithRanges} from 'react-devtools-shared/src/utils';
+import {ElementTypeRoot} from 'react-devtools-shared/src/frontend/types';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 import type {
   CommitTree,
   CommitTreeNode,
   ProfilingDataForRootFrontend,
 } from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cCommitTreeBuilder %c${methodName}`,
@@ -84,7 +84,7 @@ export function getCommitTree({
     // If this is the very first commit, start with the cached snapshot and apply the first mutation.
     // Otherwise load (or generate) the previous commit and append a mutation to it.
     if (index === 0) {
-      const nodes = new Map();
+      const nodes = new Map<number, CommitTreeNode>();
 
       // Construct the initial tree.
       recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
@@ -150,6 +150,7 @@ function updateTree(
 
   // Clone nodes before mutating them so edits don't affect them.
   const getClonedNode = (id: number): CommitTreeNode => {
+    // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
     const clonedNode = ((Object.assign(
       {},
       nodes.get(id),
@@ -162,15 +163,17 @@ function updateTree(
   let id: number = ((null: any): number);
 
   // Reassemble the string table.
-  const stringTable = [
+  const stringTable: Array<null | string> = [
     null, // ID = 0 corresponds to the null string.
   ];
   const stringTableSize = operations[i++];
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;

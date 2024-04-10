@@ -8,23 +8,34 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {
+  BootstrapScriptDescriptor,
+  HeadersDescriptor,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {
+  PostponedState,
+  ErrorInfo,
+  PostponeInfo,
+} from 'react-server/src/ReactFizzServer';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import {Writable, Readable} from 'stream';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
+  getPostponedState,
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 type Options = {
   identifierPrefix?: string,
@@ -34,15 +45,20 @@ type Options = {
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onError?: (error: mixed) => ?string,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
+  onHeaders?: (headers: HeadersDescriptor) => void,
+  maxHeadersLength?: number,
 };
 
 type StaticResult = {
+  postponed: null | PostponedState,
   prelude: Readable,
 };
 
-function createFakeWritable(readable): Writable {
+function createFakeWritable(readable: any): Writable {
   // The current host config expects a Writable so we create
   // a fake writable for now to push into the Readable.
   return ({
@@ -58,7 +74,7 @@ function createFakeWritable(readable): Writable {
   }: any);
 }
 
-function prerenderToNodeStreams(
+function prerenderToNodeStream(
   children: ReactNodeList,
   options?: Options,
 ): Promise<StaticResult> {
@@ -66,7 +82,7 @@ function prerenderToNodeStreams(
     const onFatalError = reject;
 
     function onAllReady() {
-      const readable = new Readable({
+      const readable: Readable = new Readable({
         read() {
           startFlowing(request, writable);
         },
@@ -74,20 +90,28 @@ function prerenderToNodeStreams(
       const writable = createFakeWritable(readable);
 
       const result = {
+        postponed: getPostponedState(request),
         prelude: readable,
       };
       resolve(result);
     }
-
-    const request = createRequest(
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    );
+    const request = createPrerenderRequest(
       children,
-      createResponseState(
-        options ? options.identifierPrefix : undefined,
-        undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
+      resumableState,
+      createRenderState(
+        resumableState,
+        undefined, // nonce is not compatible with prerendered bootstrap scripts
         options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
+        options ? options.onHeaders : undefined,
+        options ? options.maxHeadersLength : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -96,6 +120,7 @@ function prerenderToNodeStreams(
       undefined,
       undefined,
       onFatalError,
+      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -113,4 +138,4 @@ function prerenderToNodeStreams(
   });
 }
 
-export {prerenderToNodeStreams, ReactVersion as version};
+export {prerenderToNodeStream, ReactVersion as version};

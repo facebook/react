@@ -125,10 +125,8 @@ function ProfilerContextController({children}: Props): React.Node {
     supportsProfiling,
   } = useSubscription<StoreProfilingState>(subscription);
 
-  const [
-    prevProfilingData,
-    setPrevProfilingData,
-  ] = useState<ProfilingDataFrontend | null>(null);
+  const [prevProfilingData, setPrevProfilingData] =
+    useState<ProfilingDataFrontend | null>(null);
   const [rootID, setRootID] = useState<number | null>(null);
   const [selectedFiberID, selectFiberID] = useState<number | null>(null);
   const [selectedFiberName, selectFiberName] = useState<string | null>(null);
@@ -179,9 +177,8 @@ function ProfilerContextController({children}: Props): React.Node {
         if (rootID === null || !dataForRoots.has(rootID)) {
           let selectedElementRootID = null;
           if (selectedElementID !== null) {
-            selectedElementRootID = store.getRootIDForElement(
-              selectedElementID,
-            );
+            selectedElementRootID =
+              store.getRootIDForElement(selectedElementID);
           }
           if (
             selectedElementRootID !== null &&
@@ -196,10 +193,8 @@ function ProfilerContextController({children}: Props): React.Node {
     });
   }
 
-  const [
-    isCommitFilterEnabled,
-    setIsCommitFilterEnabled,
-  ] = useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
+  const [isCommitFilterEnabled, setIsCommitFilterEnabled] =
+    useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
   const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
     'minCommitDuration',
     0,
@@ -228,9 +223,10 @@ function ProfilerContextController({children}: Props): React.Node {
     });
     store.profilerStore.startProfiling();
   }, [store, selectedTabID]);
-  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
-    store,
-  ]);
+  const stopProfiling = useCallback(
+    () => store.profilerStore.stopProfiling(),
+    [store],
+  );
 
   if (isProfiling) {
     batchedUpdates(() => {

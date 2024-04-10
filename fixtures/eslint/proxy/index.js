@@ -16,7 +16,7 @@ function reload() {
     }
   }
   // Point to the built version.
-  build = require('../../../build/node_modules/eslint-plugin-react-hooks');
+  build = require('../../../build/oss-experimental/eslint-plugin-react-hooks');
 }
 
 let rules = {};

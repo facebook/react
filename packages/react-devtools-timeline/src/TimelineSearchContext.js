@@ -40,7 +40,7 @@ type Action =
 
 type Dispatch = (action: Action) => void;
 
-const EMPTY_ARRAY = [];
+const EMPTY_ARRAY: Array<ReactComponentMeasure> = [];
 
 function reducer(state: State, action: Action): State {
   let {searchIndex, searchRegExp, searchResults, searchText} = state;

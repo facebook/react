@@ -7,17 +7,24 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 
 import isArray from 'shared/isArray';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
-import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import {isValidElement, cloneAndReplaceKey} from './jsx/ReactJSXElement';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
@@ -34,7 +41,7 @@ function escape(key: string): string {
     '=': '=0',
     ':': '=2',
   };
-  const escapedString = key.replace(escapeRegex, function(match) {
+  const escapedString = key.replace(escapeRegex, function (match) {
     return escaperLookup[match];
   });
 
@@ -74,6 +81,68 @@ function getElementKey(element: any, index: number): string {
   return index.toString(36);
 }
 
+function noop() {}
+
+function resolveThenable<T>(thenable: Thenable<T>): T {
+  switch (thenable.status) {
+    case 'fulfilled': {
+      const fulfilledValue: T = thenable.value;
+      return fulfilledValue;
+    }
+    case 'rejected': {
+      const rejectedError = thenable.reason;
+      throw rejectedError;
+    }
+    default: {
+      if (typeof thenable.status === 'string') {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
+      } else {
+        // This is an uncached thenable that we haven't seen before.
+
+        // TODO: Detect infinite ping loops caused by uncached promises.
+
+        const pendingThenable: PendingThenable<T> = (thenable: any);
+        pendingThenable.status = 'pending';
+        pendingThenable.then(
+          fulfilledValue => {
+            if (thenable.status === 'pending') {
+              const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+              fulfilledThenable.status = 'fulfilled';
+              fulfilledThenable.value = fulfilledValue;
+            }
+          },
+          (error: mixed) => {
+            if (thenable.status === 'pending') {
+              const rejectedThenable: RejectedThenable<T> = (thenable: any);
+              rejectedThenable.status = 'rejected';
+              rejectedThenable.reason = error;
+            }
+          },
+        );
+      }
+
+      // Check one more time in case the thenable resolved synchronously.
+      switch (thenable.status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+          return fulfilledThenable.value;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<T> = (thenable: any);
+          const rejectedError = rejectedThenable.reason;
+          throw rejectedError;
+        }
+      }
+    }
+  }
+  throw thenable;
+}
+
 function mapIntoArray(
   children: ?ReactNodeList,
   array: Array<React$Node>,
@@ -94,6 +163,7 @@ function mapIntoArray(
     invokeCallback = true;
   } else {
     switch (type) {
+      case 'bigint':
       case 'string':
       case 'number':
         invokeCallback = true;
@@ -103,6 +173,17 @@ function mapIntoArray(
           case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
+            break;
+          case REACT_LAZY_TYPE:
+            const payload = (children: any)._payload;
+            const init = (children: any)._init;
+            return mapIntoArray(
+              init(payload),
+              array,
+              escapedPrefix,
+              nameSoFar,
+              callback,
+            );
         }
     }
   }
@@ -125,7 +206,7 @@ function mapIntoArray(
         if (__DEV__) {
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
-          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
           if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
             checkKeyStringCoercion(mappedChild.key);
           }
@@ -135,13 +216,11 @@ function mapIntoArray(
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
-            // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+            // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
-                  // eslint-disable-next-line react-internal/safe-string-coercion
-                  '' +
-                    // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                    mappedChild.key,
+                  // $FlowFixMe[unsafe-addition]
+                  '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
                 ) + '/'
               : '') +
             childKey,
@@ -193,7 +272,7 @@ function mapIntoArray(
       const iterator = iteratorFn.call(iterableChildren);
       let step;
       let ii = 0;
-      // $FlowFixMe `iteratorFn` might return null according to typing.
+      // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getElementKey(child, ii++);
@@ -206,6 +285,16 @@ function mapIntoArray(
         );
       }
     } else if (type === 'object') {
+      if (typeof (children: any).then === 'function') {
+        return mapIntoArray(
+          resolveThenable((children: any)),
+          array,
+          escapedPrefix,
+          nameSoFar,
+          callback,
+        );
+      }
+
       // eslint-disable-next-line react-internal/safe-string-coercion
       const childrenString = String((children: any));
 
@@ -247,11 +336,12 @@ function mapChildren(
   context: mixed,
 ): ?Array<React$Node> {
   if (children == null) {
+    // $FlowFixMe limitation refining abstract types in Flow
     return children;
   }
-  const result = [];
+  const result: Array<React$Node> = [];
   let count = 0;
-  mapIntoArray(children, result, '', '', function(child) {
+  mapIntoArray(children, result, '', '', function (child) {
     return func.call(context, child, count++);
   });
   return result;
@@ -296,7 +386,8 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
-    function() {
+    // $FlowFixMe[missing-this-annot]
+    function () {
       forEachFunc.apply(this, arguments);
       // Don't return anything.
     },

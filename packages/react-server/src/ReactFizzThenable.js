@@ -83,24 +83,36 @@ export function trackUsedThenable<T>(
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
       } else {
-        const pendingThenable: PendingThenable<mixed> = (thenable: any);
+        const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
           fulfilledValue => {
             if (thenable.status === 'pending') {
-              const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
+              const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
               fulfilledThenable.status = 'fulfilled';
               fulfilledThenable.value = fulfilledValue;
             }
           },
           (error: mixed) => {
             if (thenable.status === 'pending') {
-              const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
+              const rejectedThenable: RejectedThenable<T> = (thenable: any);
               rejectedThenable.status = 'rejected';
               rejectedThenable.reason = error;
             }
           },
         );
+
+        // Check one more time in case the thenable resolved synchronously
+        switch (thenable.status) {
+          case 'fulfilled': {
+            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+            return fulfilledThenable.value;
+          }
+          case 'rejected': {
+            const rejectedThenable: RejectedThenable<T> = (thenable: any);
+            throw rejectedThenable.reason;
+          }
+        }
       }
 
       // Suspend.

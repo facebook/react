@@ -11,6 +11,7 @@ export type Destination = ReadableStreamController;
 
 export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = Uint8Array;
+export type BinaryChunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -21,14 +22,7 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-// For now we support AsyncLocalStorage as a global for the "browser" builds
-// TODO: Move this to some special WinterCG build.
-export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
-
-const VIEW_SIZE = 512;
+const VIEW_SIZE = 2048;
 let currentView = null;
 let writtenBytes = 0;
 
@@ -39,13 +33,13 @@ export function beginWriting(destination: Destination) {
 
 export function writeChunk(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): void {
-  if (chunk.length === 0) {
+  if (chunk.byteLength === 0) {
     return;
   }
 
-  if (chunk.length > VIEW_SIZE) {
+  if (chunk.byteLength > VIEW_SIZE) {
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -66,7 +60,7 @@ export function writeChunk(
 
   let bytesToWrite = chunk;
   const allowableBytes = ((currentView: any): Uint8Array).length - writtenBytes;
-  if (allowableBytes < bytesToWrite.length) {
+  if (allowableBytes < bytesToWrite.byteLength) {
     // this chunk would overflow the current view. We enqueue a full view
     // and start a new view with the remaining chunk
     if (allowableBytes === 0) {
@@ -87,12 +81,12 @@ export function writeChunk(
     writtenBytes = 0;
   }
   ((currentView: any): Uint8Array).set(bytesToWrite, writtenBytes);
-  writtenBytes += bytesToWrite.length;
+  writtenBytes += bytesToWrite.byteLength;
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: PrecomputedChunk | Chunk | BinaryChunk,
 ): boolean {
   writeChunk(destination, chunk);
   // in web streams there is no backpressure so we can alwas write more
@@ -118,13 +112,48 @@ export function stringToChunk(content: string): Chunk {
 }
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
-  return textEncoder.encode(content);
+  const precomputedChunk = textEncoder.encode(content);
+
+  if (__DEV__) {
+    if (precomputedChunk.byteLength > VIEW_SIZE) {
+      console.error(
+        'precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.',
+      );
+    }
+  }
+
+  return precomputedChunk;
+}
+
+export function typedArrayToBinaryChunk(
+  content: $ArrayBufferView,
+): BinaryChunk {
+  // Convert any non-Uint8Array array to Uint8Array. We could avoid this for Uint8Arrays.
+  // If we passed through this straight to enqueue we wouldn't have to convert it but since
+  // we need to copy the buffer in that case, we need to convert it to copy it.
+  // When we copy it into another array using set() it needs to be a Uint8Array.
+  const buffer = new Uint8Array(
+    content.buffer,
+    content.byteOffset,
+    content.byteLength,
+  );
+  // We clone large chunks so that we can transfer them when we write them.
+  // Others get copied into the target buffer.
+  return content.byteLength > VIEW_SIZE ? buffer.slice() : buffer;
+}
+
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  return chunk.byteLength;
+}
+
+export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
+  return chunk.byteLength;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
-    // $FlowFixMe: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);
   } else {
     // Earlier implementations doesn't support this method. In that environment you're
@@ -136,3 +165,5 @@ export function closeWithError(destination: Destination, error: mixed): void {
     destination.close();
   }
 }
+
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';

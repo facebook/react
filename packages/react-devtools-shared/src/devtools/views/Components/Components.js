@@ -100,6 +100,7 @@ function Components(_: {}) {
     onResizeEnd = () =>
       dispatch({type: 'ACTION_SET_IS_RESIZING', payload: false});
 
+    // $FlowFixMe[missing-local-annot]
     onResize = event => {
       const resizeElement = resizeElementRef.current;
       const wrapperElement = wrapperElementRef.current;
@@ -258,6 +259,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(
-  Components,
-): React$StatelessFunctionalComponent<{}>);
+export default (portaledContent(Components): React$AbstractComponent<{}>);

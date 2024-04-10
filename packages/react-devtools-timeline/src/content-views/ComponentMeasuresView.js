@@ -92,13 +92,8 @@ export class ComponentMeasuresView extends View {
     showHoverHighlight: boolean,
   ): boolean {
     const {frame} = this;
-    const {
-      componentName,
-      duration,
-      timestamp,
-      type,
-      warning,
-    } = componentMeasure;
+    const {componentName, duration, timestamp, type, warning} =
+      componentMeasure;
 
     const xStart = timestampToPosition(timestamp, scaleFactor, frame);
     const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);

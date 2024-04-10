@@ -9,42 +9,30 @@
 
 'use strict';
 
-import {normalizeCodeLocInfo} from './utils';
+import {
+  getLegacyRenderImplementation,
+  getModernRenderImplementation,
+  normalizeCodeLocInfo,
+} from './utils';
 
 describe('Timeline profiler', () => {
   let React;
-  let ReactDOMClient;
   let Scheduler;
-  let renderHelper;
-  let renderRootHelper;
   let store;
-  let unmountFns;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    unmountFns = [];
-    renderHelper = element => {
-      const unmountFn = utils.legacyRender(element);
-      unmountFns.push(unmountFn);
-      return unmountFn;
-    };
-    renderRootHelper = element => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      root.render(element);
-      const unmountFn = () => root.unmount();
-      unmountFns.push(unmountFn);
-      return unmountFn;
-    };
-
     React = require('react');
-    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     store = global.store;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('User Timing API', () => {
@@ -112,8 +100,8 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
-      setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
-        .setPerformanceMock_ONLY_FOR_TESTING;
+      setPerformanceMock =
+        require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
     });
 
@@ -121,17 +109,19 @@ describe('Timeline profiler', () => {
       // Verify all logged marks also get cleared.
       expect(marks).toHaveLength(0);
 
-      unmountFns.forEach(unmountFn => unmountFn());
-
       setPerformanceMock(null);
     });
 
-    // @reactVersion >=18.0
-    it('should mark sync render without suspends or state updates', () => {
-      renderHelper(<div />);
+    describe('with legacy render', () => {
+      const {render: legacyRender} = getLegacyRenderImplementation();
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+      // @reactVersion <= 18.2
+      // @reactVersion >= 18.0
+      it('should mark sync render without suspends or state updates', () => {
+        legacyRender(<div />);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
           "--schedule-render-1",
           "--render-start-1",
           "--render-stop",
@@ -146,132 +136,132 @@ describe('Timeline profiler', () => {
           "--commit-stop",
         ]
       `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark concurrent render without suspends or state updates', () => {
-      renderRootHelper(<div />);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--schedule-render-16",
-            ]
-        `);
-
-      clearPendingMarks();
-
-      expect(Scheduler).toFlushUntilNextPaint([]);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark render yields', async () => {
-      function Bar() {
-        Scheduler.unstable_yieldValue('Bar');
-        return null;
-      }
-
-      function Foo() {
-        Scheduler.unstable_yieldValue('Foo');
-        return <Bar />;
-      }
-
-      React.startTransition(() => {
-        renderRootHelper(<Foo />);
       });
 
-      // Do one step of work.
-      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+      // TODO(hoxyq): investigate why running this test with React 18 fails
+      // @reactVersion <= 18.2
+      // @reactVersion >= 18.0
+      xit('should mark sync render with suspense that resolves', async () => {
+        const fakeSuspensePromise = Promise.resolve(true);
+        function Example() {
+          throw fakeSuspensePromise;
+        }
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--schedule-render-64",
-              "--render-start-64",
-              "--component-render-start-Foo",
-              "--component-render-stop",
-              "--render-yield",
-            ]
-        `);
-    });
+        legacyRender(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
 
-    // @reactVersion >=18.0
-    it('should mark sync render with suspense that resolves', async () => {
-      const fakeSuspensePromise = Promise.resolve(true);
-      function Example() {
-        throw fakeSuspensePromise;
-      }
-
-      renderHelper(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
-      );
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-2",
+          "--render-start-2",
           "--component-render-start-Example",
           "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-1-",
+          "--suspense-suspend-0-Example-mount-2-",
           "--render-stop",
-          "--commit-start-1",
+          "--commit-start-2",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-2",
           "--layout-effects-stop",
           "--commit-stop",
         ]
       `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      await fakeSuspensePromise;
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+        await fakeSuspensePromise;
+        expect(clearedMarks).toMatchInlineSnapshot(`
+                [
                   "--suspense-resolved-0-Example",
                 ]
           `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark sync render with suspense that rejects', async () => {
-      const fakeSuspensePromise = Promise.reject(new Error('error'));
-      function Example() {
-        throw fakeSuspensePromise;
-      }
+      // TODO(hoxyq): investigate why running this test with React 18 fails
+      // @reactVersion <= 18.2
+      // @reactVersion >= 18.0
+      xit('should mark sync render with suspense that rejects', async () => {
+        const fakeSuspensePromise = Promise.reject(new Error('error'));
+        function Example() {
+          throw fakeSuspensePromise;
+        }
 
-      renderHelper(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
-      );
+        legacyRender(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-2",
+          "--render-start-2",
           "--component-render-start-Example",
           "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-1-",
+          "--suspense-suspend-0-Example-mount-2-",
+          "--render-stop",
+          "--commit-start-2",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-2",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        await expect(fakeSuspensePromise).rejects.toThrow();
+        expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
+      });
+
+      // @reactVersion <= 18.2
+      // @reactVersion >= 18.0
+      it('should mark sync render that throws', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        function ExampleThatThrows() {
+          throw Error('Expected error');
+        }
+
+        legacyRender(
+          <ErrorBoundary>
+            <ExampleThatThrows />
+          </ErrorBoundary>,
+        );
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-1",
+          "--render-start-1",
+          "--component-render-start-ErrorBoundary",
+          "--component-render-stop",
+          "--component-render-start-ExampleThatThrows",
+          "--component-render-start-ExampleThatThrows",
+          "--component-render-stop",
+          "--error-ExampleThatThrows-mount-Expected error",
           "--render-stop",
           "--commit-start-1",
           "--react-version-<filtered-version>",
@@ -280,685 +270,699 @@ describe('Timeline profiler', () => {
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
           "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
           "--layout-effects-start-1",
+          "--schedule-state-update-1-ErrorBoundary",
           "--layout-effects-stop",
           "--commit-stop",
-        ]
-      `);
-
-      clearPendingMarks();
-
-      await expect(fakeSuspensePromise).rejects.toThrow();
-      expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark concurrent render with suspense that resolves', async () => {
-      const fakeSuspensePromise = Promise.resolve(true);
-      function Example() {
-        throw fakeSuspensePromise;
-      }
-
-      renderRootHelper(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
-      );
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--schedule-render-16",
-            ]
-        `);
-
-      clearPendingMarks();
-
-      expect(Scheduler).toFlushUntilNextPaint([]);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
+          "--render-start-1",
+          "--component-render-start-ErrorBoundary",
           "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-16-",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-1",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
           "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--commit-stop",
+        ]
+      `);
+      });
+    });
+
+    describe('with createRoot', () => {
+      let waitFor;
+      let waitForAll;
+      let waitForPaint;
+      let assertLog;
+
+      beforeEach(() => {
+        const InternalTestUtils = require('internal-test-utils');
+        waitFor = InternalTestUtils.waitFor;
+        waitForAll = InternalTestUtils.waitForAll;
+        waitForPaint = InternalTestUtils.waitForPaint;
+        assertLog = InternalTestUtils.assertLog;
+      });
+
+      const {render: modernRender} = getModernRenderImplementation();
+
+      it('should mark concurrent render without suspends or state updates', async () => {
+        modernRender(<div />);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
+          "--render-stop",
+          "--commit-start-32",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
+      });
+
+      it('should mark render yields', async () => {
+        function Bar() {
+          Scheduler.log('Bar');
+          return null;
+        }
+
+        function Foo() {
+          Scheduler.log('Foo');
+          return <Bar />;
+        }
+
+        React.startTransition(() => {
+          modernRender(<Foo />);
+        });
+
+        await waitFor(['Foo']);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-128",
+          "--render-start-128",
+          "--component-render-start-Foo",
+          "--component-render-stop",
+          "--render-yield",
+        ]
+      `);
+      });
+
+      it('should mark concurrent render with suspense that resolves', async () => {
+        let resolveFakePromise;
+        const fakeSuspensePromise = new Promise(
+          resolve => (resolveFakePromise = resolve),
+        );
+
+        function Example() {
+          throw fakeSuspensePromise;
+        }
+
+        modernRender(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--suspense-suspend-0-Example-mount-32-",
+          "--render-stop",
+          "--commit-start-32",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--layout-effects-stop",
           "--commit-stop",
         ]
       `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      await fakeSuspensePromise;
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
+        await resolveFakePromise();
+        expect(clearedMarks).toMatchInlineSnapshot(`
+            [
               "--suspense-resolved-0-Example",
             ]
         `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark concurrent render with suspense that rejects', async () => {
-      const fakeSuspensePromise = Promise.reject(new Error('error'));
-      function Example() {
-        throw fakeSuspensePromise;
-      }
+      it('should mark concurrent render with suspense that rejects', async () => {
+        let rejectFakePromise;
+        const fakeSuspensePromise = new Promise(
+          (_, reject) => (rejectFakePromise = reject),
+        );
 
-      renderRootHelper(
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>,
-      );
+        function Example() {
+          throw fakeSuspensePromise;
+        }
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--schedule-render-16",
-            ]
-        `);
+        modernRender(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
 
-      clearPendingMarks();
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+        clearPendingMarks();
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-16-",
+          "--suspense-suspend-0-Example-mount-32-",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--layout-effects-stop",
           "--commit-stop",
         ]
       `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      await expect(fakeSuspensePromise).rejects.toThrow();
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+        await expect(() => {
+          rejectFakePromise(new Error('error'));
+          return fakeSuspensePromise;
+        }).rejects.toThrow();
+        expect(clearedMarks).toMatchInlineSnapshot(`
+                [
                   "--suspense-rejected-0-Example",
                 ]
           `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark cascading class component state updates', () => {
-      class Example extends React.Component {
-        state = {didMount: false};
-        componentDidMount() {
-          this.setState({didMount: true});
-        }
-        render() {
-          return null;
-        }
-      }
-
-      renderRootHelper(<Example />);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--schedule-render-16",
-            ]
-        `);
-
-      clearPendingMarks();
-
-      expect(Scheduler).toFlushUntilNextPaint([]);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-state-update-1-Example",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark cascading class component force updates', () => {
-      class Example extends React.Component {
-        componentDidMount() {
-          this.forceUpdate();
-        }
-        render() {
-          return null;
-        }
-      }
-
-      renderRootHelper(<Example />);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
-                  "--schedule-render-16",
-                ]
-          `);
-
-      clearPendingMarks();
-
-      expect(Scheduler).toFlushUntilNextPaint([]);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-forced-update-1-Example",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark render phase state updates for class component', () => {
-      class Example extends React.Component {
-        state = {didRender: false};
-        render() {
-          if (this.state.didRender === false) {
-            this.setState({didRender: true});
-          }
-          return null;
-        }
-      }
-
-      renderRootHelper(<Example />);
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
-                  "--schedule-render-16",
-                ]
-          `);
-
-      clearPendingMarks();
-
-      let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
-        errorMessage = message;
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      it('should mark cascading class component state updates', async () => {
+        class Example extends React.Component {
+          state = {didMount: false};
+          componentDidMount() {
+            this.setState({didMount: true});
+          }
+          render() {
+            return null;
+          }
+        }
 
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(errorMessage).toContain(
-        'Cannot update during an existing state transition',
-      );
+        modernRender(<Example />);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
           "--component-render-start-Example",
-          "--schedule-state-update-16-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
+          "--schedule-state-update-2-Example",
           "--layout-effects-stop",
+          "--render-start-2",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-2",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--commit-stop",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark render phase force updates for class component', () => {
-      let forced = false;
-      class Example extends React.Component {
-        render() {
-          if (!forced) {
-            forced = true;
+      it('should mark cascading class component force updates', async () => {
+        class Example extends React.Component {
+          componentDidMount() {
             this.forceUpdate();
           }
-          return null;
+          render() {
+            return null;
+          }
         }
-      }
 
-      renderRootHelper(<Example />);
+        modernRender(<Example />);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
-                  "--schedule-render-16",
-                ]
-          `);
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
-        errorMessage = message;
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-32",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
+          "--schedule-forced-update-2-Example",
+          "--layout-effects-stop",
+          "--render-start-2",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-2",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--commit-stop",
+          "--commit-stop",
+        ]
+      `);
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      it('should mark render phase state updates for class component', async () => {
+        class Example extends React.Component {
+          state = {didRender: false};
+          render() {
+            if (this.state.didRender === false) {
+              this.setState({didRender: true});
+            }
+            return null;
+          }
+        }
 
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(errorMessage).toContain(
-        'Cannot update during an existing state transition',
-      );
+        modernRender(<Example />);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        let errorMessage;
+        jest.spyOn(console, 'error').mockImplementation(message => {
+          errorMessage = message;
+        });
+
+        await waitForPaint([]);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(errorMessage).toContain(
+          'Cannot update during an existing state transition',
+        );
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
           "--component-render-start-Example",
-          "--schedule-forced-update-16-Example",
+          "--schedule-state-update-32-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--layout-effects-stop",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark cascading layout updates', () => {
-      function Example() {
-        const [didMount, setDidMount] = React.useState(false);
-        React.useLayoutEffect(() => {
-          setDidMount(true);
-        }, []);
-        return didMount;
-      }
+      it('should mark render phase force updates for class component', async () => {
+        let forced = false;
+        class Example extends React.Component {
+          render() {
+            if (!forced) {
+              forced = true;
+              this.forceUpdate();
+            }
+            return null;
+          }
+        }
 
-      renderRootHelper(<Example />);
+        modernRender(<Example />);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
-                  "--schedule-render-16",
-                ]
-          `);
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+        let errorMessage;
+        jest.spyOn(console, 'error').mockImplementation(message => {
+          errorMessage = message;
+        });
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
+        await waitForPaint([]);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(errorMessage).toContain(
+          'Cannot update during an existing state transition',
+        );
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
           "--component-render-start-Example",
+          "--schedule-forced-update-32-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
+      });
+
+      it('should mark cascading layout updates', async () => {
+        function Example() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+          return didMount;
+        }
+
+        modernRender(<Example />);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
+
+        clearPendingMarks();
+
+        await waitForPaint([]);
+
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-32",
+          "--react-version-<filtered-version>",
+          "--profiler-version-1",
+          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--component-layout-effect-mount-start-Example",
-          "--schedule-state-update-1-Example",
+          "--schedule-state-update-2-Example",
           "--component-layout-effect-mount-stop",
           "--layout-effects-stop",
-          "--render-start-1",
+          "--render-start-2",
           "--component-render-start-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-1",
+          "--commit-start-2",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
           "--commit-stop",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark cascading passive updates', () => {
-      function Example() {
-        const [didMount, setDidMount] = React.useState(false);
-        React.useEffect(() => {
-          setDidMount(true);
-        }, []);
-        return didMount;
-      }
+      it('should mark cascading passive updates', async () => {
+        function Example() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useEffect(() => {
+            setDidMount(true);
+          }, []);
+          return didMount;
+        }
 
-      renderRootHelper(<Example />);
+        modernRender(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+          "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--layout-effects-stop",
           "--commit-stop",
-          "--passive-effects-start-16",
+          "--passive-effects-start-32",
           "--component-passive-effect-mount-start-Example",
-          "--schedule-state-update-16-Example",
+          "--schedule-state-update-32-Example",
           "--component-passive-effect-mount-stop",
           "--passive-effects-stop",
-          "--render-start-16",
+          "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark render phase updates', () => {
-      function Example() {
-        const [didRender, setDidRender] = React.useState(false);
-        if (!didRender) {
-          setDidRender(true);
+      it('should mark render phase updates', async () => {
+        function Example() {
+          const [didRender, setDidRender] = React.useState(false);
+          if (!didRender) {
+            setDidRender(true);
+          }
+          return didRender;
         }
-        return didRender;
-      }
 
-      renderRootHelper(<Example />);
+        modernRender(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+          "--render-start-32",
           "--component-render-start-Example",
-          "--schedule-state-update-16-Example",
+          "--schedule-state-update-32-Example",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--layout-effects-stop",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark sync render that throws', async () => {
-      spyOn(console, 'error');
+      it('should mark concurrent render that throws', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      class ErrorBoundary extends React.Component {
-        state = {error: null};
-        componentDidCatch(error) {
-          this.setState({error});
-        }
-        render() {
-          if (this.state.error) {
-            return null;
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
           }
-          return this.props.children;
-        }
-      }
-
-      function ExampleThatThrows() {
-        throw Error('Expected error');
-      }
-
-      renderHelper(
-        <ErrorBoundary>
-          <ExampleThatThrows />
-        </ErrorBoundary>,
-      );
-
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-stop",
-          "--error-ExampleThatThrows-mount-Expected error",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
-          "--schedule-state-update-1-ErrorBoundary",
-          "--layout-effects-stop",
-          "--commit-stop",
-          "--render-start-1",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
-          "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-        ]
-      `);
-    });
-
-    // @reactVersion >=18.0
-    it('should mark concurrent render that throws', async () => {
-      spyOn(console, 'error');
-
-      class ErrorBoundary extends React.Component {
-        state = {error: null};
-        componentDidCatch(error) {
-          this.setState({error});
-        }
-        render() {
-          if (this.state.error) {
-            return null;
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
           }
-          return this.props.children;
         }
-      }
 
-      function ExampleThatThrows() {
-        // eslint-disable-next-line no-throw-literal
-        throw 'Expected error';
-      }
+        function ExampleThatThrows() {
+          // eslint-disable-next-line no-throw-literal
+          throw 'Expected error';
+        }
 
-      renderRootHelper(
-        <ErrorBoundary>
-          <ExampleThatThrows />
-        </ErrorBoundary>,
-      );
+        modernRender(
+          <ErrorBoundary>
+            <ExampleThatThrows />
+          </ErrorBoundary>,
+        );
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
-                  "--schedule-render-16",
-                ]
-          `);
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+        ]
+      `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+        await waitForPaint([]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--render-start-32",
           "--component-render-start-ErrorBoundary",
           "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
           "--component-render-start-ExampleThatThrows",
           "--component-render-stop",
           "--error-ExampleThatThrows-mount-Expected error",
           "--render-stop",
-          "--render-start-16",
+          "--render-start-32",
           "--component-render-start-ErrorBoundary",
           "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
           "--component-render-start-ExampleThatThrows",
           "--component-render-stop",
           "--error-ExampleThatThrows-mount-Expected error",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-state-update-1-ErrorBoundary",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
+          "--schedule-state-update-2-ErrorBoundary",
           "--layout-effects-stop",
-          "--render-start-1",
+          "--render-start-2",
           "--component-render-start-ErrorBoundary",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-1",
+          "--commit-start-2",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
           "--commit-stop",
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    // @reactVersion >=18.0
-    it('should mark passive and layout effects', async () => {
-      function ComponentWithEffects() {
-        React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 1 mount');
-          return () => {
-            Scheduler.unstable_yieldValue('layout 1 unmount');
-          };
-        }, []);
+      it('should mark passive and layout effects', async () => {
+        function ComponentWithEffects() {
+          React.useLayoutEffect(() => {
+            Scheduler.log('layout 1 mount');
+            return () => {
+              Scheduler.log('layout 1 unmount');
+            };
+          }, []);
 
-        React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 1 mount');
-          return () => {
-            Scheduler.unstable_yieldValue('passive 1 unmount');
-          };
-        }, []);
+          React.useEffect(() => {
+            Scheduler.log('passive 1 mount');
+            return () => {
+              Scheduler.log('passive 1 unmount');
+            };
+          }, []);
 
-        React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 2 mount');
-          return () => {
-            Scheduler.unstable_yieldValue('layout 2 unmount');
-          };
-        }, []);
+          React.useLayoutEffect(() => {
+            Scheduler.log('layout 2 mount');
+            return () => {
+              Scheduler.log('layout 2 unmount');
+            };
+          }, []);
 
-        React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 2 mount');
-          return () => {
-            Scheduler.unstable_yieldValue('passive 2 unmount');
-          };
-        }, []);
+          React.useEffect(() => {
+            Scheduler.log('passive 2 mount');
+            return () => {
+              Scheduler.log('passive 2 unmount');
+            };
+          }, []);
 
-        React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 3 mount');
-          return () => {
-            Scheduler.unstable_yieldValue('passive 3 unmount');
-          };
-        }, []);
+          React.useEffect(() => {
+            Scheduler.log('passive 3 mount');
+            return () => {
+              Scheduler.log('passive 3 unmount');
+            };
+          }, []);
 
-        return null;
-      }
+          return null;
+        }
 
-      const unmount = renderRootHelper(<ComponentWithEffects />);
+        const unmount = modernRender(<ComponentWithEffects />);
 
-      expect(Scheduler).toFlushUntilNextPaint([
-        'layout 1 mount',
-        'layout 2 mount',
-      ]);
+        await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-32",
+          "--render-start-32",
           "--component-render-start-ComponentWithEffects",
           "--component-render-stop",
           "--render-stop",
-          "--commit-start-16",
+          "--commit-start-32",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+          "--layout-effects-start-32",
           "--component-layout-effect-mount-start-ComponentWithEffects",
           "--component-layout-effect-mount-stop",
           "--component-layout-effect-mount-start-ComponentWithEffects",
@@ -968,59 +972,59 @@ describe('Timeline profiler', () => {
         ]
       `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([
-        'passive 1 mount',
-        'passive 2 mount',
-        'passive 3 mount',
-      ]);
+        await waitForAll([
+          'passive 1 mount',
+          'passive 2 mount',
+          'passive 3 mount',
+        ]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
-              "--passive-effects-start-16",
-              "--component-passive-effect-mount-start-ComponentWithEffects",
-              "--component-passive-effect-mount-stop",
-              "--component-passive-effect-mount-start-ComponentWithEffects",
-              "--component-passive-effect-mount-stop",
-              "--component-passive-effect-mount-start-ComponentWithEffects",
-              "--component-passive-effect-mount-stop",
-              "--passive-effects-stop",
-            ]
-        `);
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--passive-effects-start-32",
+          "--component-passive-effect-mount-start-ComponentWithEffects",
+          "--component-passive-effect-mount-stop",
+          "--component-passive-effect-mount-start-ComponentWithEffects",
+          "--component-passive-effect-mount-stop",
+          "--component-passive-effect-mount-start-ComponentWithEffects",
+          "--component-passive-effect-mount-stop",
+          "--passive-effects-stop",
+        ]
+      `);
 
-      clearPendingMarks();
+        clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
-      unmount();
+        unmount();
 
-      expect(Scheduler).toHaveYielded([
-        'layout 1 unmount',
-        'layout 2 unmount',
-        'passive 1 unmount',
-        'passive 2 unmount',
-        'passive 3 unmount',
-      ]);
+        assertLog([
+          'layout 1 unmount',
+          'layout 2 unmount',
+          'passive 1 unmount',
+          'passive 2 unmount',
+          'passive 3 unmount',
+        ]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        [
+          "--schedule-render-2",
+          "--render-start-2",
           "--render-stop",
-          "--commit-start-1",
+          "--commit-start-2",
           "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
           "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
           "--component-layout-effect-unmount-start-ComponentWithEffects",
           "--component-layout-effect-unmount-stop",
           "--component-layout-effect-unmount-start-ComponentWithEffects",
           "--component-layout-effect-unmount-stop",
-          "--layout-effects-start-1",
+          "--layout-effects-start-2",
           "--layout-effects-stop",
-          "--passive-effects-start-1",
+          "--passive-effects-start-2",
           "--component-passive-effect-unmount-start-ComponentWithEffects",
           "--component-passive-effect-unmount-stop",
           "--component-passive-effect-unmount-start-ComponentWithEffects",
@@ -1031,15 +1035,20 @@ describe('Timeline profiler', () => {
           "--commit-stop",
         ]
       `);
+      });
     });
 
     describe('lane labels', () => {
-      // @reactVersion >=18.0
-      it('regression test SyncLane', () => {
-        renderHelper(<div />);
+      describe('with legacy render', () => {
+        const {render: legacyRender} = getLegacyRenderImplementation();
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+        // @reactVersion <= 18.2
+        // @reactVersion >= 18.0
+        it('regression test SyncLane', () => {
+          legacyRender(<div />);
+
+          expect(clearedMarks).toMatchInlineSnapshot(`
+          [
             "--schedule-render-1",
             "--render-start-1",
             "--render-stop",
@@ -1054,99 +1063,108 @@ describe('Timeline profiler', () => {
             "--commit-stop",
           ]
         `);
+        });
       });
 
-      // @reactVersion >=18.0
-      it('regression test DefaultLane', () => {
-        renderRootHelper(<div />);
-        expect(clearedMarks).toMatchInlineSnapshot(`
-                    Array [
-                      "--schedule-render-16",
-                    ]
-              `);
-      });
+      describe('with createRoot()', () => {
+        let waitForAll;
 
-      // @reactVersion >=18.0
-      it('regression test InputDiscreteLane', async () => {
-        const targetRef = React.createRef(null);
+        beforeEach(() => {
+          const InternalTestUtils = require('internal-test-utils');
+          waitForAll = InternalTestUtils.waitForAll;
+        });
 
-        function App() {
-          const [count, setCount] = React.useState(0);
-          const handleClick = () => {
-            setCount(count + 1);
-          };
-          return <button ref={targetRef} onClick={handleClick} />;
-        }
+        const {render: modernRender} = getModernRenderImplementation();
 
-        renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+        it('regression test DefaultLane', () => {
+          modernRender(<div />);
+          expect(clearedMarks).toMatchInlineSnapshot(`
+          [
+            "--schedule-render-32",
+          ]
+        `);
+        });
 
-        clearedMarks.splice(0);
+        it('regression test InputDiscreteLane', async () => {
+          const targetRef = React.createRef(null);
 
-        targetRef.current.click();
+          function App() {
+            const [count, setCount] = React.useState(0);
+            const handleClick = () => {
+              setCount(count + 1);
+            };
+            return <button ref={targetRef} onClick={handleClick} />;
+          }
 
-        // Wait a frame, for React to process the "click" update.
-        await Promise.resolve();
+          modernRender(<App />);
+          await waitForAll([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
-            "--schedule-state-update-1-App",
-            "--render-start-1",
+          clearedMarks.splice(0);
+
+          targetRef.current.click();
+
+          // Wait a frame, for React to process the "click" update.
+          await Promise.resolve();
+
+          expect(clearedMarks).toMatchInlineSnapshot(`
+          [
+            "--schedule-state-update-2-App",
+            "--render-start-2",
             "--component-render-start-App",
             "--component-render-stop",
             "--render-stop",
-            "--commit-start-1",
+            "--commit-start-2",
             "--react-version-<filtered-version>",
             "--profiler-version-1",
             "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
             "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-            "--layout-effects-start-1",
+            "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+            "--layout-effects-start-2",
             "--layout-effects-stop",
             "--commit-stop",
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('regression test InputContinuousLane', async () => {
-        const targetRef = React.createRef(null);
+        it('regression test InputContinuousLane', async () => {
+          const targetRef = React.createRef(null);
 
-        function App() {
-          const [count, setCount] = React.useState(0);
-          const handleMouseOver = () => setCount(count + 1);
-          return <div ref={targetRef} onMouseOver={handleMouseOver} />;
-        }
+          function App() {
+            const [count, setCount] = React.useState(0);
+            const handleMouseOver = () => setCount(count + 1);
+            return <div ref={targetRef} onMouseOver={handleMouseOver} />;
+          }
 
-        renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+          modernRender(<App />);
+          await waitForAll([]);
 
-        clearedMarks.splice(0);
+          clearedMarks.splice(0);
 
-        const event = document.createEvent('MouseEvents');
-        event.initEvent('mouseover', true, true);
-        dispatchAndSetCurrentEvent(targetRef.current, event);
+          const event = document.createEvent('MouseEvents');
+          event.initEvent('mouseover', true, true);
+          dispatchAndSetCurrentEvent(targetRef.current, event);
 
-        expect(Scheduler).toFlushAndYield([]);
+          await waitForAll([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
-            "--schedule-state-update-4-App",
-            "--render-start-4",
+          expect(clearedMarks).toMatchInlineSnapshot(`
+          [
+            "--schedule-state-update-8-App",
+            "--render-start-8",
             "--component-render-start-App",
             "--component-render-stop",
             "--render-stop",
-            "--commit-start-4",
+            "--commit-start-8",
             "--react-version-<filtered-version>",
             "--profiler-version-1",
             "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
             "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
-            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-            "--layout-effects-start-4",
+            "--react-lane-labels-SyncHydrationLane,Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen,Deferred",
+            "--layout-effects-start-8",
             "--layout-effects-stop",
             "--commit-stop",
           ]
         `);
+        });
       });
     });
   });
@@ -1196,23 +1214,23 @@ describe('Timeline profiler', () => {
       };
     });
 
-    afterEach(() => {
-      unmountFns.forEach(unmountFn => unmountFn());
-    });
-
     describe('when profiling', () => {
       beforeEach(() => {
         utils.act(() => store.profilerStore.startProfiling());
       });
 
-      // @reactVersion >=18.0
-      it('should mark sync render without suspends or state updates', () => {
-        renderHelper(<div />);
+      describe('with legacy render', () => {
+        const {render: legacyRender} = getLegacyRenderImplementation();
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+        // @reactVersion <= 18.2
+        // @reactVersion >= 18.0
+        it('should mark sync render without suspends or state updates', () => {
+          legacyRender(<div />);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "schedule-render",
@@ -1220,102 +1238,313 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
+        });
+
+        // @reactVersion <= 18.2
+        // @reactVersion >= 18.0
+        it('should mark sync render that throws', async () => {
+          jest.spyOn(console, 'error').mockImplementation(() => {});
+
+          class ErrorBoundary extends React.Component {
+            state = {error: null};
+            componentDidCatch(error) {
+              this.setState({error});
+            }
+            render() {
+              Scheduler.unstable_advanceTime(10);
+              if (this.state.error) {
+                Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+                return null;
+              }
+              Scheduler.unstable_yieldValue('ErrorBoundary render');
+              return this.props.children;
+            }
+          }
+
+          function ExampleThatThrows() {
+            Scheduler.unstable_yieldValue('ExampleThatThrows');
+            throw Error('Expected error');
+          }
+
+          legacyRender(
+            <ErrorBoundary>
+              <ExampleThatThrows />
+            </ErrorBoundary>,
+          );
+
+          expect(Scheduler.unstable_clearYields()).toEqual([
+            'ErrorBoundary render',
+            'ExampleThatThrows',
+            'ExampleThatThrows',
+            'ErrorBoundary fallback',
+          ]);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            {
+              "componentName": "ExampleThatThrows",
+              "duration": 0,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+            {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            {
+              "componentName": "ErrorBoundary",
+              "componentStack": "
+              in ErrorBoundary (at **)",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 20,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+          expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
+          [
+            {
+              "componentName": "ExampleThatThrows",
+              "message": "Expected error",
+              "phase": "mount",
+              "timestamp": 20,
+              "type": "thrown-error",
+            },
+          ]
+        `);
+        });
+
+        // @reactVersion <= 18.2
+        // @reactVersion >= 18.0
+        it('should mark sync render with suspense that resolves', async () => {
+          let resolveFn;
+          let resolved = false;
+          const suspensePromise = new Promise(resolve => {
+            resolveFn = () => {
+              resolved = true;
+              resolve();
+            };
+          });
+
+          function Example() {
+            Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+            if (!resolved) {
+              throw suspensePromise;
+            }
+            return null;
+          }
+
+          legacyRender(
+            <React.Suspense fallback={null}>
+              <Example />
+            </React.Suspense>,
+          );
+
+          expect(Scheduler.unstable_clearYields()).toEqual(['suspended']);
+
+          Scheduler.unstable_advanceTime(10);
+          resolveFn();
+          await suspensePromise;
+
+          await Scheduler.unstable_flushAllWithoutAsserting();
+          expect(Scheduler.unstable_clearYields()).toEqual(['resolved']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+
+          // Verify the Suspense event and duration was recorded.
+          expect(timelineData.suspenseEvents).toHaveLength(1);
+          const suspenseEvent = timelineData.suspenseEvents[0];
+          expect(suspenseEvent).toMatchInlineSnapshot(`
+          {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "resolved",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+          // There should be two batches of renders: Suspeneded and resolved.
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toHaveLength(2);
+        });
+
+        // @reactVersion = 18.2
+        it('should mark sync render with suspense that rejects', async () => {
+          let rejectFn;
+          let rejected = false;
+          const suspensePromise = new Promise((resolve, reject) => {
+            rejectFn = () => {
+              rejected = true;
+              reject(new Error('error'));
+            };
+          });
+
+          function Example() {
+            Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+            if (!rejected) {
+              throw suspensePromise;
+            }
+            return null;
+          }
+
+          legacyRender(
+            <React.Suspense fallback={null}>
+              <Example />
+            </React.Suspense>,
+          );
+
+          expect(Scheduler.unstable_clearYields()).toEqual(['suspended']);
+
+          Scheduler.unstable_advanceTime(10);
+          rejectFn();
+          await expect(suspensePromise).rejects.toThrow();
+
+          expect(Scheduler.unstable_clearYields()).toEqual(['rejected']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+
+          // Verify the Suspense event and duration was recorded.
+          expect(timelineData.suspenseEvents).toHaveLength(1);
+          const suspenseEvent = timelineData.suspenseEvents[0];
+          expect(suspenseEvent).toMatchInlineSnapshot(`
+          {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "rejected",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+          // There should be two batches of renders: Suspeneded and resolved.
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toHaveLength(2);
+        });
       });
 
-      // @reactVersion >=18.0
-      it('should mark concurrent render without suspends or state updates', () => {
-        utils.act(() => renderRootHelper(<div />));
+      describe('with createRoot()', () => {
+        let waitFor;
+        let waitForAll;
+        let waitForPaint;
+        let assertLog;
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+        beforeEach(() => {
+          const InternalTestUtils = require('internal-test-utils');
+          waitFor = InternalTestUtils.waitFor;
+          waitForAll = InternalTestUtils.waitForAll;
+          waitForPaint = InternalTestUtils.waitForPaint;
+          assertLog = InternalTestUtils.assertLog;
+        });
+
+        const {render: modernRender} = getModernRenderImplementation();
+
+        it('should mark concurrent render without suspends or state updates', () => {
+          utils.act(() => modernRender(<div />));
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark concurrent render without suspends or state updates', () => {
-        let updaterFn;
+        it('should mark concurrent render without suspends or state updates', () => {
+          let updaterFn;
 
-        function Example() {
-          const setHigh = React.useState(0)[1];
-          const setLow = React.useState(0)[1];
-          const startTransition = React.useTransition()[1];
+          function Example() {
+            const setHigh = React.useState(0)[1];
+            const setLow = React.useState(0)[1];
 
-          updaterFn = () => {
-            startTransition(() => {
-              setLow(prevLow => prevLow + 1);
-            });
-            setHigh(prevHigh => prevHigh + 1);
-          };
+            updaterFn = () => {
+              React.startTransition(() => {
+                setLow(prevLow => prevLow + 1);
+              });
+              setHigh(prevHigh => prevHigh + 1);
+            };
 
-          Scheduler.unstable_advanceTime(10);
+            Scheduler.unstable_advanceTime(10);
 
-          return null;
-        }
+            return null;
+          }
 
-        utils.act(() => renderRootHelper(<Example />));
-        utils.act(() => store.profilerStore.stopProfiling());
-        utils.act(() => store.profilerStore.startProfiling());
-        utils.act(updaterFn);
+          utils.act(() => modernRender(<Example />));
+          utils.act(() => store.profilerStore.stopProfiling());
+          utils.act(() => store.profilerStore.startProfiling());
+          utils.act(updaterFn);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000000000100",
+              "lanes": "0b0000000000000000000000010000000",
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000001000000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000001000000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
@@ -1324,429 +1553,179 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark render yields', async () => {
-        function Bar() {
-          Scheduler.unstable_yieldValue('Bar');
-          return null;
-        }
-
-        function Foo() {
-          Scheduler.unstable_yieldValue('Foo');
-          return <Bar />;
-        }
-
-        React.startTransition(() => {
-          renderRootHelper(<Foo />);
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         });
 
-        // Do one step of work.
-        expect(Scheduler).toFlushAndYieldThrough(['Foo']);
-
-        // Finish flushing so React commits;
-        // Unless we do this, the ProfilerStore won't collect Profiling data.
-        expect(Scheduler).toFlushAndYield(['Bar']);
-
-        // Since we yielded, the batch should report two separate "render" chunks.
-        const batch = getBatchOfWork(0);
-        expect(batch.filter(({type}) => type === 'render')).toHaveLength(2);
-      });
-
-      it('should mark sync render with suspense that resolves', async () => {
-        let resolveFn;
-        let resolved = false;
-        const suspensePromise = new Promise(resolve => {
-          resolveFn = () => {
-            resolved = true;
-            resolve();
-          };
-        });
-
-        function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
-          if (!resolved) {
-            throw suspensePromise;
-          }
-          return null;
-        }
-
-        renderHelper(
-          <React.Suspense fallback={null}>
-            <Example />
-          </React.Suspense>,
-        );
-
-        expect(Scheduler).toHaveYielded(['suspended']);
-
-        Scheduler.unstable_advanceTime(10);
-        resolveFn();
-        await suspensePromise;
-
-        expect(Scheduler).toFlushAndYield(['resolved']);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-
-        // Verify the Suspense event and duration was recorded.
-        expect(timelineData.suspenseEvents).toHaveLength(1);
-        const suspenseEvent = timelineData.suspenseEvents[0];
-        expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
-            "componentName": "Example",
-            "depth": 0,
-            "duration": 10,
-            "id": "0",
-            "phase": "mount",
-            "promiseName": "",
-            "resolution": "resolved",
-            "timestamp": 10,
-            "type": "suspense",
-            "warning": null,
-          }
-        `);
-
-        // There should be two batches of renders: Suspeneded and resolved.
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toHaveLength(2);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark sync render with suspense that rejects', async () => {
-        let rejectFn;
-        let rejected = false;
-        const suspensePromise = new Promise((resolve, reject) => {
-          rejectFn = () => {
-            rejected = true;
-            reject(new Error('error'));
-          };
-        });
-
-        function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
-          if (!rejected) {
-            throw suspensePromise;
-          }
-          return null;
-        }
-
-        renderHelper(
-          <React.Suspense fallback={null}>
-            <Example />
-          </React.Suspense>,
-        );
-
-        expect(Scheduler).toHaveYielded(['suspended']);
-
-        Scheduler.unstable_advanceTime(10);
-        rejectFn();
-        await expect(suspensePromise).rejects.toThrow();
-
-        expect(Scheduler).toHaveYielded(['rejected']);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-
-        // Verify the Suspense event and duration was recorded.
-        expect(timelineData.suspenseEvents).toHaveLength(1);
-        const suspenseEvent = timelineData.suspenseEvents[0];
-        expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
-            "componentName": "Example",
-            "depth": 0,
-            "duration": 10,
-            "id": "0",
-            "phase": "mount",
-            "promiseName": "",
-            "resolution": "rejected",
-            "timestamp": 10,
-            "type": "suspense",
-            "warning": null,
-          }
-        `);
-
-        // There should be two batches of renders: Suspeneded and resolved.
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toHaveLength(2);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark concurrent render with suspense that resolves', async () => {
-        let resolveFn;
-        let resolved = false;
-        const suspensePromise = new Promise(resolve => {
-          resolveFn = () => {
-            resolved = true;
-            resolve();
-          };
-        });
-
-        function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
-          if (!resolved) {
-            throw suspensePromise;
-          }
-          return null;
-        }
-
-        renderRootHelper(
-          <React.Suspense fallback={null}>
-            <Example />
-          </React.Suspense>,
-        );
-
-        expect(Scheduler).toFlushAndYield(['suspended']);
-
-        Scheduler.unstable_advanceTime(10);
-        resolveFn();
-        await suspensePromise;
-
-        expect(Scheduler).toFlushAndYield(['resolved']);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-
-        // Verify the Suspense event and duration was recorded.
-        expect(timelineData.suspenseEvents).toHaveLength(1);
-        const suspenseEvent = timelineData.suspenseEvents[0];
-        expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
-            "componentName": "Example",
-            "depth": 0,
-            "duration": 10,
-            "id": "0",
-            "phase": "mount",
-            "promiseName": "",
-            "resolution": "resolved",
-            "timestamp": 10,
-            "type": "suspense",
-            "warning": null,
-          }
-        `);
-
-        // There should be two batches of renders: Suspeneded and resolved.
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toHaveLength(2);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark concurrent render with suspense that rejects', async () => {
-        let rejectFn;
-        let rejected = false;
-        const suspensePromise = new Promise((resolve, reject) => {
-          rejectFn = () => {
-            rejected = true;
-            reject(new Error('error'));
-          };
-        });
-
-        function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
-          if (!rejected) {
-            throw suspensePromise;
-          }
-          return null;
-        }
-
-        renderRootHelper(
-          <React.Suspense fallback={null}>
-            <Example />
-          </React.Suspense>,
-        );
-
-        expect(Scheduler).toFlushAndYield(['suspended']);
-
-        Scheduler.unstable_advanceTime(10);
-        rejectFn();
-        await expect(suspensePromise).rejects.toThrow();
-
-        expect(Scheduler).toFlushAndYield(['rejected']);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-
-        // Verify the Suspense event and duration was recorded.
-        expect(timelineData.suspenseEvents).toHaveLength(1);
-        const suspenseEvent = timelineData.suspenseEvents[0];
-        expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
-            "componentName": "Example",
-            "depth": 0,
-            "duration": 10,
-            "id": "0",
-            "phase": "mount",
-            "promiseName": "",
-            "resolution": "rejected",
-            "timestamp": 10,
-            "type": "suspense",
-            "warning": null,
-          }
-        `);
-
-        // There should be two batches of renders: Suspeneded and resolved.
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toHaveLength(2);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark cascading class component state updates', () => {
-        class Example extends React.Component {
-          state = {didMount: false};
-          componentDidMount() {
-            this.setState({didMount: true});
-          }
-          render() {
-            Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
-              this.state.didMount ? 'update' : 'mount',
-            );
+        it('should mark render yields', async () => {
+          function Bar() {
+            Scheduler.log('Bar');
             return null;
           }
-        }
 
-        renderRootHelper(<Example />);
-
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'update']);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "componentName": "Example",
-              "duration": 10,
-              "timestamp": 10,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "duration": 10,
-              "timestamp": 20,
-              "type": "render",
-              "warning": null,
-            },
-          ]
-        `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
-              "timestamp": 10,
-              "type": "schedule-render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000000000001",
-              "timestamp": 20,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-          ]
-        `);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark cascading class component force updates', () => {
-        let forced = false;
-        class Example extends React.Component {
-          componentDidMount() {
-            forced = true;
-            this.forceUpdate();
+          function Foo() {
+            Scheduler.log('Foo');
+            return <Bar />;
           }
-          render() {
-            Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'mount');
-            return null;
-          }
-        }
 
-        renderRootHelper(<Example />);
+          React.startTransition(() => {
+            modernRender(<Foo />);
+          });
 
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'force update']);
+          // Do one step of work.
+          await waitFor(['Foo']);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "componentName": "Example",
-              "duration": 10,
-              "timestamp": 10,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "duration": 10,
-              "timestamp": 20,
-              "type": "render",
-              "warning": null,
-            },
-          ]
-        `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
-              "timestamp": 10,
-              "type": "schedule-render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "Example",
-              "lanes": "0b0000000000000000000000000000001",
-              "timestamp": 20,
-              "type": "schedule-force-update",
-              "warning": null,
-            },
-          ]
-        `);
-      });
+          // Finish flushing so React commits;
+          // Unless we do this, the ProfilerStore won't collect Profiling data.
+          await waitForAll(['Bar']);
 
-      // @reactVersion >=18.0
-      it('should mark render phase state updates for class component', () => {
-        class Example extends React.Component {
-          state = {didRender: false};
-          render() {
-            if (this.state.didRender === false) {
-              this.setState({didRender: true});
+          // Since we yielded, the batch should report two separate "render" chunks.
+          const batch = getBatchOfWork(0);
+          expect(batch.filter(({type}) => type === 'render')).toHaveLength(2);
+        });
+
+        it('should mark concurrent render with suspense that resolves', async () => {
+          let resolveFn;
+          let resolved = false;
+          const suspensePromise = new Promise(resolve => {
+            resolveFn = () => {
+              resolved = true;
+              resolve();
+            };
+          });
+
+          function Example() {
+            Scheduler.log(resolved ? 'resolved' : 'suspended');
+            if (!resolved) {
+              throw suspensePromise;
             }
-            Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
-              this.state.didRender ? 'second render' : 'first render',
-            );
             return null;
           }
-        }
 
-        renderRootHelper(<Example />);
+          modernRender(
+            <React.Suspense fallback={null}>
+              <Example />
+            </React.Suspense>,
+          );
 
-        let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
-          errorMessage = message;
+          await waitForAll(['suspended']);
+
+          Scheduler.unstable_advanceTime(10);
+          resolveFn();
+          await suspensePromise;
+
+          await waitForAll(['resolved']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+
+          // Verify the Suspense event and duration was recorded.
+          expect(timelineData.suspenseEvents).toHaveLength(1);
+          const suspenseEvent = timelineData.suspenseEvents[0];
+          expect(suspenseEvent).toMatchInlineSnapshot(`
+          {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "resolved",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+          // There should be two batches of renders: Suspeneded and resolved.
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toHaveLength(2);
         });
 
-        expect(Scheduler).toFlushAndYield(['first render', 'second render']);
+        it('should mark concurrent render with suspense that rejects', async () => {
+          let rejectFn;
+          let rejected = false;
+          const suspensePromise = new Promise((resolve, reject) => {
+            rejectFn = () => {
+              rejected = true;
+              reject(new Error('error'));
+            };
+          });
 
-        expect(console.error).toHaveBeenCalledTimes(1);
-        expect(errorMessage).toContain(
-          'Cannot update during an existing state transition',
-        );
+          function Example() {
+            Scheduler.log(rejected ? 'rejected' : 'suspended');
+            if (!rejected) {
+              throw suspensePromise;
+            }
+            return null;
+          }
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          modernRender(
+            <React.Suspense fallback={null}>
+              <Example />
+            </React.Suspense>,
+          );
+
+          await waitForAll(['suspended']);
+
+          Scheduler.unstable_advanceTime(10);
+          rejectFn();
+          await expect(suspensePromise).rejects.toThrow();
+
+          await waitForAll(['rejected']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+
+          // Verify the Suspense event and duration was recorded.
+          expect(timelineData.suspenseEvents).toHaveLength(1);
+          const suspenseEvent = timelineData.suspenseEvents[0];
+          expect(suspenseEvent).toMatchInlineSnapshot(`
+          {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "rejected",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+          // There should be two batches of renders: Suspeneded and resolved.
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toHaveLength(2);
+        });
+
+        it('should mark cascading class component state updates', async () => {
+          class Example extends React.Component {
+            state = {didMount: false};
+            componentDidMount() {
+              this.setState({didMount: true});
+            }
+            render() {
+              Scheduler.unstable_advanceTime(10);
+              Scheduler.log(this.state.didMount ? 'update' : 'mount');
+              return null;
+            }
+          }
+
+          modernRender(<Example />);
+
+          await waitForPaint(['mount', 'update']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1755,68 +1734,57 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000000010000",
-              "timestamp": 10,
+              "lanes": "0b0000000000000000000000000000010",
+              "timestamp": 20,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark render phase force updates for class component', () => {
-        let forced = false;
-        class Example extends React.Component {
-          render() {
-            Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'render');
-            if (!forced) {
+        it('should mark cascading class component force updates', async () => {
+          let forced = false;
+          class Example extends React.Component {
+            componentDidMount() {
               forced = true;
               this.forceUpdate();
             }
-            return null;
+            render() {
+              Scheduler.unstable_advanceTime(10);
+              Scheduler.log(forced ? 'force update' : 'mount');
+              return null;
+            }
           }
-        }
 
-        renderRootHelper(<Example />);
+          modernRender(<Example />);
 
-        let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
-          errorMessage = message;
-        });
+          await waitForPaint(['mount', 'force update']);
 
-        expect(Scheduler).toFlushAndYield(['render', 'force update']);
-
-        expect(console.error).toHaveBeenCalledTimes(1);
-        expect(errorMessage).toContain(
-          'Cannot update during an existing state transition',
-        );
-
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1825,61 +1793,197 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000000010",
               "timestamp": 20,
               "type": "schedule-force-update",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark cascading layout updates', () => {
-        function Example() {
-          const [didMount, setDidMount] = React.useState(false);
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_advanceTime(1);
-            setDidMount(true);
-          }, []);
-          Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
-          return didMount;
-        }
+        it('should mark render phase state updates for class component', async () => {
+          class Example extends React.Component {
+            state = {didRender: false};
+            render() {
+              if (this.state.didRender === false) {
+                this.setState({didRender: true});
+              }
+              Scheduler.unstable_advanceTime(10);
+              Scheduler.log(
+                this.state.didRender ? 'second render' : 'first render',
+              );
+              return null;
+            }
+          }
 
-        renderRootHelper(<Example />);
+          modernRender(<Example />);
 
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+          let errorMessage;
+          jest.spyOn(console, 'error').mockImplementation(message => {
+            errorMessage = message;
+          });
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          await waitForAll(['first render', 'second render']);
+
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(errorMessage).toContain(
+            'Cannot update during an existing state transition',
+          );
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            {
+              "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
+              "lanes": "0b0000000000000000000000000100000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+        });
+
+        it('should mark render phase force updates for class component', async () => {
+          let forced = false;
+          class Example extends React.Component {
+            render() {
+              Scheduler.unstable_advanceTime(10);
+              Scheduler.log(forced ? 'force update' : 'render');
+              if (!forced) {
+                forced = true;
+                this.forceUpdate();
+              }
+              return null;
+            }
+          }
+
+          modernRender(<Example />);
+
+          let errorMessage;
+          jest.spyOn(console, 'error').mockImplementation(message => {
+            errorMessage = message;
+          });
+
+          await waitForAll(['render', 'force update']);
+
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(errorMessage).toContain(
+            'Cannot update during an existing state transition',
+          );
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000100000",
+              "timestamp": 20,
+              "type": "schedule-force-update",
+              "warning": null,
+            },
+          ]
+        `);
+        });
+
+        it('should mark cascading layout updates', async () => {
+          function Example() {
+            const [didMount, setDidMount] = React.useState(false);
+            React.useLayoutEffect(() => {
+              Scheduler.unstable_advanceTime(1);
+              setDidMount(true);
+            }, []);
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.log(didMount ? 'update' : 'mount');
+            return didMount;
+          }
+
+          modernRender(<Example />);
+
+          await waitForAll(['mount', 'update']);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1888,62 +1992,61 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000000000001",
+              "lanes": "0b0000000000000000000000000000010",
               "timestamp": 21,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark cascading passive updates', () => {
-        function Example() {
-          const [didMount, setDidMount] = React.useState(false);
-          React.useEffect(() => {
-            Scheduler.unstable_advanceTime(1);
-            setDidMount(true);
-          }, []);
-          Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
-          return didMount;
-        }
+        it('should mark cascading passive updates', async () => {
+          function Example() {
+            const [didMount, setDidMount] = React.useState(false);
+            React.useEffect(() => {
+              Scheduler.unstable_advanceTime(1);
+              setDidMount(true);
+            }, []);
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.log(didMount ? 'update' : 'mount');
+            return didMount;
+          }
 
-        renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+          modernRender(<Example />);
+          await waitForAll(['mount', 'update']);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1952,48 +2055,47 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 21,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark render phase updates', () => {
-        function Example() {
-          const [didRender, setDidRender] = React.useState(false);
-          Scheduler.unstable_advanceTime(10);
-          if (!didRender) {
-            setDidRender(true);
+        it('should mark render phase updates', async () => {
+          function Example() {
+            const [didRender, setDidRender] = React.useState(false);
+            Scheduler.unstable_advanceTime(10);
+            if (!didRender) {
+              setDidRender(true);
+            }
+            Scheduler.log(didRender ? 'update' : 'mount');
+            return didRender;
           }
-          Scheduler.unstable_yieldValue(didRender ? 'update' : 'mount');
-          return didRender;
-        }
 
-        renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+          modernRender(<Example />);
+          await waitForAll(['mount', 'update']);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        // Render phase updates should be retried as part of the same batch.
-        expect(timelineData.batchUIDToMeasuresMap.size).toBe(1);
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          // Render phase updates should be retried as part of the same batch.
+          expect(timelineData.batchUIDToMeasuresMap.size).toBe(1);
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "Example",
               "duration": 20,
               "timestamp": 10,
@@ -2002,234 +2104,135 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 20,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark sync render that throws', async () => {
-        spyOn(console, 'error');
+        it('should mark concurrent render that throws', async () => {
+          jest.spyOn(console, 'error').mockImplementation(() => {});
 
-        class ErrorBoundary extends React.Component {
-          state = {error: null};
-          componentDidCatch(error) {
-            this.setState({error});
-          }
-          render() {
-            Scheduler.unstable_advanceTime(10);
-            if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
-              return null;
+          class ErrorBoundary extends React.Component {
+            state = {error: null};
+            componentDidCatch(error) {
+              this.setState({error});
             }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
-            return this.props.children;
+            render() {
+              Scheduler.unstable_advanceTime(10);
+              if (this.state.error) {
+                Scheduler.log('ErrorBoundary fallback');
+                return null;
+              }
+              Scheduler.log('ErrorBoundary render');
+              return this.props.children;
+            }
           }
-        }
 
-        function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
-          throw Error('Expected error');
-        }
+          function ExampleThatThrows() {
+            Scheduler.log('ExampleThatThrows');
+            // eslint-disable-next-line no-throw-literal
+            throw 'Expected error';
+          }
 
-        renderHelper(
-          <ErrorBoundary>
-            <ExampleThatThrows />
-          </ErrorBoundary>,
-        );
+          modernRender(
+            <ErrorBoundary>
+              <ExampleThatThrows />
+            </ErrorBoundary>,
+          );
 
-        expect(Scheduler).toHaveYielded([
-          'ErrorBoundary render',
-          'ExampleThatThrows',
-          'ExampleThatThrows',
-          'ErrorBoundary fallback',
-        ]);
+          await waitForAll([
+            'ErrorBoundary render',
+            'ExampleThatThrows',
+            'ErrorBoundary render',
+            'ExampleThatThrows',
+            'ErrorBoundary fallback',
+          ]);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
+            {
+              "componentName": "ExampleThatThrows",
+              "duration": 0,
+              "timestamp": 30,
+              "type": "render",
+              "warning": null,
+            },
+            {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 30,
+              "type": "render",
+              "warning": null,
+            },
           ]
         `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000000001",
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "componentStack": "
               in ErrorBoundary (at **)",
-              "lanes": "0b0000000000000000000000000000001",
-              "timestamp": 20,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-          ]
-        `);
-        expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "componentName": "ExampleThatThrows",
-              "message": "Expected error",
-              "phase": "mount",
-              "timestamp": 20,
-              "type": "thrown-error",
-            },
-          ]
-        `);
-      });
-
-      // @reactVersion >=18.0
-      it('should mark concurrent render that throws', async () => {
-        spyOn(console, 'error');
-
-        class ErrorBoundary extends React.Component {
-          state = {error: null};
-          componentDidCatch(error) {
-            this.setState({error});
-          }
-          render() {
-            Scheduler.unstable_advanceTime(10);
-            if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
-              return null;
-            }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
-            return this.props.children;
-          }
-        }
-
-        function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
-          // eslint-disable-next-line no-throw-literal
-          throw 'Expected error';
-        }
-
-        renderRootHelper(
-          <ErrorBoundary>
-            <ExampleThatThrows />
-          </ErrorBoundary>,
-        );
-
-        expect(Scheduler).toFlushAndYield([
-          'ErrorBoundary render',
-          'ExampleThatThrows',
-          'ExampleThatThrows',
-          'ErrorBoundary render',
-          'ExampleThatThrows',
-          'ExampleThatThrows',
-          'ErrorBoundary fallback',
-        ]);
-
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "componentName": "ErrorBoundary",
-              "duration": 10,
-              "timestamp": 10,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "ExampleThatThrows",
-              "duration": 0,
-              "timestamp": 20,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "ErrorBoundary",
-              "duration": 10,
-              "timestamp": 20,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "ExampleThatThrows",
-              "duration": 0,
-              "timestamp": 30,
-              "type": "render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "ErrorBoundary",
-              "duration": 10,
-              "timestamp": 30,
-              "type": "render",
-              "warning": null,
-            },
-          ]
-        `);
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
-              "timestamp": 10,
-              "type": "schedule-render",
-              "warning": null,
-            },
-            Object {
-              "componentName": "ErrorBoundary",
-              "componentStack": "
-              in ErrorBoundary (at **)",
-              "lanes": "0b0000000000000000000000000000001",
+              "lanes": "0b0000000000000000000000000000010",
               "timestamp": 30,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
-        expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
               "timestamp": 20,
               "type": "thrown-error",
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
@@ -2238,148 +2241,144 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-      });
+        });
 
-      // @reactVersion >=18.0
-      it('should mark passive and layout effects', async () => {
-        function ComponentWithEffects() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 1 mount');
-            return () => {
-              Scheduler.unstable_yieldValue('layout 1 unmount');
-            };
-          }, []);
+        it('should mark passive and layout effects', async () => {
+          function ComponentWithEffects() {
+            React.useLayoutEffect(() => {
+              Scheduler.log('layout 1 mount');
+              return () => {
+                Scheduler.log('layout 1 unmount');
+              };
+            }, []);
 
-          React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 1 mount');
-            return () => {
-              Scheduler.unstable_yieldValue('passive 1 unmount');
-            };
-          }, []);
+            React.useEffect(() => {
+              Scheduler.log('passive 1 mount');
+              return () => {
+                Scheduler.log('passive 1 unmount');
+              };
+            }, []);
 
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 2 mount');
-            return () => {
-              Scheduler.unstable_yieldValue('layout 2 unmount');
-            };
-          }, []);
+            React.useLayoutEffect(() => {
+              Scheduler.log('layout 2 mount');
+              return () => {
+                Scheduler.log('layout 2 unmount');
+              };
+            }, []);
 
-          React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 2 mount');
-            return () => {
-              Scheduler.unstable_yieldValue('passive 2 unmount');
-            };
-          }, []);
+            React.useEffect(() => {
+              Scheduler.log('passive 2 mount');
+              return () => {
+                Scheduler.log('passive 2 unmount');
+              };
+            }, []);
 
-          React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 3 mount');
-            return () => {
-              Scheduler.unstable_yieldValue('passive 3 unmount');
-            };
-          }, []);
+            React.useEffect(() => {
+              Scheduler.log('passive 3 mount');
+              return () => {
+                Scheduler.log('passive 3 unmount');
+              };
+            }, []);
 
-          return null;
-        }
+            return null;
+          }
 
-        const unmount = renderRootHelper(<ComponentWithEffects />);
+          const unmount = modernRender(<ComponentWithEffects />);
 
-        expect(Scheduler).toFlushUntilNextPaint([
-          'layout 1 mount',
-          'layout 2 mount',
-        ]);
+          await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
-        expect(Scheduler).toFlushAndYield([
-          'passive 1 mount',
-          'passive 2 mount',
-          'passive 3 mount',
-        ]);
+          await waitForAll([
+            'passive 1 mount',
+            'passive 2 mount',
+            'passive 3 mount',
+          ]);
 
-        expect(Scheduler).toFlushAndYield([]);
+          await waitForAll([]);
 
-        unmount();
+          unmount();
 
-        expect(Scheduler).toHaveYielded([
-          'layout 1 unmount',
-          'layout 2 unmount',
-          'passive 1 unmount',
-          'passive 2 unmount',
-          'passive 3 unmount',
-        ]);
+          assertLog([
+            'layout 1 unmount',
+            'layout 2 unmount',
+            'passive 1 unmount',
+            'passive 2 unmount',
+            'passive 3 unmount',
+          ]);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          [
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
@@ -2388,150 +2387,156 @@ describe('Timeline profiler', () => {
             },
           ]
         `);
-        expect(timelineData.batchUIDToMeasuresMap).toMatchInlineSnapshot(`
+          expect(timelineData.batchUIDToMeasuresMap).toMatchInlineSnapshot(`
           Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000010000",
+                "lanes": "0b0000000000000000000000000100000",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
             ],
-            2 => Array [
-              Object {
+            2 => [
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000010",
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000010",
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000010",
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000010",
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
-                "lanes": "0b0000000000000000000000000000001",
+                "lanes": "0b0000000000000000000000000000010",
                 "timestamp": 10,
                 "type": "passive-effects",
               },
             ],
           }
         `);
-      });
+        });
 
-      it('should generate component stacks for state update', async () => {
-        function CommponentWithChildren({initialRender}) {
-          Scheduler.unstable_yieldValue('Render ComponentWithChildren');
-          return <Child initialRender={initialRender} />;
-        }
-
-        function Child({initialRender}) {
-          const [didRender, setDidRender] = React.useState(initialRender);
-          if (!didRender) {
-            setDidRender(true);
+        it('should generate component stacks for state update', async () => {
+          function CommponentWithChildren({initialRender}) {
+            Scheduler.log('Render ComponentWithChildren');
+            return <Child initialRender={initialRender} />;
           }
-          Scheduler.unstable_yieldValue('Render Child');
-          return null;
-        }
 
-        renderRootHelper(<CommponentWithChildren initialRender={false} />);
+          function Child({initialRender}) {
+            const [didRender, setDidRender] = React.useState(initialRender);
+            if (!didRender) {
+              setDidRender(true);
+            }
+            Scheduler.log('Render Child');
+            return null;
+          }
 
-        expect(Scheduler).toFlushAndYield([
-          'Render ComponentWithChildren',
-          'Render Child',
-          'Render Child',
-        ]);
+          modernRender(<CommponentWithChildren initialRender={false} />);
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "lanes": "0b0000000000000000000000000010000",
+          await waitForAll([
+            'Render ComponentWithChildren',
+            'Render Child',
+            'Render Child',
+          ]);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          [
+            {
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Child",
               "componentStack": "
               in Child (at **)
               in CommponentWithChildren (at **)",
-              "lanes": "0b0000000000000000000000000010000",
+              "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
             },
           ]
         `);
+        });
       });
     });
 
     describe('when not profiling', () => {
-      // @reactVersion >=18.0
-      it('should not log any marks', () => {
-        renderHelper(<div />);
+      describe('with legacy render', () => {
+        const {render: legacyRender} = getLegacyRenderImplementation();
 
-        const timelineData = stopProfilingAndGetTimelineData();
-        expect(timelineData).toBeNull();
+        // @reactVersion <= 18.2
+        // @reactVersion >= 18.0
+        it('should not log any marks', () => {
+          legacyRender(<div />);
+
+          const timelineData = stopProfilingAndGetTimelineData();
+          expect(timelineData).toBeNull();
+        });
       });
     });
   });

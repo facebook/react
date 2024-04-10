@@ -24,7 +24,7 @@ import {
   clearWarningsForElement as clearWarningsForElementAPI,
 } from 'react-devtools-shared/src/backendAPI';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Props = {
@@ -40,10 +40,8 @@ export default function InspectedElementErrorsAndWarningsTree({
 }: Props): React.Node {
   const refresh = useCacheRefresh();
 
-  const [
-    isErrorsTransitionPending,
-    startClearErrorsTransition,
-  ] = useTransition();
+  const [isErrorsTransitionPending, startClearErrorsTransition] =
+    useTransition();
   const clearErrorsForInspectedElement = () => {
     const {id} = inspectedElement;
     const rendererID = store.getRendererIDForElement(id);
@@ -59,10 +57,8 @@ export default function InspectedElementErrorsAndWarningsTree({
     }
   };
 
-  const [
-    isWarningsTransitionPending,
-    startClearWarningsTransition,
-  ] = useTransition();
+  const [isWarningsTransitionPending, startClearWarningsTransition] =
+    useTransition();
   const clearWarningsForInspectedElement = () => {
     const {id} = inspectedElement;
     const rendererID = store.getRendererIDForElement(id);

@@ -2,17 +2,18 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
+const crypto = require('node:crypto');
 const fs = require('fs');
 const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
-
+const shell = require('shelljs');
 const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
-  nextChannelLabel,
+  canaryChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -35,15 +36,12 @@ let dateString = String(
 
 // On CI environment, this string is wrapped with quotes '...'s
 if (dateString.startsWith("'")) {
-  dateString = dateString.substr(1, 8);
+  dateString = dateString.slice(1, 9);
 }
 
 // Build the artifacts using a placeholder React version. We'll then do a string
 // replace to swap it with the correct version per release channel.
-//
-// The placeholder version is the same format that the "next" channel uses
-const PLACEHOLDER_REACT_VERSION =
-  ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString;
+const PLACEHOLDER_REACT_VERSION = ReactVersion + '-PLACEHOLDER';
 
 // TODO: We should inject the React version using a build-time parameter
 // instead of overwriting the source files.
@@ -93,26 +91,31 @@ if (process.env.CIRCLE_NODE_TOTAL) {
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
-  spawnSync('node', ['./scripts/rollup/build.js', ...process.argv.slice(2)], {
-    stdio: ['pipe', process.stdout, process.stderr],
-    env: {
-      ...process.env,
-      RELEASE_CHANNEL: channel,
-      CIRCLE_NODE_TOTAL: nodeTotal,
-      CIRCLE_NODE_INDEX: nodeIndex,
-    },
-  });
+  const {status} = spawnSync(
+    'node',
+    ['./scripts/rollup/build.js', ...process.argv.slice(2)],
+    {
+      stdio: ['pipe', process.stdout, process.stderr],
+      env: {
+        ...process.env,
+        RELEASE_CHANNEL: channel,
+        CIRCLE_NODE_TOTAL: nodeTotal,
+        CIRCLE_NODE_INDEX: nodeIndex,
+      },
+    }
+  );
+
+  if (status !== 0) {
+    // Error of spawned process is already piped to this stderr
+    process.exit(status);
+  }
 }
 
 function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
     // Identical to `oss-stable` but with real, semver versions. This is what
     // will get published to @latest.
-    spawnSync('cp', [
-      '-r',
-      buildDir + '/node_modules',
-      buildDir + '/oss-stable-semver',
-    ]);
+    shell.cp('-r', buildDir + '/node_modules', buildDir + '/oss-stable-semver');
 
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
@@ -120,7 +123,7 @@ function processStable(buildDir) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        version + '-' + canaryChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -133,7 +136,7 @@ function processStable(buildDir) {
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/oss-stable',
-      ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+      ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
     );
 
     // Now do the semver ones
@@ -155,7 +158,7 @@ function processStable(buildDir) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
@@ -164,9 +167,27 @@ function processStable(buildDir) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + sha + '-' + dateString
+      ReactVersion + '-www-classic-%FILEHASH%'
     );
   }
+
+  [
+    buildDir + '/react-native/implementations/',
+    buildDir + '/facebook-react-native/',
+  ].forEach(reactNativeBuildDir => {
+    if (fs.existsSync(reactNativeBuildDir)) {
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        reactNativeBuildDir,
+        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
+      );
+    }
+  });
+
+  // Update remaining placeholders with canary channel version
+  updatePlaceholderReactVersionInCompiledArtifacts(
+    buildDir,
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
+  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-stable');
@@ -201,7 +222,7 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
@@ -210,9 +231,27 @@ function processExperimental(buildDir, version) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + sha + '-' + dateString
+      ReactVersion + '-www-modern-%FILEHASH%'
     );
   }
+
+  [
+    buildDir + '/react-native/implementations/',
+    buildDir + '/facebook-react-native/',
+  ].forEach(reactNativeBuildDir => {
+    if (fs.existsSync(reactNativeBuildDir)) {
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        reactNativeBuildDir,
+        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
+      );
+    }
+  });
+
+  // Update remaining placeholders with canary channel version
+  updatePlaceholderReactVersionInCompiledArtifacts(
+    buildDir,
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
+  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-experimental');
@@ -323,9 +362,11 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
-    const replacedText = originalText.replace(
+    const fileHash = crypto.createHash('sha1');
+    fileHash.update(originalText);
+    const replacedText = originalText.replaceAll(
       PLACEHOLDER_REACT_VERSION,
-      newVersion
+      newVersion.replace(/%FILEHASH%/g, fileHash.digest('hex').slice(0, 8))
     );
     fs.writeFileSync(artifactFilename, replacedText);
   }

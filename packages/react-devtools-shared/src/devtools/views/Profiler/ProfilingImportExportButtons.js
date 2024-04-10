@@ -96,9 +96,8 @@ export default function ProfilingImportExportButtons(): React.Node {
 
           try {
             const profilingDataExport = ((json: any): ProfilingDataExport);
-            profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
-              profilingDataExport,
-            );
+            profilerStore.profilingData =
+              prepareProfilingDataFrontendFromExport(profilingDataExport);
           } catch (error) {
             modalDialogDispatch({
               id: 'ProfilingImportExportButtons',

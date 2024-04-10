@@ -44,7 +44,7 @@ module.exports = {
     }
 
     return {
-      CallExpression: function(node) {
+      CallExpression: function (node) {
         // This could be a little smarter by checking context.getScope() to see
         // how warning/invariant was defined.
         const isWarning =

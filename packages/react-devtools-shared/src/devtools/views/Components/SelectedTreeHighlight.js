@@ -7,7 +7,8 @@
  * @flow
  */
 
-import type {Element} from './types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
+
 import * as React from 'react';
 import {useContext, useMemo} from 'react';
 import {TreeStateContext} from './TreeContext';

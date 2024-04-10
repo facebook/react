@@ -17,7 +17,7 @@
 
 ### Server Components (Experimental)
 
-* Add support for `useId()` inside Server Components. ([@gnoff](https://github.com/gnoff)) in [#24172](https://github.com/facebook/react/pull/24172)
+* Add support for `useId()` inside Server Components. ([@gnoff](https://github.com/gnoff) in [#24172](https://github.com/facebook/react/pull/24172))
 
 ## 18.1.0 (April 26, 2022)
 
@@ -101,6 +101,10 @@ The existing `renderToString` method keeps working but is discouraged.
 * **Suspense trees are always consistent:** If a component suspends before it's fully added to the tree, React will not add it to the tree in an incomplete state or fire its effects. Instead, React will throw away the new tree completely, wait for the asynchronous operation to finish, and then retry rendering again from scratch. React will render the retry attempt concurrently, and without blocking the browser.
 * **Layout Effects with Suspense**: When a tree re-suspends and reverts to a fallback, React will now clean up layout effects, and then re-create them when the content inside the boundary is shown again. This fixes an issue which prevented component libraries from correctly measuring layout when used with Suspense.
 * **New JS Environment Requirements**: React now depends on modern browsers features including `Promise`, `Symbol`, and `Object.assign`. If you support older browsers and devices such as Internet Explorer which do not provide modern browser features natively or have non-compliant implementations, consider including a global polyfill in your bundled application.
+
+### Scheduler (Experimental)
+
+* Remove unstable `scheduler/tracing` API
 
 ## Notable Changes
 
@@ -192,6 +196,10 @@ The existing `renderToString` method keeps working but is discouraged.
 * Update webpack plugin for webpack 5 ([#22739](https://github.com/facebook/react/pull/22739) by [@michenly](https://github.com/michenly))
 * Fix a mistake in the Node loader. ([#22537](https://github.com/facebook/react/pull/22537) by [@btea](https://github.com/btea))
 * Use `globalThis` instead of `window` for edge environments. ([#22777](https://github.com/facebook/react/pull/22777) by [@huozhi](https://github.com/huozhi))
+
+### Scheduler (Experimental)
+
+* Remove unstable `scheduler/tracing` API ([#20037](https://github.com/facebook/react/pull/20037) by [@bvaughn](https://github.com/bvaughn))
 
 ## 17.0.2 (March 22, 2021)
 

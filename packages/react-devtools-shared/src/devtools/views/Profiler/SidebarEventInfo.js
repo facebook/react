@@ -12,7 +12,7 @@ import type {SchedulingEvent} from 'react-devtools-timeline/src/types';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import ViewSourceContext from '../Components/ViewSourceContext';
+import ViewElementSourceContext from '../Components/ViewElementSourceContext';
 import {useContext} from 'react';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 import {
@@ -31,15 +31,11 @@ type SchedulingEventProps = {
 };
 
 function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
-  const {viewUrlSourceFunction} = useContext(ViewSourceContext);
+  const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
+    ViewElementSourceContext,
+  );
   const {componentName, timestamp} = eventInfo;
   const componentStack = eventInfo.componentStack || null;
-
-  const viewSource = source => {
-    if (viewUrlSourceFunction != null && source != null) {
-      viewUrlSourceFunction(...source);
-    }
-  };
 
   return (
     <>
@@ -64,17 +60,42 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
               </div>
               <ul className={styles.List}>
                 {stackToComponentSources(componentStack).map(
-                  ([displayName, source], index) => {
+                  ([displayName, stack], index) => {
+                    if (stack == null) {
+                      return (
+                        <li key={index}>
+                          <Button
+                            className={styles.UnclickableSource}
+                            disabled={true}>
+                            {displayName}
+                          </Button>
+                        </li>
+                      );
+                    }
+
+                    // TODO: We should support symbolication here as well, but
+                    // symbolicating the whole stack can be expensive
+                    const [sourceURL, line, column] = stack;
+                    const source = {sourceURL, line, column};
+                    const canViewSource =
+                      canViewElementSourceFunction == null ||
+                      canViewElementSourceFunction(source, null);
+
+                    const viewSource =
+                      !canViewSource || viewElementSourceFunction == null
+                        ? () => null
+                        : () => viewElementSourceFunction(source, null);
+
                     return (
                       <li key={index}>
                         <Button
                           className={
-                            source
+                            canViewSource
                               ? styles.ClickableSource
                               : styles.UnclickableSource
                           }
-                          disabled={!source}
-                          onClick={() => viewSource(source)}>
+                          disabled={!canViewSource}
+                          onClick={viewSource}>
                           {displayName}
                         </Button>
                       </li>

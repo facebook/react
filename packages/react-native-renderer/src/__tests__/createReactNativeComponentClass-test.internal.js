@@ -18,12 +18,14 @@ describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
     React = require('react');
     ReactNative = require('react-native-renderer');
   });
 
+  // @gate !disableLegacyMode
   it('should register viewConfigs', () => {
     const textViewConfig = {
       validAttributes: {},

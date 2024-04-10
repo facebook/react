@@ -8,20 +8,30 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
+import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
+
+// TODO: update this to the first React version that has a corresponding DevTools backend
+const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
+export function hasAssignedBackend(version?: string): boolean {
+  if (version == null || version === '') {
+    return false;
+  }
+  return gte(version, FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER);
+}
 
 export function cleanForBridge(
   data: Object | null,
   isPathAllowed: (path: Array<string | number>) => boolean,
-  path?: Array<string | number> = [],
+  path: Array<string | number> = [],
 ): DehydratedData | null {
   if (data !== null) {
-    const cleanedPaths = [];
-    const unserializablePaths = [];
+    const cleanedPaths: Array<Array<string | number>> = [];
+    const unserializablePaths: Array<Array<string | number>> = [];
     const cleanedData = dehydrate(
       data,
       cleanedPaths,
@@ -40,23 +50,6 @@ export function cleanForBridge(
   }
 }
 
-export function copyToClipboard(value: any): void {
-  const safeToCopy = serializeToString(value);
-  const text = safeToCopy === undefined ? 'undefined' : safeToCopy;
-  const {clipboardCopyText} = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-
-  // On Firefox navigator.clipboard.writeText has to be called from
-  // the content script js code (because it requires the clipboardWrite
-  // permission to be allowed out of a "user handling" callback),
-  // clipboardCopyText is an helper injected into the page from.
-  // injectGlobalHook.
-  if (typeof clipboardCopyText === 'function') {
-    clipboardCopyText(text).catch(err => {});
-  } else {
-    copy(text);
-  }
-}
-
 export function copyWithDelete(
   obj: Object | Array<any>,
   path: Array<string | number>,
@@ -71,7 +64,7 @@ export function copyWithDelete(
       delete updated[key];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[key] = copyWithDelete(obj[key], path, index + 1);
   }
   return updated;
@@ -89,7 +82,7 @@ export function copyWithRename(
   const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === oldPath.length) {
     const newKey = newPath[index];
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[newKey] = updated[oldKey];
     if (isArray(updated)) {
       updated.splice(((oldKey: any): number), 1);
@@ -97,7 +90,7 @@ export function copyWithRename(
       delete updated[oldKey];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[oldKey] = copyWithRename(obj[oldKey], oldPath, newPath, index + 1);
   }
   return updated;
@@ -114,14 +107,15 @@ export function copyWithSet(
   }
   const key = path[index];
   const updated = isArray(obj) ? obj.slice() : {...obj};
-  // $FlowFixMe number or string is fine here
+  // $FlowFixMe[incompatible-use] number or string is fine here
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
 }
 
-export function getEffectDurations(
-  root: Object,
-): {effectDuration: any | null, passiveEffectDuration: any | null} {
+export function getEffectDurations(root: Object): {
+  effectDuration: any | null,
+  passiveEffectDuration: any | null,
+} {
   // Profiling durations are only available for certain builds.
   // If available, they'll be stored on the HostRoot.
   let effectDuration = null;
@@ -142,21 +136,28 @@ export function getEffectDurations(
 }
 
 export function serializeToString(data: any): string {
-  const cache = new Set();
+  if (data === undefined) {
+    return 'undefined';
+  }
+
+  const cache = new Set<mixed>();
   // Use a custom replacer function to protect against circular references.
-  return JSON.stringify(data, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        return;
+  return JSON.stringify(
+    data,
+    (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) {
+          return;
+        }
+        cache.add(value);
       }
-      cache.add(value);
-    }
-    // $FlowFixMe
-    if (typeof value === 'bigint') {
-      return value.toString() + 'n';
-    }
-    return value;
-  });
+      if (typeof value === 'bigint') {
+        return value.toString() + 'n';
+      }
+      return value;
+    },
+    2,
+  );
 }
 
 // Formats an array of args with a style for console methods, using
@@ -274,4 +275,107 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy &&
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
+}
+
+export function gt(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) === 1;
+}
+
+export function gte(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) > -1;
+}
+
+export const isReactNativeEnvironment = (): boolean => {
+  // We've been relying on this for such a long time
+  // We should probably define the client for DevTools on the backend side and share it with the frontend
+  return window.document == null;
+};
+
+function extractLocation(
+  url: string,
+): null | {sourceURL: string, line?: string, column?: string} {
+  if (url.indexOf(':') === -1) {
+    return null;
+  }
+
+  // remove any parentheses from start and end
+  const withoutParentheses = url.replace(/^\(+/, '').replace(/\)+$/, '');
+  const locationParts = /(at )?(.+?)(?::(\d+))?(?::(\d+))?$/.exec(
+    withoutParentheses,
+  );
+
+  if (locationParts == null) {
+    return null;
+  }
+
+  const [, , sourceURL, line, column] = locationParts;
+  return {sourceURL, line, column};
+}
+
+const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
+function parseSourceFromChromeStack(stack: string): Source | null {
+  const frames = stack.split('\n');
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const frame of frames) {
+    const sanitizedFrame = frame.trim();
+
+    const locationInParenthesesMatch = sanitizedFrame.match(/ (\(.+\)$)/);
+    const possibleLocation = locationInParenthesesMatch
+      ? locationInParenthesesMatch[1]
+      : sanitizedFrame;
+
+    const location = extractLocation(possibleLocation);
+    // Continue the search until at least sourceURL is found
+    if (location == null) {
+      continue;
+    }
+
+    const {sourceURL, line = '1', column = '1'} = location;
+
+    return {
+      sourceURL,
+      line: parseInt(line, 10),
+      column: parseInt(column, 10),
+    };
+  }
+
+  return null;
+}
+
+function parseSourceFromFirefoxStack(stack: string): Source | null {
+  const frames = stack.split('\n');
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const frame of frames) {
+    const sanitizedFrame = frame.trim();
+    const frameWithoutFunctionName = sanitizedFrame.replace(
+      /((.*".+"[^@]*)?[^@]*)(?:@)/,
+      '',
+    );
+
+    const location = extractLocation(frameWithoutFunctionName);
+    // Continue the search until at least sourceURL is found
+    if (location == null) {
+      continue;
+    }
+
+    const {sourceURL, line = '1', column = '1'} = location;
+
+    return {
+      sourceURL,
+      line: parseInt(line, 10),
+      column: parseInt(column, 10),
+    };
+  }
+
+  return null;
+}
+
+export function parseSourceFromComponentStack(
+  componentStack: string,
+): Source | null {
+  if (componentStack.match(CHROME_STACK_REGEXP)) {
+    return parseSourceFromChromeStack(componentStack);
+  }
+
+  return parseSourceFromFirefoxStack(componentStack);
 }

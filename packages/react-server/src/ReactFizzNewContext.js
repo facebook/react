@@ -9,8 +9,7 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+import {isPrimaryRenderer} from './ReactFizzConfig';
 
 let rendererSigil;
 if (__DEV__) {
@@ -163,7 +162,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   const next = newSnapshot;
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);
@@ -246,11 +245,7 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   }
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
-    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue = prevSnapshot.context._defaultValue;
-    } else {
-      prevSnapshot.context._currentValue = value;
-    }
+    prevSnapshot.context._currentValue = value;
     if (__DEV__) {
       if (
         context._currentRenderer !== undefined &&
@@ -266,11 +261,7 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
     }
   } else {
     const value = prevSnapshot.parentValue;
-    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
-    } else {
-      prevSnapshot.context._currentValue2 = value;
-    }
+    prevSnapshot.context._currentValue2 = value;
     if (__DEV__) {
       if (
         context._currentRenderer2 !== undefined &&

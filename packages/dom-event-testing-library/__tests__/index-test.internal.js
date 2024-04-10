@@ -49,7 +49,7 @@ describe('createEventTarget', () => {
     const target = createEventTarget(node);
     expect(target.node).toEqual(node);
     expect(Object.keys(target)).toMatchInlineSnapshot(`
-      Array [
+      [
         "node",
         "blur",
         "click",
@@ -337,18 +337,20 @@ describe('createEventTarget', () => {
   test('.setBoundingClientRect()', () => {
     const target = createEventTarget(node);
     expect(node.getBoundingClientRect()).toMatchInlineSnapshot(`
-      Object {
+      {
         "bottom": 0,
         "height": 0,
         "left": 0,
         "right": 0,
         "top": 0,
         "width": 0,
+        "x": 0,
+        "y": 0,
       }
     `);
     target.setBoundingClientRect({x: 10, y: 20, width: 100, height: 200});
     expect(node.getBoundingClientRect()).toMatchInlineSnapshot(`
-      Object {
+      {
         "bottom": 220,
         "height": 200,
         "left": 10,

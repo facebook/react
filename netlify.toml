@@ -1,7 +1,7 @@
 [build]
   base    = ""
   publish = "fixtures/dom/build"
-  command = "yarn build --type=UMD_DEV && cd fixtures/dom/ && yarn && yarn prestart && yarn build"
+  command = "yarn build --type=UMD_DEV && cd fixtures/dom/ && yarn && yarn predev && yarn build"
 
 [[redirects]]
   from = "/*"

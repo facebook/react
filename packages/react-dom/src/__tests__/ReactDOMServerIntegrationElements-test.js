@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -15,21 +16,20 @@ const TEXT_NODE_TYPE = 3;
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -48,7 +48,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('elements and children', function() {
+  describe('elements and children', function () {
     function expectNode(node, type, value) {
       expect(node).not.toBe(null);
       expect(node.nodeType).toBe(type);
@@ -59,7 +59,7 @@ describe('ReactDOMServerIntegration', () => {
       expectNode(node, TEXT_NODE_TYPE, text);
     }
 
-    describe('text children', function() {
+    describe('text children', function () {
       itRenders('a div with text', async render => {
         const e = await render(<div>Text</div>);
         expect(e.tagName).toBe('DIV');
@@ -135,7 +135,13 @@ describe('ReactDOMServerIntegration', () => {
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
-          ReactDOM.render(<nonstandard />, document.createElement('div'));
+          ReactDOM.flushSync(() => {
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
+
+            root.render(<nonstandard />);
+          });
         }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard>Text</nonstandard>);
@@ -265,7 +271,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('number children', function() {
+    describe('number children', function () {
       itRenders('a number as single child', async render => {
         const e = await render(<div>{3}</div>);
         expect(e.textContent).toBe('3');
@@ -302,7 +308,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('null, false, and undefined children', function() {
+    describe('null, false, and undefined children', function () {
       itRenders('null single child as blank', async render => {
         const e = await render(<div>{null}</div>);
         expect(e.childNodes.length).toBe(0);
@@ -365,7 +371,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('elements with implicit namespaces', function() {
+    describe('elements with implicit namespaces', function () {
       itRenders('an svg element', async render => {
         const e = await render(<svg />);
         expect(e.childNodes.length).toBe(0);
@@ -580,7 +586,7 @@ describe('ReactDOMServerIntegration', () => {
       }
     });
 
-    describe('newline-eating elements', function() {
+    describe('newline-eating elements', function () {
       itRenders(
         'a newline-eating tag with content not starting with \\n',
         async render => {
@@ -601,7 +607,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('different component implementations', function() {
+    describe('different component implementations', function () {
       function checkFooDiv(e) {
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
@@ -621,36 +627,23 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<ClassComponent />));
       });
 
-      if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-        itThrowsWhenRendering(
-          'factory components',
-          async render => {
-            const FactoryComponent = () => {
-              return {
-                render: function() {
-                  return <div>foo</div>;
-                },
-              };
-            };
-            await render(<FactoryComponent />, 1);
-          },
-          'Objects are not valid as a React child (found: object with keys {render})',
-        );
-      } else {
-        itRenders('factory components', async render => {
+      itThrowsWhenRendering(
+        'factory components',
+        async render => {
           const FactoryComponent = () => {
             return {
-              render: function() {
+              render: function () {
                 return <div>foo</div>;
               },
             };
           };
-          checkFooDiv(await render(<FactoryComponent />, 1));
-        });
-      }
+          await render(<FactoryComponent />, 1);
+        },
+        'Objects are not valid as a React child (found: object with keys {render})',
+      );
     });
 
-    describe('component hierarchies', function() {
+    describe('component hierarchies', function () {
       itRenders('single child hierarchies of components', async render => {
         const Component = props => <div>{props.children}</div>;
         let e = await render(
@@ -791,7 +784,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('escaping >, <, and &', function() {
+    describe('escaping >, <, and &', function () {
       itRenders('>,<, and & as single child', async render => {
         const e = await render(<div>{'<span>Text&quot;</span>'}</div>);
         expect(e.childNodes.length).toBe(1);
@@ -832,15 +825,20 @@ describe('ReactDOMServerIntegration', () => {
         'an element with one text child with special characters',
         async render => {
           const e = await render(<div>{'foo\rbar\r\nbaz\nqux\u0000'}</div>);
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            render === clientRenderOnServerString
+          ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering (or hydration) uses JS value with CR.
+            // Client rendering uses JS value with CR.
             // Null character stays.
+
             expectNode(
               e.childNodes[0],
               TEXT_NODE_TYPE,
@@ -859,10 +857,14 @@ describe('ReactDOMServerIntegration', () => {
               {'\r\nbaz\nqux\u0000'}
             </div>,
           );
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            render === clientRenderOnServerString
+          ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
@@ -870,6 +872,7 @@ describe('ReactDOMServerIntegration', () => {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
             // Hydration uses JS value with CR and null character.
+
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');
           } else {
@@ -902,7 +905,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('components that render nullish', function() {
+    describe('components that render nullish', function () {
       itRenders('a function returning null', async render => {
         const NullComponent = () => null;
         await render(<NullComponent />);
@@ -932,7 +935,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('components that throw errors', function() {
+    describe('components that throw errors', function () {
       itThrowsWhenRendering(
         'a function returning an object',
         async render => {
@@ -976,7 +979,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('badly-typed elements', function() {
+    describe('badly-typed elements', function () {
       itThrowsWhenRendering(
         'object',
         async render => {
@@ -984,7 +987,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             EmptyComponent = <EmptyComponent />;
           }).toErrorDev(
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'Warning: React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
@@ -1008,7 +1011,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             NullComponent = <NullComponent />;
           }).toErrorDev(
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'Warning: React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.',
             {withoutStack: true},
@@ -1026,7 +1029,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             UndefinedComponent = <UndefinedComponent />;
           }).toErrorDev(
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'Warning: React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: undefined. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +

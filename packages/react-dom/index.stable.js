@@ -7,19 +7,20 @@
  * @flow
  */
 
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './src/ReactDOMSharedInternals';
 export {
   createPortal,
   createRoot,
   hydrateRoot,
-  findDOMNode,
   flushSync,
-  hydrate,
-  render,
-  unmountComponentAtNode,
   unstable_batchedUpdates,
-  unstable_renderSubtreeIntoContainer,
-  preinit,
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
   preload,
+  preloadModule,
+  preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';

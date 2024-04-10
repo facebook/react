@@ -13,10 +13,6 @@
   overflow-y: auto;
 }
 
-.WhatChanged {
-  margin-bottom: 1rem;
-}
-
 .Component {
   flex: 1;
   color: var(--color-component-name);
