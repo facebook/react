@@ -32,6 +32,7 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_LEGACY_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {
   HostRoot,
@@ -166,6 +167,16 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
+    throw new Error(
+      'A React Element from an older version of React was rendered. ' +
+        'This is not supported. It can happen if:\n' +
+        '- Multiple copies of the "react" package is used.\n' +
+        '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
+        '- A compiler tries to "inline" JSX instead of using the runtime.',
+    );
+  }
+
   // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 

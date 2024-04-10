@@ -23,8 +23,9 @@ export const SERVER_CONTEXT_SYMBOL_STRING = 'Symbol(react.server_context)';
 
 export const DEPRECATED_ASYNC_MODE_SYMBOL_STRING = 'Symbol(react.async_mode)';
 
-export const ELEMENT_NUMBER = 0xeac7;
-export const ELEMENT_SYMBOL_STRING = 'Symbol(react.element)';
+export const ELEMENT_SYMBOL_STRING = 'Symbol(react.transitional.element)';
+export const LEGACY_ELEMENT_NUMBER = 0xeac7;
+export const LEGACY_ELEMENT_SYMBOL_STRING = 'Symbol(react.element)';
 
 export const DEBUG_TRACING_MODE_NUMBER = 0xeae1;
 export const DEBUG_TRACING_MODE_SYMBOL_STRING =

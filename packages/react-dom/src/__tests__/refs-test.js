@@ -389,7 +389,7 @@ describe('ref swapping', () => {
     await expect(async () => {
       await act(() => {
         root.render({
-          $$typeof: Symbol.for('react.element'),
+          $$typeof: Symbol.for('react.transitional.element'),
           type: 'div',
           props: {
             ref: undefined,
