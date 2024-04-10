@@ -29,13 +29,13 @@ function assertYieldsWereCleared(Scheduler, caller) {
     Error.captureStackTrace(error, caller);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 function toMatchRenderedOutput(ReactNoop, expectedJSX) {
   if (typeof ReactNoop.getChildrenAsJSX === 'function') {
     const Scheduler = ReactNoop._Scheduler;
     assertYieldsWereCleared(Scheduler, toMatchRenderedOutput);
-    assertConsoleLogsCleared();
     return captureAssertion(() => {
       expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
     });
