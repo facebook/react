@@ -35,7 +35,6 @@ function formatProdErrorMessage(code) {
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -1268,29 +1267,6 @@ function initTextarea(element, value, defaultValue, children) {
     null !== children &&
     (element.value = children);
 }
-var reusableSVGContainer;
-function setInnerHTMLImpl(node, html) {
-  if ("http://www.w3.org/2000/svg" !== node.namespaceURI || "innerHTML" in node)
-    node.innerHTML = html;
-  else {
-    reusableSVGContainer =
-      reusableSVGContainer || document.createElement("div");
-    reusableSVGContainer.innerHTML =
-      "<svg>" + html.valueOf().toString() + "</svg>";
-    for (html = reusableSVGContainer.firstChild; node.firstChild; )
-      node.removeChild(node.firstChild);
-    for (; html.firstChild; ) node.appendChild(html.firstChild);
-  }
-}
-var setInnerHTML = setInnerHTMLImpl;
-"undefined" !== typeof MSApp &&
-  MSApp.execUnsafeLocalFunction &&
-  (setInnerHTML = function (node, html) {
-    return MSApp.execUnsafeLocalFunction(function () {
-      return setInnerHTMLImpl(node, html);
-    });
-  });
-var setInnerHTML$1 = setInnerHTML;
 function setTextContent(node, text) {
   if (text) {
     var firstChild = node.firstChild;
@@ -14402,9 +14378,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         key = value.__html;
         if (null != key) {
           if (null != props.children) throw Error(formatProdErrorMessage(60));
-          disableIEWorkarounds
-            ? (domElement.innerHTML = key)
-            : setInnerHTML$1(domElement, key);
+          domElement.innerHTML = key;
         }
       }
       break;
@@ -14616,9 +14590,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
         key = value.__html;
         if (null != key) {
           if (null != props.children) throw Error(formatProdErrorMessage(60));
-          disableIEWorkarounds
-            ? (domElement.innerHTML = key)
-            : setInnerHTML$1(domElement, key);
+          domElement.innerHTML = key;
         }
       }
       break;
@@ -16996,7 +16968,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1727 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-1ce9ab8c",
+  version: "19.0.0-www-classic-aa655557",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2155 = {
@@ -17026,7 +16998,7 @@ var internals$jscomp$inline_2155 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-1ce9ab8c"
+  reconcilerVersion: "19.0.0-www-classic-aa655557"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2156 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17489,4 +17461,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-1ce9ab8c";
+exports.version = "19.0.0-www-classic-aa655557";
