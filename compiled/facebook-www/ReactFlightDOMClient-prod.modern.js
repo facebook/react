@@ -294,8 +294,6 @@ function parseModelString(response, parentObject, key, value) {
           (response = getOutlinedModel(response, parentObject)),
           new Set(response)
         );
-      case "B":
-        return;
       case "I":
         return Infinity;
       case "-":
