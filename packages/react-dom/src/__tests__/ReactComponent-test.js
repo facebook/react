@@ -130,6 +130,55 @@ describe('ReactComponent', () => {
   });
 
   // @gate !disableStringRefs
+  it('string refs do not detach and reattach on every render', async () => {
+    spyOnDev(console, 'error').mockImplementation(() => {});
+
+    let refVal;
+    class Child extends React.Component {
+      componentDidUpdate() {
+        // The parent ref should still be attached because it hasn't changed
+        // since the last render. If the ref had changed, then this would be
+        // undefined because refs are attached during the same phase (layout)
+        // as componentDidUpdate, in child -> parent order. So the new parent
+        // ref wouldn't have attached yet.
+        refVal = this.props.contextRef();
+      }
+
+      render() {
+        if (this.props.show) {
+          return <div>child</div>;
+        }
+      }
+    }
+
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div id="test-root" ref="root">
+            <Child
+              contextRef={() => this.refs.root}
+              show={this.props.showChild}
+            />
+          </div>
+        );
+      }
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Parent />);
+    });
+
+    expect(refVal).toBe(undefined);
+    await act(() => {
+      root.render(<Parent showChild={true} />);
+    });
+    expect(refVal).toBe(container.querySelector('#test-root'));
+  });
+
+  // @gate !disableStringRefs
   it('should support string refs on owned components', async () => {
     const innerObj = {};
     const outerObj = {};
