@@ -39,7 +39,7 @@ function makePluginOptions(
   let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = "all";
   let enableUseMemoCachePolyfill = false;
-  let panicThreshold: PanicThresholdOptions = "ALL_ERRORS";
+  let panicThreshold: PanicThresholdOptions = "all_errors";
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
@@ -93,8 +93,8 @@ function makePluginOptions(
   if (firstLine.includes("@enableUseMemoCachePolyfill")) {
     enableUseMemoCachePolyfill = true;
   }
-  if (firstLine.includes("@panicThreshold(NONE)")) {
-    panicThreshold = "NONE";
+  if (firstLine.includes("@panicThreshold(none)")) {
+    panicThreshold = "none";
   }
 
   let eslintSuppressionRules: Array<string> | null = null;

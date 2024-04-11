@@ -18,7 +18,7 @@ export function runReactForgetBabelPlugin(
   text: string,
   file: string,
   language: "flow" | "typescript",
-  options: PluginOptions | null,
+  options: Partial<PluginOptions> | null,
   includeAst: boolean = false
 ): BabelCore.BabelFileResult {
   let ast;

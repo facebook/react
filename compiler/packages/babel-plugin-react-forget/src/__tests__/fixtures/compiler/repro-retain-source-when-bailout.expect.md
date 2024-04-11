@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @panicThreshold(NONE)
+// @panicThreshold(none)
 import { useNoAlias } from "shared-runtime";
 
 const cond = true;
@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @panicThreshold(NONE)
+// @panicThreshold(none)
 import { useNoAlias } from "shared-runtime";
 
 const cond = true;

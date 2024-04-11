@@ -120,8 +120,8 @@ function handleError(
     }
   }
   if (
-    pass.opts.panicThreshold === "ALL_ERRORS" ||
-    (pass.opts.panicThreshold === "CRITICAL_ERRORS" && isCriticalError(err)) ||
+    pass.opts.panicThreshold === "all_errors" ||
+    (pass.opts.panicThreshold === "critical_errors" && isCriticalError(err)) ||
     isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;

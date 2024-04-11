@@ -1,4 +1,4 @@
-// @gating @panicThreshold(NONE) @compilationMode(annotation)
+// @gating @panicThreshold(none) @compilationMode(annotation)
 let someGlobal = "joe";
 
 function Component() {

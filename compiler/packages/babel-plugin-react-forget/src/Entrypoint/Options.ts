@@ -17,15 +17,15 @@ const PanicThresholdOptionsSchema = z.enum([
    * If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
    * skip Forget compilation for the rest of current file.
    */
-  "ALL_ERRORS",
+  "all_errors",
   /*
    * Panic by throwing an exception only on critical or unrecognized errors.
    * For all other errors, skip the erroring function without inserting
    * a Forget-compiled version (i.e. same behavior as noEmit).
    */
-  "CRITICAL_ERRORS",
+  "critical_errors",
   // Never panic by throwing an exception.
-  "NONE",
+  "none",
 ]);
 
 export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
@@ -173,7 +173,7 @@ export type Logger = {
 
 export const defaultOptions: PluginOptions = {
   compilationMode: "infer",
-  panicThreshold: "NONE",
+  panicThreshold: "none",
   environment: {},
   logger: null,
   gating: null,
@@ -189,7 +189,11 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
     return defaultOptions;
   }
   const parsedOptions = Object.create(null);
-  for (const [key, value] of Object.entries(obj)) {
+  for (let [key, value] of Object.entries(obj)) {
+    if (typeof value === "string") {
+      // normalize string configs to be case insensitive
+      value = value.toLowerCase();
+    }
     if (isCompilerFlag(key)) {
       parsedOptions[key] = value;
     }
