@@ -130,6 +130,50 @@ describe('ReactComponent', () => {
   });
 
   // @gate !disableStringRefs
+  it('should support accessing string refs from parent components', async () => {
+    spyOnDev(console, 'error').mockImplementation(() => {});
+
+    let refVal;
+    class Child extends React.Component {
+      componentDidUpdate() {
+        refVal = this.props.contextRef();
+      }
+
+      render() {
+        if (this.props.show) {
+          return <div>child</div>;
+        }
+      }
+    }
+
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div id="test-root" ref="root">
+            <Child
+              contextRef={() => this.refs.root}
+              show={this.props.showChild}
+            />
+          </div>
+        );
+      }
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Parent />);
+    });
+
+    expect(refVal).toBe(undefined);
+    await act(() => {
+      root.render(<Parent showChild={true} />);
+    });
+    expect(refVal).toBe(container.querySelector('#test-root'));
+  });
+
+  // @gate !disableStringRefs
   it('should support string refs on owned components', async () => {
     const innerObj = {};
     const outerObj = {};
