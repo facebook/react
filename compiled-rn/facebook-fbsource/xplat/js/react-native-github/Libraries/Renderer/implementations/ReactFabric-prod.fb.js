@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<224bcce6fb232bb63170272f6821f359>>
+ * @generated SignedSource<<891f2cf9f012898c3acee7317ec77aaa>>
  */
 
 "use strict";
@@ -2006,7 +2006,7 @@ function describeBuiltInComponentFrame(name) {
       }
     return "\n" + prefix + name;
   }
-  return describeComponentFrame(name, null);
+  return "\n    in " + (name || "Unknown");
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
@@ -2140,16 +2140,11 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
-}
 function describeFunctionComponentFrame(fn) {
   return enableComponentStackLocations
     ? describeNativeComponentFrame(fn, !1)
     : fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    ? "\n    in " + (fn.displayName || fn.name || "Unknown")
     : "";
 }
 function describeFiber(fiber) {
@@ -10563,6 +10558,13 @@ function getInspectorDataForInstance(closestInstance) {
       componentStack: ""
     };
   closestInstance = findCurrentFiberUsingSlowPath(closestInstance);
+  if (null === closestInstance)
+    return {
+      hierarchy: [],
+      props: emptyObject,
+      selectedIndex: null,
+      componentStack: ""
+    };
   var hierarchy = [];
   traverseOwnerTreeUp(hierarchy, closestInstance);
   var JSCompiler_inline_result;
@@ -10583,10 +10585,7 @@ function getInspectorDataForInstance(closestInstance) {
   instance = createHierarchy(hierarchy);
   var props = getHostProps(JSCompiler_inline_result);
   hierarchy = hierarchy.indexOf(JSCompiler_inline_result);
-  closestInstance =
-    null !== closestInstance
-      ? getStackByFiberInDevAndProd(closestInstance)
-      : "";
+  closestInstance = getStackByFiberInDevAndProd(closestInstance);
   return {
     closestInstance: JSCompiler_inline_result,
     hierarchy: instance,
@@ -10596,9 +10595,11 @@ function getInspectorDataForInstance(closestInstance) {
   };
 }
 function traverseOwnerTreeUp(hierarchy, instance) {
-  instance &&
-    (hierarchy.unshift(instance),
-    traverseOwnerTreeUp(hierarchy, instance._debugOwner));
+  hierarchy.unshift(instance);
+  instance = instance._debugOwner;
+  null != instance &&
+    "number" === typeof instance.tag &&
+    traverseOwnerTreeUp(hierarchy, instance);
 }
 if (
   "function" !==
@@ -10638,10 +10639,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1096 = {
+  devToolsConfig$jscomp$inline_1095 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-e9ef48bd",
+    version: "19.0.0-canary-8cbef3b3",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10657,11 +10658,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1335 = {
-  bundleType: devToolsConfig$jscomp$inline_1096.bundleType,
-  version: devToolsConfig$jscomp$inline_1096.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1096.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1096.rendererConfig,
+var internals$jscomp$inline_1334 = {
+  bundleType: devToolsConfig$jscomp$inline_1095.bundleType,
+  version: devToolsConfig$jscomp$inline_1095.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1095.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1095.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10677,26 +10678,26 @@ var internals$jscomp$inline_1335 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1096.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1095.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-e9ef48bd"
+  reconcilerVersion: "19.0.0-canary-8cbef3b3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1336 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1335 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1336.isDisabled &&
-    hook$jscomp$inline_1336.supportsFiber
+    !hook$jscomp$inline_1335.isDisabled &&
+    hook$jscomp$inline_1335.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1336.inject(
-        internals$jscomp$inline_1335
+      (rendererID = hook$jscomp$inline_1335.inject(
+        internals$jscomp$inline_1334
       )),
-        (injectedHook = hook$jscomp$inline_1336);
+        (injectedHook = hook$jscomp$inline_1335);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
