@@ -834,6 +834,10 @@ if (__DEV__) {
             return new Set(_data);
           }
 
+          case "B": {
+            return undefined;
+          }
+
           case "I": {
             // $Infinity
             return Infinity;
@@ -886,9 +890,9 @@ if (__DEV__) {
 
           default: {
             // We assume that anything else is a reference ID.
-            var _id6 = parseInt(value.slice(1), 16);
+            var _id7 = parseInt(value.slice(1), 16);
 
-            var _chunk2 = getChunk(response, _id6);
+            var _chunk2 = getChunk(response, _id7);
 
             switch (_chunk2.status) {
               case RESOLVED_MODEL:
