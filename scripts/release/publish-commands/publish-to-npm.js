@@ -19,7 +19,7 @@ const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
   // But for now the easiest way is just to ask if this is expected.
   const {status} = spawnSync('npm', ['view', `${packageName}@${version}`]);
   const packageExists = status === 0;
-  if (!packageExists) {
+  if (packageExists) {
     console.log(
       theme`{package ${packageName}} {version ${version}} has already been published.`
     );
