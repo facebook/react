@@ -10,8 +10,14 @@ import {diff} from 'jest-diff';
 import {equals} from '@jest/expect-utils';
 import enqueueTask from './enqueueTask';
 import simulateBrowserEventDispatch from './simulateBrowserEventDispatch';
-
+import {
+  clearLogs,
+  clearWarnings,
+  clearErrors,
+  createLogAssertion,
+} from './consoleMock';
 export {act} from './internalAct';
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
 import {thrownErrors, actingUpdatesScopeDepth} from './internalAct';
 
@@ -24,6 +30,7 @@ function assertYieldsWereCleared(caller) {
     Error.captureStackTrace(error, caller);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 export async function waitForMicrotasks() {
@@ -316,6 +323,22 @@ ${diff(expectedLog, actualLog)}
   Error.captureStackTrace(error, assertLog);
   throw error;
 }
+
+export const assertConsoleLogDev = createLogAssertion(
+  'log',
+  'assertConsoleLogDev',
+  clearLogs,
+);
+export const assertConsoleWarnDev = createLogAssertion(
+  'warn',
+  'assertConsoleWarnDev',
+  clearWarnings,
+);
+export const assertConsoleErrorDev = createLogAssertion(
+  'error',
+  'assertConsoleErrorDev',
+  clearErrors,
+);
 
 // Simulates dispatching events, waiting for microtasks in between.
 // This matches the browser behavior, which will flush microtasks
