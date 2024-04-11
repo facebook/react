@@ -518,7 +518,7 @@ describe('ReactHooksInspection', () => {
               },
               "id": null,
               "isStateEditable": false,
-              "name": "Promise",
+              "name": "Use",
               "subHooks": [],
               "value": "world",
             },
@@ -568,7 +568,7 @@ describe('ReactHooksInspection', () => {
         },
         "id": null,
         "isStateEditable": false,
-        "name": "Unresolved",
+        "name": "Use",
         "subHooks": [],
         "value": Any<Promise>,
       }
