@@ -9,14 +9,12 @@
 
 import * as React from "react";
 
-const {
-  // @ts-ignore
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentDispatcher,
-  },
-  useRef,
-  useEffect,
-} = React;
+const { useRef, useEffect } = React;
+const ReactSecretInternals =
+  //@ts-ignore
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ??
+  //@ts-ignore
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 type MemoCache = Array<number | typeof $empty>;
 
@@ -95,8 +93,8 @@ enum GuardKind {
 }
 
 function setCurrent(newDispatcher: any) {
-  ReactCurrentDispatcher.current = newDispatcher;
-  return ReactCurrentDispatcher.current;
+  ReactSecretInternals.ReactCurrentDispatcher.current = newDispatcher;
+  return ReactSecretInternals.ReactCurrentDispatcher.current;
 }
 
 const guardFrames: Array<unknown> = [];
@@ -137,7 +135,7 @@ const guardFrames: Array<unknown> = [];
  * ```
  */
 export function $dispatcherGuard(kind: GuardKind) {
-  const curr = ReactCurrentDispatcher.current;
+  const curr = ReactSecretInternals.ReactCurrentDispatcher.current;
   if (kind === GuardKind.PushGuardContext) {
     // Push before checking invariant or errors
     guardFrames.push(curr);
