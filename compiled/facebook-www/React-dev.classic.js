@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-classic-b9e0eea7";
+    var ReactVersion = "19.0.0-www-classic-8aa01ae9";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -843,7 +843,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, ownerFn) {
+    function describeBuiltInComponentFrame(name) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -1112,7 +1112,7 @@ if (__DEV__) {
 
       return syntheticFrame;
     }
-    function describeFunctionComponentFrame(fn, ownerFn) {
+    function describeFunctionComponentFrame(fn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -1123,7 +1123,7 @@ if (__DEV__) {
       return !!(prototype && prototype.isReactComponent);
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type) {
       if (type == null) {
         return "";
       }
@@ -1153,7 +1153,7 @@ if (__DEV__) {
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
+            return describeUnknownElementTypeFrameInDEV(type.type);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -1162,10 +1162,7 @@ if (__DEV__) {
 
             try {
               // Lazy may contain any component type so we recursively resolve it.
-              return describeUnknownElementTypeFrameInDEV(
-                init(payload),
-                ownerFn
-              );
+              return describeUnknownElementTypeFrameInDEV(init(payload));
             } catch (x) {}
           }
         }
@@ -2097,14 +2094,18 @@ if (__DEV__) {
 
         if (
           element &&
-          element._owner &&
+          element._owner != null &&
           element._owner !== ReactCurrentOwner.current
         ) {
-          // Give the component that originally created this child.
-          childOwner =
-            " It was passed a child from " +
-            getComponentNameFromType(element._owner.type) +
-            ".";
+          var ownerName = null;
+
+          if (typeof element._owner.tag === "number") {
+            ownerName = getComponentNameFromType(element._owner.type);
+          } else if (typeof element._owner.name === "string") {
+            ownerName = element._owner.name;
+          } // Give the component that originally created this child.
+
+          childOwner = " It was passed a child from " + ownerName + ".";
         }
 
         setCurrentlyValidatingElement(element);
@@ -2123,11 +2124,7 @@ if (__DEV__) {
     function setCurrentlyValidatingElement(element) {
       {
         if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
+          var stack = describeUnknownElementTypeFrameInDEV(element.type);
           ReactDebugCurrentFrame.setExtraStackFrame(stack);
         } else {
           ReactDebugCurrentFrame.setExtraStackFrame(null);

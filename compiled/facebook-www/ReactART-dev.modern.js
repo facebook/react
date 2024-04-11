@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-ab20b5da";
+    var ReactVersion = "19.0.0-www-modern-56f7d4ba";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -411,6 +411,17 @@ if (__DEV__) {
       return type.displayName || "Context";
     }
 
+    function getComponentNameFromOwner(owner) {
+      if (typeof owner.tag === "number") {
+        return getComponentNameFromFiber(owner);
+      }
+
+      if (typeof owner.name === "string") {
+        return owner.name;
+      }
+
+      return null;
+    }
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -3354,7 +3365,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, ownerFn) {
+    function describeBuiltInComponentFrame(name) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -3629,12 +3640,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor, ownerFn) {
+    function describeClassComponentFrame(ctor) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn, ownerFn) {
+    function describeFunctionComponentFrame(fn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -5967,8 +5978,8 @@ if (__DEV__) {
 
         var owner = current._debugOwner;
 
-        if (owner !== null && typeof owner !== "undefined") {
-          return getComponentNameFromFiber(owner);
+        if (owner != null) {
+          return getComponentNameFromOwner(owner);
         }
       }
 
@@ -29322,7 +29333,7 @@ if (__DEV__) {
                   "named imports.";
               }
 
-              var ownerName = owner ? getComponentNameFromFiber(owner) : null;
+              var ownerName = owner ? getComponentNameFromOwner(owner) : null;
 
               if (ownerName) {
                 info += "\n\nCheck the render method of `" + ownerName + "`.";
