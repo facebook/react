@@ -3480,7 +3480,7 @@ function getThrownInfo(request, node) {
       do {
         switch (node.tag) {
           case 0:
-            request += describeBuiltInComponentFrame(node.type);
+            request += describeBuiltInComponentFrame(node.type, null);
             break;
           case 1:
             request += describeNativeComponentFrame(node.type, !1);

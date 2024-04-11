@@ -576,8 +576,7 @@ if (__DEV__) {
       }
     }
 
-    function createElement(type, key, props, owner) {
-      // DEV-only
+    function createElement(type, key, props) {
       var element;
 
       if (enableRefAsProp) {
@@ -587,7 +586,7 @@ if (__DEV__) {
           type: type,
           key: key,
           props: props,
-          _owner: owner
+          _owner: null
         };
         Object.defineProperty(element, "ref", {
           enumerable: false,
@@ -602,7 +601,7 @@ if (__DEV__) {
           ref: null,
           props: props,
           // Record the component responsible for creating this element.
-          _owner: owner
+          _owner: null
         };
       }
 
@@ -966,7 +965,7 @@ if (__DEV__) {
       if (tuple[0] === REACT_ELEMENT_TYPE) {
         // TODO: Consider having React just directly accept these arrays as elements.
         // Or even change the ReactElement type to be an array.
-        return createElement(tuple[1], tuple[2], tuple[3], tuple[4]);
+        return createElement(tuple[1], tuple[2], tuple[3]);
       }
 
       return value;
@@ -1107,10 +1106,9 @@ if (__DEV__) {
       var payload = parseModel(response, value);
       var methodName = payload[0]; // TODO: Restore the fake stack before logging.
       // const stackTrace = payload[1];
-      // const owner = payload[2];
 
-      var env = payload[3];
-      var args = payload.slice(4);
+      var env = payload[2];
+      var args = payload.slice(3);
       printToConsole(methodName, args, env);
     }
 
@@ -1164,7 +1162,7 @@ if (__DEV__) {
         case 68: /* "D" */
         {
           {
-            var debugInfo = parseModel(response, row);
+            var debugInfo = JSON.parse(row);
             resolveDebugInfo(response, id, debugInfo);
             return;
           } // Fallthrough to share the error with Console entries.

@@ -10163,19 +10163,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1083 = {
+  devToolsConfig$jscomp$inline_1086 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-7841976c",
+    version: "19.0.0-www-modern-292e1686",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1295 = {
-  bundleType: devToolsConfig$jscomp$inline_1083.bundleType,
-  version: devToolsConfig$jscomp$inline_1083.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1083.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1083.rendererConfig,
+var internals$jscomp$inline_1298 = {
+  bundleType: devToolsConfig$jscomp$inline_1086.bundleType,
+  version: devToolsConfig$jscomp$inline_1086.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1086.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1086.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10192,26 +10192,26 @@ var internals$jscomp$inline_1295 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1083.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1086.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-7841976c"
+  reconcilerVersion: "19.0.0-www-modern-292e1686"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1296 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1299 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1296.isDisabled &&
-    hook$jscomp$inline_1296.supportsFiber
+    !hook$jscomp$inline_1299.isDisabled &&
+    hook$jscomp$inline_1299.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1296.inject(
-        internals$jscomp$inline_1295
+      (rendererID = hook$jscomp$inline_1299.inject(
+        internals$jscomp$inline_1298
       )),
-        (injectedHook = hook$jscomp$inline_1296);
+        (injectedHook = hook$jscomp$inline_1299);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

@@ -10634,7 +10634,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -10904,12 +10904,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -10923,15 +10923,15 @@ if (__DEV__) {
         do {
           switch (node.tag) {
             case 0:
-              info += describeBuiltInComponentFrame(node.type);
+              info += describeBuiltInComponentFrame(node.type, null);
               break;
 
             case 1:
-              info += describeFunctionComponentFrame(node.type);
+              info += describeFunctionComponentFrame(node.type, null);
               break;
 
             case 2:
-              info += describeClassComponentFrame(node.type);
+              info += describeClassComponentFrame(node.type, null);
               break;
           } // $FlowFixMe[incompatible-type] we bail out when we get a null
 

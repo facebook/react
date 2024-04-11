@@ -376,17 +376,6 @@ if (__DEV__) {
       return type.displayName || "Context";
     }
 
-    function getComponentNameFromOwner(owner) {
-      if (typeof owner.tag === "number") {
-        return getComponentNameFromFiber(owner);
-      }
-
-      if (typeof owner.name === "string") {
-        return owner.name;
-      }
-
-      return null;
-    }
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -3415,7 +3404,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -3690,12 +3679,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -3775,8 +3764,8 @@ if (__DEV__) {
 
         var owner = current._debugOwner;
 
-        if (owner != null) {
-          return getComponentNameFromOwner(owner);
+        if (owner !== null && typeof owner !== "undefined") {
+          return getComponentNameFromFiber(owner);
         }
       }
 
@@ -35928,7 +35917,7 @@ if (__DEV__) {
                   "named imports.";
               }
 
-              var ownerName = owner ? getComponentNameFromOwner(owner) : null;
+              var ownerName = owner ? getComponentNameFromFiber(owner) : null;
 
               if (ownerName) {
                 info += "\n\nCheck the render method of `" + ownerName + "`.";
@@ -36271,7 +36260,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-0e5afc22";
+    var ReactVersion = "19.0.0-www-classic-82184e0e";
 
     function createPortal$1(
       children,
