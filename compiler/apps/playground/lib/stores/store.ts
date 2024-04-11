@@ -18,12 +18,18 @@ import { defaultStore } from "../defaultStore";
 export interface Store {
   source: string;
 }
+export function encodeStore(store: Store): string {
+  return compressToEncodedURIComponent(JSON.stringify(store));
+}
+export function decodeStore(hash: string): Store {
+  return JSON.parse(decompressFromEncodedURIComponent(hash));
+}
 
 /**
  * Serialize, encode, and save @param store to localStorage and update URL.
  */
 export function saveStore(store: Store) {
-  const hash = compressToEncodedURIComponent(JSON.stringify(store));
+  const hash = encodeStore(store);
   localStorage.setItem("playgroundStore", hash);
   history.replaceState({}, "", `#${hash}`);
 }
@@ -54,7 +60,7 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   // Initialize with the default store.
   if (!encodedSource) return defaultStore;
 
-  const raw = JSON.parse(decompressFromEncodedURIComponent(encodedSource));
+  const raw = decodeStore(encodedSource);
 
   invariant(isValidStore(raw), "Invalid Store");
   return raw;

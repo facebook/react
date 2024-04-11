@@ -6,23 +6,33 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { encodeStore, type Store } from "../../lib/stores";
 
-const delay = 50;
+const STORE: Store = {
+  source: `export default function TestComponent({ x }) {
+  return <Button>{x}</Button>;
+}
+`,
+};
+const HASH = encodeStore(STORE);
 
 function concat(data: Array<string>): string {
   return data.join("");
 }
 
 test("editor should compile successfully", async ({ page }) => {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto(`/#${HASH}`, { waitUntil: "networkidle" });
+  await page.screenshot({
+    fullPage: true,
+    path: "test-results/00-on-networkidle.png",
+  });
 
-  // User input compiles
-  const monacoEditor = page.locator(".monaco-editor").nth(0);
-  await monacoEditor.click();
-  await page.keyboard.press("Meta+KeyA", { delay });
-  await page.keyboard.type("export default function TestComponent({ x }) {\n");
-  await page.keyboard.type("return <Button>{x}</Button>;\n");
+  // User input from hash compiles
   await page.getByRole("button", { name: /JS/ }).click();
+  await page.screenshot({
+    fullPage: true,
+    path: "test-results/01-show-js-before.png",
+  });
   const userInput =
     (await page.locator(".monaco-editor").nth(2).allInnerTexts()) ?? [];
   expect(concat(userInput)).toMatchSnapshot("user-input.txt");
@@ -30,6 +40,10 @@ test("editor should compile successfully", async ({ page }) => {
   // Reset button works
   page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Reset" }).click();
+  await page.screenshot({
+    fullPage: true,
+    path: "test-results/02-show-js-after.png",
+  });
   const defaultInput =
     (await page.locator(".monaco-editor").nth(2).allInnerTexts()) ?? [];
   expect(concat(defaultInput)).toMatchSnapshot("default-input.txt");
