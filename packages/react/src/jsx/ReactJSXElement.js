@@ -1189,7 +1189,15 @@ function coerceStringRef(mixedRef, owner, type) {
     }
   }
 
-  return stringRefAsCallbackRef.bind(null, stringRef, type, owner);
+  const callback = stringRefAsCallbackRef.bind(null, stringRef, type, owner);
+  // This is used to check whether two callback refs conceptually represent
+  // the same string ref, and can therefore be reused by the reconciler. Needed
+  // for backwards compatibility with old Meta code that relies on string refs
+  // not being reattached on every render.
+  callback.__stringRef = stringRef;
+  callback.__type = type;
+  callback.__owner = owner;
+  return callback;
 }
 
 function stringRefAsCallbackRef(stringRef, type, owner, value) {
