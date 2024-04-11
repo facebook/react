@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54a23c4fe5a4e5f9b2f4f68bfd8c09ee>>
+ * @generated SignedSource<<f3e55aa36d3d27892c4128e881af247b>>
  */
 
 "use strict";
@@ -2887,17 +2887,6 @@ to return true:wantsResponderID|                            |
       return type.displayName || "Context";
     }
 
-    function getComponentNameFromOwner(owner) {
-      if (typeof owner.tag === "number") {
-        return getComponentNameFromFiber(owner);
-      }
-
-      if (typeof owner.name === "string") {
-        return owner.name;
-      }
-
-      return null;
-    }
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -6334,7 +6323,7 @@ to return true:wantsResponderID|                            |
 
     var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       if (enableComponentStackLocations) {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -6348,12 +6337,19 @@ to return true:wantsResponderID|                            |
 
         return "\n" + prefix + name;
       } else {
-        return describeComponentFrame(name);
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
       }
     }
     function describeDebugInfoFrame(name, env) {
       return describeBuiltInComponentFrame(
-        name + (env ? " (" + env + ")" : "")
+        name + (env ? " (" + env + ")" : ""),
+        null
       );
     }
     var reentry = false;
@@ -6611,18 +6607,24 @@ to return true:wantsResponderID|                            |
       return syntheticFrame;
     }
 
-    function describeComponentFrame(name) {
-      return "\n    in " + (name || "Unknown");
+    function describeComponentFrame(name, ownerName) {
+      var sourceInfo = "";
+
+      if (ownerName) {
+        sourceInfo = " (created by " + ownerName + ")";
+      }
+
+      return "\n    in " + (name || "Unknown") + sourceInfo;
     }
 
-    function describeClassComponentFrame(ctor) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       if (enableComponentStackLocations) {
         return describeNativeComponentFrame(ctor, true);
       } else {
-        return describeFunctionComponentFrame(ctor);
+        return describeFunctionComponentFrame(ctor, ownerFn);
       }
     }
-    function describeFunctionComponentFrame(fn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       if (enableComponentStackLocations) {
         return describeNativeComponentFrame(fn, false);
       } else {
@@ -6631,35 +6633,43 @@ to return true:wantsResponderID|                            |
         }
 
         var name = fn.displayName || fn.name || null;
-        return describeComponentFrame(name);
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
       }
     }
 
     function describeFiber(fiber) {
+      var owner = fiber._debugOwner ? fiber._debugOwner.type : null;
+
       switch (fiber.tag) {
         case HostHoistable:
         case HostSingleton:
         case HostComponent:
-          return describeBuiltInComponentFrame(fiber.type);
+          return describeBuiltInComponentFrame(fiber.type, owner);
 
         case LazyComponent:
-          return describeBuiltInComponentFrame("Lazy");
+          return describeBuiltInComponentFrame("Lazy", owner);
 
         case SuspenseComponent:
-          return describeBuiltInComponentFrame("Suspense");
+          return describeBuiltInComponentFrame("Suspense", owner);
 
         case SuspenseListComponent:
-          return describeBuiltInComponentFrame("SuspenseList");
+          return describeBuiltInComponentFrame("SuspenseList", owner);
 
         case FunctionComponent:
         case SimpleMemoComponent:
-          return describeFunctionComponentFrame(fiber.type);
+          return describeFunctionComponentFrame(fiber.type, owner);
 
         case ForwardRef:
-          return describeFunctionComponentFrame(fiber.type.render);
+          return describeFunctionComponentFrame(fiber.type.render, owner);
 
         case ClassComponent:
-          return describeClassComponentFrame(fiber.type);
+          return describeClassComponentFrame(fiber.type, owner);
 
         default:
           return "";
@@ -8970,8 +8980,8 @@ to return true:wantsResponderID|                            |
 
         var owner = current._debugOwner;
 
-        if (owner != null) {
-          return getComponentNameFromOwner(owner);
+        if (owner !== null && typeof owner !== "undefined") {
+          return getComponentNameFromFiber(owner);
         }
       }
 
@@ -30692,7 +30702,7 @@ to return true:wantsResponderID|                            |
                   "named imports.";
               }
 
-              var ownerName = owner ? getComponentNameFromOwner(owner) : null;
+              var ownerName = owner ? getComponentNameFromFiber(owner) : null;
 
               if (ownerName) {
                 info += "\n\nCheck the render method of `" + ownerName + "`.";
@@ -30960,7 +30970,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-2f38dc90";
+    var ReactVersion = "19.0.0-canary-997c5634";
 
     function createPortal$1(
       children,
@@ -31812,23 +31822,13 @@ to return true:wantsResponderID|                            |
         }
 
         var fiber = findCurrentFiberUsingSlowPath(closestInstance);
-
-        if (fiber === null) {
-          // Might not be currently mounted.
-          return {
-            hierarchy: [],
-            props: emptyObject,
-            selectedIndex: null,
-            componentStack: ""
-          };
-        }
-
         var fiberHierarchy = getOwnerHierarchy(fiber);
         var instance = lastNonHostInstance(fiberHierarchy);
         var hierarchy = createHierarchy(fiberHierarchy);
         var props = getHostProps(instance);
         var selectedIndex = fiberHierarchy.indexOf(instance);
-        var componentStack = getStackByFiberInDevAndProd(fiber);
+        var componentStack =
+          fiber !== null ? getStackByFiberInDevAndProd(fiber) : "";
         return {
           closestInstance: instance,
           hierarchy: hierarchy,
@@ -31855,15 +31855,13 @@ to return true:wantsResponderID|                            |
       }
 
       return hierarchy[0];
-    }
+    } // $FlowFixMe[missing-local-annot]
 
     function traverseOwnerTreeUp(hierarchy, instance) {
       {
-        hierarchy.unshift(instance);
-        var owner = instance._debugOwner;
-
-        if (owner != null && typeof owner.tag === "number") {
-          traverseOwnerTreeUp(hierarchy, owner);
+        if (instance) {
+          hierarchy.unshift(instance);
+          traverseOwnerTreeUp(hierarchy, instance._debugOwner);
         }
       }
     }

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<568cb702cdaad263cf51f5b74157b2ba>>
+ * @generated SignedSource<<3151ca79177b1e7b421f14db372bfd97>>
  */
 
 "use strict";
@@ -349,17 +349,6 @@ if (__DEV__) {
       return type.displayName || "Context";
     }
 
-    function getComponentNameFromOwner(owner) {
-      if (typeof owner.tag === "number") {
-        return getComponentNameFromFiber(owner);
-      }
-
-      if (typeof owner.name === "string") {
-        return owner.name;
-      }
-
-      return null;
-    }
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -2892,14 +2881,21 @@ if (__DEV__) {
 
     var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
 
-    function describeBuiltInComponentFrame(name) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
-        return describeComponentFrame(name);
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
       }
     }
     function describeDebugInfoFrame(name, env) {
       return describeBuiltInComponentFrame(
-        name + (env ? " (" + env + ")" : "")
+        name + (env ? " (" + env + ")" : ""),
+        null
       );
     }
 
@@ -2908,51 +2904,65 @@ if (__DEV__) {
       new PossiblyWeakMap$1();
     }
 
-    function describeComponentFrame(name) {
-      return "\n    in " + (name || "Unknown");
+    function describeComponentFrame(name, ownerName) {
+      var sourceInfo = "";
+
+      if (ownerName) {
+        sourceInfo = " (created by " + ownerName + ")";
+      }
+
+      return "\n    in " + (name || "Unknown") + sourceInfo;
     }
 
-    function describeClassComponentFrame(ctor) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
-        return describeFunctionComponentFrame(ctor);
+        return describeFunctionComponentFrame(ctor, ownerFn);
       }
     }
-    function describeFunctionComponentFrame(fn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         if (!fn) {
           return "";
         }
 
         var name = fn.displayName || fn.name || null;
-        return describeComponentFrame(name);
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
       }
     }
 
     function describeFiber(fiber) {
+      var owner = fiber._debugOwner ? fiber._debugOwner.type : null;
+
       switch (fiber.tag) {
         case HostHoistable:
         case HostSingleton:
         case HostComponent:
-          return describeBuiltInComponentFrame(fiber.type);
+          return describeBuiltInComponentFrame(fiber.type, owner);
 
         case LazyComponent:
-          return describeBuiltInComponentFrame("Lazy");
+          return describeBuiltInComponentFrame("Lazy", owner);
 
         case SuspenseComponent:
-          return describeBuiltInComponentFrame("Suspense");
+          return describeBuiltInComponentFrame("Suspense", owner);
 
         case SuspenseListComponent:
-          return describeBuiltInComponentFrame("SuspenseList");
+          return describeBuiltInComponentFrame("SuspenseList", owner);
 
         case FunctionComponent:
         case SimpleMemoComponent:
-          return describeFunctionComponentFrame(fiber.type);
+          return describeFunctionComponentFrame(fiber.type, owner);
 
         case ForwardRef:
-          return describeFunctionComponentFrame(fiber.type.render);
+          return describeFunctionComponentFrame(fiber.type.render, owner);
 
         case ClassComponent:
-          return describeClassComponentFrame(fiber.type);
+          return describeClassComponentFrame(fiber.type, owner);
 
         default:
           return "";
@@ -5243,8 +5253,8 @@ if (__DEV__) {
 
         var owner = current._debugOwner;
 
-        if (owner != null) {
-          return getComponentNameFromOwner(owner);
+        if (owner !== null && typeof owner !== "undefined") {
+          return getComponentNameFromFiber(owner);
         }
       }
 
@@ -26550,7 +26560,7 @@ if (__DEV__) {
                   "named imports.";
               }
 
-              var ownerName = owner ? getComponentNameFromOwner(owner) : null;
+              var ownerName = owner ? getComponentNameFromFiber(owner) : null;
 
               if (ownerName) {
                 info += "\n\nCheck the render method of `" + ownerName + "`.";
@@ -26813,7 +26823,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-6077cfa0";
+    var ReactVersion = "19.0.0-canary-29bd6113";
 
     // Might add PROFILE later.
 

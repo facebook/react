@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ab4a7efab0297a08768bdea5ec49f164>>
+ * @generated SignedSource<<c03b4f2580a3f28e5204dac43fdc8e39>>
  */
 
 "use strict";
@@ -742,24 +742,28 @@ function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
 }
 var objectIs = "function" === typeof Object.is ? Object.is : is;
-function describeBuiltInComponentFrame(name) {
-  return "\n    in " + (name || "Unknown");
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
 }
 function describeFunctionComponentFrame(fn) {
-  return fn ? "\n    in " + (fn.displayName || fn.name || "Unknown") : "";
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    : "";
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
     case 26:
     case 27:
     case 5:
-      return describeBuiltInComponentFrame(fiber.type);
+      return describeComponentFrame(fiber.type, null);
     case 16:
-      return describeBuiltInComponentFrame("Lazy");
+      return describeComponentFrame("Lazy", null);
     case 13:
-      return describeBuiltInComponentFrame("Suspense");
+      return describeComponentFrame("Suspense", null);
     case 19:
-      return describeBuiltInComponentFrame("SuspenseList");
+      return describeComponentFrame("SuspenseList", null);
     case 0:
     case 15:
       return describeFunctionComponentFrame(fiber.type);
@@ -9823,12 +9827,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1078 = {
+var devToolsConfig$jscomp$inline_1079 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-c0ff0c26",
+  version: "19.0.0-canary-3aa3c53d",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9845,10 +9849,10 @@ var devToolsConfig$jscomp$inline_1078 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1078.bundleType,
-  version: devToolsConfig$jscomp$inline_1078.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1078.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1078.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1079.bundleType,
+  version: devToolsConfig$jscomp$inline_1079.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1079.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1079.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9865,14 +9869,14 @@ var devToolsConfig$jscomp$inline_1078 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1078.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1079.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-c0ff0c26"
+  reconcilerVersion: "19.0.0-canary-3aa3c53d"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
