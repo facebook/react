@@ -61,10 +61,12 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
+          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var stack = ReactSharedInternals.getStackAddendum();
+          var ReactDebugCurrentFrame =
+            ReactSharedInternals.ReactDebugCurrentFrame;
+          var stack = ReactDebugCurrentFrame.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -912,7 +914,7 @@ if (__DEV__) {
     }
 
     var SecretInternals =
-      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
     var EventInternals = SecretInternals.Events;
     var getInstanceFromNode = EventInternals[0];
     var getNodeFromInstance = EventInternals[1];
@@ -1674,9 +1676,6 @@ if (__DEV__) {
       "stalled",
       "suspend",
       "timeUpdate",
-      "transitionRun",
-      "transitionStart",
-      "transitionCancel",
       "transitionEnd",
       "waiting",
       "mouseEnter",

@@ -278,31 +278,26 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
-var ReactSharedInternalsServer =
-  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-if (!ReactSharedInternalsServer)
-  throw Error(
-    'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
-  );
-var ReactDOMSharedInternals =
-    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+var ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   sharedNotPendingObject = {
     pending: !1,
     data: null,
     method: null,
     action: null
   },
-  previousDispatcher = ReactDOMSharedInternals.d;
-ReactDOMSharedInternals.d = {
-  f: previousDispatcher.f,
-  r: previousDispatcher.r,
-  D: prefetchDNS,
-  C: preconnect,
-  L: preload,
-  m: preloadModule,
-  X: preinitScript,
-  S: preinitStyle,
-  M: preinitModuleScript
+  ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher,
+  previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preloadModule: preloadModule,
+  preinitScript: preinitScript,
+  preinitStyle: preinitStyle,
+  preinitModuleScript: preinitModuleScript
 };
 var PRELOAD_NO_CREDS = [],
   scriptRegex = /(<\/|<)(s)(cript)/gi;
@@ -1572,7 +1567,7 @@ function pushStartInstance(
           ("string" !== typeof srcSet && null != srcSet)
         ) &&
         "low" !== props.fetchPriority &&
-        !1 === !!(formatContext.tagScope & 3) &&
+        !1 === !!(formatContext.tagScope & 2) &&
         ("string" !== typeof src ||
           ":" !== src[4] ||
           ("d" !== src[0] && "D" !== src[0]) ||
@@ -2259,7 +2254,7 @@ function prefetchDNS(href) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.D(href);
+  } else previousDispatcher.prefetchDNS(href);
 }
 function preconnect(href, crossOrigin) {
   var request = currentRequest ? currentRequest : null;
@@ -2313,7 +2308,7 @@ function preconnect(href, crossOrigin) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.C(href, crossOrigin);
+  } else previousDispatcher.preconnect(href, crossOrigin);
 }
 function preload(href, as, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2427,7 +2422,7 @@ function preload(href, as, options) {
       }
       enqueueFlush(request);
     }
-  } else previousDispatcher.L(href, as, options);
+  } else previousDispatcher.preload(href, as, options);
 }
 function preloadModule(href, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2463,7 +2458,7 @@ function preloadModule(href, options) {
       renderState.bulkPreloads.add(as);
       enqueueFlush(request);
     }
-  } else previousDispatcher.m(href, options);
+  } else previousDispatcher.preloadModule(href, options);
 }
 function preinitStyle(href, precedence, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2503,7 +2498,7 @@ function preinitStyle(href, precedence, options) {
         styleQueue.sheets.set(href, precedence),
         enqueueFlush(request));
     }
-  } else previousDispatcher.S(href, precedence, options);
+  } else previousDispatcher.preinitStyle(href, precedence, options);
 }
 function preinitScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2527,7 +2522,7 @@ function preinitScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  } else previousDispatcher.X(src, options);
+  } else previousDispatcher.preinitScript(src, options);
 }
 function preinitModuleScript(src, options) {
   var request = currentRequest ? currentRequest : null;
@@ -2553,7 +2548,7 @@ function preinitModuleScript(src, options) {
         pushScriptImpl(src, options),
         enqueueFlush(request));
     }
-  } else previousDispatcher.M(src, options);
+  } else previousDispatcher.preinitModuleScript(src, options);
 }
 function adoptPreloadCredentials(target, preloadState) {
   null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
@@ -3336,6 +3331,8 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
+var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
+  ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error) {
   console.error(error);
   return null;
@@ -3483,7 +3480,7 @@ function getThrownInfo(request, node) {
       do {
         switch (node.tag) {
           case 0:
-            request += describeBuiltInComponentFrame(node.type);
+            request += describeBuiltInComponentFrame(node.type, null);
             break;
           case 1:
             request += describeNativeComponentFrame(node.type, !1);
@@ -3625,24 +3622,18 @@ function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
       var JSCompiler_inline_result = props;
-      if (enableRefAsProp && "ref" in props) {
-        JSCompiler_inline_result = {};
-        for (var propName in props)
-          "ref" !== propName &&
-            (JSCompiler_inline_result[propName] = props[propName]);
-      }
       var defaultProps = type.defaultProps;
       if (defaultProps && disableDefaultPropsExceptForClasses) {
-        JSCompiler_inline_result === props &&
-          (JSCompiler_inline_result = assign(
-            {},
-            JSCompiler_inline_result,
-            props
-          ));
-        for (var propName$31 in defaultProps)
-          void 0 === JSCompiler_inline_result[propName$31] &&
-            (JSCompiler_inline_result[propName$31] = defaultProps[propName$31]);
+        JSCompiler_inline_result = assign({}, JSCompiler_inline_result, props);
+        for (var propName in defaultProps)
+          void 0 === JSCompiler_inline_result[propName] &&
+            (JSCompiler_inline_result[propName] = defaultProps[propName]);
       }
+      enableRefAsProp &&
+        "ref" in JSCompiler_inline_result &&
+        (JSCompiler_inline_result === props &&
+          (JSCompiler_inline_result = assign({}, JSCompiler_inline_result)),
+        delete JSCompiler_inline_result.ref);
       props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
       defaultProps = emptyContextObject;
@@ -3651,10 +3642,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
         null !== ref &&
         (defaultProps = ref._currentValue);
       defaultProps = new type(JSCompiler_inline_result, defaultProps);
-      propName$31 = void 0 !== defaultProps.state ? defaultProps.state : null;
+      propName = void 0 !== defaultProps.state ? defaultProps.state : null;
       defaultProps.updater = classComponentUpdater;
       defaultProps.props = JSCompiler_inline_result;
-      defaultProps.state = propName$31;
+      defaultProps.state = propName;
       ref = { queue: [], replace: !1 };
       defaultProps._reactInternals = ref;
       var contextType = type.contextType;
@@ -3664,12 +3655,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
           : emptyContextObject;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
-        ((contextType = contextType(JSCompiler_inline_result, propName$31)),
-        (propName$31 =
+        ((contextType = contextType(JSCompiler_inline_result, propName)),
+        (propName =
           null === contextType || void 0 === contextType
-            ? propName$31
-            : assign({}, propName$31, contextType)),
-        (defaultProps.state = propName$31));
+            ? propName
+            : assign({}, propName, contextType)),
+        (defaultProps.state = propName));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
         "function" !== typeof defaultProps.getSnapshotBeforeUpdate &&
@@ -3700,26 +3691,27 @@ function renderElement(request, task, keyPath, type, props, ref) {
             defaultProps.state = type[0];
           else {
             ref = contextType ? type[0] : defaultProps.state;
-            propName$31 = !0;
+            propName = !0;
             for (
               contextType = contextType ? 1 : 0;
               contextType < type.length;
               contextType++
-            )
-              (propName = type[contextType]),
-                (propName =
-                  "function" === typeof propName
-                    ? propName.call(
-                        defaultProps,
-                        ref,
-                        JSCompiler_inline_result,
-                        void 0
-                      )
-                    : propName),
-                null != propName &&
-                  (propName$31
-                    ? ((propName$31 = !1), (ref = assign({}, ref, propName)))
-                    : assign(ref, propName));
+            ) {
+              var partial = type[contextType];
+              partial =
+                "function" === typeof partial
+                  ? partial.call(
+                      defaultProps,
+                      ref,
+                      JSCompiler_inline_result,
+                      void 0
+                    )
+                  : partial;
+              null != partial &&
+                (propName
+                  ? ((propName = !1), (ref = assign({}, ref, partial)))
+                  : assign(ref, partial));
+            }
             defaultProps.state = ref;
           }
         else ref.queue = null;
@@ -3754,14 +3746,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
     if (null === defaultProps)
       (defaultProps = props.children),
         (ref = task.formatContext),
-        (propName$31 = task.keyPath),
+        (propName = task.keyPath),
         (task.formatContext = getChildFormatContext(ref, type, props)),
         (task.keyPath = keyPath),
         renderNode(request, task, defaultProps, -1),
         (task.formatContext = ref),
-        (task.keyPath = propName$31);
+        (task.keyPath = propName);
     else {
-      propName$31 = pushStartInstance(
+      propName = pushStartInstance(
         defaultProps.chunks,
         type,
         props,
@@ -3777,7 +3769,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
       contextType = task.keyPath;
       task.formatContext = getChildFormatContext(ref, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, propName$31, -1);
+      renderNode(request, task, propName, -1);
       task.formatContext = ref;
       task.keyPath = contextType;
       a: {
@@ -3874,13 +3866,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = task.blockedBoundary;
           var parentHoistableState = task.hoistableState,
             parentSegment = task.blockedSegment;
-          propName$31 = props.fallback;
+          propName = props.fallback;
           var content = props.children;
           props = new Set();
           contextType = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
             (contextType.trackedContentKeyPath = keyPath);
-          propName = createPendingSegment(
+          partial = createPendingSegment(
             request,
             parentSegment.chunks.length,
             contextType,
@@ -3888,7 +3880,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             !1,
             !1
           );
-          parentSegment.children.push(propName);
+          parentSegment.children.push(partial);
           parentSegment.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
@@ -3962,10 +3954,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
           task = createRenderTask(
             request,
             null,
-            propName$31,
+            propName,
             -1,
             ref,
-            propName,
+            partial,
             contextType.fallbackState,
             props,
             JSCompiler_inline_result,
@@ -4496,15 +4488,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$43) {
+    } catch (thrownValue$42) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$43 === SuspenseException
+          thrownValue$42 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$43),
+            : thrownValue$42),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5159,11 +5151,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$47 = partialBoundaries[i];
+      var boundary$46 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$47.completedSegments;
+        var completedSegments = boundary$46.completedSegments;
         for (
           JSCompiler_inline_result = 0;
           JSCompiler_inline_result < completedSegments.length;
@@ -5173,7 +5165,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$47,
+              boundary$46,
               completedSegments[JSCompiler_inline_result]
             )
           ) {
@@ -5185,7 +5177,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, JSCompiler_inline_result);
         JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
           boundary,
-          boundary$47.contentState,
+          boundary$46.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5240,8 +5232,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$49) {
-    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
+  } catch (error$48) {
+    logRecoverableError(request, error$48, {}), fatalError(request, error$48);
   }
 }
 exports.abortStream = function (stream, reason) {
@@ -5266,10 +5258,10 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactSharedInternalsServer.H;
-    ReactSharedInternalsServer.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternalsServer.C;
-    ReactSharedInternalsServer.C = DefaultCacheDispatcher;
+      prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = HooksDispatcher;
+    var prevCacheDispatcher = ReactCurrentCache.current;
+    ReactCurrentCache.current = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5423,8 +5415,8 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactSharedInternalsServer.H = prevDispatcher),
-        (ReactSharedInternalsServer.C = prevCacheDispatcher),
+        (ReactCurrentDispatcher.current = prevDispatcher),
+        (ReactCurrentCache.current = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }

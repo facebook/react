@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-d8e2224b";
+    var ReactVersion = "19.0.0-www-modern-5712afa3";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -63,10 +63,12 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
+          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var stack = ReactSharedInternals.getStackAddendum();
+          var ReactDebugCurrentFrame =
+            ReactSharedInternals.ReactDebugCurrentFrame;
+          var stack = ReactDebugCurrentFrame.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -2349,10 +2351,7 @@ if (__DEV__) {
     }
 
     var ReactSharedInternals =
-      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-    var ReactDOMSharedInternals =
-      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
     // same object across all transitions.
 
@@ -2364,42 +2363,21 @@ if (__DEV__) {
     };
     var NotPending = Object.freeze(sharedNotPendingObject);
 
-    var previousDispatcher = ReactDOMSharedInternals.d;
-    /* ReactDOMCurrentDispatcher */
+    var ReactDOMSharedInternals =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    ReactDOMSharedInternals.d =
-      /* ReactDOMCurrentDispatcher */
-      {
-        f:
-          /* flushSyncWork */
-          previousDispatcher.f,
-        /* flushSyncWork */
-        r:
-          /* requestFormReset */
-          previousDispatcher.r,
-        /* requestFormReset */
-        D:
-          /* prefetchDNS */
-          prefetchDNS,
-        C:
-          /* preconnect */
-          preconnect,
-        L:
-          /* preload */
-          preload,
-        m:
-          /* preloadModule */
-          preloadModule,
-        X:
-          /* preinitScript */
-          preinitScript,
-        S:
-          /* preinitStyle */
-          preinitStyle,
-        M:
-          /* preinitModuleScript */
-          preinitModuleScript
-      }; // We make every property of the descriptor optional because it is not a contract that
+    var ReactDOMCurrentDispatcher =
+      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+    var previousDispatcher = ReactDOMCurrentDispatcher.current;
+    ReactDOMCurrentDispatcher.current = {
+      prefetchDNS: prefetchDNS,
+      preconnect: preconnect,
+      preload: preload,
+      preloadModule: preloadModule,
+      preinitScript: preinitScript,
+      preinitStyle: preinitStyle,
+      preinitModuleScript: preinitModuleScript
+    }; // We make every property of the descriptor optional because it is not a contract that
     var ScriptStreamingFormat = 0;
     var DataStreamingFormat = 1;
     var NothingSent =
@@ -5025,7 +5003,7 @@ if (__DEV__) {
       props,
       resumableState,
       renderState,
-      pictureOrNoScriptTagInScope
+      pictureTagInScope
     ) {
       var src = props.src,
         srcSet = props.srcSet;
@@ -5036,7 +5014,7 @@ if (__DEV__) {
         (typeof src === "string" || src == null) &&
         (typeof srcSet === "string" || srcSet == null) &&
         props.fetchPriority !== "low" &&
-        pictureOrNoScriptTagInScope === false && // We exclude data URIs in src and srcSet since these should not be preloaded
+        pictureTagInScope === false && // We exclude data URIs in src and srcSet since these should not be preloaded
         !(
           typeof src === "string" &&
           src[4] === ":" &&
@@ -5882,7 +5860,7 @@ if (__DEV__) {
             props,
             resumableState,
             renderState,
-            !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE))
+            !!(formatContext.tagScope & PICTURE_SCOPE)
           );
         }
         // Omitted close tags
@@ -7475,10 +7453,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.D(
-          /* prefetchDNS */
-          href
-        );
+        previousDispatcher.prefetchDNS(href);
         return;
       }
 
@@ -7537,11 +7512,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.C(
-          /* preconnect */
-          href,
-          crossOrigin
-        );
+        previousDispatcher.preconnect(href, crossOrigin);
         return;
       }
 
@@ -7606,12 +7577,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.L(
-          /* preload */
-          href,
-          as,
-          options
-        );
+        previousDispatcher.preload(href, as, options);
         return;
       }
 
@@ -7846,11 +7812,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.m(
-          /* preloadModule */
-          href,
-          options
-        );
+        previousDispatcher.preloadModule(href, options);
         return;
       }
 
@@ -7928,12 +7890,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.S(
-          /* preinitStyle */
-          href,
-          precedence,
-          options
-        );
+        previousDispatcher.preinitStyle(href, precedence, options);
         return;
       }
 
@@ -8015,11 +7972,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.X(
-          /* preinitScript */
-          src,
-          options
-        );
+        previousDispatcher.preinitScript(src, options);
         return;
       }
 
@@ -8085,11 +8038,7 @@ if (__DEV__) {
         // the resources for this call in either case we opt to do nothing. We can consider making this a warning
         // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
         // fetching) and we don't want to warn in those cases.
-        previousDispatcher.M(
-          /* preinitModuleScript */
-          src,
-          options
-        );
+        previousDispatcher.preinitModuleScript(src, options);
         return;
       }
 
@@ -10801,8 +10750,9 @@ if (__DEV__) {
       }
     }
 
+    var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -10854,13 +10804,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher = null;
+      var previousDispatcher;
 
       {
-        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactCurrentDispatcher$1.current; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactSharedInternals.H = null;
+        ReactCurrentDispatcher$1.current = null;
         disableLogs();
       }
       /**
@@ -11053,7 +11003,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactSharedInternals.H = previousDispatcher;
+          ReactCurrentDispatcher$1.current = previousDispatcher;
           reenableLogs();
         }
 
@@ -11072,12 +11022,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -11091,15 +11041,15 @@ if (__DEV__) {
         do {
           switch (node.tag) {
             case 0:
-              info += describeBuiltInComponentFrame(node.type);
+              info += describeBuiltInComponentFrame(node.type, null);
               break;
 
             case 1:
-              info += describeFunctionComponentFrame(node.type);
+              info += describeFunctionComponentFrame(node.type, null);
               break;
 
             case 2:
-              info += describeClassComponentFrame(node.type);
+              info += describeClassComponentFrame(node.type, null);
               break;
           } // $FlowFixMe[incompatible-type] we bail out when we get a null
 
@@ -11112,6 +11062,9 @@ if (__DEV__) {
       }
     }
 
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+    var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame; // Linked list representing the identity of a component given the component/tag name and key.
     // The name might be minified but we assume that it's going to be the same generated name. Typically
     // because it's just the same compiled output in practice.
     // resume with segmentID at the index
@@ -11948,38 +11901,28 @@ if (__DEV__) {
     }
 
     function resolveClassComponentProps(Component, baseProps) {
-      var newProps = baseProps;
-
-      if (enableRefAsProp) {
-        // Remove ref from the props object, if it exists.
-        if ("ref" in baseProps) {
-          newProps = {};
-
-          for (var propName in baseProps) {
-            if (propName !== "ref") {
-              newProps[propName] = baseProps[propName];
-            }
-          }
-        }
-      } // Resolve default props.
+      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
 
       var defaultProps = Component.defaultProps;
 
-      if (
-        defaultProps && // If disableDefaultPropsExceptForClasses is true, we always resolve
-        // default props here, rather than in the JSX runtime.
-        disableDefaultPropsExceptForClasses
-      ) {
-        // We may have already copied the props object above to remove ref. If so,
-        // we can modify that. Otherwise, copy the props object with Object.assign.
-        if (newProps === baseProps) {
-          newProps = assign({}, newProps, baseProps);
-        } // Taken from old JSX runtime, where this used to live.
+      if (defaultProps && disableDefaultPropsExceptForClasses) {
+        newProps = assign({}, newProps, baseProps);
 
-        for (var _propName in defaultProps) {
-          if (newProps[_propName] === undefined) {
-            newProps[_propName] = defaultProps[_propName];
+        for (var propName in defaultProps) {
+          if (newProps[propName] === undefined) {
+            newProps[propName] = defaultProps[propName];
           }
+        }
+      }
+
+      if (enableRefAsProp) {
+        // Remove ref from the props object, if it exists.
+        if ("ref" in newProps) {
+          if (newProps === baseProps) {
+            newProps = assign({}, newProps);
+          }
+
+          delete newProps.ref;
         }
       }
 
@@ -13904,22 +13847,22 @@ if (__DEV__) {
       }
 
       var prevContext = getActiveContext();
-      var prevDispatcher = ReactSharedInternals.H;
-      ReactSharedInternals.H = HooksDispatcher;
-      var prevCacheDispatcher = null;
+      var prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = HooksDispatcher;
+      var prevCacheDispatcher;
 
       {
-        prevCacheDispatcher = ReactSharedInternals.C;
-        ReactSharedInternals.C = DefaultCacheDispatcher;
+        prevCacheDispatcher = ReactCurrentCache.current;
+        ReactCurrentCache.current = DefaultCacheDispatcher;
       }
 
       var prevRequest = currentRequest;
       currentRequest = request;
-      var prevGetCurrentStackImpl = null;
+      var prevGetCurrentStackImpl;
 
       {
-        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-        ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+        prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+        ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
       }
 
       var prevResumableState = currentResumableState;
@@ -13945,14 +13888,14 @@ if (__DEV__) {
         fatalError(request, error);
       } finally {
         setCurrentResumableState(prevResumableState);
-        ReactSharedInternals.H = prevDispatcher;
+        ReactCurrentDispatcher.current = prevDispatcher;
 
         {
-          ReactSharedInternals.C = prevCacheDispatcher;
+          ReactCurrentCache.current = prevCacheDispatcher;
         }
 
         {
-          ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+          ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
         }
 
         if (prevDispatcher === HooksDispatcher) {

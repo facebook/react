@@ -26,19 +26,18 @@ function writeChunkAndReturn(destination, chunk) {
   destination.write(chunk);
   return !0;
 }
-var ReactDOMSharedInternals =
-    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  previousDispatcher = ReactDOMSharedInternals.d;
-ReactDOMSharedInternals.d = {
-  f: previousDispatcher.f,
-  r: previousDispatcher.r,
-  D: prefetchDNS,
-  C: preconnect,
-  L: preload,
-  m: preloadModule,
-  X: preinitScript,
-  S: preinitStyle,
-  M: preinitModuleScript
+var ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher,
+  previousDispatcher = ReactDOMCurrentDispatcher.current;
+ReactDOMCurrentDispatcher.current = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preloadModule: preloadModule,
+  preinitStyle: preinitStyle,
+  preinitScript: preinitScript,
+  preinitModuleScript: preinitModuleScript
 };
 function prefetchDNS(href) {
   if ("string" === typeof href && href) {
@@ -47,7 +46,7 @@ function prefetchDNS(href) {
       var hints = request.hints,
         key = "D|" + href;
       hints.has(key) || (hints.add(key), emitHint(request, "D", href));
-    } else previousDispatcher.D(href);
+    } else previousDispatcher.prefetchDNS(href);
   }
 }
 function preconnect(href, crossOrigin) {
@@ -61,7 +60,7 @@ function preconnect(href, crossOrigin) {
         "string" === typeof crossOrigin
           ? emitHint(request, "C", [href, crossOrigin])
           : emitHint(request, "C", href));
-    } else previousDispatcher.C(href, crossOrigin);
+    } else previousDispatcher.preconnect(href, crossOrigin);
   }
 }
 function preload(href, as, options) {
@@ -86,7 +85,7 @@ function preload(href, as, options) {
         (options = trimOptions(options))
           ? emitHint(request, "L", [href, as, options])
           : emitHint(request, "L", [href, as]));
-    } else previousDispatcher.L(href, as, options);
+    } else previousDispatcher.preload(href, as, options);
   }
 }
 function preloadModule(href, options) {
@@ -101,7 +100,7 @@ function preloadModule(href, options) {
         ? emitHint(request, "m", [href, options])
         : emitHint(request, "m", href);
     }
-    previousDispatcher.m(href, options);
+    previousDispatcher.preloadModule(href, options);
   }
 }
 function preinitStyle(href, precedence, options) {
@@ -122,7 +121,7 @@ function preinitStyle(href, precedence, options) {
         ? emitHint(request, "S", [href, precedence])
         : emitHint(request, "S", href);
     }
-    previousDispatcher.S(href, precedence, options);
+    previousDispatcher.preinitStyle(href, precedence, options);
   }
 }
 function preinitScript(src, options) {
@@ -137,7 +136,7 @@ function preinitScript(src, options) {
         ? emitHint(request, "X", [src, options])
         : emitHint(request, "X", src);
     }
-    previousDispatcher.X(src, options);
+    previousDispatcher.preinitScript(src, options);
   }
 }
 function preinitModuleScript(src, options) {
@@ -152,7 +151,7 @@ function preinitModuleScript(src, options) {
         ? emitHint(request, "M", [src, options])
         : emitHint(request, "M", src);
     }
-    previousDispatcher.M(src, options);
+    previousDispatcher.preinitModuleScript(src, options);
   }
 }
 function trimOptions(options) {
@@ -431,14 +430,18 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
       "\n  " + str + "\n  " + objectOrArray)
     : "\n  " + str;
 }
-var ReactSharedInternalsServer =
-  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-if (!ReactSharedInternalsServer)
+var ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  ReactSharedServerInternals =
+    React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+if (!ReactSharedServerInternals)
   throw Error(
     'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
   );
 var ObjectPrototype = Object.prototype,
-  stringify = JSON.stringify;
+  stringify = JSON.stringify,
+  ReactCurrentCache = ReactSharedServerInternals.ReactCurrentCache,
+  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 function defaultErrorHandler(error) {
   console.error(error);
 }
@@ -859,11 +862,6 @@ function renderModelDestructive(
               parentPropertyName.set(parent, -1));
       return "$W" + outlineModel(request, value).toString(16);
     }
-    if ("function" === typeof FormData && value instanceof FormData)
-      return (
-        (value = Array.from(value.entries())),
-        "$K" + outlineModel(request, value).toString(16)
-      );
     null === value || "object" !== typeof value
       ? (parent = null)
       : ((parent =
@@ -1023,8 +1021,8 @@ function retryTask(request, task) {
     }
 }
 function performWork(request) {
-  var prevDispatcher = ReactSharedInternalsServer.H;
-  ReactSharedInternalsServer.H = HooksDispatcher;
+  var prevDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = HooksDispatcher;
   var prevRequest = currentRequest;
   currentRequest$1 = currentRequest = request;
   try {
@@ -1037,7 +1035,7 @@ function performWork(request) {
   } catch (error) {
     logRecoverableError(request, error), fatalError(request, error);
   } finally {
-    (ReactSharedInternalsServer.H = prevDispatcher),
+    (ReactCurrentDispatcher.current = prevDispatcher),
       (currentRequest$1 = null),
       (currentRequest = prevRequest);
   }
@@ -1090,11 +1088,11 @@ exports.renderToDestination = function (destination, model, options) {
     );
   var onError = options ? options.onError : void 0;
   if (
-    null !== ReactSharedInternalsServer.C &&
-    ReactSharedInternalsServer.C !== DefaultCacheDispatcher
+    null !== ReactCurrentCache.current &&
+    ReactCurrentCache.current !== DefaultCacheDispatcher
   )
     throw Error("Currently React only supports one RSC renderer at a time.");
-  ReactSharedInternalsServer.C = DefaultCacheDispatcher;
+  ReactCurrentCache.current = DefaultCacheDispatcher;
   var abortSet = new Set();
   options = [];
   var hints = new Set();

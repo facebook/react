@@ -86,10 +86,12 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
+          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var stack = ReactSharedInternals.getStackAddendum();
+          var ReactDebugCurrentFrame =
+            ReactSharedInternals.ReactDebugCurrentFrame;
+          var stack = ReactDebugCurrentFrame.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -156,44 +158,20 @@ if (__DEV__) {
     }
 
     var ReactDOMSharedInternals =
-      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    var previousDispatcher = ReactDOMSharedInternals.d;
-    /* ReactDOMCurrentDispatcher */
-
-    ReactDOMSharedInternals.d =
-      /* ReactDOMCurrentDispatcher */
-      {
-        f:
-          /* flushSyncWork */
-          previousDispatcher.f,
-        /* flushSyncWork */
-        r:
-          /* requestFormReset */
-          previousDispatcher.r,
-        /* requestFormReset */
-        D:
-          /* prefetchDNS */
-          prefetchDNS,
-        C:
-          /* preconnect */
-          preconnect,
-        L:
-          /* preload */
-          preload,
-        m:
-          /* preloadModule */
-          preloadModule,
-        X:
-          /* preinitScript */
-          preinitScript,
-        S:
-          /* preinitStyle */
-          preinitStyle,
-        M:
-          /* preinitModuleScript */
-          preinitModuleScript
-      };
+    var ReactDOMCurrentDispatcher =
+      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
+    var previousDispatcher = ReactDOMCurrentDispatcher.current;
+    ReactDOMCurrentDispatcher.current = {
+      prefetchDNS: prefetchDNS,
+      preconnect: preconnect,
+      preload: preload,
+      preloadModule: preloadModule,
+      preinitStyle: preinitStyle,
+      preinitScript: preinitScript,
+      preinitModuleScript: preinitModuleScript
+    };
 
     function prefetchDNS(href) {
       if (typeof href === "string" && href) {
@@ -211,10 +189,7 @@ if (__DEV__) {
           hints.add(key);
           emitHint(request, "D", href);
         } else {
-          previousDispatcher.D(
-            /* prefetchDNS */
-            href
-          );
+          previousDispatcher.prefetchDNS(href);
         }
       }
     }
@@ -241,11 +216,7 @@ if (__DEV__) {
             emitHint(request, "C", href);
           }
         } else {
-          previousDispatcher.C(
-            /* preconnect */
-            href,
-            crossOrigin
-          );
+          previousDispatcher.preconnect(href, crossOrigin);
         }
       }
     }
@@ -282,12 +253,7 @@ if (__DEV__) {
             emitHint(request, "L", [href, as]);
           }
         } else {
-          previousDispatcher.L(
-            /* preload */
-            href,
-            as,
-            options
-          );
+          previousDispatcher.preload(href, as, options);
         }
       }
     }
@@ -314,11 +280,7 @@ if (__DEV__) {
             return emitHint(request, "m", href);
           }
         } else {
-          previousDispatcher.m(
-            /* preloadModule */
-            href,
-            options
-          );
+          previousDispatcher.preloadModule(href, options);
         }
       }
     }
@@ -351,12 +313,7 @@ if (__DEV__) {
             return emitHint(request, "S", href);
           }
         } else {
-          previousDispatcher.S(
-            /* preinitStyle */
-            href,
-            precedence,
-            options
-          );
+          previousDispatcher.preinitStyle(href, precedence, options);
         }
       }
     }
@@ -383,11 +340,7 @@ if (__DEV__) {
             return emitHint(request, "X", src);
           }
         } else {
-          previousDispatcher.X(
-            /* preinitScript */
-            src,
-            options
-          );
+          previousDispatcher.preinitScript(src, options);
         }
       }
     }
@@ -414,11 +367,7 @@ if (__DEV__) {
             return emitHint(request, "M", src);
           }
         } else {
-          previousDispatcher.M(
-            /* preinitModuleScript */
-            src,
-            options
-          );
+          previousDispatcher.preinitModuleScript(src, options);
         }
       }
     } // Flight normally encodes undefined as a special character however for directive option
@@ -636,37 +585,21 @@ if (__DEV__) {
     var currentRequest$1 = null;
     var thenableIndexCounter = 0;
     var thenableState = null;
-    var currentComponentDebugInfo = null;
     function prepareToUseHooksForRequest(request) {
       currentRequest$1 = request;
     }
     function resetHooksForRequest() {
       currentRequest$1 = null;
     }
-    function prepareToUseHooksForComponent(
-      prevThenableState,
-      componentDebugInfo
-    ) {
+    function prepareToUseHooksForComponent(prevThenableState) {
       thenableIndexCounter = 0;
       thenableState = prevThenableState;
-
-      {
-        currentComponentDebugInfo = componentDebugInfo;
-      }
     }
     function getThenableStateAfterSuspending() {
       // If you use() to Suspend this should always exist but if you throw a Promise instead,
       // which is not really supported anymore, it will be empty. We use the empty set as a
       // marker to know if this was a replay of the same component or first attempt.
       var state = thenableState || createThenableState();
-
-      {
-        // This is a hack but we stash the debug info here so that we don't need a completely
-        // different data structure just for this in DEV. Not too happy about it.
-        state._componentDebugInfo = currentComponentDebugInfo;
-        currentComponentDebugInfo = null;
-      }
-
       thenableState = null;
       return state;
     }
@@ -1150,18 +1083,19 @@ if (__DEV__) {
       return "\n  " + str;
     }
 
-    var ReactSharedInternalsServer = // $FlowFixMe: It's defined in the one we resolve to.
-      React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+    var ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-    if (!ReactSharedInternalsServer) {
+    var ReactSharedServerInternals = // $FlowFixMe: It's defined in the one we resolve to.
+      React.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+    if (!ReactSharedServerInternals) {
       throw new Error(
         'The "react" package in this environment is not configured correctly. ' +
           'The "react-server" condition must be enabled in any environment that ' +
           "runs React Server Components."
       );
     }
-
-    var ReactSharedInternals = ReactSharedInternalsServer;
 
     function patchConsole(consoleInst, methodName) {
       var descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
@@ -1205,8 +1139,7 @@ if (__DEV__) {
             // refer to previous logs in debug info to associate them with a component.
 
             var id = request.nextChunkId++;
-            var owner = ReactSharedInternals.owner;
-            emitConsoleChunk(request, id, methodName, owner, stack, arguments);
+            emitConsoleChunk(request, id, methodName, stack, arguments);
           } // $FlowFixMe[prop-missing]
 
           return originalMethod.apply(this, arguments);
@@ -1254,6 +1187,8 @@ if (__DEV__) {
 
     var SEEN_BUT_NOT_YET_OUTLINED = -1;
     var NEVER_OUTLINED = -2;
+    var ReactCurrentCache = ReactSharedServerInternals.ReactCurrentCache;
+    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
     function defaultErrorHandler(error) {
       console["error"](error); // Don't transform to our wrapper
@@ -1275,15 +1210,15 @@ if (__DEV__) {
       environmentName
     ) {
       if (
-        ReactSharedInternals.C !== null &&
-        ReactSharedInternals.C !== DefaultCacheDispatcher
+        ReactCurrentCache.current !== null &&
+        ReactCurrentCache.current !== DefaultCacheDispatcher
       ) {
         throw new Error(
           "Currently React only supports one RSC renderer at a time."
         );
       }
 
-      ReactSharedInternals.C = DefaultCacheDispatcher;
+      ReactCurrentCache.current = DefaultCacheDispatcher;
       var abortSet = new Set();
       var pingedTasks = [];
       var cleanupQueue = [];
@@ -1499,63 +1434,34 @@ if (__DEV__) {
       return lazyType;
     }
 
-    function renderFunctionComponent(
-      request,
-      task,
-      key,
-      Component,
-      props,
-      owner
-    ) {
+    function renderFunctionComponent(request, task, key, Component, props) {
       // Reset the task's thenable state before continuing, so that if a later
       // component suspends we can reuse the same task object. If the same
       // component suspends again, the thenable state will be restored.
       var prevThenableState = task.thenableState;
       task.thenableState = null;
-      var componentDebugInfo = null;
 
       {
         if (debugID === null) {
           // We don't have a chunk to assign debug info. We need to outline this
           // component to assign it an ID.
           return outlineTask(request, task);
-        } else if (prevThenableState !== null) {
-          // This is a replay and we've already emitted the debug info of this component
-          // in the first pass. We skip emitting a duplicate line.
-          // As a hack we stashed the previous component debug info on this object in DEV.
-          componentDebugInfo = prevThenableState._componentDebugInfo;
-        } else {
+        } else if (prevThenableState !== null);
+        else {
           // This is a new component in the same task so we can emit more debug info.
           var componentName = Component.displayName || Component.name || "";
           request.pendingChunks++;
-          var componentDebugID = debugID;
-          componentDebugInfo = {
+          emitDebugChunk(request, debugID, {
             name: componentName,
-            env: request.environmentName,
-            owner: owner
-          }; // We outline this model eagerly so that we can refer to by reference as an owner.
-          // If we had a smarter way to dedupe we might not have to do this if there ends up
-          // being no references to this as an owner.
-
-          outlineModel(request, componentDebugInfo);
-          emitDebugChunk(request, componentDebugID, componentDebugInfo);
+            env: request.environmentName
+          });
         }
       }
 
-      prepareToUseHooksForComponent(prevThenableState, componentDebugInfo); // The secondArg is always undefined in Server Components since refs error early.
+      prepareToUseHooksForComponent(prevThenableState); // The secondArg is always undefined in Server Components since refs error early.
 
       var secondArg = undefined;
-      var result;
-
-      {
-        ReactSharedInternals.owner = componentDebugInfo;
-
-        try {
-          result = Component(props, secondArg);
-        } finally {
-          ReactSharedInternals.owner = null;
-        }
-      }
+      var result = Component(props, secondArg);
 
       if (
         typeof result === "object" &&
@@ -1651,8 +1557,7 @@ if (__DEV__) {
       return children;
     }
 
-    function renderClientElement(task, type, key, props, owner) {
-      // DEV-only
+    function renderClientElement(task, type, key, props) {
       // the keys of any Server Components which are not serialized.
 
       var keyPath = task.keyPath;
@@ -1663,7 +1568,7 @@ if (__DEV__) {
         key = keyPath + "," + key;
       }
 
-      var element = [REACT_ELEMENT_TYPE, type, key, props, owner];
+      var element = [REACT_ELEMENT_TYPE, type, key, props];
 
       if (task.implicitSlot && key !== null) {
         // The root Server Component had no key so it was in an implicit slot.
@@ -1702,8 +1607,7 @@ if (__DEV__) {
       return serializeLazyID(newTask.id);
     }
 
-    function renderElement(request, task, type, key, ref, props, owner) {
-      // DEV only
+    function renderElement(request, task, type, key, ref, props) {
       if (ref !== null && ref !== undefined) {
         // When the ref moves to the regular props object this will implicitly
         // throw for functions. We could probably relax it to a DEV warning for other
@@ -1726,13 +1630,13 @@ if (__DEV__) {
       if (typeof type === "function") {
         if (isClientReference(type) || isTemporaryReference(type)) {
           // This is a reference to a Client Component.
-          return renderClientElement(task, type, key, props, owner);
+          return renderClientElement(task, type, key, props);
         } // This is a Server Component.
 
-        return renderFunctionComponent(request, task, key, type, props, owner);
+        return renderFunctionComponent(request, task, key, type, props);
       } else if (typeof type === "string") {
         // This is a host element. E.g. HTML.
-        return renderClientElement(task, type, key, props, owner);
+        return renderClientElement(task, type, key, props);
       } else if (typeof type === "symbol") {
         if (type === REACT_FRAGMENT_TYPE && key === null) {
           // For key-less fragments, we add a small optimization to avoid serializing
@@ -1755,11 +1659,11 @@ if (__DEV__) {
         } // This might be a built-in React component. We'll let the client decide.
         // Any built-in works as long as its props are serializable.
 
-        return renderClientElement(task, type, key, props, owner);
+        return renderClientElement(task, type, key, props);
       } else if (type != null && typeof type === "object") {
         if (isClientReference(type)) {
           // This is a reference to a Client Component.
-          return renderClientElement(task, type, key, props, owner);
+          return renderClientElement(task, type, key, props);
         }
 
         switch (type.$$typeof) {
@@ -1767,15 +1671,7 @@ if (__DEV__) {
             var payload = type._payload;
             var init = type._init;
             var wrappedType = init(payload);
-            return renderElement(
-              request,
-              task,
-              wrappedType,
-              key,
-              ref,
-              props,
-              owner
-            );
+            return renderElement(request, task, wrappedType, key, ref, props);
           }
 
           case REACT_FORWARD_REF_TYPE: {
@@ -1784,21 +1680,12 @@ if (__DEV__) {
               task,
               key,
               type.render,
-              props,
-              owner
+              props
             );
           }
 
           case REACT_MEMO_TYPE: {
-            return renderElement(
-              request,
-              task,
-              type.type,
-              key,
-              ref,
-              props,
-              owner
-            );
+            return renderElement(request, task, type.type, key, ref, props);
           }
         }
       }
@@ -2079,12 +1966,6 @@ if (__DEV__) {
       return "$Q" + id.toString(16);
     }
 
-    function serializeFormData(request, formData) {
-      var entries = Array.from(formData.entries());
-      var id = outlineModel(request, entries);
-      return "$K" + id.toString(16);
-    }
-
     function serializeSet(request, set) {
       var entries = Array.from(set);
 
@@ -2282,8 +2163,7 @@ if (__DEV__) {
               element.type, // $FlowFixMe[incompatible-call] the key of an element is null | string
               element.key,
               ref,
-              props,
-              element._owner
+              props
             );
           }
 
@@ -2391,10 +2271,6 @@ if (__DEV__) {
 
         if (value instanceof Set) {
           return serializeSet(request, value);
-        } // TODO: FormData is not available in old Node. Remove the typeof later.
-
-        if (typeof FormData === "function" && value instanceof FormData) {
-          return serializeFormData(request, value);
         }
 
         var iteratorFn = getIteratorFn(value);
@@ -2671,23 +2547,7 @@ if (__DEV__) {
     }
 
     function emitDebugChunk(request, id, debugInfo) {
-      // use the full serialization that requires a task.
-
-      var counter = {
-        objectCount: 0
-      };
-
-      function replacer(parentPropertyName, value) {
-        return renderConsoleValue(
-          request,
-          counter,
-          this,
-          parentPropertyName,
-          value
-        );
-      } // $FlowFixMe[incompatible-type] stringify can return null
-
-      var json = stringify(debugInfo, replacer);
+      var json = stringify(debugInfo);
       var row = serializeRowHeader("D", id) + json + "\n";
       var processedChunk = stringToChunk(row);
       request.completedRegularChunks.push(processedChunk);
@@ -2787,10 +2647,6 @@ if (__DEV__) {
 
         if (value instanceof Set) {
           return serializeSet(request, value);
-        } // TODO: FormData is not available in old Node. Remove the typeof later.
-
-        if (typeof FormData === "function" && value instanceof FormData) {
-          return serializeFormData(request, value);
         }
 
         var iteratorFn = getIteratorFn(value);
@@ -2900,14 +2756,7 @@ if (__DEV__) {
       return id;
     }
 
-    function emitConsoleChunk(
-      request,
-      id,
-      methodName,
-      owner,
-      stackTrace,
-      args
-    ) {
+    function emitConsoleChunk(request, id, methodName, stackTrace, args) {
       var counter = {
         objectCount: 0
       };
@@ -2927,7 +2776,7 @@ if (__DEV__) {
       } // TODO: Don't double badge if this log came from another Flight Client.
 
       var env = request.environmentName;
-      var payload = [methodName, stackTrace, owner, env]; // $FlowFixMe[method-unbinding]
+      var payload = [methodName, stackTrace, env]; // $FlowFixMe[method-unbinding]
 
       payload.push.apply(payload, args); // $FlowFixMe[incompatible-type] stringify can return null
 
@@ -3034,8 +2883,8 @@ if (__DEV__) {
     }
 
     function performWork(request) {
-      var prevDispatcher = ReactSharedInternals.H;
-      ReactSharedInternals.H = HooksDispatcher;
+      var prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = HooksDispatcher;
       var prevRequest = currentRequest;
       currentRequest = request;
       prepareToUseHooksForRequest(request);
@@ -3056,7 +2905,7 @@ if (__DEV__) {
         logRecoverableError(request, error);
         fatalError(request, error);
       } finally {
-        ReactSharedInternals.H = prevDispatcher;
+        ReactCurrentDispatcher.current = prevDispatcher;
         resetHooksForRequest();
         currentRequest = prevRequest;
       }

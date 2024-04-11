@@ -14,8 +14,9 @@
 var ReactDOM = require("react-dom");
 require("ReactFeatureFlags");
 var decoderOptions = { stream: !0 },
-  ReactDOMSharedInternals =
-    ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactDOMCurrentDispatcher;
 function resolveClientReference(moduleMap, metadata) {
   if ("function" === typeof moduleMap.resolveClientReference)
     return moduleMap.resolveClientReference(metadata);
@@ -190,7 +191,7 @@ function getChunk(response, id) {
     chunks.set(id, chunk));
   return chunk;
 }
-function createModelResolver(chunk, parentObject, key, cyclic, response, map) {
+function createModelResolver(chunk, parentObject, key, cyclic) {
   if (initializingChunkBlockedModel) {
     var blocked = initializingChunkBlockedModel;
     cyclic || blocked.deps++;
@@ -200,8 +201,8 @@ function createModelResolver(chunk, parentObject, key, cyclic, response, map) {
       value: null
     };
   return function (value) {
-    parentObject[key] = map(response, value);
-    "" === key && null === blocked.value && (blocked.value = parentObject[key]);
+    parentObject[key] = value;
+    "" === key && null === blocked.value && (blocked.value = value);
     blocked.deps--;
     0 === blocked.deps &&
       "blocked" === chunk.status &&
@@ -232,52 +233,18 @@ function createServerReferenceProxy(response, metaData) {
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }
-function getOutlinedModel(response, id, parentObject, key, map) {
-  id = getChunk(response, id);
-  switch (id.status) {
+function getOutlinedModel(response, id) {
+  response = getChunk(response, id);
+  switch (response.status) {
     case "resolved_model":
-      initializeModelChunk(id);
-      break;
-    case "resolved_module":
-      initializeModuleChunk(id);
+      initializeModelChunk(response);
   }
-  switch (id.status) {
+  switch (response.status) {
     case "fulfilled":
-      return map(response, id.value);
-    case "pending":
-    case "blocked":
-    case "cyclic":
-      var parentChunk = initializingChunk;
-      id.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          "cyclic" === id.status,
-          response,
-          map
-        ),
-        createModelReject(parentChunk)
-      );
-      return null;
+      return response.value;
     default:
-      throw id.reason;
+      throw response.reason;
   }
-}
-function createMap(response, model) {
-  return new Map(model);
-}
-function createSet(response, model) {
-  return new Set(model);
-}
-function createFormData(response, model) {
-  response = new FormData();
-  for (var i = 0; i < model.length; i++)
-    response.append(model[i][0], model[i][1]);
-  return response;
-}
-function createModel(response, model) {
-  return model;
 }
 function parseModelString(response, parentObject, key, value) {
   if ("$" === value[0]) {
@@ -299,14 +266,9 @@ function parseModelString(response, parentObject, key, value) {
         return Symbol.for(value.slice(2));
       case "F":
         return (
-          (value = parseInt(value.slice(2), 16)),
-          getOutlinedModel(
-            response,
-            value,
-            parentObject,
-            key,
-            createServerReferenceProxy
-          )
+          (parentObject = parseInt(value.slice(2), 16)),
+          (parentObject = getOutlinedModel(response, parentObject)),
+          createServerReferenceProxy(response, parentObject)
         );
       case "T":
         parentObject = parseInt(value.slice(2), 16);
@@ -322,20 +284,15 @@ function parseModelString(response, parentObject, key, value) {
         return response[parentObject];
       case "Q":
         return (
-          (value = parseInt(value.slice(2), 16)),
-          getOutlinedModel(response, value, parentObject, key, createMap)
+          (parentObject = parseInt(value.slice(2), 16)),
+          (response = getOutlinedModel(response, parentObject)),
+          new Map(response)
         );
       case "W":
         return (
-          (value = parseInt(value.slice(2), 16)),
-          getOutlinedModel(response, value, parentObject, key, createSet)
-        );
-      case "B":
-        return;
-      case "K":
-        return (
-          (value = parseInt(value.slice(2), 16)),
-          getOutlinedModel(response, value, parentObject, key, createFormData)
+          (parentObject = parseInt(value.slice(2), 16)),
+          (response = getOutlinedModel(response, parentObject)),
+          new Set(response)
         );
       case "I":
         return Infinity;
@@ -350,10 +307,37 @@ function parseModelString(response, parentObject, key, value) {
       case "n":
         return BigInt(value.slice(2));
       default:
-        return (
-          (value = parseInt(value.slice(1), 16)),
-          getOutlinedModel(response, value, parentObject, key, createModel)
-        );
+        value = parseInt(value.slice(1), 16);
+        response = getChunk(response, value);
+        switch (response.status) {
+          case "resolved_model":
+            initializeModelChunk(response);
+            break;
+          case "resolved_module":
+            initializeModuleChunk(response);
+        }
+        switch (response.status) {
+          case "fulfilled":
+            return response.value;
+          case "pending":
+          case "blocked":
+          case "cyclic":
+            return (
+              (value = initializingChunk),
+              response.then(
+                createModelResolver(
+                  value,
+                  parentObject,
+                  key,
+                  "cyclic" === response.status
+                ),
+                createModelReject(value)
+              ),
+              null
+            );
+          default:
+            throw response.reason;
+        }
     }
   }
   return value;
@@ -474,46 +458,46 @@ function startReadingFromStream(response, stream) {
               rowID = rowTag[0];
               rowTag = rowTag.slice(1);
               rowLength = JSON.parse(rowTag, rowLength._fromJSON);
-              rowTag = ReactDOMSharedInternals.d;
+              rowTag = ReactDOMCurrentDispatcher.current;
               switch (rowID) {
                 case "D":
-                  rowTag.D(rowLength);
+                  rowTag.prefetchDNS(rowLength);
                   break;
                 case "C":
                   "string" === typeof rowLength
-                    ? rowTag.C(rowLength)
-                    : rowTag.C(rowLength[0], rowLength[1]);
+                    ? rowTag.preconnect(rowLength)
+                    : rowTag.preconnect(rowLength[0], rowLength[1]);
                   break;
                 case "L":
                   rowID = rowLength[0];
                   i = rowLength[1];
                   3 === rowLength.length
-                    ? rowTag.L(rowID, i, rowLength[2])
-                    : rowTag.L(rowID, i);
+                    ? rowTag.preload(rowID, i, rowLength[2])
+                    : rowTag.preload(rowID, i);
                   break;
                 case "m":
                   "string" === typeof rowLength
-                    ? rowTag.m(rowLength)
-                    : rowTag.m(rowLength[0], rowLength[1]);
-                  break;
-                case "X":
-                  "string" === typeof rowLength
-                    ? rowTag.X(rowLength)
-                    : rowTag.X(rowLength[0], rowLength[1]);
+                    ? rowTag.preloadModule(rowLength)
+                    : rowTag.preloadModule(rowLength[0], rowLength[1]);
                   break;
                 case "S":
                   "string" === typeof rowLength
-                    ? rowTag.S(rowLength)
-                    : rowTag.S(
+                    ? rowTag.preinitStyle(rowLength)
+                    : rowTag.preinitStyle(
                         rowLength[0],
                         0 === rowLength[1] ? void 0 : rowLength[1],
                         3 === rowLength.length ? rowLength[2] : void 0
                       );
                   break;
+                case "X":
+                  "string" === typeof rowLength
+                    ? rowTag.preinitScript(rowLength)
+                    : rowTag.preinitScript(rowLength[0], rowLength[1]);
+                  break;
                 case "M":
                   "string" === typeof rowLength
-                    ? rowTag.M(rowLength)
-                    : rowTag.M(rowLength[0], rowLength[1]);
+                    ? rowTag.preinitModuleScript(rowLength)
+                    : rowTag.preinitModuleScript(rowLength[0], rowLength[1]);
               }
               break;
             case 69:

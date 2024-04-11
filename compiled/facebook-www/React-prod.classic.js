@@ -87,8 +87,17 @@ var isArrayImpl = Array.isArray,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  ReactSharedInternals = { H: null, C: null, T: null, owner: null },
-  hasOwnProperty = Object.prototype.hasOwnProperty;
+  ReactCurrentDispatcher = { current: null },
+  ReactCurrentCache = { current: null },
+  ReactCurrentBatchConfig = { transition: null },
+  ReactSharedInternals = {
+    ReactCurrentDispatcher: ReactCurrentDispatcher,
+    ReactCurrentCache: ReactCurrentCache,
+    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
+    ReactCurrentOwner: { current: null }
+  },
+  hasOwnProperty = Object.prototype.hasOwnProperty,
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   enableRefAsProp &&
     ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
@@ -102,39 +111,29 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
   };
 }
 function jsxProd(type, config, maybeKey) {
-  var key = null,
+  var propName,
+    props = {},
+    key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 === config.ref ||
-    enableRefAsProp ||
-    ((ref = config.ref),
-    (ref = coerceStringRef(ref, ReactSharedInternals.owner, type)));
-  maybeKey = {};
-  for (var propName in config)
-    "key" === propName ||
-      (!enableRefAsProp && "ref" === propName) ||
-      (enableRefAsProp && "ref" === propName
-        ? (maybeKey.ref = coerceStringRef(
-            config[propName],
-            ReactSharedInternals.owner,
-            type
-          ))
-        : (maybeKey[propName] = config[propName]));
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-    config = type.defaultProps;
-    for (var propName$0 in config)
-      void 0 === maybeKey[propName$0] &&
-        (maybeKey[propName$0] = config[propName$0]);
-  }
+  void 0 === config.ref || enableRefAsProp || (ref = config.ref);
+  for (propName in config)
+    hasOwnProperty.call(config, propName) &&
+      "key" !== propName &&
+      (enableRefAsProp || "ref" !== propName) &&
+      (props[propName] = config[propName]);
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
+    for (propName in ((config = type.defaultProps), config))
+      void 0 === props[propName] && (props[propName] = config[propName]);
   return ReactElement(
     type,
     key,
     ref,
     void 0,
     void 0,
-    ReactSharedInternals.owner,
-    maybeKey
+    ReactCurrentOwner.current,
+    props
   );
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -154,34 +153,6 @@ function isValidElement(object) {
     null !== object &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
-}
-function coerceStringRef(mixedRef, owner, type) {
-  if ("string" !== typeof mixedRef)
-    if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
-      mixedRef = "" + mixedRef;
-    else return mixedRef;
-  return stringRefAsCallbackRef.bind(null, mixedRef, type, owner);
-}
-function stringRefAsCallbackRef(stringRef, type, owner, value) {
-  if (!owner)
-    throw Error(
-      "Element ref was specified as a string (" +
-        stringRef +
-        ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
-    );
-  if (1 !== owner.tag)
-    throw Error(
-      "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
-    );
-  type = owner.stateNode;
-  if (!type)
-    throw Error(
-      "Missing owner for string ref " +
-        stringRef +
-        ". This error is likely caused by a bug in React. Please file an issue."
-    );
-  type = type.refs;
-  null === value ? delete type[stringRef] : (type[stringRef] = value);
 }
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
@@ -436,7 +407,7 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
+exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.act = function () {
   throw Error("act(...) is not supported in production builds of React.");
@@ -457,10 +428,8 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((owner = ReactSharedInternals.owner),
-      enableRefAsProp ||
-        ((ref = config.ref),
-        (ref = coerceStringRef(ref, owner, element.type))));
+      (enableRefAsProp || (ref = config.ref),
+      (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -475,17 +444,12 @@ exports.cloneElement = function (element, config, children) {
         "__self" === propName ||
         "__source" === propName ||
         (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
-        (disableDefaultPropsExceptForClasses ||
-        void 0 !== config[propName] ||
-        void 0 === defaultProps
-          ? enableRefAsProp && "ref" === propName
-            ? (props.ref = coerceStringRef(
-                config[propName],
-                owner,
-                element.type
-              ))
-            : (props[propName] = config[propName])
-          : (props[propName] = defaultProps[propName]));
+        (props[propName] =
+          disableDefaultPropsExceptForClasses ||
+          void 0 !== config[propName] ||
+          void 0 === defaultProps
+            ? config[propName]
+            : defaultProps[propName]);
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -526,8 +490,7 @@ exports.createElement = function (type, config, children) {
   if (null != config)
     for (propName in (void 0 === config.ref ||
       enableRefAsProp ||
-      ((ref = config.ref),
-      (ref = coerceStringRef(ref, ReactSharedInternals.owner, type))),
+      (ref = config.ref),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -535,13 +498,7 @@ exports.createElement = function (type, config, children) {
         (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
-        (enableRefAsProp && "ref" === propName
-          ? (props.ref = coerceStringRef(
-              config[propName],
-              ReactSharedInternals.owner,
-              type
-            ))
-          : (props[propName] = config[propName]));
+        (props[propName] = config[propName]);
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
   else if (1 < childrenLength) {
@@ -559,7 +516,7 @@ exports.createElement = function (type, config, children) {
     ref,
     void 0,
     void 0,
-    ReactSharedInternals.owner,
+    ReactCurrentOwner.current,
     props
   );
 };
@@ -567,7 +524,7 @@ exports.createRef = function () {
   return { current: null };
 };
 exports.experimental_useEffectEvent = function (callback) {
-  return ReactSharedInternals.H.useEffectEvent(callback);
+  return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -591,15 +548,15 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope, options) {
-  var prevTransition = ReactSharedInternals.T,
+  var prevTransition = ReactCurrentBatchConfig.transition,
     callbacks = new Set();
-  ReactSharedInternals.T = { _callbacks: callbacks };
-  var currentTransition = ReactSharedInternals.T;
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
-    ((ReactSharedInternals.T.name = options.name),
-    (ReactSharedInternals.T.startTime = -1));
+    ((ReactCurrentBatchConfig.transition.name = options.name),
+    (ReactCurrentBatchConfig.transition.startTime = -1));
   try {
     var returnValue = scope();
     "object" === typeof returnValue &&
@@ -612,7 +569,7 @@ exports.startTransition = function (scope, options) {
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    ReactSharedInternals.T = prevTransition;
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
@@ -622,73 +579,77 @@ exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_getCacheForType = function (resourceType) {
-  var dispatcher = ReactSharedInternals.C;
+  var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
 exports.unstable_useCacheRefresh = function () {
-  return ReactSharedInternals.H.useCacheRefresh();
+  return ReactCurrentDispatcher.current.useCacheRefresh();
 };
 exports.unstable_useMemoCache = function (size) {
-  return ReactSharedInternals.H.useMemoCache(size);
+  return ReactCurrentDispatcher.current.useMemoCache(size);
 };
 exports.use = function (usable) {
-  return ReactSharedInternals.H.use(usable);
+  return ReactCurrentDispatcher.current.use(usable);
 };
 exports.useActionState = function (action, initialState, permalink) {
-  return ReactSharedInternals.H.useActionState(action, initialState, permalink);
+  return ReactCurrentDispatcher.current.useActionState(
+    action,
+    initialState,
+    permalink
+  );
 };
 exports.useCallback = function (callback, deps) {
-  return ReactSharedInternals.H.useCallback(callback, deps);
+  return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
 exports.useContext = function (Context) {
-  return ReactSharedInternals.H.useContext(Context);
+  return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
 exports.useDeferredValue = function (value, initialValue) {
-  return ReactSharedInternals.H.useDeferredValue(value, initialValue);
+  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
 };
 exports.useEffect = function (create, deps) {
-  return ReactSharedInternals.H.useEffect(create, deps);
+  return ReactCurrentDispatcher.current.useEffect(create, deps);
 };
 exports.useId = function () {
-  return ReactSharedInternals.H.useId();
+  return ReactCurrentDispatcher.current.useId();
 };
 exports.useImperativeHandle = function (ref, create, deps) {
-  return ReactSharedInternals.H.useImperativeHandle(ref, create, deps);
+  return ReactCurrentDispatcher.current.useImperativeHandle(ref, create, deps);
 };
 exports.useInsertionEffect = function (create, deps) {
-  return ReactSharedInternals.H.useInsertionEffect(create, deps);
+  return ReactCurrentDispatcher.current.useInsertionEffect(create, deps);
 };
 exports.useLayoutEffect = function (create, deps) {
-  return ReactSharedInternals.H.useLayoutEffect(create, deps);
+  return ReactCurrentDispatcher.current.useLayoutEffect(create, deps);
 };
 exports.useMemo = function (create, deps) {
-  return ReactSharedInternals.H.useMemo(create, deps);
+  return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
 exports.useOptimistic = function (passthrough, reducer) {
-  return ReactSharedInternals.H.useOptimistic(passthrough, reducer);
+  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
 };
 exports.useReducer = function (reducer, initialArg, init) {
-  return ReactSharedInternals.H.useReducer(reducer, initialArg, init);
+  return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
 };
 exports.useRef = function (initialValue) {
-  return ReactSharedInternals.H.useRef(initialValue);
+  return ReactCurrentDispatcher.current.useRef(initialValue);
 };
 exports.useState = function (initialState) {
-  return ReactSharedInternals.H.useState(initialState);
+  return ReactCurrentDispatcher.current.useState(initialState);
 };
 exports.useSyncExternalStore = function (
   subscribe,
   getSnapshot,
   getServerSnapshot
 ) {
-  return ReactSharedInternals.H.useSyncExternalStore(
+  return ReactCurrentDispatcher.current.useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   );
 };
 exports.useTransition = function () {
-  return ReactSharedInternals.H.useTransition();
+  return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "19.0.0-www-classic-0eabe82a";
+exports.version = "19.0.0-www-classic-6f7d270a";
