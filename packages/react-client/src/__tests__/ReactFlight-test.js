@@ -2068,6 +2068,147 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>Ba</div>);
   });
 
+  it('shares state when moving keyed Server Components that render fragments', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return <span>{state}</span>;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function ServerComponent({item, initial}) {
+      return [
+        <Stateful key="a" initial={'a' + initial} />,
+        <Stateful key="b" initial={'b' + initial} />,
+      ];
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      <div>
+        <ServerComponent key="A" initial={1} />
+        <ServerComponent key="B" initial={2} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>a1</span>
+        <span>b1</span>
+        <span>a2</span>
+        <span>b2</span>
+      </div>,
+    );
+
+    // We swap the Server Components and the state of each child inside each fragment should move.
+    // Really the Fragment itself moves.
+    const transport2 = ReactNoopFlightServer.render(
+      <div>
+        <ServerComponent key="B" initial={4} />
+        <ServerComponent key="A" initial={3} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>a2</span>
+        <span>b2</span>
+        <span>a1</span>
+        <span>b1</span>
+      </div>,
+    );
+  });
+
+  it('shares state when moving keyed Server Components that render async iterables', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return <span>{state}</span>;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function ServerComponent({item, initial}) {
+      // While the ServerComponent itself could be an async generator, single-shot iterables
+      // are not supported as React children since React might need to re-map them based on
+      // state updates. So we create an AsyncIterable instead.
+      return {
+        async *[Symbol.asyncIterator]() {
+          yield <Stateful key="a" initial={'a' + initial} />;
+          yield <Stateful key="b" initial={'b' + initial} />;
+        },
+      };
+    }
+
+    function ListClient({children}) {
+      // TODO: Unwrap AsyncIterables natively in React. For now we do it in this wrapper.
+      let resolvedChildren = [];
+      for (let fragment of children) {
+        // We should've wrapped each child in a keyed Fragment.
+        expect(fragment.type).toBe(React.Fragment);
+        let fragmentChildren = [];
+        const iterator = fragment.props.children[Symbol.asyncIterator]();
+        for (let entry; !(entry = React.use(iterator.next())).done; ) {
+          fragmentChildren.push(entry.value);
+        }
+        resolvedChildren.push(
+          <React.Fragment key={fragment.key}>
+            {fragmentChildren}
+          </React.Fragment>,
+        );
+      }
+      return <div>{resolvedChildren}</div>;
+    }
+
+    const List = clientReference(ListClient);
+
+    const transport = ReactNoopFlightServer.render(
+      <List>
+        <ServerComponent key="A" initial={1} />
+        <ServerComponent key="B" initial={2} />
+      </List>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>a1</span>
+        <span>b1</span>
+        <span>a2</span>
+        <span>b2</span>
+      </div>,
+    );
+
+    // We swap the Server Components and the state of each child inside each fragment should move.
+    // Really the Fragment itself moves.
+    const transport2 = ReactNoopFlightServer.render(
+      <List>
+        <ServerComponent key="B" initial={4} />
+        <ServerComponent key="A" initial={3} />
+      </List>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>a2</span>
+        <span>b2</span>
+        <span>a1</span>
+        <span>b1</span>
+      </div>,
+    );
+  });
+
   it('preserves debug info for server-to-server pass through', async () => {
     function ThirdPartyLazyComponent() {
       return <span>!</span>;
