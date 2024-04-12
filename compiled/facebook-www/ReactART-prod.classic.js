@@ -3937,7 +3937,7 @@ function resolveClassComponentProps(
     (Component = Component.defaultProps) &&
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
+    newProps === baseProps && (newProps = assign({}, newProps));
     for (var propName$36 in Component)
       void 0 === newProps[propName$36] &&
         (newProps[propName$36] = Component[propName$36]);
@@ -10619,7 +10619,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-ce4ebc75",
+    version: "19.0.0-www-classic-e5fcf28b",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1322 = {
@@ -10650,7 +10650,7 @@ var internals$jscomp$inline_1322 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-ce4ebc75"
+  reconcilerVersion: "19.0.0-www-classic-e5fcf28b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
