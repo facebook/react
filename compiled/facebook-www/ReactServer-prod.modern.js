@@ -17,13 +17,7 @@ var assign = Object.assign,
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  ReactCurrentCache = { current: null },
-  ReactCurrentDispatcher = { current: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentOwner: { current: null }
-  },
-  ReactServerSharedInternals = { ReactCurrentCache: ReactCurrentCache };
+  ReactSharedInternals = { H: null, C: null, owner: null };
 function formatProdErrorMessage(code) {
   var url = "https://react.dev/errors/" + code;
   if (1 < arguments.length) {
@@ -57,8 +51,7 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   enableRefAsProp &&
     ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
@@ -72,29 +65,39 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
   };
 }
 function jsxProd(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
+  var key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 === config.ref || enableRefAsProp || (ref = config.ref);
-  for (propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      (enableRefAsProp || "ref" !== propName) &&
-      (props[propName] = config[propName]);
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
+  void 0 === config.ref ||
+    enableRefAsProp ||
+    ((ref = config.ref),
+    (ref = coerceStringRef(ref, ReactSharedInternals.owner, type)));
+  maybeKey = {};
+  for (var propName in config)
+    "key" === propName ||
+      (!enableRefAsProp && "ref" === propName) ||
+      (enableRefAsProp && "ref" === propName
+        ? (maybeKey.ref = coerceStringRef(
+            config[propName],
+            ReactSharedInternals.owner,
+            type
+          ))
+        : (maybeKey[propName] = config[propName]));
+  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
+    config = type.defaultProps;
+    for (var propName$0 in config)
+      void 0 === maybeKey[propName$0] &&
+        (maybeKey[propName$0] = config[propName$0]);
+  }
   return ReactElement(
     type,
     key,
     ref,
     void 0,
     void 0,
-    ReactCurrentOwner.current,
-    props
+    ReactSharedInternals.owner,
+    maybeKey
   );
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -114,6 +117,25 @@ function isValidElement(object) {
     null !== object &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+function coerceStringRef(mixedRef, owner, type) {
+  if ("string" !== typeof mixedRef)
+    if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
+      mixedRef = "" + mixedRef;
+    else return mixedRef;
+  var callback = stringRefAsCallbackRef.bind(null, mixedRef, type, owner);
+  callback.__stringRef = mixedRef;
+  callback.__type = type;
+  callback.__owner = owner;
+  return callback;
+}
+function stringRefAsCallbackRef(stringRef, type, owner, value) {
+  if (!owner) throw Error(formatProdErrorMessage(290, stringRef));
+  if (1 !== owner.tag) throw Error(formatProdErrorMessage(309));
+  type = owner.stateNode;
+  if (!type) throw Error(formatProdErrorMessage(147, stringRef));
+  type = type.refs;
+  null === value ? delete type[stringRef] : (type[stringRef] = value);
 }
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
@@ -306,36 +328,35 @@ function createCacheRoot() {
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentBatchConfig = { transition: null },
-  reportGlobalError =
-    "function" === typeof reportError
-      ? reportError
-      : function (error) {
-          if (
-            "object" === typeof window &&
-            "function" === typeof window.ErrorEvent
-          ) {
-            var event = new window.ErrorEvent("error", {
-              bubbles: !0,
-              cancelable: !0,
-              message:
-                "object" === typeof error &&
-                null !== error &&
-                "string" === typeof error.message
-                  ? String(error.message)
-                  : String(error),
-              error: error
-            });
-            if (!window.dispatchEvent(event)) return;
-          } else if (
-            "object" === typeof process &&
-            "function" === typeof process.emit
-          ) {
-            process.emit("uncaughtException", error);
-            return;
-          }
-          console.error(error);
-        };
+var reportGlobalError =
+  "function" === typeof reportError
+    ? reportError
+    : function (error) {
+        if (
+          "object" === typeof window &&
+          "function" === typeof window.ErrorEvent
+        ) {
+          var event = new window.ErrorEvent("error", {
+            bubbles: !0,
+            cancelable: !0,
+            message:
+              "object" === typeof error &&
+              null !== error &&
+              "string" === typeof error.message
+                ? String(error.message)
+                : String(error),
+            error: error
+          });
+          if (!window.dispatchEvent(event)) return;
+        } else if (
+          "object" === typeof process &&
+          "function" === typeof process.emit
+        ) {
+          process.emit("uncaughtException", error);
+          return;
+        }
+        console.error(error);
+      };
 function noop() {}
 exports.Children = {
   map: mapChildren,
@@ -371,13 +392,11 @@ exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.Profiler = REACT_PROFILER_TYPE;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+exports.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
   ReactSharedInternals;
-exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
-  ReactServerSharedInternals;
 exports.cache = function (fn) {
   return function () {
-    var dispatcher = ReactCurrentCache.current;
+    var dispatcher = ReactSharedInternals.C;
     if (!dispatcher) return fn.apply(null, arguments);
     var fnMap = dispatcher.getCacheForType(createCacheRoot);
     dispatcher = fnMap.get(fn);
@@ -424,8 +443,10 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      (enableRefAsProp || (ref = config.ref),
-      (owner = ReactCurrentOwner.current));
+      ((owner = ReactSharedInternals.owner),
+      enableRefAsProp ||
+        ((ref = config.ref),
+        (ref = coerceStringRef(ref, owner, element.type))));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -440,12 +461,17 @@ exports.cloneElement = function (element, config, children) {
         "__self" === propName ||
         "__source" === propName ||
         (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
-        (props[propName] =
-          disableDefaultPropsExceptForClasses ||
-          void 0 !== config[propName] ||
-          void 0 === defaultProps
-            ? config[propName]
-            : defaultProps[propName]);
+        (disableDefaultPropsExceptForClasses ||
+        void 0 !== config[propName] ||
+        void 0 === defaultProps
+          ? enableRefAsProp && "ref" === propName
+            ? (props.ref = coerceStringRef(
+                config[propName],
+                owner,
+                element.type
+              ))
+            : (props[propName] = config[propName])
+          : (props[propName] = defaultProps[propName]));
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -464,7 +490,8 @@ exports.createElement = function (type, config, children) {
   if (null != config)
     for (propName in (void 0 === config.ref ||
       enableRefAsProp ||
-      (ref = config.ref),
+      ((ref = config.ref),
+      (ref = coerceStringRef(ref, ReactSharedInternals.owner, type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -472,7 +499,13 @@ exports.createElement = function (type, config, children) {
         (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
-        (props[propName] = config[propName]);
+        (enableRefAsProp && "ref" === propName
+          ? (props.ref = coerceStringRef(
+              config[propName],
+              ReactSharedInternals.owner,
+              type
+            ))
+          : (props[propName] = config[propName]));
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
   else if (1 < childrenLength) {
@@ -490,7 +523,7 @@ exports.createElement = function (type, config, children) {
     ref,
     void 0,
     void 0,
-    ReactCurrentOwner.current,
+    ReactSharedInternals.owner,
     props
   );
 };
@@ -519,15 +552,15 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope, options) {
-  var prevTransition = ReactCurrentBatchConfig.transition,
+  var prevTransition = ReactSharedInternals.T,
     callbacks = new Set();
-  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
-  var currentTransition = ReactCurrentBatchConfig.transition;
+  ReactSharedInternals.T = { _callbacks: callbacks };
+  var currentTransition = ReactSharedInternals.T;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
-    ((ReactCurrentBatchConfig.transition.name = options.name),
-    (ReactCurrentBatchConfig.transition.startTime = -1));
+    ((ReactSharedInternals.T.name = options.name),
+    (ReactSharedInternals.T.startTime = -1));
   try {
     var returnValue = scope();
     "object" === typeof returnValue &&
@@ -540,27 +573,23 @@ exports.startTransition = function (scope, options) {
   } catch (error) {
     reportGlobalError(error);
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 };
 exports.use = function (usable) {
-  return ReactCurrentDispatcher.current.use(usable);
+  return ReactSharedInternals.H.use(usable);
 };
 exports.useActionState = function (action, initialState, permalink) {
-  return ReactCurrentDispatcher.current.useActionState(
-    action,
-    initialState,
-    permalink
-  );
+  return ReactSharedInternals.H.useActionState(action, initialState, permalink);
 };
 exports.useCallback = function (callback, deps) {
-  return ReactCurrentDispatcher.current.useCallback(callback, deps);
+  return ReactSharedInternals.H.useCallback(callback, deps);
 };
 exports.useDebugValue = function () {};
 exports.useId = function () {
-  return ReactCurrentDispatcher.current.useId();
+  return ReactSharedInternals.H.useId();
 };
 exports.useMemo = function (create, deps) {
-  return ReactCurrentDispatcher.current.useMemo(create, deps);
+  return ReactSharedInternals.H.useMemo(create, deps);
 };
-exports.version = "19.0.0-www-modern-53e0c063";
+exports.version = "19.0.0-www-modern-31a64bca";

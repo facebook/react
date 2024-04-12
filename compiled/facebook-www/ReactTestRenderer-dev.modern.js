@@ -62,12 +62,10 @@ if (__DEV__) {
         var React = require("react");
 
         var ReactSharedInternals =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
 
         if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
+          var stack = ReactSharedInternals.getStackAddendum();
 
           if (stack !== "") {
             format += "%s";
@@ -114,6 +112,9 @@ if (__DEV__) {
 
     var assign = Object.assign;
 
+    var LegacyRoot = 0;
+    var ConcurrentRoot = 1;
+
     /**
      * `ReactInstanceMap` maintains a mapping from a public facing stateful
      * instance (key) and the internal representation (value). This allows public
@@ -131,7 +132,7 @@ if (__DEV__) {
     }
 
     var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var debugRenderPhaseSideEffectsForStrictMode = false;
     var enableSchedulingProfiler = false;
@@ -346,6 +347,17 @@ if (__DEV__) {
       return type.displayName || "Context";
     }
 
+    function getComponentNameFromOwner(owner) {
+      if (typeof owner.tag === "number") {
+        return getComponentNameFromFiber(owner);
+      }
+
+      if (typeof owner.name === "string") {
+        return owner.name;
+      }
+
+      return null;
+    }
     function getComponentNameFromFiber(fiber) {
       var tag = fiber.tag,
         type = fiber.type;
@@ -500,6 +512,7 @@ if (__DEV__) {
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
     var DidDefer = ContentReset;
+    var FormReset = Snapshot;
     var LifecycleEffectMask =
       Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -558,7 +571,8 @@ if (__DEV__) {
       ContentReset |
       Ref |
       Hydrating |
-      Visibility;
+      Visibility |
+      FormReset;
     var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
 
     var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
@@ -568,7 +582,6 @@ if (__DEV__) {
     var StaticMask =
       LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
 
-    var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
     function getNearestMountedFiber(fiber) {
       var node = fiber;
       var nearestMounted = fiber;
@@ -610,7 +623,7 @@ if (__DEV__) {
     }
     function isMounted(component) {
       {
-        var owner = ReactCurrentOwner$2.current;
+        var owner = ReactSharedInternals.owner;
 
         if (owner !== null && owner.tag === ClassComponent) {
           var ownerFiber = owner;
@@ -1973,17 +1986,11 @@ if (__DEV__) {
       }
     }
 
+    var NoEventPriority = NoLane;
     var DiscreteEventPriority = SyncLane;
     var ContinuousEventPriority = InputContinuousLane;
     var DefaultEventPriority = DefaultLane;
     var IdleEventPriority = IdleLane;
-    var currentUpdatePriority = NoLane;
-    function getCurrentUpdatePriority() {
-      return currentUpdatePriority;
-    }
-    function setCurrentUpdatePriority(newPriority) {
-      currentUpdatePriority = newPriority;
-    }
     function higherEventPriority(a, b) {
       return a !== 0 && a < b ? a : b;
     }
@@ -1992,6 +1999,9 @@ if (__DEV__) {
     }
     function isHigherEventPriority(a, b) {
       return a !== 0 && a < b;
+    }
+    function eventPriorityToLane(updatePriority) {
+      return updatePriority;
     }
     function lanesToEventPriority(lanes) {
       var lane = getHighestPriorityLane(lanes);
@@ -2150,7 +2160,18 @@ if (__DEV__) {
         tag: "TEXT"
       };
     }
-    function getCurrentEventPriority() {
+    var currentUpdatePriority = NoEventPriority;
+    function setCurrentUpdatePriority(newPriority) {
+      currentUpdatePriority = newPriority;
+    }
+    function getCurrentUpdatePriority() {
+      return currentUpdatePriority;
+    }
+    function resolveUpdatePriority() {
+      if (currentUpdatePriority !== NoEventPriority) {
+        return currentUpdatePriority;
+      }
+
       return DefaultEventPriority;
     }
     function shouldAttemptEagerTransition() {
@@ -2531,9 +2552,6 @@ if (__DEV__) {
       }
     }
 
-    var LegacyRoot = 0;
-    var ConcurrentRoot = 1;
-
     // We use the existence of the state object as an indicator that the component
     // is hidden.
     var OffscreenVisible =
@@ -2564,9 +2582,8 @@ if (__DEV__) {
 
     var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
 
-    var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, ownerFn) {
+    function describeBuiltInComponentFrame(name) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -2623,13 +2640,13 @@ if (__DEV__) {
       var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
       Error.prepareStackTrace = undefined;
-      var previousDispatcher;
+      var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactCurrentDispatcher$2.current; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactCurrentDispatcher$2.current = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -2822,7 +2839,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactCurrentDispatcher$2.current = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -2841,12 +2858,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor, ownerFn) {
+    function describeClassComponentFrame(ctor) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn, ownerFn) {
+    function describeFunctionComponentFrame(fn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -4039,7 +4056,6 @@ if (__DEV__) {
       }
     }
 
-    var ReactCurrentActQueue$4 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
     // there's only a single root, but we do support multi root apps, hence this
     // extra complexity. But this module is optimized for the single root case.
 
@@ -4078,7 +4094,7 @@ if (__DEV__) {
       mightHavePendingSyncWork = true; // At the end of the current event, go through each of the roots and ensure
       // there's a task scheduled for each one at the correct priority.
 
-      if (ReactCurrentActQueue$4.current !== null) {
+      if (ReactSharedInternals.actQueue !== null) {
         // We're inside an `act` scope.
         if (!didScheduleMicrotask_act) {
           didScheduleMicrotask_act = true;
@@ -4091,9 +4107,9 @@ if (__DEV__) {
         }
       }
 
-      if (ReactCurrentActQueue$4.isBatchingLegacy && root.tag === LegacyRoot) {
+      if (ReactSharedInternals.isBatchingLegacy && root.tag === LegacyRoot) {
         // Special `act` case: Record whenever a legacy update is scheduled.
-        ReactCurrentActQueue$4.didScheduleLegacyUpdate = true;
+        ReactSharedInternals.didScheduleLegacyUpdate = true;
       }
     }
     function flushSyncWorkOnAllRoots() {
@@ -4284,7 +4300,7 @@ if (__DEV__) {
           // Scheduler task, rather than an `act` task, cancel it and re-schedule
           // on the `act` queue.
           !(
-            ReactCurrentActQueue$4.current !== null &&
+            ReactSharedInternals.actQueue !== null &&
             existingCallbackNode !== fakeActCallbackNode$1
           )
         ) {
@@ -4351,11 +4367,11 @@ if (__DEV__) {
     var fakeActCallbackNode$1 = {};
 
     function scheduleCallback$2(priorityLevel, callback) {
-      if (ReactCurrentActQueue$4.current !== null) {
+      if (ReactSharedInternals.actQueue !== null) {
         // Special case: We're inside an `act` scope (a testing utility).
         // Instead of scheduling work in the host environment, add it to a
         // fake internal queue that's managed by the `act` implementation.
-        ReactCurrentActQueue$4.current.push(callback);
+        ReactSharedInternals.actQueue.push(callback);
         return fakeActCallbackNode$1;
       } else {
         return scheduleCallback$3(priorityLevel, callback);
@@ -4370,13 +4386,13 @@ if (__DEV__) {
     }
 
     function scheduleImmediateTask(cb) {
-      if (ReactCurrentActQueue$4.current !== null) {
+      if (ReactSharedInternals.actQueue !== null) {
         // Special case: Inside an `act` scope, we push microtasks to the fake `act`
         // callback queue. This is because we currently support calling `act`
         // without awaiting the result. The plan is to deprecate that, and require
         // that you always await the result so that the microtasks have a chance to
         // run. But it hasn't happened yet.
-        ReactCurrentActQueue$4.current.push(function () {
+        ReactSharedInternals.actQueue.push(function () {
           cb();
           return null;
         });
@@ -5148,7 +5164,6 @@ if (__DEV__) {
       return true;
     }
 
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var current = null;
     var isRendering = false;
     function getCurrentFiberOwnerNameInDevOrNull() {
@@ -5159,8 +5174,8 @@ if (__DEV__) {
 
         var owner = current._debugOwner;
 
-        if (owner !== null && typeof owner !== "undefined") {
-          return getComponentNameFromFiber(owner);
+        if (owner != null) {
+          return getComponentNameFromOwner(owner);
         }
       }
 
@@ -5180,14 +5195,14 @@ if (__DEV__) {
 
     function resetCurrentFiber() {
       {
-        ReactDebugCurrentFrame.getCurrentStack = null;
+        ReactSharedInternals.getCurrentStack = null;
         current = null;
         isRendering = false;
       }
     }
     function setCurrentFiber(fiber) {
       {
-        ReactDebugCurrentFrame.getCurrentStack =
+        ReactSharedInternals.getCurrentStack =
           fiber === null ? null : getCurrentFiberStackInDev;
         current = fiber;
         isRendering = false;
@@ -5562,83 +5577,6 @@ if (__DEV__) {
       };
     }
 
-    /*
-     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-        var type =
-          (hasToStringTag && value[Symbol.toStringTag]) ||
-          value.constructor.name ||
-          "Object"; // $FlowFixMe[incompatible-return]
-
-        return type;
-      }
-    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
-    }
-
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return "" + value;
-    }
-    function checkPropStringCoercion(value, propName) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided `%s` prop is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            propName,
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-
-    var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue;
-
     function getThenablesFromState(state) {
       {
         var devState = state;
@@ -5692,8 +5630,8 @@ if (__DEV__) {
     function noop() {}
 
     function trackUsedThenable(thenableState, thenable, index) {
-      if (ReactCurrentActQueue$3.current !== null) {
-        ReactCurrentActQueue$3.didUsePromise = true;
+      if (ReactSharedInternals.actQueue !== null) {
+        ReactSharedInternals.didUsePromise = true;
       }
 
       var trackedThenables = getThenablesFromState(thenableState);
@@ -5916,7 +5854,6 @@ if (__DEV__) {
 
     var didWarnAboutMaps;
     var didWarnAboutGenerators;
-    var didWarnAboutStringRefs;
     var ownerHasKeyUseWarning;
     var ownerHasFunctionTypeWarning;
     var ownerHasSymbolTypeWarning;
@@ -5926,7 +5863,6 @@ if (__DEV__) {
     {
       didWarnAboutMaps = false;
       didWarnAboutGenerators = false;
-      didWarnAboutStringRefs = {};
       /**
        * Warn if there's no key explicitly set on dynamic arrays of children or
        * object keys are not valid. This allows us to keep track of children between
@@ -5971,10 +5907,6 @@ if (__DEV__) {
       };
     }
 
-    function isReactClass(type) {
-      return type.prototype && type.prototype.isReactComponent;
-    }
-
     function unwrapThenable(thenable) {
       var index = thenableIndexCounter$1;
       thenableIndexCounter$1 += 1;
@@ -5986,128 +5918,16 @@ if (__DEV__) {
       return trackUsedThenable(thenableState$1, thenable, index);
     }
 
-    function convertStringRefToCallbackRef(
-      returnFiber,
-      current,
-      element,
-      mixedRef
-    ) {
-      {
-        checkPropStringCoercion(mixedRef, "ref");
-      }
-
-      var stringRef = "" + mixedRef;
-      var owner = element._owner;
-
-      if (!owner) {
-        throw new Error(
-          "Element ref was specified as a string (" +
-            stringRef +
-            ") but no owner was set. This could happen for one of" +
-            " the following reasons:\n" +
-            "1. You may be adding a ref to a function component\n" +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            "3. You have multiple copies of React loaded\n" +
-            "See https://react.dev/link/refs-must-have-owner for more information."
-        );
-      }
-
-      if (owner.tag !== ClassComponent) {
-        throw new Error(
-          "Function components cannot have string refs. " +
-            "We recommend using useRef() instead. " +
-            "Learn more about using refs safely here: " +
-            "https://react.dev/link/strict-mode-string-ref"
-        );
-      }
-
-      {
-        if (
-          // Will already warn with "Function components cannot be given refs"
-          !(typeof element.type === "function" && !isReactClass(element.type))
-        ) {
-          var componentName =
-            getComponentNameFromFiber(returnFiber) || "Component";
-
-          if (!didWarnAboutStringRefs[componentName]) {
-            error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                "will be removed in a future major release. We recommend using " +
-                "useRef() or createRef() instead. " +
-                "Learn more about using refs safely here: " +
-                "https://react.dev/link/strict-mode-string-ref",
-              componentName,
-              stringRef
-            );
-
-            didWarnAboutStringRefs[componentName] = true;
-          }
-        }
-      }
-
-      var inst = owner.stateNode;
-
-      if (!inst) {
-        throw new Error(
-          "Missing owner for string ref " +
-            stringRef +
-            ". This error is likely caused by a " +
-            "bug in React. Please file an issue."
-        );
-      } // Check if previous string ref matches new string ref
-
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === "function" &&
-        current.ref._stringRef === stringRef
-      ) {
-        // Reuse the existing string ref
-        var currentRef = current.ref;
-        return currentRef;
-      } // Create a new string ref
-
-      var ref = function (value) {
-        var refs = inst.refs;
-
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-
-      ref._stringRef = stringRef;
-      return ref;
-    }
-
     function coerceRef(returnFiber, current, workInProgress, element) {
-      var mixedRef;
+      var ref;
 
       {
         // Old behavior.
-        mixedRef = element.ref;
-      }
-
-      var coercedRef;
-
-      if (
-        typeof mixedRef === "string" ||
-        typeof mixedRef === "number" ||
-        typeof mixedRef === "boolean"
-      ) {
-        coercedRef = convertStringRefToCallbackRef(
-          returnFiber,
-          current,
-          element,
-          mixedRef
-        );
-      } else {
-        coercedRef = mixedRef;
+        ref = element.ref;
       } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
       // should always read the ref from the prop.
 
-      workInProgress.ref = coercedRef;
+      workInProgress.ref = ref;
     }
 
     function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -7926,8 +7746,6 @@ if (__DEV__) {
       /*   */
       8;
 
-    var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
     var didWarnAboutMismatchedHooksForComponent;
     var didWarnUncachedGetSnapshot;
     var didWarnAboutUseWrappedInTryCatch;
@@ -8091,8 +7909,8 @@ if (__DEV__) {
           didWarnAboutUseFormState.add(componentName);
 
           error(
-            "ReactDOM.useFormState has been deprecated and replaced by " +
-              "React.useActionState. Please update %s to use React.useActionState.",
+            "ReactDOM.useFormState has been renamed to React.useActionState. " +
+              "Please update %s to use React.useActionState.",
             componentName
           );
         }
@@ -8228,17 +8046,16 @@ if (__DEV__) {
 
       {
         if (current !== null && current.memoizedState !== null) {
-          ReactCurrentDispatcher$1.current = HooksDispatcherOnUpdateInDEV;
+          ReactSharedInternals.H = HooksDispatcherOnUpdateInDEV;
         } else if (hookTypesDev !== null) {
           // This dispatcher handles an edge case where a component is updating,
           // but no stateful hooks have been used.
           // We want to match the production code behavior (which will use HooksDispatcherOnMount),
           // but with the extra DEV validation to ensure hooks ordering hasn't changed.
           // This dispatcher does that.
-          ReactCurrentDispatcher$1.current =
-            HooksDispatcherOnMountWithHookTypesInDEV;
+          ReactSharedInternals.H = HooksDispatcherOnMountWithHookTypesInDEV;
         } else {
-          ReactCurrentDispatcher$1.current = HooksDispatcherOnMountInDEV;
+          ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
         }
       } // In Strict Mode, during development, user functions are double invoked to
       // help detect side effects. The logic for how this is implemented for in
@@ -8293,7 +8110,7 @@ if (__DEV__) {
       } // We can assume the previous dispatcher is always this one, since we set it
       // at the beginning of the render phase and there's no re-entrance.
 
-      ReactCurrentDispatcher$1.current = ContextOnlyDispatcher; // This check uses currentHook so that it works the same in DEV and prod bundles.
+      ReactSharedInternals.H = ContextOnlyDispatcher; // This check uses currentHook so that it works the same in DEV and prod bundles.
       // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
 
       var didRenderTooFewHooks =
@@ -8444,7 +8261,7 @@ if (__DEV__) {
           hookTypesUpdateIndexDev = -1;
         }
 
-        ReactCurrentDispatcher$1.current = HooksDispatcherOnRerenderInDEV;
+        ReactSharedInternals.H = HooksDispatcherOnRerenderInDEV;
         children = Component(props, secondArg);
       } while (didScheduleRenderPhaseUpdateDuringThisPass);
 
@@ -8466,18 +8283,34 @@ if (__DEV__) {
       );
     }
     function TransitionAwareHostComponent() {
-      var dispatcher = ReactCurrentDispatcher$1.current;
+      var dispatcher = ReactSharedInternals.H;
 
       var _dispatcher$useState = dispatcher.useState(),
         maybeThenable = _dispatcher$useState[0];
 
+      var nextState;
+
       if (typeof maybeThenable.then === "function") {
         var thenable = maybeThenable;
-        return useThenable(thenable);
+        nextState = useThenable(thenable);
       } else {
         var status = maybeThenable;
-        return status;
+        nextState = status;
+      } // The "reset state" is an object. If it changes, that means something
+      // requested that we reset the form.
+
+      var _dispatcher$useState2 = dispatcher.useState(),
+        nextResetState = _dispatcher$useState2[0];
+
+      var prevResetState =
+        currentHook !== null ? currentHook.memoizedState : null;
+
+      if (prevResetState !== nextResetState) {
+        // Schedule a form reset
+        currentlyRenderingFiber$1.flags |= FormReset;
       }
+
+      return nextState;
     }
     function bailoutHooks(current, workInProgress, lanes) {
       workInProgress.updateQueue = current.updateQueue; // TODO: Don't need to reset the flags here, because they're reset in the
@@ -8506,7 +8339,7 @@ if (__DEV__) {
       currentlyRenderingFiber$1 = null; // We can assume the previous dispatcher is always this one, since we set it
       // at the beginning of the render phase and there's no re-entrance.
 
-      ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
+      ReactSharedInternals.H = ContextOnlyDispatcher;
     }
     function resetHooksOnUnwind(workInProgress) {
       if (didScheduleRenderPhaseUpdate) {
@@ -8679,7 +8512,7 @@ if (__DEV__) {
         // time (perhaps because it threw). Subsequent Hook calls should use the
         // mount dispatcher.
         {
-          ReactCurrentDispatcher$1.current = HooksDispatcherOnMountInDEV;
+          ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
         }
       }
 
@@ -9488,14 +9321,14 @@ if (__DEV__) {
       var action = actionQueue.action;
       var prevState = actionQueue.state; // This is a fork of startTransition
 
-      var prevTransition = ReactCurrentBatchConfig$2.transition;
+      var prevTransition = ReactSharedInternals.T;
       var currentTransition = {
         _callbacks: new Set()
       };
-      ReactCurrentBatchConfig$2.transition = currentTransition;
+      ReactSharedInternals.T = currentTransition;
 
       {
-        ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
+        ReactSharedInternals.T._updatedFibers = new Set();
       } // Optimistically update the pending state, similar to useTransition.
       // This will be reverted automatically when all actions are finished.
 
@@ -9553,7 +9386,7 @@ if (__DEV__) {
         setState(rejectedThenable);
         finishRunningActionStateAction(actionQueue, setPendingState, setState);
       } finally {
-        ReactCurrentBatchConfig$2.transition = prevTransition;
+        ReactSharedInternals.T = prevTransition;
 
         {
           if (prevTransition === null && currentTransition._updatedFibers) {
@@ -10139,7 +9972,7 @@ if (__DEV__) {
       setCurrentUpdatePriority(
         higherEventPriority(previousPriority, ContinuousEventPriority)
       );
-      var prevTransition = ReactCurrentBatchConfig$2.transition;
+      var prevTransition = ReactSharedInternals.T;
       var currentTransition = {
         _callbacks: new Set()
       };
@@ -10151,12 +9984,12 @@ if (__DEV__) {
         // optimistic update anyway to make it less likely the behavior accidentally
         // diverges; for example, both an optimistic update and this one should
         // share the same lane.
-        ReactCurrentBatchConfig$2.transition = currentTransition;
+        ReactSharedInternals.T = currentTransition;
         dispatchOptimisticSetState(fiber, false, queue, pendingState);
       }
 
       {
-        ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
+        currentTransition._updatedFibers = new Set();
       }
 
       try {
@@ -10202,7 +10035,7 @@ if (__DEV__) {
         }
       } finally {
         setCurrentUpdatePriority(previousPriority);
-        ReactCurrentBatchConfig$2.transition = prevTransition;
+        ReactSharedInternals.T = prevTransition;
 
         {
           if (prevTransition === null && currentTransition._updatedFibers) {
@@ -10422,11 +10255,11 @@ if (__DEV__) {
           var lastRenderedReducer = queue.lastRenderedReducer;
 
           if (lastRenderedReducer !== null) {
-            var prevDispatcher;
+            var prevDispatcher = null;
 
             {
-              prevDispatcher = ReactCurrentDispatcher$1.current;
-              ReactCurrentDispatcher$1.current =
+              prevDispatcher = ReactSharedInternals.H;
+              ReactSharedInternals.H =
                 InvalidNestedHooksDispatcherOnUpdateInDEV;
             }
 
@@ -10457,7 +10290,7 @@ if (__DEV__) {
               // Suppress the error. It will throw again in the render phase.
             } finally {
               {
-                ReactCurrentDispatcher$1.current = prevDispatcher;
+                ReactSharedInternals.H = prevDispatcher;
               }
             }
           }
@@ -10708,27 +10541,25 @@ if (__DEV__) {
           currentHookNameInDev = "useMemo";
           mountHookTypesDev();
           checkDepsAreArrayDev(deps);
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           mountHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -10739,14 +10570,13 @@ if (__DEV__) {
         useState: function (initialState) {
           currentHookNameInDev = "useState";
           mountHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -10867,27 +10697,25 @@ if (__DEV__) {
         useMemo: function (create, deps) {
           currentHookNameInDev = "useMemo";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -10898,14 +10726,13 @@ if (__DEV__) {
         useState: function (initialState) {
           currentHookNameInDev = "useState";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -11019,27 +10846,25 @@ if (__DEV__) {
         useMemo: function (create, deps) {
           currentHookNameInDev = "useMemo";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -11050,14 +10875,13 @@ if (__DEV__) {
         useState: function (initialState) {
           currentHookNameInDev = "useState";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -11179,27 +11003,25 @@ if (__DEV__) {
         useMemo: function (create, deps) {
           currentHookNameInDev = "useMemo";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnRerenderInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnRerenderInDEV;
 
           try {
             return updateMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnRerenderInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnRerenderInDEV;
 
           try {
             return rerenderReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -11210,14 +11032,13 @@ if (__DEV__) {
         useState: function (initialState) {
           currentHookNameInDev = "useState";
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnRerenderInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnRerenderInDEV;
 
           try {
             return rerenderState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -11350,28 +11171,26 @@ if (__DEV__) {
           currentHookNameInDev = "useMemo";
           warnInvalidHookAccess();
           mountHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           warnInvalidHookAccess();
           mountHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -11384,14 +11203,13 @@ if (__DEV__) {
           currentHookNameInDev = "useState";
           warnInvalidHookAccess();
           mountHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnMountInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnMountInDEV;
 
           try {
             return mountState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -11528,28 +11346,26 @@ if (__DEV__) {
           currentHookNameInDev = "useMemo";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -11562,14 +11378,13 @@ if (__DEV__) {
           currentHookNameInDev = "useState";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -11706,28 +11521,26 @@ if (__DEV__) {
           currentHookNameInDev = "useMemo";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return updateMemo(create, deps);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useReducer: function (reducer, initialArg, init) {
           currentHookNameInDev = "useReducer";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return rerenderReducer(reducer, initialArg, init);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useRef: function (initialValue) {
@@ -11740,14 +11553,13 @@ if (__DEV__) {
           currentHookNameInDev = "useState";
           warnInvalidHookAccess();
           updateHookTypesDev();
-          var prevDispatcher = ReactCurrentDispatcher$1.current;
-          ReactCurrentDispatcher$1.current =
-            InvalidNestedHooksDispatcherOnUpdateInDEV;
+          var prevDispatcher = ReactSharedInternals.H;
+          ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
 
           try {
             return rerenderState(initialState);
           } finally {
-            ReactCurrentDispatcher$1.current = prevDispatcher;
+            ReactSharedInternals.H = prevDispatcher;
           }
         },
         useDebugValue: function (value, formatterFn) {
@@ -13125,7 +12937,7 @@ if (__DEV__) {
       // remove this extra check.
       alreadyResolvedDefaultProps
     ) {
-      var newProps = baseProps; // Resolve default props. Taken from old JSX runtime, where this used to live.
+      var newProps = baseProps;
 
       var defaultProps = Component.defaultProps;
 
@@ -13134,11 +12946,15 @@ if (__DEV__) {
         // default props here in the reconciler, rather than in the JSX runtime.
         !alreadyResolvedDefaultProps
       ) {
-        newProps = assign({}, newProps, baseProps);
+        // We may have already copied the props object above to remove ref. If so,
+        // we can modify that. Otherwise, copy the props object with Object.assign.
+        if (newProps === baseProps) {
+          newProps = assign({}, newProps, baseProps);
+        } // Taken from old JSX runtime, where this used to live.
 
-        for (var propName in defaultProps) {
-          if (newProps[propName] === undefined) {
-            newProps[propName] = defaultProps[propName];
+        for (var _propName in defaultProps) {
+          if (newProps[_propName] === undefined) {
+            newProps[_propName] = defaultProps[_propName];
           }
         }
       }
@@ -13202,8 +13018,6 @@ if (__DEV__) {
 
             console["error"](error);
           };
-
-    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // Side-channel since I'm not sure we want to make this part of the public API
 
     var componentName = null;
     var errorBoundaryName = null;
@@ -13269,10 +13083,10 @@ if (__DEV__) {
 
         var error = errorInfo.value;
 
-        if (true && ReactCurrentActQueue$2.current !== null) {
+        if (true && ReactSharedInternals.actQueue !== null) {
           // For uncaught errors inside act, we track them on the act and then
           // rethrow them into the test.
-          ReactCurrentActQueue$2.thrownErrors.push(error);
+          ReactSharedInternals.thrownErrors.push(error);
           return;
         }
 
@@ -13807,7 +13621,6 @@ if (__DEV__) {
       return false;
     }
 
-    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner; // A special exception that's used to unwind the stack when an update flows
     // into a dehydrated boundary.
 
     var SelectiveHydrationException = new Error(
@@ -13922,7 +13735,7 @@ if (__DEV__) {
       prepareToReadContext(workInProgress, renderLanes);
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactSharedInternals.owner = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
           current,
@@ -14429,7 +14242,27 @@ if (__DEV__) {
         }
 
         if (current === null || current.ref !== ref) {
-          // Schedule a Ref effect
+          if (current !== null) {
+            var oldRef = current.ref;
+            var newRef = ref;
+
+            if (
+              typeof oldRef === "function" &&
+              typeof newRef === "function" &&
+              typeof oldRef.__stringRef === "string" &&
+              oldRef.__stringRef === newRef.__stringRef &&
+              oldRef.__stringRefType === newRef.__stringRefType &&
+              oldRef.__stringRefOwner === newRef.__stringRefOwner
+            ) {
+              // Although this is a different callback, it represents the same
+              // string ref. To avoid breaking old Meta code that relies on string
+              // refs only being attached once, reuse the old ref. This will
+              // prevent us from detaching and reattaching the ref on each update.
+              workInProgress.ref = oldRef;
+              return;
+            }
+          } // Schedule a Ref effect
+
           workInProgress.flags |= Ref | RefStatic;
         }
       }
@@ -14508,7 +14341,7 @@ if (__DEV__) {
       prepareToReadContext(workInProgress, renderLanes);
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactSharedInternals.owner = workInProgress;
         setIsRendering(true);
         nextChildren = renderWithHooks(
           current,
@@ -14719,7 +14552,10 @@ if (__DEV__) {
 
       var instance = workInProgress.stateNode; // Rerender
 
-      ReactCurrentOwner$1.current = workInProgress;
+      {
+        ReactSharedInternals.owner = workInProgress;
+      }
+
       var nextChildren;
 
       if (
@@ -16395,7 +16231,7 @@ if (__DEV__) {
       var newChildren;
 
       {
-        ReactCurrentOwner$1.current = workInProgress;
+        ReactSharedInternals.owner = workInProgress;
         setIsRendering(true);
         newChildren = render(newValue);
         setIsRendering(false);
@@ -17476,10 +17312,8 @@ if (__DEV__) {
       popProvider(CacheContext, workInProgress);
     }
 
-    var ReactCurrentBatchConfig$1 =
-      ReactSharedInternals.ReactCurrentBatchConfig;
     function requestCurrentTransition() {
-      var transition = ReactCurrentBatchConfig$1.transition;
+      var transition = ReactSharedInternals.T;
 
       if (transition !== null) {
         // Whenever a transition update is scheduled, register a callback on the
@@ -19105,7 +18939,7 @@ if (__DEV__) {
     // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 
     var offscreenSubtreeIsHidden = false;
-    var offscreenSubtreeWasHidden = false;
+    var offscreenSubtreeWasHidden = false; // Used to track if a form needs to be reset at the end of the mutation phase.
     var PossiblyWeakSet = typeof WeakSet === "function" ? WeakSet : Set;
     var nextEffect = null; // Used for Profiling builds to track updaters.
 
@@ -21036,6 +20870,19 @@ if (__DEV__) {
                 }
               }
             }
+
+            if (flags & FormReset) {
+              {
+                if (finishedWork.type !== "form") {
+                  // Paranoid coding. In case we accidentally start using the
+                  // FormReset bit for something else.
+                  error(
+                    "Unexpected host component type. Expected a form. This is a " +
+                      "bug in React."
+                  );
+                }
+              }
+            }
           }
 
           return;
@@ -22656,7 +22503,6 @@ if (__DEV__) {
       symbolFor("selector.text");
     }
 
-    var ReactCurrentActQueue$1 = ReactSharedInternals.ReactCurrentActQueue;
     function isLegacyActEnvironment(fiber) {
       {
         // Legacy mode. We preserve the behavior of React 17's act. It assumes an
@@ -22681,7 +22527,7 @@ if (__DEV__) {
 
         if (
           !isReactActEnvironmentGlobal &&
-          ReactCurrentActQueue$1.current !== null
+          ReactSharedInternals.actQueue !== null
         ) {
           // TODO: Include link to relevant documentation page.
           error(
@@ -22695,11 +22541,6 @@ if (__DEV__) {
     }
 
     var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
-    var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-      ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-      ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-      ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
-      ReactCurrentActQueue = ReactSharedInternals.ReactCurrentActQueue;
     var NoContext =
       /*             */
       0;
@@ -22846,13 +22687,11 @@ if (__DEV__) {
 
       if (transition !== null) {
         {
-          var batchConfigTransition = ReactCurrentBatchConfig.transition;
-
-          if (!batchConfigTransition._updatedFibers) {
-            batchConfigTransition._updatedFibers = new Set();
+          if (!transition._updatedFibers) {
+            transition._updatedFibers = new Set();
           }
 
-          batchConfigTransition._updatedFibers.add(fiber);
+          transition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -22861,26 +22700,9 @@ if (__DEV__) {
           : // is the first update in that scope. Either way, we need to get a
             // fresh transition lane.
             requestTransitionLane();
-      } // Updates originating inside certain React methods, like flushSync, have
-      // their priority set by tracking it with a context variable.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
+      }
 
-      var updateLane = getCurrentUpdatePriority();
-
-      if (updateLane !== NoLane) {
-        return updateLane;
-      } // This update originated outside React. Ask the host environment for an
-      // appropriate priority, based on the type of event.
-      //
-      // The opaque type returned by the host config is internally a lane, so we can
-      // use that directly.
-      // TODO: Move this type conversion to the event priority module.
-
-      var eventLane = getCurrentEventPriority();
-      return eventLane;
+      return eventPriorityToLane(resolveUpdatePriority());
     }
 
     function requestRetryLane(fiber) {
@@ -23015,7 +22837,7 @@ if (__DEV__) {
           !disableLegacyMode &&
           (fiber.mode & ConcurrentMode) === NoMode
         ) {
-          if (ReactCurrentActQueue.isBatchingLegacy);
+          if (ReactSharedInternals.isBatchingLegacy);
           else {
             // Flush the synchronous work now, unless we're already working or inside
             // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
@@ -23117,20 +22939,31 @@ if (__DEV__) {
             } // Check if something threw
 
             if (exitStatus === RootErrored) {
-              var originallyAttemptedLanes = lanes;
+              var lanesThatJustErrored = lanes;
               var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
                 root,
-                originallyAttemptedLanes
+                lanesThatJustErrored
               );
 
               if (errorRetryLanes !== NoLanes) {
                 lanes = errorRetryLanes;
                 exitStatus = recoverFromConcurrentError(
                   root,
-                  originallyAttemptedLanes,
+                  lanesThatJustErrored,
                   errorRetryLanes
                 );
-                renderWasConcurrent = false;
+                renderWasConcurrent = false; // Need to check the exit status again.
+
+                if (exitStatus !== RootErrored) {
+                  // The root did not error this time. Restart the exit algorithm
+                  // from the beginning.
+                  // TODO: Refactor the exit algorithm to be less confusing. Maybe
+                  // more branches + recursion instead of a loop. I think the only
+                  // thing that causes it to be a loop is the RootDidNotComplete
+                  // check. If that's true, then we don't need a loop/recursion
+                  // at all.
+                  continue;
+                }
               }
             }
 
@@ -23555,7 +23388,7 @@ if (__DEV__) {
 
           if (
             executionContext === NoContext && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-            !ReactCurrentActQueue.isBatchingLegacy
+            !ReactSharedInternals.isBatchingLegacy
           ) {
             resetRenderTimer();
             flushSyncWorkOnLegacyRootsOnly();
@@ -23568,7 +23401,7 @@ if (__DEV__) {
     // eslint-disable-next-line no-redeclare
     // eslint-disable-next-line no-redeclare
 
-    function flushSync(fn) {
+    function flushSyncFromReconciler(fn) {
       // In legacy mode, we flush pending passive effects at the beginning of the
       // next event, not at the end of the previous one.
       if (
@@ -23582,12 +23415,12 @@ if (__DEV__) {
 
       var prevExecutionContext = executionContext;
       executionContext |= BatchedContext;
-      var prevTransition = ReactCurrentBatchConfig.transition;
+      var prevTransition = ReactSharedInternals.T;
       var previousPriority = getCurrentUpdatePriority();
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactSharedInternals.T = null;
 
         if (fn) {
           return fn();
@@ -23596,7 +23429,7 @@ if (__DEV__) {
         }
       } finally {
         setCurrentUpdatePriority(previousPriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
+        ReactSharedInternals.T = prevTransition;
         executionContext = prevExecutionContext; // Flush the immediate callbacks that were scheduled during this batch.
         // Note that this will happen even if batchedUpdates is higher up
         // the stack.
@@ -23608,6 +23441,16 @@ if (__DEV__) {
           flushSyncWorkOnAllRoots();
         }
       }
+    } // If called outside of a render or commit will flush all sync work on all roots
+    // Returns whether the the call was during a render or not
+
+    function flushSyncWork() {
+      if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+        flushSyncWorkOnAllRoots();
+        return false;
+      }
+
+      return true;
     }
     // hidden subtree. The stack logic is managed there because that's the only
     // place that ever modifies it. Which module it lives in doesn't matter for
@@ -23721,7 +23564,10 @@ if (__DEV__) {
       // when React is executing user code.
       resetHooksAfterThrow();
       resetCurrentFiber();
-      ReactCurrentOwner.current = null;
+
+      {
+        ReactSharedInternals.owner = null;
+      }
 
       if (thrownValue === SuspenseException) {
         // This is a special type of exception used for Suspense. For historical
@@ -23845,8 +23691,8 @@ if (__DEV__) {
     }
 
     function pushDispatcher(container) {
-      var prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+      var prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = ContextOnlyDispatcher;
 
       if (prevDispatcher === null) {
         // The React isomorphic package does not include a default dispatcher.
@@ -23859,20 +23705,20 @@ if (__DEV__) {
     }
 
     function popDispatcher(prevDispatcher) {
-      ReactCurrentDispatcher.current = prevDispatcher;
+      ReactSharedInternals.H = prevDispatcher;
     }
 
     function pushCacheDispatcher() {
       {
-        var prevCacheDispatcher = ReactCurrentCache.current;
-        ReactCurrentCache.current = DefaultCacheDispatcher;
+        var prevCacheDispatcher = ReactSharedInternals.C;
+        ReactSharedInternals.C = DefaultCacheDispatcher;
         return prevCacheDispatcher;
       }
     }
 
     function popCacheDispatcher(prevCacheDispatcher) {
       {
-        ReactCurrentCache.current = prevCacheDispatcher;
+        ReactSharedInternals.C = prevCacheDispatcher;
       }
     }
 
@@ -24237,7 +24083,7 @@ if (__DEV__) {
             }
           }
 
-          if (true && ReactCurrentActQueue.current !== null) {
+          if (true && ReactSharedInternals.actQueue !== null) {
             // `act` special case: If we're inside an `act` scope, don't consult
             // `shouldYield`. Always keep working until the render is complete.
             // This is not just an optimization: in a unit test environment, we
@@ -24306,7 +24152,9 @@ if (__DEV__) {
         workInProgress = next;
       }
 
-      ReactCurrentOwner.current = null;
+      {
+        ReactSharedInternals.owner = null;
+      }
     }
 
     function replaySuspendedUnitOfWork(unitOfWork) {
@@ -24432,7 +24280,9 @@ if (__DEV__) {
         workInProgress = next;
       }
 
-      ReactCurrentOwner.current = null;
+      {
+        ReactSharedInternals.owner = null;
+      }
     }
 
     function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
@@ -24642,12 +24492,12 @@ if (__DEV__) {
     ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
+      var prevTransition = ReactSharedInternals.T;
       var previousUpdateLanePriority = getCurrentUpdatePriority();
-      var prevTransition = ReactCurrentBatchConfig.transition;
 
       try {
-        ReactCurrentBatchConfig.transition = null;
         setCurrentUpdatePriority(DiscreteEventPriority);
+        ReactSharedInternals.T = null;
         commitRootImpl(
           root,
           recoverableErrors,
@@ -24657,7 +24507,7 @@ if (__DEV__) {
           spawnedLane
         );
       } finally {
-        ReactCurrentBatchConfig.transition = prevTransition;
+        ReactSharedInternals.T = prevTransition;
         setCurrentUpdatePriority(previousUpdateLanePriority);
       }
 
@@ -24779,14 +24629,16 @@ if (__DEV__) {
         NoFlags$1;
 
       if (subtreeHasEffects || rootHasEffect) {
-        var prevTransition = ReactCurrentBatchConfig.transition;
-        ReactCurrentBatchConfig.transition = null;
+        var prevTransition = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
         var previousPriority = getCurrentUpdatePriority();
         setCurrentUpdatePriority(DiscreteEventPriority);
         var prevExecutionContext = executionContext;
         executionContext |= CommitContext; // Reset this to null before calling lifecycles
 
-        ReactCurrentOwner.current = null; // The commit phase is broken into several sub-phases. We do a separate pass
+        {
+          ReactSharedInternals.owner = null;
+        } // The commit phase is broken into several sub-phases. We do a separate pass
         // of the effect list for each phase: all mutation effects come before all
         // layout effects, and so on.
         // The first phase a "before mutation" phase. We use this phase to read the
@@ -24815,7 +24667,7 @@ if (__DEV__) {
         executionContext = prevExecutionContext; // Reset the priority to the previous non-sync value.
 
         setCurrentUpdatePriority(previousPriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
+        ReactSharedInternals.T = prevTransition;
       } else {
         // No effects.
         root.current = finishedWork; // Measure these anyway so the flamegraph explicitly shows that there were
@@ -24988,16 +24840,16 @@ if (__DEV__) {
         pendingPassiveEffectsRemainingLanes = NoLanes;
         var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
         var priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-        var prevTransition = ReactCurrentBatchConfig.transition;
+        var prevTransition = ReactSharedInternals.T;
         var previousPriority = getCurrentUpdatePriority();
 
         try {
-          ReactCurrentBatchConfig.transition = null;
           setCurrentUpdatePriority(priority);
+          ReactSharedInternals.T = null;
           return flushPassiveEffectsImpl();
         } finally {
           setCurrentUpdatePriority(previousPriority);
-          ReactCurrentBatchConfig.transition = prevTransition; // Once passive effects have run for the tree - giving components a
+          ReactSharedInternals.T = prevTransition; // Once passive effects have run for the tree - giving components a
           // chance to retain cache instances they use - release the pooled
           // cache at the root (if there is one)
 
@@ -25567,7 +25419,7 @@ if (__DEV__) {
       {
         // If we're currently inside an `act` scope, bypass Scheduler and push to
         // the `act` queue instead.
-        var actQueue = ReactCurrentActQueue.current;
+        var actQueue = ReactSharedInternals.actQueue;
 
         if (actQueue !== null) {
           actQueue.push(callback);
@@ -25580,7 +25432,7 @@ if (__DEV__) {
 
     function shouldForceFlushFallbacksInDEV() {
       // Never force flush in production. This function should get stripped out.
-      return ReactCurrentActQueue.current !== null;
+      return ReactSharedInternals.actQueue !== null;
     }
 
     function warnIfUpdatesNotWrappedWithActDEV(fiber) {
@@ -25614,7 +25466,7 @@ if (__DEV__) {
           }
         }
 
-        if (ReactCurrentActQueue.current === null) {
+        if (ReactSharedInternals.actQueue === null) {
           var previousFiber = current;
 
           try {
@@ -25649,7 +25501,7 @@ if (__DEV__) {
         if (
           root.tag !== LegacyRoot &&
           isConcurrentActEnvironment() &&
-          ReactCurrentActQueue.current === null
+          ReactSharedInternals.actQueue === null
         ) {
           error(
             "A suspended resource finished loading inside a test, but the event " +
@@ -25858,13 +25710,12 @@ if (__DEV__) {
         var staleFamilies = update.staleFamilies,
           updatedFamilies = update.updatedFamilies;
         flushPassiveEffects();
-        flushSync(function () {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies
-          );
-        });
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies
+        );
+        flushSyncWork();
       }
     };
     var scheduleRoot = function (root, element) {
@@ -25876,10 +25727,8 @@ if (__DEV__) {
           return;
         }
 
-        flushPassiveEffects();
-        flushSync(function () {
-          updateContainer(element, root, null, null);
-        });
+        updateContainerSync(element, root, null, null);
+        flushSyncWork();
       }
     };
 
@@ -26579,7 +26428,7 @@ if (__DEV__) {
                   "named imports.";
               }
 
-              var ownerName = owner ? getComponentNameFromFiber(owner) : null;
+              var ownerName = owner ? getComponentNameFromOwner(owner) : null;
 
               if (ownerName) {
                 info += "\n\nCheck the render method of `" + ownerName + "`.";
@@ -26858,7 +26707,82 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-74b383db";
+    var ReactVersion = "19.0.0-www-modern-3dc29640";
+
+    /*
+     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+     *
+     * The functions in this module will throw an easier-to-understand,
+     * easier-to-debug exception with a clear errors message message explaining the
+     * problem. (Instead of a confusing exception thrown inside the implementation
+     * of the `value` object).
+     */
+    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+    function typeName(value) {
+      {
+        // toStringTag is needed for namespaced types like Temporal.Instant
+        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+        var type =
+          (hasToStringTag && value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object"; // $FlowFixMe[incompatible-return]
+
+        return type;
+      }
+    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+
+    function willCoercionThrow(value) {
+      {
+        try {
+          testStringCoercion(value);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+    }
+
+    function testStringCoercion(value) {
+      // If you ended up here by following an exception call stack, here's what's
+      // happened: you supplied an object or symbol value to React (as a prop, key,
+      // DOM attribute, CSS property, string ref, etc.) and when React tried to
+      // coerce it to a string using `'' + value`, an exception was thrown.
+      //
+      // The most common types that will cause this exception are `Symbol` instances
+      // and Temporal objects like `Temporal.Instant`. But any object that has a
+      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+      // exception. (Library authors do this to prevent users from using built-in
+      // numeric operators like `+` or comparison operators like `>=` because custom
+      // methods are needed to perform accurate arithmetic or comparison.)
+      //
+      // To fix the problem, coerce this object or symbol value to a string before
+      // passing it to React. The most reliable way is usually `String(value)`.
+      //
+      // To find which value is throwing, check the browser or debugger console.
+      // Before this exception was thrown, there should be `console.error` output
+      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+      // problem and how that type was used: key, atrribute, input value prop, etc.
+      // In most cases, this console output also shows the component and its
+      // ancestor components where the exception happened.
+      //
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      return "" + value;
+    }
+    function checkPropStringCoercion(value, propName) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided `%s` prop is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            propName,
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
 
     // Might add PROFILE later.
 
@@ -26918,12 +26842,51 @@ if (__DEV__) {
       );
     }
     function updateContainer(element, container, parentComponent, callback) {
+      var current = container.current;
+      var lane = requestUpdateLane(current);
+      updateContainerImpl(
+        current,
+        lane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return lane;
+    }
+    function updateContainerSync(
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
+      if (container.tag === LegacyRoot) {
+        flushPassiveEffects();
+      }
+
+      var current = container.current;
+      updateContainerImpl(
+        current,
+        SyncLane,
+        element,
+        container,
+        parentComponent,
+        callback
+      );
+      return SyncLane;
+    }
+
+    function updateContainerImpl(
+      rootFiber,
+      lane,
+      element,
+      container,
+      parentComponent,
+      callback
+    ) {
       {
         onScheduleRoot(container, element);
       }
-
-      var current$1 = container.current;
-      var lane = requestUpdateLane(current$1);
 
       var context = getContextForSubtree(parentComponent);
 
@@ -26969,14 +26932,12 @@ if (__DEV__) {
         update.callback = callback;
       }
 
-      var root = enqueueUpdate(current$1, update, lane);
+      var root = enqueueUpdate(rootFiber, update, lane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, current$1, lane);
-        entangleTransitions(root, current$1, lane);
+        scheduleUpdateOnFiber(root, rootFiber, lane);
+        entangleTransitions(root, rootFiber, lane);
       }
-
-      return lane;
     }
     function getPublicRootInstance(container) {
       var containerFiber = container.current;
@@ -27266,7 +27227,6 @@ if (__DEV__) {
 
     function injectIntoDevTools(devToolsConfig) {
       var findFiberByHostInstance = devToolsConfig.findFiberByHostInstance;
-      var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
       return injectInternals({
         bundleType: devToolsConfig.bundleType,
         version: devToolsConfig.version,
@@ -27281,7 +27241,7 @@ if (__DEV__) {
         setErrorHandler: setErrorHandler,
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
-        currentDispatcherRef: ReactCurrentDispatcher,
+        currentDispatcherRef: ReactSharedInternals,
         findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           findFiberByHostInstance || emptyFindFiberByHostInstance,
@@ -27877,7 +27837,7 @@ if (__DEV__) {
 
           return getPublicRootInstance(root);
         },
-        unstable_flushSync: flushSync
+        unstable_flushSync: flushSyncFromReconciler
       };
       Object.defineProperty(entry, "root", {
         configurable: true,

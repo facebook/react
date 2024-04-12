@@ -78,19 +78,21 @@ if (__DEV__) {
     }
 
     var ReactDOMSharedInternals =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     // This client file is in the shared folder because it applies to both SSR and browser contexts.
-    var ReactDOMCurrentDispatcher =
-      ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
     function dispatchHint(code, model) {
-      var dispatcher = ReactDOMCurrentDispatcher.current;
+      var dispatcher = ReactDOMSharedInternals.d;
+      /* ReactDOMCurrentDispatcher */
 
       switch (code) {
         case "D": {
           var refined = refineModel(code, model);
           var href = refined;
-          dispatcher.prefetchDNS(href);
+          dispatcher.D(
+            /* prefetchDNS */
+            href
+          );
           return;
         }
 
@@ -99,11 +101,18 @@ if (__DEV__) {
 
           if (typeof _refined === "string") {
             var _href = _refined;
-            dispatcher.preconnect(_href);
+            dispatcher.C(
+              /* preconnect */
+              _href
+            );
           } else {
             var _href2 = _refined[0];
             var crossOrigin = _refined[1];
-            dispatcher.preconnect(_href2, crossOrigin);
+            dispatcher.C(
+              /* preconnect */
+              _href2,
+              crossOrigin
+            );
           }
 
           return;
@@ -117,9 +126,18 @@ if (__DEV__) {
 
           if (_refined2.length === 3) {
             var options = _refined2[2];
-            dispatcher.preload(_href3, as, options);
+            dispatcher.L(
+              /* preload */
+              _href3,
+              as,
+              options
+            );
           } else {
-            dispatcher.preload(_href3, as);
+            dispatcher.L(
+              /* preload */
+              _href3,
+              as
+            );
           }
 
           return;
@@ -130,44 +148,66 @@ if (__DEV__) {
 
           if (typeof _refined3 === "string") {
             var _href4 = _refined3;
-            dispatcher.preloadModule(_href4);
+            dispatcher.m(
+              /* preloadModule */
+              _href4
+            );
           } else {
             var _href5 = _refined3[0];
             var _options = _refined3[1];
-            dispatcher.preloadModule(_href5, _options);
-          }
-
-          return;
-        }
-
-        case "S": {
-          var _refined4 = refineModel(code, model);
-
-          if (typeof _refined4 === "string") {
-            var _href6 = _refined4;
-            dispatcher.preinitStyle(_href6);
-          } else {
-            var _href7 = _refined4[0];
-            var precedence = _refined4[1] === 0 ? undefined : _refined4[1];
-
-            var _options2 = _refined4.length === 3 ? _refined4[2] : undefined;
-
-            dispatcher.preinitStyle(_href7, precedence, _options2);
+            dispatcher.m(
+              /* preloadModule */
+              _href5,
+              _options
+            );
           }
 
           return;
         }
 
         case "X": {
+          var _refined4 = refineModel(code, model);
+
+          if (typeof _refined4 === "string") {
+            var _href6 = _refined4;
+            dispatcher.X(
+              /* preinitScript */
+              _href6
+            );
+          } else {
+            var _href7 = _refined4[0];
+            var _options2 = _refined4[1];
+            dispatcher.X(
+              /* preinitScript */
+              _href7,
+              _options2
+            );
+          }
+
+          return;
+        }
+
+        case "S": {
           var _refined5 = refineModel(code, model);
 
           if (typeof _refined5 === "string") {
             var _href8 = _refined5;
-            dispatcher.preinitScript(_href8);
+            dispatcher.S(
+              /* preinitStyle */
+              _href8
+            );
           } else {
             var _href9 = _refined5[0];
-            var _options3 = _refined5[1];
-            dispatcher.preinitScript(_href9, _options3);
+            var precedence = _refined5[1] === 0 ? undefined : _refined5[1];
+
+            var _options3 = _refined5.length === 3 ? _refined5[2] : undefined;
+
+            dispatcher.S(
+              /* preinitStyle */
+              _href9,
+              precedence,
+              _options3
+            );
           }
 
           return;
@@ -178,11 +218,18 @@ if (__DEV__) {
 
           if (typeof _refined6 === "string") {
             var _href10 = _refined6;
-            dispatcher.preinitModuleScript(_href10);
+            dispatcher.M(
+              /* preinitModuleScript */
+              _href10
+            );
           } else {
             var _href11 = _refined6[0];
             var _options4 = _refined6[1];
-            dispatcher.preinitModuleScript(_href11, _options4);
+            dispatcher.M(
+              /* preinitModuleScript */
+              _href11,
+              _options4
+            );
           }
 
           return;
@@ -576,7 +623,8 @@ if (__DEV__) {
       }
     }
 
-    function createElement(type, key, props) {
+    function createElement(type, key, props, owner) {
+      // DEV-only
       var element;
 
       if (enableRefAsProp) {
@@ -586,7 +634,7 @@ if (__DEV__) {
           type: type,
           key: key,
           props: props,
-          _owner: null
+          _owner: owner
         };
         Object.defineProperty(element, "ref", {
           enumerable: false,
@@ -601,7 +649,7 @@ if (__DEV__) {
           ref: null,
           props: props,
           // Record the component responsible for creating this element.
-          _owner: null
+          _owner: owner
         };
       }
 
@@ -656,7 +704,14 @@ if (__DEV__) {
       return chunk;
     }
 
-    function createModelResolver(chunk, parentObject, key, cyclic) {
+    function createModelResolver(
+      chunk,
+      parentObject,
+      key,
+      cyclic,
+      response,
+      map
+    ) {
       var blocked;
 
       if (initializingChunkBlockedModel) {
@@ -673,11 +728,11 @@ if (__DEV__) {
       }
 
       return function (value) {
-        parentObject[key] = value; // If this is the root object for a model reference, where `blocked.value`
+        parentObject[key] = map(response, value); // If this is the root object for a model reference, where `blocked.value`
         // is a stale `null`, the resolved value can be used directly.
 
         if (key === "" && blocked.value === null) {
-          blocked.value = value;
+          blocked.value = parentObject[key];
         }
 
         blocked.deps--;
@@ -732,24 +787,93 @@ if (__DEV__) {
       return proxy;
     }
 
-    function getOutlinedModel(response, id) {
+    function getOutlinedModel(response, id, parentObject, key, map) {
       var chunk = getChunk(response, id);
 
       switch (chunk.status) {
         case RESOLVED_MODEL:
           initializeModelChunk(chunk);
           break;
+
+        case RESOLVED_MODULE:
+          initializeModuleChunk(chunk);
+          break;
       } // The status might have changed after initialization.
 
       switch (chunk.status) {
-        case INITIALIZED: {
-          return chunk.value;
-        }
-        // We always encode it first in the stream so it won't be pending.
+        case INITIALIZED:
+          var chunkValue = map(response, chunk.value);
+
+          if (chunk._debugInfo) {
+            // If we have a direct reference to an object that was rendered by a synchronous
+            // server component, it might have some debug info about how it was rendered.
+            // We forward this to the underlying object. This might be a React Element or
+            // an Array fragment.
+            // If this was a string / number return value we lose the debug info. We choose
+            // that tradeoff to allow sync server components to return plain values and not
+            // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+            if (
+              typeof chunkValue === "object" &&
+              chunkValue !== null &&
+              (Array.isArray(chunkValue) ||
+                chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
+              !chunkValue._debugInfo
+            ) {
+              // We should maybe use a unique symbol for arrays but this is a React owned array.
+              // $FlowFixMe[prop-missing]: This should be added to elements.
+              Object.defineProperty(chunkValue, "_debugInfo", {
+                configurable: false,
+                enumerable: false,
+                writable: true,
+                value: chunk._debugInfo
+              });
+            }
+          }
+
+          return chunkValue;
+
+        case PENDING:
+        case BLOCKED:
+        case CYCLIC:
+          var parentChunk = initializingChunk;
+          chunk.then(
+            createModelResolver(
+              parentChunk,
+              parentObject,
+              key,
+              chunk.status === CYCLIC,
+              response,
+              map
+            ),
+            createModelReject(parentChunk)
+          );
+          return null;
 
         default:
           throw chunk.reason;
       }
+    }
+
+    function createMap(response, model) {
+      return new Map(model);
+    }
+
+    function createSet(response, model) {
+      return new Set(model);
+    }
+
+    function createFormData(response, model) {
+      var formData = new FormData();
+
+      for (var i = 0; i < model.length; i++) {
+        formData.append(model[i][0], model[i][1]);
+      }
+
+      return formData;
+    }
+
+    function createModel(response, model) {
+      return model;
     }
 
     function parseModelString(response, parentObject, key, value) {
@@ -797,8 +921,13 @@ if (__DEV__) {
             // Server Reference
             var _id2 = parseInt(value.slice(2), 16);
 
-            var metadata = getOutlinedModel(response, _id2);
-            return createServerReferenceProxy(response, metadata);
+            return getOutlinedModel(
+              response,
+              _id2,
+              parentObject,
+              key,
+              createServerReferenceProxy
+            );
           }
 
           case "T": {
@@ -821,17 +950,43 @@ if (__DEV__) {
             // Map
             var _id4 = parseInt(value.slice(2), 16);
 
-            var data = getOutlinedModel(response, _id4);
-            return new Map(data);
+            return getOutlinedModel(
+              response,
+              _id4,
+              parentObject,
+              key,
+              createMap
+            );
           }
 
           case "W": {
             // Set
             var _id5 = parseInt(value.slice(2), 16);
 
-            var _data = getOutlinedModel(response, _id5);
+            return getOutlinedModel(
+              response,
+              _id5,
+              parentObject,
+              key,
+              createSet
+            );
+          }
 
-            return new Set(_data);
+          case "B": {
+            return undefined;
+          }
+
+          case "K": {
+            // FormData
+            var _id7 = parseInt(value.slice(2), 16);
+
+            return getOutlinedModel(
+              response,
+              _id7,
+              parentObject,
+              key,
+              createFormData
+            );
           }
 
           case "I": {
@@ -886,72 +1041,15 @@ if (__DEV__) {
 
           default: {
             // We assume that anything else is a reference ID.
-            var _id6 = parseInt(value.slice(1), 16);
+            var _id8 = parseInt(value.slice(1), 16);
 
-            var _chunk2 = getChunk(response, _id6);
-
-            switch (_chunk2.status) {
-              case RESOLVED_MODEL:
-                initializeModelChunk(_chunk2);
-                break;
-
-              case RESOLVED_MODULE:
-                initializeModuleChunk(_chunk2);
-                break;
-            } // The status might have changed after initialization.
-
-            switch (_chunk2.status) {
-              case INITIALIZED:
-                var chunkValue = _chunk2.value;
-
-                if (_chunk2._debugInfo) {
-                  // If we have a direct reference to an object that was rendered by a synchronous
-                  // server component, it might have some debug info about how it was rendered.
-                  // We forward this to the underlying object. This might be a React Element or
-                  // an Array fragment.
-                  // If this was a string / number return value we lose the debug info. We choose
-                  // that tradeoff to allow sync server components to return plain values and not
-                  // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
-                  if (
-                    typeof chunkValue === "object" &&
-                    chunkValue !== null &&
-                    (Array.isArray(chunkValue) ||
-                      chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
-                    !chunkValue._debugInfo
-                  ) {
-                    // We should maybe use a unique symbol for arrays but this is a React owned array.
-                    // $FlowFixMe[prop-missing]: This should be added to elements.
-                    Object.defineProperty(chunkValue, "_debugInfo", {
-                      configurable: false,
-                      enumerable: false,
-                      writable: true,
-                      value: _chunk2._debugInfo
-                    });
-                  }
-                }
-
-                return chunkValue;
-
-              case PENDING:
-              case BLOCKED:
-              case CYCLIC:
-                var parentChunk = initializingChunk;
-
-                _chunk2.then(
-                  createModelResolver(
-                    parentChunk,
-                    parentObject,
-                    key,
-                    _chunk2.status === CYCLIC
-                  ),
-                  createModelReject(parentChunk)
-                );
-
-                return null;
-
-              default:
-                throw _chunk2.reason;
-            }
+            return getOutlinedModel(
+              response,
+              _id8,
+              parentObject,
+              key,
+              createModel
+            );
           }
         }
       }
@@ -965,7 +1063,7 @@ if (__DEV__) {
       if (tuple[0] === REACT_ELEMENT_TYPE) {
         // TODO: Consider having React just directly accept these arrays as elements.
         // Or even change the ReactElement type to be an array.
-        return createElement(tuple[1], tuple[2], tuple[3]);
+        return createElement(tuple[1], tuple[2], tuple[3], tuple[4]);
       }
 
       return value;
@@ -1106,9 +1204,10 @@ if (__DEV__) {
       var payload = parseModel(response, value);
       var methodName = payload[0]; // TODO: Restore the fake stack before logging.
       // const stackTrace = payload[1];
+      // const owner = payload[2];
 
-      var env = payload[2];
-      var args = payload.slice(3);
+      var env = payload[3];
+      var args = payload.slice(4);
       printToConsole(methodName, args, env);
     }
 
@@ -1162,7 +1261,7 @@ if (__DEV__) {
         case 68: /* "D" */
         {
           {
-            var debugInfo = JSON.parse(row);
+            var debugInfo = parseModel(response, row);
             resolveDebugInfo(response, id, debugInfo);
             return;
           } // Fallthrough to share the error with Console entries.
