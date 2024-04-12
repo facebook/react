@@ -11,8 +11,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "react-reconciler": "*",
     "react-client": "*",
+    "react-reconciler": "*",
     "react-server": "*"
   },
   "peerDependencies": {
