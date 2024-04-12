@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2fd27704711e4d0ffab11c7c21fee224>>
+ * @generated SignedSource<<c83df82d64eddddf249abbe7a211247d>>
  */
 
 "use strict";
@@ -13006,7 +13006,7 @@ if (__DEV__) {
         // We may have already copied the props object above to remove ref. If so,
         // we can modify that. Otherwise, copy the props object with Object.assign.
         if (newProps === baseProps) {
-          newProps = assign({}, newProps, baseProps);
+          newProps = assign({}, newProps);
         } // Taken from old JSX runtime, where this used to live.
 
         for (var _propName in defaultProps) {
@@ -26652,7 +26652,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-0c0d6d6d";
+    var ReactVersion = "19.0.0-canary-581264cc";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

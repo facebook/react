@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<184a9633ac8a1c29149afaca75347242>>
+ * @generated SignedSource<<a8095aaaeaf72137df4e00de44458ad8>>
  */
 
 "use strict";
@@ -16829,7 +16829,7 @@ to return true:wantsResponderID|                            |
         // We may have already copied the props object above to remove ref. If so,
         // we can modify that. Otherwise, copy the props object with Object.assign.
         if (newProps === baseProps) {
-          newProps = assign({}, newProps, baseProps);
+          newProps = assign({}, newProps);
         } // Taken from old JSX runtime, where this used to live.
 
         for (var _propName in defaultProps) {
@@ -30739,7 +30739,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-a41df4ab";
+    var ReactVersion = "19.0.0-canary-1adfe2d5";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

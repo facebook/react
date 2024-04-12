@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<813f6dc65831980928080bda767b77e1>>
+ * @generated SignedSource<<7546478ab9f50ee5a66b895958b26b28>>
  */
 
 "use strict";
@@ -5226,7 +5226,7 @@ function resolveClassComponentProps(
     (Component = Component.defaultProps) &&
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
+    newProps === baseProps && (newProps = assign({}, newProps));
     for (var propName in Component)
       void 0 === newProps[propName] &&
         (newProps[propName] = Component[propName]);
@@ -11302,7 +11302,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-348a26f7",
+    version: "19.0.0-canary-cae54ba1",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11358,7 +11358,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-348a26f7"
+  reconcilerVersion: "19.0.0-canary-cae54ba1"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
