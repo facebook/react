@@ -151,23 +151,25 @@ export default {
     /**
      * SourceCode#getText that also works down to ESLint 3.0.0
      */
-    function getSource(node) {
-      if (typeof context.getSource === 'function') {
-        return context.getSource(node);
-      } else {
-        return context.sourceCode.getText(node);
-      }
-    }
+    const getSource =
+      typeof context.getSource === 'function'
+        ? node => {
+            return context.getSource(node);
+          }
+        : node => {
+            return context.sourceCode.getText(node);
+          };
     /**
      * SourceCode#getScope that also works down to ESLint 3.0.0
      */
-    function getScope(node) {
-      if (typeof context.getScope === 'function') {
-        return context.getScope();
-      } else {
-        return context.sourceCode.getScope(node);
-      }
-    }
+    const getScope =
+      typeof context.getScope === 'function'
+        ? () => {
+            return context.getScope();
+          }
+        : node => {
+            return context.sourceCode.getScope(node);
+          };
 
     return {
       // Maintain code segment path stack as we traverse.
