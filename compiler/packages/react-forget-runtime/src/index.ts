@@ -28,6 +28,10 @@ export function unstable_useMemoCache(size: number) {
     for (let ii = 0; ii < size; ii++) {
       $[ii] = $empty;
     }
+    // This symbol is added to tell the react devtools that this array is from
+    // useMemoCache.
+    // @ts-ignore
+    $[$empty] = true;
     return $;
   })[0];
 }
