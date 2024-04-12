@@ -22,7 +22,6 @@ import {
   getPublicRootInstance,
   defaultOnUncaughtError,
   defaultOnCaughtError,
-  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
@@ -105,6 +104,10 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnRecoverableError(error: mixed): void {
+  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+  console.error(error);
+}
 
 function render(
   element: Element<ElementType>,
@@ -129,7 +132,7 @@ function render(
       '',
       nativeOnUncaughtError,
       nativeOnCaughtError,
-      defaultOnRecoverableError,
+      nativeOnRecoverableError,
       null,
     );
     roots.set(containerTag, root);

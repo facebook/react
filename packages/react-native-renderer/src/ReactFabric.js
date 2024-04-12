@@ -22,7 +22,6 @@ import {
   getPublicRootInstance,
   defaultOnUncaughtError,
   defaultOnCaughtError,
-  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
@@ -100,6 +99,10 @@ function nativeOnCaughtError(
 
   defaultOnCaughtError(error, errorInfo);
 }
+function nativeOnRecoverableError(error: mixed): void {
+  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+  console.error(error);
+}
 
 function render(
   element: Element<ElementType>,
@@ -125,7 +128,7 @@ function render(
       '',
       nativeOnUncaughtError,
       nativeOnCaughtError,
-      defaultOnRecoverableError,
+      nativeOnRecoverableError,
       null,
     );
     roots.set(containerTag, root);
