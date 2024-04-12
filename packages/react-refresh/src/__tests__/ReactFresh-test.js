@@ -3813,6 +3813,129 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('double invokes effects in StrictMode when remounting', async () => {
+    if (__DEV__) {
+      await render(() => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.log('useEffect mount');
+            return () => Scheduler.log('useEffect unmount');
+          });
+
+          React.useLayoutEffect(() => {
+            Scheduler.log('useLayoutEffect mount');
+            return () => Scheduler.log('useLayoutEffect unmount');
+          });
+
+          return null;
+        }
+        $RefreshReg$(App, 'App');
+        $RefreshSig$(App, '1');
+        return () => (
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+      });
+
+      if (gate(flags => flags.useModernStrictMode)) {
+        // this seems contrary to observed behavior in practice - unclear why effects are not double-invoked here
+        // effects should be double invoked here in modern strict mode
+        assertLog(['useLayoutEffect mount', 'useEffect mount']);
+      } else {
+        // in legacy strict mode, effects are double invoked on initial render
+        assertLog([
+          'useLayoutEffect mount',
+          'useEffect mount',
+          'useLayoutEffect unmount',
+          'useEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect mount',
+        ]);
+      }
+
+      // Refresh without changing signature
+      await patch(() => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.log('useEffect mount');
+            return () => Scheduler.log('useEffect unmount');
+          });
+
+          React.useLayoutEffect(() => {
+            Scheduler.log('useLayoutEffect mount');
+            return () => Scheduler.log('useLayoutEffect unmount');
+          });
+
+          return null;
+        }
+        $RefreshReg$(App, 'App');
+        $RefreshSig$(App, '1');
+        return App;
+      });
+
+      // no difference between modern and legacy strict mode here -- we unmount and remount effects
+      if (gate(flags => flags.useModernStrictMode)) {
+        assertLog([
+          'useLayoutEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect unmount',
+          'useEffect mount',
+        ]);
+      } else {
+        assertLog([
+          'useLayoutEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect unmount',
+          'useEffect mount',
+        ]);
+      }
+
+      // Refresh with change to signature
+      await patch(() => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.log('useEffect mount');
+            return () => Scheduler.log('useEffect unmount');
+          });
+
+          React.useLayoutEffect(() => {
+            Scheduler.log('useLayoutEffect mount');
+            return () => Scheduler.log('useLayoutEffect unmount');
+          });
+
+          return null;
+        }
+        $RefreshReg$(App, 'App');
+        $RefreshSig$(App, '2');
+        return App;
+      });
+
+      if (gate(flags => flags.useModernStrictMode)) {
+        // in modern strict mode, we unmount and remount like above, but do not double-invoke effects
+        // we probably should be double invoking effects?
+        assertLog([
+          'useLayoutEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect unmount',
+          'useEffect mount',
+        ]);
+      } else {
+        // in legacy strict mode, we unmount, remount, and then unmount and remount once more for double-invocation
+        assertLog([
+          'useLayoutEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect unmount',
+          'useEffect mount',
+          'useLayoutEffect unmount',
+          'useEffect unmount',
+          'useLayoutEffect mount',
+          'useEffect mount',
+        ]);
+      }
+    }
+  });
+
   function initFauxDevToolsHook() {
     const onCommitFiberRoot = jest.fn();
     const onCommitFiberUnmount = jest.fn();
