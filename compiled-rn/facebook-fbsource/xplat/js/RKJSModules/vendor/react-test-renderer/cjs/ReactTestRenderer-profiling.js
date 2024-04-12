@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c03b4f2580a3f28e5204dac43fdc8e39>>
+ * @generated SignedSource<<479c2ca549cdf886d9b952949809f126>>
  */
 
 "use strict";
@@ -30,7 +30,7 @@ function _createClass(Constructor, protoProps, staticProps) {
 }
 var assign = Object.assign,
   ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -597,7 +597,6 @@ function markRootEntangled(root, entangledLanes) {
     rootEntangledLanes &= ~lane;
   }
 }
-var currentUpdatePriority = 0;
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
   return 2 < lanes
@@ -639,7 +638,8 @@ function insertBefore(parentInstance, child, beforeChild) {
   beforeChild = parentInstance.children.indexOf(beforeChild);
   parentInstance.children.splice(beforeChild, 0, child);
 }
-var scheduleTimeout = setTimeout,
+var currentUpdatePriority = 0,
+  scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout,
   valueStack = [],
   index = -1;
@@ -742,28 +742,24 @@ function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
 }
 var objectIs = "function" === typeof Object.is ? Object.is : is;
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
+function describeBuiltInComponentFrame(name) {
+  return "\n    in " + (name || "Unknown");
 }
 function describeFunctionComponentFrame(fn) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
-    : "";
+  return fn ? "\n    in " + (fn.displayName || fn.name || "Unknown") : "";
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
     case 26:
     case 27:
     case 5:
-      return describeComponentFrame(fiber.type, null);
+      return describeBuiltInComponentFrame(fiber.type);
     case 16:
-      return describeComponentFrame("Lazy", null);
+      return describeBuiltInComponentFrame("Lazy");
     case 13:
-      return describeComponentFrame("Suspense", null);
+      return describeBuiltInComponentFrame("Suspense");
     case 19:
-      return describeComponentFrame("SuspenseList", null);
+      return describeBuiltInComponentFrame("SuspenseList");
     case 0:
     case 15:
       return describeFunctionComponentFrame(fiber.type);
@@ -1476,55 +1472,6 @@ function unwrapThenable(thenable) {
   null === thenableState$1 && (thenableState$1 = []);
   return trackUsedThenable(thenableState$1, thenable, index);
 }
-function convertStringRefToCallbackRef(
-  returnFiber,
-  current,
-  element,
-  mixedRef
-) {
-  function ref(value) {
-    var refs = inst.refs;
-    null === value ? delete refs[stringRef] : (refs[stringRef] = value);
-  }
-  var stringRef = "" + mixedRef;
-  returnFiber = element._owner;
-  if (!returnFiber)
-    throw Error(
-      "Element ref was specified as a string (" +
-        stringRef +
-        ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
-    );
-  if (1 !== returnFiber.tag)
-    throw Error(
-      "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
-    );
-  var inst = returnFiber.stateNode;
-  if (!inst)
-    throw Error(
-      "Missing owner for string ref " +
-        stringRef +
-        ". This error is likely caused by a bug in React. Please file an issue."
-    );
-  if (
-    null !== current &&
-    null !== current.ref &&
-    "function" === typeof current.ref &&
-    current.ref._stringRef === stringRef
-  )
-    return current.ref;
-  ref._stringRef = stringRef;
-  return ref;
-}
-function coerceRef(returnFiber, current, workInProgress, element) {
-  var mixedRef = element.ref;
-  returnFiber =
-    "string" === typeof mixedRef ||
-    "number" === typeof mixedRef ||
-    "boolean" === typeof mixedRef
-      ? convertStringRefToCallbackRef(returnFiber, current, element, mixedRef)
-      : mixedRef;
-  workInProgress.ref = returnFiber;
-}
 function throwOnInvalidObjectType(returnFiber, newChild) {
   returnFiber = Object.prototype.toString.call(newChild);
   throw Error(
@@ -1620,12 +1567,12 @@ function createChildReconciler(shouldTrackSideEffects) {
           resolveLazy(elementType) === current.type))
     )
       return (
-        (lanes = useFiber(current, element.props)),
-        coerceRef(returnFiber, current, lanes, element),
-        (lanes.return = returnFiber),
-        lanes
+        (current = useFiber(current, element.props)),
+        (current.ref = element.ref),
+        (current.return = returnFiber),
+        current
       );
-    lanes = createFiberFromTypeAndProps(
+    current = createFiberFromTypeAndProps(
       element.type,
       element.key,
       element.props,
@@ -1633,9 +1580,9 @@ function createChildReconciler(shouldTrackSideEffects) {
       returnFiber.mode,
       lanes
     );
-    coerceRef(returnFiber, current, lanes, element);
-    lanes.return = returnFiber;
-    return lanes;
+    current.ref = element.ref;
+    current.return = returnFiber;
+    return current;
   }
   function updatePortal(returnFiber, current, portal, lanes) {
     if (
@@ -1696,7 +1643,7 @@ function createChildReconciler(shouldTrackSideEffects) {
               returnFiber.mode,
               lanes
             )),
-            coerceRef(returnFiber, null, lanes, newChild),
+            (lanes.ref = newChild.ref),
             (lanes.return = returnFiber),
             lanes
           );
@@ -2036,52 +1983,54 @@ function createChildReconciler(shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           a: {
-            for (
-              var key = newChild.key, child = currentFirstChild;
-              null !== child;
-
-            ) {
-              if (child.key === key) {
+            for (var key = newChild.key; null !== currentFirstChild; ) {
+              if (currentFirstChild.key === key) {
                 key = newChild.type;
                 if (key === REACT_FRAGMENT_TYPE) {
-                  if (7 === child.tag) {
-                    deleteRemainingChildren(returnFiber, child.sibling);
-                    currentFirstChild = useFiber(
-                      child,
+                  if (7 === currentFirstChild.tag) {
+                    deleteRemainingChildren(
+                      returnFiber,
+                      currentFirstChild.sibling
+                    );
+                    lanes = useFiber(
+                      currentFirstChild,
                       newChild.props.children
                     );
-                    currentFirstChild.return = returnFiber;
-                    returnFiber = currentFirstChild;
+                    lanes.return = returnFiber;
+                    returnFiber = lanes;
                     break a;
                   }
                 } else if (
-                  child.elementType === key ||
+                  currentFirstChild.elementType === key ||
                   ("object" === typeof key &&
                     null !== key &&
                     key.$$typeof === REACT_LAZY_TYPE &&
-                    resolveLazy(key) === child.type)
+                    resolveLazy(key) === currentFirstChild.type)
                 ) {
-                  deleteRemainingChildren(returnFiber, child.sibling);
-                  currentFirstChild = useFiber(child, newChild.props);
-                  coerceRef(returnFiber, child, currentFirstChild, newChild);
-                  currentFirstChild.return = returnFiber;
-                  returnFiber = currentFirstChild;
+                  deleteRemainingChildren(
+                    returnFiber,
+                    currentFirstChild.sibling
+                  );
+                  lanes = useFiber(currentFirstChild, newChild.props);
+                  lanes.ref = newChild.ref;
+                  lanes.return = returnFiber;
+                  returnFiber = lanes;
                   break a;
                 }
-                deleteRemainingChildren(returnFiber, child);
+                deleteRemainingChildren(returnFiber, currentFirstChild);
                 break;
-              } else deleteChild(returnFiber, child);
-              child = child.sibling;
+              } else deleteChild(returnFiber, currentFirstChild);
+              currentFirstChild = currentFirstChild.sibling;
             }
             newChild.type === REACT_FRAGMENT_TYPE
-              ? ((currentFirstChild = createFiberFromFragment(
+              ? ((lanes = createFiberFromFragment(
                   newChild.props.children,
                   returnFiber.mode,
                   lanes,
                   newChild.key
                 )),
-                (currentFirstChild.return = returnFiber),
-                (returnFiber = currentFirstChild))
+                (lanes.return = returnFiber),
+                (returnFiber = lanes))
               : ((lanes = createFiberFromTypeAndProps(
                   newChild.type,
                   newChild.key,
@@ -2090,15 +2039,15 @@ function createChildReconciler(shouldTrackSideEffects) {
                   returnFiber.mode,
                   lanes
                 )),
-                coerceRef(returnFiber, currentFirstChild, lanes, newChild),
+                (lanes.ref = newChild.ref),
                 (lanes.return = returnFiber),
                 (returnFiber = lanes));
           }
           return placeSingleChild(returnFiber);
         case REACT_PORTAL_TYPE:
           a: {
-            for (child = newChild.key; null !== currentFirstChild; ) {
-              if (currentFirstChild.key === child)
+            for (key = newChild.key; null !== currentFirstChild; ) {
+              if (currentFirstChild.key === key)
                 if (
                   4 === currentFirstChild.tag &&
                   currentFirstChild.stateNode.containerInfo ===
@@ -2110,12 +2059,9 @@ function createChildReconciler(shouldTrackSideEffects) {
                     returnFiber,
                     currentFirstChild.sibling
                   );
-                  currentFirstChild = useFiber(
-                    currentFirstChild,
-                    newChild.children || []
-                  );
-                  currentFirstChild.return = returnFiber;
-                  returnFiber = currentFirstChild;
+                  lanes = useFiber(currentFirstChild, newChild.children || []);
+                  lanes.return = returnFiber;
+                  returnFiber = lanes;
                   break a;
                 } else {
                   deleteRemainingChildren(returnFiber, currentFirstChild);
@@ -2124,22 +2070,18 @@ function createChildReconciler(shouldTrackSideEffects) {
               else deleteChild(returnFiber, currentFirstChild);
               currentFirstChild = currentFirstChild.sibling;
             }
-            currentFirstChild = createFiberFromPortal(
-              newChild,
-              returnFiber.mode,
-              lanes
-            );
-            currentFirstChild.return = returnFiber;
-            returnFiber = currentFirstChild;
+            lanes = createFiberFromPortal(newChild, returnFiber.mode, lanes);
+            lanes.return = returnFiber;
+            returnFiber = lanes;
           }
           return placeSingleChild(returnFiber);
         case REACT_LAZY_TYPE:
           return (
-            (child = newChild._init),
+            (key = newChild._init),
             reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
-              child(newChild._payload),
+              key(newChild._payload),
               lanes
             )
           );
@@ -2180,17 +2122,13 @@ function createChildReconciler(shouldTrackSideEffects) {
       ? ((newChild = "" + newChild),
         null !== currentFirstChild && 6 === currentFirstChild.tag
           ? (deleteRemainingChildren(returnFiber, currentFirstChild.sibling),
-            (currentFirstChild = useFiber(currentFirstChild, newChild)),
-            (currentFirstChild.return = returnFiber),
-            (returnFiber = currentFirstChild))
+            (lanes = useFiber(currentFirstChild, newChild)),
+            (lanes.return = returnFiber),
+            (returnFiber = lanes))
           : (deleteRemainingChildren(returnFiber, currentFirstChild),
-            (currentFirstChild = createFiberFromText(
-              newChild,
-              returnFiber.mode,
-              lanes
-            )),
-            (currentFirstChild.return = returnFiber),
-            (returnFiber = currentFirstChild)),
+            (lanes = createFiberFromText(newChild, returnFiber.mode, lanes)),
+            (lanes.return = returnFiber),
+            (returnFiber = lanes)),
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
@@ -2283,9 +2221,7 @@ function findFirstSuspended(row) {
   }
   return null;
 }
-var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
-  renderLanes = 0,
+var renderLanes = 0,
   currentlyRenderingFiber$1 = null,
   currentHook = null,
   workInProgressHook = null,
@@ -2319,7 +2255,7 @@ function renderWithHooks(
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = 0;
-  ReactCurrentDispatcher$1.current =
+  ReactSharedInternals.H =
     null === current || null === current.memoizedState
       ? HooksDispatcherOnMount
       : HooksDispatcherOnUpdate;
@@ -2337,7 +2273,7 @@ function renderWithHooks(
   return current;
 }
 function finishRenderingHooks() {
-  ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
   var didRenderTooFewHooks = null !== currentHook && null !== currentHook.next;
   renderLanes = 0;
   workInProgressHook = currentHook = currentlyRenderingFiber$1 = null;
@@ -2363,16 +2299,22 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
     workInProgress.updateQueue = null;
-    ReactCurrentDispatcher$1.current = HooksDispatcherOnRerender;
+    ReactSharedInternals.H = HooksDispatcherOnRerender;
     var children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
 function TransitionAwareHostComponent() {
-  var maybeThenable = ReactCurrentDispatcher$1.current.useState()[0];
-  return "function" === typeof maybeThenable.then
-    ? useThenable(maybeThenable)
-    : maybeThenable;
+  var dispatcher = ReactSharedInternals.H,
+    maybeThenable = dispatcher.useState()[0];
+  maybeThenable =
+    "function" === typeof maybeThenable.then
+      ? useThenable(maybeThenable)
+      : maybeThenable;
+  dispatcher = dispatcher.useState()[0];
+  (null !== currentHook ? currentHook.memoizedState : null) !== dispatcher &&
+    (currentlyRenderingFiber$1.flags |= 1024);
+  return maybeThenable;
 }
 function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.updateQueue = current.updateQueue;
@@ -2460,7 +2402,7 @@ function useThenable(thenable) {
     (null === workInProgressHook
       ? null === currentlyRenderingFiber$1.memoizedState
       : null === workInProgressHook.next) &&
-    (ReactCurrentDispatcher$1.current = HooksDispatcherOnMount);
+    (ReactSharedInternals.H = HooksDispatcherOnMount);
   return thenable;
 }
 function use(usable) {
@@ -2760,9 +2702,9 @@ function dispatchActionState(
 function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
-    prevTransition = ReactCurrentBatchConfig$2.transition,
+    prevTransition = ReactSharedInternals.T,
     currentTransition = { _callbacks: new Set() };
-  ReactCurrentBatchConfig$2.transition = currentTransition;
+  ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
   try {
     var returnValue = action(prevState, payload);
@@ -2795,7 +2737,7 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
     setState({ then: function () {}, status: "rejected", reason: error }),
       finishRunningActionStateAction(actionQueue, setPendingState, setState);
   } finally {
-    ReactCurrentBatchConfig$2.transition = prevTransition;
+    ReactSharedInternals.T = prevTransition;
   }
 }
 function finishRunningActionStateAction(
@@ -3032,9 +2974,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$2.transition,
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = { _callbacks: new Set() };
-  ReactCurrentBatchConfig$2.transition = currentTransition;
+  ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   try {
     var returnValue = callback();
@@ -3058,7 +3000,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
     });
   } finally {
     (currentUpdatePriority = previousPriority),
-      (ReactCurrentBatchConfig$2.transition = prevTransition);
+      (ReactSharedInternals.T = prevTransition);
   }
 }
 function useHostTransitionStatus() {
@@ -3692,7 +3634,7 @@ function resolveClassComponentProps(
 ) {
   var newProps = baseProps;
   if ((Component = Component.defaultProps) && !alreadyResolvedDefaultProps) {
-    newProps = assign({}, newProps, baseProps);
+    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
     for (var propName in Component)
       void 0 === newProps[propName] &&
         (newProps[propName] = Component[propName]);
@@ -3964,8 +3906,7 @@ function throwException(
   } while (null !== returnFiber);
   return !1;
 }
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-  SelectiveHydrationException = Error(
+var SelectiveHydrationException = Error(
     "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
   ),
   didReceiveUpdate = !1;
@@ -4182,8 +4123,22 @@ function markRef(current, workInProgress) {
       throw Error(
         "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
       );
-    if (null === current || current.ref !== ref)
+    if (null === current || current.ref !== ref) {
+      if (
+        null !== current &&
+        ((current = current.ref),
+        "function" === typeof current &&
+          "function" === typeof ref &&
+          "string" === typeof current.__stringRef &&
+          current.__stringRef === ref.__stringRef &&
+          current.__stringRefType === ref.__stringRefType &&
+          current.__stringRefOwner === ref.__stringRefOwner)
+      ) {
+        workInProgress.ref = current;
+        return;
+      }
       workInProgress.flags |= 2097664;
+    }
   }
 }
 function updateFunctionComponent(
@@ -4468,7 +4423,7 @@ function finishClassComponent(
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
   shouldUpdate = workInProgress.stateNode;
-  ReactCurrentOwner$1.current = workInProgress;
+  ReactSharedInternals.owner = workInProgress;
   if (
     didCaptureError &&
     "function" !== typeof Component.getDerivedStateFromError
@@ -5695,9 +5650,8 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
-  var transition = ReactCurrentBatchConfig$1.transition;
+  var transition = ReactSharedInternals.T;
   null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
@@ -7000,7 +6954,7 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 12854)
+  if (parentFiber.subtreeFlags & 13878)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -7915,10 +7869,6 @@ var DefaultCacheDispatcher = {
     }
   },
   PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
-  ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher,
-  ReactCurrentCache = ReactSharedInternals.ReactCurrentCache,
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-  ReactCurrentBatchConfig = ReactSharedInternals.ReactCurrentBatchConfig,
   executionContext = 0,
   workInProgressRoot = null,
   workInProgress = null,
@@ -7956,8 +7906,8 @@ function requestUpdateLane(fiber) {
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
     );
-  fiber = currentUpdatePriority;
-  return 0 !== fiber ? fiber : 32;
+  fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
+  return fiber;
 }
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
@@ -8036,13 +7986,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             root,
             renderWasConcurrent
           );
-          0 !== errorRetryLanes &&
+          if (
+            0 !== errorRetryLanes &&
             ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
               renderWasConcurrent,
               errorRetryLanes
-            )));
+            )),
+            (renderWasConcurrent = !1),
+            2 !== exitStatus)
+          )
+            continue;
         }
         if (1 === exitStatus) {
           prepareFreshStack(root, 0);
@@ -8269,25 +8224,21 @@ function performSyncWorkOnRoot(root, lanes) {
   ensureRootIsScheduled(root);
   return null;
 }
-function flushSync(fn) {
+function flushSyncFromReconciler(fn) {
   null !== rootWithPendingPassiveEffects &&
     0 === rootWithPendingPassiveEffects.tag &&
     0 === (executionContext & 6) &&
     flushPassiveEffects();
   var prevExecutionContext = executionContext;
   executionContext |= 1;
-  var prevTransition = ReactCurrentBatchConfig.transition,
+  var prevTransition = ReactSharedInternals.T,
     previousPriority = currentUpdatePriority;
   try {
-    if (
-      ((ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
-      fn)
-    )
+    if (((currentUpdatePriority = 2), (ReactSharedInternals.T = null), fn))
       return fn();
   } finally {
     (currentUpdatePriority = previousPriority),
-      (ReactCurrentBatchConfig.transition = prevTransition),
+      (ReactSharedInternals.T = prevTransition),
       (executionContext = prevExecutionContext),
       0 === (executionContext & 6) && flushSyncWorkAcrossRoots_impl(!1);
   }
@@ -8353,8 +8304,8 @@ function prepareFreshStack(root, lanes) {
 }
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
-  ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
+  ReactSharedInternals.owner = null;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
     var handler = suspenseHandlerStackCursor.current;
@@ -8421,13 +8372,13 @@ function handleThrow(root, thrownValue) {
     }
 }
 function pushDispatcher() {
-  var prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+  var prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = ContextOnlyDispatcher;
   return null === prevDispatcher ? ContextOnlyDispatcher : prevDispatcher;
 }
 function pushCacheDispatcher() {
-  var prevCacheDispatcher = ReactCurrentCache.current;
-  ReactCurrentCache.current = DefaultCacheDispatcher;
+  var prevCacheDispatcher = ReactSharedInternals.C;
+  ReactSharedInternals.C = DefaultCacheDispatcher;
   return prevCacheDispatcher;
 }
 function renderDidSuspendDelayIfPossible() {
@@ -8480,8 +8431,8 @@ function renderRootSync(root, lanes) {
   lanes && root.shellSuspendCounter++;
   resetContextDependencies();
   executionContext = prevExecutionContext;
-  ReactCurrentDispatcher.current = prevDispatcher;
-  ReactCurrentCache.current = prevCacheDispatcher;
+  ReactSharedInternals.H = prevDispatcher;
+  ReactSharedInternals.C = prevCacheDispatcher;
   if (null !== workInProgress)
     throw Error(
       "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue."
@@ -8589,8 +8540,8 @@ function renderRootConcurrent(root, lanes) {
     }
   while (1);
   resetContextDependencies();
-  ReactCurrentDispatcher.current = prevDispatcher;
-  ReactCurrentCache.current = prevCacheDispatcher;
+  ReactSharedInternals.H = prevDispatcher;
+  ReactSharedInternals.C = prevCacheDispatcher;
   executionContext = prevExecutionContext;
   if (null !== workInProgress)
     return (
@@ -8620,7 +8571,7 @@ function performUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.owner = null;
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate,
@@ -8677,7 +8628,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactCurrentOwner.current = null;
+  ReactSharedInternals.owner = null;
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -8773,11 +8724,11 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane
 ) {
-  var previousUpdateLanePriority = currentUpdatePriority,
-    prevTransition = ReactCurrentBatchConfig.transition;
+  var prevTransition = ReactSharedInternals.T,
+    previousUpdateLanePriority = currentUpdatePriority;
   try {
-    (ReactCurrentBatchConfig.transition = null),
-      (currentUpdatePriority = 2),
+    (currentUpdatePriority = 2),
+      (ReactSharedInternals.T = null),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -8787,7 +8738,7 @@ function commitRoot(
         spawnedLane
       );
   } finally {
-    (ReactCurrentBatchConfig.transition = prevTransition),
+    (ReactSharedInternals.T = prevTransition),
       (currentUpdatePriority = previousUpdateLanePriority);
   }
   return null;
@@ -8837,13 +8788,13 @@ function commitRootImpl(
     }));
   transitions = 0 !== (finishedWork.flags & 15990);
   if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-    transitions = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = null;
+    transitions = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
     spawnedLane = currentUpdatePriority;
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    ReactCurrentOwner.current = null;
+    ReactSharedInternals.owner = null;
     commitBeforeMutationEffects(root, finishedWork);
     commitTime = now();
     commitMutationEffectsOnFiber(finishedWork, root);
@@ -8860,7 +8811,7 @@ function commitRootImpl(
     requestPaint();
     executionContext = prevExecutionContext;
     currentUpdatePriority = spawnedLane;
-    ReactCurrentBatchConfig.transition = transitions;
+    ReactSharedInternals.T = transitions;
   } else (root.current = finishedWork), (commitTime = now());
   rootDoesHavePassiveEffects
     ? ((rootDoesHavePassiveEffects = !1),
@@ -8907,18 +8858,17 @@ function flushPassiveEffects() {
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
-      priority = 32 > renderPriority ? 32 : renderPriority;
-    renderPriority = ReactCurrentBatchConfig.transition;
-    var previousPriority = currentUpdatePriority;
+      prevTransition = ReactSharedInternals.T,
+      previousPriority = currentUpdatePriority;
     try {
-      ReactCurrentBatchConfig.transition = null;
-      currentUpdatePriority = priority;
+      currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
+      ReactSharedInternals.T = null;
       if (null === rootWithPendingPassiveEffects)
         var JSCompiler_inline_result = !1;
       else {
         var transitions = pendingPassiveTransitions;
         pendingPassiveTransitions = null;
-        priority = rootWithPendingPassiveEffects;
+        renderPriority = rootWithPendingPassiveEffects;
         var lanes = pendingPassiveEffectsLanes;
         rootWithPendingPassiveEffects = null;
         pendingPassiveEffectsLanes = 0;
@@ -8930,10 +8880,10 @@ function flushPassiveEffects() {
           injectedProfilingHooks.markPassiveEffectsStarted(lanes);
         var prevExecutionContext = executionContext;
         executionContext |= 4;
-        commitPassiveUnmountOnFiber(priority.current);
+        commitPassiveUnmountOnFiber(renderPriority.current);
         commitPassiveMountOnFiber(
-          priority,
-          priority.current,
+          renderPriority,
+          renderPriority.current,
           lanes,
           transitions
         );
@@ -8981,9 +8931,9 @@ function flushPassiveEffects() {
           "function" === typeof injectedHook.onPostCommitFiberRoot
         )
           try {
-            injectedHook.onPostCommitFiberRoot(rendererID, priority);
+            injectedHook.onPostCommitFiberRoot(rendererID, renderPriority);
           } catch (err) {}
-        var stateNode = priority.current.stateNode;
+        var stateNode = renderPriority.current.stateNode;
         stateNode.effectDuration = 0;
         stateNode.passiveEffectDuration = 0;
         JSCompiler_inline_result = !0;
@@ -8991,7 +8941,7 @@ function flushPassiveEffects() {
       return JSCompiler_inline_result;
     } finally {
       (currentUpdatePriority = previousPriority),
-        (ReactCurrentBatchConfig.transition = renderPriority),
+        (ReactSharedInternals.T = prevTransition),
         releaseRootPooledCache(root, remainingLanes);
     }
   }
@@ -9827,12 +9777,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1079 = {
+var devToolsConfig$jscomp$inline_1082 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-3aa3c53d",
+  version: "19.0.0-canary-2a177f7f",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9849,10 +9799,10 @@ var devToolsConfig$jscomp$inline_1079 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1079.bundleType,
-  version: devToolsConfig$jscomp$inline_1079.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1079.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1079.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1082.bundleType,
+  version: devToolsConfig$jscomp$inline_1082.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1082.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1082.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9862,21 +9812,21 @@ var devToolsConfig$jscomp$inline_1079 = {
   setErrorHandler: null,
   setSuspenseHandler: null,
   scheduleUpdate: null,
-  currentDispatcherRef: ReactSharedInternals.ReactCurrentDispatcher,
+  currentDispatcherRef: ReactSharedInternals,
   findHostInstanceByFiber: function (fiber) {
     fiber = findCurrentFiberUsingSlowPath(fiber);
     fiber = null !== fiber ? findCurrentHostFiberImpl(fiber) : null;
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1079.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1082.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-3aa3c53d"
+  reconcilerVersion: "19.0.0-canary-2a177f7f"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
@@ -9975,7 +9925,7 @@ exports.create = function (element, options) {
       }
       return JSCompiler_inline_result;
     },
-    unstable_flushSync: flushSync
+    unstable_flushSync: flushSyncFromReconciler
   };
   Object.defineProperty(element, "root", {
     configurable: !0,
