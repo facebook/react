@@ -13,7 +13,10 @@ import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 
-import type {Wall} from 'react-devtools-shared/src/frontend/types';
+import type {
+  BrowserTheme,
+  Wall,
+} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Config = {
@@ -42,18 +45,20 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
 type InitializationOptions = {
   bridge: FrontendBridge,
   store: Store,
+  theme?: BrowserTheme,
 };
 
 export function initialize(
   contentWindow: Element | Document,
   options: InitializationOptions,
 ): void {
-  const {bridge, store} = options;
+  const {bridge, store, theme = 'light'} = options;
   const root = createRoot(contentWindow);
 
   root.render(
     <DevTools
       bridge={bridge}
+      browserTheme={theme}
       store={store}
       showTabBar={true}
       warnIfLegacyBackendDetected={true}
