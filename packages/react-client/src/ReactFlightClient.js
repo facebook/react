@@ -69,6 +69,12 @@ import {
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
+interface StreamController {
+  close(returnValue: any): void;
+  enqueue(value: any): void;
+  error(error: Error): void;
+}
+
 type UninitializedModel = string;
 
 export type JSONValue =
@@ -138,15 +144,17 @@ type ResolvedModuleChunk<T> = {
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
-  reason: null | ReadableStreamController,
+  reason: null | StreamController,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type InitializedStreamChunk = {
+type InitializedStreamChunk<
+  T: ReadableStream | $AsyncIterable<any, any, void>,
+> = {
   status: 'fulfilled',
-  value: ReadableStream,
-  reason: ReadableStreamController,
+  value: T,
+  reason: StreamController,
   _response: Response,
   then(resolve: (ReadableStream) => mixed, reject: (mixed) => mixed): void,
 };
@@ -323,7 +331,7 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
     if (enableFlightReadableStream) {
       // If we get more data to an already resolved ID, we assume that it's
       // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk = (chunk: any);
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
       const controller = streamChunk.reason;
       // $FlowFixMe[incompatible-call]: The error method should accept mixed.
       controller.error(error);
@@ -371,11 +379,13 @@ function createInitializedBufferChunk(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
-function createInitializedStreamChunk(
+function createInitializedStreamChunk<
+  T: ReadableStream | $AsyncIterable<any, any, void>,
+>(
   response: Response,
-  value: ReadableStream,
-  controller: ReadableStreamController,
-): InitializedChunk<ReadableStream> {
+  value: T,
+  controller: StreamController,
+): InitializedChunk<T> {
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
@@ -390,8 +400,9 @@ function resolveModelChunk<T>(
     if (enableFlightReadableStream) {
       // If we get more data to an already resolved ID, we assume that it's
       // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk = (chunk: any);
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
       const controller = streamChunk.reason;
+      // TODO: This model might get blocked.
       const parsedValue: T = parseModel(chunk._response, value);
       controller.enqueue(parsedValue);
     }
@@ -1068,19 +1079,13 @@ function resolveModule(
   }
 }
 
-function startReadableStream(
+function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   response: Response,
   id: number,
-  type: void | 'bytes',
+  stream: T,
+  controller: StreamController,
 ): void {
   const chunks = response._chunks;
-  let controller: ReadableStreamController = (null: any);
-  const stream = new ReadableStream({
-    type: type,
-    start(c) {
-      controller = c;
-    },
-  });
   const chunk = chunks.get(id);
   if (!chunk) {
     chunks.set(id, createInitializedStreamChunk(response, stream, controller));
@@ -1091,7 +1096,7 @@ function startReadableStream(
     return;
   }
   const resolveListeners = chunk.value;
-  const resolvedChunk: InitializedStreamChunk = (chunk: any);
+  const resolvedChunk: InitializedStreamChunk<T> = (chunk: any);
   resolvedChunk.status = INITIALIZED;
   resolvedChunk.value = stream;
   resolvedChunk.reason = controller;
@@ -1100,23 +1105,152 @@ function startReadableStream(
   }
 }
 
-function startAsyncIterator(response: Response, id: number): void {
-  // TODO
+function startReadableStream(
+  response: Response,
+  id: number,
+  type: void | 'bytes',
+): void {
+  let controller: StreamController = (null: any);
+  const stream = new ReadableStream({
+    type: type,
+    start(c) {
+      controller = c;
+    },
+  });
+  resolveStream(response, id, stream, controller);
 }
 
-function startAsyncIterable(response: Response, id: number): void {
-  // TODO
+type IteratorEntry<T> = {done: false, value: T} | {done: true, value: T};
+
+function asyncIterator(this: $AsyncIterator<any, any, void>) {
+  // Self referencing iterator.
+  return this;
 }
 
-function stopStream(response: Response, id: number): void {
+function createIterator<T>(
+  next: (arg: void) => SomeChunk<IteratorEntry<T>>,
+): $AsyncIterator<T, T, void> {
+  const iterator: any = {
+    next: next,
+    // TODO: Add return/throw as options for aborting.
+  };
+  // TODO: The iterator could inherit the AsyncIterator prototype which is not exposed as
+  // a global but exists as a prototype of an AsyncGenerator. However, it's not needed
+  // to satisfy the iterable protocol.
+  (iterator: any)[Symbol.asyncIterator] = asyncIterator;
+  return iterator;
+}
+
+function initializeIteratorEntry<T>(
+  chunk: SomeChunk<IteratorEntry<T>>,
+  value: T,
+  done: boolean,
+): void {
+  const entry: IteratorEntry<T> = ({done, value}: any);
+  const pendingChunk: PendingChunk<IteratorEntry<T>> = (chunk: any);
+  const resolveListeners = pendingChunk.value;
+  const initializedChunk: InitializedChunk<IteratorEntry<T>> =
+    (pendingChunk: any);
+  initializedChunk.status = INITIALIZED;
+  initializedChunk.value = entry;
+  if (resolveListeners !== null) {
+    wakeChunk(resolveListeners, entry);
+  }
+}
+
+function startAsyncIterable<T>(
+  response: Response,
+  id: number,
+  iterator: boolean,
+): void {
+  const buffer: Array<SomeChunk<IteratorEntry<T>>> = [];
+  let closed = false;
+  let nextWriteIndex = 0;
+  const controller: StreamController = {
+    enqueue(value: any): void {
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+      }
+      initializeIteratorEntry(buffer[nextWriteIndex++], value, false);
+    },
+    close(value: T): void {
+      closed = true;
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+      }
+      initializeIteratorEntry(buffer[nextWriteIndex++], value, true);
+      while (nextWriteIndex < buffer.length) {
+        // In generators, any extra reads from the iterator have the value undefined.
+        initializeIteratorEntry(
+          buffer[nextWriteIndex++],
+          (undefined: any),
+          true,
+        );
+      }
+    },
+    error(error: Error): void {
+      closed = true;
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+      }
+      while (nextWriteIndex < buffer.length) {
+        triggerErrorOnChunk(buffer[nextWriteIndex++], error);
+      }
+    },
+  };
+  const iterable: $AsyncIterable<T, T, void> = {
+    [Symbol.asyncIterator](): $AsyncIterator<T, T, void> {
+      let nextReadIndex = 0;
+      return createIterator(arg => {
+        if (arg !== undefined) {
+          throw new Error(
+            'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+          );
+        }
+        if (nextReadIndex === buffer.length) {
+          if (closed) {
+            // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+            return new Chunk(
+              INITIALIZED,
+              {done: true, value: undefined},
+              null,
+              response,
+            );
+          }
+          buffer[nextReadIndex] =
+            createPendingChunk<IteratorEntry<T>>(response);
+        }
+        return buffer[nextReadIndex++];
+      });
+    },
+  };
+  // TODO: If it's a single shot iterator we can optimize memory by cleaning up the buffer after
+  // reading through the end, but currently we favor code size over this optimization.
+  resolveStream(
+    response,
+    id,
+    iterator ? iterable[Symbol.asyncIterator]() : iterable,
+    controller,
+  );
+}
+
+function stopStream(
+  response: Response,
+  id: number,
+  row: UninitializedModel,
+): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk || chunk.status !== INITIALIZED) {
     // We didn't expect not to have an existing stream;
+    return;
   }
-  const streamChunk: InitializedStreamChunk = (chunk: any);
+  const streamChunk: InitializedStreamChunk<any> = (chunk: any);
   const controller = streamChunk.reason;
-  controller.close();
+  // TODO: This model might get blocked.
+  const parsedValue: any =
+    row === '' ? undefined : parseModel(chunk._response, row);
+  controller.close(parsedValue);
 }
 
 type ErrorWithDigest = Error & {digest?: string};
@@ -1462,21 +1596,21 @@ function processFullRow(
     // Fallthrough
     case 88 /* "X" */: {
       if (enableFlightReadableStream) {
-        startAsyncIterable(response, id);
+        startAsyncIterable(response, id, false);
         return;
       }
     }
     // Fallthrough
     case 120 /* "x" */: {
       if (enableFlightReadableStream) {
-        startAsyncIterator(response, id);
+        startAsyncIterable(response, id, true);
         return;
       }
     }
     // Fallthrough
     case 67 /* "C" */: {
       if (enableFlightReadableStream) {
-        stopStream(response, id);
+        stopStream(response, id, row);
         return;
       }
     }

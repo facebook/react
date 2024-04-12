@@ -641,31 +641,46 @@ function serializeAsyncIterable(
       return;
     }
 
-    try {
-      const chunkId = outlineModel(request, entry.value);
-      const processedChunk = encodeReferenceChunk(
-        request,
-        streamId,
-        serializeByValueID(chunkId),
-      );
-      request.pendingChunks++;
-      request.completedRegularChunks.push(processedChunk);
-      enqueueFlush(request);
-    } catch (x) {
-      error(x);
-      return;
-    }
     if (entry.done) {
-      // Unlike streams, the last entry is encoded as a row. Even if it's undefined,
-      // because it might not be.
       request.abortListeners.delete(error);
-      const endStreamRow = streamId.toString(16) + ':C\n';
+      let endStreamRow;
+      if (entry.value === undefined) {
+        endStreamRow = streamId.toString(16) + ':C\n';
+      } else {
+        // Unlike streams, the last value may not be undefined. If it's not
+        // we outline it and encode a reference to it in the closing instruction.
+        try {
+          const chunkId = outlineModel(request, entry.value);
+          endStreamRow =
+            streamId.toString(16) +
+            ':C' +
+            stringify(serializeByValueID(chunkId)) +
+            '\n';
+        } catch (x) {
+          error(x);
+          return;
+        }
+      }
       request.pendingChunks++;
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
       aborted = true;
     } else {
-      iterator.next().then(progress, error);
+      try {
+        const chunkId = outlineModel(request, entry.value);
+        const processedChunk = encodeReferenceChunk(
+          request,
+          streamId,
+          serializeByValueID(chunkId),
+        );
+        request.pendingChunks++;
+        request.completedRegularChunks.push(processedChunk);
+        enqueueFlush(request);
+        iterator.next().then(progress, error);
+      } catch (x) {
+        error(x);
+        return;
+      }
     }
   }
   function error(reason: mixed) {
