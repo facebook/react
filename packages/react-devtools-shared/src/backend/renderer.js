@@ -86,6 +86,7 @@ import {
   STRICT_MODE_SYMBOL_STRING,
   PROFILER_NUMBER,
   PROFILER_SYMBOL_STRING,
+  REACT_MEMO_CACHE_SENTINEL,
   SCOPE_NUMBER,
   SCOPE_SYMBOL_STRING,
   FORWARD_REF_NUMBER,
@@ -474,8 +475,12 @@ export function getInternalReactConstants(version: string): {
     }
 
     let resolvedContext: any = null;
-    // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
-    if (!shouldSkipForgetCheck && fiber.updateQueue?.memoCache != null) {
+    if (
+      !shouldSkipForgetCheck &&
+      // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
+      (fiber.updateQueue?.memoCache != null ||
+        fiber.memoizedState?.memoizedState?.[REACT_MEMO_CACHE_SENTINEL])
+    ) {
       const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
         fiber,
         true,
