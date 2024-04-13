@@ -729,6 +729,7 @@ function getOutlinedModel<T>(
           typeof chunkValue === 'object' &&
           chunkValue !== null &&
           (Array.isArray(chunkValue) ||
+            typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
             chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
           !chunkValue._debugInfo
         ) {
@@ -1122,6 +1123,8 @@ function startReadableStream(
 
 type IteratorEntry<T> = {done: false, value: T} | {done: true, value: T};
 
+const ASYNC_ITERATOR = Symbol.asyncIterator;
+
 function asyncIterator(this: $AsyncIterator<any, any, void>) {
   // Self referencing iterator.
   return this;
@@ -1137,7 +1140,7 @@ function createIterator<T>(
   // TODO: The iterator could inherit the AsyncIterator prototype which is not exposed as
   // a global but exists as a prototype of an AsyncGenerator. However, it's not needed
   // to satisfy the iterable protocol.
-  (iterator: any)[Symbol.asyncIterator] = asyncIterator;
+  (iterator: any)[ASYNC_ITERATOR] = asyncIterator;
   return iterator;
 }
 
@@ -1199,7 +1202,7 @@ function startAsyncIterable<T>(
     },
   };
   const iterable: $AsyncIterable<T, T, void> = {
-    [Symbol.asyncIterator](): $AsyncIterator<T, T, void> {
+    [ASYNC_ITERATOR](): $AsyncIterator<T, T, void> {
       let nextReadIndex = 0;
       return createIterator(arg => {
         if (arg !== undefined) {
@@ -1229,7 +1232,7 @@ function startAsyncIterable<T>(
   resolveStream(
     response,
     id,
-    iterator ? iterable[Symbol.asyncIterator]() : iterable,
+    iterator ? iterable[ASYNC_ITERATOR]() : iterable,
     controller,
   );
 }

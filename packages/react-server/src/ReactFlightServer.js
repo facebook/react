@@ -241,7 +241,7 @@ export type ReactClientValue =
   | void
   | bigint
   | ReadableStream
-  | AsyncIterable<ReactClientValue>
+  | $AsyncIterable<ReactClientValue, ReactClientValue, void>
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
@@ -614,20 +614,27 @@ function serializeReadableStream(
 
 function serializeAsyncIterable(
   request: Request,
-  iteratable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  iterable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
   iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
 ): string {
   // Generators/Iterators are Iterables but they're also their own iterator
   // functions. If that's the case, we treat them as single-shot. Otherwise,
   // we assume that this iterable might be a multi-shot and allow it to be
   // iterated more than once on the client.
-  const isIterator = iteratable === iterator;
+  const isIterator = iterable === iterator;
 
   request.pendingChunks += 2; // Start and Stop rows.
   const streamId = request.nextChunkId++;
   const startStreamRow =
     streamId.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  if (__DEV__) {
+    const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, streamId, debugInfo);
+    }
+  }
 
   // There's a race condition between when the stream is aborted and when the promise
   // resolves so we track whether we already aborted it to avoid writing twice.
@@ -885,30 +892,9 @@ function renderFunctionComponent<Props>(
 function renderFragment(
   request: Request,
   task: Task,
-  children:
-    | $ReadOnlyArray<ReactClientValue>
+  children: $ReadOnlyArray<ReactClientValue>,
 ): ReactJSONValue {
-  if (__DEV__) {
-    const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
-    if (debugInfo) {
-      // If this came from Flight, forward any debug info into this new row.
-      if (debugID === null) {
-        // We don't have a chunk to assign debug info. We need to outline this
-        // component to assign it an ID.
-        return outlineTask(request, task);
-      } else {
-        // Forward any debug info we have the first time we see it.
-        // We do this after init so that we have received all the debug info
-        // from the server by the time we emit it.
-        // TODO: We might see this fragment twice if it ends up wrapped below.
-        forwardDebugInfo(request, debugID, debugInfo);
-      }
-    }
-  }
-  if (!enableServerComponentKeys) {
-    return children;
-  }
-  if (task.keyPath !== null) {
+  if (enableServerComponentKeys && task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
     const fragment = [
@@ -939,15 +925,6 @@ function renderFragment(
   // way up. Which is what we want since we've consumed it. If this changes to
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
   // before recursing here.
-  return children;
-}
-
-function renderAsyncFragment(
-  request: Request,
-  task: Task,
-  children: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
-  getAsyncIterator: () => $AsyncIterator<any, any, any>
-): ReactJSONValue {
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
     if (debugInfo) {
@@ -960,16 +937,23 @@ function renderAsyncFragment(
         // Forward any debug info we have the first time we see it.
         // We do this after init so that we have received all the debug info
         // from the server by the time we emit it.
-        // TODO: We might see this fragment twice if it ends up wrapped below.
         forwardDebugInfo(request, debugID, debugInfo);
       }
+      // Since we're rendering this array again, create a copy that doesn't
+      // have the debug info so we avoid outlining or emitting debug info again.
+      children = Array.from(children);
     }
   }
-  if (!enableServerComponentKeys) {
-    const asyncIterator = getAsyncIterator.call(children);
-    return serializeAsyncIterable(request, children, asyncIterator);
-  }
-  if (task.keyPath !== null) {
+  return children;
+}
+
+function renderAsyncFragment(
+  request: Request,
+  task: Task,
+  children: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  getAsyncIterator: () => $AsyncIterator<any, any, any>,
+): ReactJSONValue {
+  if (enableServerComponentKeys && task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
     const fragment = [
@@ -996,6 +980,7 @@ function renderAsyncFragment(
     // So instead, we wrap it with an unkeyed fragment and inner keyed fragment.
     return [fragment];
   }
+
   // Since we're yielding here, that implicitly resets the keyPath context on the
   // way up. Which is what we want since we've consumed it. If this changes to
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
@@ -1953,7 +1938,12 @@ function renderModelDestructive(
         (value: any)[ASYNC_ITERATOR];
       if (typeof getAsyncIterator === 'function') {
         // We treat AsyncIterables as a Fragment and as such we might need to key them.
-        return renderAsyncFragment(request, task, (value: any), getAsyncIterator);
+        return renderAsyncFragment(
+          request,
+          task,
+          (value: any),
+          getAsyncIterator,
+        );
       }
     }
 
