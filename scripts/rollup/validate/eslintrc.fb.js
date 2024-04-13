@@ -31,12 +31,16 @@ module.exports = {
 
     Reflect: 'readonly',
     globalThis: 'readonly',
+
+    FinalizationRegistry: 'readonly',
+
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
     // FB
     __DEV__: 'readonly',
     // Node.js Server Rendering
+    process: 'readonly',
     setImmediate: 'readonly',
     Buffer: 'readonly',
     // Trusted Types
@@ -52,6 +56,7 @@ module.exports = {
 
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // jest
     jest: 'readonly',

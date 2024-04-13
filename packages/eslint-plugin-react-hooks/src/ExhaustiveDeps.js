@@ -111,7 +111,7 @@ export default {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
         });
       }
 
@@ -177,7 +177,7 @@ export default {
         if (init == null) {
           return false;
         }
-        while (init.type === 'TSAsExpression') {
+        while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
           init = init.expression;
         }
         // Detect primitive constants
@@ -618,7 +618,12 @@ export default {
 
       const declaredDependencies = [];
       const externalDependencies = new Set();
-      if (declaredDependenciesNode.type !== 'ArrayExpression') {
+      const isArrayExpression =
+        declaredDependenciesNode.type === 'ArrayExpression';
+      const isTSAsArrayExpression =
+        declaredDependenciesNode.type === 'TSAsExpression' &&
+        declaredDependenciesNode.expression.type === 'ArrayExpression';
+      if (!isArrayExpression && !isTSAsArrayExpression) {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
@@ -631,7 +636,11 @@ export default {
             'dependencies.',
         });
       } else {
-        declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
+        const arrayExpression = isTSAsArrayExpression
+          ? declaredDependenciesNode.expression
+          : declaredDependenciesNode;
+
+        arrayExpression.elements.forEach(declaredDependencyNode => {
           // Skip elided elements.
           if (declaredDependencyNode === null) {
             return;
@@ -1161,7 +1170,12 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const maybeNode = node.arguments[callbackIndex + 1];
+      const declaredDependenciesNode =
+        maybeNode &&
+        !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
+          ? maybeNode
+          : undefined;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
@@ -1203,6 +1217,15 @@ export default {
         case 'ArrowFunctionExpression':
           visitFunctionWithDependencies(
             callback,
+            declaredDependenciesNode,
+            reactiveHook,
+            reactiveHookName,
+            isEffect,
+          );
+          return; // Handled
+        case 'TSAsExpression':
+          visitFunctionWithDependencies(
+            callback.expression,
             declaredDependenciesNode,
             reactiveHook,
             reactiveHookName,
@@ -1520,7 +1543,7 @@ function getConstructionExpressionType(node) {
       }
       return null;
     case 'TypeCastExpression':
-      return getConstructionExpressionType(node.expression);
+    case 'AsExpression':
     case 'TSAsExpression':
       return getConstructionExpressionType(node.expression);
   }

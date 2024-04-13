@@ -4,6 +4,110 @@
 
 ---
 
+### 5.0.2
+March 5, 2024
+
+* feat[devtools]: symbolicate source for inspected element ([hoxyq](https://github.com/hoxyq) in [#28471](https://github.com/facebook/react/pull/28471))
+* refactor[devtools]: lazily define source for fiber based on component stacks ([hoxyq](https://github.com/hoxyq) in [#28351](https://github.com/facebook/react/pull/28351))
+* fix[devtools/tree/element]: onClick -> onMouseDown to handle first click correctly ([hoxyq](https://github.com/hoxyq) in [#28486](https://github.com/facebook/react/pull/28486))
+* Devtools: Unwrap Promise in useFormState ([eps1lon](https://github.com/eps1lon) in [#28319](https://github.com/facebook/react/pull/28319))
+* Include server component names in the componentStack in DEV ([sebmarkbage](https://github.com/sebmarkbage) in [#28415](https://github.com/facebook/react/pull/28415))
+
+---
+
+### 5.0.1
+February 22, 2024
+
+* feature[REMOVED][devtools]: turn off / hide location based component filters ([hoxyq](https://github.com/hoxyq) in [#28417](https://github.com/facebook/react/pull/28417))
+* Add useSyncExternalStore and useTransition to getPrimitiveStackCache ([jamesbvaughan](https://github.com/jamesbvaughan) in [#28399](https://github.com/facebook/react/pull/28399))
+* chore[devtools]: use react-window from npm and bump react-virtualized-auto-sizer to ^1.0.23 ([hoxyq](https://github.com/hoxyq) in [#28408](https://github.com/facebook/react/pull/28408))
+* [Debug Tools] Always use includeHooksSource option ([sebmarkbage](https://github.com/sebmarkbage) in [#28309](https://github.com/facebook/react/pull/28309))
+* [Debug Tools] Introspect Promises in use() ([sebmarkbage](https://github.com/sebmarkbage) in [#28297](https://github.com/facebook/react/pull/28297))
+* fix[devtools/useModalDismissSignal]: use getRootNode for shadow root case support ([hoxyq](https://github.com/hoxyq) in [#28145](https://github.com/facebook/react/pull/28145))
+* DevTools: Add support for use(Context) ([eps1lon](https://github.com/eps1lon) in [#28233](https://github.com/facebook/react/pull/28233))
+* Patch devtools before running useMemo function in strict mode ([gsathya](https://github.com/gsathya) in [#28249](https://github.com/facebook/react/pull/28249))
+* DevTools: Add support for useFormState ([eps1lon](https://github.com/eps1lon) in [#28232](https://github.com/facebook/react/pull/28232))
+* DevTools: Add support for useOptimistic Hook ([eps1lon](https://github.com/eps1lon) in [#27982](https://github.com/facebook/react/pull/27982))
+
+---
+
+### 5.0.0
+November 29, 2023
+
+### Breaking
+* refactor[devtools]: highlight an array of elements for native ([hoxyq](https://github.com/hoxyq) in [#27734](https://github.com/facebook/react/pull/27734))
+
+### Features
+* feat[devtools]: display Forget badge for the relevant components ([hoxyq](https://github.com/hoxyq) in [#27709](https://github.com/facebook/react/pull/27709))
+
+### Other
+* Added windows powershell syntax to build scripts ([PrathamLalwani](https://github.com/PrathamLalwani) in [#27692](https://github.com/facebook/react/pull/27692))
+* refactor[react-devtools-shared]: minor parsing improvements and modifications ([hoxyq](https://github.com/hoxyq) in [#27661](https://github.com/facebook/react/pull/27661))
+
+---
+
+### 4.28.5
+October 18, 2023
+
+#### Bugfixes
+* fix[devtools/useMemoCache]: add stub for useMemoCache in ReactDebugHook ([hoxyq](https://github.com/hoxyq) in [#27472](https://github.com/facebook/react/pull/27472))
+* refactor[react-devtools-extensions]: use globals to eliminate dead code ([hoxyq](https://github.com/hoxyq) in [#27516](https://github.com/facebook/react/pull/27516))
+* fix[devtools/inspectElement]: dont pause initial inspectElement call when user switches tabs ([hoxyq](https://github.com/hoxyq) in [#27488](https://github.com/facebook/react/pull/27488))
+
+---
+
+### 4.28.4
+September 25, 2023
+
+#### Features
+* feat:-Added a delete all filters action and added title to the add filter a… ([Biki-das](https://github.com/Biki-das) in [#27332](https://github.com/facebook/react/pull/27332))
+* feat[devtools/extension]: add dark theme for popup ([rakleed](https://github.com/rakleed) in [#27330](https://github.com/facebook/react/pull/27330))
+
+#### Bugfixes
+* refactor[devtools/extension]: refactored messaging logic across different parts of the extension ([hoxyq](https://github.com/hoxyq) in [#27417](https://github.com/facebook/react/pull/27417))
+* fix[devtools/extension]: added a workaround for proxy content script injection in firefox ([hoxyq](https://github.com/hoxyq) in [#27375](https://github.com/facebook/react/pull/27375))
+* fix[devtools/useTransition]: don't check for dispatch property when determining if hook is stateful ([hoxyq](https://github.com/hoxyq) in [#27365](https://github.com/facebook/react/pull/27365))
+* feat[devtools/extension]: show disclaimer when page doesnt run react and refactor react polling logic ([hoxyq](https://github.com/hoxyq) in [#27373](https://github.com/facebook/react/pull/27373))
+* fix[devtools/extension]: unregister dynamically injected content scripts instead of filtering ([hoxyq](https://github.com/hoxyq) in [#27369](https://github.com/facebook/react/pull/27369))
+* refactor[devtools/extension]: more stable element updates polling to avoid timed out errors ([hoxyq](https://github.com/hoxyq) in [#27357](https://github.com/facebook/react/pull/27357))
+
+---
+
+### 4.28.3
+September 5, 2023
+
+* refactor[devtools/extension]: handle ports disconnection, instead of frequent reconnection ([hoxyq](https://github.com/hoxyq) in [#27336](https://github.com/facebook/react/pull/27336))
+* refactor[devtools/extension]: migrate from using setInterval for polling if react is loaded ([hoxyq](https://github.com/hoxyq) in [#27323](https://github.com/facebook/react/pull/27323))
+* fix[devtools/extension]: fixed duplicating panels in firefox ([hoxyq](https://github.com/hoxyq) in [#27320](https://github.com/facebook/react/pull/27320))
+
+---
+
+### 4.28.2
+August 30, 2023
+
+#### Bugfixes
+* fix[devtools/extension]: handle tab navigation events before react is loaded ([hoxyq](https://github.com/hoxyq) in [#27316](https://github.com/facebook/react/pull/27316))
+
+---
+
+### 4.28.1
+August 29, 2023
+
+#### Features
+* feat: added open in editor to appear by default ([Biki-das](https://github.com/Biki-das) in [#26949](https://github.com/facebook/react/pull/26949))
+
+#### Bugfixes
+* refactor: refactored devtools browser extension scripts to improve port management and service worker lifetime ([hoxyq](https://github.com/hoxyq) in [#27215](https://github.com/facebook/react/pull/27215))
+* fix[devtools]: allow element updates polling only if bridge is alive ([hoxyq](https://github.com/hoxyq) in [#27067](https://github.com/facebook/react/pull/27067))
+* refactor: resolve browser via env variables based on build rather than user agent ([hoxyq](https://github.com/hoxyq) in [#27179](https://github.com/facebook/react/pull/27179))
+* fix[devtools/updateFiberRecursively]: mount suspense fallback set in timed out case ([hoxyq](https://github.com/hoxyq) in [#27147](https://github.com/facebook/react/pull/27147))
+* fix[devtools/inspect]: null check memoized props before trying to call hasOwnProperty ([hoxyq](https://github.com/hoxyq) in [#27057](https://github.com/facebook/react/pull/27057))
+
+#### Other
+* refactor[devtools/extension]: minify production builds to strip comments ([hoxyq](https://github.com/hoxyq) in [#27304](https://github.com/facebook/react/pull/27304))
+
+---
+
 ### 4.28.0
 July 4, 2023
 

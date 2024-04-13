@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-devtools-timeline",
-  "version": "4.28.0",
+  "version": "5.0.2",
   "license": "MIT",
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",
@@ -9,7 +9,7 @@
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
-    "react-virtualized-auto-sizer": "^1.0.6",
+    "react-virtualized-auto-sizer": "^1.0.23",
     "regenerator-runtime": "^0.13.7"
   },
   "devDependencies": {

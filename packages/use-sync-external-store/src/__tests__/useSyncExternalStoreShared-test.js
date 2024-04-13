@@ -14,13 +14,14 @@ let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let Scheduler;
 let act;
 let useState;
 let useEffect;
 let useLayoutEffect;
 let assertLog;
+
+let originalError;
 
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
@@ -29,28 +30,29 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     jest.resetModules();
 
     if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
-      // Remove useSyncExternalStore from the React imports so that we use the
-      // shim instead. Also removing startTransition, since we use that to
-      // detect outdated 18 alphas that don't yet include useSyncExternalStore.
-      //
-      // Longer term, we'll probably test this branch using an actual build
-      // of React 17.
+      // Test the shim against React 17.
       jest.mock('react', () => {
-        const {
-          // eslint-disable-next-line no-unused-vars
-          startTransition: _,
-          // eslint-disable-next-line no-unused-vars
-          useSyncExternalStore: __,
-          ...otherExports
-        } = jest.requireActual('react');
-        return otherExports;
+        return jest.requireActual(
+          __DEV__
+            ? 'react-17/umd/react.development.js'
+            : 'react-17/umd/react.production.min.js',
+        );
       });
+      jest.mock('react-dom', () =>
+        jest.requireActual(
+          __DEV__
+            ? 'react-dom-17/umd/react-dom.development.js'
+            : 'react-dom-17/umd/react-dom.production.min.js',
+        ),
+      );
+      // Because React 17 prints extra logs we need to ignore them.
+      originalError = console.error;
+      console.error = jest.fn();
     }
 
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
@@ -83,6 +85,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       require('use-sync-external-store/shim/with-selector').useSyncExternalStoreWithSelector;
   });
 
+  afterEach(() => {
+    if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
+      console.error = originalError;
+    }
+  });
+
   function Text({text}) {
     Scheduler.log(text);
     return text;
@@ -100,6 +108,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       // createLegacyRoot directly.
       return ReactDOMClient.createRoot(container);
     } else {
+      // This ReactDOM.render is from the React 17 npm module.
       ReactDOM.render(null, container);
       return {
         render(children) {
@@ -132,7 +141,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     };
   }
 
-  test('basic usage', async () => {
+  it('basic usage', async () => {
     const store = createExternalStore('Initial');
 
     function App() {
@@ -154,7 +163,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('Updated');
   });
 
-  test('skips re-rendering if nothing changes', async () => {
+  it('skips re-rendering if nothing changes', async () => {
     const store = createExternalStore('Initial');
 
     function App() {
@@ -178,7 +187,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('Initial');
   });
 
-  test('switch to a different store', async () => {
+  it('switch to a different store', async () => {
     const storeA = createExternalStore(0);
     const storeB = createExternalStore(0);
 
@@ -231,7 +240,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('1');
   });
 
-  test('selecting a specific value inside getSnapshot', async () => {
+  it('selecting a specific value inside getSnapshot', async () => {
     const store = createExternalStore({a: 0, b: 0});
 
     function A() {
@@ -279,7 +288,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   // In React 18, you can't observe in between a sync render and its
   // passive effects, so this is only relevant to legacy roots
   // @gate enableUseSyncExternalStoreShim
-  test(
+  it(
     "compares to current state before bailing out, even when there's a " +
       'mutation in between the sync and passive effects',
     async () => {
@@ -323,7 +332,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     },
   );
 
-  test('mutating the store in between render and commit when getSnapshot has changed', async () => {
+  it('mutating the store in between render and commit when getSnapshot has changed', async () => {
     const store = createExternalStore({a: 1, b: 1});
 
     const getSnapshotA = () => store.getState().a;
@@ -383,7 +392,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('B2');
   });
 
-  test('mutating the store in between render and commit when getSnapshot has _not_ changed', async () => {
+  it('mutating the store in between render and commit when getSnapshot has _not_ changed', async () => {
     // Same as previous test, but `getSnapshot` does not change
     const store = createExternalStore({a: 1, b: 1});
 
@@ -442,7 +451,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('A1');
   });
 
-  test("does not bail out if the previous update hasn't finished yet", async () => {
+  it("does not bail out if the previous update hasn't finished yet", async () => {
     const store = createExternalStore(0);
 
     function Child1() {
@@ -481,7 +490,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('00');
   });
 
-  test('uses the latest getSnapshot, even if it changed in the same batch as a store update', async () => {
+  it('uses the latest getSnapshot, even if it changed in the same batch as a store update', async () => {
     const store = createExternalStore({a: 0, b: 0});
 
     const getSnapshotA = () => store.getState().a;
@@ -512,7 +521,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('2');
   });
 
-  test('handles errors thrown by getSnapshot', async () => {
+  it('handles errors thrown by getSnapshot', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -557,23 +566,41 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('0');
 
     // Update that throws in a getSnapshot. We can catch it with an error boundary.
-    await act(() => {
-      store.set({value: 1, throwInGetSnapshot: true, throwInIsEqual: false});
-    });
-    if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
-      assertLog([
-        'Error in getSnapshot',
-        // In a concurrent root, React renders a second time to attempt to
-        // recover from the error.
-        'Error in getSnapshot',
-      ]);
+    if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
+      // In 17, the error is re-thrown in DEV.
+      await expect(async () => {
+        await act(() => {
+          store.set({
+            value: 1,
+            throwInGetSnapshot: true,
+            throwInIsEqual: false,
+          });
+        });
+      }).rejects.toThrow('Error in getSnapshot');
     } else {
-      assertLog(['Error in getSnapshot']);
+      await act(() => {
+        store.set({
+          value: 1,
+          throwInGetSnapshot: true,
+          throwInIsEqual: false,
+        });
+      });
     }
+
+    assertLog(
+      gate(flags => flags.enableUseSyncExternalStoreShim)
+        ? ['Error in getSnapshot']
+        : [
+            'Error in getSnapshot',
+            // In a concurrent root, React renders a second time to attempt to
+            // recover from the error.
+            'Error in getSnapshot',
+          ],
+    );
     expect(container.textContent).toEqual('Error in getSnapshot');
   });
 
-  test('Infinite loop if getSnapshot keeps returning new reference', async () => {
+  it('Infinite loop if getSnapshot keeps returning new reference', async () => {
     const store = createExternalStore({});
 
     function App() {
@@ -585,19 +612,38 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const root = createRoot(container);
 
     await expect(async () => {
-      expect(() =>
-        ReactDOM.flushSync(async () => root.render(<App />)),
-      ).toThrow(
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.flushSync(async () => root.render(<App />));
+        });
+      }).rejects.toThrow(
         'Maximum update depth exceeded. This can happen when a component repeatedly ' +
           'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
           'the number of nested updates to prevent infinite loops.',
       );
     }).toErrorDev(
-      'The result of getSnapshot should be cached to avoid an infinite loop',
+      gate(flags => flags.enableUseSyncExternalStoreShim)
+        ? [
+            'Maximum update depth exceeded. ',
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+            'The above error occurred in the',
+          ]
+        : [
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+          ],
+      {
+        withoutStack: gate(flags => {
+          if (flags.enableUseSyncExternalStoreShim) {
+            // Stacks don't work when mixing the source and the npm package.
+            return flags.source ? 1 : 0;
+          }
+          return false;
+        }),
+      },
     );
   });
 
-  test('getSnapshot can return NaN without infinite loop warning', async () => {
+  it('getSnapshot can return NaN without infinite loop warning', async () => {
     const store = createExternalStore('not a number');
 
     function App() {
@@ -614,20 +660,21 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     // Object.is algorithm to compare values.
     await act(() => root.render(<App />));
     expect(container.textContent).toEqual('NaN');
+    assertLog([NaN]);
 
     // Update to real number
     await act(() => store.set(123));
     expect(container.textContent).toEqual('123');
+    assertLog([123]);
 
     // Update back to NaN
     await act(() => store.set('not a number'));
     expect(container.textContent).toEqual('NaN');
+    assertLog([NaN]);
   });
 
   describe('extra features implemented in user-space', () => {
-    // The selector implementation uses the lazy ref initialization pattern
-    // @gate !(enableUseRefAccessWarning && __DEV__)
-    test('memoized selectors are only called once per update', async () => {
+    it('memoized selectors are only called once per update', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
       function selector(state) {
@@ -668,9 +715,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A1');
     });
 
-    // The selector implementation uses the lazy ref initialization pattern
-    // @gate !(enableUseRefAccessWarning && __DEV__)
-    test('Using isEqual to bailout', async () => {
+    it('Using isEqual to bailout', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
       function A() {
@@ -729,7 +774,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('A1B1');
     });
 
-    test('basic server hydration', async () => {
+    it('basic server hydration', async () => {
       const store = createExternalStore('client');
 
       const ref = React.createRef();
@@ -782,7 +827,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     });
   });
 
-  test('regression test for #23150', async () => {
+  it('regression test for #23150', async () => {
     const store = createExternalStore('Initial');
 
     function App() {
@@ -809,9 +854,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     expect(container.textContent).toEqual('UPDATED');
   });
 
-  // The selector implementation uses the lazy ref initialization pattern
-  // @gate !(enableUseRefAccessWarning && __DEV__)
-  test('compares selection to rendered selection even if selector changes', async () => {
+  it('compares selection to rendered selection even if selector changes', async () => {
     const store = createExternalStore({items: ['A', 'B']});
 
     const shallowEqualArray = (a, b) => {
@@ -928,17 +971,22 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         ),
       );
 
+      assertLog(['A']);
       expect(container.textContent).toEqual('A');
 
-      await expect(async () => {
+      if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
+        // In 17, the error is re-thrown in DEV.
+        await expect(async () => {
+          await act(() => {
+            store.set({});
+          });
+        }).rejects.toThrow('Malformed state');
+      } else {
         await act(() => {
           store.set({});
         });
-      }).toWarnDev(
-        ReactFeatureFlags.enableUseRefAccessWarning
-          ? ['Warning: App: Unsafe read of a mutable value during render.']
-          : [],
-      );
+      }
+
       expect(container.textContent).toEqual('Malformed state');
     });
 
@@ -973,17 +1021,22 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         ),
       );
 
+      assertLog(['A']);
       expect(container.textContent).toEqual('A');
 
-      await expect(async () => {
+      if (__DEV__ && gate(flags => flags.enableUseSyncExternalStoreShim)) {
+        // In 17, the error is re-thrown in DEV.
+        await expect(async () => {
+          await act(() => {
+            store.set({});
+          });
+        }).rejects.toThrow('Malformed state');
+      } else {
         await act(() => {
           store.set({});
         });
-      }).toWarnDev(
-        ReactFeatureFlags.enableUseRefAccessWarning
-          ? ['Warning: App: Unsafe read of a mutable value during render.']
-          : [],
-      );
+      }
+
       expect(container.textContent).toEqual('Malformed state');
     });
   });

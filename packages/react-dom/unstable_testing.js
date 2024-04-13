@@ -7,7 +7,25 @@
  * @flow
  */
 
-export * from './index.js';
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
+  unstable_createEventHandle,
+  unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
+  preload,
+  preloadModule,
+  preinit,
+  preinitModule,
+  version,
+} from './index.js';
+
+export {createRoot, hydrateRoot} from './client.js';
+
 export {
   createComponentSelector,
   createHasPseudoClassSelector,

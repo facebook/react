@@ -1114,14 +1114,16 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Outer was hydrated earlier
       OuterTestUtils.assertLog([]);
 
+      // First Inner Mouse Enter fires then Outer Mouse Enter
+      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
+
       await act(() => {
         Scheduler.unstable_flushAllWithoutAsserting();
         OuterScheduler.unstable_flushAllWithoutAsserting();
         InnerScheduler.unstable_flushAllWithoutAsserting();
       });
 
-      // First Inner Mouse Enter fires then Outer Mouse Enter
-      assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
+      assertLog([]);
     });
   });
 
@@ -1852,5 +1854,59 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
       assertLog(['App', 'A', 'App', 'AA', 'DefaultContext', 'Commit']);
     });
+  });
+
+  it('regression: selective hydration does not contribute to "maximum update limit" count', async () => {
+    const outsideRef = React.createRef(null);
+    const insideRef = React.createRef(null);
+    function Child() {
+      return (
+        <Suspense fallback="Loading...">
+          <div ref={insideRef} />
+        </Suspense>
+      );
+    }
+
+    let setIsMounted = false;
+    function App() {
+      const [isMounted, setState] = React.useState(false);
+      setIsMounted = setState;
+
+      const children = [];
+      for (let i = 0; i < 100; i++) {
+        children.push(<Child key={i} isMounted={isMounted} />);
+      }
+
+      return <div ref={outsideRef}>{children}</div>;
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+
+      // Commit just the shell
+      await waitForPaint([]);
+
+      // Assert that the shell has hydrated, but not the children
+      expect(outsideRef.current).not.toBe(null);
+      expect(insideRef.current).toBe(null);
+
+      // Update the shell synchronously. The update will flow into the children,
+      // which haven't hydrated yet. This will trigger a cascade of commits
+      // caused by selective hydration. However, since there's really only one
+      // update, it should not be treated as an update loop.
+      // NOTE: It's unfortunate that every sibling boundary is separately
+      // committed in this case. We should be able to commit everything in a
+      // render phase, which we could do if we had resumable context stacks.
+      ReactDOM.flushSync(() => {
+        setIsMounted(true);
+      });
+    });
+
+    // Should have successfully hydrated with no errors.
+    expect(insideRef.current).not.toBe(null);
   });
 });

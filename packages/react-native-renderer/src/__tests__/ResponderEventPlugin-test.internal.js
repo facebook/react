@@ -1377,11 +1377,12 @@ describe('ResponderEventPlugin', () => {
     expect(ResponderEventPlugin._getResponder()).toBe(null);
   });
 
-  it('should determine the first common ancestor correctly', () => {
+  it('should determine the first common ancestor correctly', async () => {
     // This test was moved here from the ReactTreeTraversal test since only the
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
-    const ReactTestUtils = require('react-dom/test-utils');
+    const ReactDOMClient = require('react-dom/client');
+    const act = require('internal-test-utils').act;
     const getLowestCommonAncestor =
       require('react-native-renderer/src/legacy-events/ResponderEventPlugin').getLowestCommonAncestor;
     // This works by accident and will likely break in the future.
@@ -1422,7 +1423,12 @@ describe('ResponderEventPlugin', () => {
       }
     }
 
-    const parent = ReactTestUtils.renderIntoDocument(<ParentComponent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let parent;
+    await act(() => {
+      root.render(<ParentComponent ref={current => (parent = current)} />);
+    });
 
     const ancestors = [
       // Common ancestor with self is self.

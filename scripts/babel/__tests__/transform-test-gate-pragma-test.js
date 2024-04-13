@@ -203,6 +203,15 @@ describe('transform test-gate-pragma: actual runtime', () => {
     console.error('Stop that!');
     throw Error('I told you to stop!');
   });
+
+  // @gate false
+  test('a global error event is treated as a test failure', () => {
+    dispatchEvent(
+      new ErrorEvent('error', {
+        error: new Error('Oops!'),
+      })
+    );
+  });
 });
 
 describe('dynamic gate method', () => {

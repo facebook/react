@@ -58,12 +58,6 @@ export function typedArrayToBinaryChunk(
   throw new Error('Not implemented.');
 }
 
-export function clonePrecomputedChunk(
-  chunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return chunk;
-}
-
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
   throw new Error('Not implemented.');
 }
@@ -76,3 +70,5 @@ export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
 }
+
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';

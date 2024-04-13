@@ -41,20 +41,30 @@ import {
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
-import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
+import {
+  ComponentFilterElementType,
+  ComponentFilterLocation,
+  ElementTypeHostComponent,
+} from './frontend/types';
 import {
   ElementTypeRoot,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
-import type {ComponentFilter, ElementType, BrowserTheme} from './types';
-import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {
+  ComponentFilter,
+  ElementType,
+  BrowserTheme,
+  SerializedElement as SerializedElementFrontend,
+  LRUCache,
+} from 'react-devtools-shared/src/frontend/types';
+import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -109,7 +119,7 @@ export function getWrappedDisplayName(
   wrapperName: string,
   fallbackName?: string,
 ): string {
-  const displayName = (outerType: any).displayName;
+  const displayName = (outerType: any)?.displayName;
   return (
     displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
   );
@@ -145,15 +155,14 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Array<number>): string {
-  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-  // Functions arguments are first placed on the stack before the function is called
-  // which throws a RangeError for large arrays.
-  // See github.com/facebook/react/issues/22293
+export function utfDecodeStringWithRanges(
+  array: Array<number>,
+  left: number,
+  right: number,
+): string {
   let string = '';
-  for (let i = 0; i < array.length; i++) {
-    const char = array[i];
-    string += String.fromCodePoint(char);
+  for (let i = left; i <= right; i++) {
+    string += String.fromCodePoint(array[i]);
   }
   return string;
 }
@@ -209,8 +218,10 @@ export function printOperationsArray(operations: Array<number>) {
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -329,7 +340,8 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
       LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
     );
     if (raw != null) {
-      return JSON.parse(raw);
+      const parsedFilters: Array<ComponentFilter> = JSON.parse(raw);
+      return filterOutLocationComponentFilters(parsedFilters);
     }
   } catch (error) {}
   return getDefaultComponentFilters();
@@ -340,8 +352,25 @@ export function setSavedComponentFilters(
 ): void {
   localStorageSetItem(
     LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
-    JSON.stringify(componentFilters),
+    JSON.stringify(filterOutLocationComponentFilters(componentFilters)),
   );
+}
+
+// Following __debugSource removal from Fiber, the new approach for finding the source location
+// of a component, represented by the Fiber, is based on lazily generating and parsing component stack frames
+// To find the original location, React DevTools will perform symbolication, source maps are required for that.
+// In order to start filtering Fibers, we need to find location for all of them, which can't be done lazily.
+// Eager symbolication can become quite expensive for large applications.
+export function filterOutLocationComponentFilters(
+  componentFilters: Array<ComponentFilter>,
+): Array<ComponentFilter> {
+  // This is just an additional check to preserve the previous state
+  // Filters can be stored on the backend side or in user land (in a window object)
+  if (!Array.isArray(componentFilters)) {
+    return componentFilters;
+  }
+
+  return componentFilters.filter(f => f.type !== ComponentFilterLocation);
 }
 
 function parseBool(s: ?string): ?boolean {
@@ -407,16 +436,35 @@ export function getOpenInEditorURL(): string {
   return getDefaultOpenInEditorURL();
 }
 
-export function separateDisplayNameAndHOCs(
+type ParseElementDisplayNameFromBackendReturn = {
+  formattedDisplayName: string | null,
+  hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
+};
+export function parseElementDisplayNameFromBackend(
   displayName: string | null,
   type: ElementType,
-): [string | null, Array<string> | null] {
+): ParseElementDisplayNameFromBackendReturn {
   if (displayName === null) {
-    return [null, null];
+    return {
+      formattedDisplayName: null,
+      hocDisplayNames: null,
+      compiledWithForget: false,
+    };
+  }
+
+  if (displayName.startsWith('Forget(')) {
+    const displayNameWithoutForgetWrapper = displayName.slice(
+      7,
+      displayName.length - 1,
+    );
+
+    const {formattedDisplayName, hocDisplayNames} =
+      parseElementDisplayNameFromBackend(displayNameWithoutForgetWrapper, type);
+    return {formattedDisplayName, hocDisplayNames, compiledWithForget: true};
   }
 
   let hocDisplayNames = null;
-
   switch (type) {
     case ElementTypeClass:
     case ElementTypeForwardRef:
@@ -434,7 +482,11 @@ export function separateDisplayNameAndHOCs(
       break;
   }
 
-  return [displayName, hocDisplayNames];
+  return {
+    formattedDisplayName: displayName,
+    hocDisplayNames,
+    compiledWithForget: false,
+  };
 }
 
 // Pulled from react-compat
@@ -889,3 +941,22 @@ export const isPlainObject = (object: Object): boolean => {
   const objectParentPrototype = Object.getPrototypeOf(objectPrototype);
   return !objectParentPrototype;
 };
+
+export function backendToFrontendSerializedElementMapper(
+  element: SerializedElementBackend,
+): SerializedElementFrontend {
+  const {formattedDisplayName, hocDisplayNames, compiledWithForget} =
+    parseElementDisplayNameFromBackend(element.displayName, element.type);
+
+  return {
+    ...element,
+    displayName: formattedDisplayName,
+    hocDisplayNames,
+    compiledWithForget,
+  };
+}
+
+// This is a hacky one to just support this exact case.
+export function normalizeUrl(url: string): string {
+  return url.replace('/./', '/');
+}

@@ -11,15 +11,17 @@ import type {Request} from 'react-server/src/ReactFlightServer';
 
 export * from '../ReactFlightServerConfigBundlerCustom';
 
+export * from '../ReactFlightServerConfigDebugNoop';
+
 export type Hints = any;
-export type HintModel = any;
+export type HintCode = any;
+// eslint-disable-next-line no-unused-vars
+export type HintModel<T: any> = any;
 
 export const isPrimaryRenderer = false;
 
-export const prepareHostDispatcher = () => {};
-
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export function createHints(): any {
   return null;

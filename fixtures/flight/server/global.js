@@ -33,9 +33,11 @@ const compress = require('compression');
 const chalk = require('chalk');
 const express = require('express');
 const http = require('http');
+const React = require('react');
 
 const {renderToPipeableStream} = require('react-dom/server');
 const {createFromNodeStream} = require('react-server-dom-webpack/client');
+const {PassThrough} = require('stream');
 
 const app = express();
 
@@ -62,6 +64,11 @@ if (process.env.NODE_ENV === 'development') {
     webpackMiddleware(compiler, {
       publicPath: paths.publicUrlOrPath.slice(0, -1),
       serverSideRender: true,
+      headers: () => {
+        return {
+          'Cache-Control': 'no-store, must-revalidate',
+        };
+      },
     })
   );
   app.use(webpackHotMiddleware(compiler));
@@ -121,12 +128,13 @@ app.all('/', async function (req, res, next) {
         buildPath = path.join(__dirname, '../build/');
       }
       // Read the module map from the virtual file system.
-      const moduleMap = JSON.parse(
+      const ssrManifest = JSON.parse(
         await virtualFs.readFile(
           path.join(buildPath, 'react-ssr-manifest.json'),
           'utf8'
         )
       );
+
       // Read the entrypoints containing the initial JS to bootstrap everything.
       // For other pages, the chunks in the RSC payload are enough.
       const mainJSChunks = JSON.parse(
@@ -138,13 +146,47 @@ app.all('/', async function (req, res, next) {
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
-      const root = await createFromNodeStream(rscResponse, moduleMap);
+
+      // We need to get the formState before we start rendering but we also
+      // need to run the Flight client inside the render to get all the preloads.
+      // The API is ambivalent about what's the right one so we need two for now.
+
+      // Tee the response into two streams so that we can do both.
+      const rscResponse1 = new PassThrough();
+      const rscResponse2 = new PassThrough();
+
+      rscResponse.pipe(rscResponse1);
+      rscResponse.pipe(rscResponse2);
+
+      const {formState} = await createFromNodeStream(rscResponse1, ssrManifest);
+      rscResponse1.end();
+
+      let cachedResult;
+      let Root = () => {
+        if (!cachedResult) {
+          // Read this stream inside the render.
+          cachedResult = createFromNodeStream(rscResponse2, ssrManifest);
+        }
+        return React.use(cachedResult).root;
+      };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
-      const {pipe} = renderToPipeableStream(root, {
+      const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
+        formState: formState,
+        onShellReady() {
+          pipe(res);
+        },
+        onShellError(error) {
+          const {pipe: pipeError} = renderToPipeableStream(
+            React.createElement('html', null, React.createElement('body')),
+            {
+              bootstrapScripts: mainJSChunks,
+            }
+          );
+          pipeError(res);
+        },
       });
-      pipe(res);
     } catch (e) {
       console.error(`Failed to SSR: ${e.stack}`);
       res.statusCode = 500;

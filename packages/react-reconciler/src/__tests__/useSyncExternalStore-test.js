@@ -19,6 +19,7 @@ let forwardRef;
 let useImperativeHandle;
 let useRef;
 let useState;
+let use;
 let startTransition;
 let waitFor;
 let waitForAll;
@@ -41,6 +42,7 @@ describe('useSyncExternalStore', () => {
     forwardRef = React.forwardRef;
     useRef = React.useRef;
     useState = React.useState;
+    use = React.use;
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
 
@@ -212,4 +214,84 @@ describe('useSyncExternalStore', () => {
     });
     assertLog(['value:initial']);
   });
+
+  test(
+    'regression: suspending in shell after synchronously patching ' +
+      'up store mutation',
+    async () => {
+      // Tests a case where a store is mutated during a concurrent event, then
+      // during the sync re-render, a synchronous render is triggered.
+
+      const store = createExternalStore('Initial');
+
+      let resolve;
+      const promise = new Promise(r => {
+        resolve = r;
+      });
+
+      function A() {
+        const value = useSyncExternalStore(store.subscribe, store.getState);
+
+        if (value === 'Updated') {
+          try {
+            use(promise);
+          } catch (x) {
+            Scheduler.log('Suspend A');
+            throw x;
+          }
+        }
+
+        return <Text text={'A: ' + value} />;
+      }
+
+      function B() {
+        const value = useSyncExternalStore(store.subscribe, store.getState);
+        return <Text text={'B: ' + value} />;
+      }
+
+      function App() {
+        return (
+          <>
+            <span>
+              <A />
+            </span>
+            <span>
+              <B />
+            </span>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        // A and B both read from the same store. Partially render A.
+        startTransition(() => root.render(<App />));
+        // A reads the initial value of the store.
+        await waitFor(['A: Initial']);
+
+        // Before B renders, mutate the store.
+        store.set('Updated');
+      });
+      assertLog([
+        // B reads the updated value of the store.
+        'B: Updated',
+        // This should a synchronous re-render of A using the updated value. In
+        // this test, this causes A to suspend.
+        'Suspend A',
+      ]);
+      // Nothing has committed, because A suspended and no fallback
+      // was provided.
+      expect(root).toMatchRenderedOutput(null);
+
+      // Resolve the data and finish rendering.
+      await act(() => resolve());
+      assertLog(['A: Updated', 'B: Updated']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span>A: Updated</span>
+          <span>B: Updated</span>
+        </>,
+      );
+    },
+  );
 });

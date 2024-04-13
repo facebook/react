@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* global Bun */
+
 type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
   write(data: Chunk | BinaryChunk): void,
@@ -68,12 +70,6 @@ export function typedArrayToBinaryChunk(
   return content;
 }
 
-export function clonePrecomputedChunk(
-  chunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return chunk;
-}
-
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
   return Buffer.byteLength(chunk, 'utf8');
 }
@@ -95,4 +91,8 @@ export function closeWithError(destination: Destination, error: mixed): void {
     // to a global callback in addition to this anyway. So it's fine just to close this.
     destination.close();
   }
+}
+
+export function createFastHash(input: string): string | number {
+  return Bun.hash(input);
 }

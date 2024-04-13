@@ -5,20 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  NoEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 const pooledTransform = new Transform();
 
 const NO_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 /** Helper Methods */
@@ -312,10 +315,6 @@ export function prepareForCommit() {
   return null;
 }
 
-export function prepareUpdate(domElement, type, oldProps, newProps) {
-  return UPDATE_SIGNAL;
-}
-
 export function resetAfterCommit() {
   // Noop
 }
@@ -342,8 +341,18 @@ export function shouldSetTextContent(type, props) {
   );
 }
 
-export function getCurrentEventPriority() {
-  return DefaultEventPriority;
+let currentUpdatePriority: EventPriority = NoEventPriority;
+
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  return currentUpdatePriority || DefaultEventPriority;
 }
 
 export function shouldAttemptEagerTransition() {
@@ -481,3 +490,4 @@ export function waitForCommitToBeReady() {
 }
 
 export const NotPendingTransition = null;
+export function resetFormInstance() {}

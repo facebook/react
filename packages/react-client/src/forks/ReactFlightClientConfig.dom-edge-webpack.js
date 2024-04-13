@@ -7,7 +7,10 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientConfigBrowser';
-export * from 'react-server-dom-webpack/src/ReactFlightClientConfigWebpackBundler';
+export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
+export * from 'react-client/src/ReactFlightClientConsoleConfigServer';
+export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack';
+export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackServer';
+export * from 'react-server-dom-webpack/src/ReactFlightClientConfigTargetWebpackServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = true;

@@ -26,6 +26,7 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 import {
   DefaultEventPriority,
+  NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -60,11 +61,6 @@ export type RendererInspectionConfig = $ReadOnly<{
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ) => void,
 }>;
-
-const UPDATE_SIGNAL = {};
-if (__DEV__) {
-  Object.freeze(UPDATE_SIGNAL);
-}
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -237,16 +233,6 @@ export function prepareForCommit(containerInfo: Container): null | Object {
   return null;
 }
 
-export function prepareUpdate(
-  instance: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  hostContext: HostContext,
-): null | Object {
-  return UPDATE_SIGNAL;
-}
-
 export function resetAfterCommit(containerInfo: Container): void {
   // Noop
 }
@@ -268,7 +254,19 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
 }
 
@@ -551,3 +549,6 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}

@@ -1,7 +1,11 @@
 'use strict';
 
+var s;
 if (process.env.NODE_ENV === 'production') {
-  module.exports = require('./cjs/react-dom-static.edge.production.min.js');
+  s = require('./cjs/react-dom-server.edge.production.min.js');
 } else {
-  module.exports = require('./cjs/react-dom-static.edge.development.js');
+  s = require('./cjs/react-dom-server.edge.development.js');
 }
+
+exports.version = s.version;
+exports.prerender = s.prerender;

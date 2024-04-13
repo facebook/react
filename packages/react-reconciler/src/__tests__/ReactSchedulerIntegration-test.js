@@ -370,7 +370,7 @@ describe('`act` bypasses Scheduler methods completely,', () => {
     }
 
     const root = ReactNoop.createRoot();
-    const publicAct = React.unstable_act;
+    const publicAct = React.act;
     const prevIsReactActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
     try {
       global.IS_REACT_ACT_ENVIRONMENT = true;

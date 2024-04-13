@@ -31,6 +31,9 @@ module.exports = {
 
     Reflect: 'readonly',
     globalThis: 'readonly',
+
+    FinalizationRegistry: 'readonly',
+
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
@@ -39,6 +42,8 @@ module.exports = {
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
     nativeFabricUIManager: 'readonly',
+    // RN flag to enable microtasks
+    RN$enableMicrotasksInReact: 'readonly',
     // Trusted Types
     trustedTypes: 'readonly',
     // RN supports this
@@ -48,8 +53,12 @@ module.exports = {
     reportError: 'readonly',
     AggregateError: 'readonly',
 
+    // Node Feature Detection
+    process: 'readonly',
+
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // jest
     jest: 'readonly',

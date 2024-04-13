@@ -12,7 +12,8 @@ import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
+import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
 
 // TODO: update this to the first React version that has a corresponding DevTools backend
 const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
@@ -282,4 +283,99 @@ export function gt(a: string = '', b: string = ''): boolean {
 
 export function gte(a: string = '', b: string = ''): boolean {
   return compareVersions(a, b) > -1;
+}
+
+export const isReactNativeEnvironment = (): boolean => {
+  // We've been relying on this for such a long time
+  // We should probably define the client for DevTools on the backend side and share it with the frontend
+  return window.document == null;
+};
+
+function extractLocation(
+  url: string,
+): null | {sourceURL: string, line?: string, column?: string} {
+  if (url.indexOf(':') === -1) {
+    return null;
+  }
+
+  // remove any parentheses from start and end
+  const withoutParentheses = url.replace(/^\(+/, '').replace(/\)+$/, '');
+  const locationParts = /(at )?(.+?)(?::(\d+))?(?::(\d+))?$/.exec(
+    withoutParentheses,
+  );
+
+  if (locationParts == null) {
+    return null;
+  }
+
+  const [, , sourceURL, line, column] = locationParts;
+  return {sourceURL, line, column};
+}
+
+const CHROME_STACK_REGEXP = /^\s*at .*(\S+:\d+|\(native\))/m;
+function parseSourceFromChromeStack(stack: string): Source | null {
+  const frames = stack.split('\n');
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const frame of frames) {
+    const sanitizedFrame = frame.trim();
+
+    const locationInParenthesesMatch = sanitizedFrame.match(/ (\(.+\)$)/);
+    const possibleLocation = locationInParenthesesMatch
+      ? locationInParenthesesMatch[1]
+      : sanitizedFrame;
+
+    const location = extractLocation(possibleLocation);
+    // Continue the search until at least sourceURL is found
+    if (location == null) {
+      continue;
+    }
+
+    const {sourceURL, line = '1', column = '1'} = location;
+
+    return {
+      sourceURL,
+      line: parseInt(line, 10),
+      column: parseInt(column, 10),
+    };
+  }
+
+  return null;
+}
+
+function parseSourceFromFirefoxStack(stack: string): Source | null {
+  const frames = stack.split('\n');
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const frame of frames) {
+    const sanitizedFrame = frame.trim();
+    const frameWithoutFunctionName = sanitizedFrame.replace(
+      /((.*".+"[^@]*)?[^@]*)(?:@)/,
+      '',
+    );
+
+    const location = extractLocation(frameWithoutFunctionName);
+    // Continue the search until at least sourceURL is found
+    if (location == null) {
+      continue;
+    }
+
+    const {sourceURL, line = '1', column = '1'} = location;
+
+    return {
+      sourceURL,
+      line: parseInt(line, 10),
+      column: parseInt(column, 10),
+    };
+  }
+
+  return null;
+}
+
+export function parseSourceFromComponentStack(
+  componentStack: string,
+): Source | null {
+  if (componentStack.match(CHROME_STACK_REGEXP)) {
+    return parseSourceFromChromeStack(componentStack);
+  }
+
+  return parseSourceFromFirefoxStack(componentStack);
 }

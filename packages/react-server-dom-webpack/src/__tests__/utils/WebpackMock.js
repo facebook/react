@@ -42,6 +42,9 @@ Module.prototype._compile = previousCompile;
 exports.webpackMap = webpackClientMap;
 exports.webpackModules = webpackClientModules;
 exports.webpackServerMap = webpackServerMap;
+exports.moduleLoading = {
+  prefix: '/',
+};
 
 exports.clientModuleError = function clientModuleError(moduleError) {
   const idx = '' + webpackModuleIdx++;
@@ -52,25 +55,33 @@ exports.clientModuleError = function clientModuleError(moduleError) {
     chunks: [],
     name: '*',
   };
-  const mod = {exports: {}};
+  const mod = new Module();
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
 
-exports.clientExports = function clientExports(moduleExports) {
+exports.clientExports = function clientExports(
+  moduleExports,
+  chunkId,
+  chunkFilename,
+) {
+  const chunks = [];
+  if (chunkId) {
+    chunks.push(chunkId, chunkFilename);
+  }
   const idx = '' + webpackModuleIdx++;
   webpackClientModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
   webpackClientMap[path] = {
     id: idx,
-    chunks: [],
+    chunks,
     name: '*',
   };
   // We only add this if this test is testing ESM compat.
   if ('__esModule' in moduleExports) {
     webpackClientMap[path + '#'] = {
       id: idx,
-      chunks: [],
+      chunks,
       name: '',
     };
   }
@@ -80,7 +91,7 @@ exports.clientExports = function clientExports(moduleExports) {
         for (const name in asyncModuleExports) {
           webpackClientMap[path + '#' + name] = {
             id: idx,
-            chunks: [],
+            chunks,
             name: name,
           };
         }
@@ -96,11 +107,11 @@ exports.clientExports = function clientExports(moduleExports) {
     };
     webpackClientMap[path + '#split'] = {
       id: splitIdx,
-      chunks: [],
+      chunks,
       name: 's',
     };
   }
-  const mod = {exports: {}};
+  const mod = new Module();
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
 };
@@ -135,7 +146,8 @@ exports.serverExports = function serverExports(moduleExports) {
       name: 's',
     };
   }
-  const mod = {exports: moduleExports};
+  const mod = new Module();
+  mod.exports = moduleExports;
   nodeCompile.call(mod, '"use server"', idx);
   return mod.exports;
 };

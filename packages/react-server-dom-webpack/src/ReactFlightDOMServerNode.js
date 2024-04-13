@@ -16,12 +16,13 @@ import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -36,7 +37,10 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
 
 export {
   registerServerReference,
@@ -48,9 +52,18 @@ function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
 
+function createCancelHandler(request: Request, reason: string) {
+  return () => {
+    stopFlowing(request);
+    // eslint-disable-next-line react-internal/prod-error-codes
+    abort(request, new Error(reason));
+  };
+}
+
 type Options = {
+  environmentName?: string,
   onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
+  onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
 };
 
@@ -68,8 +81,9 @@ function renderToPipeableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -83,6 +97,17 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createCancelHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createCancelHandler(request, 'The destination stream closed early.'),
+      );
       return destination;
     },
     abort(reason: mixed) {
@@ -156,8 +181,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(webpackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {
@@ -165,4 +191,5 @@ export {
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
+  decodeFormState,
 };

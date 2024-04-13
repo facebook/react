@@ -12,7 +12,7 @@ import {
   enableFetchInstrumentation,
 } from 'shared/ReactFeatureFlags';
 
-import ReactCurrentCache from './ReactCurrentCache';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 function createFetchCache(): Map<string, Array<any>> {
   return new Map();
@@ -46,17 +46,13 @@ if (enableCache && enableFetchInstrumentation) {
       resource: URL | RequestInfo,
       options?: RequestOptions,
     ) {
-      const dispatcher = ReactCurrentCache.current;
+      const dispatcher = ReactSharedInternals.C;
       if (!dispatcher) {
         // We're outside a cached scope.
         return originalFetch(resource, options);
       }
-      if (
-        options &&
-        options.signal &&
-        options.signal !== dispatcher.getCacheSignal()
-      ) {
-        // If we're passed a signal that is not ours, then we assume that
+      if (options && options.signal) {
+        // If we're passed a signal, then we assume that
         // someone else controls the lifetime of this object and opts out of
         // caching. It's effectively the opt-out mechanism.
         // Ideally we should be able to check this on the Request but

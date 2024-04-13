@@ -30,6 +30,10 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.createRoot).toBe(undefined);
     expect(ReactDOM.hydrateRoot).toBe(undefined);
     expect(ReactDOM.findDOMNode).toBe(undefined);
+    expect(
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode,
+    ).toBe(null);
     expect(ReactDOM.hydrate).toBe(undefined);
     expect(ReactDOM.render).toBe(undefined);
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
@@ -38,16 +42,17 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });
 
-  // @gate enableFloat
-  it('provides preload and preinit exports', async () => {
+  it('provides preload, preloadModule, preinit, and preinitModule exports', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preloadModule('foomodule');
       ReactDOM.preinit('bar', {as: 'style'});
+      ReactDOM.preinitModule('barmodule');
       return <div>foo</div>;
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><link rel="preload" as="style" href="foo"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" href="foo" as="style"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
     );
   });
 
@@ -81,11 +86,10 @@ describe('react-dom-server-rendering-stub', () => {
     expect(x).toBe(false);
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('exports experimental_useFormStatus', async () => {
+  it('exports useFormStatus', async () => {
     function App() {
-      const {pending} = ReactDOM.experimental_useFormStatus();
+      const {pending} = ReactDOM.useFormStatus();
       return 'Pending: ' + pending;
     }
 

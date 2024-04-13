@@ -15,7 +15,7 @@ import {createContext} from 'react';
 // TODO (cache) Remove this cache; it is outdated and will not work with newer APIs like startTransition.
 
 // Cache implementation was forked from the React repo:
-// https://github.com/facebook/react/blob/main/packages/react-cache/src/ReactCache.js
+// https://github.com/facebook/react/blob/main/packages/react-cache/src/ReactCacheOld.js
 //
 // This cache is simpler than react-cache in that:
 // 1. Individual items don't need to be invalidated.
@@ -53,18 +53,17 @@ export type Resource<Input, Key, Value> = {
   read(Input): Value,
   preload(Input): void,
   write(Key, Value): void,
-  ...
 };
 
 const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-const ReactCurrentDispatcher = (React: any)
-  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
+const ReactSharedInternals = (React: any)
+  .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 function readContext(Context: ReactContext<null>) {
-  const dispatcher = ReactCurrentDispatcher.current;
+  const dispatcher = ReactSharedInternals.H;
   if (dispatcher === null) {
     throw new Error(
       'react-cache: read and preload may only be called from within a ' +

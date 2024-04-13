@@ -7,7 +7,23 @@
  * @flow
  */
 
-export * from './index.modern.fb.js';
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
+  unstable_createEventHandle,
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
+  preload,
+  preloadModule,
+  preinit,
+  preinitModule,
+  version,
+  __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+} from './index.modern.fb.js';
+export {createRoot, hydrateRoot} from './client.js';
 export {
   createComponentSelector,
   createHasPseudoClassSelector,
