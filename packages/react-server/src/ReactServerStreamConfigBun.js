@@ -13,6 +13,7 @@ type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
   write(data: Chunk | BinaryChunk): void,
   error(error: Error): void,
+  flush?: () => void,
 };
 export type Destination = BunReadableStreamController;
 
@@ -25,8 +26,12 @@ export function scheduleWork(callback: () => void) {
 }
 
 export function flushBuffered(destination: Destination) {
-  // WHATWG Streams do not yet have a way to flush the underlying
-  // transform streams. https://github.com/whatwg/streams/issues/960
+  // Bun direct streams provide a flush function.
+  // If we don't have any more data to send right now.
+  // Flush whatever is in the buffer to the wire.
+  if (typeof destination.flush === 'function') {
+    destination.flush();
+  }
 }
 
 export function beginWriting(destination: Destination) {}
