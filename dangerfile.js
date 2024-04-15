@@ -31,6 +31,7 @@ const {markdown, danger, warn} = require('danger');
 const {promisify} = require('util');
 const glob = promisify(require('glob'));
 const gzipSize = require('gzip-size');
+const {writeFileSync} = require('fs');
 
 const {readFileSync, statSync} = require('fs');
 
@@ -236,7 +237,7 @@ function row(result, baseSha, headSha) {
     }
   }
 
-  markdown(`
+  const message = `
 Comparing: ${baseSha}...${headSha}
 
 ## Critical size changes
@@ -263,5 +264,18 @@ ${significantResults.join('\n')}
 `
     : '(No significant changes)'
 }
-`);
+`;
+
+  if (message.length > 65535) {
+    // Also logging for quick inspection.
+    console.log(message);
+    // But harder to find so also persisting as an artifact
+    writeFileSync('sizebot-message.md', message);
+    markdown(
+      'The size diff is too large to display in a single comment. ' +
+        `The [CircleCI artifacts for this job](${process.env.CIRCLE_BUILD_URL}/artifacts) contains a file called 'sizebot-message.md' with the full message.`
+    );
+  } else {
+    markdown(message);
+  }
 })();

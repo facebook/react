@@ -211,6 +211,8 @@ jobs:
       - setup_node_modules
       - run:
           command: node ./scripts/tasks/danger
+      - store_artifacts:
+          path: sizebot-message.md
 
   build_devtools_and_process_artifacts:
     docker: *docker
