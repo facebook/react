@@ -4874,7 +4874,7 @@ function resolveClassComponentProps(
     (Component = Component.defaultProps) &&
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
-    newProps === baseProps && (newProps = assign({}, newProps));
+    newProps === baseProps && (newProps = assign({}, newProps, baseProps));
     for (var propName$63 in Component)
       void 0 === newProps[propName$63] &&
         (newProps[propName$63] = Component[propName$63]);
@@ -12843,7 +12843,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-classic-8729eb10"
+    reconcilerVersion: "19.0.0-www-classic-acb7e6d0"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -17406,7 +17406,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-8729eb10",
+  version: "19.0.0-www-classic-acb7e6d0",
   rendererPackageName: "react-dom"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17539,7 +17539,7 @@ assign(Internals, {
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-8729eb10",
+  version: "19.0.0-www-classic-acb7e6d0",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -18006,4 +18006,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-8729eb10";
+exports.version = "19.0.0-www-classic-acb7e6d0";

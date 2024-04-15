@@ -12949,7 +12949,7 @@ if (__DEV__) {
         // We may have already copied the props object above to remove ref. If so,
         // we can modify that. Otherwise, copy the props object with Object.assign.
         if (newProps === baseProps) {
-          newProps = assign({}, newProps);
+          newProps = assign({}, newProps, baseProps);
         } // Taken from old JSX runtime, where this used to live.
 
         for (var _propName in defaultProps) {
@@ -26707,7 +26707,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-575c07cf";
+    var ReactVersion = "19.0.0-www-modern-3dc29640";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

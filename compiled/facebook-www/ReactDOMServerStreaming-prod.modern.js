@@ -278,9 +278,13 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
-var ReactSharedInternals =
-    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  ReactDOMSharedInternals =
+var ReactSharedInternalsServer =
+  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+if (!ReactSharedInternalsServer)
+  throw Error(
+    'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
+  );
+var ReactDOMSharedInternals =
     ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   sharedNotPendingObject = {
     pending: !1,
@@ -4997,11 +5001,10 @@ function flushPartiallyCompletedSegment(
 }
 function flushCompletedQueues(request, destination) {
   try {
-    if (!(0 < request.pendingRootTasks)) {
-      var i,
-        completedRootSegment = request.completedRootSegment;
-      if (null !== completedRootSegment) {
-        if (5 === completedRootSegment.status) return;
+    var i,
+      completedRootSegment = request.completedRootSegment;
+    if (null !== completedRootSegment)
+      if (5 !== completedRootSegment.status && 0 === request.pendingRootTasks) {
         var renderState = request.renderState;
         if (
           (0 !== request.allPendingTasks ||
@@ -5068,145 +5071,141 @@ function flushCompletedQueues(request, destination) {
         flushSegment(request, destination, completedRootSegment, null);
         request.completedRootSegment = null;
         writeBootstrap(destination, request.renderState);
-      }
-      var renderState$jscomp$0 = request.renderState;
+      } else return;
+    var renderState$jscomp$0 = request.renderState;
+    completedRootSegment = 0;
+    var viewportChunks$jscomp$0 = renderState$jscomp$0.viewportChunks;
+    for (
       completedRootSegment = 0;
-      var viewportChunks$jscomp$0 = renderState$jscomp$0.viewportChunks;
-      for (
-        completedRootSegment = 0;
-        completedRootSegment < viewportChunks$jscomp$0.length;
-        completedRootSegment++
-      )
-        writeChunk(destination, viewportChunks$jscomp$0[completedRootSegment]);
-      viewportChunks$jscomp$0.length = 0;
-      renderState$jscomp$0.preconnects.forEach(flushResource, destination);
-      renderState$jscomp$0.preconnects.clear();
-      renderState$jscomp$0.fontPreloads.forEach(flushResource, destination);
-      renderState$jscomp$0.fontPreloads.clear();
-      renderState$jscomp$0.highImagePreloads.forEach(
-        flushResource,
-        destination
-      );
-      renderState$jscomp$0.highImagePreloads.clear();
-      renderState$jscomp$0.styles.forEach(preloadLateStyles, destination);
-      renderState$jscomp$0.scripts.forEach(flushResource, destination);
-      renderState$jscomp$0.scripts.clear();
-      renderState$jscomp$0.bulkPreloads.forEach(flushResource, destination);
-      renderState$jscomp$0.bulkPreloads.clear();
-      var hoistableChunks$jscomp$0 = renderState$jscomp$0.hoistableChunks;
-      for (
-        completedRootSegment = 0;
-        completedRootSegment < hoistableChunks$jscomp$0.length;
-        completedRootSegment++
-      )
-        writeChunk(destination, hoistableChunks$jscomp$0[completedRootSegment]);
-      hoistableChunks$jscomp$0.length = 0;
-      var clientRenderedBoundaries = request.clientRenderedBoundaries;
-      for (i = 0; i < clientRenderedBoundaries.length; i++) {
-        var boundary = clientRenderedBoundaries[i];
-        renderState$jscomp$0 = destination;
-        var resumableState$jscomp$0 = request.resumableState,
-          renderState$jscomp$1 = request.renderState,
-          id = boundary.rootSegmentID,
-          errorDigest = boundary.errorDigest,
-          scriptFormat = 0 === resumableState$jscomp$0.streamingFormat;
-        scriptFormat
-          ? ((renderState$jscomp$0.buffer +=
-              renderState$jscomp$1.startInlineScript),
-            0 === (resumableState$jscomp$0.instructions & 4)
-              ? ((resumableState$jscomp$0.instructions |= 4),
-                (renderState$jscomp$0.buffer +=
-                  '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};;$RX("'))
-              : (renderState$jscomp$0.buffer += '$RX("'))
-          : (renderState$jscomp$0.buffer += '<template data-rxi="" data-bid="');
-        renderState$jscomp$0.buffer += renderState$jscomp$1.boundaryPrefix;
-        var chunk$jscomp$1 = id.toString(16);
-        renderState$jscomp$0.buffer += chunk$jscomp$1;
-        scriptFormat && (renderState$jscomp$0.buffer += '"');
-        if (errorDigest)
-          if (scriptFormat) {
-            renderState$jscomp$0.buffer += ",";
-            var chunk$jscomp$2 = escapeJSStringsForInstructionScripts(
-              errorDigest || ""
-            );
-            renderState$jscomp$0.buffer += chunk$jscomp$2;
-          } else {
-            renderState$jscomp$0.buffer += '" data-dgst="';
-            var chunk$jscomp$3 = escapeTextForBrowser(errorDigest || "");
-            renderState$jscomp$0.buffer += chunk$jscomp$3;
-          }
-        var JSCompiler_inline_result = scriptFormat
-          ? writeChunkAndReturn(renderState$jscomp$0, ")\x3c/script>")
-          : writeChunkAndReturn(renderState$jscomp$0, '"></template>');
-        if (!JSCompiler_inline_result) {
-          request.destination = null;
-          i++;
-          clientRenderedBoundaries.splice(0, i);
-          return;
-        }
-      }
-      clientRenderedBoundaries.splice(0, i);
-      var completedBoundaries = request.completedBoundaries;
-      for (i = 0; i < completedBoundaries.length; i++)
-        if (
-          !flushCompletedBoundary(request, destination, completedBoundaries[i])
-        ) {
-          request.destination = null;
-          i++;
-          completedBoundaries.splice(0, i);
-          return;
-        }
-      completedBoundaries.splice(0, i);
-      var partialBoundaries = request.partialBoundaries;
-      for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$47 = partialBoundaries[i];
-        a: {
-          clientRenderedBoundaries = request;
-          boundary = destination;
-          var completedSegments = boundary$47.completedSegments;
-          for (
-            JSCompiler_inline_result = 0;
-            JSCompiler_inline_result < completedSegments.length;
-            JSCompiler_inline_result++
-          )
-            if (
-              !flushPartiallyCompletedSegment(
-                clientRenderedBoundaries,
-                boundary,
-                boundary$47,
-                completedSegments[JSCompiler_inline_result]
-              )
-            ) {
-              JSCompiler_inline_result++;
-              completedSegments.splice(0, JSCompiler_inline_result);
-              var JSCompiler_inline_result$jscomp$0 = !1;
-              break a;
-            }
-          completedSegments.splice(0, JSCompiler_inline_result);
-          JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
-            boundary,
-            boundary$47.contentState,
-            clientRenderedBoundaries.renderState
+      completedRootSegment < viewportChunks$jscomp$0.length;
+      completedRootSegment++
+    )
+      writeChunk(destination, viewportChunks$jscomp$0[completedRootSegment]);
+    viewportChunks$jscomp$0.length = 0;
+    renderState$jscomp$0.preconnects.forEach(flushResource, destination);
+    renderState$jscomp$0.preconnects.clear();
+    renderState$jscomp$0.fontPreloads.forEach(flushResource, destination);
+    renderState$jscomp$0.fontPreloads.clear();
+    renderState$jscomp$0.highImagePreloads.forEach(flushResource, destination);
+    renderState$jscomp$0.highImagePreloads.clear();
+    renderState$jscomp$0.styles.forEach(preloadLateStyles, destination);
+    renderState$jscomp$0.scripts.forEach(flushResource, destination);
+    renderState$jscomp$0.scripts.clear();
+    renderState$jscomp$0.bulkPreloads.forEach(flushResource, destination);
+    renderState$jscomp$0.bulkPreloads.clear();
+    var hoistableChunks$jscomp$0 = renderState$jscomp$0.hoistableChunks;
+    for (
+      completedRootSegment = 0;
+      completedRootSegment < hoistableChunks$jscomp$0.length;
+      completedRootSegment++
+    )
+      writeChunk(destination, hoistableChunks$jscomp$0[completedRootSegment]);
+    hoistableChunks$jscomp$0.length = 0;
+    var clientRenderedBoundaries = request.clientRenderedBoundaries;
+    for (i = 0; i < clientRenderedBoundaries.length; i++) {
+      var boundary = clientRenderedBoundaries[i];
+      renderState$jscomp$0 = destination;
+      var resumableState$jscomp$0 = request.resumableState,
+        renderState$jscomp$1 = request.renderState,
+        id = boundary.rootSegmentID,
+        errorDigest = boundary.errorDigest,
+        scriptFormat = 0 === resumableState$jscomp$0.streamingFormat;
+      scriptFormat
+        ? ((renderState$jscomp$0.buffer +=
+            renderState$jscomp$1.startInlineScript),
+          0 === (resumableState$jscomp$0.instructions & 4)
+            ? ((resumableState$jscomp$0.instructions |= 4),
+              (renderState$jscomp$0.buffer +=
+                '$RX=function(b,c,d,e,f){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),f&&(a.cstck=f),b._reactRetry&&b._reactRetry())};;$RX("'))
+            : (renderState$jscomp$0.buffer += '$RX("'))
+        : (renderState$jscomp$0.buffer += '<template data-rxi="" data-bid="');
+      renderState$jscomp$0.buffer += renderState$jscomp$1.boundaryPrefix;
+      var chunk$jscomp$1 = id.toString(16);
+      renderState$jscomp$0.buffer += chunk$jscomp$1;
+      scriptFormat && (renderState$jscomp$0.buffer += '"');
+      if (errorDigest)
+        if (scriptFormat) {
+          renderState$jscomp$0.buffer += ",";
+          var chunk$jscomp$2 = escapeJSStringsForInstructionScripts(
+            errorDigest || ""
           );
+          renderState$jscomp$0.buffer += chunk$jscomp$2;
+        } else {
+          renderState$jscomp$0.buffer += '" data-dgst="';
+          var chunk$jscomp$3 = escapeTextForBrowser(errorDigest || "");
+          renderState$jscomp$0.buffer += chunk$jscomp$3;
         }
-        if (!JSCompiler_inline_result$jscomp$0) {
-          request.destination = null;
-          i++;
-          partialBoundaries.splice(0, i);
-          return;
-        }
+      var JSCompiler_inline_result = scriptFormat
+        ? writeChunkAndReturn(renderState$jscomp$0, ")\x3c/script>")
+        : writeChunkAndReturn(renderState$jscomp$0, '"></template>');
+      if (!JSCompiler_inline_result) {
+        request.destination = null;
+        i++;
+        clientRenderedBoundaries.splice(0, i);
+        return;
       }
-      partialBoundaries.splice(0, i);
-      var largeBoundaries = request.completedBoundaries;
-      for (i = 0; i < largeBoundaries.length; i++)
-        if (!flushCompletedBoundary(request, destination, largeBoundaries[i])) {
-          request.destination = null;
-          i++;
-          largeBoundaries.splice(0, i);
-          return;
-        }
-      largeBoundaries.splice(0, i);
     }
+    clientRenderedBoundaries.splice(0, i);
+    var completedBoundaries = request.completedBoundaries;
+    for (i = 0; i < completedBoundaries.length; i++)
+      if (
+        !flushCompletedBoundary(request, destination, completedBoundaries[i])
+      ) {
+        request.destination = null;
+        i++;
+        completedBoundaries.splice(0, i);
+        return;
+      }
+    completedBoundaries.splice(0, i);
+    var partialBoundaries = request.partialBoundaries;
+    for (i = 0; i < partialBoundaries.length; i++) {
+      var boundary$47 = partialBoundaries[i];
+      a: {
+        clientRenderedBoundaries = request;
+        boundary = destination;
+        var completedSegments = boundary$47.completedSegments;
+        for (
+          JSCompiler_inline_result = 0;
+          JSCompiler_inline_result < completedSegments.length;
+          JSCompiler_inline_result++
+        )
+          if (
+            !flushPartiallyCompletedSegment(
+              clientRenderedBoundaries,
+              boundary,
+              boundary$47,
+              completedSegments[JSCompiler_inline_result]
+            )
+          ) {
+            JSCompiler_inline_result++;
+            completedSegments.splice(0, JSCompiler_inline_result);
+            var JSCompiler_inline_result$jscomp$0 = !1;
+            break a;
+          }
+        completedSegments.splice(0, JSCompiler_inline_result);
+        JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
+          boundary,
+          boundary$47.contentState,
+          clientRenderedBoundaries.renderState
+        );
+      }
+      if (!JSCompiler_inline_result$jscomp$0) {
+        request.destination = null;
+        i++;
+        partialBoundaries.splice(0, i);
+        return;
+      }
+    }
+    partialBoundaries.splice(0, i);
+    var largeBoundaries = request.completedBoundaries;
+    for (i = 0; i < largeBoundaries.length; i++)
+      if (!flushCompletedBoundary(request, destination, largeBoundaries[i])) {
+        request.destination = null;
+        i++;
+        largeBoundaries.splice(0, i);
+        return;
+      }
+    largeBoundaries.splice(0, i);
   } finally {
     0 === request.allPendingTasks &&
       0 === request.pingedTasks.length &&
@@ -5267,10 +5266,10 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactSharedInternals.H;
-    ReactSharedInternals.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+      prevDispatcher = ReactSharedInternalsServer.H;
+    ReactSharedInternalsServer.H = HooksDispatcher;
+    var prevCacheDispatcher = ReactSharedInternalsServer.C;
+    ReactSharedInternalsServer.C = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5424,8 +5423,8 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactSharedInternals.H = prevDispatcher),
-        (ReactSharedInternals.C = prevCacheDispatcher),
+        (ReactSharedInternalsServer.H = prevDispatcher),
+        (ReactSharedInternalsServer.C = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }
