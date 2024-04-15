@@ -1646,7 +1646,7 @@ function codegenInstructionValue(
       ).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {
         let body: t.BlockStatement | t.Expression = fn.body;
-        if (body.body.length === 1) {
+        if (body.body.length === 1 && loweredFunc.directives.length == 0) {
           const stmt = body.body[0]!;
           if (stmt.type === "ReturnStatement" && stmt.argument != null) {
             body = stmt.argument;
