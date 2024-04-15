@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<da347c8a1a9c73260ac3bf373b50bbb0>>
+ * @generated SignedSource<<ac51ccb15db731fa0f15c9f8c62efde8>>
  */
 
 "use strict";
@@ -10816,7 +10816,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1168 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-af4a82a4",
+    version: "19.0.0-canary-f713ac17",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10859,7 +10859,7 @@ var internals$jscomp$inline_1452 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-af4a82a4"
+  reconcilerVersion: "19.0.0-canary-f713ac17"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1453 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10918,32 +10918,45 @@ exports.getInspectorDataForInstance = getInspectorDataForInstance;
 exports.isChildPublicInstance = function () {
   throw Error("isChildPublicInstance() is not available in production.");
 };
-exports.render = function (element, containerTag, callback) {
+exports.render = function (element, containerTag, callback, options) {
   var root = roots.get(containerTag);
   if (!root) {
-    root = new FiberRootNode(
+    root = nativeOnUncaughtError;
+    var onCaughtError = nativeOnCaughtError,
+      onRecoverableError = defaultOnRecoverableError;
+    options &&
+      void 0 !== options.onUncaughtError &&
+      (root = options.onUncaughtError);
+    options &&
+      void 0 !== options.onCaughtError &&
+      (onCaughtError = options.onCaughtError);
+    options &&
+      void 0 !== options.onRecoverableError &&
+      (onRecoverableError = options.onRecoverableError);
+    options = new FiberRootNode(
       containerTag,
       0,
       !1,
       "",
-      nativeOnUncaughtError,
-      nativeOnCaughtError,
-      defaultOnRecoverableError,
+      root,
+      onCaughtError,
+      onRecoverableError,
       null
     );
-    var JSCompiler_inline_result = createFiber(3, null, null, 0);
-    root.current = JSCompiler_inline_result;
-    JSCompiler_inline_result.stateNode = root;
-    var initialCache = createCache();
-    initialCache.refCount++;
-    root.pooledCache = initialCache;
-    initialCache.refCount++;
-    JSCompiler_inline_result.memoizedState = {
+    root = createFiber(3, null, null, 0);
+    options.current = root;
+    root.stateNode = options;
+    onCaughtError = createCache();
+    onCaughtError.refCount++;
+    options.pooledCache = onCaughtError;
+    onCaughtError.refCount++;
+    root.memoizedState = {
       element: null,
       isDehydrated: !1,
-      cache: initialCache
+      cache: onCaughtError
     };
-    initializeUpdateQueue(JSCompiler_inline_result);
+    initializeUpdateQueue(root);
+    root = options;
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);

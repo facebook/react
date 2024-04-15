@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<158d73c5518a6a28f53717610189a696>>
+ * @generated SignedSource<<bd640d85592d7d9b873f1a2f979ad51a>>
  */
 
 "use strict";
@@ -30286,7 +30286,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-5d6d8736";
+    var ReactVersion = "19.0.0-canary-9cace4d2";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -31464,12 +31464,30 @@ to return true:wantsResponderID|                            |
       defaultOnCaughtError(error, errorInfo);
     }
 
-    function render(element, containerTag, callback, concurrentRoot) {
+    function render(element, containerTag, callback, concurrentRoot, options) {
       var root = roots.get(containerTag);
 
       if (!root) {
-        // TODO (bvaughn): If we decide to keep the wrapper component,
+        // TODO: these defaults are for backwards compatibility.
+        // Once RN implements these options internally,
+        // we can remove the defaults and ReactFiberErrorDialog.
+        var onUncaughtError = nativeOnUncaughtError;
+        var onCaughtError = nativeOnCaughtError;
+        var onRecoverableError = defaultOnRecoverableError;
+
+        if (options && options.onUncaughtError !== undefined) {
+          onUncaughtError = options.onUncaughtError;
+        }
+
+        if (options && options.onCaughtError !== undefined) {
+          onCaughtError = options.onCaughtError;
+        }
+
+        if (options && options.onRecoverableError !== undefined) {
+          onRecoverableError = options.onRecoverableError;
+        } // TODO (bvaughn): If we decide to keep the wrapper component,
         // We could create a wrapper for containerTag as well to reduce special casing.
+
         root = createContainer(
           containerTag,
           concurrentRoot ? ConcurrentRoot : LegacyRoot,
@@ -31477,9 +31495,9 @@ to return true:wantsResponderID|                            |
           false,
           null,
           "",
-          nativeOnUncaughtError,
-          nativeOnCaughtError,
-          defaultOnRecoverableError,
+          onUncaughtError,
+          onCaughtError,
+          onRecoverableError,
           null
         );
         roots.set(containerTag, root);

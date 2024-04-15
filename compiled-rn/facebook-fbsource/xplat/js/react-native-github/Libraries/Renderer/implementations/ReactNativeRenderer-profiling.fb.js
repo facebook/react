@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<277d7b89bf0502e0ae1bd774d61f55c0>>
+ * @generated SignedSource<<3450c74a05c0859ece175bd97bff875c>>
  */
 
 "use strict";
@@ -11522,7 +11522,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1248 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-44005ec6",
+    version: "19.0.0-canary-5984a444",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11578,7 +11578,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-44005ec6"
+  reconcilerVersion: "19.0.0-canary-5984a444"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -11624,39 +11624,47 @@ exports.getInspectorDataForInstance = getInspectorDataForInstance;
 exports.isChildPublicInstance = function () {
   throw Error("isChildPublicInstance() is not available in production.");
 };
-exports.render = function (element, containerTag, callback) {
+exports.render = function (element, containerTag, callback, options) {
   var root = roots.get(containerTag);
   if (!root) {
-    root = new FiberRootNode(
+    root = nativeOnUncaughtError;
+    var onCaughtError = nativeOnCaughtError,
+      onRecoverableError = defaultOnRecoverableError;
+    options &&
+      void 0 !== options.onUncaughtError &&
+      (root = options.onUncaughtError);
+    options &&
+      void 0 !== options.onCaughtError &&
+      (onCaughtError = options.onCaughtError);
+    options &&
+      void 0 !== options.onRecoverableError &&
+      (onRecoverableError = options.onRecoverableError);
+    options = new FiberRootNode(
       containerTag,
       0,
       !1,
       "",
-      nativeOnUncaughtError,
-      nativeOnCaughtError,
-      defaultOnRecoverableError,
+      root,
+      onCaughtError,
+      onRecoverableError,
       null
     );
-    var JSCompiler_inline_result = 0;
-    isDevToolsPresent && (JSCompiler_inline_result |= 2);
-    JSCompiler_inline_result = createFiber(
-      3,
-      null,
-      null,
-      JSCompiler_inline_result
-    );
-    root.current = JSCompiler_inline_result;
-    JSCompiler_inline_result.stateNode = root;
-    var initialCache = createCache();
-    initialCache.refCount++;
-    root.pooledCache = initialCache;
-    initialCache.refCount++;
-    JSCompiler_inline_result.memoizedState = {
+    root = 0;
+    isDevToolsPresent && (root |= 2);
+    root = createFiber(3, null, null, root);
+    options.current = root;
+    root.stateNode = options;
+    onCaughtError = createCache();
+    onCaughtError.refCount++;
+    options.pooledCache = onCaughtError;
+    onCaughtError.refCount++;
+    root.memoizedState = {
       element: null,
       isDehydrated: !1,
-      cache: initialCache
+      cache: onCaughtError
     };
-    initializeUpdateQueue(JSCompiler_inline_result);
+    initializeUpdateQueue(root);
+    root = options;
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
