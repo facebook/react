@@ -504,6 +504,7 @@ module.exports = {
     $AsyncIterator: 'readonly',
     Iterator: 'readonly',
     AsyncIterator: 'readonly',
+    IteratorResult: 'readonly',
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',
     MouseEventHandler: 'readonly',

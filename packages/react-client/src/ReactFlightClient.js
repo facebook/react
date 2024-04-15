@@ -69,9 +69,9 @@ import {
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
-interface StreamController {
-  close(returnValue: any): void;
-  enqueue(value: any): void;
+interface FlightStreamController {
+  enqueue(json: UninitializedModel): void;
+  close(json: UninitializedModel): void;
   error(error: Error): void;
 }
 
@@ -107,7 +107,7 @@ type PendingChunk<T> = {
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
   status: 'blocked',
@@ -115,7 +115,7 @@ type BlockedChunk<T> = {
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type CyclicChunk<T> = {
   status: 'cyclic',
@@ -123,7 +123,7 @@ type CyclicChunk<T> = {
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
@@ -131,7 +131,7 @@ type ResolvedModelChunk<T> = {
   reason: null,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
@@ -139,24 +139,24 @@ type ResolvedModuleChunk<T> = {
   reason: null,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
-  reason: null | StreamController,
+  reason: null | FlightStreamController,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
   T: ReadableStream | $AsyncIterable<any, any, void>,
 > = {
   status: 'fulfilled',
   value: T,
-  reason: StreamController,
+  reason: FlightStreamController,
   _response: Response,
-  then(resolve: (ReadableStream) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
   status: 'rejected',
@@ -164,7 +164,7 @@ type ErroredChunk<T> = {
   reason: mixed,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
   | PendingChunk<T>
@@ -191,7 +191,7 @@ Chunk.prototype = (Object.create(Promise.prototype): any);
 Chunk.prototype.then = function <T>(
   this: SomeChunk<T>,
   resolve: (value: T) => mixed,
-  reject: (reason: mixed) => mixed,
+  reject?: (reason: mixed) => mixed,
 ) {
   const chunk: SomeChunk<T> = this;
   // If we have resolved content, we try to initialize it first which
@@ -226,7 +226,9 @@ Chunk.prototype.then = function <T>(
       }
       break;
     default:
-      reject(chunk.reason);
+      if (reject) {
+        reject(chunk.reason);
+      }
       break;
   }
 };
@@ -384,12 +386,35 @@ function createInitializedStreamChunk<
 >(
   response: Response,
   value: T,
-  controller: StreamController,
+  controller: FlightStreamController,
 ): InitializedChunk<T> {
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(INITIALIZED, value, controller, response);
+}
+
+function createResolvedIteratorResultChunk<T>(
+  response: Response,
+  value: UninitializedModel,
+  done: boolean,
+): ResolvedModelChunk<IteratorResult<T, T>> {
+  // To reuse code as much code as possible we add the wrapper element as part of the JSON.
+  const iteratorResultJSON =
+    (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, null, response);
+}
+
+function resolveIteratorResultChunk<T>(
+  chunk: SomeChunk<IteratorResult<T, T>>,
+  value: UninitializedModel,
+  done: boolean,
+): void {
+  // To reuse code as much code as possible we add the wrapper element as part of the JSON.
+  const iteratorResultJSON =
+    (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
+  resolveModelChunk(chunk, iteratorResultJSON);
 }
 
 function resolveModelChunk<T>(
@@ -402,9 +427,7 @@ function resolveModelChunk<T>(
       // a stream chunk since any other row shouldn't have more than one entry.
       const streamChunk: InitializedStreamChunk<any> = (chunk: any);
       const controller = streamChunk.reason;
-      // TODO: This model might get blocked.
-      const parsedValue: T = parseModel(chunk._response, value);
-      controller.enqueue(parsedValue);
+      controller.enqueue(value);
     }
     return;
   }
@@ -1084,7 +1107,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   response: Response,
   id: number,
   stream: T,
-  controller: StreamController,
+  controller: FlightStreamController,
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -1106,22 +1129,82 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
   }
 }
 
-function startReadableStream(
+function startReadableStream<T>(
   response: Response,
   id: number,
   type: void | 'bytes',
 ): void {
-  let controller: StreamController = (null: any);
+  let controller: ReadableStreamController = (null: any);
   const stream = new ReadableStream({
     type: type,
     start(c) {
       controller = c;
     },
   });
-  resolveStream(response, id, stream, controller);
+  let previousBlockedChunk: SomeChunk<T> | null = null;
+  const flightController = {
+    enqueue(json: UninitializedModel): void {
+      if (previousBlockedChunk === null) {
+        // If we're not blocked on any other chunks, we can try to eagerly initialize
+        // this as a fast-path to avoid awaiting them.
+        const chunk: ResolvedModelChunk<T> = createResolvedModelChunk(
+          response,
+          json,
+        );
+        initializeModelChunk(chunk);
+        const initializedChunk: SomeChunk<T> = chunk;
+        if (initializedChunk.status === INITIALIZED) {
+          controller.enqueue(initializedChunk.value);
+        } else {
+          chunk.then(
+            v => controller.enqueue(v),
+            e => controller.error((e: any)),
+          );
+          previousBlockedChunk = chunk;
+        }
+      } else {
+        // We're still waiting on a previous chunk so we can't enqueue quite yet.
+        const blockedChunk = previousBlockedChunk;
+        const chunk: SomeChunk<T> = createPendingChunk(response);
+        chunk.then(
+          v => controller.enqueue(v),
+          e => controller.error((e: any)),
+        );
+        previousBlockedChunk = chunk;
+        blockedChunk.then(function () {
+          if (previousBlockedChunk === chunk) {
+            // We were still the last chunk so we can now clear the queue and return
+            // to synchronous emitting.
+            previousBlockedChunk = null;
+          }
+          resolveModelChunk(chunk, json);
+        });
+      }
+    },
+    close(json: UninitializedModel): void {
+      if (previousBlockedChunk === null) {
+        controller.close();
+      } else {
+        const blockedChunk = previousBlockedChunk;
+        // We shouldn't get any more enqueues after this so we can set it back to null.
+        previousBlockedChunk = null;
+        blockedChunk.then(() => controller.close());
+      }
+    },
+    error(error: mixed): void {
+      if (previousBlockedChunk === null) {
+        // $FlowFixMe[incompatible-call]
+        controller.error(error);
+      } else {
+        const blockedChunk = previousBlockedChunk;
+        // We shouldn't get any more enqueues after this so we can set it back to null.
+        previousBlockedChunk = null;
+        blockedChunk.then(() => controller.error((error: any)));
+      }
+    },
+  };
+  resolveStream(response, id, stream, flightController);
 }
-
-type IteratorEntry<T> = {done: false, value: T} | {done: true, value: T};
 
 const ASYNC_ITERATOR = Symbol.asyncIterator;
 
@@ -1131,7 +1214,7 @@ function asyncIterator(this: $AsyncIterator<any, any, void>) {
 }
 
 function createIterator<T>(
-  next: (arg: void) => SomeChunk<IteratorEntry<T>>,
+  next: (arg: void) => SomeChunk<IteratorResult<T, T>>,
 ): $AsyncIterator<T, T, void> {
   const iterator: any = {
     next: next,
@@ -1144,49 +1227,44 @@ function createIterator<T>(
   return iterator;
 }
 
-function initializeIteratorEntry<T>(
-  chunk: SomeChunk<IteratorEntry<T>>,
-  value: T,
-  done: boolean,
-): void {
-  const entry: IteratorEntry<T> = ({done, value}: any);
-  const pendingChunk: PendingChunk<IteratorEntry<T>> = (chunk: any);
-  const resolveListeners = pendingChunk.value;
-  const initializedChunk: InitializedChunk<IteratorEntry<T>> =
-    (pendingChunk: any);
-  initializedChunk.status = INITIALIZED;
-  initializedChunk.value = entry;
-  if (resolveListeners !== null) {
-    wakeChunk(resolveListeners, entry);
-  }
-}
-
 function startAsyncIterable<T>(
   response: Response,
   id: number,
   iterator: boolean,
 ): void {
-  const buffer: Array<SomeChunk<IteratorEntry<T>>> = [];
+  const buffer: Array<SomeChunk<IteratorResult<T, T>>> = [];
   let closed = false;
   let nextWriteIndex = 0;
-  const controller: StreamController = {
-    enqueue(value: any): void {
+  const flightController = {
+    enqueue(value: UninitializedModel): void {
       if (nextWriteIndex === buffer.length) {
-        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+        buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+          response,
+          value,
+          false,
+        );
+      } else {
+        resolveIteratorResultChunk(buffer[nextWriteIndex], value, false);
       }
-      initializeIteratorEntry(buffer[nextWriteIndex++], value, false);
+      nextWriteIndex++;
     },
-    close(value: T): void {
+    close(value: UninitializedModel): void {
       closed = true;
       if (nextWriteIndex === buffer.length) {
-        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+        buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+          response,
+          value,
+          true,
+        );
+      } else {
+        resolveIteratorResultChunk(buffer[nextWriteIndex], value, true);
       }
-      initializeIteratorEntry(buffer[nextWriteIndex++], value, true);
+      nextWriteIndex++;
       while (nextWriteIndex < buffer.length) {
         // In generators, any extra reads from the iterator have the value undefined.
-        initializeIteratorEntry(
+        resolveIteratorResultChunk(
           buffer[nextWriteIndex++],
-          (undefined: any),
+          '"$undefined"',
           true,
         );
       }
@@ -1194,7 +1272,8 @@ function startAsyncIterable<T>(
     error(error: Error): void {
       closed = true;
       if (nextWriteIndex === buffer.length) {
-        buffer[nextWriteIndex] = createPendingChunk<IteratorEntry<T>>(response);
+        buffer[nextWriteIndex] =
+          createPendingChunk<IteratorResult<T, T>>(response);
       }
       while (nextWriteIndex < buffer.length) {
         triggerErrorOnChunk(buffer[nextWriteIndex++], error);
@@ -1221,7 +1300,7 @@ function startAsyncIterable<T>(
             );
           }
           buffer[nextReadIndex] =
-            createPendingChunk<IteratorEntry<T>>(response);
+            createPendingChunk<IteratorResult<T, T>>(response);
         }
         return buffer[nextReadIndex++];
       });
@@ -1233,7 +1312,7 @@ function startAsyncIterable<T>(
     response,
     id,
     iterator ? iterable[ASYNC_ITERATOR]() : iterable,
-    controller,
+    flightController,
   );
 }
 
@@ -1250,10 +1329,7 @@ function stopStream(
   }
   const streamChunk: InitializedStreamChunk<any> = (chunk: any);
   const controller = streamChunk.reason;
-  // TODO: This model might get blocked.
-  const parsedValue: any =
-    row === '' ? undefined : parseModel(chunk._response, row);
-  controller.close(parsedValue);
+  controller.close(row === '' ? '"$undefined"' : row);
 }
 
 type ErrorWithDigest = Error & {digest?: string};

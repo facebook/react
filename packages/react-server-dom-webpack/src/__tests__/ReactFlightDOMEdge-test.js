@@ -80,6 +80,7 @@ describe('ReactFlightDOMEdge', () => {
           reader.read().then(({done, value}) => {
             if (done) {
               controller.enqueue(prevChunk);
+              prevChunk = new Uint8Array(0);
               controller.close();
               return;
             }
@@ -90,7 +91,18 @@ describe('ReactFlightDOMEdge', () => {
               controller.enqueue(chunk.subarray(0, chunk.length - 50));
               prevChunk = chunk.subarray(chunk.length - 50);
             } else {
+              // Wait to see if we get some more bytes to join in.
               prevChunk = chunk;
+              // Flush if we don't get any more.
+              (async function flushAfterAFewTasks() {
+                for (let i = 0; i < 10; i++) {
+                  await i;
+                }
+                if (prevChunk.byteLength > 0) {
+                  controller.enqueue(prevChunk);
+                }
+                prevChunk = new Uint8Array(0);
+              })();
             }
             push();
           });
@@ -428,6 +440,95 @@ describe('ReactFlightDOMEdge', () => {
     const result = await resultPromise;
     expect(result instanceof Map).toBe(true);
     expect(result.get('value')).toBe('hello');
+  });
+
+  it('can pass an async import to a ReadableStream while enqueuing in order', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    const asyncClient = clientExports(promise);
+
+    // We await the value on the servers so it's an async value that the client should wait for
+    const awaitedValue = await asyncClient;
+
+    const s = new ReadableStream({
+      start(c) {
+        c.enqueue('hello');
+        c.enqueue(awaitedValue);
+        c.enqueue('!');
+        c.close();
+      },
+    });
+
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(s, webpackMap),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const reader = result.getReader();
+
+    expect(await reader.read()).toEqual({value: 'hello', done: false});
+
+    const readPromise = reader.read();
+    // We resolve this after we've already received the '!' row.
+    await resolve('world');
+
+    expect(await readPromise).toEqual({value: 'world', done: false});
+    expect(await reader.read()).toEqual({value: '!', done: false});
+    expect(await reader.read()).toEqual({value: undefined, done: true});
+  });
+
+  it('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    const asyncClient = clientExports(promise);
+
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        yield 'hello';
+        // We await the value on the servers so it's an async value that the client should wait for
+        yield await asyncClient;
+        yield '!';
+      },
+    };
+
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(
+        multiShotIterable,
+        webpackMap,
+      ),
+    );
+
+    // Parsing the root blocks because the module hasn't loaded yet
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const iterator = result[Symbol.asyncIterator]();
+
+    expect(await iterator.next()).toEqual({value: 'hello', done: false});
+
+    const readPromise = iterator.next();
+
+    // While the previous promise didn't resolve yet, we should be able to peak at the next value
+    // by iterating past it.
+    expect(await iterator.next()).toEqual({value: '!', done: false});
+
+    // We resolve the previous row after we've already received the '!' row.
+    await resolve('world');
+    expect(await readPromise).toEqual({value: 'world', done: false});
+
+    expect(await iterator.next()).toEqual({value: undefined, done: true});
   });
 
   it('warns if passing a this argument to bind() of a server reference', async () => {
