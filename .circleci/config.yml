@@ -529,21 +529,24 @@ workflows:
                 # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
-      - download_base_build_for_sizebot:
-          filters:
-            branches:
-              ignore:
-                - main
-          requires:
-            - setup
-      - sizebot:
-          filters:
-            branches:
-              ignore:
-                - main
-          requires:
-            - download_base_build_for_sizebot
-            - yarn_build_combined
+
+      # Sizebot is disabled because the base revision of this 18.3 branch is
+      # too old
+      # - download_base_build_for_sizebot:
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - main
+      #     requires:
+      #       - setup
+      # - sizebot:
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - main
+      #     requires:
+      #       - download_base_build_for_sizebot
+      #       - yarn_build_combined
       - yarn_lint_build:
           requires:
             - yarn_build_combined
