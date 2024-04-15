@@ -49,7 +49,6 @@ type HookLogEntry = {
   value: mixed,
   debugInfo: ReactDebugInfo | null,
   dispatcherHookName: string,
-  wrapperNames: Array<string>,
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -218,7 +217,6 @@ function use<T>(usable: Usable<T>): T {
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
             dispatcherHookName: 'Use',
-            wrapperNames: ['Use'],
           });
           return fulfilledValue;
         }
@@ -237,7 +235,6 @@ function use<T>(usable: Usable<T>): T {
         debugInfo:
           thenable._debugInfo === undefined ? null : thenable._debugInfo,
         dispatcherHookName: 'Use',
-        wrapperNames: ['Use'],
       });
       throw SuspenseException;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -251,7 +248,6 @@ function use<T>(usable: Usable<T>): T {
         value,
         debugInfo: null,
         dispatcherHookName: 'Use',
-        wrapperNames: ['Use'],
       });
 
       return value;
@@ -271,7 +267,6 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherHookName: 'Context',
-    wrapperNames: ['Context'],
   });
   return value;
 }
@@ -294,7 +289,6 @@ function useState<S>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'State',
-    wrapperNames: ['State'],
   });
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -318,7 +312,6 @@ function useReducer<S, I, A>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'Reducer',
-    wrapperNames: ['Reducer'],
   });
   return [state, (action: A) => {}];
 }
@@ -333,7 +326,6 @@ function useRef<T>(initialValue: T): {current: T} {
     value: ref.current,
     debugInfo: null,
     dispatcherHookName: 'Ref',
-    wrapperNames: ['Ref'],
   });
   return ref;
 }
@@ -347,7 +339,6 @@ function useCacheRefresh(): () => void {
     value: hook !== null ? hook.memoizedState : function refresh() {},
     debugInfo: null,
     dispatcherHookName: 'CacheRefresh',
-    wrapperNames: ['CacheRefresh'],
   });
   return () => {};
 }
@@ -364,7 +355,6 @@ function useLayoutEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'LayoutEffect',
-    wrapperNames: ['LayoutEffect'],
   });
 }
 
@@ -380,7 +370,6 @@ function useInsertionEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'InsertionEffect',
-    wrapperNames: ['InsertionEffect'],
   });
 }
 
@@ -396,7 +385,6 @@ function useEffect(
     value: create,
     debugInfo: null,
     dispatcherHookName: 'Effect',
-    wrapperNames: ['Effect'],
   });
 }
 
@@ -421,7 +409,6 @@ function useImperativeHandle<T>(
     value: instance,
     debugInfo: null,
     dispatcherHookName: 'ImperativeHandle',
-    wrapperNames: ['ImperativeHandle'],
   });
 }
 
@@ -433,7 +420,6 @@ function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     value: typeof formatterFn === 'function' ? formatterFn(value) : value,
     debugInfo: null,
     dispatcherHookName: 'DebugValue',
-    wrapperNames: ['DebugValue'],
   });
 }
 
@@ -446,7 +432,6 @@ function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
     value: hook !== null ? hook.memoizedState[0] : callback,
     debugInfo: null,
     dispatcherHookName: 'Callback',
-    wrapperNames: ['Callback'],
   });
   return callback;
 }
@@ -464,7 +449,6 @@ function useMemo<T>(
     value,
     debugInfo: null,
     dispatcherHookName: 'Memo',
-    wrapperNames: ['Memo'],
   });
   return value;
 }
@@ -487,7 +471,6 @@ function useSyncExternalStore<T>(
     value,
     debugInfo: null,
     dispatcherHookName: 'SyncExternalStore',
-    wrapperNames: ['SyncExternalStore'],
   });
   return value;
 }
@@ -511,7 +494,6 @@ function useTransition(): [
     value: isPending,
     debugInfo: null,
     dispatcherHookName: 'Transition',
-    wrapperNames: ['Transition'],
   });
   return [isPending, () => {}];
 }
@@ -526,7 +508,6 @@ function useDeferredValue<T>(value: T, initialValue?: T): T {
     value: prevValue,
     debugInfo: null,
     dispatcherHookName: 'DeferredValue',
-    wrapperNames: ['DeferredValue'],
   });
   return prevValue;
 }
@@ -541,7 +522,6 @@ function useId(): string {
     value: id,
     debugInfo: null,
     dispatcherHookName: 'Id',
-    wrapperNames: ['Id'],
   });
   return id;
 }
@@ -593,7 +573,6 @@ function useOptimistic<S, A>(
     value: state,
     debugInfo: null,
     dispatcherHookName: 'Optimistic',
-    wrapperNames: ['Optimistic'],
   });
   return [state, (action: A) => {}];
 }
@@ -654,7 +633,6 @@ function useFormState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherHookName: 'FormState',
-    wrapperNames: ['FormState'],
   });
 
   if (error !== null) {
@@ -725,7 +703,6 @@ function useActionState<S, P>(
     value: value,
     debugInfo: debugInfo,
     dispatcherHookName: 'ActionState',
-    wrapperNames: ['ActionState'],
   });
 
   if (error !== null) {
@@ -756,10 +733,6 @@ function useHostTransitionStatus(): TransitionStatus {
     value: status,
     debugInfo: null,
     dispatcherHookName: 'HostTransitionStatus',
-    wrapperNames: [
-      // react-dom
-      'FormStatus',
-    ],
   });
 
   return status;
@@ -909,15 +882,7 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
         isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
-      }
-      for (let j = 0; j < hook.wrapperNames.length; j++) {
-        const wrapperName = hook.wrapperNames[j];
-        if (
-          i < hookStack.length - 1 &&
-          isReactWrapper(hookStack[i].functionName, wrapperName)
-        ) {
-          i++;
-        }
+        i++;
       }
       return i;
     }
