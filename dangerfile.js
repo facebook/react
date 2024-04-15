@@ -266,7 +266,8 @@ ${significantResults.join('\n')}
 }
 `;
 
-  if (message.length > 65535) {
+  // GitHub comments are limited to 65536 characters.
+  if (message.length > 65536) {
     // Make message available as an artifact
     writeFileSync('sizebot-message.md', message);
     markdown(
