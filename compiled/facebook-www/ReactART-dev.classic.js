@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-classic-1d4ea768";
+    var ReactVersion = "19.0.0-www-classic-e168c427";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -14302,7 +14302,7 @@ if (__DEV__) {
         // We may have already copied the props object above to remove ref. If so,
         // we can modify that. Otherwise, copy the props object with Object.assign.
         if (newProps === baseProps) {
-          newProps = assign({}, newProps, baseProps);
+          newProps = assign({}, newProps);
         } // Taken from old JSX runtime, where this used to live.
 
         for (var _propName in defaultProps) {

@@ -32290,7 +32290,7 @@ if (__DEV__) {
         // We may have already copied the props object above to remove ref. If so,
         // we can modify that. Otherwise, copy the props object with Object.assign.
         if (newProps === baseProps) {
-          newProps = assign({}, newProps, baseProps);
+          newProps = assign({}, newProps);
         } // Taken from old JSX runtime, where this used to live.
 
         for (var _propName in defaultProps) {
@@ -46514,7 +46514,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-b6b5a18a";
+    var ReactVersion = "19.0.0-www-modern-8a063592";
 
     function createPortal$1(
       children,
