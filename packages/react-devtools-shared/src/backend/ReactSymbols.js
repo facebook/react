@@ -67,3 +67,7 @@ export const SUSPENSE_LIST_SYMBOL_STRING = 'Symbol(react.suspense_list)';
 
 export const SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED_SYMBOL_STRING =
   'Symbol(react.server_context.defaultValue)';
+
+export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
+  'react.memo_cache_sentinel',
+);
