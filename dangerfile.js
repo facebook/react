@@ -267,13 +267,11 @@ ${significantResults.join('\n')}
 `;
 
   if (message.length > 65535) {
-    // Also logging for quick inspection.
-    console.log(message);
-    // But harder to find so also persisting as an artifact
+    // Make message available as an artifact
     writeFileSync('sizebot-message.md', message);
     markdown(
       'The size diff is too large to display in a single comment. ' +
-        `The [CircleCI artifacts for this job](${process.env.CIRCLE_BUILD_URL}/artifacts) contains a file called 'sizebot-message.md' with the full message.`
+        `The [CircleCI job](${process.env.CIRCLE_BUILD_URL}) contains an artifact called 'sizebot-message.md' with the full message.`
     );
   } else {
     markdown(message);
