@@ -101,11 +101,30 @@ function nativeOnCaughtError(
   defaultOnCaughtError(error, errorInfo);
 }
 
+type NativeRenderOptions = {
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+};
+
 function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
   concurrentRoot: ?boolean,
+  options?: NativeRenderOptions,
 ): ?ElementRef<ElementType> {
   if (disableLegacyMode && !concurrentRoot) {
     throw new Error('render: Unsupported Legacy Mode API.');
@@ -114,6 +133,23 @@ function render(
   let root = roots.get(containerTag);
 
   if (!root) {
+    // TODO: these defaults are for backwards compatibility.
+    // Once RN implements these options internally,
+    // we can remove the defaults and ReactFiberErrorDialog.
+    let onUncaughtError = nativeOnUncaughtError;
+    let onCaughtError = nativeOnCaughtError;
+    let onRecoverableError = defaultOnRecoverableError;
+
+    if (options && options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options && options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+    if (options && options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
@@ -123,9 +159,9 @@ function render(
       false,
       null,
       '',
-      nativeOnUncaughtError,
-      nativeOnCaughtError,
-      defaultOnRecoverableError,
+      onUncaughtError,
+      onCaughtError,
+      onRecoverableError,
       null,
     );
     roots.set(containerTag, root);
