@@ -426,6 +426,150 @@ describe('ReactHooksInspection', () => {
     `);
   });
 
+  it('should not confuse built-in hooks with custom hooks that have the same name', () => {
+    function useState(value) {
+      React.useState(value);
+      React.useDebugValue('custom useState');
+    }
+    function useFormStatus() {
+      React.useState('custom useState');
+      React.useDebugValue('custom useFormStatus');
+    }
+    function Foo(props) {
+      useFormStatus();
+      useState('Hello, Dave!');
+      return null;
+    }
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
+    if (__DEV__) {
+      expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+        [
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": 0,
+              "fileName": "**",
+              "functionName": "Foo",
+              "lineNumber": 0,
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "FormStatus",
+            "subHooks": [
+              {
+                "debugInfo": null,
+                "hookSource": {
+                  "columnNumber": 0,
+                  "fileName": "**",
+                  "functionName": "useFormStatus",
+                  "lineNumber": 0,
+                },
+                "id": 0,
+                "isStateEditable": true,
+                "name": "State",
+                "subHooks": [],
+                "value": "custom useState",
+              },
+            ],
+            "value": "custom useFormStatus",
+          },
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": 0,
+              "fileName": "**",
+              "functionName": "Foo",
+              "lineNumber": 0,
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "State",
+            "subHooks": [
+              {
+                "debugInfo": null,
+                "hookSource": {
+                  "columnNumber": 0,
+                  "fileName": "**",
+                  "functionName": "useState",
+                  "lineNumber": 0,
+                },
+                "id": 1,
+                "isStateEditable": true,
+                "name": "State",
+                "subHooks": [],
+                "value": "Hello, Dave!",
+              },
+            ],
+            "value": "custom useState",
+          },
+        ]
+      `);
+    } else {
+      expect(normalizeSourceLoc(tree)).toMatchInlineSnapshot(`
+        [
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": 0,
+              "fileName": "**",
+              "functionName": "Foo",
+              "lineNumber": 0,
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "FormStatus",
+            "subHooks": [
+              {
+                "debugInfo": null,
+                "hookSource": {
+                  "columnNumber": 0,
+                  "fileName": "**",
+                  "functionName": "useFormStatus",
+                  "lineNumber": 0,
+                },
+                "id": 0,
+                "isStateEditable": true,
+                "name": "State",
+                "subHooks": [],
+                "value": "custom useState",
+              },
+            ],
+            "value": undefined,
+          },
+          {
+            "debugInfo": null,
+            "hookSource": {
+              "columnNumber": 0,
+              "fileName": "**",
+              "functionName": "Foo",
+              "lineNumber": 0,
+            },
+            "id": null,
+            "isStateEditable": false,
+            "name": "State",
+            "subHooks": [
+              {
+                "debugInfo": null,
+                "hookSource": {
+                  "columnNumber": 0,
+                  "fileName": "**",
+                  "functionName": "useState",
+                  "lineNumber": 0,
+                },
+                "id": 1,
+                "isStateEditable": true,
+                "name": "State",
+                "subHooks": [],
+                "value": "Hello, Dave!",
+              },
+            ],
+            "value": undefined,
+          },
+        ]
+      `);
+    }
+  });
+
   it('should inspect the default value using the useContext hook', () => {
     const MyContext = React.createContext('default');
     function Foo(props) {
