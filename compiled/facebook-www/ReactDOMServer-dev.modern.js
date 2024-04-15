@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-d8e2224b";
+    var ReactVersion = "19.0.0-www-modern-d9b30156";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -14274,6 +14274,11 @@ if (__DEV__) {
         // until the sink tells us to stop. When we should stop, we still finish writing
         // that item fully and then yield. At that point we remove the already completed
         // items up until the point we completed them.
+        if (request.pendingRootTasks > 0) {
+          // When there are pending root tasks we don't want to flush anything
+          return;
+        }
+
         var i;
         var completedRootSegment = request.completedRootSegment;
 
@@ -14281,15 +14286,12 @@ if (__DEV__) {
           if (completedRootSegment.status === POSTPONED) {
             // We postponed the root, so we write nothing.
             return;
-          } else if (request.pendingRootTasks === 0) {
-            flushPreamble(request, destination, completedRootSegment);
-            flushSegment(request, destination, completedRootSegment, null);
-            request.completedRootSegment = null;
-            writeCompletedRoot(destination, request.renderState);
-          } else {
-            // We haven't flushed the root yet so we don't need to check any other branches further down
-            return;
           }
+
+          flushPreamble(request, destination, completedRootSegment);
+          flushSegment(request, destination, completedRootSegment, null);
+          request.completedRootSegment = null;
+          writeCompletedRoot(destination, request.renderState);
         }
 
         writeHoistables(
