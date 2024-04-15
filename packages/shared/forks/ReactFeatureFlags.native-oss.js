@@ -101,6 +101,7 @@ export const allowConcurrentByDefault = false;
 export const enableTransitionTracing = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;
+export const enableEarlyReturnForPropDiffing = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
