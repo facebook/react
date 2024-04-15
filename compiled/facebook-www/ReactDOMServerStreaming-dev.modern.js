@@ -2345,16 +2345,8 @@ if (__DEV__) {
         : 'something with type "' + typeof thing + '"';
     }
 
-    var ReactSharedInternalsServer = // $FlowFixMe: It's defined in the one we resolve to.
-      React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-    if (!ReactSharedInternalsServer) {
-      throw new Error(
-        'The "react" package in this environment is not configured correctly. ' +
-          'The "react-server" condition must be enabled in any environment that ' +
-          "runs React Server Components."
-      );
-    }
+    var ReactSharedInternals =
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
     var ReactDOMSharedInternals =
       ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
@@ -10747,10 +10739,10 @@ if (__DEV__) {
       var previousDispatcher = null;
 
       {
-        previousDispatcher = ReactSharedInternalsServer.H; // Set the dispatcher in DEV because this might be call in the render function
+        previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
         // for warnings.
 
-        ReactSharedInternalsServer.H = null;
+        ReactSharedInternals.H = null;
         disableLogs();
       }
       /**
@@ -10943,7 +10935,7 @@ if (__DEV__) {
         reentry = false;
 
         {
-          ReactSharedInternalsServer.H = previousDispatcher;
+          ReactSharedInternals.H = previousDispatcher;
           reenableLogs();
         }
 
@@ -13791,13 +13783,13 @@ if (__DEV__) {
       }
 
       var prevContext = getActiveContext();
-      var prevDispatcher = ReactSharedInternalsServer.H;
-      ReactSharedInternalsServer.H = HooksDispatcher;
+      var prevDispatcher = ReactSharedInternals.H;
+      ReactSharedInternals.H = HooksDispatcher;
       var prevCacheDispatcher = null;
 
       {
-        prevCacheDispatcher = ReactSharedInternalsServer.C;
-        ReactSharedInternalsServer.C = DefaultCacheDispatcher;
+        prevCacheDispatcher = ReactSharedInternals.C;
+        ReactSharedInternals.C = DefaultCacheDispatcher;
       }
 
       var prevRequest = currentRequest;
@@ -13805,8 +13797,8 @@ if (__DEV__) {
       var prevGetCurrentStackImpl = null;
 
       {
-        prevGetCurrentStackImpl = ReactSharedInternalsServer.getCurrentStack;
-        ReactSharedInternalsServer.getCurrentStack = getCurrentStackInDEV;
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+        ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
       }
 
       var prevResumableState = currentResumableState;
@@ -13832,14 +13824,14 @@ if (__DEV__) {
         fatalError(request, error);
       } finally {
         setCurrentResumableState(prevResumableState);
-        ReactSharedInternalsServer.H = prevDispatcher;
+        ReactSharedInternals.H = prevDispatcher;
 
         {
-          ReactSharedInternalsServer.C = prevCacheDispatcher;
+          ReactSharedInternals.C = prevCacheDispatcher;
         }
 
         {
-          ReactSharedInternalsServer.getCurrentStack = prevGetCurrentStackImpl;
+          ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
         }
 
         if (prevDispatcher === HooksDispatcher) {

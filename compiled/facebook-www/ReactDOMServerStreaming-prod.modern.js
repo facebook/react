@@ -278,13 +278,9 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
-var ReactSharedInternalsServer =
-  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-if (!ReactSharedInternalsServer)
-  throw Error(
-    'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.'
-  );
-var ReactDOMSharedInternals =
+var ReactSharedInternals =
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  ReactDOMSharedInternals =
     ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   sharedNotPendingObject = {
     pending: !1,
@@ -5271,10 +5267,10 @@ exports.renderNextChunk = function (stream) {
   stream = stream.destination;
   if (2 !== request.status) {
     var prevContext = currentActiveSnapshot,
-      prevDispatcher = ReactSharedInternalsServer.H;
-    ReactSharedInternalsServer.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternalsServer.C;
-    ReactSharedInternalsServer.C = DefaultCacheDispatcher;
+      prevDispatcher = ReactSharedInternals.H;
+    ReactSharedInternals.H = HooksDispatcher;
+    var prevCacheDispatcher = ReactSharedInternals.C;
+    ReactSharedInternals.C = DefaultCacheDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5428,8 +5424,8 @@ exports.renderNextChunk = function (stream) {
       logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
-        (ReactSharedInternalsServer.H = prevDispatcher),
-        (ReactSharedInternalsServer.C = prevCacheDispatcher),
+        (ReactSharedInternals.H = prevDispatcher),
+        (ReactSharedInternals.C = prevCacheDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }
