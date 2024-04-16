@@ -108,6 +108,8 @@ export type PluginOptions = {
    * Ignore 'use no forget' annotations. Helpful during testing but should not be used in production.
    */
   ignoreUseNoForget: boolean;
+
+  sources?: Array<string> | ((filename: string) => boolean) | null;
 };
 
 const CompilationModeSchema = z.enum([

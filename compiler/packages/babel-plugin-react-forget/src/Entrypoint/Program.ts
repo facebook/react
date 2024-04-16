@@ -195,11 +195,49 @@ const DEFAULT_ESLINT_SUPPRESSIONS = [
   "react-hooks/rules-of-hooks",
 ];
 
+function isFilePartOfSources(
+  sources: Array<string> | ((filename: string) => boolean),
+  filename: string
+): boolean {
+  if (typeof sources === "function") {
+    return sources(filename);
+  }
+
+  for (const prefix in sources) {
+    if (filename.indexOf(prefix) !== -1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
 ): void {
   const options = parsePluginOptions(pass.opts);
+
+  if (options.sources) {
+    if (pass.filename === null) {
+      const error = new CompilerError();
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason: `Expected a filename but found none.`,
+          description:
+            "When the 'sources' config options is specified, the React compiler will only compile files with a name",
+          severity: ErrorSeverity.InvalidConfig,
+          loc: null,
+        })
+      );
+      handleError(error, pass, null);
+      return;
+    }
+
+    if (!isFilePartOfSources(options.sources, pass.filename)) {
+      return;
+    }
+  }
 
   // Top level "use no forget", skip this file entirely
   if (
