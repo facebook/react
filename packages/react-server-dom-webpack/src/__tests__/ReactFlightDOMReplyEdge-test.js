@@ -109,33 +109,35 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  it('can transport FormData (blobs)', async () => {
-    const bytes = new Uint8Array([
-      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
-    ]);
-    const blob = new Blob([bytes, bytes], {
-      type: 'application/x-test',
+  if (typeof FormData !== 'undefined' && typeof File !== 'undefined') {
+    it('can transport FormData (blobs)', async () => {
+      const bytes = new Uint8Array([
+        123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+      ]);
+      const blob = new Blob([bytes, bytes], {
+        type: 'application/x-test',
+      });
+
+      const formData = new FormData();
+      formData.append('hi', 'world');
+      formData.append('file', blob, 'filename.test');
+
+      expect(formData.get('file') instanceof File).toBe(true);
+      expect(formData.get('file').name).toBe('filename.test');
+
+      const body = await ReactServerDOMClient.encodeReply(formData);
+      const result = await ReactServerDOMServer.decodeReply(
+        body,
+        webpackServerMap,
+      );
+
+      expect(result instanceof FormData).toBe(true);
+      expect(result.get('hi')).toBe('world');
+      const resultBlob = result.get('file');
+      expect(resultBlob instanceof Blob).toBe(true);
+      expect(resultBlob.name).toBe('filename.test'); // In this direction we allow file name to pass through but not other direction.
+      expect(resultBlob.size).toBe(bytes.length * 2);
+      expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
     });
-
-    const formData = new FormData();
-    formData.append('hi', 'world');
-    formData.append('file', blob, 'filename.test');
-
-    expect(formData.get('file') instanceof File).toBe(true);
-    expect(formData.get('file').name).toBe('filename.test');
-
-    const body = await ReactServerDOMClient.encodeReply(formData);
-    const result = await ReactServerDOMServer.decodeReply(
-      body,
-      webpackServerMap,
-    );
-
-    expect(result instanceof FormData).toBe(true);
-    expect(result.get('hi')).toBe('world');
-    const resultBlob = result.get('file');
-    expect(resultBlob instanceof Blob).toBe(true);
-    expect(resultBlob.name).toBe('filename.test'); // In this direction we allow file name to pass through but not other direction.
-    expect(resultBlob.size).toBe(bytes.length * 2);
-    expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
-  });
+  }
 });

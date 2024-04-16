@@ -20,6 +20,8 @@ import {
   enableServerComponentLogs,
 } from 'shared/ReactFeatureFlags';
 
+import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
+
 import {
   scheduleWork,
   flushBuffered,
@@ -199,6 +201,8 @@ if (
 
 const ObjectPrototype = Object.prototype;
 
+const ASYNC_ITERATOR = Symbol.asyncIterator;
+
 type JSONValue =
   | string
   | boolean
@@ -236,6 +240,8 @@ export type ReactClientValue =
   | null
   | void
   | bigint
+  | ReadableStream
+  | $AsyncIterable<ReactClientValue, ReactClientValue, void>
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
@@ -282,6 +288,7 @@ export type Request = {
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
+  abortListeners: Set<(reason: mixed) => void>,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
@@ -378,6 +385,7 @@ export function createRequest(
     nextChunkId: 0,
     pendingChunks: 0,
     hints,
+    abortListeners: new Set(),
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
@@ -509,13 +517,218 @@ function serializeThenable(
         emitErrorChunk(request, newTask.id, digest, reason);
       }
       request.abortableTasks.delete(newTask);
-      if (request.destination !== null) {
-        flushCompletedChunks(request, request.destination);
-      }
+      enqueueFlush(request);
     },
   );
 
   return newTask.id;
+}
+
+function serializeReadableStream(
+  request: Request,
+  task: Task,
+  stream: ReadableStream,
+): string {
+  // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
+  // receiving side. It also implies that different chunks can be split up or merged as opposed
+  // to a readable stream that happens to have Uint8Array as the type which might expect it to be
+  // received in the same slices.
+  // $FlowFixMe: This is a Node.js extension.
+  let supportsBYOB: void | boolean = stream.supportsBYOB;
+  if (supportsBYOB === undefined) {
+    try {
+      // $FlowFixMe[extra-arg]: This argument is accepted.
+      stream.getReader({mode: 'byob'}).releaseLock();
+      supportsBYOB = true;
+    } catch (x) {
+      supportsBYOB = false;
+    }
+  }
+
+  const reader = stream.getReader();
+
+  // This task won't actually be retried. We just use it to attempt synchronous renders.
+  const streamTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+  request.abortableTasks.delete(streamTask);
+
+  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
+
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  // There's a race condition between when the stream is aborted and when the promise
+  // resolves so we track whether we already aborted it to avoid writing twice.
+  let aborted = false;
+  function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
+    if (aborted) {
+      return;
+    }
+
+    if (entry.done) {
+      request.abortListeners.delete(error);
+      const endStreamRow = streamTask.id.toString(16) + ':C\n';
+      request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      enqueueFlush(request);
+      aborted = true;
+    } else {
+      try {
+        streamTask.model = entry.value;
+        request.pendingChunks++;
+        tryStreamTask(request, streamTask);
+        enqueueFlush(request);
+        reader.read().then(progress, error);
+      } catch (x) {
+        error(x);
+      }
+    }
+  }
+  function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
+    if (
+      enablePostpone &&
+      typeof reason === 'object' &&
+      reason !== null &&
+      (reason: any).$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (reason: any);
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, streamTask.id, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, reason);
+      emitErrorChunk(request, streamTask.id, digest, reason);
+    }
+    enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
+  }
+  request.abortListeners.add(error);
+  reader.read().then(progress, error);
+  return serializeByValueID(streamTask.id);
+}
+
+function serializeAsyncIterable(
+  request: Request,
+  task: Task,
+  iterable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
+): string {
+  // Generators/Iterators are Iterables but they're also their own iterator
+  // functions. If that's the case, we treat them as single-shot. Otherwise,
+  // we assume that this iterable might be a multi-shot and allow it to be
+  // iterated more than once on the client.
+  const isIterator = iterable === iterator;
+
+  // This task won't actually be retried. We just use it to attempt synchronous renders.
+  const streamTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+  request.abortableTasks.delete(streamTask);
+
+  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
+
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  if (__DEV__) {
+    const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, streamTask.id, debugInfo);
+    }
+  }
+
+  // There's a race condition between when the stream is aborted and when the promise
+  // resolves so we track whether we already aborted it to avoid writing twice.
+  let aborted = false;
+  function progress(
+    entry:
+      | {done: false, +value: ReactClientValue, ...}
+      | {done: true, +value: ReactClientValue, ...},
+  ) {
+    if (aborted) {
+      return;
+    }
+
+    if (entry.done) {
+      request.abortListeners.delete(error);
+      let endStreamRow;
+      if (entry.value === undefined) {
+        endStreamRow = streamTask.id.toString(16) + ':C\n';
+      } else {
+        // Unlike streams, the last value may not be undefined. If it's not
+        // we outline it and encode a reference to it in the closing instruction.
+        try {
+          const chunkId = outlineModel(request, entry.value);
+          endStreamRow =
+            streamTask.id.toString(16) +
+            ':C' +
+            stringify(serializeByValueID(chunkId)) +
+            '\n';
+        } catch (x) {
+          error(x);
+          return;
+        }
+      }
+      request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      enqueueFlush(request);
+      aborted = true;
+    } else {
+      try {
+        streamTask.model = entry.value;
+        request.pendingChunks++;
+        tryStreamTask(request, streamTask);
+        enqueueFlush(request);
+        iterator.next().then(progress, error);
+      } catch (x) {
+        error(x);
+        return;
+      }
+    }
+  }
+  function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
+    if (
+      enablePostpone &&
+      typeof reason === 'object' &&
+      reason !== null &&
+      (reason: any).$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (reason: any);
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, streamTask.id, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, reason);
+      emitErrorChunk(request, streamTask.id, digest, reason);
+    }
+    enqueueFlush(request);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
+  }
+  request.abortListeners.add(error);
+  iterator.next().then(progress, error);
+  return serializeByValueID(streamTask.id);
 }
 
 export function emitHint<Code: HintCode>(
@@ -691,26 +904,7 @@ function renderFragment(
   task: Task,
   children: $ReadOnlyArray<ReactClientValue>,
 ): ReactJSONValue {
-  if (__DEV__) {
-    const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
-    if (debugInfo) {
-      // If this came from Flight, forward any debug info into this new row.
-      if (debugID === null) {
-        // We don't have a chunk to assign debug info. We need to outline this
-        // component to assign it an ID.
-        return outlineTask(request, task);
-      } else {
-        // Forward any debug info we have the first time we see it.
-        // We do this after init so that we have received all the debug info
-        // from the server by the time we emit it.
-        forwardDebugInfo(request, debugID, debugInfo);
-      }
-    }
-  }
-  if (!enableServerComponentKeys) {
-    return children;
-  }
-  if (task.keyPath !== null) {
+  if (enableServerComponentKeys && task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
     const fragment = [
@@ -741,7 +935,68 @@ function renderFragment(
   // way up. Which is what we want since we've consumed it. If this changes to
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
   // before recursing here.
+  if (__DEV__) {
+    const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
+    if (debugInfo) {
+      // If this came from Flight, forward any debug info into this new row.
+      if (debugID === null) {
+        // We don't have a chunk to assign debug info. We need to outline this
+        // component to assign it an ID.
+        return outlineTask(request, task);
+      } else {
+        // Forward any debug info we have the first time we see it.
+        // We do this after init so that we have received all the debug info
+        // from the server by the time we emit it.
+        forwardDebugInfo(request, debugID, debugInfo);
+      }
+      // Since we're rendering this array again, create a copy that doesn't
+      // have the debug info so we avoid outlining or emitting debug info again.
+      children = Array.from(children);
+    }
+  }
   return children;
+}
+
+function renderAsyncFragment(
+  request: Request,
+  task: Task,
+  children: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  getAsyncIterator: () => $AsyncIterator<any, any, any>,
+): ReactJSONValue {
+  if (enableServerComponentKeys && task.keyPath !== null) {
+    // We have a Server Component that specifies a key but we're now splitting
+    // the tree using a fragment.
+    const fragment = [
+      REACT_ELEMENT_TYPE,
+      REACT_FRAGMENT_TYPE,
+      task.keyPath,
+      {children},
+    ];
+    if (!task.implicitSlot) {
+      // If this was keyed inside a set. I.e. the outer Server Component was keyed
+      // then we need to handle reorders of the whole set. To do this we need to wrap
+      // this array in a keyed Fragment.
+      return fragment;
+    }
+    // If the outer Server Component was implicit but then an inner one had a key
+    // we don't actually need to be able to move the whole set around. It'll always be
+    // in an implicit slot. The key only exists to be able to reset the state of the
+    // children. We could achieve the same effect by passing on the keyPath to the next
+    // set of components inside the fragment. This would also allow a keyless fragment
+    // reconcile against a single child.
+    // Unfortunately because of JSON.stringify, we can't call the recursive loop for
+    // each child within this context because we can't return a set with already resolved
+    // values. E.g. a string would get double encoded. Returning would pop the context.
+    // So instead, we wrap it with an unkeyed fragment and inner keyed fragment.
+    return [fragment];
+  }
+
+  // Since we're yielding here, that implicitly resets the keyPath context on the
+  // way up. Which is what we want since we've consumed it. If this changes to
+  // be recursive serialization, we need to reset the keyPath and implicitSlot,
+  // before recursing here.
+  const asyncIterator = getAsyncIterator.call(children);
+  return serializeAsyncIterable(request, task, children, asyncIterator);
 }
 
 function renderClientElement(
@@ -1156,13 +1411,9 @@ function serializeTemporaryReference(
 }
 
 function serializeLargeTextString(request: Request, text: string): string {
-  request.pendingChunks += 2;
+  request.pendingChunks++;
   const textId = request.nextChunkId++;
-  const textChunk = stringToChunk(text);
-  const binaryLength = byteLengthOfChunk(textChunk);
-  const row = textId.toString(16) + ':T' + binaryLength.toString(16) + ',';
-  const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, textChunk);
+  emitTextChunk(request, textId, text);
   return serializeByValueID(textId);
 }
 
@@ -1212,27 +1463,9 @@ function serializeTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
-  if (enableTaint) {
-    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
-      // If we have had any tainted values of this length, we check
-      // to see if these bytes matches any entries in the registry.
-      const tainted = TaintRegistryValues.get(
-        binaryToComparableString(typedArray),
-      );
-      if (tainted !== undefined) {
-        throwTaintViolation(tainted.message);
-      }
-    }
-  }
-  request.pendingChunks += 2;
+  request.pendingChunks++;
   const bufferId = request.nextChunkId++;
-  // TODO: Convert to little endian if that's not the server default.
-  const binaryChunk = typedArrayToBinaryChunk(typedArray);
-  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
-  const row =
-    bufferId.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
-  const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  emitTypedArrayChunk(request, bufferId, tag, typedArray);
   return serializeByValueID(bufferId);
 }
 
@@ -1248,10 +1481,16 @@ function serializeBlob(request: Request, blob: Blob): string {
 
   const reader = blob.stream().getReader();
 
+  let aborted = false;
   function progress(
     entry: {done: false, value: Uint8Array} | {done: true, value: void},
   ): Promise<void> | void {
+    if (aborted) {
+      return;
+    }
     if (entry.done) {
+      request.abortListeners.delete(error);
+      aborted = true;
       pingTask(request, newTask);
       return;
     }
@@ -1262,13 +1501,21 @@ function serializeBlob(request: Request, blob: Blob): string {
   }
 
   function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
     const digest = logRecoverableError(request, reason);
     emitErrorChunk(request, newTask.id, digest, reason);
     request.abortableTasks.delete(newTask);
-    if (request.destination !== null) {
-      flushCompletedChunks(request, request.destination);
-    }
+    enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
   }
+
+  request.abortListeners.add(error);
+
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
 
@@ -1667,6 +1914,27 @@ function renderModelDestructive(
       return renderFragment(request, task, Array.from((value: any)));
     }
 
+    if (enableFlightReadableStream) {
+      // TODO: Blob is not available in old Node. Remove the typeof check later.
+      if (
+        typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream
+      ) {
+        return serializeReadableStream(request, task, value);
+      }
+      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+        (value: any)[ASYNC_ITERATOR];
+      if (typeof getAsyncIterator === 'function') {
+        // We treat AsyncIterables as a Fragment and as such we might need to key them.
+        return renderAsyncFragment(
+          request,
+          task,
+          (value: any),
+          getAsyncIterator,
+        );
+      }
+    }
+
     // Verify that this is a simple plain object.
     const proto = getPrototypeOf(value);
     if (
@@ -2031,6 +2299,42 @@ function emitDebugChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitTypedArrayChunk(
+  request: Request,
+  id: number,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): void {
+  if (enableTaint) {
+    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
+      // If we have had any tainted values of this length, we check
+      // to see if these bytes matches any entries in the registry.
+      const tainted = TaintRegistryValues.get(
+        binaryToComparableString(typedArray),
+      );
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+  }
+  request.pendingChunks++; // Extra chunk for the header.
+  // TODO: Convert to little endian if that's not the server default.
+  const binaryChunk = typedArrayToBinaryChunk(typedArray);
+  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
+  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  request.completedRegularChunks.push(headerChunk, binaryChunk);
+}
+
+function emitTextChunk(request: Request, id: number, text: string): void {
+  request.pendingChunks++; // Extra chunk for the header.
+  const textChunk = stringToChunk(text);
+  const binaryLength = byteLengthOfChunk(textChunk);
+  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  request.completedRegularChunks.push(headerChunk, textChunk);
+}
+
 function serializeEval(source: string): string {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2391,6 +2695,96 @@ function forwardDebugInfo(
   }
 }
 
+function emitChunk(
+  request: Request,
+  task: Task,
+  value: ReactClientValue,
+): void {
+  const id = task.id;
+  // For certain types we have special types, we typically outlined them but
+  // we can emit them directly for this row instead of through an indirection.
+  if (typeof value === 'string') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+    emitTextChunk(request, id, value);
+    return;
+  }
+  if (enableBinaryFlight) {
+    if (value instanceof ArrayBuffer) {
+      emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+      return;
+    }
+    if (value instanceof Int8Array) {
+      // char
+      emitTypedArrayChunk(request, id, 'O', value);
+      return;
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      emitTypedArrayChunk(request, id, 'o', value);
+      return;
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      emitTypedArrayChunk(request, id, 'U', value);
+      return;
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      emitTypedArrayChunk(request, id, 'S', value);
+      return;
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      emitTypedArrayChunk(request, id, 's', value);
+      return;
+    }
+    if (value instanceof Int32Array) {
+      // long
+      emitTypedArrayChunk(request, id, 'L', value);
+      return;
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      emitTypedArrayChunk(request, id, 'l', value);
+      return;
+    }
+    if (value instanceof Float32Array) {
+      // float
+      emitTypedArrayChunk(request, id, 'G', value);
+      return;
+    }
+    if (value instanceof Float64Array) {
+      // double
+      emitTypedArrayChunk(request, id, 'g', value);
+      return;
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      emitTypedArrayChunk(request, id, 'M', value);
+      return;
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      emitTypedArrayChunk(request, id, 'm', value);
+      return;
+    }
+    if (value instanceof DataView) {
+      emitTypedArrayChunk(request, id, 'V', value);
+      return;
+    }
+  }
+  // For anything else we need to try to serialize it using JSON.
+  // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+  const json: string = stringify(value, task.toJSON);
+  emitModelChunk(request, task.id, json);
+}
+
 const emptyRoot = {};
 
 function retryTask(request: Request, task: Task): void {
@@ -2435,19 +2829,17 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
-    let json: string;
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
-      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-      json = stringify(resolvedModel, task.toJSON);
+      emitChunk(request, task, resolvedModel);
     } else {
       // If the value is a string, it means it's a terminal value and we already escaped it
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-      json = stringify(resolvedModel);
+      const json: string = stringify(resolvedModel);
+      emitModelChunk(request, task.id, json);
     }
-    emitModelChunk(request, task.id, json);
 
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
@@ -2482,6 +2874,24 @@ function retryTask(request: Request, task: Task): void {
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
     emitErrorChunk(request, task.id, digest, x);
+  } finally {
+    if (__DEV__) {
+      debugID = prevDebugID;
+    }
+  }
+}
+
+function tryStreamTask(request: Request, task: Task): void {
+  // This is used to try to emit something synchronously but if it suspends,
+  // we emit a reference to a new outlined task immediately instead.
+  const prevDebugID = debugID;
+  if (__DEV__) {
+    // We don't use the id of the stream task for debugID. Instead we leave it null
+    // so that we instead outline the row to get a new debugID if needed.
+    debugID = null;
+  }
+  try {
+    emitChunk(request, task, task.model);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
@@ -2603,6 +3013,7 @@ function flushCompletedChunks(
       cleanupTaintQueue(request);
     }
     close(destination);
+    request.destination = null;
   }
 }
 
@@ -2660,9 +3071,9 @@ export function stopFlowing(request: Request): void {
 export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
+    // We have tasks to abort. We'll emit one error row and then emit a reference
+    // to that row from every row that's still remaining.
     if (abortableTasks.size > 0) {
-      // We have tasks to abort. We'll emit one error row and then emit a reference
-      // to that row from every row that's still remaining.
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
       if (
@@ -2686,6 +3097,30 @@ export function abort(request: Request, reason: mixed): void {
       }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
+    }
+    const abortListeners = request.abortListeners;
+    if (abortListeners.size > 0) {
+      let error;
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        // We aborted with a Postpone but since we're passing this to an
+        // external handler, passing this object would leak it outside React.
+        // We create an alternative reason for it instead.
+        error = new Error('The render was aborted due to being postponed.');
+      } else {
+        error =
+          reason === undefined
+            ? new Error(
+                'The render was aborted by the server without a reason.',
+              )
+            : reason;
+      }
+      abortListeners.forEach(callback => callback(error));
+      abortListeners.clear();
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
