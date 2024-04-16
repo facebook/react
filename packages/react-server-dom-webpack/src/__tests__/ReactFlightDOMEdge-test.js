@@ -124,6 +124,18 @@ describe('ReactFlightDOMEdge', () => {
     }
   }
 
+  async function readByteLength(stream) {
+    const reader = stream.getReader();
+    let length = 0;
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return length;
+      }
+      length += value.byteLength;
+    }
+  }
+
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
@@ -555,6 +567,127 @@ describe('ReactFlightDOMEdge', () => {
     }).toErrorDev(
       'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
       {withoutStack: true},
+    );
+  });
+
+  // @gate enableFlightReadableStream && enableBinaryFlight
+  it('should supports ReadableStreams with typed arrays', async () => {
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]).buffer;
+    const buffers = [
+      buffer,
+      new Int8Array(buffer, 1),
+      new Uint8Array(buffer, 2),
+      new Uint8ClampedArray(buffer, 2),
+      new Int16Array(buffer, 2),
+      new Uint16Array(buffer, 2),
+      new Int32Array(buffer, 4),
+      new Uint32Array(buffer, 4),
+      new Float32Array(buffer, 4),
+      new Float64Array(buffer, 0),
+      new BigInt64Array(buffer, 0),
+      new BigUint64Array(buffer, 0),
+      new DataView(buffer, 3),
+    ];
+
+    // This is not a binary stream, it's a stream that contain binary chunks.
+    const s = new ReadableStream({
+      start(c) {
+        for (let i = 0; i < buffers.length; i++) {
+          c.enqueue(buffers[i]);
+        }
+        c.close();
+      },
+    });
+
+    const stream = ReactServerDOMServer.renderToReadableStream(s, {});
+
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream1,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    expect(await readByteLength(stream2)).toBeLessThan(400);
+
+    const streamedBuffers = [];
+    const reader = result.getReader();
+    let entry;
+    while (!(entry = await reader.read()).done) {
+      streamedBuffers.push(entry.value);
+    }
+
+    expect(streamedBuffers).toEqual(buffers);
+  });
+
+  // @gate enableFlightReadableStream && enableBinaryFlight
+  it('should support BYOB binary ReadableStreams', async () => {
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]).buffer;
+    const buffers = [
+      new Int8Array(buffer, 1),
+      new Uint8Array(buffer, 2),
+      new Uint8ClampedArray(buffer, 2),
+      new Int16Array(buffer, 2),
+      new Uint16Array(buffer, 2),
+      new Int32Array(buffer, 4),
+      new Uint32Array(buffer, 4),
+      new Float32Array(buffer, 4),
+      new Float64Array(buffer, 0),
+      new BigInt64Array(buffer, 0),
+      new BigUint64Array(buffer, 0),
+      new DataView(buffer, 3),
+    ];
+
+    // This a binary stream where each chunk ends up as Uint8Array.
+    const s = new ReadableStream({
+      type: 'bytes',
+      start(c) {
+        for (let i = 0; i < buffers.length; i++) {
+          c.enqueue(buffers[i]);
+        }
+        c.close();
+      },
+    });
+
+    const stream = ReactServerDOMServer.renderToReadableStream(s, {});
+
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream1,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    expect(await readByteLength(stream2)).toBeLessThan(400);
+
+    const streamedBuffers = [];
+    const reader = result.getReader({mode: 'byob'});
+    let entry;
+    while (!(entry = await reader.read(new Uint8Array(10))).done) {
+      expect(entry.value instanceof Uint8Array).toBe(true);
+      streamedBuffers.push(entry.value);
+    }
+
+    // The streamed buffers might be in different chunks and in Uint8Array form but
+    // the concatenated bytes should be the same.
+    expect(streamedBuffers.flatMap(t => Array.from(t))).toEqual(
+      buffers.flatMap(c =>
+        Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
+      ),
     );
   });
 });

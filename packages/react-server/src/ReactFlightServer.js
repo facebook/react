@@ -526,6 +526,7 @@ function serializeThenable(
 
 function serializeReadableStream(
   request: Request,
+  task: Task,
   stream: ReadableStream,
 ): string {
   // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
@@ -546,10 +547,20 @@ function serializeReadableStream(
 
   const reader = stream.getReader();
 
-  request.pendingChunks += 2; // Start and Stop rows.
-  const streamId = request.nextChunkId++;
+  // This task won't actually be retried. We just use it to attempt synchronous renders.
+  const streamTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+  request.abortableTasks.delete(streamTask);
+
+  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
+
   const startStreamRow =
-    streamId.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
+    streamTask.id.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   // There's a race condition between when the stream is aborted and when the promise
@@ -562,21 +573,15 @@ function serializeReadableStream(
 
     if (entry.done) {
       request.abortListeners.delete(error);
-      const endStreamRow = streamId.toString(16) + ':C\n';
-      request.pendingChunks++;
+      const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
       aborted = true;
     } else {
       try {
-        const chunkId = outlineModel(request, entry.value);
-        const processedChunk = encodeReferenceChunk(
-          request,
-          streamId,
-          serializeByValueID(chunkId),
-        );
+        streamTask.model = entry.value;
         request.pendingChunks++;
-        request.completedRegularChunks.push(processedChunk);
+        tryStreamTask(request, streamTask);
         enqueueFlush(request);
         reader.read().then(progress, error);
       } catch (x) {
@@ -598,10 +603,10 @@ function serializeReadableStream(
     ) {
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message);
-      emitPostponeChunk(request, streamId, postponeInstance);
+      emitPostponeChunk(request, streamTask.id, postponeInstance);
     } else {
       const digest = logRecoverableError(request, reason);
-      emitErrorChunk(request, streamId, digest, reason);
+      emitErrorChunk(request, streamTask.id, digest, reason);
     }
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
@@ -609,11 +614,12 @@ function serializeReadableStream(
   }
   request.abortListeners.add(error);
   reader.read().then(progress, error);
-  return serializeByValueID(streamId);
+  return serializeByValueID(streamTask.id);
 }
 
 function serializeAsyncIterable(
   request: Request,
+  task: Task,
   iterable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
   iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
 ): string {
@@ -623,16 +629,26 @@ function serializeAsyncIterable(
   // iterated more than once on the client.
   const isIterator = iterable === iterator;
 
-  request.pendingChunks += 2; // Start and Stop rows.
-  const streamId = request.nextChunkId++;
+  // This task won't actually be retried. We just use it to attempt synchronous renders.
+  const streamTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+  request.abortableTasks.delete(streamTask);
+
+  request.pendingChunks++; // The task represents the Start row. This adds a Stop row.
+
   const startStreamRow =
-    streamId.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
+    streamTask.id.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
   if (__DEV__) {
     const debugInfo: ?ReactDebugInfo = (iterable: any)._debugInfo;
     if (debugInfo) {
-      forwardDebugInfo(request, streamId, debugInfo);
+      forwardDebugInfo(request, streamTask.id, debugInfo);
     }
   }
 
@@ -652,14 +668,14 @@ function serializeAsyncIterable(
       request.abortListeners.delete(error);
       let endStreamRow;
       if (entry.value === undefined) {
-        endStreamRow = streamId.toString(16) + ':C\n';
+        endStreamRow = streamTask.id.toString(16) + ':C\n';
       } else {
         // Unlike streams, the last value may not be undefined. If it's not
         // we outline it and encode a reference to it in the closing instruction.
         try {
           const chunkId = outlineModel(request, entry.value);
           endStreamRow =
-            streamId.toString(16) +
+            streamTask.id.toString(16) +
             ':C' +
             stringify(serializeByValueID(chunkId)) +
             '\n';
@@ -668,20 +684,14 @@ function serializeAsyncIterable(
           return;
         }
       }
-      request.pendingChunks++;
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
       aborted = true;
     } else {
       try {
-        const chunkId = outlineModel(request, entry.value);
-        const processedChunk = encodeReferenceChunk(
-          request,
-          streamId,
-          serializeByValueID(chunkId),
-        );
+        streamTask.model = entry.value;
         request.pendingChunks++;
-        request.completedRegularChunks.push(processedChunk);
+        tryStreamTask(request, streamTask);
         enqueueFlush(request);
         iterator.next().then(progress, error);
       } catch (x) {
@@ -704,10 +714,10 @@ function serializeAsyncIterable(
     ) {
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message);
-      emitPostponeChunk(request, streamId, postponeInstance);
+      emitPostponeChunk(request, streamTask.id, postponeInstance);
     } else {
       const digest = logRecoverableError(request, reason);
-      emitErrorChunk(request, streamId, digest, reason);
+      emitErrorChunk(request, streamTask.id, digest, reason);
     }
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
@@ -718,7 +728,7 @@ function serializeAsyncIterable(
   }
   request.abortListeners.add(error);
   iterator.next().then(progress, error);
-  return serializeByValueID(streamId);
+  return serializeByValueID(streamTask.id);
 }
 
 export function emitHint<Code: HintCode>(
@@ -986,7 +996,7 @@ function renderAsyncFragment(
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
   // before recursing here.
   const asyncIterator = getAsyncIterator.call(children);
-  return serializeAsyncIterable(request, children, asyncIterator);
+  return serializeAsyncIterable(request, task, children, asyncIterator);
 }
 
 function renderClientElement(
@@ -1932,7 +1942,7 @@ function renderModelDestructive(
         typeof ReadableStream === 'function' &&
         value instanceof ReadableStream
       ) {
-        return serializeReadableStream(request, value);
+        return serializeReadableStream(request, task, value);
       }
       const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
         (value: any)[ASYNC_ITERATOR];
@@ -2762,6 +2772,26 @@ function retryTask(request: Request, task: Task): void {
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
     emitErrorChunk(request, task.id, digest, x);
+  } finally {
+    if (__DEV__) {
+      debugID = prevDebugID;
+    }
+  }
+}
+
+function tryStreamTask(request: Request, task: Task): void {
+  // This is used to try to emit something synchronously but if it suspends,
+  // we emit a reference to a new outlined task immediately instead.
+  const prevDebugID = debugID;
+  if (__DEV__) {
+    // We don't use the id of the stream task for debugID. Instead we leave it null
+    // so that we instead outline the row to get a new debugID if needed.
+    debugID = null;
+  }
+  try {
+    // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+    const json: string = stringify(task.model, task.toJSON);
+    emitModelChunk(request, task.id, json);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
