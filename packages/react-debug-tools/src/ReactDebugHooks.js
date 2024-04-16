@@ -882,7 +882,11 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
         isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
-        i++;
+        // Guard against the dispatcher call being inlined.
+        // At this point we wouldn't be able to recover the actual React Hook name.
+        if (i < hookStack.length - 1) {
+          i++;
+        }
       }
       return i;
     }
