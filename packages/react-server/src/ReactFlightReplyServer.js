@@ -25,6 +25,7 @@ import {
 } from 'react-client/src/ReactFlightClientConfig';
 
 import {createTemporaryReference} from './ReactFlightServerTemporaryReferences';
+import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
 
 export type JSONValue =
   | number
@@ -378,9 +379,41 @@ function getOutlinedModel(response: Response, id: number): any {
   return chunk.value;
 }
 
+function parseTypedArray(
+  response: Response,
+  reference: string,
+  constructor: any,
+  bytesPerElement: number,
+  parentObject: Object,
+  parentKey: string,
+): null {
+  const id = parseInt(reference.slice(2), 16);
+  const prefix = response._prefix;
+  const key = prefix + id;
+  // We should have this backingEntry in the store already because we emitted
+  // it before referencing it. It should be a Blob.
+  const backingEntry: Blob = (response._formData.get(key): any);
+
+  const promise =
+    constructor === ArrayBuffer
+      ? backingEntry.arrayBuffer()
+      : backingEntry.arrayBuffer().then(function (buffer) {
+          return new constructor(buffer);
+        });
+
+  // Since loading the buffer is an async operation we'll be blocking the parent
+  // chunk. TODO: This is not safe if the parent chunk needs a mapper like Map.
+  const parentChunk = initializingChunk;
+  promise.then(
+    createModelResolver(parentChunk, parentObject, parentKey),
+    createModelReject(parentChunk),
+  );
+  return null;
+}
+
 function parseModelString(
   response: Response,
-  parentObject: Object,
+  obj: Object,
   key: string,
   value: string,
 ): any {
@@ -407,7 +440,7 @@ function parseModelString(
           metaData.id,
           metaData.bound,
           initializingChunk,
-          parentObject,
+          obj,
           key,
         );
       }
@@ -473,31 +506,77 @@ function parseModelString(
         // BigInt
         return BigInt(value.slice(2));
       }
-      default: {
-        // We assume that anything else is a reference ID.
-        const id = parseInt(value.slice(1), 16);
-        const chunk = getChunk(response, id);
-        switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
-            break;
-        }
-        // The status might have changed after initialization.
-        switch (chunk.status) {
-          case INITIALIZED:
-            return chunk.value;
-          case PENDING:
-          case BLOCKED:
-            const parentChunk = initializingChunk;
-            chunk.then(
-              createModelResolver(parentChunk, parentObject, key),
-              createModelReject(parentChunk),
-            );
-            return null;
-          default:
-            throw chunk.reason;
+    }
+    if (enableBinaryFlight) {
+      switch (value[1]) {
+        case 'A':
+          return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
+        case 'O':
+          return parseTypedArray(response, value, Int8Array, 1, obj, key);
+        case 'o':
+          return parseTypedArray(response, value, Uint8Array, 1, obj, key);
+        case 'U':
+          return parseTypedArray(
+            response,
+            value,
+            Uint8ClampedArray,
+            1,
+            obj,
+            key,
+          );
+        case 'S':
+          return parseTypedArray(response, value, Int16Array, 2, obj, key);
+        case 's':
+          return parseTypedArray(response, value, Uint16Array, 2, obj, key);
+        case 'L':
+          return parseTypedArray(response, value, Int32Array, 4, obj, key);
+        case 'l':
+          return parseTypedArray(response, value, Uint32Array, 4, obj, key);
+        case 'G':
+          return parseTypedArray(response, value, Float32Array, 4, obj, key);
+        case 'g':
+          return parseTypedArray(response, value, Float64Array, 8, obj, key);
+        case 'M':
+          return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
+        case 'm':
+          return parseTypedArray(response, value, BigUint64Array, 8, obj, key);
+        case 'V':
+          return parseTypedArray(response, value, DataView, 1, obj, key);
+        case 'B': {
+          // Blob
+          const id = parseInt(value.slice(2), 16);
+          const prefix = response._prefix;
+          const blobKey = prefix + id;
+          // We should have this backingEntry in the store already because we emitted
+          // it before referencing it. It should be a Blob.
+          const backingEntry: Blob = (response._formData.get(blobKey): any);
+          return backingEntry;
         }
       }
+    }
+
+    // We assume that anything else is a reference ID.
+    const id = parseInt(value.slice(1), 16);
+    const chunk = getChunk(response, id);
+    switch (chunk.status) {
+      case RESOLVED_MODEL:
+        initializeModelChunk(chunk);
+        break;
+    }
+    // The status might have changed after initialization.
+    switch (chunk.status) {
+      case INITIALIZED:
+        return chunk.value;
+      case PENDING:
+      case BLOCKED:
+        const parentChunk = initializingChunk;
+        chunk.then(
+          createModelResolver(parentChunk, obj, key),
+          createModelReject(parentChunk),
+        );
+        return null;
+      default:
+        throw chunk.reason;
     }
   }
   return value;

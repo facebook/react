@@ -1262,10 +1262,10 @@ function processFullRow(
         // We must always clone to extract it into a separate buffer instead of just a view.
         resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
         return;
-      case 67 /* "C" */:
+      case 79 /* "O" */:
         resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
         return;
-      case 99 /* "c" */:
+      case 111 /* "o" */:
         resolveBuffer(
           response,
           id,
@@ -1287,13 +1287,13 @@ function processFullRow(
       case 108 /* "l" */:
         resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
         return;
-      case 70 /* "F" */:
+      case 71 /* "G" */:
         resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
         return;
-      case 100 /* "d" */:
+      case 103 /* "g" */:
         resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
         return;
-      case 78 /* "N" */:
+      case 77 /* "M" */:
         resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
         return;
       case 109 /* "m" */:
@@ -1417,16 +1417,16 @@ export function processBinaryChunk(
           resolvedRowTag === 84 /* "T" */ ||
           (enableBinaryFlight &&
             (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 67 /* "C" */ ||
-              resolvedRowTag === 99 /* "c" */ ||
+              resolvedRowTag === 79 /* "O" */ ||
+              resolvedRowTag === 111 /* "o" */ ||
               resolvedRowTag === 85 /* "U" */ ||
               resolvedRowTag === 83 /* "S" */ ||
               resolvedRowTag === 115 /* "s" */ ||
               resolvedRowTag === 76 /* "L" */ ||
               resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 70 /* "F" */ ||
-              resolvedRowTag === 100 /* "d" */ ||
-              resolvedRowTag === 78 /* "N" */ ||
+              resolvedRowTag === 71 /* "G" */ ||
+              resolvedRowTag === 103 /* "g" */ ||
+              resolvedRowTag === 77 /* "M" */ ||
               resolvedRowTag === 109 /* "m" */ ||
               resolvedRowTag === 86)) /* "V" */
         ) {

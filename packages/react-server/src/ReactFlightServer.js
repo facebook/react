@@ -1610,11 +1610,11 @@ function renderModelDestructive(
       }
       if (value instanceof Int8Array) {
         // char
-        return serializeTypedArray(request, 'C', value);
+        return serializeTypedArray(request, 'O', value);
       }
       if (value instanceof Uint8Array) {
         // unsigned char
-        return serializeTypedArray(request, 'c', value);
+        return serializeTypedArray(request, 'o', value);
       }
       if (value instanceof Uint8ClampedArray) {
         // unsigned clamped char
@@ -1638,15 +1638,15 @@ function renderModelDestructive(
       }
       if (value instanceof Float32Array) {
         // float
-        return serializeTypedArray(request, 'F', value);
+        return serializeTypedArray(request, 'G', value);
       }
       if (value instanceof Float64Array) {
         // double
-        return serializeTypedArray(request, 'd', value);
+        return serializeTypedArray(request, 'g', value);
       }
       if (value instanceof BigInt64Array) {
         // number
-        return serializeTypedArray(request, 'N', value);
+        return serializeTypedArray(request, 'M', value);
       }
       if (value instanceof BigUint64Array) {
         // unsigned number
@@ -2158,11 +2158,11 @@ function renderConsoleValue(
       }
       if (value instanceof Int8Array) {
         // char
-        return serializeTypedArray(request, 'C', value);
+        return serializeTypedArray(request, 'O', value);
       }
       if (value instanceof Uint8Array) {
         // unsigned char
-        return serializeTypedArray(request, 'c', value);
+        return serializeTypedArray(request, 'o', value);
       }
       if (value instanceof Uint8ClampedArray) {
         // unsigned clamped char
@@ -2186,15 +2186,15 @@ function renderConsoleValue(
       }
       if (value instanceof Float32Array) {
         // float
-        return serializeTypedArray(request, 'F', value);
+        return serializeTypedArray(request, 'G', value);
       }
       if (value instanceof Float64Array) {
         // double
-        return serializeTypedArray(request, 'd', value);
+        return serializeTypedArray(request, 'g', value);
       }
       if (value instanceof BigInt64Array) {
         // number
-        return serializeTypedArray(request, 'N', value);
+        return serializeTypedArray(request, 'M', value);
       }
       if (value instanceof BigUint64Array) {
         // unsigned number

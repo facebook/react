@@ -17,7 +17,10 @@ import type {
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
+import {
+  enableRenderableContext,
+  enableBinaryFlight,
+} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -150,6 +153,10 @@ function serializeSetID(id: number): string {
   return '$W' + id.toString(16);
 }
 
+function serializeBlobID(id: number): string {
+  return '$B' + id.toString(16);
+}
+
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use those to encode
@@ -170,6 +177,19 @@ export function processReply(
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
+
+  function serializeTypedArray(
+    tag: string,
+    typedArray: ArrayBuffer | $ArrayBufferView,
+  ): string {
+    const blob = new Blob([typedArray]);
+    const blobId = nextPartId++;
+    if (formData === null) {
+      formData = new FormData();
+    }
+    formData.append(formFieldPrefix + blobId, blob);
+    return '$' + tag + blobId.toString(16);
+  }
 
   function resolveToJSON(
     this:
@@ -362,6 +382,70 @@ export function processReply(
         formData.append(formFieldPrefix + setId, partJSON);
         return serializeSetID(setId);
       }
+
+      if (enableBinaryFlight) {
+        if (value instanceof ArrayBuffer) {
+          return serializeTypedArray('A', value);
+        }
+        if (value instanceof Int8Array) {
+          // char
+          return serializeTypedArray('O', value);
+        }
+        if (value instanceof Uint8Array) {
+          // unsigned char
+          return serializeTypedArray('o', value);
+        }
+        if (value instanceof Uint8ClampedArray) {
+          // unsigned clamped char
+          return serializeTypedArray('U', value);
+        }
+        if (value instanceof Int16Array) {
+          // sort
+          return serializeTypedArray('S', value);
+        }
+        if (value instanceof Uint16Array) {
+          // unsigned short
+          return serializeTypedArray('s', value);
+        }
+        if (value instanceof Int32Array) {
+          // long
+          return serializeTypedArray('L', value);
+        }
+        if (value instanceof Uint32Array) {
+          // unsigned long
+          return serializeTypedArray('l', value);
+        }
+        if (value instanceof Float32Array) {
+          // float
+          return serializeTypedArray('G', value);
+        }
+        if (value instanceof Float64Array) {
+          // double
+          return serializeTypedArray('g', value);
+        }
+        if (value instanceof BigInt64Array) {
+          // number
+          return serializeTypedArray('M', value);
+        }
+        if (value instanceof BigUint64Array) {
+          // unsigned number
+          // We use "m" instead of "n" since JSON can start with "null"
+          return serializeTypedArray('m', value);
+        }
+        if (value instanceof DataView) {
+          return serializeTypedArray('V', value);
+        }
+        // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
+        if (typeof Blob === 'function' && value instanceof Blob) {
+          if (formData === null) {
+            formData = new FormData();
+          }
+          const blobId = nextPartId++;
+          formData.append(formFieldPrefix + blobId, value);
+          return serializeBlobID(blobId);
+        }
+      }
+
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
         return Array.from((value: any));
