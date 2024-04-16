@@ -295,6 +295,33 @@ describe('ReactFlight', () => {
     expect(Array.from(result)).toEqual([]);
   });
 
+  it('can render a Generator Server Component as a fragment', async () => {
+    function ItemListClient(props) {
+      return <span>{props.children}</span>;
+    }
+    const ItemList = clientReference(ItemListClient);
+
+    function* Items() {
+      yield 'A';
+      yield 'B';
+      yield 'C';
+    }
+
+    const model = (
+      <ItemList>
+        <Items />
+      </ItemList>
+    );
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
+  });
+
   it('can render undefined', async () => {
     function Undefined() {
       return undefined;
@@ -2151,16 +2178,9 @@ describe('ReactFlight', () => {
     }
     const Stateful = clientReference(StatefulClient);
 
-    function ServerComponent({item, initial}) {
-      // While the ServerComponent itself could be an async generator, single-shot iterables
-      // are not supported as React children since React might need to re-map them based on
-      // state updates. So we create an AsyncIterable instead.
-      return {
-        async *[Symbol.asyncIterator]() {
-          yield <Stateful key="a" initial={'a' + initial} />;
-          yield <Stateful key="b" initial={'b' + initial} />;
-        },
-      };
+    async function* ServerComponent({item, initial}) {
+      yield <Stateful key="a" initial={'a' + initial} />;
+      yield <Stateful key="b" initial={'b' + initial} />;
     }
 
     function ListClient({children}) {
@@ -2172,6 +2192,11 @@ describe('ReactFlight', () => {
         expect(fragment.type).toBe(React.Fragment);
         const fragmentChildren = [];
         const iterator = fragment.props.children[Symbol.asyncIterator]();
+        if (iterator === fragment.props.children) {
+          console.error(
+            'AyncIterators are not valid children of React. It must be a multi-shot AsyncIterable.',
+          );
+        }
         for (let entry; !(entry = React.use(iterator.next())).done; ) {
           fragmentChildren.push(entry.value);
         }
@@ -2316,23 +2341,21 @@ describe('ReactFlight', () => {
     let resolve;
     const iteratorPromise = new Promise(r => (resolve = r));
 
-    function ThirdPartyAsyncIterableComponent({item, initial}) {
-      // While the ServerComponent itself could be an async generator, single-shot iterables
-      // are not supported as React children since React might need to re-map them based on
-      // state updates. So we create an AsyncIterable instead.
-      return {
-        async *[Symbol.asyncIterator]() {
-          yield <span>Who</span>;
-          yield <span>dis?</span>;
-          resolve();
-        },
-      };
+    async function* ThirdPartyAsyncIterableComponent({item, initial}) {
+      yield <span>Who</span>;
+      yield <span>dis?</span>;
+      resolve();
     }
 
     function ListClient({children: fragment}) {
       // TODO: Unwrap AsyncIterables natively in React. For now we do it in this wrapper.
       const resolvedChildren = [];
       const iterator = fragment.props.children[Symbol.asyncIterator]();
+      if (iterator === fragment.props.children) {
+        console.error(
+          'AyncIterators are not valid children of React. It must be a multi-shot AsyncIterable.',
+        );
+      }
       for (let entry; !(entry = React.use(iterator.next())).done; ) {
         resolvedChildren.push(entry.value);
       }
