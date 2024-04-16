@@ -2305,7 +2305,6 @@ describe('ReactFlight', () => {
       return {
         async *[Symbol.asyncIterator]() {
           yield <span>Who</span>;
-          yield ' ';
           yield <span>dis?</span>;
           resolve();
         },
@@ -2386,7 +2385,8 @@ describe('ReactFlight', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
-        <span>Who</span> <span>dis?</span>
+        <span>Who</span>
+        <span>dis?</span>
       </div>,
     );
   });

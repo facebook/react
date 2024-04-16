@@ -615,7 +615,7 @@ describe('ReactFlightDOMEdge', () => {
       },
     );
 
-    expect(await readByteLength(stream2)).toBeLessThan(400);
+    expect(await readByteLength(stream2)).toBeLessThan(300);
 
     const streamedBuffers = [];
     const reader = result.getReader();
@@ -672,7 +672,7 @@ describe('ReactFlightDOMEdge', () => {
       },
     );
 
-    expect(await readByteLength(stream2)).toBeLessThan(400);
+    expect(await readByteLength(stream2)).toBeLessThan(300);
 
     const streamedBuffers = [];
     const reader = result.getReader({mode: 'byob'});

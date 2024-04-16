@@ -70,7 +70,8 @@ import {
 export type {CallServerCallback, EncodeFormActionCallback};
 
 interface FlightStreamController {
-  enqueue(json: UninitializedModel): void;
+  enqueueValue(value: any): void;
+  enqueueModel(json: UninitializedModel): void;
   close(json: UninitializedModel): void;
   error(error: Error): void;
 }
@@ -381,6 +382,15 @@ function createInitializedBufferChunk(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
+function createInitializedIteratorResultChunk<T>(
+  response: Response,
+  value: T,
+  done: boolean,
+): InitializedChunk<IteratorResult<T, T>> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, {done: done, value: value}, null, response);
+}
+
 function createInitializedStreamChunk<
   T: ReadableStream | $AsyncIterable<any, any, void>,
 >(
@@ -427,7 +437,7 @@ function resolveModelChunk<T>(
       // a stream chunk since any other row shouldn't have more than one entry.
       const streamChunk: InitializedStreamChunk<any> = (chunk: any);
       const controller = streamChunk.reason;
-      controller.enqueue(value);
+      controller.enqueueModel(value);
     }
     return;
   }
@@ -1034,8 +1044,17 @@ function resolveModel(
 
 function resolveText(response: Response, id: number, text: string): void {
   const chunks = response._chunks;
-  // We assume that we always reference large strings after they've been
-  // emitted.
+  if (enableFlightReadableStream) {
+    const chunk = chunks.get(id);
+    if (chunk && chunk.status !== PENDING) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      controller.enqueueValue(text);
+      return;
+    }
+  }
   chunks.set(id, createInitializedTextChunk(response, text));
 }
 
@@ -1045,7 +1064,17 @@ function resolveBuffer(
   buffer: $ArrayBufferView | ArrayBuffer,
 ): void {
   const chunks = response._chunks;
-  // We assume that we always reference buffers after they've been emitted.
+  if (enableFlightReadableStream) {
+    const chunk = chunks.get(id);
+    if (chunk && chunk.status !== PENDING) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      controller.enqueueValue(buffer);
+      return;
+    }
+  }
   chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
 
@@ -1143,7 +1172,17 @@ function startReadableStream<T>(
   });
   let previousBlockedChunk: SomeChunk<T> | null = null;
   const flightController = {
-    enqueue(json: UninitializedModel): void {
+    enqueueValue(value: T): void {
+      if (previousBlockedChunk === null) {
+        controller.enqueue(value);
+      } else {
+        // We're still waiting on a previous chunk so we can't enqueue quite yet.
+        previousBlockedChunk.then(function () {
+          controller.enqueue(value);
+        });
+      }
+    },
+    enqueueModel(json: UninitializedModel): void {
       if (previousBlockedChunk === null) {
         // If we're not blocked on any other chunks, we can try to eagerly initialize
         // this as a fast-path to avoid awaiting them.
@@ -1236,7 +1275,30 @@ function startAsyncIterable<T>(
   let closed = false;
   let nextWriteIndex = 0;
   const flightController = {
-    enqueue(value: UninitializedModel): void {
+    enqueueValue(value: T): void {
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createInitializedIteratorResultChunk(
+          response,
+          value,
+          false,
+        );
+      } else {
+        const chunk: PendingChunk<IteratorResult<T, T>> = (buffer[
+          nextWriteIndex
+        ]: any);
+        const resolveListeners = chunk.value;
+        const rejectListeners = chunk.reason;
+        const initializedChunk: InitializedChunk<IteratorResult<T, T>> =
+          (chunk: any);
+        initializedChunk.status = INITIALIZED;
+        initializedChunk.value = {done: false, value: value};
+        if (resolveListeners !== null) {
+          wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+        }
+      }
+      nextWriteIndex++;
+    },
+    enqueueModel(value: UninitializedModel): void {
       if (nextWriteIndex === buffer.length) {
         buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
           response,

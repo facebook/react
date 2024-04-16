@@ -1411,13 +1411,9 @@ function serializeTemporaryReference(
 }
 
 function serializeLargeTextString(request: Request, text: string): string {
-  request.pendingChunks += 2;
+  request.pendingChunks++;
   const textId = request.nextChunkId++;
-  const textChunk = stringToChunk(text);
-  const binaryLength = byteLengthOfChunk(textChunk);
-  const row = textId.toString(16) + ':T' + binaryLength.toString(16) + ',';
-  const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, textChunk);
+  emitTextChunk(request, textId, text);
   return serializeByValueID(textId);
 }
 
@@ -1467,27 +1463,9 @@ function serializeTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
-  if (enableTaint) {
-    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
-      // If we have had any tainted values of this length, we check
-      // to see if these bytes matches any entries in the registry.
-      const tainted = TaintRegistryValues.get(
-        binaryToComparableString(typedArray),
-      );
-      if (tainted !== undefined) {
-        throwTaintViolation(tainted.message);
-      }
-    }
-  }
-  request.pendingChunks += 2;
+  request.pendingChunks++;
   const bufferId = request.nextChunkId++;
-  // TODO: Convert to little endian if that's not the server default.
-  const binaryChunk = typedArrayToBinaryChunk(typedArray);
-  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
-  const row =
-    bufferId.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
-  const headerChunk = stringToChunk(row);
-  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  emitTypedArrayChunk(request, bufferId, tag, typedArray);
   return serializeByValueID(bufferId);
 }
 
@@ -2321,6 +2299,42 @@ function emitDebugChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitTypedArrayChunk(
+  request: Request,
+  id: number,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): void {
+  if (enableTaint) {
+    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
+      // If we have had any tainted values of this length, we check
+      // to see if these bytes matches any entries in the registry.
+      const tainted = TaintRegistryValues.get(
+        binaryToComparableString(typedArray),
+      );
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+  }
+  request.pendingChunks++; // Extra chunk for the header.
+  // TODO: Convert to little endian if that's not the server default.
+  const binaryChunk = typedArrayToBinaryChunk(typedArray);
+  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
+  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  request.completedRegularChunks.push(headerChunk, binaryChunk);
+}
+
+function emitTextChunk(request: Request, id: number, text: string): void {
+  request.pendingChunks++; // Extra chunk for the header.
+  const textChunk = stringToChunk(text);
+  const binaryLength = byteLengthOfChunk(textChunk);
+  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  request.completedRegularChunks.push(headerChunk, textChunk);
+}
+
 function serializeEval(source: string): string {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2681,6 +2695,96 @@ function forwardDebugInfo(
   }
 }
 
+function emitChunk(
+  request: Request,
+  task: Task,
+  value: ReactClientValue,
+): void {
+  const id = task.id;
+  // For certain types we have special types, we typically outlined them but
+  // we can emit them directly for this row instead of through an indirection.
+  if (typeof value === 'string') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+    emitTextChunk(request, id, value);
+    return;
+  }
+  if (enableBinaryFlight) {
+    if (value instanceof ArrayBuffer) {
+      emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+      return;
+    }
+    if (value instanceof Int8Array) {
+      // char
+      emitTypedArrayChunk(request, id, 'O', value);
+      return;
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      emitTypedArrayChunk(request, id, 'o', value);
+      return;
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      emitTypedArrayChunk(request, id, 'U', value);
+      return;
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      emitTypedArrayChunk(request, id, 'S', value);
+      return;
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      emitTypedArrayChunk(request, id, 's', value);
+      return;
+    }
+    if (value instanceof Int32Array) {
+      // long
+      emitTypedArrayChunk(request, id, 'L', value);
+      return;
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      emitTypedArrayChunk(request, id, 'l', value);
+      return;
+    }
+    if (value instanceof Float32Array) {
+      // float
+      emitTypedArrayChunk(request, id, 'G', value);
+      return;
+    }
+    if (value instanceof Float64Array) {
+      // double
+      emitTypedArrayChunk(request, id, 'g', value);
+      return;
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      emitTypedArrayChunk(request, id, 'M', value);
+      return;
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      emitTypedArrayChunk(request, id, 'm', value);
+      return;
+    }
+    if (value instanceof DataView) {
+      emitTypedArrayChunk(request, id, 'V', value);
+      return;
+    }
+  }
+  // For anything else we need to try to serialize it using JSON.
+  // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+  const json: string = stringify(value, task.toJSON);
+  emitModelChunk(request, task.id, json);
+}
+
 const emptyRoot = {};
 
 function retryTask(request: Request, task: Task): void {
@@ -2725,19 +2829,17 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
-    let json: string;
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
-      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-      json = stringify(resolvedModel, task.toJSON);
+      emitChunk(request, task, resolvedModel);
     } else {
       // If the value is a string, it means it's a terminal value and we already escaped it
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-      json = stringify(resolvedModel);
+      const json: string = stringify(resolvedModel);
+      emitModelChunk(request, task.id, json);
     }
-    emitModelChunk(request, task.id, json);
 
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
@@ -2789,9 +2891,7 @@ function tryStreamTask(request: Request, task: Task): void {
     debugID = null;
   }
   try {
-    // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-    const json: string = stringify(task.model, task.toJSON);
-    emitModelChunk(request, task.id, json);
+    emitChunk(request, task, task.model);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
