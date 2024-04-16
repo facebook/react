@@ -20,3 +20,5 @@ dist
 !packages/playground/.vscode
 .spr.yml
 testfilter.txt
+
+bundle-oss.sh
