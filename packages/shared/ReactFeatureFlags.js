@@ -159,7 +159,7 @@ export const disableIEWorkarounds = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
-export const disableClientCache = false;
+export const disableClientCache = true;
 
 // Changes Server Components Reconciliation when they have keys
 export const enableServerComponentKeys = true;
