@@ -21,6 +21,7 @@ import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
+import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 import ErrorStackParser from 'error-stack-parser';
 import assign from 'shared/assign';
@@ -134,6 +135,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useHostTransitionStatus === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useHostTransitionStatus();
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -711,6 +717,27 @@ function useActionState<S, P>(
   return [state, (payload: P) => {}, false];
 }
 
+function useHostTransitionStatus(): TransitionStatus {
+  const status = readContext<TransitionStatus>(
+    // $FlowFixMe[prop-missing] `readContext` only needs _currentValue
+    ({
+      // $FlowFixMe[incompatible-cast] TODO: Incorrect bottom value without access to Fiber config.
+      _currentValue: null,
+    }: ReactContext<TransitionStatus>),
+  );
+
+  hookLog.push({
+    displayName: null,
+    primitive: 'HostTransitionStatus',
+    stackError: new Error(),
+    value: status,
+    debugInfo: null,
+    dispatcherHookName: 'HostTransitionStatus',
+  });
+
+  return status;
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -734,6 +761,7 @@ const Dispatcher: DispatcherType = {
   useId,
   useFormState,
   useActionState,
+  useHostTransitionStatus,
 };
 
 // create a proxy to throw a custom error
@@ -854,12 +882,11 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
         isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
-      }
-      if (
-        i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
-      ) {
-        i++;
+        // Guard against the dispatcher call being inlined.
+        // At this point we wouldn't be able to recover the actual React Hook name.
+        if (i < hookStack.length - 1) {
+          i++;
+        }
       }
       return i;
     }
@@ -997,7 +1024,8 @@ function buildTree(
       primitive === 'Context (use)' ||
       primitive === 'DebugValue' ||
       primitive === 'Promise' ||
-      primitive === 'Unresolved'
+      primitive === 'Unresolved' ||
+      primitive === 'HostTransitionStatus'
         ? null
         : nativeHookID++;
 
