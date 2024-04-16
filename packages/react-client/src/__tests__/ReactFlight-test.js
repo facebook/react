@@ -2347,8 +2347,10 @@ describe('ReactFlight', () => {
       },
     );
 
-    // Wait for the iterator to finish
-    await iteratorPromise;
+    if (gate(flag => flag.enableFlightReadableStream)) {
+      // Wait for the iterator to finish
+      await iteratorPromise;
+    }
     await 0; // One more tick for the return value / closing.
 
     const transport = ReactNoopFlightServer.render(

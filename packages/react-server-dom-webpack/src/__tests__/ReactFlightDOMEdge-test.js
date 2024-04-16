@@ -454,6 +454,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.get('value')).toBe('hello');
   });
 
+  // @gate enableFlightReadableStream
   it('can pass an async import to a ReadableStream while enqueuing in order', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
@@ -496,6 +497,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(await reader.read()).toEqual({value: undefined, done: true});
   });
 
+  // @gate enableFlightReadableStream
   it('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
