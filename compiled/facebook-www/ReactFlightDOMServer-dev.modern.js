@@ -567,8 +567,14 @@ if (__DEV__) {
         }
 
         default: {
-          if (typeof thenable.status === "string");
-          else {
+          if (typeof thenable.status === "string") {
+            // Only instrument the thenable if the status if not defined. If
+            // it's defined, but an unknown value, assume it's been instrumented by
+            // some custom userspace implementation. We treat it as "pending".
+            // Attach a dummy listener, to ensure that any lazy initialization can
+            // happen. Flight lazily parses JSON when the value is actually awaited.
+            thenable.then(noop, noop);
+          } else {
             var pendingThenable = thenable;
             pendingThenable.status = "pending";
             pendingThenable.then(
@@ -586,18 +592,18 @@ if (__DEV__) {
                   rejectedThenable.reason = error;
                 }
               }
-            ); // Check one more time in case the thenable resolved synchronously
+            );
+          } // Check one more time in case the thenable resolved synchronously
 
-            switch (thenable.status) {
-              case "fulfilled": {
-                var fulfilledThenable = thenable;
-                return fulfilledThenable.value;
-              }
+          switch (thenable.status) {
+            case "fulfilled": {
+              var fulfilledThenable = thenable;
+              return fulfilledThenable.value;
+            }
 
-              case "rejected": {
-                var rejectedThenable = thenable;
-                throw rejectedThenable.reason;
-              }
+            case "rejected": {
+              var rejectedThenable = thenable;
+              throw rejectedThenable.reason;
             }
           } // Suspend.
           //
@@ -1299,6 +1305,7 @@ if (__DEV__) {
         nextChunkId: 0,
         pendingChunks: 0,
         hints: hints,
+        abortListeners: new Set(),
         abortableTasks: abortSet,
         pingedTasks: pingedTasks,
         completedImportChunks: [],
@@ -1415,10 +1422,7 @@ if (__DEV__) {
           }
 
           request.abortableTasks.delete(newTask);
-
-          if (request.destination !== null) {
-            flushCompletedChunks(request, request.destination);
-          }
+          enqueueFlush(request);
         }
       );
       return newTask.id;
@@ -1596,24 +1600,6 @@ if (__DEV__) {
     }
 
     function renderFragment(request, task, children) {
-      {
-        var debugInfo = children._debugInfo;
-
-        if (debugInfo) {
-          // If this came from Flight, forward any debug info into this new row.
-          if (debugID === null) {
-            // We don't have a chunk to assign debug info. We need to outline this
-            // component to assign it an ID.
-            return outlineTask(request, task);
-          } else {
-            // Forward any debug info we have the first time we see it.
-            // We do this after init so that we have received all the debug info
-            // from the server by the time we emit it.
-            forwardDebugInfo(request, debugID, debugInfo);
-          }
-        }
-      }
-
       if (task.keyPath !== null) {
         // We have a Server Component that specifies a key but we're now splitting
         // the tree using a fragment.
@@ -1647,6 +1633,27 @@ if (__DEV__) {
       // way up. Which is what we want since we've consumed it. If this changes to
       // be recursive serialization, we need to reset the keyPath and implicitSlot,
       // before recursing here.
+
+      {
+        var debugInfo = children._debugInfo;
+
+        if (debugInfo) {
+          // If this came from Flight, forward any debug info into this new row.
+          if (debugID === null) {
+            // We don't have a chunk to assign debug info. We need to outline this
+            // component to assign it an ID.
+            return outlineTask(request, task);
+          } else {
+            // Forward any debug info we have the first time we see it.
+            // We do this after init so that we have received all the debug info
+            // from the server by the time we emit it.
+            forwardDebugInfo(request, debugID, debugInfo);
+          } // Since we're rendering this array again, create a copy that doesn't
+          // have the debug info so we avoid outlining or emitting debug info again.
+
+          children = Array.from(children);
+        }
+      }
 
       return children;
     }
@@ -2049,13 +2056,9 @@ if (__DEV__) {
     }
 
     function serializeLargeTextString(request, text) {
-      request.pendingChunks += 2;
+      request.pendingChunks++;
       var textId = request.nextChunkId++;
-      var textChunk = stringToChunk(text);
-      var binaryLength = byteLengthOfChunk(textChunk);
-      var row = textId.toString(16) + ":T" + binaryLength.toString(16) + ",";
-      var headerChunk = stringToChunk(row);
-      request.completedRegularChunks.push(headerChunk, textChunk);
+      emitTextChunk(request, textId, text);
       return serializeByValueID(textId);
     }
 
@@ -2401,7 +2404,7 @@ if (__DEV__) {
 
         if (iteratorFn) {
           return renderFragment(request, task, Array.from(value));
-        } // Verify that this is a simple plain object.
+        }
 
         var proto = getPrototypeOf(value);
 
@@ -2693,6 +2696,16 @@ if (__DEV__) {
       request.completedRegularChunks.push(processedChunk);
     }
 
+    function emitTextChunk(request, id, text) {
+      request.pendingChunks++; // Extra chunk for the header.
+
+      var textChunk = stringToChunk(text);
+      var binaryLength = byteLengthOfChunk(textChunk);
+      var row = id.toString(16) + ":T" + binaryLength.toString(16) + ",";
+      var headerChunk = stringToChunk(row);
+      request.completedRegularChunks.push(headerChunk, textChunk);
+    }
+
     function serializeEval(source) {
       return "$E" + source;
     } // This is a forked version of renderModel which should never error, never suspend and is limited
@@ -2944,6 +2957,20 @@ if (__DEV__) {
       }
     }
 
+    function emitChunk(request, task, value) {
+      var id = task.id; // For certain types we have special types, we typically outlined them but
+      // we can emit them directly for this row instead of through an indirection.
+
+      if (typeof value === "string") {
+        emitTextChunk(request, id, value);
+        return;
+      }
+      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+
+      var json = stringify(value, task.toJSON);
+      emitModelChunk(request, task.id, json);
+    }
+
     var emptyRoot = {};
 
     function retryTask(request, task) {
@@ -2984,21 +3011,19 @@ if (__DEV__) {
 
         task.keyPath = null;
         task.implicitSlot = false;
-        var json;
 
         if (typeof resolvedModel === "object" && resolvedModel !== null) {
           // Object might contain unresolved values like additional elements.
           // This is simulating what the JSON loop would do if this was part of it.
-          // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-          json = stringify(resolvedModel, task.toJSON);
+          emitChunk(request, task, resolvedModel);
         } else {
           // If the value is a string, it means it's a terminal value and we already escaped it
           // We don't need to escape it again so it's not passed the toJSON replacer.
           // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-          json = stringify(resolvedModel);
+          var json = stringify(resolvedModel);
+          emitModelChunk(request, task.id, json);
         }
 
-        emitModelChunk(request, task.id, json);
         request.abortableTasks.delete(task);
         task.status = COMPLETED;
       } catch (thrownValue) {
@@ -3148,6 +3173,7 @@ if (__DEV__) {
 
       if (request.pendingChunks === 0) {
         close(destination);
+        request.destination = null;
       }
     }
 

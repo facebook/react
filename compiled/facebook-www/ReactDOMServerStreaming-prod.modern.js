@@ -2818,9 +2818,9 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      if ("string" !== typeof thenable.status)
-        switch (
-          ((thenableState = thenable),
+      "string" === typeof thenable.status
+        ? thenable.then(noop$2, noop$2)
+        : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
             function (fulfilledValue) {
@@ -2837,14 +2837,13 @@ function trackUsedThenable(thenableState, thenable, index) {
                 rejectedThenable.reason = error;
               }
             }
-          ),
-          thenable.status)
-        ) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw thenable.reason;
-        }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
       suspendedThenable = thenable;
       throw SuspenseException;
   }

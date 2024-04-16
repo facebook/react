@@ -73,7 +73,7 @@ Chunk.prototype.then = function (resolve, reject) {
         (null === this.reason && (this.reason = []), this.reason.push(reject));
       break;
     default:
-      reject(this.reason);
+      reject && reject(this.reason);
   }
 };
 function readChunk(chunk) {
@@ -438,7 +438,9 @@ function startReadingFromStream(response, stream) {
             rowState = value[i];
             84 === rowState
               ? ((rowTag = rowState), (rowState = 2), i++)
-              : 64 < rowState && 91 > rowState
+              : (64 < rowState && 91 > rowState) ||
+                114 === rowState ||
+                120 === rowState
               ? ((rowTag = rowState), (rowState = 3), i++)
               : ((rowTag = 0), (rowState = 3));
             continue;

@@ -191,9 +191,9 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      if ("string" !== typeof thenable.status)
-        switch (
-          ((thenableState = thenable),
+      "string" === typeof thenable.status
+        ? thenable.then(noop, noop)
+        : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
             function (fulfilledValue) {
@@ -210,14 +210,13 @@ function trackUsedThenable(thenableState, thenable, index) {
                 rejectedThenable.reason = error;
               }
             }
-          ),
-          thenable.status)
-        ) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw thenable.reason;
-        }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
       suspendedThenable = thenable;
       throw SuspenseException;
   }
@@ -488,8 +487,7 @@ function serializeThenable(request, task, thenable) {
       reason = logRecoverableError(request, reason);
       emitErrorChunk(request, newTask.id, reason);
       request.abortableTasks.delete(newTask);
-      null !== request.destination &&
-        flushCompletedChunks(request, request.destination);
+      enqueueFlush(request);
     }
   );
   return newTask.id;
@@ -500,12 +498,7 @@ function emitHint(request, code, model) {
   code = "H" + code;
   code = id.toString(16) + ":" + code;
   request.completedHintChunks.push(code + model + "\n");
-  !1 === request.flushScheduled &&
-    0 === request.pingedTasks.length &&
-    null !== request.destination &&
-    ((model = request.destination),
-    (request.flushScheduled = !0),
-    flushCompletedChunks(request, model));
+  enqueueFlush(request);
 }
 function readThenable(thenable) {
   if ("fulfilled" === thenable.status) return thenable.value;
@@ -887,18 +880,13 @@ function renderModelDestructive(
       parent[parentPropertyName] instanceof Date
     )
       return "$D" + value;
-    if (1024 <= value.length) {
-      request.pendingChunks += 2;
-      task = request.nextChunkId++;
-      if (null == byteLengthImpl)
-        throw Error(
-          "byteLengthOfChunk implementation is not configured. Please, provide the implementation via ReactFlightDOMServer.setConfig(...);"
-        );
-      parent = byteLengthImpl(value);
-      parent = task.toString(16) + ":T" + parent.toString(16) + ",";
-      request.completedRegularChunks.push(parent, value);
-      return serializeByValueID(task);
-    }
+    if (1024 <= value.length)
+      return (
+        request.pendingChunks++,
+        (task = request.nextChunkId++),
+        emitTextChunk(request, task, value),
+        serializeByValueID(task)
+      );
     request = "$" === value[0] ? "$" + value : value;
     return request;
   }
@@ -981,6 +969,16 @@ function emitErrorChunk(request, id, digest) {
   id = id.toString(16) + ":E" + stringify(digest) + "\n";
   request.completedErrorChunks.push(id);
 }
+function emitTextChunk(request, id, text) {
+  request.pendingChunks++;
+  if (null == byteLengthImpl)
+    throw Error(
+      "byteLengthOfChunk implementation is not configured. Please, provide the implementation via ReactFlightDOMServer.setConfig(...);"
+    );
+  var JSCompiler_inline_result = byteLengthImpl(text);
+  id = id.toString(16) + ":T" + JSCompiler_inline_result.toString(16) + ",";
+  request.completedRegularChunks.push(id, text);
+}
 var emptyRoot = {};
 function retryTask(request, task) {
   if (0 === task.status)
@@ -996,12 +994,21 @@ function retryTask(request, task) {
       modelRoot = resolvedModel;
       task.keyPath = null;
       task.implicitSlot = !1;
-      var json =
-          "object" === typeof resolvedModel && null !== resolvedModel
-            ? stringify(resolvedModel, task.toJSON)
-            : stringify(resolvedModel),
-        processedChunk = task.id.toString(16) + ":" + json + "\n";
-      request.completedRegularChunks.push(processedChunk);
+      if ("object" === typeof resolvedModel && null !== resolvedModel) {
+        var id = task.id;
+        if ("string" === typeof resolvedModel)
+          emitTextChunk(request, id, resolvedModel);
+        else {
+          var json = stringify(resolvedModel, task.toJSON),
+            processedChunk = task.id.toString(16) + ":" + json + "\n";
+          request.completedRegularChunks.push(processedChunk);
+        }
+      } else {
+        var json$jscomp$0 = stringify(resolvedModel),
+          processedChunk$jscomp$0 =
+            task.id.toString(16) + ":" + json$jscomp$0 + "\n";
+        request.completedRegularChunks.push(processedChunk$jscomp$0);
+      }
       request.abortableTasks.delete(task);
       task.status = 1;
     } catch (thrownValue) {
@@ -1070,7 +1077,19 @@ function flushCompletedChunks(request, destination) {
     (request.flushScheduled = !1), destination.completeWriting();
   }
   destination.flushBuffered();
-  0 === request.pendingChunks && destination.close();
+  0 === request.pendingChunks &&
+    (destination.close(), (request.destination = null));
+}
+function enqueueFlush(request) {
+  if (
+    !1 === request.flushScheduled &&
+    0 === request.pingedTasks.length &&
+    null !== request.destination
+  ) {
+    var destination = request.destination;
+    request.flushScheduled = !0;
+    flushCompletedChunks(request, destination);
+  }
 }
 var configured = !1;
 exports.clearRequestedClientReferencesKeysSet = function () {
@@ -1108,6 +1127,7 @@ exports.renderToDestination = function (destination, model, options) {
     nextChunkId: 0,
     pendingChunks: 0,
     hints: hints,
+    abortListeners: new Set(),
     abortableTasks: abortSet,
     pingedTasks: options,
     completedImportChunks: [],

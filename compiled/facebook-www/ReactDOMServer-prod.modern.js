@@ -2944,9 +2944,9 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      if ("string" !== typeof thenable.status)
-        switch (
-          ((thenableState = thenable),
+      "string" === typeof thenable.status
+        ? thenable.then(noop$2, noop$2)
+        : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
             function (fulfilledValue) {
@@ -2963,14 +2963,13 @@ function trackUsedThenable(thenableState, thenable, index) {
                 rejectedThenable.reason = error;
               }
             }
-          ),
-          thenable.status)
-        ) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw thenable.reason;
-        }
+          ));
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
       suspendedThenable = thenable;
       throw SuspenseException;
   }
@@ -5659,4 +5658,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-4944636f";
+exports.version = "19.0.0-www-modern-39d2e934";

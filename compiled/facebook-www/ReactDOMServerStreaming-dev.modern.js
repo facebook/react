@@ -9743,8 +9743,14 @@ if (__DEV__) {
         }
 
         default: {
-          if (typeof thenable.status === "string");
-          else {
+          if (typeof thenable.status === "string") {
+            // Only instrument the thenable if the status if not defined. If
+            // it's defined, but an unknown value, assume it's been instrumented by
+            // some custom userspace implementation. We treat it as "pending".
+            // Attach a dummy listener, to ensure that any lazy initialization can
+            // happen. Flight lazily parses JSON when the value is actually awaited.
+            thenable.then(noop$2, noop$2);
+          } else {
             var pendingThenable = thenable;
             pendingThenable.status = "pending";
             pendingThenable.then(
@@ -9762,18 +9768,18 @@ if (__DEV__) {
                   rejectedThenable.reason = error;
                 }
               }
-            ); // Check one more time in case the thenable resolved synchronously
+            );
+          } // Check one more time in case the thenable resolved synchronously
 
-            switch (thenable.status) {
-              case "fulfilled": {
-                var fulfilledThenable = thenable;
-                return fulfilledThenable.value;
-              }
+          switch (thenable.status) {
+            case "fulfilled": {
+              var fulfilledThenable = thenable;
+              return fulfilledThenable.value;
+            }
 
-              case "rejected": {
-                var rejectedThenable = thenable;
-                throw rejectedThenable.reason;
-              }
+            case "rejected": {
+              var rejectedThenable = thenable;
+              throw rejectedThenable.reason;
             }
           } // Suspend.
           //

@@ -388,7 +388,10 @@ if (__DEV__) {
           break;
 
         default:
-          reject(chunk.reason);
+          if (reject) {
+            reject(chunk.reason);
+          }
+
           break;
       }
     };
@@ -472,7 +475,6 @@ if (__DEV__) {
 
     function triggerErrorOnChunk(chunk, error) {
       if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-        // We already resolved. We didn't expect to see this.
         return;
       }
 
@@ -503,7 +505,6 @@ if (__DEV__) {
 
     function resolveModelChunk(chunk, value) {
       if (chunk.status !== PENDING) {
-        // We already resolved. We didn't expect to see this.
         return;
       }
 
@@ -816,6 +817,7 @@ if (__DEV__) {
               typeof chunkValue === "object" &&
               chunkValue !== null &&
               (Array.isArray(chunkValue) ||
+                typeof chunkValue[ASYNC_ITERATOR] === "function" ||
                 chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
               !chunkValue._debugInfo
             ) {
@@ -1118,8 +1120,7 @@ if (__DEV__) {
     }
 
     function resolveText(response, id, text) {
-      var chunks = response._chunks; // We assume that we always reference large strings after they've been
-      // emitted.
+      var chunks = response._chunks;
 
       chunks.set(id, createInitializedTextChunk(response, text));
     }
@@ -1170,6 +1171,8 @@ if (__DEV__) {
         }
       }
     }
+
+    var ASYNC_ITERATOR = Symbol.asyncIterator;
 
     function resolveErrorDev(response, id, digest, message, stack) {
       var error = new Error(
@@ -1275,6 +1278,26 @@ if (__DEV__) {
           }
         }
 
+        case 82:
+        /* "R" */
+        // Fallthrough
+
+        case 114:
+        /* "r" */
+        // Fallthrough
+
+        case 88:
+        /* "X" */
+        // Fallthrough
+
+        case 120:
+        /* "x" */
+        // Fallthrough
+
+        case 67:
+        /* "C" */
+        // Fallthrough
+
         case 80:
         /* "P" */
         // Fallthrough
@@ -1330,9 +1353,12 @@ if (__DEV__) {
               rowState = ROW_LENGTH;
               i++;
             } else if (
-              resolvedRowTag > 64 &&
-              resolvedRowTag < 91
+              (resolvedRowTag > 64 && resolvedRowTag < 91) ||
               /* "A"-"Z" */
+              resolvedRowTag === 114 ||
+              /* "r" */
+              resolvedRowTag === 120
+              /* "x" */
             ) {
               rowTag = resolvedRowTag;
               rowState = ROW_CHUNK_BY_NEWLINE;
