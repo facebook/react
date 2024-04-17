@@ -2146,7 +2146,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Expected errors
         + Received errors
 
-        - This is a complete different message that happens to start with "T"
+        - This is a completely different message that happens to start with "T"
         + Message that happens to contain a "T" <component stack>"
       `);
     });
