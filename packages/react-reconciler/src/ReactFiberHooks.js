@@ -414,7 +414,10 @@ function warnIfAsyncClientComponent(Component: Function) {
     // bulletproof but together they cover the most common cases.
     const isAsyncFunction =
       // $FlowIgnore[method-unbinding]
-      Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+      Object.prototype.toString.call(Component) === '[object AsyncFunction]' ||
+      // $FlowIgnore[method-unbinding]
+      Object.prototype.toString.call(Component) ===
+        '[object AsyncGeneratorFunction]';
     if (isAsyncFunction) {
       // Encountered an async Client Component. This is not yet supported.
       const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
