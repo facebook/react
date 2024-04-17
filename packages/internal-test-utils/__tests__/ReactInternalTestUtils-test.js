@@ -2135,7 +2135,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         console.error('Message that happens to contain a "T"\n    in div');
 
         assertConsoleErrorDev([
-          'This is a complete different message that happens to start with "T"',
+          'This is a completely different message that happens to start with "T"',
         ]);
       });
       expect(message).toMatchInlineSnapshot(`
