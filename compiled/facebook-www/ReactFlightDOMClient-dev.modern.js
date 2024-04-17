@@ -303,6 +303,7 @@ if (__DEV__) {
     // The Symbol used to tag the ReactElement-like types.
     var REACT_ELEMENT_TYPE = Symbol.for("react.element");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    var ASYNC_ITERATOR = Symbol.asyncIterator;
 
     function readTemporaryReference(set, id) {
       if (id < 0 || id >= set.length) {
@@ -1171,8 +1172,6 @@ if (__DEV__) {
         }
       }
     }
-
-    var ASYNC_ITERATOR = Symbol.asyncIterator;
 
     function resolveErrorDev(response, id, digest, message, stack) {
       var error = new Error(
