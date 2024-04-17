@@ -13021,14 +13021,17 @@ if (__DEV__) {
         lanes,
         debugInfo
       ) {
-        // This function is not recursive.
+        // This function is only recursive for Usables/Lazy and not nested arrays.
+        // That's so that using a Lazy wrapper is unobservable to the Fragment
+        // convention.
         // If the top level item is an array, we treat it as a set of children,
         // not as a fragment. Nested arrays on the other hand will be treated as
         // fragment nodes. Recursion happens at the normal flow.
         // Handle top level unkeyed fragments as if they were arrays.
         // This leads to an ambiguity between <>{[...]}</> and <>...</>.
         // We treat the ambiguous cases above the same.
-        // TODO: Let's use recursion like we do for Usable nodes?
+        // We don't use recursion here because a fragment inside a fragment
+        // is no longer considered "top level" for these purposes.
         var isUnkeyedTopLevelFragment =
           typeof newChild === "object" &&
           newChild !== null &&
@@ -36866,7 +36869,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-c52cc1c4";
+    var ReactVersion = "19.0.0-www-classic-9558ae95";
 
     function createPortal$1(
       children,
