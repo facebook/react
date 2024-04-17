@@ -71,6 +71,7 @@ export const enableFetchInstrumentation = false;
 
 export const enableBinaryFlight = false;
 export const enableFlightReadableStream = false;
+export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
 

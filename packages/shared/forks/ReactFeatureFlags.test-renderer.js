@@ -23,6 +23,7 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
 export const enablePostpone = false;
 export const disableCommentsAsDOMContainers = true;

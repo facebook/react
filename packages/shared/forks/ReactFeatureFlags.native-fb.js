@@ -46,6 +46,7 @@ export const enableLegacyCache = false;
 export const enableFetchInstrumentation = false;
 export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
 export const enablePostpone = false;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
