@@ -10,6 +10,7 @@
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {RenderRootOptions} from './ReactNativeTypes';
 
 import './ReactFabricInjection';
 
@@ -101,30 +102,12 @@ function nativeOnCaughtError(
   defaultOnCaughtError(error, errorInfo);
 }
 
-type NativeRenderOptions = {
-  onUncaughtError?: (
-    error: mixed,
-    errorInfo: {+componentStack?: ?string},
-  ) => void,
-  onCaughtError?: (
-    error: mixed,
-    errorInfo: {
-      +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
-    },
-  ) => void,
-  onRecoverableError?: (
-    error: mixed,
-    errorInfo: {+componentStack?: ?string},
-  ) => void,
-};
-
 function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
   concurrentRoot: ?boolean,
-  options?: NativeRenderOptions,
+  options: ?RenderRootOptions,
 ): ?ElementRef<ElementType> {
   if (disableLegacyMode && !concurrentRoot) {
     throw new Error('render: Unsupported Legacy Mode API.');

@@ -215,6 +215,24 @@ export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
 
+export type RenderRootOptions = {
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+};
+
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
@@ -237,6 +255,7 @@ export type ReactFabricType = {
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   getNodeFromInternalInstanceHandle(
