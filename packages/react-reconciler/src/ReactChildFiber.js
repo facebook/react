@@ -27,6 +27,7 @@ import {
 } from './ReactFiberFlags';
 import {
   getIteratorFn,
+  ASYNC_ITERATOR,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
@@ -41,7 +42,10 @@ import {
   FunctionComponent,
 } from './ReactWorkTags';
 import isArray from 'shared/isArray';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {
+  enableRefAsProp,
+  enableAsyncIterableChildren,
+} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -576,7 +580,12 @@ function createChildReconciler(
         }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         const created = createFiberFromFragment(
           newChild,
           returnFiber.mode,
@@ -700,7 +709,12 @@ function createChildReconciler(
         }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         if (key !== null) {
           return null;
         }
@@ -822,7 +836,12 @@ function createChildReconciler(
           );
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         const matchedFiber = existingChildren.get(newIdx) || null;
         return updateFragment(
           returnFiber,
@@ -1101,7 +1120,7 @@ function createChildReconciler(
     return resultingFirstChild;
   }
 
-  function reconcileChildrenIterator(
+  function reconcileChildrenIteratable(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChildrenIterable: Iterable<mixed>,
@@ -1160,6 +1179,80 @@ function createChildReconciler(
       }
     }
 
+    return reconcileChildrenIterator(
+      returnFiber,
+      currentFirstChild,
+      newChildren,
+      lanes,
+      debugInfo,
+    );
+  }
+
+  function reconcileChildrenAsyncIteratable(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChildrenIterable: AsyncIterable<mixed>,
+    lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
+  ): Fiber | null {
+    const newChildren = newChildrenIterable[ASYNC_ITERATOR]();
+
+    if (__DEV__) {
+      if (newChildren === newChildrenIterable) {
+        // We don't support rendering AsyncGenerators as props because it's a mutation.
+        // We do support generators if they were created by a AsyncGeneratorFunction component
+        // as its direct child since we can recreate those by rerendering the component
+        // as needed.
+        const isGeneratorComponent =
+          returnFiber.tag === FunctionComponent &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(returnFiber.type) ===
+            '[object AsyncGeneratorFunction]' &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(newChildren) ===
+            '[object AsyncGenerator]';
+        if (!isGeneratorComponent) {
+          if (!didWarnAboutGenerators) {
+            console.error(
+              'Using AsyncIterators as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating a generator mutates it. ' +
+                'You can use an AsyncIterable that can iterate multiple times over ' +
+                'the same items.',
+            );
+          }
+          didWarnAboutGenerators = true;
+        }
+      }
+    }
+
+    if (newChildren == null) {
+      throw new Error('An iterable object provided no iterator.');
+    }
+
+    // To save bytes, we reuse the logic by creating a synchronous Iterable and
+    // reusing that code path.
+    const iterator: Iterator<mixed> = ({
+      next(): IteratorResult<mixed, void> {
+        return unwrapThenable(newChildren.next());
+      },
+    }: any);
+
+    return reconcileChildrenIterator(
+      returnFiber,
+      currentFirstChild,
+      iterator,
+      lanes,
+      debugInfo,
+    );
+  }
+
+  function reconcileChildrenIterator(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChildren: ?Iterator<mixed>,
+    lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
+  ): Fiber | null {
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
     }
@@ -1552,7 +1645,20 @@ function createChildReconciler(
       }
 
       if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(
+        return reconcileChildrenIteratable(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
+        );
+      }
+
+      if (
+        enableAsyncIterableChildren &&
+        typeof newChild[ASYNC_ITERATOR] === 'function'
+      ) {
+        return reconcileChildrenAsyncIteratable(
           returnFiber,
           currentFirstChild,
           newChild,

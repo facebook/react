@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ */
+
 'use strict';
 
 let React;
@@ -1815,5 +1824,95 @@ describe('ReactUse', () => {
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.',
     ]);
+  });
+
+  // @gate enableAsyncIterableChildren
+  test('async generator component', async () => {
+    let hi, world;
+    async function* App() {
+      // Only cached promises can be awaited in async generators because
+      // when we rerender, it'll issue another request which blocks the next.
+      await (hi || (hi = getAsyncText('Hi')));
+      yield <Text key="1" text="Hi" />;
+      yield ' ';
+      await (world || (world = getAsyncText('World')));
+      yield <Text key="2" text="World" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<App />);
+        });
+      });
+    }).toErrorDev([
+      'async/await is not yet supported in Client Components, only ' +
+        'Server Components. This error is often caused by accidentally ' +
+        "adding `'use client'` to a module that was originally written " +
+        'for the server.',
+    ]);
+    assertLog(['Async text requested [Hi]']);
+
+    await expect(async () => {
+      await act(() => resolveTextRequests('Hi'));
+    }).toErrorDev(
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    );
+
+    assertLog(['Async text requested [World]']);
+
+    await act(() => resolveTextRequests('World'));
+
+    assertLog(['Hi', 'World']);
+    expect(root).toMatchRenderedOutput('Hi World');
+  });
+
+  // @gate enableAsyncIterableChildren
+  test('async iterable children', async () => {
+    let hi, world;
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        // Only cached promises can be awaited in async iterables because
+        // when we retry, it'll ask for another iterator which issues another
+        // request which blocks the next.
+        await (hi || (hi = getAsyncText('Hi')));
+        yield <Text key="1" text="Hi" />;
+        yield ' ';
+        await (world || (world = getAsyncText('World')));
+        yield <Text key="2" text="World" />;
+      },
+    };
+
+    function App({children}) {
+      return <div>{children}</div>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      startTransition(() => {
+        root.render(<App>{iterable}</App>);
+      });
+    });
+    assertLog(['Async text requested [Hi]']);
+
+    await expect(async () => {
+      await act(() => resolveTextRequests('Hi'));
+    }).toErrorDev(
+      // We get this warning because the generator's promise themselves are not cached.
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    );
+
+    assertLog(['Async text requested [World]']);
+
+    await act(() => resolveTextRequests('World'));
+
+    assertLog(['Hi', 'World']);
+    expect(root).toMatchRenderedOutput(<div>Hi World</div>);
   });
 });
