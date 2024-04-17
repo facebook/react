@@ -33,7 +33,13 @@ import {
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
-import {HostRoot, HostText, HostPortal, Fragment} from './ReactWorkTags';
+import {
+  HostRoot,
+  HostText,
+  HostPortal,
+  Fragment,
+  FunctionComponent,
+} from './ReactWorkTags';
 import isArray from 'shared/isArray';
 import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
@@ -1114,51 +1120,45 @@ function createChildReconciler(
       );
     }
 
-    if (__DEV__) {
-      // We don't support rendering Generators because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
-      if (
-        typeof Symbol === 'function' &&
-        // $FlowFixMe[prop-missing] Flow doesn't know about toStringTag
-        newChildrenIterable[Symbol.toStringTag] === 'Generator'
-      ) {
-        if (!didWarnAboutGenerators) {
-          console.error(
-            'Using Generators as children is unsupported and will likely yield ' +
-              'unexpected results because enumerating a generator mutates it. ' +
-              'You may convert it to an array with `Array.from()` or the ' +
-              '`[...spread]` operator before rendering. Keep in mind ' +
-              'you might need to polyfill these features for older browsers.',
-          );
-        }
-        didWarnAboutGenerators = true;
-      }
+    const newChildren = iteratorFn.call(newChildrenIterable);
 
-      // Warn about using Maps as children
-      if ((newChildrenIterable: any).entries === iteratorFn) {
+    if (__DEV__) {
+      if (newChildren === newChildrenIterable) {
+        // We don't support rendering Generators as props because it's a mutation.
+        // See https://github.com/facebook/react/issues/12995
+        // We do support generators if they were created by a GeneratorFunction component
+        // as its direct child since we can recreate those by rerendering the component
+        // as needed.
+        const isGeneratorComponent =
+          returnFiber.tag === FunctionComponent &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(returnFiber.type) ===
+            '[object GeneratorFunction]' &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(newChildren) === '[object Generator]';
+        if (!isGeneratorComponent) {
+          if (!didWarnAboutGenerators) {
+            console.error(
+              'Using Iterators as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating a generator mutates it. ' +
+                'You may convert it to an array with `Array.from()` or the ' +
+                '`[...spread]` operator before rendering. You can also use an ' +
+                'Iterable that can iterate multiple times over the same items.',
+            );
+          }
+          didWarnAboutGenerators = true;
+        }
+      } else if ((newChildrenIterable: any).entries === iteratorFn) {
+        // Warn about using Maps as children
         if (!didWarnAboutMaps) {
           console.error(
             'Using Maps as children is not supported. ' +
               'Use an array of keyed ReactElements instead.',
           );
-        }
-        didWarnAboutMaps = true;
-      }
-
-      // First, validate keys.
-      // We'll get a different iterator later for the main pass.
-      const newChildren = iteratorFn.call(newChildrenIterable);
-      if (newChildren) {
-        let knownKeys: Set<string> | null = null;
-        let step = newChildren.next();
-        for (; !step.done; step = newChildren.next()) {
-          const child = step.value;
-          knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
+          didWarnAboutMaps = true;
         }
       }
     }
-
-    const newChildren = iteratorFn.call(newChildrenIterable);
 
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
@@ -1172,11 +1172,20 @@ function createChildReconciler(
     let newIdx = 0;
     let nextOldFiber = null;
 
+    let knownKeys: Set<string> | null = null;
+
     let step = newChildren.next();
+    if (__DEV__) {
+      knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber);
+    }
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, step = newChildren.next()
+      newIdx++,
+        step = newChildren.next(),
+        knownKeys = __DEV__
+          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+          : null
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1236,7 +1245,15 @@ function createChildReconciler(
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (; !step.done; newIdx++, step = newChildren.next()) {
+      for (
+        ;
+        !step.done;
+        newIdx++,
+          step = newChildren.next(),
+          knownKeys = __DEV__
+            ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+            : null
+      ) {
         const newFiber = createChild(returnFiber, step.value, lanes, debugInfo);
         if (newFiber === null) {
           continue;
@@ -1261,7 +1278,15 @@ function createChildReconciler(
     const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, step = newChildren.next()) {
+    for (
+      ;
+      !step.done;
+      newIdx++,
+        step = newChildren.next(),
+        knownKeys = __DEV__
+          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+          : null
+    ) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
