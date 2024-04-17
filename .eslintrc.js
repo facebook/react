@@ -545,7 +545,6 @@ module.exports = {
     __EXTENSION__: 'readonly',
     __PROFILE__: 'readonly',
     __TEST__: 'readonly',
-    __UMD__: 'readonly',
     __VARIANT__: 'readonly',
     __unmockReact: 'readonly',
     gate: 'readonly',

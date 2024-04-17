@@ -9,9 +9,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -79,21 +76,6 @@ ${source}`;
   /***************** BUN_PROD *****************/
   [BUN_PROD](source, globalName, filename, moduleType) {
     return source;
-  },
-
-  /***************** UMD_DEV *****************/
-  [UMD_DEV](source, globalName, filename, moduleType) {
-    return source;
-  },
-
-  /***************** UMD_PROD *****************/
-  [UMD_PROD](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
-  },
-
-  /***************** UMD_PROFILING *****************/
-  [UMD_PROFILING](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
   },
 
   /***************** NODE_DEV *****************/
@@ -275,42 +257,6 @@ ${source}`;
 
   /***************** BUN_PROD *****************/
   [BUN_PROD](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_DEV *****************/
-  [UMD_DEV](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_PROD *****************/
-  [UMD_PROD](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_PROFILING *****************/
-  [UMD_PROFILING](source, globalName, filename, moduleType) {
     return `/**
  * @license React
  * ${filename}

@@ -21,9 +21,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -62,10 +59,6 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
     case NODE_PROD:
     case NODE_PROFILING:
       return `build/node_modules/${packageName}/cjs/${filename}`;
-    case UMD_DEV:
-    case UMD_PROD:
-    case UMD_PROFILING:
-      return `build/node_modules/${packageName}/umd/${filename}`;
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:

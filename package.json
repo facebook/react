@@ -121,7 +121,7 @@
     "test-www": "node ./scripts/jest/jest-cli.js --release-channel=www-modern",
     "test-classic": "node ./scripts/jest/jest-cli.js --release-channel=www-classic",
     "test-build-devtools": "node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental",
-    "test-dom-fixture": "cd fixtures/dom && yarn && yarn predev && yarn test",
+    "test-dom-fixture": "cd fixtures/dom && yarn && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",

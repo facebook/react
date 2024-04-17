@@ -10,7 +10,6 @@
 /* eslint-disable */
 
 declare const __PROFILE__: boolean;
-declare const __UMD__: boolean;
 declare const __EXPERIMENTAL__: boolean;
 declare const __VARIANT__: boolean;
 

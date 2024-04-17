@@ -89,7 +89,7 @@ function createRoot(
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
-    if (!(Internals: any).usingClientEntryPoint && !__UMD__) {
+    if (!Internals.usingClientEntryPoint) {
       console.error(
         'You are importing createRoot from "react-dom" which is not supported. ' +
           'You should instead import it from "react-dom/client".',
@@ -105,7 +105,7 @@ function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (__DEV__) {
-    if (!(Internals: any).usingClientEntryPoint && !__UMD__) {
+    if (!Internals.usingClientEntryPoint) {
       console.error(
         'You are importing hydrateRoot from "react-dom" which is not supported. ' +
           'You should instead import it from "react-dom/client".',

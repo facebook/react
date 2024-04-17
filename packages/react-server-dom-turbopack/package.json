@@ -24,7 +24,6 @@
     "server.node.unbundled.js",
     "node-register.js",
     "cjs/",
-    "umd/",
     "esm/"
   ],
   "exports": {
