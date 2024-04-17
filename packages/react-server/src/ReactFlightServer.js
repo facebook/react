@@ -99,6 +99,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_POSTPONE_TYPE,
+  ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
 import {
@@ -200,8 +201,6 @@ if (
 }
 
 const ObjectPrototype = Object.prototype;
-
-const ASYNC_ITERATOR = Symbol.asyncIterator;
 
 type JSONValue =
   | string

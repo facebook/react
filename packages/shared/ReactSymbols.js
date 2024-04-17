@@ -60,3 +60,5 @@ export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<any> {
   }
   return null;
 }
+
+export const ASYNC_ITERATOR = Symbol.asyncIterator;

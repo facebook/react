@@ -65,6 +65,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
+  ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
 export type {CallServerCallback, EncodeFormActionCallback};
@@ -1244,8 +1245,6 @@ function startReadableStream<T>(
   };
   resolveStream(response, id, stream, flightController);
 }
-
-const ASYNC_ITERATOR = Symbol.asyncIterator;
 
 function asyncIterator(this: $AsyncIterator<any, any, void>) {
   // Self referencing iterator.
