@@ -97,6 +97,35 @@ describe('ReactFlightDOMReply', () => {
       items.push(item);
     }
     expect(items).toEqual(['A', 'B', 'C']);
+
+    // Multipass
+    const items2 = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const item of iterable) {
+      items2.push(item);
+    }
+    expect(items2).toEqual(['A', 'B', 'C']);
+  });
+
+  it('can pass an iterator as a reply', async () => {
+    const iterator = (function* () {
+      yield 'A';
+      yield 'B';
+      yield 'C';
+    })();
+
+    const body = await ReactServerDOMClient.encodeReply(iterator);
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    // The iterator should be the same as itself.
+    expect(result[Symbol.iterator]()).toBe(result);
+
+    expect(Array.from(result)).toEqual(['A', 'B', 'C']);
+    // We've already consumed this iterator.
+    expect(Array.from(result)).toEqual([]);
   });
 
   it('can pass weird numbers as a reply', async () => {
