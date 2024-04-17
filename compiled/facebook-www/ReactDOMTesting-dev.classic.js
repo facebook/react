@@ -36869,7 +36869,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-classic-9558ae95";
+    var ReactVersion = "19.0.0-www-classic-b18818ec";
 
     function createPortal$1(
       children,
@@ -50592,7 +50592,7 @@ if (__DEV__) {
 
     function createRoot$1(container, options) {
       {
-        if (!Internals.usingClientEntryPoint && !false) {
+        if (!Internals.usingClientEntryPoint) {
           error(
             'You are importing createRoot from "react-dom" which is not supported. ' +
               'You should instead import it from "react-dom/client".'
@@ -50605,7 +50605,7 @@ if (__DEV__) {
 
     function hydrateRoot$1(container, initialChildren, options) {
       {
-        if (!Internals.usingClientEntryPoint && !false) {
+        if (!Internals.usingClientEntryPoint) {
           error(
             'You are importing hydrateRoot from "react-dom" which is not supported. ' +
               'You should instead import it from "react-dom/client".'
