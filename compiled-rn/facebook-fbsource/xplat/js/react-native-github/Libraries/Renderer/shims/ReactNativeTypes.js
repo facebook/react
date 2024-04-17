@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict
  * @nolint
- * @generated SignedSource<<f33ee88cc50bb00a16d281dce9952e21>>
+ * @generated SignedSource<<c41f61379973354629ee7bf55ba92541>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
@@ -176,6 +176,25 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
   ...InspectorData,
 }>;
 
+export type RenderRootOptions = {
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      // $FlowFixMe[unclear-type] unknown props and state.
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+};
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.
@@ -204,6 +223,7 @@ export type ReactNativeType = {
     element: Element<ElementType>,
     containerTag: number,
     callback: ?() => void,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
@@ -216,24 +236,6 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
-
-export type RenderRootOptions = {
-  onUncaughtError?: (
-    error: mixed,
-    errorInfo: {+componentStack?: ?string},
-  ) => void,
-  onCaughtError?: (
-    error: mixed,
-    errorInfo: {
-      +componentStack?: ?string,
-      +errorBoundary?: ?React$Component<any, any>,
-    },
-  ) => void,
-  onRecoverableError?: (
-    error: mixed,
-    errorInfo: {+componentStack?: ?string},
-  ) => void,
-};
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
