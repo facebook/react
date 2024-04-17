@@ -386,7 +386,7 @@ export function createLogAssertion(
           expectedWithoutStack = expectedMessageOrArray[1].withoutStack;
         } else if (typeof expectedMessageOrArray === 'string') {
           // Should be in the form assert(['log']) or assert(['log'], {withoutStack: true})
-          expectedMessage = replaceComponentStack(expectedMessageOrArray[0]);
+          expectedMessage = replaceComponentStack(expectedMessageOrArray);
           if (consoleMethod === 'log') {
             expectedWithoutStack = true;
           } else {

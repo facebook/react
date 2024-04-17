@@ -2129,6 +2129,28 @@ describe('ReactInternalTestUtils console assertions', () => {
       `);
     });
 
+    // @gate __DEV__
+    it('regression: checks entire string, not just the first letter', async () => {
+      const message = expectToThrowFailure(() => {
+        console.error('Message that happens to contain a "T"\n    in div');
+
+        assertConsoleErrorDev([
+          'This is a completely different message that happens to start with "T"',
+        ]);
+      });
+      expect(message).toMatchInlineSnapshot(`
+        "assertConsoleErrorDev(expected)
+
+        Unexpected error(s) recorded.
+
+        - Expected errors
+        + Received errors
+
+        - This is a complete different message that happens to start with "T"
+        + Message that happens to contain a "T" <component stack>"
+      `);
+    });
+
     describe('global withoutStack', () => {
       // @gate __DEV__
       it('passes if errors without stack explicitly opt out', () => {
