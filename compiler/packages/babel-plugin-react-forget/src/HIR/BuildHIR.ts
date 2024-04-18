@@ -16,7 +16,7 @@ import {
 } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive, hasNode } from "../Utils/utils";
-import { Environment } from "./Environment";
+import { Environment, printFunctionType } from "./Environment";
 import {
   ArrayExpression,
   ArrayPattern,
@@ -3273,9 +3273,16 @@ function lowerIdentifierForAssignment(
   const identifier = builder.resolveIdentifier(path);
   if (identifier == null) {
     if (kind === InstructionKind.Reassign) {
-      // Trying to reassign a global is not allowed
+      /*
+       * Trying to reassign a global is not allowed
+       * TODO: add support for StoreGlobal or similar, and move this error to run conditionally only for render-phase
+       * functions in InferReferenceEffects
+       */
       builder.errors.push({
-        reason: `This reassigns a variable which was not defined inside of the component. Components should be pure and side-effect free. If this variable is used in rendering, use useState instead. (https://react.dev/learn/keeping-components-pure)`,
+        reason: `Unexpected reassignment of a variable which was defined outside of the ${printFunctionType(
+          builder.environment.fnType
+        )}`,
+        description: `Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
         severity: ErrorSeverity.InvalidReact,
         loc: path.parentPath.node.loc ?? null,
         suggestions: null,

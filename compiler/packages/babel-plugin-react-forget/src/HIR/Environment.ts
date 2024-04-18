@@ -405,6 +405,20 @@ export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
 export type ReactFunctionType = "Component" | "Hook" | "Other";
 
+export function printFunctionType(type: ReactFunctionType): string {
+  switch (type) {
+    case "Component": {
+      return "component";
+    }
+    case "Hook": {
+      return "hook";
+    }
+    default: {
+      return "function";
+    }
+  }
+}
+
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
