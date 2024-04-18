@@ -12,7 +12,6 @@ import type {Lanes} from './ReactFiberLane.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {Flags} from './ReactFiberFlags';
 
-import * as React from 'react';
 import {
   LayoutStatic,
   MountLayoutDev,
@@ -81,10 +80,6 @@ import {
 } from './ReactFiberDevToolsHook.new';
 
 const fakeInternalInstance = {};
-
-// React.Component uses a shared frozen object by default.
-// We'll use it to determine whether we need to initialize legacy refs.
-export const emptyRefsObject = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -871,7 +866,7 @@ function mountClassInstance(
   const instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = emptyRefsObject;
+  instance.refs = {};
 
   initializeUpdateQueue(workInProgress);
 
