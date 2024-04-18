@@ -4180,79 +4180,100 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  describe('bootstrapScriptContent and importMap escaping', () => {
-    it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
-      window.__test_outlet = '';
-      const stringWithScriptsInIt =
-        'prescription pre<scription pre<Scription pre</scRipTion pre</ScripTion </script><script><!-- <script> -->';
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<div />, {
-          bootstrapScriptContent:
-            'window.__test_outlet = "This should have been replaced";var x = "' +
-            stringWithScriptsInIt +
-            '";\nwindow.__test_outlet = x;',
+  describe('inline script escaping', () => {
+    describe('bootstrapScriptContent', () => {
+      it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
+        window.__test_outlet = '';
+        const stringWithScriptsInIt =
+          'prescription pre<scription pre<Scription pre</scRipTion pre</ScripTion </script><script><!-- <script> -->';
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<div />, {
+            bootstrapScriptContent:
+              'window.__test_outlet = "This should have been replaced";var x = "' +
+              stringWithScriptsInIt +
+              '";\nwindow.__test_outlet = x;',
+          });
+          pipe(writable);
         });
-        pipe(writable);
+        expect(window.__test_outlet).toMatch(stringWithScriptsInIt);
       });
-      expect(window.__test_outlet).toMatch(stringWithScriptsInIt);
+
+      it('does not escape \\u2028, or \\u2029 characters', async () => {
+        // these characters are ignored in engines support https://github.com/tc39/proposal-json-superset
+        // in this test with JSDOM the characters are silently dropped and thus don't need to be encoded.
+        // if you send these characters to an older browser they could fail so it is a good idea to
+        // sanitize JSON input of these characters
+        window.__test_outlet = '';
+        const el = document.createElement('p');
+        el.textContent = '{"one":1,\u2028\u2029"two":2}';
+        const stringWithLSAndPSCharacters = el.textContent;
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<div />, {
+            bootstrapScriptContent:
+              'let x = ' +
+              stringWithLSAndPSCharacters +
+              '; window.__test_outlet = x;',
+          });
+          pipe(writable);
+        });
+        const outletString = JSON.stringify(window.__test_outlet);
+        expect(outletString).toBe(
+          stringWithLSAndPSCharacters.replace(/[\u2028\u2029]/g, ''),
+        );
+      });
+
+      it('does not escape <, >, or & characters', async () => {
+        // these characters valid javascript and may be necessary in scripts and won't be interpretted properly
+        // escaped outside of a string context within javascript
+        window.__test_outlet = null;
+        // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
+        const booleanLogicString = '1 < 2 & 3 > 1';
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<div />, {
+            bootstrapScriptContent:
+              'let x = ' + booleanLogicString + '; window.__test_outlet = x;',
+          });
+          pipe(writable);
+        });
+        expect(window.__test_outlet).toBe(1);
+      });
     });
 
-    it('does not escape \\u2028, or \\u2029 characters', async () => {
-      // these characters are ignored in engines support https://github.com/tc39/proposal-json-superset
-      // in this test with JSDOM the characters are silently dropped and thus don't need to be encoded.
-      // if you send these characters to an older browser they could fail so it is a good idea to
-      // sanitize JSON input of these characters
-      window.__test_outlet = '';
-      const el = document.createElement('p');
-      el.textContent = '{"one":1,\u2028\u2029"two":2}';
-      const stringWithLSAndPSCharacters = el.textContent;
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<div />, {
-          bootstrapScriptContent:
-            'let x = ' +
-            stringWithLSAndPSCharacters +
-            '; window.__test_outlet = x;',
+    describe('importMaps', () => {
+      it('escapes </[sS]cirpt> in importMaps', async () => {
+        window.__test_outlet_key = '';
+        window.__test_outlet_value = '';
+        const jsonWithScriptsInIt = {
+          "keypos</script><script>window.__test_outlet_key = 'pwned'</script><script>":
+            'value',
+          key: "valuepos</script><script>window.__test_outlet_value = 'pwned'</script><script>",
+        };
+        await act(() => {
+          const {pipe} = renderToPipeableStream(<div />, {
+            importMap: jsonWithScriptsInIt,
+          });
+          pipe(writable);
         });
-        pipe(writable);
+        expect(window.__test_outlet_key).toBe('');
+        expect(window.__test_outlet_value).toBe('');
       });
-      const outletString = JSON.stringify(window.__test_outlet);
-      expect(outletString).toBe(
-        stringWithLSAndPSCharacters.replace(/[\u2028\u2029]/g, ''),
-      );
     });
 
-    it('does not escape <, >, or & characters', async () => {
-      // these characters valid javascript and may be necessary in scripts and won't be interpretted properly
-      // escaped outside of a string context within javascript
-      window.__test_outlet = null;
-      // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
-      const booleanLogicString = '1 < 2 & 3 > 1';
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<div />, {
-          bootstrapScriptContent:
-            'let x = ' + booleanLogicString + '; window.__test_outlet = x;',
+    describe('inline script', () => {
+      it('escapes </[sS]cirpt> in inline scripts', async () => {
+        window.__test_outlet = '';
+        await act(() => {
+          const {pipe} = renderToPipeableStream(
+            <script>{`
+              <!-- some html comment </script><script>window.__test_outlet = 'pwned'</script>
+              window.__test_outlet = 'safe';
+              --> </script><script>window.__test_outlet = 'pwned after'</script>
+            `}</script>,
+          );
+          pipe(writable);
         });
-        pipe(writable);
+        expect(window.__test_outlet).toBe('safe');
       });
-      expect(window.__test_outlet).toBe(1);
-    });
-
-    it('escapes </[sS]cirpt> in importMaps', async () => {
-      window.__test_outlet_key = '';
-      window.__test_outlet_value = '';
-      const jsonWithScriptsInIt = {
-        "keypos</script><script>window.__test_outlet_key = 'pwned'</script><script>":
-          'value',
-        key: "valuepos</script><script>window.__test_outlet_value = 'pwned'</script><script>",
-      };
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<div />, {
-          importMap: jsonWithScriptsInIt,
-        });
-        pipe(writable);
-      });
-      expect(window.__test_outlet_key).toBe('');
-      expect(window.__test_outlet_value).toBe('');
     });
   });
 
