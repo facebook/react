@@ -1572,6 +1572,17 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         continue;
       }
+      case "StoreGlobal": {
+        state.reference(
+          instrValue.value,
+          functionEffects,
+          Effect.Capture,
+          ValueReason.Other
+        );
+        const lvalue = instr.lvalue;
+        lvalue.effect = Effect.Store;
+        continue;
+      }
       case "Destructure": {
         let effect: Effect = Effect.Capture;
         for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {

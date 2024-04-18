@@ -571,6 +571,17 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
+    case "StoreGlobal": {
+      const lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+      }
+
+      return {
+        lvalues,
+        rvalues: [value.value],
+      };
+    }
     case "Destructure": {
       // Indirection for the inner value, memoized if the value is
       const lvalues = [];

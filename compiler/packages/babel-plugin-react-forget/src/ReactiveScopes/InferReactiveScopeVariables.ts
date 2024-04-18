@@ -195,7 +195,8 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "FinishMemoize":
     case "UnaryExpression":
     case "BinaryExpression":
-    case "PropertyLoad": {
+    case "PropertyLoad":
+    case "StoreGlobal": {
       return false;
     }
     case "CallExpression":

@@ -571,7 +571,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "LoadGlobal": {
-      value = `Global ${instrValue.name}`;
+      value = `LoadGlobal ${instrValue.name}`;
+      break;
+    }
+    case "StoreGlobal": {
+      value = `StoreGlobal ${instrValue.name} = ${printPlace(
+        instrValue.value
+      )}`;
       break;
     }
     case "OptionalExpression": {

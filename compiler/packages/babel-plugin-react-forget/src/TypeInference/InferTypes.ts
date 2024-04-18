@@ -174,6 +174,11 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "StoreGlobal": {
+      yield equation(left, value.value.identifier.type);
+      break;
+    }
+
     case "BinaryExpression": {
       if (isPrimitiveBinaryOp(value.operator)) {
         yield equation(value.left.identifier.type, { kind: "Primitive" });

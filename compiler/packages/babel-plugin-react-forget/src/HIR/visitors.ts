@@ -93,6 +93,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "StoreGlobal": {
+      yield instrValue.value;
+      break;
+    }
     case "Destructure": {
       yield instrValue.value;
       break;
@@ -418,6 +422,10 @@ export function mapInstructionValueOperands(
     }
     case "StoreContext": {
       instrValue.lvalue.place = fn(instrValue.lvalue.place);
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "StoreGlobal": {
       instrValue.value = fn(instrValue.value);
       break;
     }

@@ -897,6 +897,7 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | LoadGlobal
+  | StoreGlobal
   | FunctionExpression
   | {
       kind: "TaggedTemplateExpression";
@@ -1027,6 +1028,13 @@ export type PropertyLoad = {
 export type LoadGlobal = {
   kind: "LoadGlobal";
   name: string;
+  loc: SourceLocation;
+};
+
+export type StoreGlobal = {
+  kind: "StoreGlobal";
+  name: string;
+  value: Place;
   loc: SourceLocation;
 };
 

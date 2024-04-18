@@ -1813,6 +1813,14 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "StoreGlobal": {
+      value = t.assignmentExpression(
+        "=",
+        t.identifier(instrValue.name),
+        codegenPlaceToExpression(cx, instrValue.value)
+      );
+      break;
+    }
     case "ReactiveFunctionValue":
     case "StartMemoize":
     case "FinishMemoize":

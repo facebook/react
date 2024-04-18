@@ -310,7 +310,8 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     case "ComputedStore":
     case "PropertyDelete":
     case "MethodCall":
-    case "PropertyStore": {
+    case "PropertyStore":
+    case "StoreGlobal": {
       /*
        * Mutating instructions are not safe to prune.
        * TODO: we could be more precise and make this conditional on whether
