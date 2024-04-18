@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d86bdae683e0b6b9649eb43c0d5548c4>>
+ * @generated SignedSource<<64acec7be24561ecbf6d2eaf55e55d0a>>
  */
 
 "use strict";
@@ -969,7 +969,25 @@ for (pluginName$jscomp$inline_265 in injectedNamesToPlugins$jscomp$inline_263)
     }
   }
 isOrderingDirty$jscomp$inline_264 && recomputePluginOrdering();
-var emptyObject$1 = {},
+var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+  consoleManagedByDevToolsDuringStrictMode =
+    dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
+  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableEarlyReturnForPropDiffing =
+    dynamicFlagsUntyped.enableEarlyReturnForPropDiffing,
+  enableComponentStackLocations =
+    dynamicFlagsUntyped.enableComponentStackLocations,
+  enableDeferRootSchedulingToMicrotask =
+    dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
+  enableInfiniteRenderLoopDetection =
+    dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
+  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
+  enableUnifiedSyncLane = dynamicFlagsUntyped.enableUnifiedSyncLane,
+  passChildrenWhenCloningPersistedNodes =
+    dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+  emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
   deepDifferOptions = { unsafelyIgnoreFunctions: !0 };
@@ -1268,23 +1286,7 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
     }
   });
 }
-var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode =
-    dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
-  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
-  enableComponentStackLocations =
-    dynamicFlagsUntyped.enableComponentStackLocations,
-  enableDeferRootSchedulingToMicrotask =
-    dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
-  enableInfiniteRenderLoopDetection =
-    dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
-  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
-  enableUnifiedSyncLane = dynamicFlagsUntyped.enableUnifiedSyncLane,
-  passChildrenWhenCloningPersistedNodes =
-    dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-  disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
+var scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
   requestPaint = Scheduler.unstable_requestPaint,
@@ -7554,12 +7556,15 @@ function completeWork(current, workInProgress, renderLanes) {
               : createChildNodeSet()),
             appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
           b: {
-            oldProps = diffProperties(
-              null,
-              oldProps,
-              newProps,
-              renderLanes.canonical.viewConfig.validAttributes
-            );
+            oldProps =
+              enableEarlyReturnForPropDiffing && oldProps === newProps
+                ? null
+                : diffProperties(
+                    null,
+                    oldProps,
+                    newProps,
+                    renderLanes.canonical.viewConfig.validAttributes
+                  );
             renderLanes.canonical.currentProps = newProps;
             newProps = renderLanes.node;
             if (current)
@@ -11302,7 +11307,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-42633113",
+    version: "19.0.0-canary-ef6bcf29",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11358,7 +11363,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-42633113"
+  reconcilerVersion: "19.0.0-canary-ef6bcf29"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

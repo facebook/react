@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5314f257c0eaf16ab8324449affda09>>
+ * @generated SignedSource<<cda44a9b6dde6c0bc692dd0a256b0422>>
  */
 
 "use strict";
@@ -2688,6 +2688,8 @@ to return true:wantsResponderID|                            |
       consoleManagedByDevToolsDuringStrictMode =
         dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
       enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableEarlyReturnForPropDiffing =
+        dynamicFlags.enableEarlyReturnForPropDiffing,
       enableComponentStackLocations =
         dynamicFlags.enableComponentStackLocations,
       enableDeferRootSchedulingToMicrotask =
@@ -3889,6 +3891,12 @@ to return true:wantsResponderID|                            |
       );
     }
     function diff(prevProps, nextProps, validAttributes) {
+      if (enableEarlyReturnForPropDiffing) {
+        if (prevProps === nextProps) {
+          return null; // no change
+        }
+      }
+
       return diffProperties(
         null, // updatePayload
         prevProps,
@@ -30742,7 +30750,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-f19a567c";
+    var ReactVersion = "19.0.0-canary-ad24d706";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

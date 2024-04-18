@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<96428d44939bb491570161921c41332c>>
+ * @generated SignedSource<<84d884f07a1d5851f53652012b257860>>
  */
 
 "use strict";
@@ -2289,6 +2289,39 @@ to return true:wantsResponderID|                            |
       ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin
     });
 
+    // Re-export dynamic flags from the internal module.
+    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+    // the exports object every time a flag is read.
+
+    var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+      consoleManagedByDevToolsDuringStrictMode =
+        dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
+      enableAsyncActions = dynamicFlags.enableAsyncActions,
+      enableEarlyReturnForPropDiffing =
+        dynamicFlags.enableEarlyReturnForPropDiffing,
+      enableComponentStackLocations =
+        dynamicFlags.enableComponentStackLocations,
+      enableDeferRootSchedulingToMicrotask =
+        dynamicFlags.enableDeferRootSchedulingToMicrotask,
+      enableInfiniteRenderLoopDetection =
+        dynamicFlags.enableInfiniteRenderLoopDetection,
+      enableRenderableContext = dynamicFlags.enableRenderableContext,
+      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
+      passChildrenWhenCloningPersistedNodes =
+        dynamicFlags.passChildrenWhenCloningPersistedNodes,
+      useModernStrictMode = dynamicFlags.useModernStrictMode,
+      disableDefaultPropsExceptForClasses =
+        dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+    var enableSchedulingProfiler = true;
+    var enableProfilerTimer = true;
+    var enableProfilerCommitHooks = true;
+    var enableProfilerNestedUpdatePhase = true;
+    var syncLaneExpirationMs = 250;
+    var transitionLaneExpirationMs = 5000;
+    var enableLazyContextPropagation = false;
+    var enableLegacyHidden = false;
+    var disableLegacyMode = false;
+
     // Modules provided by RN:
     var emptyObject$1 = {};
     /**
@@ -2763,6 +2796,12 @@ to return true:wantsResponderID|                            |
       );
     }
     function diff(prevProps, nextProps, validAttributes) {
+      if (enableEarlyReturnForPropDiffing) {
+        if (prevProps === nextProps) {
+          return null; // no change
+        }
+      }
+
       return diffProperties(
         null, // updatePayload
         prevProps,
@@ -2965,37 +3004,6 @@ to return true:wantsResponderID|                            |
       }); // React Native doesn't use ReactControlledComponent but if it did, here's
       // where it would do it.
     }
-
-    // Re-export dynamic flags from the internal module.
-    var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-    // the exports object every time a flag is read.
-
-    var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-      consoleManagedByDevToolsDuringStrictMode =
-        dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
-      enableAsyncActions = dynamicFlags.enableAsyncActions,
-      enableComponentStackLocations =
-        dynamicFlags.enableComponentStackLocations,
-      enableDeferRootSchedulingToMicrotask =
-        dynamicFlags.enableDeferRootSchedulingToMicrotask,
-      enableInfiniteRenderLoopDetection =
-        dynamicFlags.enableInfiniteRenderLoopDetection,
-      enableRenderableContext = dynamicFlags.enableRenderableContext,
-      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-      passChildrenWhenCloningPersistedNodes =
-        dynamicFlags.passChildrenWhenCloningPersistedNodes,
-      useModernStrictMode = dynamicFlags.useModernStrictMode,
-      disableDefaultPropsExceptForClasses =
-        dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
-    var enableSchedulingProfiler = true;
-    var enableProfilerTimer = true;
-    var enableProfilerCommitHooks = true;
-    var enableProfilerNestedUpdatePhase = true;
-    var syncLaneExpirationMs = 250;
-    var transitionLaneExpirationMs = 5000;
-    var enableLazyContextPropagation = false;
-    var enableLegacyHidden = false;
-    var disableLegacyMode = false;
 
     var NoFlags$1 =
       /*                      */
@@ -30288,7 +30296,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-2d263258";
+    var ReactVersion = "19.0.0-canary-adfb7d73";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

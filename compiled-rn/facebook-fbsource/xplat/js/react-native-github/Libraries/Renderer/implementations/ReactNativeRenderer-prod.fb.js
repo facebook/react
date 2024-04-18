@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ac51ccb15db731fa0f15c9f8c62efde8>>
+ * @generated SignedSource<<40e33e67d4c6fd0373352fbe892a02dc>>
  */
 
 "use strict";
@@ -1116,6 +1116,8 @@ var ReactSharedInternals =
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableEarlyReturnForPropDiffing =
+    dynamicFlagsUntyped.enableEarlyReturnForPropDiffing,
   enableComponentStackLocations =
     dynamicFlagsUntyped.enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask =
@@ -8339,12 +8341,15 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         try {
           var viewConfig = flags.viewConfig;
           instanceProps.set(flags._nativeTag, newProps);
-          var updatePayload = diffProperties(
-            null,
-            current,
-            newProps,
-            viewConfig.validAttributes
-          );
+          var updatePayload =
+            enableEarlyReturnForPropDiffing && current === newProps
+              ? null
+              : diffProperties(
+                  null,
+                  current,
+                  newProps,
+                  viewConfig.validAttributes
+                );
           null != updatePayload &&
             ReactNativePrivateInterface.UIManager.updateView(
               flags._nativeTag,
@@ -8461,12 +8466,15 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                     prevProps = assign({}, props, {
                       style: [props.style, { display: "none" }]
                     });
-                  var updatePayload$jscomp$1 = diffProperties(
-                    null,
-                    prevProps,
-                    props,
-                    viewConfig$jscomp$1.validAttributes
-                  );
+                  var updatePayload$jscomp$1 =
+                    enableEarlyReturnForPropDiffing && prevProps === props
+                      ? null
+                      : diffProperties(
+                          null,
+                          prevProps,
+                          props,
+                          viewConfig$jscomp$1.validAttributes
+                        );
                   ReactNativePrivateInterface.UIManager.updateView(
                     instance._nativeTag,
                     viewConfig$jscomp$1.uiViewClassName,
@@ -10816,7 +10824,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1168 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-f713ac17",
+    version: "19.0.0-canary-7fc44ecb",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10859,7 +10867,7 @@ var internals$jscomp$inline_1452 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-f713ac17"
+  reconcilerVersion: "19.0.0-canary-7fc44ecb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1453 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
