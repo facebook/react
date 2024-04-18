@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9206ca0f6781a4c840d6d393f26b3429>>
+ * @generated SignedSource<<2efa00521669a237ba088981baf581b8>>
  */
 
 "use strict";
@@ -3584,7 +3584,6 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = {};
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
   "object" === typeof contextType && null !== contextType
@@ -9760,7 +9759,7 @@ var devToolsConfig$jscomp$inline_1101 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-39a6938a",
+  version: "19.0.0-canary-dec118c3",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9804,7 +9803,7 @@ var devToolsConfig$jscomp$inline_1101 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-39a6938a"
+  reconcilerVersion: "19.0.0-canary-dec118c3"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

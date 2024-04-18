@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<150980e4b77b12c241c9997159b4f67a>>
+ * @generated SignedSource<<df40c362ab4858d0f1f3b69d7d7eb4ad>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "19.0.0-canary-a13a0c2f";
+    var ReactVersion = "19.0.0-canary-d59b7713";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -299,20 +299,14 @@ if (__DEV__) {
 
     var assign = Object.assign;
 
-    var emptyObject = {};
-
-    {
-      Object.freeze(emptyObject);
-    }
     /**
      * Base class helpers for the updating state of a component.
      */
 
     function Component(props, context, updater) {
       this.props = props;
-      this.context = context; // If a component has string refs, we will assign a different object later.
-
-      this.refs = emptyObject; // We initialize the default updater but the real one gets injected by the
+      this.context = context;
+      this.refs = {}; // We initialize the default updater but the real one gets injected by the
       // renderer.
 
       this.updater = updater || ReactNoopUpdateQueue;
@@ -429,7 +423,7 @@ if (__DEV__) {
       this.props = props;
       this.context = context; // If a component has string refs, we will assign a different object later.
 
-      this.refs = emptyObject;
+      this.refs = {};
       this.updater = updater || ReactNoopUpdateQueue;
     }
 
