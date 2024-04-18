@@ -164,12 +164,13 @@ export function suppressionsToCompilerError(
     switch (suppressionRange.source) {
       case "Eslint":
         reason =
-          "React Compiler has bailed out of optimizing this component as one or more React eslint rules were disabled";
-        suggestion = "Remove the eslint disable";
+          "React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled";
+        suggestion =
+          "Remove the ESLint suppression and address the React error";
         break;
       case "Flow":
         reason =
-          "React Compiler has bailed out of optimizing this component as one or more React rule violations were reported by Flow";
+          "React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow";
         suggestion = "Remove the Flow suppression and address the React error";
         break;
       default:
@@ -180,7 +181,7 @@ export function suppressionsToCompilerError(
     }
     error.pushErrorDetail(
       new CompilerErrorDetail({
-        reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in undefined behavior`,
+        reason: `${reason}. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior`,
         description: suppressionRange.disableComment.value.trim(),
         severity: ErrorSeverity.InvalidReact,
         loc: suppressionRange.disableComment.loc ?? null,

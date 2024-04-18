@@ -23,7 +23,7 @@ function Component() {
   4 |     () => {
   5 |       item.push(1);
 > 6 |     }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: React Compiler has bailed out of optimizing this component as one or more React eslint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in undefined behavior. eslint-disable-next-line react-hooks/exhaustive-deps (6:6)
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. eslint-disable-next-line react-hooks/exhaustive-deps (6:6)
   7 |     []
   8 |   );
   9 |
