@@ -120,7 +120,7 @@ function validateNoRefAccessInRenderImpl(
             errors.push({
               severity: ErrorSeverity.InvalidReact,
               reason:
-                "This function accesses a ref, which not be accessed during render. (https://react.dev/reference/react/useRef)",
+                "This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)",
               loc: callee.loc,
               description: `Function ${printPlace(callee)} accesses a ref`,
               suggestions: null,
