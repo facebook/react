@@ -270,7 +270,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind '${(instr as any).kind}'`
+            `Unexpected instruction kind \`${(instr as any).kind}\``
           );
         }
       }

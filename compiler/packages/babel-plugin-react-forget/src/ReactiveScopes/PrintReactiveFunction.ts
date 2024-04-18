@@ -143,7 +143,7 @@ function writeReactiveInstruction(
     default: {
       assertExhaustive(
         instr,
-        `Unexpected terminal kind '${(instr as any).kind}'`
+        `Unexpected terminal kind \`${(instr as any).kind}\``
       );
     }
   }

@@ -182,7 +182,7 @@ export class ReactiveFunctionVisitor<TState = void> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
+          `Unexpected terminal kind \`${(terminal as any).kind}\``
         );
       }
     }
@@ -216,7 +216,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind '${(instr as any).kind}'`
+            `Unexpected instruction kind \`${(instr as any).kind}\``
           );
         }
       }
@@ -279,7 +279,7 @@ export class ReactiveFunctionTransform<
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind '${(instr as any).kind}'`
+            `Unexpected instruction kind \`${(instr as any).kind}\``
           );
         }
       }
@@ -554,7 +554,7 @@ export class ReactiveFunctionTransform<
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
+          `Unexpected terminal kind \`${(terminal as any).kind}\``
         );
       }
     }
@@ -652,7 +652,7 @@ export function mapTerminalBlocks(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }

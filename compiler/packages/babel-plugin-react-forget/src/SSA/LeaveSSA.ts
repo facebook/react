@@ -147,7 +147,7 @@ export function leaveSSA(fn: HIRFunction): void {
         if (name !== null) {
           CompilerError.invariant(!declarations.has(name.value), {
             reason: `Unexpected duplicate declaration`,
-            description: `Found duplicate declaration for '${name.value}'`,
+            description: `Found duplicate declaration for \`${name.value}\``,
             loc: value.lvalue.place.loc,
             suggestions: null,
           });
@@ -220,7 +220,7 @@ export function leaveSSA(fn: HIRFunction): void {
               kind === null || kind === InstructionKind.Const,
               {
                 reason: `Expected consistent kind for destructuring`,
-                description: `other places were '${kind}' but '${printPlace(
+                description: `other places were \`${kind}\` but '${printPlace(
                   place
                 )}' is const`,
                 loc: place.loc,
@@ -251,7 +251,7 @@ export function leaveSSA(fn: HIRFunction): void {
                 kind === null || kind === InstructionKind.Const,
                 {
                   reason: `Expected consistent kind for destructuring`,
-                  description: `Other places were '${kind}' but '${printPlace(
+                  description: `Other places were \`${kind}\` but '${printPlace(
                     place
                   )}' is const`,
                   loc: place.loc,
@@ -264,7 +264,7 @@ export function leaveSSA(fn: HIRFunction): void {
                 kind === null || kind === InstructionKind.Reassign,
                 {
                   reason: `Expected consistent kind for destructuring`,
-                  description: `Other places were '${kind}' but '${printPlace(
+                  description: `Other places were \`${kind}\` but '${printPlace(
                     place
                   )}' is reassigned`,
                   loc: place.loc,

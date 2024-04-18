@@ -718,7 +718,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         CompilerError.invariant(inner.kind === "SequenceExpression", {
           reason:
             "Expected OptionalExpression value to be a SequenceExpression",
-          description: `Found a '${value.kind}'`,
+          description: `Found a \`${value.kind}\``,
           loc: value.loc,
           suggestions: null,
         });
@@ -1028,7 +1028,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
+          `Unexpected terminal kind \`${(terminal as any).kind}\``
         );
       }
     }

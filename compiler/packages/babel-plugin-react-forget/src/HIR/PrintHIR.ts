@@ -288,7 +288,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${terminal as any as Terminal}'`
+        `Unexpected terminal kind \`${terminal as any as Terminal}\``
       );
     }
   }
@@ -680,7 +680,7 @@ export function printLValue(lval: LValue): string {
       return `HoistedConst ${lvalue}$`;
     }
     default: {
-      assertExhaustive(lval.kind, `Unexpected lvalue kind '${lval.kind}'`);
+      assertExhaustive(lval.kind, `Unexpected lvalue kind \`${lval.kind}\``);
     }
   }
 }
@@ -733,7 +733,7 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }

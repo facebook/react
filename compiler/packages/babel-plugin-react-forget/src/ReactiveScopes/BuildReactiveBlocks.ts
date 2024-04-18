@@ -194,7 +194,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
       default: {
         assertExhaustive(
           stmt,
-          `Unexpected statement kind '${(stmt as any).kind}'`
+          `Unexpected statement kind \`${(stmt as any).kind}\``
         );
       }
     }

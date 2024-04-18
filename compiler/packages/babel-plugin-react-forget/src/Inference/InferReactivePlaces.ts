@@ -257,7 +257,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               default: {
                 assertExhaustive(
                   operand.effect,
-                  `Unexpected effect kind '${operand.effect}'`
+                  `Unexpected effect kind \`${operand.effect}\``
                 );
               }
             }

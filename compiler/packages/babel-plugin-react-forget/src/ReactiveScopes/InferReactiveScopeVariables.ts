@@ -217,7 +217,10 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
       return true;
     }
     default: {
-      assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
+      assertExhaustive(
+        value,
+        `Unexpected value kind \`${(value as any).kind}\``
+      );
     }
   }
 }

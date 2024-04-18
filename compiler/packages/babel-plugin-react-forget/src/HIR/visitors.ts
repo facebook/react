@@ -147,7 +147,7 @@ export function* eachInstructionValueOperand(
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind '${(attribute as any).kind}'`
+              `Unexpected attribute kind \`${(attribute as any).kind}\``
             );
           }
         }
@@ -242,7 +242,7 @@ export function* eachInstructionValueOperand(
     default: {
       assertExhaustive(
         instrValue,
-        `Unexpected instruction kind '${(instrValue as any).kind}'`
+        `Unexpected instruction kind \`${(instrValue as any).kind}\``
       );
     }
   }
@@ -281,7 +281,7 @@ export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }
@@ -301,7 +301,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
         } else {
           assertExhaustive(
             item,
-            `Unexpected item kind '${(item as any).kind}'`
+            `Unexpected item kind \`${(item as any).kind}\``
           );
         }
       }
@@ -316,7 +316,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
         } else {
           assertExhaustive(
             property,
-            `Unexpected item kind '${(property as any).kind}'`
+            `Unexpected item kind \`${(property as any).kind}\``
           );
         }
       }
@@ -325,7 +325,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }
@@ -458,7 +458,7 @@ export function mapInstructionValueOperands(
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind '${(attribute as any).kind}'`
+              `Unexpected attribute kind \`${(attribute as any).kind}\``
             );
           }
         }
@@ -601,7 +601,7 @@ export function mapPatternOperands(
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }
@@ -851,7 +851,7 @@ export function mapTerminalSuccessors(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any as Terminal).kind}'`
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
       );
     }
   }
@@ -891,7 +891,7 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }
@@ -991,7 +991,7 @@ export function mapOptionalFallthroughs(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }
@@ -1082,7 +1082,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any as Terminal).kind}'`
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
       );
     }
   }
@@ -1144,7 +1144,7 @@ export function mapTerminalOperands(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }
@@ -1201,7 +1201,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }

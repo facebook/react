@@ -726,7 +726,7 @@ class Driver {
           default: {
             assertExhaustive(
               terminal.variant,
-              `Unexpected goto variant '${terminal.variant}'`
+              `Unexpected goto variant \`${terminal.variant}\``
             );
           }
         }
@@ -991,7 +991,7 @@ class Driver {
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         if (testBlock.terminal.kind !== "branch") {
           CompilerError.throwTodo({
-            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for optional test block`,
+            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional test block`,
             description: null,
             loc: testBlock.terminal.loc,
             suggestions: null,
@@ -1033,7 +1033,7 @@ class Driver {
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         if (testBlock.terminal.kind !== "branch") {
           CompilerError.throwTodo({
-            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for logical test block`,
+            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for logical test block`,
             description: null,
             loc: testBlock.terminal.loc,
             suggestions: null,
@@ -1081,7 +1081,7 @@ class Driver {
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         if (testBlock.terminal.kind !== "branch") {
           CompilerError.throwTodo({
-            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for ternary test block`,
+            reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ternary test block`,
             description: null,
             loc: testBlock.terminal.loc,
             suggestions: null,
@@ -1128,7 +1128,7 @@ class Driver {
       }
       default: {
         CompilerError.throwTodo({
-          reason: `Support '${terminal.kind}' as a value block terminal (conditional, logical, optional chaining, etc)`,
+          reason: `Support \`${terminal.kind}\` as a value block terminal (conditional, logical, optional chaining, etc)`,
           description: null,
           loc: terminal.loc,
           suggestions: null,

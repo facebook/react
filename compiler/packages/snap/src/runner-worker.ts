@@ -158,13 +158,13 @@ export async function transformFixture(
   let unexpectedError: string | null = null;
   if (expectError) {
     if (error === null) {
-      unexpectedError = `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`;
+      unexpectedError = `Expected an error to be thrown for fixture: \`${basename}\`, remove the 'error.' prefix if an error is not expected.`;
     }
   } else {
     if (error !== null) {
-      unexpectedError = `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error}`;
+      unexpectedError = `Expected fixture \`${basename}\` to succeed but it failed with error:\n\n${error}`;
     } else if (compileResult == null) {
-      unexpectedError = `Expected output for fixture '${basename}'.`;
+      unexpectedError = `Expected output for fixture \`${basename}\`.`;
     }
   }
 

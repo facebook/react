@@ -286,7 +286,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
               break;
             }
             default: {
-              assertExhaustive(objectKind, `Unexpected kind '${objectKind}'`);
+              assertExhaustive(objectKind, `Unexpected kind \`${objectKind}\``);
             }
           }
           setKind(instr.lvalue, kind);
@@ -360,7 +360,10 @@ export function validateHooksUsage(fn: HIRFunction): void {
                 break;
               }
               default: {
-                assertExhaustive(objectKind, `Unexpected kind '${objectKind}'`);
+                assertExhaustive(
+                  objectKind,
+                  `Unexpected kind \`${objectKind}\``
+                );
               }
             }
             setKind(lvalue, kind);

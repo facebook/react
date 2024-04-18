@@ -108,9 +108,9 @@ Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression 
 
 Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
 
-Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
+Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered (57:57)
 
-Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
+Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `BinaryExpression` cannot be safely reordered (53:53)
   4 |
   5 |   class Bar {
   6 |     #secretSauce = 42;

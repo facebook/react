@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 4 |     return x;
     | ^^^^^^^^^^^^^
 > 5 |   }
-    | ^^^^ Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'ArrowFunctionExpression' cannot be safely reordered (3:5)
+    | ^^^^ Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `ArrowFunctionExpression` cannot be safely reordered (3:5)
   6 | ) {
   7 |   return y();
   8 | }

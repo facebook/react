@@ -494,7 +494,7 @@ function getReactFunctionType(
     default: {
       assertExhaustive(
         pass.opts.compilationMode,
-        `Unexpected compilationMode '${pass.opts.compilationMode}'`
+        `Unexpected compilationMode \`${pass.opts.compilationMode}\``
       );
     }
   }

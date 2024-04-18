@@ -69,7 +69,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
       default: {
         assertExhaustive(
           stmt.terminal,
-          `Unexpected terminal kind '${(stmt.terminal as any).kind}'`
+          `Unexpected terminal kind \`${(stmt.terminal as any).kind}\``
         );
       }
     }

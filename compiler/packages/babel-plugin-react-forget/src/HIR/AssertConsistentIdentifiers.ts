@@ -37,7 +37,7 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       CompilerError.invariant(instr.lvalue.identifier.name === null, {
         reason: `Expected all lvalues to be temporaries`,
-        description: `Found named lvalue '${instr.lvalue.identifier.name}'`,
+        description: `Found named lvalue \`${instr.lvalue.identifier.name}\``,
         loc: instr.lvalue.loc,
         suggestions: null,
       });

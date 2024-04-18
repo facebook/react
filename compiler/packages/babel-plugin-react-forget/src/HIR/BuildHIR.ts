@@ -102,7 +102,7 @@ export function lower(
       const identifier = builder.resolveIdentifier(param);
       if (identifier === null) {
         builder.errors.push({
-          reason: `(BuildHIR::lower) Could not find binding for param '${param.node.name}'`,
+          reason: `(BuildHIR::lower) Could not find binding for param \`${param.node.name}\``,
           severity: ErrorSeverity.Invariant,
           loc: param.node.loc ?? null,
           suggestions: null,
@@ -186,7 +186,7 @@ export function lower(
     builder.errors.push({
       severity: ErrorSeverity.InvalidJS,
       reason: `Unexpected function body kind`,
-      description: `Expected function body to be an expression or a block statement, got '${body.type}'`,
+      description: `Expected function body to be an expression or a block statement, got \`${body.type}\``,
       loc: body.node.loc ?? null,
       suggestions: null,
     });
@@ -2005,7 +2005,7 @@ function lowerExpression(
           propName = namePath.node.name;
           if (propName.indexOf(":") !== -1) {
             builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name '${name}'`,
+              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name \`${name}\``,
               severity: ErrorSeverity.Todo,
               loc: namePath.node.loc ?? null,
               suggestions: null,
@@ -2658,7 +2658,7 @@ function lowerReorderableExpression(
 ): Place {
   if (!isReorderableExpression(builder, expr, true)) {
     builder.errors.push({
-      reason: `(BuildHIR::node.lowerReorderableExpression) Expression type '${expr.type}' cannot be safely reordered`,
+      reason: `(BuildHIR::node.lowerReorderableExpression) Expression type \`${expr.type}\` cannot be safely reordered`,
       severity: ErrorSeverity.Todo,
       loc: expr.node.loc ?? null,
       suggestions: null,
@@ -2987,7 +2987,7 @@ function lowerJsxMemberExpression(
     objectPlace = lowerJsxMemberExpression(builder, object);
   } else {
     CompilerError.invariant(object.isJSXIdentifier(), {
-      reason: `TypeScript refinement fail: expected 'JsxIdentifier', got '${object.node.type}'`,
+      reason: `TypeScript refinement fail: expected 'JsxIdentifier', got \`${object.node.type}\``,
       description: null,
       loc: object.node.loc ?? null,
       suggestions: null,

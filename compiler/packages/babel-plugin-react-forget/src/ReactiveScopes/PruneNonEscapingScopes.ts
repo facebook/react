@@ -276,7 +276,7 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
     CompilerError.invariant(node !== undefined, {
-      reason: `Expected a node for all identifiers, none found for '${id}'`,
+      reason: `Expected a node for all identifiers, none found for \`${id}\``,
       description: null,
       loc: null,
       suggestions: null,
@@ -720,7 +720,10 @@ function computeMemoizationInputs(
       });
     }
     default: {
-      assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
+      assertExhaustive(
+        value,
+        `Unexpected value kind \`${(value as any).kind}\``
+      );
     }
   }
 }
@@ -757,7 +760,7 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }

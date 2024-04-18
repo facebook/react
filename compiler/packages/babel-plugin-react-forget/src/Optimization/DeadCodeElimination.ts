@@ -368,7 +368,10 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       return true;
     }
     default: {
-      assertExhaustive(value, `Unexepcted value kind '${(value as any).kind}'`);
+      assertExhaustive(
+        value,
+        `Unexepcted value kind \`${(value as any).kind}\``
+      );
     }
   }
 }

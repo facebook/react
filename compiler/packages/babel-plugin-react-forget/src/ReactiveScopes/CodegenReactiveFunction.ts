@@ -337,7 +337,10 @@ function codegenBlockNoReset(
         break;
       }
       default: {
-        assertExhaustive(item, `Unexpected item kind '${(item as any).kind}'`);
+        assertExhaustive(
+          item,
+          `Unexpected item kind \`${(item as any).kind}\``
+        );
       }
     }
   }
@@ -651,7 +654,7 @@ function codegenTerminal(
     case "for-of": {
       CompilerError.invariant(terminal.init.kind === "SequenceExpression", {
         reason: `Expected a sequence expression init for ForOf`,
-        description: `Got '${terminal.init.kind}' expression instead`,
+        description: `Got \`${terminal.init.kind}\` expression instead`,
         loc: terminal.init.loc,
         suggestions: null,
       });
@@ -806,7 +809,7 @@ function codegenTerminal(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
+        `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
     }
   }
@@ -937,7 +940,7 @@ function codegenInstructionNullable(
         });
       }
       default: {
-        assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);
+        assertExhaustive(kind, `Unexpected instruction kind \`${kind}\``);
       }
     }
   } else if (
@@ -977,7 +980,7 @@ function codegenForInit(
           loc: instr.loc,
           description:
             instr.value.lvalue.place.identifier.name != null
-              ? `'${instr.value.lvalue.place.identifier.name.value}' is a context variable`
+              ? `\`${instr.value.lvalue.place.identifier.name.value}\` is a context variable`
               : null,
           suggestions: null,
         });
@@ -1346,7 +1349,7 @@ function codegenInstructionValue(
           CompilerError.invariant(false, {
             reason:
               "Expected an optional value to resolve to a call expression or member expression",
-            description: `Got a '${optionalValue.type}'`,
+            description: `Got a \`${optionalValue.type}\``,
             loc: instrValue.loc,
             suggestions: null,
           });
@@ -1364,7 +1367,7 @@ function codegenInstructionValue(
         {
           reason:
             "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. " +
-            `Got a '${memberExpr.type}'`,
+            `Got a \`${memberExpr.type}\``,
           description: null,
           loc: memberExpr.loc ?? null,
           suggestions: null,
@@ -1493,7 +1496,7 @@ function codegenInstructionValue(
         tag = convertMemberExpressionToJsx(tagValue);
       } else {
         CompilerError.invariant(tagValue.type === "StringLiteral", {
-          reason: `Expected JSX tag to be an identifier or string, got '${tagValue.type}'`,
+          reason: `Expected JSX tag to be an identifier or string, got \`${tagValue.type}\``,
           description: null,
           loc: tagValue.loc ?? null,
           suggestions: null,
@@ -1829,7 +1832,7 @@ function codegenInstructionValue(
     default: {
       assertExhaustive(
         instrValue,
-        `Unexpected instruction value kind '${(instrValue as any).kind}'`
+        `Unexpected instruction value kind \`${(instrValue as any).kind}\``
       );
     }
   }
@@ -1881,7 +1884,7 @@ function codegenJsxAttribute(
     default: {
       assertExhaustive(
         attribute,
-        `Unexpected attribute kind '${(attribute as any).kind}'`
+        `Unexpected attribute kind \`${(attribute as any).kind}\``
       );
     }
   }
@@ -2057,7 +2060,7 @@ function codegenLValue(
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind '${(pattern as any).kind}'`
+        `Unexpected pattern kind \`${(pattern as any).kind}\``
       );
     }
   }

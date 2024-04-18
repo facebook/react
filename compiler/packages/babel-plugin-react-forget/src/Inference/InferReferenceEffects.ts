@@ -237,7 +237,7 @@ export default function inferReferenceEffects(
         default:
           assertExhaustive(
             eff.kind,
-            `Unexpected function effect kind '${eff.kind}'`
+            `Unexpected function effect kind \`${eff.kind}\``
           );
       }
     });
@@ -313,7 +313,7 @@ class InferenceState {
     }
     CompilerError.invariant(mergedKind !== null, {
       reason: `InferReferenceEffects::kind: Expected at least one value`,
-      description: `No value found at '${printPlace(place)}'`,
+      description: `No value found at \`${printPlace(place)}\``,
       loc: place.loc,
       suggestions: null,
     });
@@ -493,7 +493,7 @@ class InferenceState {
          *
          * invariant(
          *   valueKind.kind === ValueKindKind.Mutable,
-         *   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
+         *   `expected valueKind to be 'Mutable' but found to be \`${valueKind}\``
          * );
          */
         effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
@@ -527,7 +527,7 @@ class InferenceState {
       default: {
         assertExhaustive(
           effectKind,
-          `Unexpected reference kind '${effectKind as any as string}'`
+          `Unexpected reference kind \`${effectKind as any as string}\``
         );
       }
     }
@@ -931,7 +931,7 @@ function inferBlock(
             default: {
               assertExhaustive(
                 property,
-                `Unexpected property kind '${(property as any).kind}'`
+                `Unexpected property kind \`${(property as any).kind}\``
               );
             }
           }

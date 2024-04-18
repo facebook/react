@@ -805,7 +805,7 @@ function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
+          `Unexpected terminal kind \`${(terminal as any).kind}\``
         );
       }
     }

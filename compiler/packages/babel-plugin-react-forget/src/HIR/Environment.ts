@@ -518,7 +518,7 @@ export class Environment {
       if (isHookName(resolvedName)) {
         return this.#getCustomHookType();
       } else {
-        log(() => `Undefined global '${name}'`);
+        log(() => `Undefined global \`${name}\``);
       }
     }
     return resolvedGlobal;

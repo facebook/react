@@ -1088,7 +1088,7 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
   CompilerError.invariant(t.isValidIdentifier(name), {
     reason: `Expected a valid identifier name`,
     loc: GeneratedSource,
-    description: `'${name}' is not a valid JavaScript identifier`,
+    description: `\`${name}\` is not a valid JavaScript identifier`,
     suggestions: null,
   });
   return {
@@ -1104,7 +1104,7 @@ export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     loc: GeneratedSource,
-    description: `Identifier already has a name, '${identifier.name}'`,
+    description: `Identifier already has a name, \`${identifier.name}\``,
     suggestions: null,
   });
   identifier.name = {
@@ -1125,7 +1125,7 @@ export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
     reason: `Expected a temporary (unnamed) identifier`,
     loc: GeneratedSource,
-    description: `Identifier already has a name, '${identifier.name}'`,
+    description: `Identifier already has a name, \`${identifier.name}\``,
     suggestions: null,
   });
   identifier.name = {
@@ -1246,7 +1246,7 @@ export function isMutableEffect(
       return false;
     }
     default: {
-      assertExhaustive(effect, `Unexpected effect '${effect}'`);
+      assertExhaustive(effect, `Unexpected effect \`${effect}\``);
     }
   }
 }
