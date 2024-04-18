@@ -18,7 +18,7 @@ function Component() {
   1 | // @validateNoCapitalizedCalls
   2 | function Component() {
 > 3 |   const x = someGlobal.SomeFunc();
-    |             ^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Capitalized method calls may be calling components that use hooks, which make them dangerous to memoize. Ensure there are no hook calls in the function and rename it to begin with a lowercase letter to fix this error. SomeFunc may be a component. (3:3)
+    |             ^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. SomeFunc may be a component. (3:3)
   4 |
   5 |   return x;
   6 | }

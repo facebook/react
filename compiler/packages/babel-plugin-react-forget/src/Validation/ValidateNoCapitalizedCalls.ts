@@ -49,7 +49,8 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
             CompilerError.throwInvalidReact({
-              reason: `Capitalized function calls may be calling components that use hooks, which make them dangerous to memoize. Ensure there are no hook calls in the function and rename it to begin with a lowercase letter to fix this error`,
+              reason:
+                "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter",
               description: `${calleeName} may be a component.`,
               loc: value.loc,
               suggestions: null,
@@ -69,7 +70,8 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
             CompilerError.throwInvalidReact({
-              reason: `Capitalized method calls may be calling components that use hooks, which make them dangerous to memoize. Ensure there are no hook calls in the function and rename it to begin with a lowercase letter to fix this error`,
+              reason:
+                "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter",
               description: `${propertyName} may be a component.`,
               loc: value.loc,
               suggestions: null,
