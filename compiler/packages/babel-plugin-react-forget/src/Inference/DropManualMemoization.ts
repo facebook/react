@@ -282,14 +282,14 @@ function extractManualMemoizationArgs(
   >;
   if (fnPlace == null) {
     CompilerError.throwInvalidReact({
-      reason: `Expected ${kind} call to pass a callback function`,
+      reason: `Expected a callback function to be passed to ${kind}`,
       loc: instr.value.loc,
       suggestions: null,
     });
   }
-  if (fnPlace?.kind !== "Identifier" || depsListPlace?.kind === "Spread") {
+  if (fnPlace.kind === "Spread" || depsListPlace?.kind === "Spread") {
     CompilerError.throwInvalidReact({
-      reason: `Unexpected arguments to ${kind} call`,
+      reason: `Unexpected spread argument to ${kind}`,
       loc: instr.value.loc,
       suggestions: null,
     });
@@ -301,7 +301,7 @@ function extractManualMemoizationArgs(
     );
     if (maybeDepsList == null) {
       CompilerError.throwInvalidReact({
-        reason: `Expected the dependency list for ${kind} to be an array literal without rest spreads`,
+        reason: `Expected the dependency list to be an array literal without rest spreads`,
         suggestions: null,
         loc: depsListPlace.loc,
       });
@@ -310,7 +310,7 @@ function extractManualMemoizationArgs(
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
         CompilerError.throwInvalidReact({
-          reason: `Expected the dependency list for ${kind} to be an array of simple expressions`,
+          reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
           suggestions: null,
           loc: dep.loc,
         });
@@ -398,7 +398,7 @@ export function dropManualMemoization(func: HIRFunction): void {
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
               CompilerError.throwInvalidReact({
-                reason: `Expected the first argument of ${manualMemo.kind} to be an inline function expression`,
+                reason: `Expected the first argument to be an inline function expression`,
                 suggestions: [],
                 loc: fnPlace.loc,
               });
