@@ -62,10 +62,7 @@ const forks = Object.freeze({
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
-    if (
-      entry === 'react/src/ReactServer.js' ||
-      entry === 'react/src/ReactServerFB.js'
-    ) {
+    if (entry === 'react/src/ReactServer.js') {
       return './packages/react/src/ReactSharedInternalsServer.js';
     }
     if (bundle.condition === 'react-server') {
