@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cd896bdd798ca5dd7926d71cf5271eeb>>
+ * @generated SignedSource<<96428d44939bb491570161921c41332c>>
  */
 
 "use strict";
@@ -21276,7 +21276,6 @@ to return true:wantsResponderID|                            |
         var node = workInProgress.child;
 
         while (node !== null) {
-          // eslint-disable-next-line no-labels
           if (node.tag === HostComponent) {
             var instance = node.stateNode;
 
@@ -30289,7 +30288,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-273549cb";
+    var ReactVersion = "19.0.0-canary-2d263258";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
