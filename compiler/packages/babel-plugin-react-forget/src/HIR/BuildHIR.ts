@@ -16,7 +16,7 @@ import {
 } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive, hasNode } from "../Utils/utils";
-import { Environment, printFunctionType } from "./Environment";
+import { Environment } from "./Environment";
 import {
   ArrayExpression,
   ArrayPattern,
@@ -2334,6 +2334,14 @@ function lowerExpression(
           });
         }
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      } else if (lvalue.kind === "Global") {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global`,
+          severity: ErrorSeverity.Todo,
+          loc: exprLoc,
+          suggestions: null,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
       const value = lowerIdentifier(builder, argument);
       if (expr.node.prefix) {
@@ -3269,24 +3277,11 @@ function lowerIdentifierForAssignment(
   loc: SourceLocation,
   kind: InstructionKind,
   path: NodePath<t.Identifier>
-): Place | null {
+): Place | { kind: "Global"; name: string } | null {
   const identifier = builder.resolveIdentifier(path);
   if (identifier == null) {
     if (kind === InstructionKind.Reassign) {
-      /*
-       * Trying to reassign a global is not allowed
-       * TODO: add support for StoreGlobal or similar, and move this error to run conditionally only for render-phase
-       * functions in InferReferenceEffects
-       */
-      builder.errors.push({
-        reason: `Unexpected reassignment of a variable which was defined outside of the ${printFunctionType(
-          builder.environment.fnType
-        )}`,
-        description: `Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)`,
-        severity: ErrorSeverity.InvalidReact,
-        loc: path.parentPath.node.loc ?? null,
-        suggestions: null,
-      });
+      return { kind: "Global", name: path.node.name };
     } else {
       // Else its an internal error bc we couldn't find the binding
       builder.errors.push({
@@ -3295,8 +3290,8 @@ function lowerIdentifierForAssignment(
         loc: path.node.loc ?? null,
         suggestions: null,
       });
+      return null;
     }
-    return null;
   }
 
   const place: Place = {
@@ -3328,6 +3323,14 @@ function lowerAssignment(
           loc: lvalue.node.loc ?? GeneratedSource,
           node: lvalue.node,
         };
+      } else if (place.kind === "Global") {
+        const temporary = lowerValueToTemporary(builder, {
+          kind: "StoreGlobal",
+          name: place.name,
+          value,
+          loc,
+        });
+        return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
       }
       const isHoistedIdentifier = builder.environment.isHoistedIdentifier(
         lvalue.node
@@ -3452,7 +3455,8 @@ function lowerAssignment(
           elements.some(
             (element) =>
               element.isIdentifier() &&
-              getStoreKind(builder, element) !== "StoreLocal"
+              (getStoreKind(builder, element) !== "StoreLocal" ||
+                builder.resolveIdentifier(element) == null)
           ));
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
@@ -3477,6 +3481,14 @@ function lowerAssignment(
               argument
             );
             if (identifier === null) {
+              continue;
+            } else if (identifier.kind === "Global") {
+              builder.errors.push({
+                severity: ErrorSeverity.Todo,
+                reason:
+                  "Expected reassignment of globals to enable forceTemporaries",
+                loc: element.node.loc ?? GeneratedSource,
+              });
               continue;
             }
             items.push({
@@ -3508,6 +3520,14 @@ function lowerAssignment(
             element
           );
           if (identifier === null) {
+            continue;
+          } else if (identifier.kind === "Global") {
+            builder.errors.push({
+              severity: ErrorSeverity.Todo,
+              reason:
+                "Expected reassignment of globals to enable forceTemporaries",
+              loc: element.node.loc ?? GeneratedSource,
+            });
             continue;
           }
           items.push(identifier);
@@ -3564,7 +3584,10 @@ function lowerAssignment(
           (property) =>
             property.isRestElement() ||
             (property.isObjectProperty() &&
-              !property.get("value").isIdentifier())
+              (!property.get("value").isIdentifier() ||
+                builder.resolveIdentifier(
+                  property.get("value") as NodePath<t.Identifier>
+                ) == null))
         );
       for (let i = 0; i < propertiesPaths.length; i++) {
         const property = propertiesPaths[i];
@@ -3601,6 +3624,14 @@ function lowerAssignment(
               argument
             );
             if (identifier === null) {
+              continue;
+            } else if (identifier.kind === "Global") {
+              builder.errors.push({
+                severity: ErrorSeverity.Todo,
+                reason:
+                  "Expected reassignment of globals to enable forceTemporaries",
+                loc: property.node.loc ?? GeneratedSource,
+              });
               continue;
             }
             properties.push({
@@ -3655,6 +3686,14 @@ function lowerAssignment(
               element
             );
             if (identifier === null) {
+              continue;
+            } else if (identifier.kind === "Global") {
+              builder.errors.push({
+                severity: ErrorSeverity.Todo,
+                reason:
+                  "Expected reassignment of globals to enable forceTemporaries",
+                loc: element.node.loc ?? GeneratedSource,
+              });
               continue;
             }
             properties.push({
