@@ -87,6 +87,7 @@ export const disableLegacyMode = false;
 export const disableDOMTestUtils = false;
 
 export const disableDefaultPropsExceptForClasses = false;
+export const enableEarlyReturnForPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
