@@ -23,6 +23,19 @@ module.exports = function shouldIgnoreConsoleError(format, args) {
         // We haven't finished migrating our tests to use createRoot.
         return true;
       }
+      if (
+        format.indexOf(
+          'uses the legacy contextTypes API which is no longer supported and will be removed'
+        ) !== -1 ||
+        format.indexOf(
+          'uses the legacy childContextTypes API which is no longer supported and will be removed'
+        ) !== -1
+      ) {
+        // This is a backported warning. In `main`, there's a different warning
+        // (and it's fully tested). Not going to bother upgrading all the tests
+        // on this old release branch, so let's just silence it instead.
+        return true;
+      }
     }
   } else {
     if (

@@ -96,6 +96,7 @@ let warnOnInvalidCallback;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
+let didWarnAboutLegacyContext;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = new Set();
@@ -106,6 +107,7 @@ if (__DEV__) {
   didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutContextTypeAndContextTypes = new Set();
   didWarnAboutInvalidateContextType = new Set();
+  didWarnAboutLegacyContext = new Set();
 
   const didWarnOnInvalidCallback = new Set();
 
@@ -435,6 +437,39 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         );
       }
     } else {
+      if (
+        ctor.childContextTypes &&
+        !didWarnAboutLegacyContext.has(ctor) &&
+        // Strict Mode has its own warning for legacy context, so we can skip
+        // this one.
+        (workInProgress.mode & StrictLegacyMode) === NoMode
+      ) {
+        didWarnAboutLegacyContext.add(ctor);
+        console.error(
+          '%s uses the legacy childContextTypes API which is no longer ' +
+            'supported and will be removed in the next major release. Use ' +
+            'React.createContext() instead\n\n.' +
+            'Learn more about this warning here: https://reactjs.org/link/legacy-context',
+          name,
+        );
+      }
+      if (
+        ctor.contextTypes &&
+        !didWarnAboutLegacyContext.has(ctor) &&
+        // Strict Mode has its own warning for legacy context, so we can skip
+        // this one.
+        (workInProgress.mode & StrictLegacyMode) === NoMode
+      ) {
+        didWarnAboutLegacyContext.add(ctor);
+        console.error(
+          '%s uses the legacy contextTypes API which is no longer supported ' +
+            'and will be removed in the next major release. Use ' +
+            'React.createContext() with static contextType instead.\n\n' +
+            'Learn more about this warning here: https://reactjs.org/link/legacy-context',
+          name,
+        );
+      }
+
       if (instance.contextTypes) {
         console.error(
           'contextTypes was defined as an instance property on %s. Use a static ' +
