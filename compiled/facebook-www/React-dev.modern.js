@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "19.0.0-www-modern-8003ee33";
+    var ReactVersion = "19.0.0-www-modern-b720dc57";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -233,20 +233,14 @@ if (__DEV__) {
 
     var assign = Object.assign;
 
-    var emptyObject = {};
-
-    {
-      Object.freeze(emptyObject);
-    }
     /**
      * Base class helpers for the updating state of a component.
      */
 
     function Component(props, context, updater) {
       this.props = props;
-      this.context = context; // If a component has string refs, we will assign a different object later.
-
-      this.refs = emptyObject; // We initialize the default updater but the real one gets injected by the
+      this.context = context;
+      this.refs = {}; // We initialize the default updater but the real one gets injected by the
       // renderer.
 
       this.updater = updater || ReactNoopUpdateQueue;
@@ -363,7 +357,7 @@ if (__DEV__) {
       this.props = props;
       this.context = context; // If a component has string refs, we will assign a different object later.
 
-      this.refs = emptyObject;
+      this.refs = {};
       this.updater = updater || ReactNoopUpdateQueue;
     }
 

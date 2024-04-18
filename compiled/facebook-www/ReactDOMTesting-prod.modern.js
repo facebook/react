@@ -7941,7 +7941,6 @@ function updateClassComponent(
     context = workInProgress.stateNode;
     context.props = nextProps;
     context.state = workInProgress.memoizedState;
-    context.refs = {};
     initializeUpdateQueue(workInProgress);
     contextType = Component.contextType;
     context.context =
@@ -16129,7 +16128,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-375fcad7"
+    reconcilerVersion: "19.0.0-www-modern-d7756861"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16827,7 +16826,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-375fcad7",
+  version: "19.0.0-www-modern-d7756861",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16835,7 +16834,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-375fcad7",
+  version: "19.0.0-www-modern-d7756861",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -17249,4 +17248,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-375fcad7";
+exports.version = "19.0.0-www-modern-d7756861";
