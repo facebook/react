@@ -184,8 +184,9 @@ export function lower(
     directives = body.get("directives").map((d) => d.node.value.value);
   } else {
     builder.errors.push({
-      reason: `Unexpected function body kind: ${body.type}}. This error is likely caused by a bug in React Compiler. Please file an issue`,
       severity: ErrorSeverity.InvalidJS,
+      reason: `Unexpected function body kind`,
+      description: `Expected function body to be an expression or a block statement, got '${body.type}'`,
       loc: body.node.loc ?? null,
       suggestions: null,
     });
@@ -738,7 +739,7 @@ function lowerStatement(
         if (testExpr.node == null) {
           if (hasDefault) {
             builder.errors.push({
-              reason: `Expected at most one \`default\` branch in SwitchStatement, this code should have failed to parse. This error is likely caused by a bug in React Compiler. Please file an issue`,
+              reason: `Expected at most one \`default\` branch in a switch statement, this code should have failed to parse`,
               severity: ErrorSeverity.InvalidJS,
               loc: case_.node.loc ?? null,
               suggestions: null,
@@ -855,12 +856,12 @@ function lowerStatement(
               if (kind === InstructionKind.Const) {
                 const declRangeStart = declaration.parentPath.node.start!;
                 builder.errors.push({
-                  reason: `Invalid declaration kind (const), this variable is reassigned later`,
+                  reason: `Expect \`const\` declaration not to be reassigned`,
                   severity: ErrorSeverity.InvalidJS,
                   loc: id.node.loc ?? null,
                   suggestions: [
                     {
-                      description: "Change to let",
+                      description: "Change to a `let` declaration",
                       op: CompilerSuggestionOperation.Replace,
                       range: [declRangeStart, declRangeStart + 5], // "const".length
                       text: "let",
@@ -901,7 +902,8 @@ function lowerStatement(
           }
         } else {
           builder.errors.push({
-            reason: `Expected variable declaration to be an identifier if no initializer was provided. This error is likely caused by a bug in React Compiler. Please file an issue`,
+            reason: `Expected variable declaration to be an identifier if no initializer was provided`,
+            description: `Got a \`${id.type}\``,
             severity: ErrorSeverity.InvalidJS,
             loc: stmt.node.loc ?? null,
             suggestions: null,
@@ -1550,7 +1552,8 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.errors.push({
-          reason: `Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}. This error is likely caused by a bug in React Compiler. Please file an issue`,
+          reason: `Expected an expression as the \`new\` expression receiver (v8 intrinsics are not supported)`,
+          description: `Got a \`${calleePath.node.type}\``,
           severity: ErrorSeverity.InvalidJS,
           loc: calleePath.node.loc ?? null,
           suggestions: null,
@@ -1642,7 +1645,7 @@ function lowerExpression(
         }
         if (last === null) {
           builder.errors.push({
-            reason: `Expected SequenceExpression to have at least one expression. This error is likely caused by a bug in React Compiler. Please file an issue`,
+            reason: `Expected sequence expression to have at least one expression`,
             severity: ErrorSeverity.InvalidJS,
             loc: expr.node.loc ?? null,
             suggestions: null,
@@ -2187,7 +2190,7 @@ function lowerExpression(
 
       if (subexprs.length !== quasis.length - 1) {
         builder.errors.push({
-          reason: `Unexpected quasi and subexpression lengths in TemplateLiteral. This error is likely caused by a bug in React Compiler. Please file an issue`,
+          reason: `Unexpected quasi and subexpression lengths in template literal`,
           severity: ErrorSeverity.InvalidJS,
           loc: exprPath.node.loc ?? null,
           suggestions: null,
@@ -2239,7 +2242,7 @@ function lowerExpression(
           }
         } else {
           builder.errors.push({
-            reason: `Deleting a non-member expression has no semantic meaning`,
+            reason: `Only object properties can be deleted`,
             severity: ErrorSeverity.InvalidJS,
             loc: expr.node.loc ?? null,
             suggestions: [
@@ -2945,7 +2948,8 @@ function lowerJsxElementName(
     const tag = `${namespace}:${name}`;
     if (namespace.indexOf(":") !== -1 || name.indexOf(":") !== -1) {
       builder.errors.push({
-        reason: `Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'. This error is likely caused by a bug in React Compiler. Please file an issue`,
+        reason: `Expected JSXNamespacedName to have no colons in the namespace or name`,
+        description: `Got \`${namespace}\` : \`${name}\``,
         severity: ErrorSeverity.InvalidJS,
         loc: exprPath.node.loc ?? null,
         suggestions: null,
@@ -3327,7 +3331,7 @@ function lowerAssignment(
         if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
           if (kind === InstructionKind.Const) {
             builder.errors.push({
-              reason: `[lowerAssignment] Invalid declaration kind (const), this variable is reassigned later`,
+              reason: `Expected \`const\` declaration not to be reassigned`,
               severity: ErrorSeverity.InvalidJS,
               loc: lvalue.node.loc ?? null,
               suggestions: null,
