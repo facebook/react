@@ -131,6 +131,19 @@ export function trackUsedThenable<T>(
   }
 }
 
+export function readPreviousThenable<T>(
+  thenableState: ThenableState,
+  index: number,
+): void | T {
+  const previous = thenableState[index];
+  if (previous === undefined) {
+    return undefined;
+  } else {
+    // We assume this has been resolved already.
+    return (previous: any).value;
+  }
+}
+
 // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.

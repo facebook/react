@@ -25,7 +25,11 @@ import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
-import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
+import {
+  createThenableState,
+  trackUsedThenable,
+  readPreviousThenable,
+} from './ReactFizzThenable';
 
 import {makeId, NotPendingTransition} from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
@@ -225,6 +229,13 @@ export function prepareToUseHooks(
   localIdCounter = 0;
   actionStateCounter = 0;
   actionStateMatchingIndex = -1;
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+}
+
+export function prepareToUseThenableState(
+  prevThenableState: ThenableState | null,
+): void {
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -763,6 +774,15 @@ export function unwrapThenable<T>(thenable: Thenable<T>): T {
     thenableState = createThenableState();
   }
   return trackUsedThenable(thenableState, thenable, index);
+}
+
+export function readPreviousThenableFromState<T>(): T | void {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    return undefined;
+  }
+  return readPreviousThenable(thenableState, index);
 }
 
 function unsupportedRefresh() {

@@ -98,6 +98,7 @@ import {
 } from './ReactFizzNewContext';
 import {
   prepareToUseHooks,
+  prepareToUseThenableState,
   finishHooks,
   checkDidRenderIdHook,
   resetHooksState,
@@ -106,6 +107,7 @@ import {
   setCurrentResumableState,
   getThenableStateAfterSuspending,
   unwrapThenable,
+  readPreviousThenableFromState,
   getActionStateCount,
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
@@ -115,6 +117,7 @@ import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
 import {
   getIteratorFn,
+  ASYNC_ITERATOR,
   REACT_ELEMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
@@ -144,6 +147,7 @@ import {
   enableRenderableContext,
   enableRefAsProp,
   disableDefaultPropsExceptForClasses,
+  enableAsyncIterableChildren,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -2165,6 +2169,7 @@ function validateIterable(
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
       const isGeneratorComponent =
+        childIndex === -1 && // Only the root child is valid
         task.componentStack !== null &&
         task.componentStack.tag === 1 && // FunctionComponent
         // $FlowFixMe[method-unbinding]
@@ -2192,6 +2197,43 @@ function validateIterable(
             'Use an array of keyed ReactElements instead.',
         );
         didWarnAboutMaps = true;
+      }
+    }
+  }
+}
+
+function validateAsyncIterable(
+  task: Task,
+  iterable: AsyncIterable<any>,
+  childIndex: number,
+  iterator: AsyncIterator<any>,
+): void {
+  if (__DEV__) {
+    if (iterator === iterable) {
+      // We don't support rendering Generators as props because it's a mutation.
+      // See https://github.com/facebook/react/issues/12995
+      // We do support generators if they were created by a GeneratorFunction component
+      // as its direct child since we can recreate those by rerendering the component
+      // as needed.
+      const isGeneratorComponent =
+        childIndex === -1 && // Only the root child is valid
+        task.componentStack !== null &&
+        task.componentStack.tag === 1 && // FunctionComponent
+        // $FlowFixMe[method-unbinding]
+        Object.prototype.toString.call(task.componentStack.type) ===
+          '[object AsyncGeneratorFunction]' &&
+        // $FlowFixMe[method-unbinding]
+        Object.prototype.toString.call(iterator) === '[object AsyncGenerator]';
+      if (!isGeneratorComponent) {
+        if (!didWarnAboutGenerators) {
+          console.error(
+            'Using AsyncIterators as children is unsupported and will likely yield ' +
+              'unexpected results because enumerating a generator mutates it. ' +
+              'You can use an AsyncIterable that can iterate multiple times over ' +
+              'the same items.',
+          );
+        }
+        didWarnAboutGenerators = true;
       }
     }
   }
@@ -2327,7 +2369,6 @@ function renderNodeDestructive(
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
         let step = iterator.next();
-        // If there are not entries, we need to push an empty so we start by checking that.
         if (!step.done) {
           const children = [];
           do {
@@ -2335,8 +2376,72 @@ function renderNodeDestructive(
             step = iterator.next();
           } while (!step.done);
           renderChildrenArray(request, task, children, childIndex);
-          return;
         }
+        return;
+      }
+    }
+
+    if (
+      enableAsyncIterableChildren &&
+      typeof (node: any)[ASYNC_ITERATOR] === 'function'
+    ) {
+      const iterator: AsyncIterator<ReactNodeList> = (node: any)[
+        ASYNC_ITERATOR
+      ]();
+      if (iterator) {
+        if (__DEV__) {
+          validateAsyncIterable(task, (node: any), childIndex, iterator);
+        }
+        // TODO: Update the task.node to be the iterator to avoid asking
+        // for new iterators, but we currently warn for rendering these
+        // so needs some refactoring to deal with the warning.
+
+        // We need to push a component stack because if this suspends, we'll pop a stack.
+        const previousComponentStack = task.componentStack;
+        task.componentStack = createBuiltInComponentStack(
+          task,
+          'AsyncIterable',
+        );
+
+        // Restore the thenable state before resuming.
+        const prevThenableState = task.thenableState;
+        task.thenableState = null;
+        prepareToUseThenableState(prevThenableState);
+
+        // We need to know how many total children are in this set, so that we
+        // can allocate enough id slots to acommodate them. So we must exhaust
+        // the iterator before we start recursively rendering the children.
+        // TODO: This is not great but I think it's inherent to the id
+        // generation algorithm.
+        const children = [];
+
+        let done = false;
+
+        if (iterator === node) {
+          // If it's an iterator we need to continue reading where we left
+          // off. We can do that by reading the first few rows from the previous
+          // thenable state.
+          // $FlowFixMe
+          let step = readPreviousThenableFromState();
+          while (step !== undefined) {
+            if (step.done) {
+              done = true;
+              break;
+            }
+            children.push(step.value);
+            step = readPreviousThenableFromState();
+          }
+        }
+
+        if (!done) {
+          let step = unwrapThenable(iterator.next());
+          while (!step.done) {
+            children.push(step.value);
+            step = unwrapThenable(iterator.next());
+          }
+        }
+        task.componentStack = previousComponentStack;
+        renderChildrenArray(request, task, children, childIndex);
         return;
       }
     }
@@ -3554,6 +3659,11 @@ function retryRenderTask(
         const ping = task.ping;
         x.then(ping, ping);
         task.thenableState = getThenableStateAfterSuspending();
+        // We pop one task off the stack because the node that suspended will be tried again,
+        // which will add it back onto the stack.
+        if (task.componentStack !== null) {
+          task.componentStack = task.componentStack.parent;
+        }
         return;
       } else if (
         enablePostpone &&
@@ -3639,6 +3749,11 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
         const ping = task.ping;
         x.then(ping, ping);
         task.thenableState = getThenableStateAfterSuspending();
+        // We pop one task off the stack because the node that suspended will be tried again,
+        // which will add it back onto the stack.
+        if (task.componentStack !== null) {
+          task.componentStack = task.componentStack.parent;
+        }
         return;
       }
     }
