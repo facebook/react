@@ -393,9 +393,9 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
   if (config.success) {
     return config.data;
   }
-  CompilerError.throwInvalidConfig({
-    reason: `${fromZodError(config.error)}`,
-    description: "Update Forget config to fix the error",
+  CompilerError.invariant(false, {
+    reason: "Internal error, could not parse config from pragma string",
+    description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
   });
@@ -597,8 +597,9 @@ export function validateEnvironmentConfig(
   }
 
   CompilerError.throwInvalidConfig({
-    reason: `${fromZodError(config.error)}`,
-    description: "Update Forget config to fix the error",
+    reason:
+      "Could not validate environment config. Update React Compiler config to fix the error",
+    description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
   });
@@ -615,8 +616,9 @@ export function tryParseExternalFunction(
   }
 
   CompilerError.throwInvalidConfig({
-    reason: `${fromZodError(externalFunction.error)}`,
-    description: "Update Forget config to fix the error",
+    reason:
+      "Could not parse external function. Update React Compiler config to fix the error",
+    description: `${fromZodError(externalFunction.error)}`,
     loc: null,
     suggestions: null,
   });

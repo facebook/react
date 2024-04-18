@@ -20,7 +20,7 @@ describe("parseConfigPragma()", () => {
         validateHooksUsage: 1,
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"InvalidConfig: Validation error: Expected boolean, received number at "validateHooksUsage". Update Forget config to fix the error"`
+      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage""`
     );
   });
 

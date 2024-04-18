@@ -299,7 +299,8 @@ export function compileProgram(
        */
       if (environment.isErr()) {
         CompilerError.throwInvalidConfig({
-          reason: "Error in validating environment config",
+          reason:
+            "Error in validating environment config. This is an advanced setting and not meant to be used directly",
           description: environment.unwrapErr().toString(),
           suggestions: null,
           loc: null,
