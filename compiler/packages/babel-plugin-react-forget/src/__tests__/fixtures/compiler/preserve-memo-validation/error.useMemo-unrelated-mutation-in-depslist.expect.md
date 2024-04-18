@@ -30,7 +30,17 @@ function useFoo(input1) {
 ## Error
 
 ```
-Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `input1`, but the source dependencies were [y]. Detail: inferred different dependency than source
+  14 |   const x = {};
+  15 |   const y = [input1];
+> 16 |   const memoized = useMemo(() => {
+     |                            ^^^^^^^
+> 17 |     return [y];
+     | ^^^^^^^^^^^^^^^
+> 18 |   }, [(mutate(x), y)]);
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (16:18)
+  19 |
+  20 |   return [x, memoized];
+  21 | }
 ```
           
       

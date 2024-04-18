@@ -19,7 +19,12 @@ function useHook(x) {
 ## Error
 
 ```
-Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `aliasedX`, but the source dependencies were [x, aliasedProp]. Detail: inferred different dependency than source
+   7 |   const aliasedProp = x.y.z;
+   8 |
+>  9 |   return useCallback(() => [aliasedX, x.y.z], [x, aliasedProp]);
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (9:9)
+  10 | }
+  11 |
 ```
           
       

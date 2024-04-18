@@ -23,7 +23,7 @@ export enum ErrorSeverity {
    */
   InvalidConfig = "InvalidConfig",
   /**
-   * Code that can reasonably occur and that doesn't break any rules, but is unsafe to perserve
+   * Code that can reasonably occur and that doesn't break any rules, but is unsafe to preserve
    * memoization.
    */
   CannotPreserveMemoization = "CannotPreserveMemoization",

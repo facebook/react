@@ -20,6 +20,7 @@ import {
   ReactiveScopeDependency,
   ReactiveValue,
   ScopeId,
+  SourceLocation,
 } from "../HIR";
 import { printManualMemoDependency } from "../HIR/PrintHIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
@@ -48,7 +49,12 @@ export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
   }
 }
 
+const DEBUG = false;
+
 type ManualMemoBlockState = {
+  // The source of the original memoization, used when reporting errors
+  loc: SourceLocation;
+
   /**
    * Values produced within manual memoization blocks.
    * We track these to ensure our inferred dependencies are
@@ -201,7 +207,8 @@ function validateInferredDep(
   temporaries: Map<IdentifierId, ManualMemoDependency>,
   declsWithinMemoBlock: Set<IdentifierId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
-  errorState: CompilerError
+  errorState: CompilerError,
+  memoLocation: SourceLocation
 ): void {
   let normalizedDep: ManualMemoDependency;
   const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -249,19 +256,21 @@ function validateInferredDep(
     }
   }
   errorState.push({
-    severity: ErrorSeverity.Todo,
+    severity: ErrorSeverity.CannotPreserveMemoization,
     reason:
-      "Could not preserve manual memoization because an inferred dependency does not match the dependency list in source",
-    description: `The inferred dependency was \`${prettyPrintScopeDependency(
-      dep
-    )}\`, but the source dependencies were [${validDepsInMemoBlock
-      .map((dep) => printManualMemoDependency(dep, true))
-      .join(", ")}]. Detail: ${
-      errorDiagnostic
-        ? getCompareDependencyResultDescription(errorDiagnostic)
-        : "none"
-    }`,
-    loc: GeneratedSource,
+      "React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected",
+    description: DEBUG
+      ? `The inferred dependency was \`${prettyPrintScopeDependency(
+          dep
+        )}\`, but the source dependencies were [${validDepsInMemoBlock
+          .map((dep) => printManualMemoDependency(dep, true))
+          .join(", ")}]. Detail: ${
+          errorDiagnostic
+            ? getCompareDependencyResultDescription(errorDiagnostic)
+            : "none"
+        }`
+      : null,
+    loc: memoLocation,
     suggestions: null,
   });
 }
@@ -359,7 +368,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           this.temporaries,
           state.manualMemoState.decls,
           state.manualMemoState.depsFromSource,
-          state.errors
+          state.errors,
+          state.manualMemoState.loc
         );
       }
     }
@@ -405,6 +415,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       });
 
       state.manualMemoState = {
+        loc: instruction.loc,
         decls: new Set(),
         depsFromSource,
         manualMemoId: instruction.value.manualMemoId,
@@ -437,7 +448,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         ) {
           state.errors.push({
             reason:
-              "This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized",
+              "React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly",
             description: null,
             severity: ErrorSeverity.CannotPreserveMemoization,
             loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,

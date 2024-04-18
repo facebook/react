@@ -104,9 +104,9 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       ) {
         state.push({
           reason:
-            "This effect may trigger an infinite loop: one or more of its dependencies could not be memoized due to a later mutation",
+            "React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior",
           description: null,
-          severity: ErrorSeverity.InvalidReact,
+          severity: ErrorSeverity.CannotPreserveMemoization,
           loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
           suggestions: null,
         });

@@ -30,7 +30,7 @@ function Component(props) {
 > 10 |     console.log(items);
      | ^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   }, [items]);
-     | ^^^^^^^^^^^^^^ InvalidReact: This effect may trigger an infinite loop: one or more of its dependencies could not be memoized due to a later mutation (9:11)
+     | ^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior (9:11)
   12 |
   13 |   return [items, state];
   14 | }

@@ -35,7 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 12 |     console.log(y);
      | ^^^^^^^^^^^^^^^^^^^
 > 13 |   }, [y]);
-     | ^^^^^^^^^^ InvalidReact: This effect may trigger an infinite loop: one or more of its dependencies could not be memoized due to a later mutation (11:13)
+     | ^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior (11:13)
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {

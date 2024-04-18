@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 10 |     ref.current.inner = event.target.value;
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   });
-     | ^^^^ CannotPreserveMemoization: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly (7:11)
   12 |
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
   14 |   ref.current.inner = null;

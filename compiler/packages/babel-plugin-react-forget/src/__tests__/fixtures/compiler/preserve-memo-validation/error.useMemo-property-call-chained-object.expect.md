@@ -19,7 +19,20 @@ function Component({ propA }) {
 ## Error
 
 ```
-Todo: Could not preserve manual memoization because an inferred dependency does not match the dependency list in source. The inferred dependency was `propA`, but the source dependencies were [propA.x]. Detail: inferred less specific property than source
+   3 |
+   4 | function Component({ propA }) {
+>  5 |   return useMemo(() => {
+     |                  ^^^^^^^
+>  6 |     return {
+     | ^^^^^^^^^^^^
+>  7 |       value: propA.x().y,
+     | ^^^^^^^^^^^^
+>  8 |     };
+     | ^^^^^^^^^^^^
+>  9 |   }, [propA.x]);
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (5:9)
+  10 | }
+  11 |
 ```
           
       
