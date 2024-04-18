@@ -329,7 +329,6 @@ function appendAllChildrenToContainer(
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
-      // eslint-disable-next-line no-labels
       if (node.tag === HostComponent) {
         let instance = node.stateNode;
         if (needsVisibilityToggle && isHidden) {
