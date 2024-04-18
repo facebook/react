@@ -879,9 +879,7 @@ const bundles = [
 
   /******* React Cache (experimental, old) *******/
   {
-    // This is only used by our own tests.
-    // We can delete it later.
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-cache',
     global: 'ReactCacheOld',
