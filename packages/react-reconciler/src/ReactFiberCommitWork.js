@@ -318,29 +318,19 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         }
       }
     } else if (typeof ref === 'function') {
-      let retVal;
       try {
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            retVal = ref(null);
+            ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          retVal = ref(null);
+          ref(null);
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
-      }
-      if (__DEV__) {
-        if (typeof retVal === 'function') {
-          console.error(
-            'Unexpected return value from a callback ref in %s. ' +
-              'A callback ref should not return a function.',
-            getComponentNameFromFiber(current),
-          );
-        }
       }
     } else {
       // $FlowFixMe[incompatible-use] unable to narrow type to RefObject

@@ -706,45 +706,4 @@ describe('refs return clean up function', () => {
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
-
-  it('warns if clean up function is returned when called with null', async () => {
-    const container = document.createElement('div');
-    const cleanUp = jest.fn();
-    const setup = jest.fn();
-    let returnCleanUp = false;
-
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(
-        <div
-          ref={_ref => {
-            setup(_ref);
-            if (returnCleanUp) {
-              return cleanUp;
-            }
-          }}
-        />,
-      );
-    });
-
-    expect(setup).toHaveBeenCalledTimes(1);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    returnCleanUp = true;
-
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <div
-            ref={_ref => {
-              setup(_ref);
-              if (returnCleanUp) {
-                return cleanUp;
-              }
-            }}
-          />,
-        );
-      });
-    }).toErrorDev('Unexpected return value from a callback ref in div');
-  });
 });
