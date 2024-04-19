@@ -23,6 +23,7 @@ const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
+const minify = require('terser').minify;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -455,137 +456,58 @@ function getPlugins(
           );
         },
       },
-      // License and haste headers for artifacts with sourcemaps
-      // For artifacts with sourcemaps we apply these headers
-      // before passing sources to the Closure compiler, which will be building sourcemaps
-      needsSourcemaps && {
-        name: 'license-and-signature-header-for-artifacts-with-sourcemaps',
-        renderChunk(source) {
-          return Wrappers.wrapWithLicenseHeader(
-            source,
-            bundleType,
-            globalName,
-            filename,
-            moduleType
-          );
-        },
-      },
-      // Apply dead code elimination and/or minification.
-      // closure doesn't yet support leaving ESM imports intact
+      // For production builds, compile with Closure. We do this even for the
+      // "non-minified" production builds because Closure is much better at
+      // minification than what most applications use. During this step, we do
+      // preserve the original symbol names, though, so the resulting code is
+      // relatively readable.
+      //
+      // For the minified builds, the names will be mangled later.
+      //
+      // We don't bother with sourcemaps at this step. The sourcemaps we publish
+      // are only for whitespace and symbol renaming; they don't map back to
+      // before Closure was applied.
       needsMinifiedByClosure &&
-        closure(
-          {
-            compilation_level: 'SIMPLE',
-            language_in: 'ECMASCRIPT_2020',
-            language_out:
-              bundleType === NODE_ES2015
-                ? 'ECMASCRIPT_2020'
-                : bundleType === BROWSER_SCRIPT
-                ? 'ECMASCRIPT5'
-                : 'ECMASCRIPT5_STRICT',
-            emit_use_strict:
-              bundleType !== BROWSER_SCRIPT &&
-              bundleType !== ESM_PROD &&
-              bundleType !== ESM_DEV,
-            env: 'CUSTOM',
-            warning_level: 'QUIET',
-            source_map_include_content: true,
-            use_types_for_optimization: false,
-            process_common_js_modules: false,
-            rewrite_polyfills: false,
-            inject_libraries: false,
-            allow_dynamic_import: true,
+        closure({
+          compilation_level: 'SIMPLE',
+          language_in: 'ECMASCRIPT_2020',
+          language_out:
+            bundleType === NODE_ES2015
+              ? 'ECMASCRIPT_2020'
+              : bundleType === BROWSER_SCRIPT
+              ? 'ECMASCRIPT5'
+              : 'ECMASCRIPT5_STRICT',
+          emit_use_strict:
+            bundleType !== BROWSER_SCRIPT &&
+            bundleType !== ESM_PROD &&
+            bundleType !== ESM_DEV,
+          env: 'CUSTOM',
+          warning_level: 'QUIET',
+          source_map_include_content: true,
+          use_types_for_optimization: false,
+          process_common_js_modules: false,
+          rewrite_polyfills: false,
+          inject_libraries: false,
+          allow_dynamic_import: true,
 
-            // Don't let it create global variables in the browser.
-            // https://github.com/facebook/react/issues/10909
-            assume_function_wrapper: true,
-            renaming: !shouldStayReadable,
-          },
-          {needsSourcemaps}
-        ),
-      // Add the whitespace back if necessary.
-      shouldStayReadable &&
+          // Don't let it create global variables in the browser.
+          // https://github.com/facebook/react/issues/10909
+          assume_function_wrapper: true,
+
+          // Don't rename symbols (variable names, functions, etc). This will
+          // be handled in a later step.
+          renaming: false,
+        }),
+      needsMinifiedByClosure &&
+        // Add the whitespace back
         prettier({
           parser: 'flow',
           singleQuote: false,
           trailingComma: 'none',
           bracketSpacing: true,
         }),
-      needsSourcemaps && {
-        name: 'generate-prod-bundle-sourcemaps',
-        async renderChunk(minifiedCodeWithChangedHeader, chunk, options, meta) {
-          // We want to generate a sourcemap that shows the production bundle source
-          // as it existed before Closure Compiler minified that chunk, rather than
-          // showing the "original" individual source files. This better shows
-          // what is actually running in the app.
-
-          // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
-          const finalSourcemapPath = options.file.replace('.js', '.js.map');
-          const finalSourcemapFilename = path.basename(finalSourcemapPath);
-          const outputFolder = path.dirname(options.file);
-
-          // Read the sourcemap that Closure wrote to disk
-          const sourcemapAfterClosure = JSON.parse(
-            fs.readFileSync(finalSourcemapPath, 'utf8')
-          );
-
-          // Represent the "original" bundle as a file with no `.min` in the name
-          const filenameWithoutMin = filename.replace('.min', '');
-          // There's _one_ artifact where the incoming filename actually contains
-          // a folder name: "use-sync-external-store-shim/with-selector.production.js".
-          // The output path already has the right structure, but we need to strip this
-          // down to _just_ the JS filename.
-          const preMinifiedFilename = path.basename(filenameWithoutMin);
-
-          // CC generated a file list that only contains the tempfile name.
-          // Replace that with a more meaningful "source" name for this bundle
-          // that represents "the bundled source before minification".
-          sourcemapAfterClosure.sources = [preMinifiedFilename];
-          sourcemapAfterClosure.file = filename;
-
-          // All our code is considered "third-party" and should be ignored by default.
-          sourcemapAfterClosure.ignoreList = [0];
-
-          // We'll write the pre-minified source to disk as a separate file.
-          // Because it sits on disk, there's no need to have it in the `sourcesContent` array.
-          // That also makes the file easier to read, and available for use by scripts.
-          // This should be the only file in the array.
-          const [preMinifiedBundleSource] =
-            sourcemapAfterClosure.sourcesContent;
-
-          // Remove this entirely - we're going to write the file to disk instead.
-          delete sourcemapAfterClosure.sourcesContent;
-
-          const preMinifiedBundlePath = path.join(
-            outputFolder,
-            preMinifiedFilename
-          );
-
-          // Write the original source to disk as a separate file
-          fs.writeFileSync(preMinifiedBundlePath, preMinifiedBundleSource);
-
-          // Overwrite the Closure-generated file with the final combined sourcemap
-          fs.writeFileSync(
-            finalSourcemapPath,
-            JSON.stringify(sourcemapAfterClosure)
-          );
-
-          // Add the sourcemap URL to the actual bundle, so that tools pick it up
-          const sourceWithMappingUrl =
-            minifiedCodeWithChangedHeader +
-            `\n//# sourceMappingURL=${finalSourcemapFilename}`;
-
-          return {
-            code: sourceWithMappingUrl,
-            map: null,
-          };
-        },
-      },
-      // License and haste headers for artifacts without sourcemaps
-      // Primarily used for FB-artifacts, which should preserve specific format of the header
-      // Which potentially can be changed by Closure minification
-      !needsSourcemaps && {
-        name: 'license-and-signature-header-for-artifacts-without-sourcemaps',
+      {
+        name: 'license-and-signature-header',
         renderChunk(source) {
           return Wrappers.wrapWithLicenseHeader(
             source,
@@ -596,6 +518,89 @@ function getPlugins(
           );
         },
       },
+      isProduction &&
+        !shouldStayReadable && {
+          name: 'mangle-symbol-names',
+          async renderChunk(code, chunk, options, meta) {
+            // Minify the code by mangling symbol names. We already ran Closure
+            // on this code, so stuff like dead code elimination and inlining
+            // has already happened. This step is purely to rename the symbols,
+            // which we asked Closure to preserve.
+            //
+            // The only reason this is a separate step from Closure is so we
+            // can publish non-mangled versions of the code for easier debugging
+            // in production. We also publish sourcemaps that map back to the
+            // non-mangled code (*not* the pre-Closure code).
+
+            const outputFolder = path.dirname(options.file);
+
+            // Represent the "original" bundle as a file with no `.min` in the name
+            const filenameWithoutMin = filename.replace('.min', '');
+            // There's _one_ artifact where the incoming filename actually contains
+            // a folder name: "use-sync-external-store-shim/with-selector.production.js".
+            // The output path already has the right structure, but we need to strip this
+            // down to _just_ the JS filename.
+            const preMinifiedFilename = path.basename(filenameWithoutMin);
+            const preMinifiedBundlePath = path.join(
+              outputFolder,
+              preMinifiedFilename
+            );
+
+            // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
+            const finalSourcemapPath = options.file.replace('.js', '.js.map');
+            const finalSourcemapFilename = path.basename(finalSourcemapPath);
+
+            const terserOptions = {
+              // Don't bother compressing. Closure already did that.
+              compress: false,
+              toplevel: true,
+              // Mangle the symbol names.
+              mangle: {
+                toplevel: true,
+              },
+            };
+            if (needsSourcemaps) {
+              terserOptions.sourceMap = {
+                // Used to set the `file` field in the sourcemap
+                filename: filename,
+                // Used to set `# sourceMappingURL=` in the compiled code
+                url: finalSourcemapFilename,
+              };
+            }
+
+            const minifiedResult = await minify(
+              {[preMinifiedFilename]: code},
+              terserOptions
+            );
+
+            // Create the directory if it doesn't already exist
+            fs.mkdirSync(outputFolder, {recursive: true});
+
+            if (needsSourcemaps) {
+              const sourcemapJSON = JSON.parse(minifiedResult.map);
+
+              // All our code is considered "third-party" and should be ignored
+              // by default
+              sourcemapJSON.ignoreList = [0];
+
+              // Write the sourcemap to disk
+              fs.writeFileSync(
+                finalSourcemapPath,
+                JSON.stringify(sourcemapJSON)
+              );
+            }
+
+            // Write the original source to disk as a separate file
+            fs.writeFileSync(preMinifiedBundlePath, code);
+
+            return {
+              code: minifiedResult.code,
+              // TODO: Maybe we should use Rollup's sourcemap feature instead
+              // of writing it to disk manually?
+              map: null,
+            };
+          },
+        },
       // Record bundle size.
       sizes({
         getSize: (size, gzip) => {
