@@ -204,6 +204,47 @@ module.exports.default = module.exports;
 Object.defineProperty(module.exports, "__esModule", { value: true });
 `;
   },
+
+  /***************** FB_WWW_DEV (reconciler only) *****************/
+  [FB_WWW_DEV](source, globalName, filename, moduleType) {
+    return `'use strict';
+
+if (__DEV__) {
+  module.exports = function $$$reconciler($$$config) {
+    var exports = {};
+${source}
+    return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+}
+`;
+  },
+
+  /***************** FB_WWW_PROD (reconciler only) *****************/
+  [FB_WWW_PROD](source, globalName, filename, moduleType) {
+    return `module.exports = function $$$reconciler($$$config) {
+
+      var exports = {};
+  ${source}
+      return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+  `;
+  },
+
+  /***************** FB_WWW_PROFILING (reconciler only) *****************/
+  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+    return `module.exports = function $$$reconciler($$$config) {
+      var exports = {};
+  ${source}
+      return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+  `;
+  },
 };
 
 const licenseHeaderWrappers = {
