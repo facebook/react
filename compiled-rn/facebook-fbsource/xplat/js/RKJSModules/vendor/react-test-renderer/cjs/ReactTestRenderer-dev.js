@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1af14f0d0942bd1e022dac734e776b15>>
+ * @generated SignedSource<<f80067582f8d263400103116af004cc1>>
  */
 
 "use strict";
@@ -12589,6 +12589,7 @@ if (__DEV__) {
       var instance = workInProgress.stateNode;
       instance.props = newProps;
       instance.state = workInProgress.memoizedState;
+      instance.refs = {};
       initializeUpdateQueue(workInProgress);
       var contextType = ctor.contextType;
 
@@ -26672,7 +26673,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-4a670971";
+    var ReactVersion = "19.0.0-canary-a47ffde4";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

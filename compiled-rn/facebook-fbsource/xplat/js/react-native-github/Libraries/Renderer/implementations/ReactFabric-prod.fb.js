@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<13b0be8da9b49fcd1f29069f699207ea>>
+ * @generated SignedSource<<d42756695dd6c4c7a24ede54b6a5902a>>
  */
 
 "use strict";
@@ -4995,6 +4995,7 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
+  instance.refs = {};
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
   "object" === typeof contextType && null !== contextType
@@ -10601,7 +10602,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1099 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-7feb98a8",
+    version: "19.0.0-canary-7f7baf16",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10644,7 +10645,7 @@ var internals$jscomp$inline_1366 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7feb98a8"
+  reconcilerVersion: "19.0.0-canary-7f7baf16"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4623f2323ff9fe23a59f41063e37036d>>
+ * @generated SignedSource<<00252b7815c38ef0d757b44717a43f7d>>
  */
 
 "use strict";
@@ -46,11 +46,12 @@ var ReactNoopUpdateQueue = {
     enqueueReplaceState: function () {},
     enqueueSetState: function () {}
   },
-  assign = Object.assign;
+  assign = Object.assign,
+  emptyObject = {};
 function Component(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = {};
+  this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
 Component.prototype.isReactComponent = {};
@@ -73,7 +74,7 @@ ComponentDummy.prototype = Component.prototype;
 function PureComponent(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = {};
+  this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
 var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
@@ -678,4 +679,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-canary-43e619b6";
+exports.version = "19.0.0-canary-3277b133";

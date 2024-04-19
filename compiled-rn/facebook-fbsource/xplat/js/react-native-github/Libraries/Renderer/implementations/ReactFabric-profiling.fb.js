@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dd792dd5b38efe98d74676e597f14301>>
+ * @generated SignedSource<<64acec7be24561ecbf6d2eaf55e55d0a>>
  */
 
 "use strict";
@@ -5187,6 +5187,7 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
+  instance.refs = {};
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
   "object" === typeof contextType && null !== contextType
@@ -11306,7 +11307,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-e320aa3b",
+    version: "19.0.0-canary-ef6bcf29",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11362,7 +11363,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-e320aa3b"
+  reconcilerVersion: "19.0.0-canary-ef6bcf29"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

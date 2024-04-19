@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a9c02652daf34108f64b03d290ef9434>>
+ * @generated SignedSource<<cda44a9b6dde6c0bc692dd0a256b0422>>
  */
 
 "use strict";
@@ -16402,6 +16402,7 @@ to return true:wantsResponderID|                            |
       var instance = workInProgress.stateNode;
       instance.props = newProps;
       instance.state = workInProgress.memoizedState;
+      instance.refs = {};
       initializeUpdateQueue(workInProgress);
       var contextType = ctor.contextType;
 
@@ -30749,7 +30750,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "19.0.0-canary-22e6f306";
+    var ReactVersion = "19.0.0-canary-ad24d706";
 
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
