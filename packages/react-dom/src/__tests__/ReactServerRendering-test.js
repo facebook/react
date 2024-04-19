@@ -620,17 +620,27 @@ describe('ReactDOMServer', () => {
   describe('renderToStaticNodeStream', () => {
     it('should generate simple markup', () => {
       const SuccessfulElement = React.createElement(() => <img />);
-      const response = ReactDOMServer.renderToStaticNodeStream(
-        SuccessfulElement,
-      );
-      expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
+      expect(() => {
+        const response = ReactDOMServer.renderToStaticNodeStream(
+          SuccessfulElement,
+        );
+        expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
+      }).toErrorDev('ReactDOMServer.renderToStaticNodeStream() is deprecated', {
+        withoutStack: true,
+      });
     });
 
     it('should handle errors correctly', () => {
       const FailingElement = React.createElement(() => {
         throw new Error('An Error');
       });
-      const response = ReactDOMServer.renderToStaticNodeStream(FailingElement);
+
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToStaticNodeStream(FailingElement);
+      }).toErrorDev('ReactDOMServer.renderToStaticNodeStream() is deprecated', {
+        withoutStack: true,
+      });
       return new Promise(resolve => {
         response.once('error', () => {
           resolve();
