@@ -18,13 +18,6 @@ export function renderToReadableStream() {
   );
 }
 
-export function renderToStaticNodeStream() {
-  return require('./src/server/react-dom-server.bun').renderToStaticNodeStream.apply(
-    this,
-    arguments,
-  );
-}
-
 export function renderToString() {
   return require('./src/server/ReactDOMLegacyServerBrowser').renderToString.apply(
     this,

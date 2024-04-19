@@ -23,12 +23,6 @@ export function renderToStaticMarkup() {
     arguments,
   );
 }
-export function renderToStaticNodeStream() {
-  return require('./src/server/ReactDOMLegacyServerNode').renderToStaticNodeStream.apply(
-    this,
-    arguments,
-  );
-}
 
 export function renderToPipeableStream() {
   return require('./src/server/react-dom-server.node').renderToPipeableStream.apply(

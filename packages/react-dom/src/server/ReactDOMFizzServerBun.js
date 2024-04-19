@@ -146,15 +146,4 @@ function renderToReadableStream(
   });
 }
 
-function renderToStaticNodeStream() {
-  throw new Error(
-    'ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available ' +
-      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
-  );
-}
-
-export {
-  renderToReadableStream,
-  renderToStaticNodeStream,
-  ReactVersion as version,
-};
+export {renderToReadableStream, ReactVersion as version};

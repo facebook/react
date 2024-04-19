@@ -7,8 +7,4 @@
  * @flow
  */
 
-export {
-  renderToReadableStream,
-  renderToStaticNodeStream,
-  version,
-} from './ReactDOMFizzServerBun.js';
+export {renderToReadableStream, version} from './ReactDOMFizzServerBun.js';
