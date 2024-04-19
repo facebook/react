@@ -248,6 +248,7 @@ export default [
   "ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18. Consider using a portal instead. Until you switch to the createRoot API, your app will behave as if it's running React 17. Learn more: https://react.dev/link/switch-to-createroot",
   "ReactDOM.unstable_renderSubtreeIntoContainer() was removed in React 19. Consider using a portal instead.",
   "ReactDOM.useFormState has been renamed to React.useActionState. Please update %s to use React.useActionState.",
+  "ReactDOMServer.renderToStaticNodeStream() is deprecated and will be removed in an upcomingrelease of React. Use ReactDOMServer.renderToPipeableStream() and wait to `pipe` until the `onAllReady` callback has been called to produce a document suitable for static use cases.",
   "ReactTestUtils.mockComponent() is deprecated. Use shallow rendering or jest.mock() instead.\n\nSee https://react.dev/link/test-utils-mock-component for more information.",
   "Received NaN for the `%s` attribute. If this is expected, cast the value to a string.",
   "Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s=\"%s\" or %s={value.toString()}.",
