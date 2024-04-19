@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "19.0.0-www-modern-a3d75b83";
+    var ReactVersion = "19.0.0-www-modern-7fadda4f";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -13574,6 +13574,7 @@ if (__DEV__) {
       var instance = workInProgress.stateNode;
       instance.props = newProps;
       instance.state = workInProgress.memoizedState;
+      instance.refs = {};
       initializeUpdateQueue(workInProgress);
       var contextType = ctor.contextType;
 

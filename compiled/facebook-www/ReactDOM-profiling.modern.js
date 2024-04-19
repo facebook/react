@@ -8004,6 +8004,7 @@ function updateClassComponent(
     context = workInProgress.stateNode;
     context.props = nextProps;
     context.state = workInProgress.memoizedState;
+    context.refs = {};
     initializeUpdateQueue(workInProgress);
     contextType = Component.contextType;
     context.context =
@@ -17125,7 +17126,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-17bf9d88",
+  version: "19.0.0-www-modern-1e359311",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17169,7 +17170,7 @@ var devToolsConfig$jscomp$inline_1808 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-17bf9d88"
+  reconcilerVersion: "19.0.0-www-modern-1e359311"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17464,7 +17465,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-17bf9d88";
+exports.version = "19.0.0-www-modern-1e359311";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

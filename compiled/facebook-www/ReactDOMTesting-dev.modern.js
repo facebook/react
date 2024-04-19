@@ -31852,6 +31852,7 @@ if (__DEV__) {
       var instance = workInProgress.stateNode;
       instance.props = newProps;
       instance.state = workInProgress.memoizedState;
+      instance.refs = {};
       initializeUpdateQueue(workInProgress);
       var contextType = ctor.contextType;
 
@@ -46516,7 +46517,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "19.0.0-www-modern-19d8d6f5";
+    var ReactVersion = "19.0.0-www-modern-f9d107af";
 
     function createPortal$1(
       children,

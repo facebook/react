@@ -7796,6 +7796,7 @@ function updateClassComponent(
     context = workInProgress.stateNode;
     context.props = nextProps;
     context.state = workInProgress.memoizedState;
+    context.refs = {};
     initializeUpdateQueue(workInProgress);
     contextType = Component.contextType;
     context.context =
@@ -16394,7 +16395,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1722 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-6bb7ac6f",
+  version: "19.0.0-www-modern-1217c10a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2162 = {
@@ -16424,7 +16425,7 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-6bb7ac6f"
+  reconcilerVersion: "19.0.0-www-modern-1217c10a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16732,4 +16733,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-6bb7ac6f";
+exports.version = "19.0.0-www-modern-1217c10a";
