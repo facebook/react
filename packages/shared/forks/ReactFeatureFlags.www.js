@@ -34,6 +34,7 @@ export const {
   enableRefAsProp,
   favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
