@@ -100,6 +100,13 @@ function renderToStaticNodeStream(
   children: ReactNodeList,
   options?: ServerOptions,
 ): Readable {
+  if (__DEV__) {
+    console.error(
+      'ReactDOMServer.renderToStaticNodeStream() is deprecated.' +
+        ' Use ReactDOMServer.renderToPipeableStream() and wait to `pipe` until the `onAllReady`' +
+        ' callback has been called instead.',
+    );
+  }
   return renderToNodeStreamImpl(children, options, true);
 }
 
