@@ -138,4 +138,28 @@ describe('ReactFiberRefs', () => {
     );
     expect(refProp).toBe('child');
   });
+
+  test('strings refs can be codemodded to callback refs', async () => {
+    let app;
+    class App extends React.Component {
+      render() {
+        app = this;
+        return (
+          <div
+            prop="Hello!"
+            ref={el => {
+              // `refs` used to be a shared frozen object unless/until a string
+              // ref attached by the reconciler, but it's not anymore so that we
+              // can codemod string refs to userspace callback refs.
+              this.refs.div = el;
+            }}
+          />
+        );
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    expect(app.refs.div.prop).toBe('Hello!');
+  });
 });
