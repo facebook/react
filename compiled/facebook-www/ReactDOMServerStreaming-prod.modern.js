@@ -767,7 +767,8 @@ function pushScriptImpl(target, props) {
     }
   target.push(">");
   pushInnerHTML(target, innerHTML, children);
-  "string" === typeof children && target.push(escapeTextForBrowser(children));
+  "string" === typeof children &&
+    target.push(("" + children).replace(scriptRegex, scriptReplacer));
   target.push(endChunkForTag("script"));
   return null;
 }
