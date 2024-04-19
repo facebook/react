@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa7d2d8bc19196a0f82f861919a366a9>>
+ * @generated SignedSource<<1a8fdf80e78f9d6a4a8bccd8d1a9a735>>
  */
 
 'use strict';
@@ -10482,7 +10482,30 @@ function useMemoCache(size) {
 
         if (currentMemoCache != null) {
           memoCache = {
-            data: currentMemoCache.data.map(function (array) {
+            // When enableNoCloningMemoCache is enabled, instead of treating the
+            // cache as copy-on-write, like we do with fibers, we share the same
+            // cache instance across all render attempts, even if the component
+            // is interrupted before it commits.
+            //
+            // If an update is interrupted, either because it suspended or
+            // because of another update, we can reuse the memoized computations
+            // from the previous attempt. We can do this because the React
+            // Compiler performs atomic writes to the memo cache, i.e. it will
+            // not record the inputs to a memoization without also recording its
+            // output.
+            //
+            // This gives us a form of "resuming" within components and hooks.
+            //
+            // This only works when updating a component that already mounted.
+            // It has no impact during initial render, because the memo cache is
+            // stored on the fiber, and since we have not implemented resuming
+            // for fibers, it's always a fresh memo cache, anyway.
+            //
+            // However, this alone is pretty useful — it happens whenever you
+            // update the UI with fresh data after a mutation/action, which is
+            // extremely common in a Suspense-driven (e.g. RSC or Relay) app.
+            data: // Clone the memo cache before each render (copy-on-write)
+            currentMemoCache.data.map(function (array) {
               return array.slice();
             }),
             index: 0
@@ -26037,7 +26060,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-bd0f09e6';
+var ReactVersion = '19.0.0-canary-e42cf623';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
