@@ -94,7 +94,6 @@
     "shelljs": "^0.8.5",
     "signedsource": "^2.0.0",
     "targz": "^1.0.1",
-    "terser": "^5.30.3",
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",

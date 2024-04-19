@@ -10,7 +10,6 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
-const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -23,7 +22,6 @@ const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
-const minify = require('terser').minify;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -363,30 +361,7 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const {shouldStayReadable} = getBundleTypeFlags(bundleType);
-
     const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
-
-    // Any other packages that should specifically _not_ have sourcemaps
-    const sourcemapPackageExcludes = [
-      // Having `//#sourceMappingUrl` for the `react-debug-tools` prod bundle breaks
-      // `ReactDevToolsHooksIntegration-test.js`, because it changes Node's generated
-      // stack traces and thus alters the hook name parsing behavior.
-      // Also, this is an internal-only package that doesn't need sourcemaps anyway
-      'react-debug-tools',
-    ];
-
-    // Generate sourcemaps for true "production" build artifacts
-    // that will be used by bundlers, such as `react-dom.production.min.js`.
-    // Also include profiling builds as well.
-    const needsSourcemaps =
-      needsMinifiedByClosure &&
-      // This will only exclude `unstable_server-external-runtime.js` artifact
-      // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
-      // and force `react-dom` to include .map files in npm-package at the root level
-      bundleType !== BROWSER_SCRIPT &&
-      !sourcemapPackageExcludes.includes(entry) &&
-      !shouldStayReadable;
 
     return [
       // Keep dynamic imports as externals
@@ -494,8 +469,9 @@ function getPlugins(
           // https://github.com/facebook/react/issues/10909
           assume_function_wrapper: true,
 
-          // Don't rename symbols (variable names, functions, etc). This will
-          // be handled in a later step.
+          // Don't rename symbols (variable names, functions, etc). We leave
+          // this up to the application to handle, if they want. Otherwise gzip
+          // takes care of it.
           renaming: false,
         }),
       needsMinifiedByClosure &&
@@ -518,89 +494,6 @@ function getPlugins(
           );
         },
       },
-      isProduction &&
-        !shouldStayReadable && {
-          name: 'mangle-symbol-names',
-          async renderChunk(code, chunk, options, meta) {
-            // Minify the code by mangling symbol names. We already ran Closure
-            // on this code, so stuff like dead code elimination and inlining
-            // has already happened. This step is purely to rename the symbols,
-            // which we asked Closure to preserve.
-            //
-            // The only reason this is a separate step from Closure is so we
-            // can publish non-mangled versions of the code for easier debugging
-            // in production. We also publish sourcemaps that map back to the
-            // non-mangled code (*not* the pre-Closure code).
-
-            const outputFolder = path.dirname(options.file);
-
-            // Represent the "original" bundle as a file with no `.min` in the name
-            const filenameWithoutMin = filename.replace('.min', '');
-            // There's _one_ artifact where the incoming filename actually contains
-            // a folder name: "use-sync-external-store-shim/with-selector.production.js".
-            // The output path already has the right structure, but we need to strip this
-            // down to _just_ the JS filename.
-            const preMinifiedFilename = path.basename(filenameWithoutMin);
-            const preMinifiedBundlePath = path.join(
-              outputFolder,
-              preMinifiedFilename
-            );
-
-            // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
-            const finalSourcemapPath = options.file.replace('.js', '.js.map');
-            const finalSourcemapFilename = path.basename(finalSourcemapPath);
-
-            const terserOptions = {
-              // Don't bother compressing. Closure already did that.
-              compress: false,
-              toplevel: true,
-              // Mangle the symbol names.
-              mangle: {
-                toplevel: true,
-              },
-            };
-            if (needsSourcemaps) {
-              terserOptions.sourceMap = {
-                // Used to set the `file` field in the sourcemap
-                filename: filename,
-                // Used to set `# sourceMappingURL=` in the compiled code
-                url: finalSourcemapFilename,
-              };
-            }
-
-            const minifiedResult = await minify(
-              {[preMinifiedFilename]: code},
-              terserOptions
-            );
-
-            // Create the directory if it doesn't already exist
-            fs.mkdirSync(outputFolder, {recursive: true});
-
-            if (needsSourcemaps) {
-              const sourcemapJSON = JSON.parse(minifiedResult.map);
-
-              // All our code is considered "third-party" and should be ignored
-              // by default
-              sourcemapJSON.ignoreList = [0];
-
-              // Write the sourcemap to disk
-              fs.writeFileSync(
-                finalSourcemapPath,
-                JSON.stringify(sourcemapJSON)
-              );
-            }
-
-            // Write the original source to disk as a separate file
-            fs.writeFileSync(preMinifiedBundlePath, code);
-
-            return {
-              code: minifiedResult.code,
-              // TODO: Maybe we should use Rollup's sourcemap feature instead
-              // of writing it to disk manually?
-              map: null,
-            };
-          },
-        },
       // Record bundle size.
       sizes({
         getSize: (size, gzip) => {

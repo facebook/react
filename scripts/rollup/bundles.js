@@ -1098,17 +1098,17 @@ function getFilename(bundle, bundleType) {
     case BUN_DEV:
       return `${name}.development.js`;
     case BUN_PROD:
-      return `${name}.production.min.js`;
+      return `${name}.production.js`;
     case ESM_DEV:
       return `${name}.development.js`;
     case ESM_PROD:
-      return `${name}.production.min.js`;
+      return `${name}.production.js`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
-      return `${name}.production.min.js`;
+      return `${name}.production.js`;
     case NODE_PROFILING:
-      return `${name}.profiling.min.js`;
+      return `${name}.profiling.js`;
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:

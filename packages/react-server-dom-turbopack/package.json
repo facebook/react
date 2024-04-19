@@ -63,7 +63,7 @@
     "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
     "./server.node.unbundled": "./server.node.unbundled.js",
-    "./node-loader": "./esm/react-server-dom-turbopack-node-loader.production.min.js",
+    "./node-loader": "./esm/react-server-dom-turbopack-node-loader.production.js",
     "./node-register": "./node-register.js",
     "./src/*": "./src/*.js",
     "./package.json": "./package.json"

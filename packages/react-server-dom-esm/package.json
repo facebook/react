@@ -33,7 +33,7 @@
       "default": "./server.js"
     },
     "./server.node": "./server.node.js",
-    "./node-loader": "./esm/react-server-dom-esm-node-loader.production.min.js",
+    "./node-loader": "./esm/react-server-dom-esm-node-loader.production.js",
     "./src/*": "./src/*.js",
     "./package.json": "./package.json"
   },
