@@ -580,16 +580,28 @@ describe('ReactDOMServer', () => {
   describe('renderToStaticNodeStream', () => {
     it('should generate simple markup', () => {
       const SuccessfulElement = React.createElement(() => <img />);
-      const response =
-        ReactDOMServer.renderToStaticNodeStream(SuccessfulElement);
-      expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
+      expect(() => {
+        const response =
+          ReactDOMServer.renderToStaticNodeStream(SuccessfulElement);
+        expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
+      }).toErrorDev(
+        'ReactDOMServer.renderToStaticNodeStream() is deprecated and will be removed in an upcomingrelease of React',
+        {withoutStack: true},
+      );
     });
 
     it('should handle errors correctly', () => {
       const FailingElement = React.createElement(() => {
         throw new Error('An Error');
       });
-      const response = ReactDOMServer.renderToStaticNodeStream(FailingElement);
+
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToStaticNodeStream(FailingElement);
+      }).toErrorDev(
+        'ReactDOMServer.renderToStaticNodeStream() is deprecated and will be removed in an upcomingrelease of React',
+        {withoutStack: true},
+      );
       return new Promise(resolve => {
         response.once('error', () => {
           resolve();
@@ -614,12 +626,18 @@ describe('ReactDOMServer', () => {
         throw promise;
       }
 
-      const response = ReactDOMServer.renderToStaticNodeStream(
-        <div>
-          <React.Suspense fallback={'fallback'}>
-            <Suspender />
-          </React.Suspense>
-        </div>,
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToStaticNodeStream(
+          <div>
+            <React.Suspense fallback={'fallback'}>
+              <Suspender />
+            </React.Suspense>
+          </div>,
+        );
+      }).toErrorDev(
+        'ReactDOMServer.renderToStaticNodeStream() is deprecated and will be removed in an upcomingrelease of React',
+        {withoutStack: true},
       );
       await resolve();
       expect(response.read().toString()).toEqual('<div>resolved</div>');
