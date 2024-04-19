@@ -5654,9 +5654,6 @@ exports.renderToStaticMarkup = function (children, options) {
     'The server used "renderToStaticMarkup" which does not support Suspense. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.renderToStaticNodeStream = function () {
-  throw Error(formatProdErrorMessage(208));
-};
 exports.renderToString = function (children, options) {
   return renderToStringImpl(
     children,
@@ -5665,4 +5662,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-322b4431";
+exports.version = "19.0.0-www-modern-f02d17e5";

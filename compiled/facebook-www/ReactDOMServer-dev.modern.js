@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-d1bfd9cd";
+    var ReactVersion = "19.0.0-www-modern-a9bcdef2";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -14641,15 +14641,7 @@ if (__DEV__) {
       );
     }
 
-    function renderToStaticNodeStream() {
-      throw new Error(
-        "ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available " +
-          "in the browser. Use ReactDOMServer.renderToStaticMarkup() instead."
-      );
-    }
-
     exports.renderToStaticMarkup = renderToStaticMarkup;
-    exports.renderToStaticNodeStream = renderToStaticNodeStream;
     exports.renderToString = renderToString;
     exports.version = ReactVersion;
   })();
