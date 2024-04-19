@@ -10,7 +10,6 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {version, renderToStringImpl} from './ReactDOMLegacyServerImpl';
-import {renderToStaticNodeStream} from './ReactDOMLegacyServerNodeStream';
 
 type ServerOptions = {
   identifierPrefix?: string,
@@ -40,9 +39,4 @@ function renderToStaticMarkup(
   );
 }
 
-export {
-  renderToString,
-  renderToStaticMarkup,
-  renderToStaticNodeStream,
-  version,
-};
+export {renderToString, renderToStaticMarkup, version};

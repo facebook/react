@@ -15,6 +15,5 @@ exports.renderToReadableStream = b.renderToReadableStream;
 if (b.resume) {
   exports.resume = b.resume;
 }
-exports.renderToStaticNodeStream = b.renderToStaticNodeStream;
 exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;
