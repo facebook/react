@@ -704,6 +704,10 @@ function pushLinkImpl(target, props) {
   target.push("/>");
   return null;
 }
+var styleRegex = /(<\/|<)(s)(tyle)/gi;
+function styleReplacer(match, prefix, s, suffix) {
+  return "" + prefix + ("s" === s ? "\\73 " : "\\53 ") + suffix;
+}
 function pushSelfClosing(target, props, tag) {
   target.push(startChunkForTag(tag));
   for (var propKey in props)
@@ -1435,7 +1439,7 @@ function pushStartInstance(
           "symbol" !== typeof child &&
           null !== child &&
           void 0 !== child &&
-          target$jscomp$0.push(escapeTextForBrowser("" + child));
+          target$jscomp$0.push(("" + child).replace(styleRegex, styleReplacer));
         pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
         target$jscomp$0.push(endChunkForTag("style"));
         var JSCompiler_inline_result$jscomp$5 = null;
@@ -1484,7 +1488,9 @@ function pushStartInstance(
             "symbol" !== typeof child$jscomp$0 &&
             null !== child$jscomp$0 &&
             void 0 !== child$jscomp$0 &&
-            target.push(escapeTextForBrowser("" + child$jscomp$0));
+            target.push(
+              ("" + child$jscomp$0).replace(styleRegex, styleReplacer)
+            );
           pushInnerHTML(target, innerHTML$jscomp$5, children$jscomp$6);
         }
         styleQueue$jscomp$0 &&
@@ -5680,4 +5686,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-fef33f20";
+exports.version = "19.0.0-www-classic-a5b1d991";

@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "19.0.0-www-modern-72ca4dea";
+    var ReactVersion = "19.0.0-www-modern-e48dd4e1";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -4924,6 +4924,26 @@ if (__DEV__) {
         target.push(textSeparator);
       }
     }
+    /**
+     * This escaping function is designed to work with style tag textContent only.
+     *
+     * While untrusted style content should be made safe before using this api it will
+     * ensure that the style cannot be early terminated or never terminated state
+     */
+
+    function escapeStyleTextContent(styleText) {
+      {
+        checkHtmlStringCoercion(styleText);
+      }
+
+      return ("" + styleText).replace(styleRegex, styleReplacer);
+    }
+
+    var styleRegex = /(<\/|<)(s)(tyle)/gi;
+
+    var styleReplacer = function (match, prefix, s, suffix) {
+      return "" + prefix + (s === "s" ? "\\73 " : "\\53 ") + suffix;
+    };
 
     function pushStyleImpl(target, props) {
       target.push(startChunkForTag("style"));
@@ -4968,7 +4988,7 @@ if (__DEV__) {
         child !== undefined
       ) {
         // eslint-disable-next-line react-internal/safe-string-coercion
-        target.push(stringToChunk(escapeTextForBrowser("" + child)));
+        target.push(stringToChunk(escapeStyleTextContent(child)));
       }
 
       pushInnerHTML(target, innerHTML, children);
@@ -5013,7 +5033,7 @@ if (__DEV__) {
         child !== undefined
       ) {
         // eslint-disable-next-line react-internal/safe-string-coercion
-        target.push(stringToChunk(escapeTextForBrowser("" + child)));
+        target.push(stringToChunk(escapeStyleTextContent(child)));
       }
 
       pushInnerHTML(target, innerHTML, children);
