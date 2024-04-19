@@ -2592,9 +2592,11 @@ module.exports = function ($$$config) {
           ((current = current.memoCache),
           null != current &&
             (memoCache = {
-              data: current.data.map(function (array) {
-                return array.slice();
-              }),
+              data: enableNoCloningMemoCache
+                ? current.data
+                : current.data.map(function (array) {
+                    return array.slice();
+                  }),
               index: 0
             })));
     }
@@ -11503,6 +11505,7 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     disableDefaultPropsExceptForClasses =
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
     REACT_ELEMENT_TYPE = Symbol.for("react.element"),
     REACT_PORTAL_TYPE = Symbol.for("react.portal"),
     REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -12629,7 +12632,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-23bf93ce"
+      reconcilerVersion: "19.0.0-www-classic-873e0310"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -100,7 +100,8 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, false is used for a new modern build.
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+ // On WWW, false is used for a new modern build.
 // because JSX is an extremely hot path.
 
 var disableStringRefs = false;

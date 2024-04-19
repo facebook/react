@@ -45,6 +45,7 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   assign = Object.assign,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -6053,9 +6054,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -16395,7 +16398,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1722 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-1217c10a",
+  version: "19.0.0-www-modern-c7f3d35a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2162 = {
@@ -16425,7 +16428,7 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-1217c10a"
+  reconcilerVersion: "19.0.0-www-modern-c7f3d35a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16733,4 +16736,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-1217c10a";
+exports.version = "19.0.0-www-modern-c7f3d35a";

@@ -25,7 +25,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var ReactVersion = '19.0.0-www-modern-fe830ed2';
+          var ReactVersion = '19.0.0-www-modern-f6026193';
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -429,7 +429,8 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, true is used for a new modern build.
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+ // On WWW, true is used for a new modern build.
 // because JSX is an extremely hot path.
 
 var disableStringRefs = false;

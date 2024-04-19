@@ -606,7 +606,8 @@ var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableUseDeferredValueInitialArg = dynamicFeatureFlags.enableUseDeferredValueInitialArg,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, true is used for a new modern build.
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+ // On WWW, true is used for a new modern build.
 
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;

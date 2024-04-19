@@ -49,6 +49,7 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   assign = Object.assign,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
@@ -6189,9 +6190,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -17126,7 +17129,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-1e359311",
+  version: "19.0.0-www-modern-6d2a2ca0",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17170,7 +17173,7 @@ var devToolsConfig$jscomp$inline_1808 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-1e359311"
+  reconcilerVersion: "19.0.0-www-modern-6d2a2ca0"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -17465,7 +17468,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-1e359311";
+exports.version = "19.0.0-www-modern-6d2a2ca0";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

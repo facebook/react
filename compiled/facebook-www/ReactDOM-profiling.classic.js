@@ -67,6 +67,7 @@ var ReactSharedInternals =
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -3584,9 +3585,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -17781,7 +17784,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1815 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-a7d2fb9b",
+  version: "19.0.0-www-classic-7a3394e6",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17825,7 +17828,7 @@ var devToolsConfig$jscomp$inline_1815 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-a7d2fb9b"
+  reconcilerVersion: "19.0.0-www-classic-7a3394e6"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
@@ -18278,7 +18281,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-a7d2fb9b";
+exports.version = "19.0.0-www-classic-7a3394e6";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

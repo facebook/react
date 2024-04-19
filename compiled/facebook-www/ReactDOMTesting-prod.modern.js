@@ -45,6 +45,7 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   assign = Object.assign,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -6198,9 +6199,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -16129,7 +16132,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-375fcad7"
+    reconcilerVersion: "19.0.0-www-modern-26fdeab5"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16827,7 +16830,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-375fcad7",
+  version: "19.0.0-www-modern-26fdeab5",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16835,7 +16838,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-375fcad7",
+  version: "19.0.0-www-modern-26fdeab5",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -17249,4 +17252,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-375fcad7";
+exports.version = "19.0.0-www-modern-26fdeab5";

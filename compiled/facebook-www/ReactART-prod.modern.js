@@ -86,6 +86,7 @@ var ReactSharedInternals =
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -2537,9 +2538,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -10098,7 +10101,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-20a4f736",
+    version: "19.0.0-www-modern-c36cdef3",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1307 = {
@@ -10129,7 +10132,7 @@ var internals$jscomp$inline_1307 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-20a4f736"
+  reconcilerVersion: "19.0.0-www-modern-c36cdef3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1308 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

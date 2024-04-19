@@ -117,7 +117,8 @@ var enableTrustedTypesIntegration = dynamicFeatureFlags.enableTrustedTypesIntegr
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     favorSafetyOverHydrationPerf = dynamicFeatureFlags.favorSafetyOverHydrationPerf,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses; // On WWW, false is used for a new modern build.
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache; // On WWW, false is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -12174,7 +12175,30 @@ function useMemoCache(size) {
 
         if (currentMemoCache != null) {
           memoCache = {
-            data: currentMemoCache.data.map(function (array) {
+            // When enableNoCloningMemoCache is enabled, instead of treating the
+            // cache as copy-on-write, like we do with fibers, we share the same
+            // cache instance across all render attempts, even if the component
+            // is interrupted before it commits.
+            //
+            // If an update is interrupted, either because it suspended or
+            // because of another update, we can reuse the memoized computations
+            // from the previous attempt. We can do this because the React
+            // Compiler performs atomic writes to the memo cache, i.e. it will
+            // not record the inputs to a memoization without also recording its
+            // output.
+            //
+            // This gives us a form of "resuming" within components and hooks.
+            //
+            // This only works when updating a component that already mounted.
+            // It has no impact during initial render, because the memo cache is
+            // stored on the fiber, and since we have not implemented resuming
+            // for fibers, it's always a fresh memo cache, anyway.
+            //
+            // However, this alone is pretty useful — it happens whenever you
+            // update the UI with fresh data after a mutation/action, which is
+            // extremely common in a Suspense-driven (e.g. RSC or Relay) app.
+            data: enableNoCloningMemoCache ? currentMemoCache.data : // Clone the memo cache before each render (copy-on-write)
+            currentMemoCache.data.map(function (array) {
               return array.slice();
             }),
             index: 0
@@ -31364,7 +31388,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-36a7a568';
+var ReactVersion = '19.0.0-www-classic-75e45b11';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {

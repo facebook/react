@@ -63,6 +63,7 @@ var ReactSharedInternals =
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -3448,9 +3449,11 @@ function useMemoCache(size) {
         ((current = current.memoCache),
         null != current &&
           (memoCache = {
-            data: current.data.map(function (array) {
-              return array.slice();
-            }),
+            data: enableNoCloningMemoCache
+              ? current.data
+              : current.data.map(function (array) {
+                  return array.slice();
+                }),
             index: 0
           })));
   }
@@ -17033,7 +17036,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1729 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-38c43cf6",
+  version: "19.0.0-www-classic-7b6a2c60",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2160 = {
@@ -17063,7 +17066,7 @@ var internals$jscomp$inline_2160 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-38c43cf6"
+  reconcilerVersion: "19.0.0-www-classic-7b6a2c60"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17529,4 +17532,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-38c43cf6";
+exports.version = "19.0.0-www-classic-7b6a2c60";
