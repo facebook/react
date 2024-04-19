@@ -59,10 +59,23 @@ function onError() {
   // Non-fatal errors are ignored.
 }
 
+let didWarnAboutDeprecatedRenderToStaticNodeStream = false;
+
 function renderToStaticNodeStream(
   children: ReactNodeList,
   options?: ServerOptions,
 ): Readable {
+  if (__DEV__) {
+    if (!didWarnAboutDeprecatedRenderToStaticNodeStream) {
+      didWarnAboutDeprecatedRenderToStaticNodeStream = true;
+      console.error(
+        'ReactDOMServer.renderToStaticNodeStream() is deprecated and will be removed in an upcoming' +
+          'release of React. Use ReactDOMServer.renderToPipeableStream() and wait to `pipe` until the `onAllReady`' +
+          ' callback has been called to produce a document suitable for static use cases.',
+      );
+    }
+  }
+
   function onAllReady() {
     // We wait until everything has loaded before starting to write.
     // That way we only end up with fully resolved HTML even if we suspend.
