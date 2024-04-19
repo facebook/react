@@ -819,6 +819,7 @@ function mountClassInstance(
   const instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
+  instance.refs = {};
 
   initializeUpdateQueue(workInProgress);
 
