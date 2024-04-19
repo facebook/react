@@ -62,6 +62,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // TODO: decide on React 19
 export const enableUseMemoCacheHook = false;
+export const enableNoCloningMemoCache = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
