@@ -375,6 +375,7 @@ const skipFilter = new Set([
   "gating-test-export-function-and-default",
   "gating-test-export-function",
   "gating-test",
+  "gating-with-hoisted-type-reference.flow",
   "hook-call",
   "hooks-freeze-arguments",
   "hooks-freeze-possibly-mutable-arguments",

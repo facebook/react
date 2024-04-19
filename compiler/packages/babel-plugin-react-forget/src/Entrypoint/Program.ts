@@ -758,6 +758,18 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   const errors = new CompilerError();
 
   program.traverse({
+    TypeAnnotation(path) {
+      path.skip();
+    },
+    TSTypeAnnotation(path) {
+      path.skip();
+    },
+    TypeAlias(path) {
+      path.skip();
+    },
+    TSTypeAliasDeclaration(path) {
+      path.skip();
+    },
     Identifier(id) {
       const fn = fnNames.get(id.node.name);
       // We're not tracking this identifier.
