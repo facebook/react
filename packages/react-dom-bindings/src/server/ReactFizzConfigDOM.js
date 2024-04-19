@@ -2669,6 +2669,26 @@ function pushStyle(
   }
 }
 
+/**
+ * This escaping function is designed to work with style tag textContent only.
+ *
+ * While untrusted style content should be made safe before using this api it will
+ * ensure that the style cannot be early terminated or never terminated state
+ */
+function escapeStyleTextContent(styleText: string) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(styleText);
+  }
+  return ('' + styleText).replace(styleRegex, styleReplacer);
+}
+const styleRegex = /(<\/|<)(s)(tyle)/gi;
+const styleReplacer = (
+  match: string,
+  prefix: string,
+  s: string,
+  suffix: string,
+) => `${prefix}${s === 's' ? '\\73 ' : '\\53 '}${suffix}`;
+
 function pushStyleImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -2710,7 +2730,7 @@ function pushStyleImpl(
     child !== undefined
   ) {
     // eslint-disable-next-line react-internal/safe-string-coercion
-    target.push(stringToChunk(escapeTextForBrowser('' + child)));
+    target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
   target.push(endChunkForTag('style'));
@@ -2752,7 +2772,7 @@ function pushStyleContents(
     child !== undefined
   ) {
     // eslint-disable-next-line react-internal/safe-string-coercion
-    target.push(stringToChunk(escapeTextForBrowser('' + child)));
+    target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
   return;

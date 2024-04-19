@@ -4256,6 +4256,56 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  describe('<style> textContent escaping', () => {
+    it('the "S" in "</?[Ss]style" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <style>{`
+            .foo::after {
+              content: 'sSsS</style></Style></StYlE><style><Style>sSsS'
+            }
+            body {
+              background-color: blue;
+            }
+          `}</style>,
+        );
+        pipe(writable);
+      });
+      expect(window.getComputedStyle(document.body).backgroundColor).toMatch(
+        'blue',
+      );
+    });
+
+    it('the "S" in "</?[Ss]style" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters inside hoistable style tags', async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <style href="foo" precedence="default">{`
+            .foo::after {
+              content: 'sSsS</style></Style></StYlE><style><Style>sSsS'
+            }
+            body {
+              background-color: blue;
+            }
+          `}</style>
+            <style href="bar" precedence="default">{`
+          .foo::after {
+            content: 'sSsS</style></Style></StYlE><style><Style>sSsS'
+          }
+          body {
+            background-color: red;
+          }
+        `}</style>
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(window.getComputedStyle(document.body).backgroundColor).toMatch(
+        'red',
+      );
+    });
+  });
+
   // @gate enableFizzExternalRuntime
   it('supports option to load runtime as an external script', async () => {
     await act(() => {
