@@ -284,10 +284,17 @@ export type HIRFunction = {
   directives: Array<string>;
 };
 
-export type FunctionEffect = {
-  kind: "GlobalMutation";
-  error: CompilerErrorDetailOptions;
-};
+export type FunctionEffect =
+  | {
+      kind: "GlobalMutation";
+      error: CompilerErrorDetailOptions;
+    }
+  | {
+      kind: "ContextMutation";
+      places: Array<Place>;
+      effect: Effect;
+      loc: SourceLocation;
+    };
 
 /*
  * Each reactive scope may have its own control-flow, so the instructions form

@@ -237,12 +237,20 @@ export default function inferReferenceEffects(
   if (!options.isFunctionExpression) {
     functionEffects.forEach((eff) => {
       switch (eff.kind) {
-        case "GlobalMutation":
+        case "GlobalMutation": {
           CompilerError.throw(eff.error);
+        }
+        case "ContextMutation": {
+          CompilerError.throw({
+            severity: ErrorSeverity.Invariant,
+            reason: `Unexpected ContextMutation in top-level function effects`,
+            loc: eff.loc,
+          });
+        }
         default:
           assertExhaustive(
-            eff.kind,
-            `Unexpected function effect kind \`${eff.kind}\``
+            eff,
+            `Unexpected function effect kind \`${(eff as any).kind}\``
           );
       }
     });
