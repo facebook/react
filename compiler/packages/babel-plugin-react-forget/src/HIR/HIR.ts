@@ -1149,6 +1149,7 @@ export function isPromotedJsxTemporary(name: string): boolean {
 export type AbstractValue = {
   kind: ValueKind;
   reason: ReadonlySet<ValueReason>;
+  context: ReadonlySet<Place>;
 };
 
 /**

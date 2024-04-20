@@ -112,6 +112,7 @@ export default function inferReferenceEffects(
   initialState.initialize(value, {
     kind: ValueKind.Frozen,
     reason: new Set([ValueReason.Other]),
+    context: new Set(),
   });
 
   for (const ref of fn.context) {
@@ -124,6 +125,7 @@ export default function inferReferenceEffects(
     initialState.initialize(value, {
       kind: ValueKind.Context,
       reason: new Set([ValueReason.Other]),
+      context: new Set([ref]),
     });
     initialState.define(ref, value);
   }
@@ -132,10 +134,12 @@ export default function inferReferenceEffects(
     ? {
         kind: ValueKind.Mutable,
         reason: new Set([ValueReason.Other]),
+        context: new Set(),
       }
     : {
         kind: ValueKind.Frozen,
         reason: new Set([ValueReason.ReactiveFunctionArgument]),
+        context: new Set(),
       };
 
   if (fn.fnType === "Component") {
@@ -171,6 +175,7 @@ export default function inferReferenceEffects(
       initialState.initialize(value, {
         kind: ValueKind.Mutable,
         reason: new Set([ValueReason.Other]),
+        context: new Set(),
       });
       initialState.define(place, value);
     }
@@ -405,11 +410,13 @@ class InferenceState {
           valueKind = {
             kind: ValueKind.Frozen,
             reason: reasonSet,
+            context: new Set(),
           };
           values.forEach((value) => {
             this.#values.set(value, {
               kind: ValueKind.Frozen,
               reason: reasonSet,
+              context: new Set(),
             });
 
             if (
@@ -798,14 +805,23 @@ function mergeAbstractValues(
   b: AbstractValue
 ): AbstractValue {
   const kind = mergeValues(a.kind, b.kind);
-  if (kind === a.kind && kind === b.kind && isSuperset(a.reason, b.reason)) {
+  if (
+    kind === a.kind &&
+    kind === b.kind &&
+    isSuperset(a.reason, b.reason) &&
+    isSuperset(a.context, b.context)
+  ) {
     return a;
   }
   const reason = new Set(a.reason);
   for (const r of b.reason) {
     reason.add(r);
   }
-  return { kind, reason };
+  const context = new Set(a.context);
+  for (const c of b.context) {
+    context.add(c);
+  }
+  return { kind, reason, context };
 }
 
 /*
@@ -832,6 +848,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = {
           kind: Effect.Read,
@@ -844,8 +861,13 @@ function inferBlock(
           ? {
               kind: ValueKind.Context,
               reason: new Set([ValueReason.Other]),
+              context: new Set(),
             }
-          : { kind: ValueKind.Mutable, reason: new Set([ValueReason.Other]) };
+          : {
+              kind: ValueKind.Mutable,
+              reason: new Set([ValueReason.Other]),
+              context: new Set(),
+            };
         effect = { kind: Effect.Capture, reason: ValueReason.Other };
         lvalueEffect = Effect.Store;
         break;
@@ -867,6 +889,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         state.reference(
           instrValue.callee,
@@ -894,8 +917,13 @@ function inferBlock(
           ? {
               kind: ValueKind.Context,
               reason: new Set([ValueReason.Other]),
+              context: new Set(),
             }
-          : { kind: ValueKind.Mutable, reason: new Set([ValueReason.Other]) };
+          : {
+              kind: ValueKind.Mutable,
+              reason: new Set([ValueReason.Other]),
+              context: new Set(),
+            };
 
         for (const property of instrValue.properties) {
           switch (property.kind) {
@@ -946,6 +974,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = { kind: Effect.Read, reason: ValueReason.Other };
         break;
@@ -955,6 +984,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         break;
       }
@@ -962,6 +992,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = { kind: Effect.Freeze, reason: ValueReason.JsxCaptured };
         break;
@@ -970,6 +1001,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = {
           kind: Effect.Freeze,
@@ -981,6 +1013,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = {
           kind: Effect.ConditionallyMutate,
@@ -996,6 +1029,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = { kind: Effect.Read, reason: ValueReason.Other };
         break;
@@ -1005,6 +1039,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = {
           kind: Effect.ConditionallyMutate,
@@ -1016,6 +1051,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Global]),
+          context: new Set(),
         };
         break;
       case "Debugger":
@@ -1024,6 +1060,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         break;
       }
@@ -1046,6 +1083,7 @@ function inferBlock(
         state.initialize(instrValue, {
           kind: hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         });
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
@@ -1067,8 +1105,13 @@ function inferBlock(
                   signature.returnValueReason ??
                     ValueReason.KnownReturnSignature,
                 ]),
+                context: new Set(),
               }
-            : { kind: ValueKind.Mutable, reason: new Set([ValueReason.Other]) };
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
         let hasCaptureArgument = false;
         let isUseEffect = isEffectHook(instrValue.callee.identifier);
         for (let i = 0; i < instrValue.args.length; i++) {
@@ -1151,8 +1194,13 @@ function inferBlock(
             ? {
                 kind: signature.returnValueKind,
                 reason: new Set([ValueReason.Other]),
+                context: new Set(),
               }
-            : { kind: ValueKind.Mutable, reason: new Set([ValueReason.Other]) };
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
 
         if (
           signature !== null &&
@@ -1278,6 +1326,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         effect = { kind: Effect.Mutate, reason: ValueReason.Other };
         break;
@@ -1340,6 +1389,7 @@ function inferBlock(
         state.initialize(instrValue, {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         });
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Mutate;
@@ -1427,6 +1477,7 @@ function inferBlock(
         state.initialize(instrValue, {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         });
         state.define(lvalue, instrValue);
         continue;
@@ -1483,10 +1534,12 @@ function inferBlock(
             ? {
                 kind: ValueKind.Mutable,
                 reason: new Set([ValueReason.Other]),
+                context: new Set(),
               }
             : {
                 kind: ValueKind.Immutable,
                 reason: new Set([ValueReason.Other]),
+                context: new Set(),
               }
         );
         state.define(instrValue.lvalue.place, value);
@@ -1496,6 +1549,7 @@ function inferBlock(
         state.initialize(instrValue, {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         });
         state.define(instrValue.lvalue.place, instrValue);
         continue;
@@ -1633,6 +1687,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         break;
       }
@@ -1642,6 +1697,7 @@ function inferBlock(
         valueKind = {
           kind: ValueKind.Immutable,
           reason: new Set([ValueReason.Other]),
+          context: new Set(),
         };
         break;
       }
