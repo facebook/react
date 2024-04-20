@@ -521,7 +521,19 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const context = instrValue.loweredFunc.func.context
         .map((dep) => printPlace(dep))
         .join(",");
-      value = `${kind} ${name} @deps[${deps}] @context[${context}]:\n${fn}`;
+      const effects =
+        instrValue.loweredFunc.func.effects
+          ?.map((effect) => {
+            if (effect.kind === "ContextMutation") {
+              return `ContextMutation places=[${[...effect.places]
+                .map((place) => printPlace(place))
+                .join(", ")}] effect=${effect.effect}`;
+            } else {
+              return `GlobalMutation`;
+            }
+          })
+          .join(", ") ?? "";
+      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]:\n${fn}`;
       break;
     }
     case "TaggedTemplateExpression": {

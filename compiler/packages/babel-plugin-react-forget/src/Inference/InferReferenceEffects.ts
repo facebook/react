@@ -401,7 +401,22 @@ class InferenceState {
           value.kind === "ObjectMethod") &&
         value.loweredFunc.func.effects != null
       ) {
-        functionEffects.push(...value.loweredFunc.func.effects);
+        for (const effect of value.loweredFunc.func.effects) {
+          if (effect.kind === "GlobalMutation") {
+            functionEffects.push(effect);
+          } else {
+            for (const place of effect.places) {
+              if (this.isDefined(place)) {
+                this.reference(
+                  { ...place, loc: effect.loc },
+                  functionEffects,
+                  effect.effect,
+                  reason
+                );
+              }
+            }
+          }
+        }
       }
     }
     let valueKind: AbstractValue | null = this.kind(place);
@@ -460,10 +475,17 @@ class InferenceState {
         break;
       }
       case Effect.Mutate: {
-        if (
-          valueKind.kind !== ValueKind.Mutable &&
-          valueKind.kind !== ValueKind.Context
-        ) {
+        if (valueKind.kind === ValueKind.Context) {
+          functionEffects.push({
+            kind: "ContextMutation",
+            loc: place.loc,
+            effect: effectKind,
+            places:
+              valueKind.context.size === 0
+                ? new Set([place])
+                : valueKind.context,
+          });
+        } else if (valueKind.kind !== ValueKind.Mutable) {
           let reason = getWriteErrorReason(valueKind);
           functionEffects.push({
             kind: "GlobalMutation",
@@ -483,10 +505,17 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
-        if (
-          valueKind.kind !== ValueKind.Mutable &&
-          valueKind.kind !== ValueKind.Context
-        ) {
+        if (valueKind.kind === ValueKind.Context) {
+          functionEffects.push({
+            kind: "ContextMutation",
+            loc: place.loc,
+            effect: effectKind,
+            places:
+              valueKind.context.size === 0
+                ? new Set([place])
+                : valueKind.context,
+          });
+        } else if (valueKind.kind !== ValueKind.Mutable) {
           let reason = getWriteErrorReason(valueKind);
           functionEffects.push({
             kind: "GlobalMutation",
@@ -1078,7 +1107,7 @@ function inferBlock(
         for (const operand of eachInstructionOperand(instr)) {
           state.reference(
             operand,
-            functionEffects,
+            [],
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect,
             ValueReason.Other
           );

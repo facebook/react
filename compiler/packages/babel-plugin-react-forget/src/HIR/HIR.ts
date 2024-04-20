@@ -291,7 +291,7 @@ export type FunctionEffect =
     }
   | {
       kind: "ContextMutation";
-      places: Array<Place>;
+      places: ReadonlySet<Place>;
       effect: Effect;
       loc: SourceLocation;
     };
