@@ -258,6 +258,8 @@ export default [
   "Received the string `%s` for the boolean attribute `%s`. %s Did you mean %s={%s}?",
   "Render methods should be a pure function of props and state; triggering nested component updates from render is not allowed. If necessary, trigger nested updates in componentDidUpdate.\n\nCheck the render method of %s.",
   "Replacing React-rendered children with a new root component. If you intended to update the children of this node, you should instead have the existing children update their state and render the new components instead of calling ReactDOM.render.",
+  "Returning an AsyncIterator from a Server Component is not supported since it cannot be looped over more than once. ",
+  "Returning an Iterator from a Server Component is not supported since it cannot be looped over more than once. ",
   "Select elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled select element and remove one of these props. More info: https://react.dev/link/controlled-components",
   "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
   "Should have found matching lanes. This is a bug in React.",
