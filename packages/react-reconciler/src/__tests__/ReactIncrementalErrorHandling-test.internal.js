@@ -356,7 +356,65 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  it('retries one more time before handling error', async () => {
+  it('does not retry during default updates', async () => {
+    function BadRender({unused}) {
+      Scheduler.log('BadRender');
+      throw new Error('oops');
+    }
+
+    function Sibling({unused}) {
+      Scheduler.log('Sibling');
+      return <span prop="Sibling" />;
+    }
+
+    function Parent({unused}) {
+      Scheduler.log('Parent');
+      return (
+        <>
+          <BadRender />
+          <Sibling />
+        </>
+      );
+    }
+
+    // Render the bad component synchronously
+    ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
+
+    await waitFor(['Parent', 'BadRender', 'commit']);
+    expect(ReactNoop).toMatchRenderedOutput(null);
+  });
+
+  it('does not retry during sync updates', async () => {
+    function BadRender({unused}) {
+      Scheduler.log('BadRender');
+      throw new Error('oops');
+    }
+
+    function Sibling({unused}) {
+      Scheduler.log('Sibling');
+      return <span prop="Sibling" />;
+    }
+
+    function Parent({unused}) {
+      Scheduler.log('Parent');
+      return (
+        <>
+          <BadRender />
+          <Sibling />
+        </>
+      );
+    }
+
+    // Render the bad component synchronously
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
+    });
+
+    assertLog(['Parent', 'BadRender', 'Parent', 'BadRender', 'commit']);
+    expect(ReactNoop).toMatchRenderedOutput(null);
+  });
+
+  it('retries one more time if an error occured during concurrent rendering before handling error', async () => {
     function BadRender({unused}) {
       Scheduler.log('BadRender');
       throw new Error('oops');
