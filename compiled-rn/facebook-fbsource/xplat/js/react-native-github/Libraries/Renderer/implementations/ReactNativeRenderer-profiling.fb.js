@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e4cc143cf5b6c40986732f7c31042c95>>
+ * @generated SignedSource<<677f52c0fc1c027786c2d7914509109d>>
  */
 
 "use strict";
@@ -3525,7 +3525,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildrenIterable.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3549,7 +3549,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (step.done)
       return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next())
+      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -3562,7 +3562,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -11530,7 +11530,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1248 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-b6bdb4e2",
+    version: "19.0.0-canary-d8b54028",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11586,7 +11586,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-b6bdb4e2"
+  reconcilerVersion: "19.0.0-canary-d8b54028"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

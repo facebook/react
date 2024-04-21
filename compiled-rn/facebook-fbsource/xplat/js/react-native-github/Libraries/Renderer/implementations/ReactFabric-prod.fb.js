@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d42756695dd6c4c7a24ede54b6a5902a>>
+ * @generated SignedSource<<885ed33c17f9bf322d3f754c50d26ed9>>
  */
 
 "use strict";
@@ -3350,7 +3350,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildrenIterable.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3374,7 +3374,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (step.done)
       return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next())
+      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -3387,7 +3387,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -10602,7 +10602,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1099 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-7f7baf16",
+    version: "19.0.0-canary-d7b022bb",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10645,7 +10645,7 @@ var internals$jscomp$inline_1366 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7f7baf16"
+  reconcilerVersion: "19.0.0-canary-d7b022bb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

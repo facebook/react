@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<64acec7be24561ecbf6d2eaf55e55d0a>>
+ * @generated SignedSource<<0fd40d36a058297c5f28d3505e638983>>
  */
 
 "use strict";
@@ -3472,7 +3472,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildrenIterable.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3496,7 +3496,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (step.done)
       return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next())
+      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -3509,7 +3509,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -11307,7 +11307,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1179 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-ef6bcf29",
+    version: "19.0.0-canary-9e21665c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11363,7 +11363,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-ef6bcf29"
+  reconcilerVersion: "19.0.0-canary-9e21665c"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

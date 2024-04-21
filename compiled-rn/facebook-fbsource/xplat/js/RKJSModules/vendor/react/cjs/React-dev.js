@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ccd58cd787da0b40cbf5543503953db>>
+ * @generated SignedSource<<745c28cba28ff3a4a3a391cfdfdd1c1b>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-canary-c627bf44';
+var ReactVersion = '19.0.0-canary-e8808e1d';
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1889,11 +1889,14 @@ function validateChildKeys(node, parentType) {
         // but now we print a separate warning for them later.
         if (iteratorFn !== node.entries) {
           var iterator = iteratorFn.call(node);
-          var step;
 
-          while (!(step = iterator.next()).done) {
-            if (isValidElement(step.value)) {
-              validateExplicitKey(step.value, parentType);
+          if (iterator !== node) {
+            var step;
+
+            while (!(step = iterator.next()).done) {
+              if (isValidElement(step.value)) {
+                validateExplicitKey(step.value, parentType);
+              }
             }
           }
         }

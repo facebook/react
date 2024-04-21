@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9206ca0f6781a4c840d6d393f26b3429>>
+ * @generated SignedSource<<9f8b5b89043962a79b6b2123a526bf46>>
  */
 
 "use strict";
@@ -1913,7 +1913,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildrenIterable.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -1937,7 +1937,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (step.done)
       return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next())
+      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -1950,7 +1950,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -9760,7 +9760,7 @@ var devToolsConfig$jscomp$inline_1101 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-39a6938a",
+  version: "19.0.0-canary-359342b1",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9804,7 +9804,7 @@ var devToolsConfig$jscomp$inline_1101 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-39a6938a"
+  reconcilerVersion: "19.0.0-canary-359342b1"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

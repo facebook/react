@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<63334719117bc7e81815150b27588000>>
+ * @generated SignedSource<<6786f79c50baa1d713a06b4ed12afb60>>
  */
 
 'use strict';
@@ -1328,11 +1328,14 @@ function validateChildKeys(node, parentType) {
         // but now we print a separate warning for them later.
         if (iteratorFn !== node.entries) {
           var iterator = iteratorFn.call(node);
-          var step;
 
-          while (!(step = iterator.next()).done) {
-            if (isValidElement(step.value)) {
-              validateExplicitKey(step.value, parentType);
+          if (iterator !== node) {
+            var step;
+
+            while (!(step = iterator.next()).done) {
+              if (isValidElement(step.value)) {
+                validateExplicitKey(step.value, parentType);
+              }
             }
           }
         }

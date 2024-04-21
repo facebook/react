@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0ce01fc662f6de8232355aded350d529>>
+ * @generated SignedSource<<1c5ee0ee0fef4e85b317999b53699b5f>>
  */
 
 'use strict';
@@ -9340,44 +9340,35 @@ function createChildReconciler(shouldTrackSideEffects) {
       throw new Error('An object is not an iterable. This error is likely caused by a bug in ' + 'React. Please file an issue.');
     }
 
+    var newChildren = iteratorFn.call(newChildrenIterable);
+
     {
-      // We don't support rendering Generators because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
-      if (typeof Symbol === 'function' && // $FlowFixMe[prop-missing] Flow doesn't know about toStringTag
-      newChildrenIterable[Symbol.toStringTag] === 'Generator') {
-        if (!didWarnAboutGenerators) {
-          error('Using Generators as children is unsupported and will likely yield ' + 'unexpected results because enumerating a generator mutates it. ' + 'You may convert it to an array with `Array.from()` or the ' + '`[...spread]` operator before rendering. Keep in mind ' + 'you might need to polyfill these features for older browsers.');
+      if (newChildren === newChildrenIterable) {
+        // We don't support rendering Generators as props because it's a mutation.
+        // See https://github.com/facebook/react/issues/12995
+        // We do support generators if they were created by a GeneratorFunction component
+        // as its direct child since we can recreate those by rerendering the component
+        // as needed.
+        var isGeneratorComponent = returnFiber.tag === FunctionComponent && // $FlowFixMe[method-unbinding]
+        Object.prototype.toString.call(returnFiber.type) === '[object GeneratorFunction]' && // $FlowFixMe[method-unbinding]
+        Object.prototype.toString.call(newChildren) === '[object Generator]';
+
+        if (!isGeneratorComponent) {
+          if (!didWarnAboutGenerators) {
+            error('Using Iterators as children is unsupported and will likely yield ' + 'unexpected results because enumerating a generator mutates it. ' + 'You may convert it to an array with `Array.from()` or the ' + '`[...spread]` operator before rendering. You can also use an ' + 'Iterable that can iterate multiple times over the same items.');
+          }
+
+          didWarnAboutGenerators = true;
         }
-
-        didWarnAboutGenerators = true;
-      } // Warn about using Maps as children
-
-
-      if (newChildrenIterable.entries === iteratorFn) {
+      } else if (newChildrenIterable.entries === iteratorFn) {
+        // Warn about using Maps as children
         if (!didWarnAboutMaps) {
           error('Using Maps as children is not supported. ' + 'Use an array of keyed ReactElements instead.');
-        }
 
-        didWarnAboutMaps = true;
-      } // First, validate keys.
-      // We'll get a different iterator later for the main pass.
-
-
-      var _newChildren = iteratorFn.call(newChildrenIterable);
-
-      if (_newChildren) {
-        var knownKeys = null;
-
-        var _step = _newChildren.next();
-
-        for (; !_step.done; _step = _newChildren.next()) {
-          var child = _step.value;
-          knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
+          didWarnAboutMaps = true;
         }
       }
     }
-
-    var newChildren = iteratorFn.call(newChildrenIterable);
 
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
@@ -9389,9 +9380,14 @@ function createChildReconciler(shouldTrackSideEffects) {
     var lastPlacedIndex = 0;
     var newIdx = 0;
     var nextOldFiber = null;
+    var knownKeys = null;
     var step = newChildren.next();
 
-    for (; oldFiber !== null && !step.done; newIdx++, step = newChildren.next()) {
+    {
+      knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber);
+    }
+
+    for (; oldFiber !== null && !step.done; newIdx++, step = newChildren.next(), knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber) ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
         oldFiber = null;
@@ -9448,7 +9444,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (; !step.done; newIdx++, step = newChildren.next()) {
+      for (; !step.done; newIdx++, step = newChildren.next(), knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber) ) {
         var _newFiber3 = createChild(returnFiber, step.value, lanes, debugInfo);
 
         if (_newFiber3 === null) {
@@ -9473,7 +9469,7 @@ function createChildReconciler(shouldTrackSideEffects) {
 
     var existingChildren = mapRemainingChildren(oldFiber); // Keep scanning and use the map to restore deleted items as moves.
 
-    for (; !step.done; newIdx++, step = newChildren.next()) {
+    for (; !step.done; newIdx++, step = newChildren.next(), knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber) ) {
       var _newFiber4 = updateFromMap(existingChildren, returnFiber, newIdx, step.value, lanes, debugInfo);
 
       if (_newFiber4 !== null) {
@@ -26475,7 +26471,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-852c4872';
+var ReactVersion = '19.0.0-canary-f6aae78f';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
