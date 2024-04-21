@@ -328,10 +328,30 @@ describe('ReactMultiChild', () => {
     );
   });
 
-  it('should warn for using generators as children', async () => {
+  it('should NOT warn for using generator functions as components', async () => {
     function* Foo() {
       yield <h1 key="1">Hello</h1>;
       yield <h1 key="2">World</h1>;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Foo />);
+    });
+
+    expect(container.textContent).toBe('HelloWorld');
+  });
+
+  it('should warn for using generators as children props', async () => {
+    function* getChildren() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
+    }
+
+    function Foo() {
+      const children = getChildren();
+      return <div>{children}</div>;
     }
 
     const container = document.createElement('div');
@@ -341,12 +361,60 @@ describe('ReactMultiChild', () => {
         root.render(<Foo />);
       });
     }).toErrorDev(
-      'Using Generators as children is unsupported and will likely yield ' +
-        'unexpected results because enumerating a generator mutates it. You may ' +
-        'convert it to an array with `Array.from()` or the `[...spread]` operator ' +
-        'before rendering. Keep in mind you might need to polyfill these features for older browsers.\n' +
+      'Using Iterators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. ' +
+        'You may convert it to an array with `Array.from()` or the ' +
+        '`[...spread]` operator before rendering. You can also use an ' +
+        'Iterable that can iterate multiple times over the same items.\n' +
+        '    in div (at **)\n' +
         '    in Foo (at **)',
     );
+
+    expect(container.textContent).toBe('HelloWorld');
+
+    // Test de-duplication
+    await act(async () => {
+      root.render(<Foo />);
+    });
+  });
+
+  it('should warn for using other types of iterators as children', async () => {
+    function Foo() {
+      let i = 0;
+      const iterator = {
+        [Symbol.iterator]() {
+          return iterator;
+        },
+        next() {
+          switch (i++) {
+            case 0:
+              return {done: false, value: <h1 key="1">Hello</h1>};
+            case 1:
+              return {done: false, value: <h1 key="2">World</h1>};
+            default:
+              return {done: true, value: undefined};
+          }
+        },
+      };
+      return iterator;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(async () => {
+        root.render(<Foo />);
+      });
+    }).toErrorDev(
+      'Using Iterators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. ' +
+        'You may convert it to an array with `Array.from()` or the ' +
+        '`[...spread]` operator before rendering. You can also use an ' +
+        'Iterable that can iterate multiple times over the same items.\n' +
+        '    in Foo (at **)',
+    );
+
+    expect(container.textContent).toBe('HelloWorld');
 
     // Test de-duplication
     await act(async () => {
