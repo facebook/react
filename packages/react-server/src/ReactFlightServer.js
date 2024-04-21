@@ -241,7 +241,9 @@ export type ReactClientValue =
   | bigint
   | ReadableStream
   | $AsyncIterable<ReactClientValue, ReactClientValue, void>
+  | $AsyncIterator<ReactClientValue, ReactClientValue, void>
   | Iterable<ReactClientValue>
+  | Iterator<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
   | Set<ReactClientValue>
@@ -1457,6 +1459,14 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   return '$W' + id.toString(16);
 }
 
+function serializeIterator(
+  request: Request,
+  iterator: Iterator<ReactClientValue>,
+): string {
+  const id = outlineModel(request, Array.from(iterator));
+  return '$i' + id.toString(16);
+}
+
 function serializeTypedArray(
   request: Request,
   tag: string,
@@ -1910,7 +1920,13 @@ function renderModelDestructive(
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      return renderFragment(request, task, Array.from((value: any)));
+      // TODO: Should we serialize the return value as well like we do for AsyncIterables?
+      const iterator = iteratorFn.call(value);
+      if (iterator === value) {
+        // Iterator, not Iterable
+        return serializeIterator(request, (iterator: any));
+      }
+      return renderFragment(request, task, Array.from((iterator: any)));
     }
 
     if (enableFlightReadableStream) {

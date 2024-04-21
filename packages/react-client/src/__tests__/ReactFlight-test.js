@@ -277,6 +277,24 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
   });
 
+  it('can render an iterator as a single shot iterator', async () => {
+    const iterator = (function* () {
+      yield 'A';
+      yield 'B';
+      yield 'C';
+    })();
+
+    const transport = ReactNoopFlightServer.render(iterator);
+    const result = await ReactNoopFlightClient.read(transport);
+
+    // The iterator should be the same as itself.
+    expect(result[Symbol.iterator]()).toBe(result);
+
+    expect(Array.from(result)).toEqual(['A', 'B', 'C']);
+    // We've already consumed this iterator.
+    expect(Array.from(result)).toEqual([]);
+  });
+
   it('can render undefined', async () => {
     function Undefined() {
       return undefined;

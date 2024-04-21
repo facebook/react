@@ -477,6 +477,12 @@ function parseModelString(
         });
         return data;
       }
+      case 'i': {
+        // Iterator
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return data[Symbol.iterator]();
+      }
       case 'I': {
         // $Infinity
         return Infinity;
