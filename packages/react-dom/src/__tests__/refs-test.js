@@ -382,14 +382,14 @@ describe('ref swapping', () => {
     }).rejects.toThrow('Expected ref to be a function');
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp && www
   it('undefined ref on manually inlined React element triggers error', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
       await act(() => {
         root.render({
-          $$typeof: Symbol.for('react.transitional.element'),
+          $$typeof: Symbol.for('react.element'),
           type: 'div',
           props: {
             ref: undefined,

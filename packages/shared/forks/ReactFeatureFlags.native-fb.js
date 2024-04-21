@@ -69,6 +69,8 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 
+export const renameElementSymbol = false;
+
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;

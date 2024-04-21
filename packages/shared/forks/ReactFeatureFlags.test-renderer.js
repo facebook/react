@@ -79,6 +79,8 @@ export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableEarlyReturnForPropDiffing = false;
 
+export const renameElementSymbol = true;
+
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
 // react package.
