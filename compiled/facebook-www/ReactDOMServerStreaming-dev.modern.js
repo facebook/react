@@ -10355,28 +10355,35 @@ function replayElement(request, task, keyPath, name, keyOrIndex, childIndex, typ
   } // We didn't find any matching nodes. We assume that this element was already
   // rendered in the prelude and skip it.
 
-} // $FlowFixMe[missing-local-annot]
+}
 
-
-function validateIterable(iterable, iteratorFn) {
+function validateIterable(task, iterable, childIndex, iterator, iteratorFn) {
   {
-    // We don't support rendering Generators because it's a mutation.
-    // See https://github.com/facebook/react/issues/12995
-    if (typeof Symbol === 'function' && iterable[Symbol.toStringTag] === 'Generator') {
-      if (!didWarnAboutGenerators) {
-        error('Using Generators as children is unsupported and will likely yield ' + 'unexpected results because enumerating a generator mutates it. ' + 'You may convert it to an array with `Array.from()` or the ' + '`[...spread]` operator before rendering. Keep in mind ' + 'you might need to polyfill these features for older browsers.');
+    if (iterator === iterable) {
+      // We don't support rendering Generators as props because it's a mutation.
+      // See https://github.com/facebook/react/issues/12995
+      // We do support generators if they were created by a GeneratorFunction component
+      // as its direct child since we can recreate those by rerendering the component
+      // as needed.
+      var isGeneratorComponent = task.componentStack !== null && task.componentStack.tag === 1 && // FunctionComponent
+      // $FlowFixMe[method-unbinding]
+      Object.prototype.toString.call(task.componentStack.type) === '[object GeneratorFunction]' && // $FlowFixMe[method-unbinding]
+      Object.prototype.toString.call(iterator) === '[object Generator]';
+
+      if (!isGeneratorComponent) {
+        if (!didWarnAboutGenerators) {
+          error('Using Iterators as children is unsupported and will likely yield ' + 'unexpected results because enumerating a generator mutates it. ' + 'You may convert it to an array with `Array.from()` or the ' + '`[...spread]` operator before rendering. You can also use an ' + 'Iterable that can iterate multiple times over the same items.');
+        }
+
+        didWarnAboutGenerators = true;
       }
-
-      didWarnAboutGenerators = true;
-    } // Warn about using Maps as children
-
-
-    if (iterable.entries === iteratorFn) {
+    } else if (iterable.entries === iteratorFn) {
+      // Warn about using Maps as children
       if (!didWarnAboutMaps) {
         error('Using Maps as children is not supported. ' + 'Use an array of keyed ReactElements instead.');
-      }
 
-      didWarnAboutMaps = true;
+        didWarnAboutMaps = true;
+      }
     }
   }
 }
@@ -10481,18 +10488,18 @@ function renderNodeDestructive(request, task, node, childIndex) {
     var iteratorFn = getIteratorFn(node);
 
     if (iteratorFn) {
-      {
-        validateIterable(node, iteratorFn);
-      }
-
       var iterator = iteratorFn.call(node);
 
       if (iterator) {
-        // We need to know how many total children are in this set, so that we
+        {
+          validateIterable(task, node, childIndex, iterator, iteratorFn);
+        } // We need to know how many total children are in this set, so that we
         // can allocate enough id slots to acommodate them. So we must exhaust
         // the iterator before we start recursively rendering the children.
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
+
+
         var step = iterator.next(); // If there are not entries, we need to push an empty so we start by checking that.
 
         if (!step.done) {

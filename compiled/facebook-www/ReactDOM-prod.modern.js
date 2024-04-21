@@ -5211,7 +5211,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildrenIterable.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -5239,7 +5239,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         iteratorFn
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next())
+      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -5253,7 +5253,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next()
+      newIdx++, step = newChildrenIterable.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -16398,7 +16398,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1722 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-c7f3d35a",
+  version: "19.0.0-www-modern-c10596ab",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2162 = {
@@ -16428,7 +16428,7 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-c7f3d35a"
+  reconcilerVersion: "19.0.0-www-modern-c10596ab"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16736,4 +16736,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-c7f3d35a";
+exports.version = "19.0.0-www-modern-c10596ab";

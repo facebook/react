@@ -2062,7 +2062,7 @@ module.exports = function ($$$config) {
           nextOldFiber = null,
           step = newChildrenIterable.next();
         null !== oldFiber && !step.done;
-        newIdx++, step = newChildrenIterable.next()
+        newIdx++, step = newChildrenIterable.next(), null
       ) {
         oldFiber.index > newIdx
           ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -2090,7 +2090,7 @@ module.exports = function ($$$config) {
           iteratorFn
         );
       if (null === oldFiber) {
-        for (; !step.done; newIdx++, step = newChildrenIterable.next())
+        for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
           (step = createChild(returnFiber, step.value, lanes)),
             null !== step &&
               ((currentFirstChild = placeChild(
@@ -2108,7 +2108,7 @@ module.exports = function ($$$config) {
       for (
         oldFiber = mapRemainingChildren(oldFiber);
         !step.done;
-        newIdx++, step = newChildrenIterable.next()
+        newIdx++, step = newChildrenIterable.next(), null
       )
         (step = updateFromMap(
           oldFiber,
@@ -12632,7 +12632,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-873e0310"
+      reconcilerVersion: "19.0.0-www-classic-1c6ccd17"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
