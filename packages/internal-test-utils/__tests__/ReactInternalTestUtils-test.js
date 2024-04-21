@@ -752,7 +752,17 @@ describe('ReactInternalTestUtils console assertions', () => {
         You must call one of the assertConsoleDev helpers between each act call."
       `);
 
-      await waitForAll(['A', 'B', 'A', 'B']);
+      await waitForAll([
+        'A',
+        'B',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              // React will try one more time in non-blocking updates before giving up.
+              'A',
+              'B',
+            ]),
+      ]);
     });
 
     test('should fail if waitForPaint is called before asserting', async () => {
@@ -1684,7 +1694,17 @@ describe('ReactInternalTestUtils console assertions', () => {
         You must call one of the assertConsoleDev helpers between each act call."
       `);
 
-      await waitForAll(['A', 'B', 'A', 'B']);
+      await waitForAll([
+        'A',
+        'B',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              // React will try one more time in non-blocking updates before giving up.
+              'A',
+              'B',
+            ]),
+      ]);
     });
 
     test('should fail if waitForPaint is called before asserting', async () => {
@@ -2634,7 +2654,17 @@ describe('ReactInternalTestUtils console assertions', () => {
         You must call one of the assertConsoleDev helpers between each act call."
       `);
 
-      await waitForAll(['A', 'B', 'A', 'B']);
+      await waitForAll([
+        'A',
+        'B',
+        ...(gate(flags => flags.enableUnifiedSyncLane)
+          ? []
+          : [
+              // React will try one more time in non-blocking updates before giving up.
+              'A',
+              'B',
+            ]),
+      ]);
     });
 
     test('should fail if waitForPaint is called before asserting', async () => {

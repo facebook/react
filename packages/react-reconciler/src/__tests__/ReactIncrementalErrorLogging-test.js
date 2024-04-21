@@ -249,18 +249,7 @@ describe('ReactIncrementalErrorLogging', () => {
         <Foo />
       </ErrorBoundary>,
     );
-    await waitForAll(
-      [
-        'render: 0',
-
-        'render: 1',
-
-        // Retry one more time before handling error
-        'render: 1',
-
-        'componentWillUnmount: 0',
-      ].filter(Boolean),
-    );
+    await waitForAll(['render: 0', 'render: 1', 'componentWillUnmount: 0']);
 
     expect(console.error).toHaveBeenCalledTimes(1);
     if (__DEV__) {

@@ -2152,88 +2152,65 @@ describe('Timeline profiler', () => {
           await waitForAll([
             'ErrorBoundary render',
             'ExampleThatThrows',
-            'ErrorBoundary render',
-            'ExampleThatThrows',
             'ErrorBoundary fallback',
           ]);
 
           const timelineData = stopProfilingAndGetTimelineData();
           expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "componentName": "ErrorBoundary",
-                          "duration": 10,
-                          "timestamp": 10,
-                          "type": "render",
-                          "warning": null,
-                        },
-                        {
-                          "componentName": "ExampleThatThrows",
-                          "duration": 0,
-                          "timestamp": 20,
-                          "type": "render",
-                          "warning": null,
-                        },
-                        {
-                          "componentName": "ErrorBoundary",
-                          "duration": 10,
-                          "timestamp": 20,
-                          "type": "render",
-                          "warning": null,
-                        },
-                        {
-                          "componentName": "ExampleThatThrows",
-                          "duration": 0,
-                          "timestamp": 30,
-                          "type": "render",
-                          "warning": null,
-                        },
-                        {
-                          "componentName": "ErrorBoundary",
-                          "duration": 10,
-                          "timestamp": 30,
-                          "type": "render",
-                          "warning": null,
-                        },
-                      ]
-                  `);
+            [
+              {
+                "componentName": "ErrorBoundary",
+                "duration": 10,
+                "timestamp": 10,
+                "type": "render",
+                "warning": null,
+              },
+              {
+                "componentName": "ExampleThatThrows",
+                "duration": 0,
+                "timestamp": 20,
+                "type": "render",
+                "warning": null,
+              },
+              {
+                "componentName": "ErrorBoundary",
+                "duration": 10,
+                "timestamp": 20,
+                "type": "render",
+                "warning": null,
+              },
+            ]
+          `);
           expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "lanes": "0b0000000000000000000000000100000",
-                          "timestamp": 10,
-                          "type": "schedule-render",
-                          "warning": null,
-                        },
-                        {
-                          "componentName": "ErrorBoundary",
-                          "componentStack": "
-                          in ErrorBoundary (at **)",
-                          "lanes": "0b0000000000000000000000000000010",
-                          "timestamp": 30,
-                          "type": "schedule-state-update",
-                          "warning": null,
-                        },
-                      ]
-                  `);
+            [
+              {
+                "lanes": "0b0000000000000000000000000100000",
+                "timestamp": 10,
+                "type": "schedule-render",
+                "warning": null,
+              },
+              {
+                "componentName": "ErrorBoundary",
+                "componentStack": "
+                in ErrorBoundary (at **)",
+                "lanes": "0b0000000000000000000000000000010",
+                "timestamp": 20,
+                "type": "schedule-state-update",
+                "warning": null,
+              },
+            ]
+          `);
           expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "componentName": "ExampleThatThrows",
-                          "message": "Expected error",
-                          "phase": "mount",
-                          "timestamp": 20,
-                          "type": "thrown-error",
-                        },
-                        {
-                          "componentName": "ExampleThatThrows",
-                          "message": "Expected error",
-                          "phase": "mount",
-                          "timestamp": 30,
-                          "type": "thrown-error",
-                        },
-                      ]
-                  `);
+            [
+              {
+                "componentName": "ExampleThatThrows",
+                "message": "Expected error",
+                "phase": "mount",
+                "timestamp": 20,
+                "type": "thrown-error",
+              },
+            ]
+          `);
         });
 
         it('should mark passive and layout effects', async () => {

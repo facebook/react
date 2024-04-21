@@ -380,7 +380,18 @@ describe('ReactIncrementalErrorHandling', () => {
     // Render the bad component synchronously
     ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
 
-    await waitFor(['Parent', 'BadRender', 'commit']);
+    await waitFor([
+      'Parent',
+      'BadRender',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            // Retry in non-blocking updates
+            'Parent',
+            'BadRender',
+          ]),
+      'commit',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
@@ -410,7 +421,7 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
     });
 
-    assertLog(['Parent', 'BadRender', 'Parent', 'BadRender', 'commit']);
+    assertLog(['Parent', 'BadRender', 'commit']);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
@@ -666,12 +677,6 @@ describe('ReactIncrementalErrorHandling', () => {
     assertLog([
       'ErrorBoundary render success',
       'BrokenRender',
-
-      // React retries one more time
-      'ErrorBoundary render success',
-      'BrokenRender',
-
-      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -716,12 +721,6 @@ describe('ReactIncrementalErrorHandling', () => {
     assertLog([
       'ErrorBoundary render success',
       'BrokenRender',
-
-      // React retries one more time
-      'ErrorBoundary render success',
-      'BrokenRender',
-
-      // Errored again on retry. Now handle it.
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
@@ -840,12 +839,6 @@ describe('ReactIncrementalErrorHandling', () => {
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
-
-      // React retries one more time
-      'RethrowErrorBoundary render',
-      'BrokenRender',
-
-      // Errored again on retry. Now handle it.
       'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
@@ -880,10 +873,6 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     assertLog([
-      'RethrowErrorBoundary render',
-      'BrokenRender',
-
-      // React retries one more time
       'RethrowErrorBoundary render',
       'BrokenRender',
 
@@ -1892,27 +1881,31 @@ describe('ReactIncrementalErrorHandling', () => {
       root.render(<Oops />);
     });
 
-    await act(async () => {
-      // Schedule a default pri and a low pri update on the root.
-      root.render(<Oops />);
-      React.startTransition(() => {
-        root.render(<AllGood />);
-      });
+    await expect(
+      act(async () => {
+        // Schedule a default pri and a low pri update on the root.
+        root.render(<Oops />);
+        React.startTransition(() => {
+          root.render(<AllGood />);
+        });
 
-      // Render through just the default pri update. The low pri update remains on
-      // the queue.
-      await waitFor(['Everything is fine.']);
+        // Render through the default pri and low pri update.
+        await waitFor(['Everything is fine.']);
 
-      // Schedule a discrete update on a child that triggers an error.
-      // The root should capture this error. But since there's still a pending
-      // update on the root, the error should be suppressed.
-      ReactNoop.discreteUpdates(() => {
-        setShouldThrow(true);
-      });
-    });
-    // Should render the final state without throwing the error.
-    assertLog(['Everything is fine.']);
-    expect(root).toMatchRenderedOutput('Everything is fine.');
+        // Schedule a discrete update on a child that triggers an error.
+        // Schedule a discrete update on a child that triggers an error.
+        // The root should capture this error. But since there's still a pending
+        // update on the root, the error should be suppressed.
+        // Schedule a discrete update on a child that triggers an error.
+        // The root should capture this error. But since there's still a pending
+        // update on the root, the error should be suppressed.
+        ReactNoop.discreteUpdates(() => {
+          setShouldThrow(true);
+        });
+      }),
+    ).rejects.toThrow('Oops');
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(null);
   });
 
   it("does not infinite loop if there's a render phase update in the same render as an error", async () => {

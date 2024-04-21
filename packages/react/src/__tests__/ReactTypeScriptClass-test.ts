@@ -338,11 +338,8 @@ describe('ReactTypeScriptClass', function() {
       expect(() => {
         ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
       }).toErrorDev([
-        // A failed component renders twice in DEV in concurrent mode
         'Warning: No `render` method found on the Empty instance: ' +
-          'you may have forgotten to define `render`.',
-        'Warning: No `render` method found on the Empty instance: ' +
-          'you may have forgotten to define `render`.',
+          'you may have forgotten to define `render`.'
       ]);
     } finally {
       window.removeEventListener('error', errorHandler);
@@ -445,8 +442,10 @@ describe('ReactTypeScriptClass', function() {
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
-      'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
-        'and will be ignored. Instead, declare it as an instance method.'
+      [
+        'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.',
+      ]
     );
   });
 
