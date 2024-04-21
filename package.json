@@ -97,6 +97,7 @@
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
+    "undici": "^5.28.4",
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
   },

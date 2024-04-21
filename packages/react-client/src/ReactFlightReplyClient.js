@@ -187,9 +187,17 @@ export function processReply(
 
   function serializeTypedArray(
     tag: string,
-    typedArray: ArrayBuffer | $ArrayBufferView,
+    typedArray: $ArrayBufferView,
   ): string {
-    const blob = new Blob([typedArray]);
+    const blob = new Blob([
+      // We should be able to pass the buffer straight through but Node < 18 treat
+      // multi-byte array blobs differently so we first convert it to single-byte.
+      new Uint8Array(
+        typedArray.buffer,
+        typedArray.byteOffset,
+        typedArray.byteLength,
+      ),
+    ]);
     const blobId = nextPartId++;
     if (formData === null) {
       formData = new FormData();
@@ -392,7 +400,13 @@ export function processReply(
 
       if (enableBinaryFlight) {
         if (value instanceof ArrayBuffer) {
-          return serializeTypedArray('A', value);
+          const blob = new Blob([value]);
+          const blobId = nextPartId++;
+          if (formData === null) {
+            formData = new FormData();
+          }
+          formData.append(formFieldPrefix + blobId, blob);
+          return '$' + 'A' + blobId.toString(16);
         }
         if (value instanceof Int8Array) {
           // char
