@@ -290,6 +290,10 @@ export type FunctionEffect =
       error: CompilerErrorDetailOptions;
     }
   | {
+      kind: "ReactMutation";
+      error: CompilerErrorDetailOptions;
+    }
+  | {
       kind: "ContextMutation";
       places: ReadonlySet<Place>;
       effect: Effect;

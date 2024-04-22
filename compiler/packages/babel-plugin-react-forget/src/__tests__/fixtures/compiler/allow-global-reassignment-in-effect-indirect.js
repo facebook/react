@@ -6,7 +6,6 @@ function Component() {
   const [state, setState] = useState(someGlobal);
 
   const setGlobal = () => {
-    // TODO: this should be allowed since setGlobal is only used in an effect
     someGlobal = true;
   };
   useEffect(() => {

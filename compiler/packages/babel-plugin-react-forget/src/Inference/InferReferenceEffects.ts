@@ -237,6 +237,7 @@ export default function inferReferenceEffects(
   if (!options.isFunctionExpression) {
     functionEffects.forEach((eff) => {
       switch (eff.kind) {
+        case "ReactMutation":
         case "GlobalMutation": {
           CompilerError.throw(eff.error);
         }
@@ -395,6 +396,7 @@ class InferenceState {
       return;
     }
 
+    // Propagate effects of function expressions to the outer (ie current) effect context
     for (const value of values) {
       if (
         (value.kind === "FunctionExpression" ||
@@ -402,25 +404,68 @@ class InferenceState {
         value.loweredFunc.func.effects != null
       ) {
         for (const effect of value.loweredFunc.func.effects) {
-          if (effect.kind === "GlobalMutation") {
+          if (
+            effect.kind === "GlobalMutation" ||
+            effect.kind === "ReactMutation"
+          ) {
+            // Known effects are always propagated upwards
             functionEffects.push(effect);
           } else {
+            /**
+             * Contextual effects need to be replayed against the current inference
+             * state, which may know more about the value to which the effect applied.
+             * The main cases are:
+             * 1. The mutated context value is _still_ a context value in the current scope,
+             *    so we have to continue propagating the original context mutation.
+             * 2. The mutated context value is a mutable value in the current scope,
+             *    so the context mutation was fine and we can skip propagating the effect.
+             * 3. The mutated context value  is an immutable value in the current scope,
+             *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
+             *    more detailed effect to the current function context.
+             */
             for (const place of effect.places) {
               if (this.isDefined(place)) {
-                this.referenceAndRecordEffects(
+                const replayedEffect = this.reference(
                   { ...place, loc: effect.loc },
                   effect.effect,
-                  reason,
-                  functionEffects
+                  reason
                 );
+                if (replayedEffect != null) {
+                  if (replayedEffect.kind === "ContextMutation") {
+                    // Case 1, still a context value so propagate the original effect
+                    functionEffects.push(effect);
+                  } else {
+                    // Case 3, immutable value so propagate the more precise effect
+                    functionEffects.push(replayedEffect);
+                  }
+                } // else case 2, local mutable value so this effect was fine
               }
             }
           }
         }
       }
     }
+    const functionEffect = this.reference(place, effectKind, reason);
+    if (functionEffect !== null) {
+      functionEffects.push(functionEffect);
+    }
+  }
+
+  reference(
+    place: Place,
+    effectKind: Effect,
+    reason: ValueReason
+  ): FunctionEffect | null {
+    const values = this.#variables.get(place.identifier.id);
+    CompilerError.invariant(values !== undefined, {
+      reason: "[InferReferenceEffects] Expected value to be initialized",
+      description: null,
+      loc: place.loc,
+      suggestions: null,
+    });
     let valueKind: AbstractValue | null = this.kind(place);
     let effect: Effect | null = null;
+    let functionEffect: FunctionEffect | null = null;
     switch (effectKind) {
       case Effect.Freeze: {
         if (
@@ -452,7 +497,7 @@ class InferenceState {
                     operand,
                     Effect.Freeze,
                     ValueReason.Other,
-                    functionEffects
+                    []
                   );
                 }
               }
@@ -476,7 +521,7 @@ class InferenceState {
       }
       case Effect.Mutate: {
         if (valueKind.kind === ValueKind.Context) {
-          functionEffects.push({
+          functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
             effect: effectKind,
@@ -484,11 +529,15 @@ class InferenceState {
               valueKind.context.size === 0
                 ? new Set([place])
                 : valueKind.context,
-          });
+          };
         } else if (valueKind.kind !== ValueKind.Mutable) {
           let reason = getWriteErrorReason(valueKind);
-          functionEffects.push({
-            kind: "GlobalMutation",
+          functionEffect = {
+            kind:
+              valueKind.reason.size === 1 &&
+              valueKind.reason.has(ValueReason.Global)
+                ? "GlobalMutation"
+                : "ReactMutation",
             error: {
               reason,
               description:
@@ -499,14 +548,14 @@ class InferenceState {
               suggestions: null,
               severity: ErrorSeverity.InvalidReact,
             },
-          });
+          };
         }
         effect = Effect.Mutate;
         break;
       }
       case Effect.Store: {
         if (valueKind.kind === ValueKind.Context) {
-          functionEffects.push({
+          functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
             effect: effectKind,
@@ -514,11 +563,15 @@ class InferenceState {
               valueKind.context.size === 0
                 ? new Set([place])
                 : valueKind.context,
-          });
+          };
         } else if (valueKind.kind !== ValueKind.Mutable) {
           let reason = getWriteErrorReason(valueKind);
-          functionEffects.push({
-            kind: "GlobalMutation",
+          functionEffect = {
+            kind:
+              valueKind.reason.size === 1 &&
+              valueKind.reason.has(ValueReason.Global)
+                ? "GlobalMutation"
+                : "ReactMutation",
             error: {
               reason,
               description:
@@ -529,7 +582,7 @@ class InferenceState {
               suggestions: null,
               severity: ErrorSeverity.InvalidReact,
             },
-          });
+          };
         }
 
         /*
@@ -582,6 +635,7 @@ class InferenceState {
       suggestions: null,
     });
     place.effect = effect;
+    return functionEffect;
   }
 
   /*
@@ -1112,6 +1166,42 @@ function inferBlock(
             []
           );
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
+
+          /**
+           * If this function references other functions, propagate the referenced function's
+           * effects to this function.
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * g();
+           * ```
+           *
+           * In this example, because `g` references `f`, we propagate the GlobalMutation from
+           * `f` to `g`. Thus, referencing `g` in `g()` will evaluate the GlobalMutation in the outer
+           * function effect context and report an error. But if instead we do:
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * useEffect(() => g(), [g])
+           * ```
+           *
+           * Now `g`'s effects will be discarded since they're in a useEffect.
+           */
+          const values = state.values(operand);
+          for (const value of values) {
+            if (
+              (value.kind === "ObjectMethod" ||
+                value.kind === "FunctionExpression") &&
+              value.loweredFunc.func.effects !== null
+            ) {
+              instrValue.loweredFunc.func.effects ??= [];
+              instrValue.loweredFunc.func.effects.push(
+                ...value.loweredFunc.func.effects
+              );
+            }
+          }
         }
         /*
          * If a closure did not capture any mutable values, then we can consider it to be
@@ -1530,7 +1620,7 @@ function inferBlock(
           instrValue.place,
           effect,
           ValueReason.Other,
-          functionEffects
+          []
         );
         lvalue.effect = Effect.ConditionallyMutate;
         // direct aliasing: `a = b`;
@@ -1628,7 +1718,7 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          functionEffects
+          []
         );
 
         const lvalue = instr.lvalue;
