@@ -2170,7 +2170,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
+  // @gate enableFlightReadableStream && enableAsyncIterableChildren
   it('shares state when moving keyed Server Components that render async iterables', async () => {
     function StatefulClient({name, initial}) {
       const [state] = React.useState(initial);
@@ -2183,39 +2183,11 @@ describe('ReactFlight', () => {
       yield <Stateful key="b" initial={'b' + initial} />;
     }
 
-    function ListClient({children}) {
-      // TODO: Unwrap AsyncIterables natively in React. For now we do it in this wrapper.
-      const resolvedChildren = [];
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const fragment of children) {
-        // We should've wrapped each child in a keyed Fragment.
-        expect(fragment.type).toBe(React.Fragment);
-        const fragmentChildren = [];
-        const iterator = fragment.props.children[Symbol.asyncIterator]();
-        if (iterator === fragment.props.children) {
-          console.error(
-            'AyncIterators are not valid children of React. It must be a multi-shot AsyncIterable.',
-          );
-        }
-        for (let entry; !(entry = React.use(iterator.next())).done; ) {
-          fragmentChildren.push(entry.value);
-        }
-        resolvedChildren.push(
-          <React.Fragment key={fragment.key}>
-            {fragmentChildren}
-          </React.Fragment>,
-        );
-      }
-      return <div>{resolvedChildren}</div>;
-    }
-
-    const List = clientReference(ListClient);
-
     const transport = ReactNoopFlightServer.render(
-      <List>
+      <div>
         <ServerComponent key="A" initial={1} />
         <ServerComponent key="B" initial={2} />
-      </List>,
+      </div>,
     );
 
     await act(async () => {
@@ -2234,10 +2206,10 @@ describe('ReactFlight', () => {
     // We swap the Server Components and the state of each child inside each fragment should move.
     // Really the Fragment itself moves.
     const transport2 = ReactNoopFlightServer.render(
-      <List>
+      <div>
         <ServerComponent key="B" initial={4} />
         <ServerComponent key="A" initial={3} />
-      </List>,
+      </div>,
     );
 
     await act(async () => {
@@ -2336,7 +2308,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
+  // @gate enableFlightReadableStream && enableAsyncIterableChildren
   it('preserves debug info for server-to-server pass through of async iterables', async () => {
     let resolve;
     const iteratorPromise = new Promise(r => (resolve = r));
@@ -2346,23 +2318,6 @@ describe('ReactFlight', () => {
       yield <span>dis?</span>;
       resolve();
     }
-
-    function ListClient({children: fragment}) {
-      // TODO: Unwrap AsyncIterables natively in React. For now we do it in this wrapper.
-      const resolvedChildren = [];
-      const iterator = fragment.props.children[Symbol.asyncIterator]();
-      if (iterator === fragment.props.children) {
-        console.error(
-          'AyncIterators are not valid children of React. It must be a multi-shot AsyncIterable.',
-        );
-      }
-      for (let entry; !(entry = React.use(iterator.next())).done; ) {
-        resolvedChildren.push(entry.value);
-      }
-      return <div>{resolvedChildren}</div>;
-    }
-
-    const List = clientReference(ListClient);
 
     function Keyed({children}) {
       // Keying this should generate a fragment.
@@ -2375,9 +2330,9 @@ describe('ReactFlight', () => {
         ReactNoopFlightClient.read(transport),
       ).root;
       return (
-        <List>
+        <div>
           <Keyed key="keyed">{children}</Keyed>
-        </List>
+        </div>
       );
     }
 

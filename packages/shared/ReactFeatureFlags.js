@@ -82,6 +82,7 @@ export const enableFetchInstrumentation = true;
 
 export const enableBinaryFlight = __EXPERIMENTAL__;
 export const enableFlightReadableStream = __EXPERIMENTAL__;
+export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 

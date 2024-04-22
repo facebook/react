@@ -3346,7 +3346,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  it('Supports iterable', async () => {
+  it('supports iterable', async () => {
     const Immutable = require('immutable');
 
     const mappedJSX = Immutable.fromJS([
@@ -3366,7 +3366,71 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('Supports bigint', async () => {
+  // @gate enableAsyncIterableChildren
+  it('supports async generator component', async () => {
+    async function* App() {
+      yield <span key="1">{await Promise.resolve('Hi')}</span>;
+      yield ' ';
+      yield <span key="2">{await Promise.resolve('World')}</span>;
+    }
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(
+        <div>
+          <App />
+        </div>,
+      );
+      pipe(writable);
+    });
+
+    // Each act retries once which causes a new ping which schedules
+    // new work but only after the act has finished rendering.
+    await act(() => {});
+    await act(() => {});
+    await act(() => {});
+    await act(() => {});
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Hi</span> <span>World</span>
+      </div>,
+    );
+  });
+
+  // @gate enableAsyncIterableChildren
+  it('supports async iterable children', async () => {
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        yield <span key="1">{await Promise.resolve('Hi')}</span>;
+        yield ' ';
+        yield <span key="2">{await Promise.resolve('World')}</span>;
+      },
+    };
+
+    function App({children}) {
+      return <div>{children}</div>;
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App>{iterable}</App>);
+      pipe(writable);
+    });
+
+    // Each act retries once which causes a new ping which schedules
+    // new work but only after the act has finished rendering.
+    await act(() => {});
+    await act(() => {});
+    await act(() => {});
+    await act(() => {});
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Hi</span> <span>World</span>
+      </div>,
+    );
+  });
+
+  it('supports bigint', async () => {
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>{10n}</div>,
