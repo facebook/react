@@ -28,7 +28,7 @@ function Component(props) {
    8 |   let y = x;
    9 |   let mutateProps = () => {
 > 10 |     y.foo = true;
-     |     ^ InvalidReact: This mutates a variable that React considers immutable.. Found mutation of [object Object] (10:10)
+     |     ^ InvalidReact: This mutates a variable that React considers immutable. Found mutation of `y` (10:10)
   11 |   };
   12 |   let mutatePropsIndirect = () => {
   13 |     mutateProps();

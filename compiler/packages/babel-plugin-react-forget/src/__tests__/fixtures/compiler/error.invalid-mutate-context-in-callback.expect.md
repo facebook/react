@@ -27,7 +27,7 @@ function Component(props) {
   10 |   // independently
   11 |   const onClick = () => {
 > 12 |     FooContext.current = true;
-     |     ^^^^^^^^^^ InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated.. Found mutation of [object Object] (12:12)
+     |     ^^^^^^^^^^ InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. Found mutation of `FooContext` (12:12)
   13 |   };
   14 |   return <div onClick={onClick} />;
   15 | }

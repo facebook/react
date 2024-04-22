@@ -541,8 +541,9 @@ class InferenceState {
             error: {
               reason,
               description:
-                place.identifier.name !== null
-                  ? `Found mutation of ${place.identifier.name}`
+                place.identifier.name !== null &&
+                place.identifier.name.kind === "named"
+                  ? `Found mutation of \`${place.identifier.name.value}\``
                   : null,
               loc: place.loc,
               suggestions: null,
@@ -575,8 +576,9 @@ class InferenceState {
             error: {
               reason,
               description:
-                place.identifier.name !== null
-                  ? `Found mutation of ${place.identifier.name}`
+                place.identifier.name !== null &&
+                place.identifier.name.kind === "named"
+                  ? `Found mutation of \`${place.identifier.name.value}\``
                   : null,
               loc: place.loc,
               suggestions: null,
@@ -1986,18 +1988,18 @@ function areArgumentsImmutableAndNonMutating(
 
 function getWriteErrorReason(abstractValue: AbstractValue): string {
   if (abstractValue.reason.has(ValueReason.Global)) {
-    return "Writing to a variable defined outside a component or hook is not allowed. Consider using an effect.";
+    return "Writing to a variable defined outside a component or hook is not allowed. Consider using an effect";
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-    return "Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX.";
+    return "Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX";
   } else if (abstractValue.reason.has(ValueReason.Context)) {
-    return `Mutating a value returned from 'useContext()', which should not be mutated.`;
+    return `Mutating a value returned from 'useContext()', which should not be mutated`;
   } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-    return "Mutating a value returned from a function that should not be mutated.";
+    return "Mutating a value returned from a function whose return value should not be mutated";
   } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-    return "Mutating props or hook arguments is not allowed. Consider using a local variable instead.";
+    return "Mutating component props or hook arguments is not allowed. Consider using a local variable instead";
   } else if (abstractValue.reason.has(ValueReason.State)) {
-    return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead.";
+    return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
   } else {
-    return "This mutates a variable that React considers immutable.";
+    return "This mutates a variable that React considers immutable";
   }
 }

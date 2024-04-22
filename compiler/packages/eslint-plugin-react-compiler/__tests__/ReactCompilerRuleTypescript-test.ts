@@ -52,7 +52,7 @@ const tests: CompilerTestCases = {
       errors: [
         {
           message:
-            "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead.",
+            "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead",
           line: 7,
         },
       ],
