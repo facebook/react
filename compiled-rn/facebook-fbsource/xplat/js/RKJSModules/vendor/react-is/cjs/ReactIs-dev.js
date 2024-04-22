@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4b798dcd431887c30b264d36a3b13441>>
+ * @generated SignedSource<<67ecfa6f3ffb08a7102950c78e1002d4>>
  */
 
 'use strict';
@@ -18,11 +18,23 @@ if (__DEV__) {
 
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-// ATTENTION
+// Re-export dynamic flags from the internal module.
+var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+
+var enableRenderableContext = dynamicFlags.enableRenderableContext;
+ // The rest of the flags are static for better dead code elimination.
+var enableDebugTracing = false;
+var enableScopeAPI = false;
+var enableLegacyHidden = false;
+var enableTransitionTracing = false;
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -37,17 +49,6 @@ var REACT_SUSPENSE_LIST_TYPE = Symbol.for('react.suspense_list');
 var REACT_MEMO_TYPE = Symbol.for('react.memo');
 var REACT_LAZY_TYPE = Symbol.for('react.lazy');
 var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
-
-// Re-export dynamic flags from the internal module.
-var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-// the exports object every time a flag is read.
-
-var enableRenderableContext = dynamicFlags.enableRenderableContext;
- // The rest of the flags are static for better dead code elimination.
-var enableDebugTracing = false;
-var enableScopeAPI = false;
-var enableLegacyHidden = false;
-var enableTransitionTracing = false;
 
 var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 function isValidElementType(type) {

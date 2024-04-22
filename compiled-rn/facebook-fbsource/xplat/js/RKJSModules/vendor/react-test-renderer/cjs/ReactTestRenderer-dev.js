@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<72055afa4818e8a565d07875c49b2d9d>>
+ * @generated SignedSource<<46b519886f2205ba3e56e9120fea4a08>>
  */
 
 'use strict';
@@ -168,11 +168,12 @@ var HostHoistable = 26;
 var HostSingleton = 27;
 var IncompleteFunctionComponent = 28;
 
-// ATTENTION
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -5422,7 +5423,11 @@ function coerceRef(returnFiber, current, workInProgress, element) {
 }
 
 function throwOnInvalidObjectType(returnFiber, newChild) {
-  // $FlowFixMe[method-unbinding]
+  if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
+    throw new Error('A React Element from an older version of React was rendered. ' + 'This is not supported. It can happen if:\n' + '- Multiple copies of the "react" package is used.\n' + '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' + '- A compiler tries to "inline" JSX instead of using the runtime.');
+  } // $FlowFixMe[method-unbinding]
+
+
   var childString = Object.prototype.toString.call(newChild);
   throw new Error("Objects are not valid as a React child (found: " + (childString === '[object Object]' ? 'object with keys {' + Object.keys(newChild).join(', ') + '}' : childString) + "). " + 'If you meant to render a collection of children, use an array ' + 'instead.');
 }
@@ -22978,7 +22983,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-acecb093';
+var ReactVersion = '19.0.0-canary-faeca3c1';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b7764b0ac63cb81257aa2e03fa2024ca>>
+ * @generated SignedSource<<dd4130449d81f060937446adea45cb8c>>
  */
 
 'use strict';
@@ -19,11 +19,24 @@ if (__DEV__) {
 var React = require('react');
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-// ATTENTION
+// Re-export dynamic flags from the internal module.
+var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+
+var enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
+    enableRenderableContext = dynamicFlags.enableRenderableContext,
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+var enableDebugTracing = false;
+var enableScopeAPI = false;
+var enableLegacyHidden = false;
+var enableTransitionTracing = false;
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -91,18 +104,6 @@ function printWarning(level, format, args) {
     Function.prototype.apply.call(console[level], console, argsWithFormat);
   }
 }
-
-// Re-export dynamic flags from the internal module.
-var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-// the exports object every time a flag is read.
-
-var enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
-    enableRenderableContext = dynamicFlags.enableRenderableContext,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
-var enableDebugTracing = false;
-var enableScopeAPI = false;
-var enableLegacyHidden = false;
-var enableTransitionTracing = false;
 
 function getWrappedName$1(outerType, innerType, wrapperName) {
   var displayName = outerType.displayName;
@@ -1006,7 +1007,7 @@ function defineRefPropWarningGetter(props, displayName) {
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
- * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * will not work. Instead test $$typeof field against Symbol.for('react.transitional.element') to check
  * if something is a React Element.
  *
  * @param {*} type

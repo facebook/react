@@ -7,13 +7,15 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<881038bf21de122675cb4eb0358c5cfd>>
+ * @generated SignedSource<<62661c1c6567dce2b9c9ba9b3170fc16>>
  */
 
 "use strict";
 var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
   React = require("react"),
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
 function formatProdErrorMessage(code) {
   var url = "https://react.dev/errors/" + code;
@@ -30,10 +32,8 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
-var disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  ReactSharedInternals =
-    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+var ReactSharedInternals =
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 function jsxProd(type, config, maybeKey) {
   var key = null,
     ref = null;
@@ -63,7 +63,7 @@ function jsxProd(type, config, maybeKey) {
         (maybeKey[propName$0] = config[propName$0]);
   }
   return {
-    $$typeof: REACT_ELEMENT_TYPE,
+    $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: ref,

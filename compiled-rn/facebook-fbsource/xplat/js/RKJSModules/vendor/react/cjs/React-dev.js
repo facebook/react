@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<745c28cba28ff3a4a3a391cfdfdd1c1b>>
+ * @generated SignedSource<<d7190ab854f8773414d6c6f329023c5e>>
  */
 
 'use strict';
@@ -27,13 +27,31 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-canary-e8808e1d';
+var ReactVersion = '19.0.0-canary-086a539f';
 
-// ATTENTION
+// Re-export dynamic flags from the internal module.
+var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+
+var enableAsyncActions = dynamicFlags.enableAsyncActions,
+    enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
+    enableRenderableContext = dynamicFlags.enableRenderableContext,
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+var enableDebugTracing = false;
+var enableScopeAPI = false;
+var enableLegacyHidden = false;
+var enableTransitionTracing = false;
+// because JSX is an extremely hot path.
+
+var enableRefAsProp = false;
+var disableLegacyMode = false;
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -67,23 +85,6 @@ function getIteratorFn(maybeIterable) {
 
   return null;
 }
-
-// Re-export dynamic flags from the internal module.
-var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-// the exports object every time a flag is read.
-
-var enableAsyncActions = dynamicFlags.enableAsyncActions,
-    enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
-    enableRenderableContext = dynamicFlags.enableRenderableContext,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
-var enableDebugTracing = false;
-var enableScopeAPI = false;
-var enableLegacyHidden = false;
-var enableTransitionTracing = false;
-// because JSX is an extremely hot path.
-
-var enableRefAsProp = false;
-var disableLegacyMode = false;
 
 var ReactSharedInternals = {
   H: null,
@@ -1307,7 +1308,7 @@ function defineRefPropWarningGetter(props, displayName) {
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
- * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * will not work. Instead test $$typeof field against Symbol.for('react.transitional.element') to check
  * if something is a React Element.
  *
  * @param {*} type

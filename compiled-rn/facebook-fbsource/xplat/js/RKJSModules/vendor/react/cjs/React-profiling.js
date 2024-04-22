@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9fd3393509037fbe670735ccea6d8cca>>
+ * @generated SignedSource<<fca7ed5acdad0291a3b263d96d523766>>
  */
 
 "use strict";
@@ -16,7 +16,11 @@
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
 var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
+  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -86,15 +90,11 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
-  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
-  disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   ReactSharedInternals = { H: null, C: null, T: null, owner: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   return {
-    $$typeof: REACT_ELEMENT_TYPE,
+    $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: _ref,
@@ -146,7 +146,7 @@ function isValidElement(object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_ELEMENT_TYPE
+    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
   );
 }
 function coerceStringRef(mixedRef, owner, type) {
@@ -243,7 +243,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         break;
       case "object":
         switch (children.$$typeof) {
-          case REACT_ELEMENT_TYPE:
+          case REACT_LEGACY_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = !0;
             break;
@@ -683,7 +683,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-canary-52747c26";
+exports.version = "19.0.0-canary-966142ac";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<885ed33c17f9bf322d3f754c50d26ed9>>
+ * @generated SignedSource<<51142bb6cdcde9e8faffbaa114b1cbc7>>
  */
 
 "use strict";
@@ -1652,7 +1652,7 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler({
       );
   }
 });
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -2910,6 +2910,10 @@ function unwrapThenable(thenable) {
   return trackUsedThenable(thenableState$1, thenable, index);
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
+  if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
+    throw Error(
+      'A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the "react" package is used.\n- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n- A compiler tries to "inline" JSX instead of using the runtime.'
+    );
   returnFiber = Object.prototype.toString.call(newChild);
   throw Error(
     "Objects are not valid as a React child (found: " +
@@ -3070,7 +3074,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return (
             (lanes = createFiberFromTypeAndProps(
               newChild.type,
@@ -3133,7 +3137,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return newChild.key === key
             ? updateElement(returnFiber, oldFiber, newChild, lanes)
             : null;
@@ -3187,7 +3191,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return (
             (existingChildren =
               existingChildren.get(
@@ -3418,7 +3422,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           a: {
             for (var key = newChild.key; null !== currentFirstChild; ) {
               if (currentFirstChild.key === key) {
@@ -10602,7 +10606,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1099 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-d7b022bb",
+    version: "19.0.0-canary-7eb4df81",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10645,7 +10649,7 @@ var internals$jscomp$inline_1366 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-d7b022bb"
+  reconcilerVersion: "19.0.0-canary-7eb4df81"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

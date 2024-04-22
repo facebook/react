@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9f8b5b89043962a79b6b2123a526bf46>>
+ * @generated SignedSource<<3a52338cfe089716cbc5c55bc70f1def>>
  */
 
 "use strict";
@@ -31,7 +31,7 @@ function _createClass(Constructor, protoProps, staticProps) {
 var assign = Object.assign,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -1473,6 +1473,10 @@ function unwrapThenable(thenable) {
   return trackUsedThenable(thenableState$1, thenable, index);
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
+  if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
+    throw Error(
+      'A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the "react" package is used.\n- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n- A compiler tries to "inline" JSX instead of using the runtime.'
+    );
   returnFiber = Object.prototype.toString.call(newChild);
   throw Error(
     "Objects are not valid as a React child (found: " +
@@ -1633,7 +1637,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return (
             (lanes = createFiberFromTypeAndProps(
               newChild.type,
@@ -1696,7 +1700,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return newChild.key === key
             ? updateElement(returnFiber, oldFiber, newChild, lanes)
             : null;
@@ -1750,7 +1754,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           return (
             (existingChildren =
               existingChildren.get(
@@ -1981,7 +1985,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
+        case REACT_LEGACY_ELEMENT_TYPE:
           a: {
             for (var key = newChild.key; null !== currentFirstChild; ) {
               if (currentFirstChild.key === key) {
@@ -9760,7 +9764,7 @@ var devToolsConfig$jscomp$inline_1101 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-359342b1",
+  version: "19.0.0-canary-1895753d",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9804,7 +9808,7 @@ var devToolsConfig$jscomp$inline_1101 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-359342b1"
+  reconcilerVersion: "19.0.0-canary-1895753d"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
