@@ -11,7 +11,7 @@
  */
 
 "use strict";
-var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
 require("ReactFeatureFlags");
+var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
 exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.jsxDEV = void 0;

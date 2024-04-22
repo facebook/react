@@ -25,13 +25,28 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var ReactVersion = '19.0.0-www-classic-29916c01';
+          var ReactVersion = '19.0.0-www-classic-ece5ea17';
 
-// ATTENTION
+// Re-export dynamic flags from the www version.
+var dynamicFeatureFlags = require('ReactFeatureFlags');
+
+var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+ // On WWW, false is used for a new modern build.
+// because JSX is an extremely hot path.
+
+var disableStringRefs = false;
+var disableLegacyMode = false;
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -421,20 +436,6 @@ function checkPropStringCoercion(value, propName) {
     }
   }
 }
-
-// Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require('ReactFeatureFlags');
-
-var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-    enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
- // On WWW, false is used for a new modern build.
-// because JSX is an extremely hot path.
-
-var disableStringRefs = false;
-var disableLegacyMode = false;
 
 function getWrappedName$1(outerType, innerType, wrapperName) {
   var displayName = outerType.displayName;
@@ -1313,7 +1314,7 @@ function elementRefGetterWithDeprecationWarning() {
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
- * will not work. Instead test $$typeof field against Symbol.for('react.element') to check
+ * will not work. Instead test $$typeof field against Symbol.for('react.transitional.element') to check
  * if something is a React Element.
  *
  * @param {*} type

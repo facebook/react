@@ -66,11 +66,22 @@ function printWarning(level, format, args) {
   }
 }
 
-// ATTENTION
+// Re-export dynamic flags from the www version.
+var dynamicFeatureFlags = require('ReactFeatureFlags');
+
+var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+    enableUseDeferredValueInitialArg = dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+ // On WWW, true is used for a new modern build.
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -598,16 +609,6 @@ function checkHtmlStringCoercion(value) {
     }
   }
 }
-
-// Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require('ReactFeatureFlags');
-
-var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    enableUseDeferredValueInitialArg = dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
- // On WWW, true is used for a new modern build.
 
 // $FlowFixMe[method-unbinding]
 var hasOwnProperty = Object.prototype.hasOwnProperty;

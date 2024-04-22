@@ -16,11 +16,20 @@ if (__DEV__) {
   (function() {
 'use strict';
 
-// ATTENTION
+// Re-export dynamic flags from the www version.
+var dynamicFeatureFlags = require('ReactFeatureFlags');
+
+var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+    enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+ // On WWW, false is used for a new modern build.
+
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for('react.element');
+
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
+var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
 var REACT_PORTAL_TYPE = Symbol.for('react.portal');
 var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
 var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
@@ -39,14 +48,6 @@ var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for('react.debug_trace_mode');
 var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
 var REACT_LEGACY_HIDDEN_TYPE = Symbol.for('react.legacy_hidden');
 var REACT_TRACING_MARKER_TYPE = Symbol.for('react.tracing_marker');
-
-// Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require('ReactFeatureFlags');
-
-var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-    enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
- // On WWW, false is used for a new modern build.
 
 var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 function isValidElementType(type) {

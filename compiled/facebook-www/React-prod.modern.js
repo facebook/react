@@ -11,7 +11,13 @@
  */
 
 "use strict";
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -81,19 +87,13 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-  disableDefaultPropsExceptForClasses =
-    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   ReactSharedInternals = { H: null, C: null, T: null, owner: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   enableRefAsProp &&
     ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
   return {
-    $$typeof: REACT_ELEMENT_TYPE,
+    $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: _ref,
@@ -152,7 +152,7 @@ function isValidElement(object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_ELEMENT_TYPE
+    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
   );
 }
 function coerceStringRef(mixedRef, owner, type) {
@@ -249,7 +249,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         break;
       case "object":
         switch (children.$$typeof) {
-          case REACT_ELEMENT_TYPE:
+          case REACT_LEGACY_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = !0;
             break;
@@ -695,4 +695,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-c379aa62";
+exports.version = "19.0.0-www-modern-4c7400c8";

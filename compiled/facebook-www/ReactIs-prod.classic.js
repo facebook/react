@@ -11,7 +11,11 @@
  */
 
 "use strict";
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -29,16 +33,12 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
   if ("object" === typeof object && null !== object) {
     var $$typeof = object.$$typeof;
     switch ($$typeof) {
-      case REACT_ELEMENT_TYPE:
+      case REACT_LEGACY_ELEMENT_TYPE:
         switch (((object = object.type), object)) {
           case REACT_FRAGMENT_TYPE:
           case REACT_PROFILER_TYPE:
@@ -73,7 +73,7 @@ exports.ContextConsumer = enableRenderableContext
   ? REACT_CONSUMER_TYPE
   : REACT_CONTEXT_TYPE;
 exports.ContextProvider = ContextProvider;
-exports.Element = REACT_ELEMENT_TYPE;
+exports.Element = REACT_LEGACY_ELEMENT_TYPE;
 exports.ForwardRef = REACT_FORWARD_REF_TYPE;
 exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.Lazy = REACT_LAZY_TYPE;
@@ -97,7 +97,7 @@ exports.isElement = function (object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_ELEMENT_TYPE
+    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
   );
 };
 exports.isForwardRef = function (object) {

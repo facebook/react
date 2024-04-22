@@ -1479,6 +1479,8 @@ module.exports = function ($$$config) {
     workInProgress.ref = returnFiber;
   }
   function throwOnInvalidObjectType(returnFiber, newChild) {
+    if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
+      throw Error(formatProdErrorMessage(525));
     returnFiber = Object.prototype.toString.call(newChild);
     throw Error(
       formatProdErrorMessage(
@@ -11036,7 +11038,8 @@ module.exports = function ($$$config) {
     disableDefaultPropsExceptForClasses =
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
-    REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+    REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
     REACT_PORTAL_TYPE = Symbol.for("react.portal"),
     REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
     REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -12149,7 +12152,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-41c33f0e"
+      reconcilerVersion: "19.0.0-www-modern-0b51321e"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

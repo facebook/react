@@ -16,7 +16,9 @@ if (__DEV__) {
   (function() {
 'use strict';
 
-// ATTENTION
+// Re-export dynamic flags from the www version.
+require('ReactFeatureFlags');
+
 var REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
 var REACT_MEMO_TYPE = Symbol.for('react.memo');
 
