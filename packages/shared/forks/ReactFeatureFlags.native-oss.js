@@ -104,6 +104,8 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableEarlyReturnForPropDiffing = false;
 
+export const renameElementSymbol = true;
+
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;

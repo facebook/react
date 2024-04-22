@@ -382,7 +382,7 @@ describe('ref swapping', () => {
     }).rejects.toThrow('Expected ref to be a function');
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp && www
   it('undefined ref on manually inlined React element triggers error', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

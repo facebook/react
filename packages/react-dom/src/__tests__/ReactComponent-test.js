@@ -612,6 +612,32 @@ describe('ReactComponent', () => {
     );
   });
 
+  // @gate renameElementSymbol
+  it('throws if a legacy element is used as a child', async () => {
+    const inlinedElement = {
+      $$typeof: Symbol.for('react.element'),
+      type: 'div',
+      key: null,
+      ref: null,
+      props: {},
+      _owner: null,
+    };
+    const element = <div>{[inlinedElement]}</div>;
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(element);
+      }),
+    ).rejects.toThrowError(
+      'A React Element from an older version of React was rendered. ' +
+        'This is not supported. It can happen if:\n' +
+        '- Multiple copies of the "react" package is used.\n' +
+        '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
+        '- A compiler tries to "inline" JSX instead of using the runtime.',
+    );
+  });
+
   it('throws if a plain object even if it is in an owner', async () => {
     class Foo extends React.Component {
       render() {

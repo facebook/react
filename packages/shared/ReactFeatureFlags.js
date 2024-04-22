@@ -143,6 +143,9 @@ export const transitionLaneExpirationMs = 5000;
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
+// Renames the internal symbol for elements since they have changed signature/constructor
+export const renameElementSymbol = true;
+
 // Removes legacy style context
 export const disableLegacyContext = true;
 

@@ -134,6 +134,7 @@ describe('ReactDOMOption', () => {
     }).rejects.toThrow('Objects are not valid as a React child');
   });
 
+  // @gate www
   it('should support element-ish child', async () => {
     // This is similar to <fbt>.
     // We don't toString it because you must instead provide a value prop.

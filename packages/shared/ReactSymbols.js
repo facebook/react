@@ -7,12 +7,17 @@
  * @flow
  */
 
+import {renameElementSymbol} from 'shared/ReactFeatureFlags';
+
 // ATTENTION
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 
 // The Symbol used to tag the ReactElement-like types.
-export const REACT_ELEMENT_TYPE: symbol = Symbol.for('react.element');
+export const REACT_LEGACY_ELEMENT_TYPE: symbol = Symbol.for('react.element');
+export const REACT_ELEMENT_TYPE: symbol = renameElementSymbol
+  ? Symbol.for('react.transitional.element')
+  : REACT_LEGACY_ELEMENT_TYPE;
 export const REACT_PORTAL_TYPE: symbol = Symbol.for('react.portal');
 export const REACT_FRAGMENT_TYPE: symbol = Symbol.for('react.fragment');
 export const REACT_STRICT_MODE_TYPE: symbol = Symbol.for('react.strict_mode');

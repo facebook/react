@@ -509,5 +509,6 @@
   "521": "flushSyncWork should not be called from builds that support legacy mode. This is a bug in React.",
   "522": "Invalid form element. requestFormReset must be passed a form that was rendered by React.",
   "523": "The render was aborted due to being postponed.",
-  "524": "Values cannot be passed to next() of AsyncIterables passed to Client Components."
+  "524": "Values cannot be passed to next() of AsyncIterables passed to Client Components.",
+  "525": "A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the \"react\" package is used.\n- A library pre-bundled an old copy of \"react\" or \"react/jsx-runtime\".\n- A compiler tries to \"inline\" JSX instead of using the runtime."
 }
