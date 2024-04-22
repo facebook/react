@@ -19851,27 +19851,19 @@ function safelyDetachRef(current, nearestMountedAncestor) {
         }
       }
     } else if (typeof ref === 'function') {
-      var retVal;
-
       try {
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            retVal = ref(null);
+            ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          retVal = ref(null);
+          ref(null);
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
-      }
-
-      {
-        if (typeof retVal === 'function') {
-          error('Unexpected return value from a callback ref in %s. ' + 'A callback ref should not return a function.', getComponentNameFromFiber(current));
-        }
       }
     } else {
       // $FlowFixMe[incompatible-use] unable to narrow type to RefObject
@@ -28647,7 +28639,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-0d0181ca';
+var ReactVersion = '19.0.0-www-classic-43b5b0ab';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

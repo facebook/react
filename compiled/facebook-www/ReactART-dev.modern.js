@@ -63,7 +63,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-3c131a55';
+var ReactVersion = '19.0.0-www-modern-dd5be59c';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -17819,27 +17819,19 @@ function safelyDetachRef(current, nearestMountedAncestor) {
         }
       }
     } else if (typeof ref === 'function') {
-      var retVal;
-
       try {
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            retVal = ref(null);
+            ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          retVal = ref(null);
+          ref(null);
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
-      }
-
-      {
-        if (typeof retVal === 'function') {
-          error('Unexpected return value from a callback ref in %s. ' + 'A callback ref should not return a function.', getComponentNameFromFiber(current));
-        }
       }
     } else {
       // $FlowFixMe[incompatible-use] unable to narrow type to RefObject

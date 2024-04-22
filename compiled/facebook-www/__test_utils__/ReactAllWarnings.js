@@ -306,7 +306,6 @@ export default [
   "Unexpected host component type. Expected a form. This is a bug in React.",
   "Unexpected pop.",
   "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
-  "Unexpected return value from a callback ref in %s. A callback ref should not return a function.",
   "Unexpected type for suspenseCallback.",
   "Unexpected type of fiber triggered a suspensey commit. This is a bug in React.",
   "Unknown ARIA attribute `%s`. Did you mean `%s`?",
