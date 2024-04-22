@@ -2049,22 +2049,19 @@ module.exports = function ($$$config) {
     function reconcileChildrenIterator(
       returnFiber,
       currentFirstChild,
-      newChildrenIterable,
+      newChildren,
       lanes
     ) {
-      var iteratorFn = getIteratorFn(newChildrenIterable);
-      if ("function" !== typeof iteratorFn)
-        throw Error(formatProdErrorMessage(150));
-      newChildrenIterable = iteratorFn.call(newChildrenIterable);
-      if (null == newChildrenIterable) throw Error(formatProdErrorMessage(151));
+      if (null == newChildren) throw Error(formatProdErrorMessage(151));
       for (
-        var previousNewFiber = (iteratorFn = null),
+        var resultingFirstChild = null,
+          previousNewFiber = null,
           oldFiber = currentFirstChild,
           newIdx = (currentFirstChild = 0),
           nextOldFiber = null,
-          step = newChildrenIterable.next();
+          step = newChildren.next();
         null !== oldFiber && !step.done;
-        newIdx++, step = newChildrenIterable.next(), null
+        newIdx++, step = newChildren.next(), null
       ) {
         oldFiber.index > newIdx
           ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -2080,7 +2077,7 @@ module.exports = function ($$$config) {
           deleteChild(returnFiber, oldFiber);
         currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
         null === previousNewFiber
-          ? (iteratorFn = newFiber)
+          ? (resultingFirstChild = newFiber)
           : (previousNewFiber.sibling = newFiber);
         previousNewFiber = newFiber;
         oldFiber = nextOldFiber;
@@ -2089,10 +2086,10 @@ module.exports = function ($$$config) {
         return (
           deleteRemainingChildren(returnFiber, oldFiber),
           isHydrating && pushTreeFork(returnFiber, newIdx),
-          iteratorFn
+          resultingFirstChild
         );
       if (null === oldFiber) {
-        for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+        for (; !step.done; newIdx++, step = newChildren.next(), null)
           (step = createChild(returnFiber, step.value, lanes)),
             null !== step &&
               ((currentFirstChild = placeChild(
@@ -2101,16 +2098,16 @@ module.exports = function ($$$config) {
                 newIdx
               )),
               null === previousNewFiber
-                ? (iteratorFn = step)
+                ? (resultingFirstChild = step)
                 : (previousNewFiber.sibling = step),
               (previousNewFiber = step));
         isHydrating && pushTreeFork(returnFiber, newIdx);
-        return iteratorFn;
+        return resultingFirstChild;
       }
       for (
         oldFiber = mapRemainingChildren(oldFiber);
         !step.done;
-        newIdx++, step = newChildrenIterable.next(), null
+        newIdx++, step = newChildren.next(), null
       )
         (step = updateFromMap(
           oldFiber,
@@ -2125,7 +2122,7 @@ module.exports = function ($$$config) {
               oldFiber.delete(null === step.key ? newIdx : step.key),
             (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
       shouldTrackSideEffects &&
@@ -2133,7 +2130,7 @@ module.exports = function ($$$config) {
           return deleteChild(returnFiber, child);
         });
       isHydrating && pushTreeFork(returnFiber, newIdx);
-      return iteratorFn;
+      return resultingFirstChild;
     }
     function reconcileChildFibersImpl(
       returnFiber,
@@ -2265,13 +2262,18 @@ module.exports = function ($$$config) {
             newChild,
             lanes
           );
-        if (getIteratorFn(newChild))
+        if (getIteratorFn(newChild)) {
+          child = getIteratorFn(newChild);
+          if ("function" !== typeof child)
+            throw Error(formatProdErrorMessage(150));
+          newChild = child.call(newChild);
           return reconcileChildrenIterator(
             returnFiber,
             currentFirstChild,
             newChild,
             lanes
           );
+        }
         if ("function" === typeof newChild.then)
           return reconcileChildFibersImpl(
             returnFiber,
@@ -12635,7 +12637,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-fca253b5"
+      reconcilerVersion: "19.0.0-www-classic-a5d26b69"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

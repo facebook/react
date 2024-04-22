@@ -2983,22 +2983,19 @@ function createChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber,
     currentFirstChild,
-    newChildrenIterable,
+    newChildren,
     lanes
   ) {
-    var iteratorFn = getIteratorFn(newChildrenIterable);
-    if ("function" !== typeof iteratorFn)
-      throw Error(formatProdErrorMessage(150));
-    newChildrenIterable = iteratorFn.call(newChildrenIterable);
-    if (null == newChildrenIterable) throw Error(formatProdErrorMessage(151));
+    if (null == newChildren) throw Error(formatProdErrorMessage(151));
     for (
-      var previousNewFiber = (iteratorFn = null),
+      var resultingFirstChild = null,
+        previousNewFiber = null,
         oldFiber = currentFirstChild,
         newIdx = (currentFirstChild = 0),
         nextOldFiber = null,
-        step = newChildrenIterable.next();
+        step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3014,7 +3011,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, oldFiber);
       currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
       null === previousNewFiber
-        ? (iteratorFn = newFiber)
+        ? (resultingFirstChild = newFiber)
         : (previousNewFiber.sibling = newFiber);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
@@ -3023,24 +3020,24 @@ function createChildReconciler(shouldTrackSideEffects) {
       return (
         deleteRemainingChildren(returnFiber, oldFiber),
         isHydrating && pushTreeFork(returnFiber, newIdx),
-        iteratorFn
+        resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
       isHydrating && pushTreeFork(returnFiber, newIdx);
-      return iteratorFn;
+      return resultingFirstChild;
     }
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -3049,7 +3046,7 @@ function createChildReconciler(shouldTrackSideEffects) {
             oldFiber.delete(null === step.key ? newIdx : step.key),
           (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
           null === previousNewFiber
-            ? (iteratorFn = step)
+            ? (resultingFirstChild = step)
             : (previousNewFiber.sibling = step),
           (previousNewFiber = step));
     shouldTrackSideEffects &&
@@ -3057,7 +3054,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         return deleteChild(returnFiber, child);
       });
     isHydrating && pushTreeFork(returnFiber, newIdx);
-    return iteratorFn;
+    return resultingFirstChild;
   }
   function reconcileChildFibersImpl(
     returnFiber,
@@ -3189,13 +3186,18 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
-      if (getIteratorFn(newChild))
+      if (getIteratorFn(newChild)) {
+        child = getIteratorFn(newChild);
+        if ("function" !== typeof child)
+          throw Error(formatProdErrorMessage(150));
+        newChild = child.call(newChild);
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes
         );
+      }
       if ("function" === typeof newChild.then)
         return reconcileChildFibersImpl(
           returnFiber,
@@ -12848,7 +12850,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-classic-0b6adad3"
+    reconcilerVersion: "19.0.0-www-classic-b7cce8fb"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -13395,19 +13397,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$353;
+  var JSCompiler_inline_result$jscomp$354;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1524 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1524) {
-      var element$jscomp$inline_1525 = document.createElement("div");
-      element$jscomp$inline_1525.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1524 =
-        "function" === typeof element$jscomp$inline_1525.oninput;
+    var isSupported$jscomp$inline_1533 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1533) {
+      var element$jscomp$inline_1534 = document.createElement("div");
+      element$jscomp$inline_1534.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1533 =
+        "function" === typeof element$jscomp$inline_1534.oninput;
     }
-    JSCompiler_inline_result$jscomp$353 = isSupported$jscomp$inline_1524;
-  } else JSCompiler_inline_result$jscomp$353 = !1;
+    JSCompiler_inline_result$jscomp$354 = isSupported$jscomp$inline_1533;
+  } else JSCompiler_inline_result$jscomp$354 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$353 &&
+    JSCompiler_inline_result$jscomp$354 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13785,20 +13787,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1565 = 0;
-  i$jscomp$inline_1565 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1565++
+  var i$jscomp$inline_1574 = 0;
+  i$jscomp$inline_1574 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1574++
 ) {
-  var eventName$jscomp$inline_1566 =
-      simpleEventPluginEvents[i$jscomp$inline_1565],
-    domEventName$jscomp$inline_1567 =
-      eventName$jscomp$inline_1566.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1568 =
-      eventName$jscomp$inline_1566[0].toUpperCase() +
-      eventName$jscomp$inline_1566.slice(1);
+  var eventName$jscomp$inline_1575 =
+      simpleEventPluginEvents[i$jscomp$inline_1574],
+    domEventName$jscomp$inline_1576 =
+      eventName$jscomp$inline_1575.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1577 =
+      eventName$jscomp$inline_1575[0].toUpperCase() +
+      eventName$jscomp$inline_1575.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1567,
-    "on" + capitalizedEvent$jscomp$inline_1568
+    domEventName$jscomp$inline_1576,
+    "on" + capitalizedEvent$jscomp$inline_1577
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17411,7 +17413,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-0b6adad3",
+  version: "19.0.0-www-classic-b7cce8fb",
   rendererPackageName: "react-dom"
 });
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17544,7 +17546,7 @@ assign(Internals, {
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-0b6adad3",
+  version: "19.0.0-www-classic-b7cce8fb",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -18011,4 +18013,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-0b6adad3";
+exports.version = "19.0.0-www-classic-b7cce8fb";

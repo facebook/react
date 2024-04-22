@@ -5323,6 +5323,9 @@ exports.renderNextChunk = function (stream) {
                 var ping = task$jscomp$0.ping;
                 x.then(ping, ping);
                 task$jscomp$0.thenableState = getThenableStateAfterSuspending();
+                null !== task$jscomp$0.componentStack &&
+                  (task$jscomp$0.componentStack =
+                    task$jscomp$0.componentStack.parent);
               } else {
                 task$jscomp$0.replay.pendingTasks--;
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
@@ -5391,6 +5394,9 @@ exports.renderNextChunk = function (stream) {
                 var ping$jscomp$0 = task$jscomp$0.ping;
                 x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
                 task$jscomp$0.thenableState = getThenableStateAfterSuspending();
+                null !== task$jscomp$0.componentStack &&
+                  (task$jscomp$0.componentStack =
+                    task$jscomp$0.componentStack.parent);
               } else {
                 var errorInfo$jscomp$0 = getThrownInfo(
                   request,

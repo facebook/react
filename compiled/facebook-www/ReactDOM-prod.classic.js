@@ -2897,22 +2897,19 @@ function createChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber,
     currentFirstChild,
-    newChildrenIterable,
+    newChildren,
     lanes
   ) {
-    var iteratorFn = getIteratorFn(newChildrenIterable);
-    if ("function" !== typeof iteratorFn)
-      throw Error(formatProdErrorMessage(150));
-    newChildrenIterable = iteratorFn.call(newChildrenIterable);
-    if (null == newChildrenIterable) throw Error(formatProdErrorMessage(151));
+    if (null == newChildren) throw Error(formatProdErrorMessage(151));
     for (
-      var previousNewFiber = (iteratorFn = null),
+      var resultingFirstChild = null,
+        previousNewFiber = null,
         oldFiber = currentFirstChild,
         newIdx = (currentFirstChild = 0),
         nextOldFiber = null,
-        step = newChildrenIterable.next();
+        step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -2928,7 +2925,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, oldFiber);
       currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
       null === previousNewFiber
-        ? (iteratorFn = newFiber)
+        ? (resultingFirstChild = newFiber)
         : (previousNewFiber.sibling = newFiber);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
@@ -2937,24 +2934,24 @@ function createChildReconciler(shouldTrackSideEffects) {
       return (
         deleteRemainingChildren(returnFiber, oldFiber),
         isHydrating && pushTreeFork(returnFiber, newIdx),
-        iteratorFn
+        resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
       isHydrating && pushTreeFork(returnFiber, newIdx);
-      return iteratorFn;
+      return resultingFirstChild;
     }
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -2963,7 +2960,7 @@ function createChildReconciler(shouldTrackSideEffects) {
             oldFiber.delete(null === step.key ? newIdx : step.key),
           (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
           null === previousNewFiber
-            ? (iteratorFn = step)
+            ? (resultingFirstChild = step)
             : (previousNewFiber.sibling = step),
           (previousNewFiber = step));
     shouldTrackSideEffects &&
@@ -2971,7 +2968,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         return deleteChild(returnFiber, child);
       });
     isHydrating && pushTreeFork(returnFiber, newIdx);
-    return iteratorFn;
+    return resultingFirstChild;
   }
   function reconcileChildFibersImpl(
     returnFiber,
@@ -3103,13 +3100,18 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
-      if (getIteratorFn(newChild))
+      if (getIteratorFn(newChild)) {
+        child = getIteratorFn(newChild);
+        if ("function" !== typeof child)
+          throw Error(formatProdErrorMessage(150));
+        newChild = child.call(newChild);
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes
         );
+      }
       if ("function" === typeof newChild.then)
         return reconcileChildFibersImpl(
           returnFiber,
@@ -13079,19 +13081,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$351;
+  var JSCompiler_inline_result$jscomp$352;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1497 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1497) {
-      var element$jscomp$inline_1498 = document.createElement("div");
-      element$jscomp$inline_1498.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1497 =
-        "function" === typeof element$jscomp$inline_1498.oninput;
+    var isSupported$jscomp$inline_1506 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1506) {
+      var element$jscomp$inline_1507 = document.createElement("div");
+      element$jscomp$inline_1507.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1506 =
+        "function" === typeof element$jscomp$inline_1507.oninput;
     }
-    JSCompiler_inline_result$jscomp$351 = isSupported$jscomp$inline_1497;
-  } else JSCompiler_inline_result$jscomp$351 = !1;
+    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1506;
+  } else JSCompiler_inline_result$jscomp$352 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$351 &&
+    JSCompiler_inline_result$jscomp$352 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13469,20 +13471,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1538 = 0;
-  i$jscomp$inline_1538 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1538++
+  var i$jscomp$inline_1547 = 0;
+  i$jscomp$inline_1547 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1547++
 ) {
-  var eventName$jscomp$inline_1539 =
-      simpleEventPluginEvents[i$jscomp$inline_1538],
-    domEventName$jscomp$inline_1540 =
-      eventName$jscomp$inline_1539.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1541 =
-      eventName$jscomp$inline_1539[0].toUpperCase() +
-      eventName$jscomp$inline_1539.slice(1);
+  var eventName$jscomp$inline_1548 =
+      simpleEventPluginEvents[i$jscomp$inline_1547],
+    domEventName$jscomp$inline_1549 =
+      eventName$jscomp$inline_1548.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1550 =
+      eventName$jscomp$inline_1548[0].toUpperCase() +
+      eventName$jscomp$inline_1548.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1540,
-    "on" + capitalizedEvent$jscomp$inline_1541
+    domEventName$jscomp$inline_1549,
+    "on" + capitalizedEvent$jscomp$inline_1550
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17035,17 +17037,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1729 = {
+var devToolsConfig$jscomp$inline_1738 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-73a7e510",
+  version: "19.0.0-www-classic-baf64147",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2160 = {
-  bundleType: devToolsConfig$jscomp$inline_1729.bundleType,
-  version: devToolsConfig$jscomp$inline_1729.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1729.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1729.rendererConfig,
+var internals$jscomp$inline_2169 = {
+  bundleType: devToolsConfig$jscomp$inline_1738.bundleType,
+  version: devToolsConfig$jscomp$inline_1738.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1738.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1738.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17061,26 +17063,26 @@ var internals$jscomp$inline_2160 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1729.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1738.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-73a7e510"
+  reconcilerVersion: "19.0.0-www-classic-baf64147"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2170 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2161.isDisabled &&
-    hook$jscomp$inline_2161.supportsFiber
+    !hook$jscomp$inline_2170.isDisabled &&
+    hook$jscomp$inline_2170.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2161.inject(
-        internals$jscomp$inline_2160
+      (rendererID = hook$jscomp$inline_2170.inject(
+        internals$jscomp$inline_2169
       )),
-        (injectedHook = hook$jscomp$inline_2161);
+        (injectedHook = hook$jscomp$inline_2170);
     } catch (err) {}
 }
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
@@ -17534,4 +17536,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-73a7e510";
+exports.version = "19.0.0-www-classic-baf64147";

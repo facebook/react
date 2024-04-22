@@ -125,6 +125,7 @@ var enableProfilerNestedUpdatePhase = true;
 var enableAsyncActions = true;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
+var enableAsyncIterableChildren = false;
 var enableSuspenseCallback = true;
 var passChildrenWhenCloningPersistedNodes = false;
 var disableLegacyMode = false;
@@ -7130,7 +7131,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         var _created3 = createFiberFromFragment(newChild, returnFiber.mode, lanes, null);
 
         _created3.return = returnFiber;
@@ -7215,7 +7216,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         if (key !== null) {
           return null;
         }
@@ -7283,7 +7284,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           return updateFromMap(existingChildren, returnFiber, newIdx, init(payload), lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         var _matchedFiber3 = existingChildren.get(newIdx) || null;
 
         return updateFragment(returnFiber, _matchedFiber3, newChild, lanes, null, mergeDebugInfo(debugInfo, newChild._debugInfo));
@@ -7531,7 +7532,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     return resultingFirstChild;
   }
 
-  function reconcileChildrenIterator(returnFiber, currentFirstChild, newChildrenIterable, lanes, debugInfo) {
+  function reconcileChildrenIteratable(returnFiber, currentFirstChild, newChildrenIterable, lanes, debugInfo) {
     // This is the same implementation as reconcileChildrenArray(),
     // but using the iterator instead.
     var iteratorFn = getIteratorFn(newChildrenIterable);
@@ -7570,6 +7571,10 @@ function createChildReconciler(shouldTrackSideEffects) {
       }
     }
 
+    return reconcileChildrenIterator(returnFiber, currentFirstChild, newChildren, lanes, debugInfo);
+  }
+
+  function reconcileChildrenIterator(returnFiber, currentFirstChild, newChildren, lanes, debugInfo) {
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
     }
@@ -7890,8 +7895,8 @@ function createChildReconciler(shouldTrackSideEffects) {
       }
 
       if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(returnFiber, currentFirstChild, newChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
-      } // Usables are a valid React node type. When React encounters a Usable in
+        return reconcileChildrenIteratable(returnFiber, currentFirstChild, newChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
+      }
       // a child position, it unwraps it using the same algorithm as `use`. For
       // example, for promises, React will throw an exception to unwind the
       // stack, then replay the component once the promise resolves.
@@ -8401,7 +8406,8 @@ function warnIfAsyncClientComponent(Component) {
     // for transpiled async functions. Neither mechanism is completely
     // bulletproof but together they cover the most common cases.
     var isAsyncFunction = // $FlowIgnore[method-unbinding]
-    Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+    Object.prototype.toString.call(Component) === '[object AsyncFunction]' || // $FlowIgnore[method-unbinding]
+    Object.prototype.toString.call(Component) === '[object AsyncGeneratorFunction]';
 
     if (isAsyncFunction) {
       // Encountered an async Client Component. This is not yet supported.
@@ -28644,7 +28650,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-7d7660cc';
+var ReactVersion = '19.0.0-www-classic-eaa29620';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

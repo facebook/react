@@ -4992,6 +4992,8 @@ function performWork(request$jscomp$2) {
                 var ping = task.ping;
                 x.then(ping, ping);
                 task.thenableState = getThenableStateAfterSuspending();
+                null !== task.componentStack &&
+                  (task.componentStack = task.componentStack.parent);
               } else {
                 task.replay.pendingTasks--;
                 task.abortSet.delete(task);
@@ -5061,6 +5063,8 @@ function performWork(request$jscomp$2) {
               var ping$jscomp$0 = task.ping;
               x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
               task.thenableState = getThenableStateAfterSuspending();
+              null !== task.componentStack &&
+                (task.componentStack = task.componentStack.parent);
             } else {
               var errorInfo$jscomp$0 = getThrownInfo(
                 request,
@@ -5662,4 +5666,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-ef2f7d1b";
+exports.version = "19.0.0-www-modern-521cf579";

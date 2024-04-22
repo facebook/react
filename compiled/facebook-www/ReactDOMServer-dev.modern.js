@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-modern-5c36a344';
+var ReactVersion = '19.0.0-www-modern-b5a582ea';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -8114,7 +8114,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         throw SuspenseException;
       }
   }
-} // This is used to track the actual thenable that suspended so it can be
+}
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -10454,7 +10454,8 @@ function validateIterable(task, iterable, childIndex, iterator, iteratorFn) {
       // We do support generators if they were created by a GeneratorFunction component
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
-      var isGeneratorComponent = task.componentStack !== null && task.componentStack.tag === 1 && // FunctionComponent
+      var isGeneratorComponent = childIndex === -1 && // Only the root child is valid
+      task.componentStack !== null && task.componentStack.tag === 1 && // FunctionComponent
       // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(task.componentStack.type) === '[object GeneratorFunction]' && // $FlowFixMe[method-unbinding]
       Object.prototype.toString.call(iterator) === '[object Generator]';
@@ -10589,7 +10590,7 @@ function renderNodeDestructive(request, task, node, childIndex) {
         // generation algorithm.
 
 
-        var step = iterator.next(); // If there are not entries, we need to push an empty so we start by checking that.
+        var step = iterator.next();
 
         if (!step.done) {
           var children = [];
@@ -10600,12 +10601,11 @@ function renderNodeDestructive(request, task, node, childIndex) {
           } while (!step.done);
 
           renderChildrenArray(request, task, children, childIndex);
-          return;
         }
 
         return;
       }
-    } // Usables are a valid React node type. When React encounters a Usable in
+    }
     // a child position, it unwraps it using the same algorithm as `use`. For
     // example, for promises, React will throw an exception to unwind the
     // stack, then replay the component once the promise resolves.
@@ -11348,7 +11348,13 @@ function retryRenderTask(request, task, segment) {
         // Something suspended again, let's pick it back up later.
         var ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState = getThenableStateAfterSuspending(); // We pop one task off the stack because the node that suspended will be tried again,
+        // which will add it back onto the stack.
+
+        if (task.componentStack !== null) {
+          task.componentStack = task.componentStack.parent;
+        }
+
         return;
       }
     }
@@ -11409,7 +11415,13 @@ function retryReplayTask(request, task) {
         // Something suspended again, let's pick it back up later.
         var ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
+        task.thenableState = getThenableStateAfterSuspending(); // We pop one task off the stack because the node that suspended will be tried again,
+        // which will add it back onto the stack.
+
+        if (task.componentStack !== null) {
+          task.componentStack = task.componentStack.parent;
+        }
+
         return;
       }
     }

@@ -2191,14 +2191,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$296;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_430 = "oninput" in document;
-    if (!isSupported$jscomp$inline_430) {
-      var element$jscomp$inline_431 = document.createElement("div");
-      element$jscomp$inline_431.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_430 =
-        "function" === typeof element$jscomp$inline_431.oninput;
+    var isSupported$jscomp$inline_431 = "oninput" in document;
+    if (!isSupported$jscomp$inline_431) {
+      var element$jscomp$inline_432 = document.createElement("div");
+      element$jscomp$inline_432.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_431 =
+        "function" === typeof element$jscomp$inline_432.oninput;
     }
-    JSCompiler_inline_result$jscomp$296 = isSupported$jscomp$inline_430;
+    JSCompiler_inline_result$jscomp$296 = isSupported$jscomp$inline_431;
   } else JSCompiler_inline_result$jscomp$296 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$296 &&
@@ -2634,19 +2634,19 @@ for (
             }
             console.error(error);
           },
-    i$jscomp$inline_471 = 0;
-  i$jscomp$inline_471 < simpleEventPluginEvents.length;
-  i$jscomp$inline_471++
+    i$jscomp$inline_472 = 0;
+  i$jscomp$inline_472 < simpleEventPluginEvents.length;
+  i$jscomp$inline_472++
 ) {
-  var eventName$jscomp$inline_472 =
-      simpleEventPluginEvents[i$jscomp$inline_471],
-    domEventName$jscomp$inline_473 = eventName$jscomp$inline_472.toLowerCase(),
-    capitalizedEvent$jscomp$inline_474 =
-      eventName$jscomp$inline_472[0].toUpperCase() +
-      eventName$jscomp$inline_472.slice(1);
+  var eventName$jscomp$inline_473 =
+      simpleEventPluginEvents[i$jscomp$inline_472],
+    domEventName$jscomp$inline_474 = eventName$jscomp$inline_473.toLowerCase(),
+    capitalizedEvent$jscomp$inline_475 =
+      eventName$jscomp$inline_473[0].toUpperCase() +
+      eventName$jscomp$inline_473.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_473,
-    "on" + capitalizedEvent$jscomp$inline_474
+    domEventName$jscomp$inline_474,
+    "on" + capitalizedEvent$jscomp$inline_475
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -5343,22 +5343,19 @@ function createChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber,
     currentFirstChild,
-    newChildrenIterable,
+    newChildren,
     lanes
   ) {
-    var iteratorFn = getIteratorFn(newChildrenIterable);
-    if ("function" !== typeof iteratorFn)
-      throw Error(formatProdErrorMessage(150));
-    newChildrenIterable = iteratorFn.call(newChildrenIterable);
-    if (null == newChildrenIterable) throw Error(formatProdErrorMessage(151));
+    if (null == newChildren) throw Error(formatProdErrorMessage(151));
     for (
-      var previousNewFiber = (iteratorFn = null),
+      var resultingFirstChild = null,
+        previousNewFiber = null,
         oldFiber = currentFirstChild,
         newIdx = (currentFirstChild = 0),
         nextOldFiber = null,
-        step = newChildrenIterable.next();
+        step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -5374,7 +5371,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, oldFiber);
       currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
       null === previousNewFiber
-        ? (iteratorFn = newFiber)
+        ? (resultingFirstChild = newFiber)
         : (previousNewFiber.sibling = newFiber);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
@@ -5383,24 +5380,24 @@ function createChildReconciler(shouldTrackSideEffects) {
       return (
         deleteRemainingChildren(returnFiber, oldFiber),
         isHydrating && pushTreeFork(returnFiber, newIdx),
-        iteratorFn
+        resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
       isHydrating && pushTreeFork(returnFiber, newIdx);
-      return iteratorFn;
+      return resultingFirstChild;
     }
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -5409,7 +5406,7 @@ function createChildReconciler(shouldTrackSideEffects) {
             oldFiber.delete(null === step.key ? newIdx : step.key),
           (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
           null === previousNewFiber
-            ? (iteratorFn = step)
+            ? (resultingFirstChild = step)
             : (previousNewFiber.sibling = step),
           (previousNewFiber = step));
     shouldTrackSideEffects &&
@@ -5417,7 +5414,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         return deleteChild(returnFiber, child);
       });
     isHydrating && pushTreeFork(returnFiber, newIdx);
-    return iteratorFn;
+    return resultingFirstChild;
   }
   function reconcileChildFibersImpl(
     returnFiber,
@@ -5549,13 +5546,18 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
-      if (getIteratorFn(newChild))
+      if (getIteratorFn(newChild)) {
+        child = getIteratorFn(newChild);
+        if ("function" !== typeof child)
+          throw Error(formatProdErrorMessage(150));
+        newChild = child.call(newChild);
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes
         );
+      }
       if ("function" === typeof newChild.then)
         return reconcileChildFibersImpl(
           returnFiber,
@@ -16134,7 +16136,7 @@ function injectIntoDevTools(devToolsConfig) {
     scheduleRoot: null,
     setRefreshHandler: null,
     getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-modern-693c0137"
+    reconcilerVersion: "19.0.0-www-modern-5714cea2"
   };
   if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
     devToolsConfig = !1;
@@ -16832,7 +16834,7 @@ Internals.Events = [
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-693c0137",
+  version: "19.0.0-www-modern-5714cea2",
   rendererPackageName: "react-dom"
 });
 if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
@@ -16840,7 +16842,7 @@ if ("function" !== typeof require("ReactFiberErrorDialog").showErrorDialog)
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-693c0137",
+  version: "19.0.0-www-modern-5714cea2",
   rendererPackageName: "react-dom"
 });
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
@@ -17254,4 +17256,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-693c0137";
+exports.version = "19.0.0-www-modern-5714cea2";
