@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1805be4fd01dd300dab1d1eb6fec9931>>
+ * @generated SignedSource<<326542d2f2bb8bbc5fb69f5994f1ea0f>>
  */
 
 'use strict';
@@ -2355,6 +2355,7 @@ var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
+var enableAsyncIterableChildren = false;
 var syncLaneExpirationMs = 250;
 var transitionLaneExpirationMs = 5000;
 var enableLazyContextPropagation = false;
@@ -8950,7 +8951,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         var _created3 = createFiberFromFragment(newChild, returnFiber.mode, lanes, null);
 
         _created3.return = returnFiber;
@@ -9035,7 +9036,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         if (key !== null) {
           return null;
         }
@@ -9103,7 +9104,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           return updateFromMap(existingChildren, returnFiber, newIdx, init(payload), lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
         var _matchedFiber3 = existingChildren.get(newIdx) || null;
 
         return updateFragment(returnFiber, _matchedFiber3, newChild, lanes, null, mergeDebugInfo(debugInfo, newChild._debugInfo));
@@ -9336,7 +9337,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     return resultingFirstChild;
   }
 
-  function reconcileChildrenIterator(returnFiber, currentFirstChild, newChildrenIterable, lanes, debugInfo) {
+  function reconcileChildrenIteratable(returnFiber, currentFirstChild, newChildrenIterable, lanes, debugInfo) {
     // This is the same implementation as reconcileChildrenArray(),
     // but using the iterator instead.
     var iteratorFn = getIteratorFn(newChildrenIterable);
@@ -9375,6 +9376,10 @@ function createChildReconciler(shouldTrackSideEffects) {
       }
     }
 
+    return reconcileChildrenIterator(returnFiber, currentFirstChild, newChildren, lanes, debugInfo);
+  }
+
+  function reconcileChildrenIterator(returnFiber, currentFirstChild, newChildren, lanes, debugInfo) {
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
     }
@@ -9680,8 +9685,8 @@ function createChildReconciler(shouldTrackSideEffects) {
       }
 
       if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(returnFiber, currentFirstChild, newChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
-      } // Usables are a valid React node type. When React encounters a Usable in
+        return reconcileChildrenIteratable(returnFiber, currentFirstChild, newChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
+      }
       // a child position, it unwraps it using the same algorithm as `use`. For
       // example, for promises, React will throw an exception to unwind the
       // stack, then replay the component once the promise resolves.
@@ -10166,7 +10171,8 @@ function warnIfAsyncClientComponent(Component) {
     // for transpiled async functions. Neither mechanism is completely
     // bulletproof but together they cover the most common cases.
     var isAsyncFunction = // $FlowIgnore[method-unbinding]
-    Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+    Object.prototype.toString.call(Component) === '[object AsyncFunction]' || // $FlowIgnore[method-unbinding]
+    Object.prototype.toString.call(Component) === '[object AsyncGeneratorFunction]';
 
     if (isAsyncFunction) {
       // Encountered an async Client Component. This is not yet supported.
@@ -26468,7 +26474,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-5d4acc6d';
+var ReactVersion = '19.0.0-canary-2d608505';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

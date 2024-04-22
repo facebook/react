@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3a52338cfe089716cbc5c55bc70f1def>>
+ * @generated SignedSource<<d056995ed197f2bb9dea5e09fe3f5123>>
  */
 
 "use strict";
@@ -1899,25 +1899,20 @@ function createChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber,
     currentFirstChild,
-    newChildrenIterable,
+    newChildren,
     lanes
   ) {
-    var iteratorFn = getIteratorFn(newChildrenIterable);
-    if ("function" !== typeof iteratorFn)
-      throw Error(
-        "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue."
-      );
-    newChildrenIterable = iteratorFn.call(newChildrenIterable);
-    if (null == newChildrenIterable)
+    if (null == newChildren)
       throw Error("An iterable object provided no iterator.");
     for (
-      var previousNewFiber = (iteratorFn = null),
+      var resultingFirstChild = null,
+        previousNewFiber = null,
         oldFiber = currentFirstChild,
         newIdx = (currentFirstChild = 0),
         nextOldFiber = null,
-        step = newChildrenIterable.next();
+        step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -1933,28 +1928,30 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, oldFiber);
       currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
       null === previousNewFiber
-        ? (iteratorFn = newFiber)
+        ? (resultingFirstChild = newFiber)
         : (previousNewFiber.sibling = newFiber);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
     }
     if (step.done)
-      return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
+      return (
+        deleteRemainingChildren(returnFiber, oldFiber), resultingFirstChild
+      );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
-      return iteratorFn;
+      return resultingFirstChild;
     }
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -1963,14 +1960,14 @@ function createChildReconciler(shouldTrackSideEffects) {
             oldFiber.delete(null === step.key ? newIdx : step.key),
           (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
           null === previousNewFiber
-            ? (iteratorFn = step)
+            ? (resultingFirstChild = step)
             : (previousNewFiber.sibling = step),
           (previousNewFiber = step));
     shouldTrackSideEffects &&
       oldFiber.forEach(function (child) {
         return deleteChild(returnFiber, child);
       });
-    return iteratorFn;
+    return resultingFirstChild;
   }
   function reconcileChildFibersImpl(
     returnFiber,
@@ -2097,13 +2094,20 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
-      if (getIteratorFn(newChild))
+      if (getIteratorFn(newChild)) {
+        key = getIteratorFn(newChild);
+        if ("function" !== typeof key)
+          throw Error(
+            "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue."
+          );
+        newChild = key.call(newChild);
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes
         );
+      }
       if ("function" === typeof newChild.then)
         return reconcileChildFibersImpl(
           returnFiber,
@@ -9759,12 +9763,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1101 = {
+var devToolsConfig$jscomp$inline_1110 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-1895753d",
+  version: "19.0.0-canary-71d4d884",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9781,10 +9785,10 @@ var devToolsConfig$jscomp$inline_1101 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1101.bundleType,
-  version: devToolsConfig$jscomp$inline_1101.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1101.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1101.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1110.bundleType,
+  version: devToolsConfig$jscomp$inline_1110.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1110.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1110.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9801,14 +9805,14 @@ var devToolsConfig$jscomp$inline_1101 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1101.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1110.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-1895753d"
+  reconcilerVersion: "19.0.0-canary-71d4d884"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

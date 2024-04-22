@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<51142bb6cdcde9e8faffbaa114b1cbc7>>
+ * @generated SignedSource<<d3b7614abf5c86177b115750e157b71a>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_247 = {
+var injectedNamesToPlugins$jscomp$inline_248 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_247 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_248 = !1,
-  pluginName$jscomp$inline_249;
-for (pluginName$jscomp$inline_249 in injectedNamesToPlugins$jscomp$inline_247)
+  isOrderingDirty$jscomp$inline_249 = !1,
+  pluginName$jscomp$inline_250;
+for (pluginName$jscomp$inline_250 in injectedNamesToPlugins$jscomp$inline_248)
   if (
-    injectedNamesToPlugins$jscomp$inline_247.hasOwnProperty(
-      pluginName$jscomp$inline_249
+    injectedNamesToPlugins$jscomp$inline_248.hasOwnProperty(
+      pluginName$jscomp$inline_250
     )
   ) {
-    var pluginModule$jscomp$inline_250 =
-      injectedNamesToPlugins$jscomp$inline_247[pluginName$jscomp$inline_249];
+    var pluginModule$jscomp$inline_251 =
+      injectedNamesToPlugins$jscomp$inline_248[pluginName$jscomp$inline_250];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_249) ||
-      namesToPlugins[pluginName$jscomp$inline_249] !==
-        pluginModule$jscomp$inline_250
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_250) ||
+      namesToPlugins[pluginName$jscomp$inline_250] !==
+        pluginModule$jscomp$inline_251
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_249])
+      if (namesToPlugins[pluginName$jscomp$inline_250])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_249 + "`.")
+            (pluginName$jscomp$inline_250 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_249] =
-        pluginModule$jscomp$inline_250;
-      isOrderingDirty$jscomp$inline_248 = !0;
+      namesToPlugins[pluginName$jscomp$inline_250] =
+        pluginModule$jscomp$inline_251;
+      isOrderingDirty$jscomp$inline_249 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_248 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_249 && recomputePluginOrdering();
 var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
@@ -3336,25 +3336,20 @@ function createChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber,
     currentFirstChild,
-    newChildrenIterable,
+    newChildren,
     lanes
   ) {
-    var iteratorFn = getIteratorFn(newChildrenIterable);
-    if ("function" !== typeof iteratorFn)
-      throw Error(
-        "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue."
-      );
-    newChildrenIterable = iteratorFn.call(newChildrenIterable);
-    if (null == newChildrenIterable)
+    if (null == newChildren)
       throw Error("An iterable object provided no iterator.");
     for (
-      var previousNewFiber = (iteratorFn = null),
+      var resultingFirstChild = null,
+        previousNewFiber = null,
         oldFiber = currentFirstChild,
         newIdx = (currentFirstChild = 0),
         nextOldFiber = null,
-        step = newChildrenIterable.next();
+        step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3370,28 +3365,30 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, oldFiber);
       currentFirstChild = placeChild(newFiber, currentFirstChild, newIdx);
       null === previousNewFiber
-        ? (iteratorFn = newFiber)
+        ? (resultingFirstChild = newFiber)
         : (previousNewFiber.sibling = newFiber);
       previousNewFiber = newFiber;
       oldFiber = nextOldFiber;
     }
     if (step.done)
-      return deleteRemainingChildren(returnFiber, oldFiber), iteratorFn;
+      return (
+        deleteRemainingChildren(returnFiber, oldFiber), resultingFirstChild
+      );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildrenIterable.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next(), null)
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
             null === previousNewFiber
-              ? (iteratorFn = step)
+              ? (resultingFirstChild = step)
               : (previousNewFiber.sibling = step),
             (previousNewFiber = step));
-      return iteratorFn;
+      return resultingFirstChild;
     }
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildrenIterable.next(), null
+      newIdx++, step = newChildren.next(), null
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -3400,14 +3397,14 @@ function createChildReconciler(shouldTrackSideEffects) {
             oldFiber.delete(null === step.key ? newIdx : step.key),
           (currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
           null === previousNewFiber
-            ? (iteratorFn = step)
+            ? (resultingFirstChild = step)
             : (previousNewFiber.sibling = step),
           (previousNewFiber = step));
     shouldTrackSideEffects &&
       oldFiber.forEach(function (child) {
         return deleteChild(returnFiber, child);
       });
-    return iteratorFn;
+    return resultingFirstChild;
   }
   function reconcileChildFibersImpl(
     returnFiber,
@@ -3534,13 +3531,20 @@ function createChildReconciler(shouldTrackSideEffects) {
           newChild,
           lanes
         );
-      if (getIteratorFn(newChild))
+      if (getIteratorFn(newChild)) {
+        key = getIteratorFn(newChild);
+        if ("function" !== typeof key)
+          throw Error(
+            "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue."
+          );
+        newChild = key.call(newChild);
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes
         );
+      }
       if ("function" === typeof newChild.then)
         return reconcileChildFibersImpl(
           returnFiber,
@@ -10603,10 +10607,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1099 = {
+  devToolsConfig$jscomp$inline_1108 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-7eb4df81",
+    version: "19.0.0-canary-44e696d7",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10622,11 +10626,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1366 = {
-  bundleType: devToolsConfig$jscomp$inline_1099.bundleType,
-  version: devToolsConfig$jscomp$inline_1099.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1099.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1099.rendererConfig,
+var internals$jscomp$inline_1375 = {
+  bundleType: devToolsConfig$jscomp$inline_1108.bundleType,
+  version: devToolsConfig$jscomp$inline_1108.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1108.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1108.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10642,26 +10646,26 @@ var internals$jscomp$inline_1366 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1099.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1108.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7eb4df81"
+  reconcilerVersion: "19.0.0-canary-44e696d7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1376 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1367.isDisabled &&
-    hook$jscomp$inline_1367.supportsFiber
+    !hook$jscomp$inline_1376.isDisabled &&
+    hook$jscomp$inline_1376.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1367.inject(
-        internals$jscomp$inline_1366
+      (rendererID = hook$jscomp$inline_1376.inject(
+        internals$jscomp$inline_1375
       )),
-        (injectedHook = hook$jscomp$inline_1367);
+        (injectedHook = hook$jscomp$inline_1376);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
