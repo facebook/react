@@ -19,7 +19,6 @@ function loadModules({
   enableProfilerTimer = true,
   enableProfilerCommitHooks = true,
   enableProfilerNestedUpdatePhase = true,
-  enableProfilerNestedUpdateScheduledHook = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -27,8 +26,6 @@ function loadModules({
   ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
   ReactFeatureFlags.enableProfilerNestedUpdatePhase =
     enableProfilerNestedUpdatePhase;
-  ReactFeatureFlags.enableProfilerNestedUpdateScheduledHook =
-    enableProfilerNestedUpdateScheduledHook;
 
   React = require('react');
   ReactDOMClient = require('react-dom/client');
