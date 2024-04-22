@@ -8276,7 +8276,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     parser: require.resolve('@typescript-eslint/parser-v2'),
     parserOptions: parserOptionsV7,
   }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@2.x',
+    'eslint: v7, parser: @typescript-eslint/parser@2.x',
     ReactHooksESLintRule,
     testsTypescriptEslintParser
   );
