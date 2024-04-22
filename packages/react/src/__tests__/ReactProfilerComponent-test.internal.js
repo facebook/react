@@ -20,7 +20,6 @@ function loadModules({
   enableProfilerCommitHooks = true,
   enableProfilerNestedUpdatePhase = true,
   enableProfilerNestedUpdateScheduledHook = false,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -30,8 +29,6 @@ function loadModules({
     enableProfilerNestedUpdatePhase;
   ReactFeatureFlags.enableProfilerNestedUpdateScheduledHook =
     enableProfilerNestedUpdateScheduledHook;
-  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
   ReactDOMClient = require('react-dom/client');
