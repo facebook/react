@@ -7984,4 +7984,85 @@ describe('ReactDOMFizzServer', () => {
     ]);
     expect(postpones).toEqual([]);
   });
+
+  it('should NOT warn for using generator functions as components', async () => {
+    function* Foo() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(document.body.textContent).toBe('HelloWorld');
+  });
+
+  it('should warn for using generators as children props', async () => {
+    function* getChildren() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
+    }
+
+    function Foo() {
+      const children = getChildren();
+      return <div>{children}</div>;
+    }
+
+    await expect(async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<Foo />);
+        pipe(writable);
+      });
+    }).toErrorDev(
+      'Using Iterators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. ' +
+        'You may convert it to an array with `Array.from()` or the ' +
+        '`[...spread]` operator before rendering. You can also use an ' +
+        'Iterable that can iterate multiple times over the same items.\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
+    );
+
+    expect(document.body.textContent).toBe('HelloWorld');
+  });
+
+  it('should warn for using other types of iterators as children', async () => {
+    function Foo() {
+      let i = 0;
+      const iterator = {
+        [Symbol.iterator]() {
+          return iterator;
+        },
+        next() {
+          switch (i++) {
+            case 0:
+              return {done: false, value: <h1 key="1">Hello</h1>};
+            case 1:
+              return {done: false, value: <h1 key="2">World</h1>};
+            default:
+              return {done: true, value: undefined};
+          }
+        },
+      };
+      return iterator;
+    }
+
+    await expect(async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<Foo />);
+        pipe(writable);
+      });
+    }).toErrorDev(
+      'Using Iterators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. ' +
+        'You may convert it to an array with `Array.from()` or the ' +
+        '`[...spread]` operator before rendering. You can also use an ' +
+        'Iterable that can iterate multiple times over the same items.\n' +
+        '    in Foo (at **)',
+    );
+
+    expect(document.body.textContent).toBe('HelloWorld');
+  });
 });

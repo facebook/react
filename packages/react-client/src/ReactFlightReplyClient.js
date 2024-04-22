@@ -81,7 +81,10 @@ export type ReactServerValue =
   | null
   | void
   | bigint
+  | $AsyncIterable<ReactServerValue, ReactServerValue, void>
+  | $AsyncIterator<ReactServerValue, ReactServerValue, void>
   | Iterable<ReactServerValue>
+  | Iterator<ReactServerValue>
   | Array<ReactServerValue>
   | Map<ReactServerValue, ReactServerValue>
   | Set<ReactServerValue>
@@ -155,6 +158,10 @@ function serializeSetID(id: number): string {
 
 function serializeBlobID(id: number): string {
   return '$B' + id.toString(16);
+}
+
+function serializeIteratorID(id: number): string {
+  return '$i' + id.toString(16);
 }
 
 function escapeStringValue(value: string): string {
@@ -448,7 +455,21 @@ export function processReply(
 
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
-        return Array.from((value: any));
+        const iterator = iteratorFn.call(value);
+        if (iterator === value) {
+          // Iterator, not Iterable
+          const partJSON = JSON.stringify(
+            Array.from((iterator: any)),
+            resolveToJSON,
+          );
+          if (formData === null) {
+            formData = new FormData();
+          }
+          const iteratorId = nextPartId++;
+          formData.append(formFieldPrefix + iteratorId, partJSON);
+          return serializeIteratorID(iteratorId);
+        }
+        return Array.from((iterator: any));
       }
 
       // Verify that this is a simple plain object.

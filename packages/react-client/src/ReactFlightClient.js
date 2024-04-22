@@ -825,6 +825,11 @@ function createFormData(
   return formData;
 }
 
+function extractIterator(response: Response, model: Array<any>): Iterator<any> {
+  // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+  return model[Symbol.iterator]();
+}
+
 function createModel(response: Response, model: any): any {
   return model;
 }
@@ -917,6 +922,17 @@ function parseModelString(
           parentObject,
           key,
           createFormData,
+        );
+      }
+      case 'i': {
+        // Iterator
+        const id = parseInt(value.slice(2), 16);
+        return getOutlinedModel(
+          response,
+          id,
+          parentObject,
+          key,
+          extractIterator,
         );
       }
       case 'I': {

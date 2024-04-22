@@ -241,7 +241,9 @@ export type ReactClientValue =
   | bigint
   | ReadableStream
   | $AsyncIterable<ReactClientValue, ReactClientValue, void>
+  | $AsyncIterator<ReactClientValue, ReactClientValue, void>
   | Iterable<ReactClientValue>
+  | Iterator<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
   | Set<ReactClientValue>
@@ -863,20 +865,95 @@ function renderFunctionComponent<Props>(
   } else {
     result = Component(props, secondArg);
   }
-  if (
-    typeof result === 'object' &&
-    result !== null &&
-    typeof result.then === 'function'
-  ) {
-    // When the return value is in children position we can resolve it immediately,
-    // to its value without a wrapper if it's synchronously available.
-    const thenable: Thenable<any> = result;
-    if (thenable.status === 'fulfilled') {
-      return thenable.value;
+  if (typeof result === 'object' && result !== null) {
+    if (typeof result.then === 'function') {
+      // When the return value is in children position we can resolve it immediately,
+      // to its value without a wrapper if it's synchronously available.
+      const thenable: Thenable<any> = result;
+      if (thenable.status === 'fulfilled') {
+        return thenable.value;
+      }
+      // TODO: Once we accept Promises as children on the client, we can just return
+      // the thenable here.
+      result = createLazyWrapperAroundWakeable(result);
     }
-    // TODO: Once we accept Promises as children on the client, we can just return
-    // the thenable here.
-    result = createLazyWrapperAroundWakeable(result);
+
+    // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
+    // to be rendered as a React Child. However, because we have the function to recreate
+    // an iterable from rendering the element again, we can effectively treat it as multi-
+    // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
+    // adding a wrapper so that this component effectively renders down to an AsyncIterable.
+    const iteratorFn = getIteratorFn(result);
+    if (iteratorFn) {
+      const iterableChild = result;
+      result = {
+        [Symbol.iterator]: function () {
+          const iterator = iteratorFn.call(iterableChild);
+          if (__DEV__) {
+            // If this was an Iterator but not a GeneratorFunction we warn because
+            // it might have been a mistake. Technically you can make this mistake with
+            // GeneratorFunctions and even single-shot Iterables too but it's extra
+            // tempting to try to return the value from a generator.
+            if (iterator === iterableChild) {
+              const isGeneratorComponent =
+                // $FlowIgnore[method-unbinding]
+                Object.prototype.toString.call(Component) ===
+                  '[object GeneratorFunction]' &&
+                // $FlowIgnore[method-unbinding]
+                Object.prototype.toString.call(iterableChild) ===
+                  '[object Generator]';
+              if (!isGeneratorComponent) {
+                console.error(
+                  'Returning an Iterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              }
+            }
+          }
+          return (iterator: any);
+        },
+      };
+      if (__DEV__) {
+        (result: any)._debugInfo = iterableChild._debugInfo;
+      }
+    } else if (
+      enableFlightReadableStream &&
+      typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
+      (typeof ReadableStream !== 'function' ||
+        !(result instanceof ReadableStream))
+    ) {
+      const iterableChild = result;
+      result = {
+        [ASYNC_ITERATOR]: function () {
+          const iterator = (iterableChild: any)[ASYNC_ITERATOR]();
+          if (__DEV__) {
+            // If this was an AsyncIterator but not an AsyncGeneratorFunction we warn because
+            // it might have been a mistake. Technically you can make this mistake with
+            // AsyncGeneratorFunctions and even single-shot AsyncIterables too but it's extra
+            // tempting to try to return the value from a generator.
+            if (iterator === iterableChild) {
+              const isGeneratorComponent =
+                // $FlowIgnore[method-unbinding]
+                Object.prototype.toString.call(Component) ===
+                  '[object AsyncGeneratorFunction]' &&
+                // $FlowIgnore[method-unbinding]
+                Object.prototype.toString.call(iterableChild) ===
+                  '[object AsyncGenerator]';
+              if (!isGeneratorComponent) {
+                console.error(
+                  'Returning an AsyncIterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              }
+            }
+          }
+          return iterator;
+        },
+      };
+      if (__DEV__) {
+        (result: any)._debugInfo = iterableChild._debugInfo;
+      }
+    }
   }
   // Track this element's key on the Server Component on the keyPath context..
   const prevKeyPath = task.keyPath;
@@ -1457,6 +1534,14 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   return '$W' + id.toString(16);
 }
 
+function serializeIterator(
+  request: Request,
+  iterator: Iterator<ReactClientValue>,
+): string {
+  const id = outlineModel(request, Array.from(iterator));
+  return '$i' + id.toString(16);
+}
+
 function serializeTypedArray(
   request: Request,
   tag: string,
@@ -1910,7 +1995,13 @@ function renderModelDestructive(
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      return renderFragment(request, task, Array.from((value: any)));
+      // TODO: Should we serialize the return value as well like we do for AsyncIterables?
+      const iterator = iteratorFn.call(value);
+      if (iterator === value) {
+        // Iterator, not Iterable
+        return serializeIterator(request, (iterator: any));
+      }
+      return renderFragment(request, task, Array.from((iterator: any)));
     }
 
     if (enableFlightReadableStream) {
