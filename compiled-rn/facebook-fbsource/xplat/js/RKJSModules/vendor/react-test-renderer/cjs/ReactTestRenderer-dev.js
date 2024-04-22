@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fbc5f0d556063e18e8065897a4edae21>>
+ * @generated SignedSource<<72055afa4818e8a565d07875c49b2d9d>>
  */
 
 'use strict';
@@ -16185,27 +16185,19 @@ function safelyDetachRef(current, nearestMountedAncestor) {
         }
       }
     } else if (typeof ref === 'function') {
-      var retVal;
-
       try {
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            retVal = ref(null);
+            ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          retVal = ref(null);
+          ref(null);
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
-      }
-
-      {
-        if (typeof retVal === 'function') {
-          error('Unexpected return value from a callback ref in %s. ' + 'A callback ref should not return a function.', getComponentNameFromFiber(current));
-        }
       }
     } else {
       // $FlowFixMe[incompatible-use] unable to narrow type to RefObject
@@ -22986,7 +22978,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-c4e3bea9';
+var ReactVersion = '19.0.0-canary-acecb093';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
