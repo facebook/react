@@ -1,0 +1,17 @@
+{
+  "name": "healthcheck",
+  "version": "0.0.0",
+  "description": "Health check script to test violations of the rules of react.",
+  "scripts": {
+    "build": "rimraf dist && tsc --build",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "engines": {
+    "node": "^14.17.0 || ^16.0.0 || >= 18.0.0"
+  },
+  "license": "MIT"
+}
