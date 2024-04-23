@@ -710,7 +710,6 @@ describe('refs return clean up function', () => {
   it('handles detaching refs with either cleanup function or null argument', async () => {
     const container = document.createElement('div');
     const cleanUp = jest.fn();
-    const cleanUp2 = jest.fn();
     const setup = jest.fn();
     const setup2 = jest.fn();
     const nullHandler = jest.fn();
@@ -755,7 +754,6 @@ describe('refs return clean up function', () => {
     // New ref is setup
     expect(setup2).toBeCalledWith('test-div2');
     expect(setup2).toHaveBeenCalledTimes(1);
-    expect(cleanUp2).toHaveBeenCalledTimes(0);
 
     // Now, render with the original ref again
     await act(() => {
