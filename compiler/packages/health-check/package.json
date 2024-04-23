@@ -7,10 +7,10 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
+    "fast-glob": "^3.3.2",
     "yargs": "^17.7.2"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "engines": {
     "node": "^14.17.0 || ^16.0.0 || >= 18.0.0"
   },

@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { glob } from "fast-glob";
 import yargs from "yargs/yargs";
 
-function main() {
+async function main() {
   const argv = yargs(process.argv.slice(2))
     .scriptName("healthcheck")
     .usage("$ npx healthcheck <src>")
@@ -18,7 +19,30 @@ function main() {
     })
     .parseSync();
 
-  console.log(argv.src);
+  let src = argv.src;
+
+  // no file extension specified
+  if (!src.includes(".")) {
+    src = src + ".{js,ts,jsx,tsx,mjs}";
+  }
+
+  const globOptions = {
+    onlyFiles: true,
+    ignore: [
+      "*/node_modules/**",
+      "*/dist/**",
+      "*/tests/**",
+      "*/__tests__/**",
+      "node_modules/**",
+      "dist/**",
+      "tests/**",
+      "__tests__/**",
+    ],
+  };
+
+  for (const path of await glob(src, globOptions)) {
+    console.log(path);
+  }
 }
 
 main();
