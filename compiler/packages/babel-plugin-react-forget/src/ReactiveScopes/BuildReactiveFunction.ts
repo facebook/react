@@ -112,7 +112,7 @@ class Driver {
       }
       case "if": {
         const fallthroughId =
-          terminal.fallthrough !== null &&
+          this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
@@ -176,7 +176,7 @@ class Driver {
       }
       case "switch": {
         const fallthroughId =
-          terminal.fallthrough !== null &&
+          this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
@@ -289,7 +289,7 @@ class Driver {
       }
       case "while": {
         const fallthroughId =
-          terminal.fallthrough !== null &&
+          this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
@@ -350,11 +350,9 @@ class Driver {
             ? terminal.loop
             : null;
 
-        const fallthroughId =
-          terminal.fallthrough !== null &&
-          !this.cx.isScheduled(terminal.fallthrough)
-            ? terminal.fallthrough
-            : null;
+        const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
 
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
@@ -437,11 +435,9 @@ class Driver {
             ? terminal.loop
             : null;
 
-        const fallthroughId =
-          terminal.fallthrough !== null &&
-          !this.cx.isScheduled(terminal.fallthrough)
-            ? terminal.fallthrough
-            : null;
+        const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
 
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
@@ -512,11 +508,9 @@ class Driver {
             ? terminal.loop
             : null;
 
-        const fallthroughId =
-          terminal.fallthrough !== null &&
-          !this.cx.isScheduled(terminal.fallthrough)
-            ? terminal.fallthrough
-            : null;
+        const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
 
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
@@ -626,7 +620,7 @@ class Driver {
       }
       case "label": {
         const fallthroughId =
-          terminal.fallthrough !== null &&
+          this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
@@ -747,7 +741,7 @@ class Driver {
       }
       case "try": {
         const fallthroughId =
-          terminal.fallthrough !== null &&
+          this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
@@ -1239,6 +1233,11 @@ class Context {
 
   scheduleCatchHandler(block: BlockId): void {
     this.#catchHandlers.add(block);
+  }
+
+  reachable(id: BlockId): boolean {
+    const block = this.ir.blocks.get(id)!;
+    return block.terminal.kind !== "unreachable";
   }
 
   /*

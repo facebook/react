@@ -31,12 +31,13 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
+  let x;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const x = [];
+      x = [];
       try {
         throwInput(x);
       } catch (t1) {
@@ -45,17 +46,17 @@ function Component(props) {
         t0 = e;
         break bb0;
       }
-
-      t0 = x;
-      break bb0;
     }
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    x = $[0];
+    t0 = $[1];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

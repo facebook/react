@@ -13,8 +13,8 @@ import {
   HIRFunction,
   Instruction,
 } from "./HIR";
-import { markPredecessors, removeUnreachableFallthroughs } from "./HIRBuilder";
-import { mapOptionalFallthroughs, terminalFallthrough } from "./visitors";
+import { markPredecessors } from "./HIRBuilder";
+import { terminalFallthrough, terminalHasFallthrough } from "./visitors";
 
 /*
  * Merges sequences of blocks that will always execute consecutively —
@@ -113,10 +113,11 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     fn.body.blocks.delete(block.id);
   }
   markPredecessors(fn.body);
-  for (const [, block] of fn.body.blocks) {
-    mapOptionalFallthroughs(block.terminal, (blockId) => merged.get(blockId));
+  for (const [, { terminal }] of fn.body.blocks) {
+    if (terminalHasFallthrough(terminal)) {
+      terminal.fallthrough = merged.get(terminal.fallthrough);
+    }
   }
-  removeUnreachableFallthroughs(fn.body);
 }
 
 class MergedBlocks {

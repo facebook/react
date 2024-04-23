@@ -23,7 +23,6 @@ import {
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
-  removeUnreachableFallthroughs,
   reversePostorderBlocks,
 } from "../HIR";
 import {
@@ -72,7 +71,6 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
      * Re-run minification of the graph (incl reordering instruction ids)
      */
     reversePostorderBlocks(fn.body);
-    removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);
     removeDeadDoWhileStatements(fn.body);
     removeUnnecessaryTryCatch(fn.body);

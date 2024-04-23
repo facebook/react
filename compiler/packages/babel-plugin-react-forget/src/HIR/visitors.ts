@@ -634,8 +634,7 @@ export function mapTerminalSuccessors(
     case "if": {
       const consequent = fn(terminal.consequent);
       const alternate = fn(terminal.alternate);
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "if",
         test: terminal.test,
@@ -666,8 +665,7 @@ export function mapTerminalSuccessors(
           block: target,
         };
       });
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "switch",
         test: terminal.test,
@@ -794,8 +792,7 @@ export function mapTerminalSuccessors(
     }
     case "label": {
       const block = fn(terminal.block);
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "label",
         block,
@@ -829,8 +826,7 @@ export function mapTerminalSuccessors(
     case "try": {
       const block = fn(terminal.block);
       const handler = fn(terminal.handler);
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "try",
         block,
@@ -866,12 +862,10 @@ export function mapTerminalSuccessors(
   }
 }
 
-/*
- * Helper to get a terminal's fallthrough. The main reason to extract this as a helper
- * function is to ensure that we use an exhaustive switch to ensure that we add new terminal
- * variants as appropriate.
- */
-export function terminalFallthrough(terminal: Terminal): BlockId | null {
+export function terminalHasFallthrough<
+  T extends Terminal,
+  U extends T & { fallthrough: BlockId }
+>(terminal: T): terminal is U {
   switch (terminal.kind) {
     case "maybe-throw":
     case "branch":
@@ -880,7 +874,8 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "throw":
     case "unreachable":
     case "unsupported": {
-      return null;
+      const _: undefined = terminal.fallthrough;
+      return false;
     }
     case "try":
     case "do-while":
@@ -896,7 +891,8 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "ternary":
     case "while":
     case "scope": {
-      return terminal.fallthrough;
+      const _: BlockId = terminal.fallthrough;
+      return true;
     }
     default: {
       assertExhaustive(
@@ -907,104 +903,16 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
   }
 }
 
-export function mapOptionalFallthroughs(
-  terminal: Terminal,
-  fn: (block: BlockId) => BlockId | null
-): void {
-  switch (terminal.kind) {
-    case "maybe-throw":
-    case "branch":
-    case "goto":
-    case "return":
-    case "throw":
-    case "unreachable":
-    case "unsupported": {
-      return;
-    }
-    /*
-     * NOTE: TypeScript has a bug where it does not correctly model properties whose values are
-     * non-null in some cases and nullable in other cases, if those cases are joined together.
-     * Thus we use one block per case here to ensure that any changes to the types will cause
-     * a compiler error.
-     */
-    case "do-while": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "for-of": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "for-in": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "for": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "logical": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "optional": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "ternary": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "while": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "scope": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "switch": {
-      if (terminal.fallthrough !== null) {
-        terminal.fallthrough = fn(terminal.fallthrough);
-      } else {
-        terminal.fallthrough = null;
-      }
-      break;
-    }
-    case "if": {
-      if (terminal.fallthrough !== null) {
-        terminal.fallthrough = fn(terminal.fallthrough);
-      } else {
-        terminal.fallthrough = null;
-      }
-      break;
-    }
-    case "label": {
-      if (terminal.fallthrough !== null) {
-        terminal.fallthrough = fn(terminal.fallthrough);
-      } else {
-        terminal.fallthrough = null;
-      }
-      break;
-    }
-    case "sequence": {
-      const _: BlockId = terminal.fallthrough;
-      break;
-    }
-    case "try": {
-      if (terminal.fallthrough !== null) {
-        terminal.fallthrough = fn(terminal.fallthrough);
-      } else {
-        terminal.fallthrough = null;
-      }
-      break;
-    }
-    default: {
-      assertExhaustive(
-        terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
-      );
-    }
+/*
+ * Helper to get a terminal's fallthrough. The main reason to extract this as a helper
+ * function is to ensure that we use an exhaustive switch to ensure that we add new terminal
+ * variants as appropriate.
+ */
+export function terminalFallthrough(terminal: Terminal): BlockId | null {
+  if (terminalHasFallthrough(terminal)) {
+    return terminal.fallthrough;
+  } else {
+    return null;
   }
 }
 

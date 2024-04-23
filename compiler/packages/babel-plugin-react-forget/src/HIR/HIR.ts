@@ -362,6 +362,8 @@ export type Terminal =
   | TryTerminal
   | ReactiveScopeTerminal;
 
+export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
+
 function _staticInvariantTerminalHasLocation(
   terminal: Terminal
 ): SourceLocation {
@@ -376,6 +378,13 @@ function _staticInvariantTerminalHasInstructionId(
   return terminal.id;
 }
 
+function _staticInvariantTerminalHasFallthrough(
+  terminal: Terminal
+): BlockId | never | undefined {
+  // If this fails, it is because a variant of Terminal is missing a fallthrough annotation
+  return terminal.fallthrough;
+}
+
 /*
  * Terminal nodes allowed for a value block
  * A terminal that couldn't be lowered correctly.
@@ -384,6 +393,7 @@ export type UnsupportedTerminal = {
   kind: "unsupported";
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 
 /**
@@ -395,6 +405,7 @@ export type UnreachableTerminal = {
   kind: "unreachable";
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 
 export type ThrowTerminal = {
@@ -402,6 +413,7 @@ export type ThrowTerminal = {
   value: Place;
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 export type Case = { test: Place | null; block: BlockId };
 
@@ -410,6 +422,7 @@ export type ReturnTerminal = {
   loc: SourceLocation;
   value: Place;
   id: InstructionId;
+  fallthrough?: never;
 };
 
 export type GotoTerminal = {
@@ -418,6 +431,7 @@ export type GotoTerminal = {
   variant: GotoVariant;
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 
 export enum GotoVariant {
@@ -431,7 +445,7 @@ export type IfTerminal = {
   test: Place;
   consequent: BlockId;
   alternate: BlockId;
-  fallthrough: BlockId | null;
+  fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -443,13 +457,14 @@ export type BranchTerminal = {
   alternate: BlockId;
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 
 export type SwitchTerminal = {
   kind: "switch";
   test: Place;
   cases: Array<Case>;
-  fallthrough: BlockId | null;
+  fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -521,7 +536,7 @@ export type TernaryTerminal = {
 export type LabelTerminal = {
   kind: "label";
   block: BlockId;
-  fallthrough: BlockId | null;
+  fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -555,7 +570,7 @@ export type TryTerminal = {
   handlerBinding: Place | null;
   handler: BlockId;
   // TODO: support `finally`
-  fallthrough: BlockId | null;
+  fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;
 };
@@ -566,6 +581,7 @@ export type MaybeThrowTerminal = {
   handler: BlockId;
   id: InstructionId;
   loc: SourceLocation;
+  fallthrough?: never;
 };
 
 export type ReactiveScopeTerminal = {

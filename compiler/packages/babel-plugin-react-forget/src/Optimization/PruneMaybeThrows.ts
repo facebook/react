@@ -15,7 +15,6 @@ import {
   assertConsistentIdentifiers,
   assertTerminalSuccessorsExist,
   mergeConsecutiveBlocks,
-  removeUnreachableFallthroughs,
   reversePostorderBlocks,
 } from "../HIR";
 import {
@@ -39,7 +38,6 @@ export function pruneMaybeThrows(fn: HIRFunction): void {
      * Re-run minification of the graph (incl reordering instruction ids)
      */
     reversePostorderBlocks(fn.body);
-    removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);
     removeDeadDoWhileStatements(fn.body);
     removeUnnecessaryTryCatch(fn.body);

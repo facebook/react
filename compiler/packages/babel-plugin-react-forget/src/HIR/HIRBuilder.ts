@@ -8,7 +8,6 @@
 import { Binding, NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
-import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
 import { Global } from "./Globals";
 import {
@@ -32,8 +31,8 @@ import {
 import { printInstruction } from "./PrintHIR";
 import {
   eachTerminalSuccessor,
-  mapOptionalFallthroughs,
   mapTerminalSuccessors,
+  terminalFallthrough,
 } from "./visitors";
 
 /*
@@ -329,7 +328,6 @@ export default class HIRBuilder {
     ir.blocks = rpoBlocks;
 
     removeUnreachableForUpdates(ir);
-    removeUnreachableFallthroughs(ir);
     removeDeadDoWhileStatements(ir);
     removeUnnecessaryTryCatch(ir);
     markInstructionIds(ir);
@@ -629,24 +627,6 @@ export function removeUnreachableForUpdates(fn: HIR): void {
   }
 }
 
-export function removeUnreachableFallthroughs(func: HIR): void {
-  const visited: Set<BlockId> = new Set();
-  for (const [_, block] of func.blocks) {
-    visited.add(block.id);
-  }
-
-  // Cleanup any fallthrough blocks that weren't visited
-  for (const [_, block] of func.blocks) {
-    mapOptionalFallthroughs(block.terminal, (fallthrough) => {
-      if (visited.has(fallthrough)) {
-        return fallthrough;
-      } else {
-        return null;
-      }
-    });
-  }
-}
-
 export function removeDeadDoWhileStatements(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   for (const [_, block] of func.blocks) {
@@ -691,14 +671,19 @@ export function reversePostorderBlocks(func: HIR): void {
  */
 function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
   const visited: Set<BlockId> = new Set();
+  const used: Set<BlockId> = new Set();
+  const usedFallthroughs: Set<BlockId> = new Set();
   const postorder: Array<BlockId> = [];
-  function visit(blockId: BlockId): void {
-    if (visited.has(blockId)) {
+  function visit(blockId: BlockId, isUsed: boolean): void {
+    const wasUsed = used.has(blockId);
+    const wasVisited = visited.has(blockId);
+    visited.add(blockId);
+    if (isUsed) {
+      used.add(blockId);
+    }
+    if (wasVisited && (wasUsed || !isUsed)) {
       return;
     }
-    visited.add(blockId);
-    const block = func.blocks.get(blockId)!;
-    const { terminal } = block;
 
     /*
      * Note that we visit successors in reverse order. This ensures that when we
@@ -710,7 +695,7 @@ function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
      *    // bb1
      *    x = 1;
      * } else {
-     *    // b2
+     *    // bb2
      *    x = 2;
      * }
      * // bb3
@@ -721,104 +706,50 @@ function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
      * program order for visual debugging. By visiting the successors in reverse order
      * (eg bb2 then bb1), we ensure that they get reversed back to the correct order.
      */
-    switch (terminal.kind) {
-      case "return":
-      case "throw": {
-        // no-op, no successors
-        break;
+    const block = func.blocks.get(blockId)!;
+    const successors = [...eachTerminalSuccessor(block.terminal)].reverse();
+    const fallthrough = terminalFallthrough(block.terminal);
+
+    /**
+     * Fallthrough blocks are only used to record original program block structure. If the
+     * fallthrough is actually reachable, it will be reached through terminal successors.
+     * To retain program structure, we visit fallthrough blocks first (marking them as not
+     * actually used yet) to ensure their block IDs emitted in the correct order.
+     */
+    if (fallthrough != null) {
+      if (isUsed) {
+        usedFallthroughs.add(fallthrough);
       }
-      case "goto": {
-        visit(terminal.block);
-        break;
-      }
-      case "if": {
-        /*
-         * can ignore fallthrough, if its reachable it will be reached through
-         * consequent/alternate
-         */
-        const { consequent, alternate } = terminal;
-        visit(alternate);
-        visit(consequent);
-        break;
-      }
-      case "branch": {
-        const { consequent, alternate } = terminal;
-        visit(alternate);
-        visit(consequent);
-        break;
-      }
-      case "switch": {
-        /*
-         * can ignore fallthrough, if its reachable it will be reached through
-         * a case
-         */
-        const { cases } = terminal;
-        for (const case_ of [...cases].reverse()) {
-          visit(case_.block);
-        }
-        break;
-      }
-      case "optional":
-      case "ternary":
-      case "logical": {
-        visit(terminal.test);
-        break;
-      }
-      case "do-while": {
-        visit(terminal.loop);
-        break;
-      }
-      case "while": {
-        visit(terminal.test);
-        break;
-      }
-      case "for":
-      case "for-in":
-      case "for-of": {
-        visit(terminal.init);
-        break;
-      }
-      case "label": {
-        visit(terminal.block);
-        break;
-      }
-      case "sequence": {
-        visit(terminal.block);
-        break;
-      }
-      case "maybe-throw": {
-        visit(terminal.handler);
-        visit(terminal.continuation);
-        break;
-      }
-      case "try": {
-        visit(terminal.block);
-        break;
-      }
-      case "scope": {
-        visit(terminal.block);
-        break;
-      }
-      case "unreachable":
-      case "unsupported": {
-        break;
-      }
-      default: {
-        assertExhaustive(
-          terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
-        );
-      }
+      visit(fallthrough, false);
+    }
+    for (const successor of successors) {
+      visit(successor, isUsed);
     }
 
-    postorder.push(blockId);
+    if (!wasVisited) {
+      postorder.push(blockId);
+    }
   }
-  visit(func.entry);
-
-  const blocks = new Map();
+  visit(func.entry, true);
+  const blocks = new Map<BlockId, BasicBlock>();
   for (const blockId of postorder.reverse()) {
-    blocks.set(blockId, func.blocks.get(blockId)!);
+    const block = func.blocks.get(blockId)!;
+    if (used.has(blockId)) {
+      blocks.set(blockId, func.blocks.get(blockId)!);
+    } else if (usedFallthroughs.has(blockId)) {
+      blocks.set(blockId, {
+        ...block,
+        instructions: [],
+        terminal: {
+          kind: "unreachable",
+          id: block.terminal.id,
+          loc: block.terminal.loc,
+        },
+      });
+    }
+    // otherwise this block is unreachable
   }
+
   return blocks;
 }
 
@@ -847,6 +778,14 @@ export function markPredecessors(func: HIR): void {
   const visited: Set<BlockId> = new Set();
   function visit(blockId: BlockId, prevBlock: BasicBlock | null): void {
     const block = func.blocks.get(blockId)!;
+    if (block == null) {
+      return;
+    }
+    CompilerError.invariant(block != null, {
+      reason: "unexpected missing block",
+      description: `block ${blockId}`,
+      loc: GeneratedSource,
+    });
     if (prevBlock) {
       block.preds.add(prevBlock.id);
     }
@@ -879,7 +818,7 @@ function getTargetIfIndirection(block: BasicBlock): number | null {
 
 /*
  * Finds try terminals where the handler is unreachable, and converts the try
- * to a goto(terminal.fallthrough)
+ * to a goto(terminal.block)
  */
 export function removeUnnecessaryTryCatch(fn: HIR): void {
   for (const [, block] of fn.blocks) {
@@ -887,6 +826,9 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
       block.terminal.kind === "try" &&
       !fn.blocks.has(block.terminal.handler)
     ) {
+      const handlerId = block.terminal.handler;
+      const fallthroughId = block.terminal.fallthrough;
+      const fallthrough = fn.blocks.get(fallthroughId);
       block.terminal = {
         kind: "goto",
         block: block.terminal.block,
@@ -894,6 +836,15 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
         loc: block.terminal.loc,
         variant: GotoVariant.Break,
       };
+
+      if (fallthrough != null) {
+        if (fallthrough.preds.size === 1 && fallthrough.preds.has(handlerId)) {
+          // delete fallthrough
+          fn.blocks.delete(fallthroughId);
+        } else {
+          fallthrough.preds.delete(handlerId);
+        }
+      }
     }
   }
 }

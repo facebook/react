@@ -23,7 +23,6 @@ export {
   markInstructionIds,
   markPredecessors,
   removeUnnecessaryTryCatch,
-  removeUnreachableFallthroughs,
   reversePostorderBlocks,
 } from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";

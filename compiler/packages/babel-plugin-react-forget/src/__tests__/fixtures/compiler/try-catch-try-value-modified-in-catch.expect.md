@@ -45,9 +45,6 @@ function Component(props) {
         t0 = e;
         break bb0;
       }
-
-      t0 = null;
-      break bb0;
     }
     $[0] = props.y;
     $[1] = props.e;
@@ -58,6 +55,7 @@ function Component(props) {
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
   }
+  return null;
 }
 
 export const FIXTURE_ENTRYPOINT = {
