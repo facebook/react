@@ -488,8 +488,7 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
 
   // bugs
-  "bug-reduce-reactive-deps-return-in-scope",
-  "bug-reduce-reactive-deps-break-in-scope",
+  "bug-invalid-reactivity-value-block",
 
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",
