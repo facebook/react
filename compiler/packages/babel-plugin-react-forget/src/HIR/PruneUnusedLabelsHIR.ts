@@ -7,7 +7,7 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
     next: BlockId;
     fallthrough: BlockId;
   }> = [];
-
+  const rewrites: Map<BlockId, BlockId> = new Map();
   for (const [blockId, block] of fn.body.blocks) {
     const terminal = block.terminal;
     if (terminal.kind === "label") {
@@ -32,10 +32,11 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
   }
 
   for (const {
-    label: labelId,
+    label: originalLabelId,
     next: nextId,
     fallthrough: fallthroughId,
   } of merged) {
+    const labelId = rewrites.get(originalLabelId) ?? originalLabelId;
     const label = fn.body.blocks.get(labelId)!;
     const next = fn.body.blocks.get(nextId)!;
     const fallthrough = fn.body.blocks.get(fallthroughId)!;
@@ -52,7 +53,7 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
     CompilerError.invariant(
       next.preds.size === 1 &&
         fallthrough.preds.size === 1 &&
-        next.preds.has(labelId) &&
+        next.preds.has(originalLabelId) &&
         fallthrough.preds.has(nextId),
       {
         reason: "Unexpected block predecessors when merging label blocks",
@@ -64,5 +65,6 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
     label.terminal = fallthrough.terminal;
     fn.body.blocks.delete(nextId);
     fn.body.blocks.delete(fallthroughId);
+    rewrites.set(fallthroughId, labelId);
   }
 }
