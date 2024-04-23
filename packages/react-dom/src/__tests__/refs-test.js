@@ -770,4 +770,37 @@ describe('refs return clean up function', () => {
     // Original setup hit one more time
     expect(setup).toHaveBeenCalledTimes(2);
   });
+
+  it('calls cleanup function on unmount', async () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    const nullHandler = jest.fn();
+
+    function _onRefChangeWithCleanup(_ref) {
+      if (_ref) {
+        setup(_ref.id);
+      } else {
+        nullHandler();
+      }
+      return cleanUp;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div id="test-div" ref={_onRefChangeWithCleanup} />);
+    });
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+
+    root.unmount();
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    // Now cleanup has been called
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    // Ref callback never called with null when cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+  });
 });
