@@ -226,7 +226,6 @@ export default [
   "React instrumentation encountered an error: %s",
   "React instrumentation encountered an error: %s.",
   "React uses onFocus and onBlur instead of onFocusIn and onFocusOut. All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.",
-  "React was unable to patch the fetch() function in this environment. Suspensey APIs might not work correctly as a result.",
   "React.createElement: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s",
   "React.jsx: Static children should always be an array. You are likely explicitly calling React.jsxs or React.jsxDEV. Use the Babel transform instead.",
   "React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s",
