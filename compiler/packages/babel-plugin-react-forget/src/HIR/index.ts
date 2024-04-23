@@ -27,3 +27,4 @@ export {
 } from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
+export { pruneUnusedLabelsHIR } from "./PruneUnusedLabelsHIR";

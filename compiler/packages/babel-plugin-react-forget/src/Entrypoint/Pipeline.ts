@@ -17,6 +17,7 @@ import {
   assertValidMutableRanges,
   lower,
   mergeConsecutiveBlocks,
+  pruneUnusedLabelsHIR,
 } from "../HIR";
 import {
   Environment,
@@ -236,6 +237,13 @@ function* runWithEnvironment(
   });
 
   if (env.config.enableAlignReactiveScopesToBlockScopesHIR) {
+    pruneUnusedLabelsHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "PruneUnusedLabelsHIR",
+      value: hir,
+    });
+
     alignReactiveScopesToBlockScopesHIR(hir);
     yield log({
       kind: "hir",
