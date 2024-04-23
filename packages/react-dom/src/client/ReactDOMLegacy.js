@@ -393,7 +393,19 @@ export function unstable_renderSubtreeIntoContainer(
   );
 }
 
+let didWarnAboutUnmountComponentAtNode = false;
 export function unmountComponentAtNode(container: Container) {
+  if (__DEV__) {
+    if (!didWarnAboutUnmountComponentAtNode) {
+      didWarnAboutUnmountComponentAtNode = true;
+      console.error(
+        'unmountComponentAtNode is deprecated and will be removed in the ' +
+          'next major release. Switch to the createRoot API. Learn ' +
+          'more: https://reactjs.org/link/switch-to-createroot',
+      );
+    }
+  }
+
   if (!isValidContainerLegacy(container)) {
     throw new Error(
       'unmountComponentAtNode(...): Target container is not a DOM element.',
