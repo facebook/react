@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-declare module "@babel/plugin-syntax-jsx";
-
 // v0.17.1
 declare module "hermes-parser" {
   type HermesParserOptions = {

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/// <reference path="./types.d.ts" />
-
 import type * as BabelCore from "@babel/core";
 import { compileProgram, parsePluginOptions } from "../Entrypoint";
 

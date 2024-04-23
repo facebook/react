@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from "@babel/types";
 import invariant from "invariant";
 import { runReactForgetBabelPlugin } from "../Babel/RunReactForgetBabelPlugin";
 import type { Logger, LoggerEvent } from "../Entrypoint";
@@ -29,10 +30,8 @@ it("logs succesful compilation", () => {
   expect(event.kind).toEqual("CompileSuccess");
   invariant(event.kind === "CompileSuccess", "typescript be smarter");
   expect(event.fnName).toEqual("Component");
-  expect(event.fnLoc).toEqual({
-    end: { column: 55, line: 1 },
-    start: { column: 0, line: 1 },
-  });
+  expect(event.fnLoc?.end).toEqual({ column: 55, index: 55, line: 1 });
+  expect(event.fnLoc?.start).toEqual({ column: 0, index: 0, line: 1 });
 });
 
 it("logs failed compilation", () => {
@@ -58,15 +57,13 @@ it("logs failed compilation", () => {
   invariant(event.kind === "CompileError", "typescript be smarter");
 
   expect(event.detail.severity).toEqual("InvalidReact");
-  expect(event.detail.loc).toEqual({
-    end: { column: 33, line: 1 },
-    identifierName: "props",
-    start: { column: 28, line: 1 },
-  });
+  //@ts-ignore
+  const { start, end, identifierName } = event.detail.loc as t.SourceLocation;
+  expect(start).toEqual({ column: 28, index: 28, line: 1 });
+  expect(end).toEqual({ column: 33, index: 33, line: 1 });
+  expect(identifierName).toEqual("props");
 
   // Make sure event.fnLoc is different from event.detail.loc
-  expect(event.fnLoc).toEqual({
-    end: { column: 70, line: 1 },
-    start: { column: 0, line: 1 },
-  });
+  expect(event.fnLoc?.start).toEqual({ column: 0, index: 0, line: 1 });
+  expect(event.fnLoc?.end).toEqual({ column: 70, index: 70, line: 1 });
 });
