@@ -7,6 +7,7 @@
 
 export { assertConsistentIdentifiers } from "./AssertConsistentIdentifiers";
 export { assertTerminalSuccessorsExist } from "./AssertTerminalSuccessorsExist";
+export { assertValidBlockNesting } from "./AssertValidBlockNesting";
 export { assertValidMutableRanges } from "./AssertValidMutableRanges";
 export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";

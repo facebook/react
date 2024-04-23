@@ -251,6 +251,24 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       );
     }
   });
+  /**
+   * Join scopes that begin and end at the same instructions
+   */
+  {
+    const allScopes = [...new Set(placeScopes.values())].sort(
+      (a, b) => a.range.start - b.range.start
+    );
+    for (let i = 1; i < allScopes.length; i++) {
+      const prev = allScopes[i - 1];
+      const curr = allScopes[i];
+      if (
+        prev.range.start === curr.range.start &&
+        prev.range.end === curr.range.end
+      ) {
+        joinedScopes.union([prev, curr]);
+      }
+    }
+  }
   for (const [place, originalScope] of placeScopes) {
     const nextScope = joinedScopes.find(originalScope);
     if (nextScope !== null && nextScope !== originalScope) {

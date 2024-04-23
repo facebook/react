@@ -14,6 +14,7 @@ import {
   ReactiveFunction,
   assertConsistentIdentifiers,
   assertTerminalSuccessorsExist,
+  assertValidBlockNesting,
   assertValidMutableRanges,
   lower,
   mergeConsecutiveBlocks,
@@ -250,6 +251,8 @@ function* runWithEnvironment(
       name: "AlignReactiveScopesToBlockScopesHIR",
       value: hir,
     });
+
+    assertValidBlockNesting(hir);
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
