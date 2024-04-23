@@ -17,6 +17,11 @@ export function scheduleWork(callback: () => void) {
   setTimeout(callback, 0);
 }
 
+const resolved = Promise.resolve();
+export function scheduleEagerWork(callback: () => void) {
+  resolved.then(callback);
+}
+
 export function flushBuffered(destination: Destination) {
   // WHATWG Streams do not yet have a way to flush the underlying
   // transform streams. https://github.com/whatwg/streams/issues/960

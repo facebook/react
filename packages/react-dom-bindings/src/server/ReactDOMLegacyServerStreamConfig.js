@@ -20,6 +20,10 @@ export function scheduleWork(callback: () => void) {
   callback();
 }
 
+export function scheduleEagerWork(callback: () => void) {
+  callback();
+}
+
 export function flushBuffered(destination: Destination) {}
 
 export function beginWriting(destination: Destination) {}

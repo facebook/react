@@ -46,6 +46,10 @@ export function scheduleWork(callback: () => void) {
   callback();
 }
 
+export function scheduleEagerWork(callback: () => void) {
+  callback();
+}
+
 export function beginWriting(destination: Destination) {
   destination.beginWriting();
 }

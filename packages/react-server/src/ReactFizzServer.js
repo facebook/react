@@ -36,6 +36,7 @@ import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
   scheduleWork,
+  scheduleEagerWork,
   beginWriting,
   writeChunk,
   writeChunkAndReturn,
@@ -595,7 +596,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (request.pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+    scheduleEagerWork(() => performWork(request));
   }
 }
 
@@ -4430,6 +4431,7 @@ export function abort(request: Request, reason: mixed): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
+    console.log('caught', error);
     const errorInfo: ThrownInfo = {};
     logRecoverableError(request, error, errorInfo);
     fatalError(request, error);

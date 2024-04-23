@@ -77,6 +77,9 @@ const ReactNoopServer = ReactFizzServer({
   scheduleWork(callback: () => void) {
     callback();
   },
+  scheduleEagerWork(callback: () => void) {
+    callback();
+  },
   beginWriting(destination: Destination): void {},
   writeChunk(destination: Destination, buffer: Uint8Array): void {
     write(destination, buffer);

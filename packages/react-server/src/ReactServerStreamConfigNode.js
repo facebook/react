@@ -26,6 +26,11 @@ export function scheduleWork(callback: () => void) {
   setImmediate(callback);
 }
 
+const resolved = Promise.resolve();
+export function scheduleEagerWork(callback: () => void) {
+  resolved.then(callback);
+}
+
 export function flushBuffered(destination: Destination) {
   // If we don't have any more data to send right now.
   // Flush whatever is in the buffer to the wire.

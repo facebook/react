@@ -38,7 +38,7 @@ describe('ReactDOMFizzServerNode', () => {
       writable.on('finish', () => {
         resolve();
       });
-      writable.on('error', () => {
+      writable.on('error', pl => {
         resolve();
       });
     });
@@ -589,6 +589,7 @@ describe('ReactDOMFizzServerNode', () => {
       if (!hasLoaded) {
         throw promise;
       }
+      console.log('rendering');
       rendered = true;
       return 'Done';
     }
@@ -617,11 +618,10 @@ describe('ReactDOMFizzServerNode', () => {
     writable.end();
 
     await jest.runAllTimers();
+    await completed;
 
     hasLoaded = true;
     resolve();
-
-    await completed;
 
     expect(errors).toEqual([
       'The destination stream errored while writing data.',
