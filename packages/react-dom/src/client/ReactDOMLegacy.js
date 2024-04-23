@@ -238,10 +238,22 @@ function legacyRenderSubtreeIntoContainer(
   return getPublicRootInstance(root);
 }
 
+let didWarnAboutFindDOMNode = false;
+
 export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
+    if (!didWarnAboutFindDOMNode) {
+      didWarnAboutFindDOMNode = true;
+      console.error(
+        'findDOMNode is deprecated and will be removed in the next major ' +
+          'release. Instead, add a ref directly to the element you want ' +
+          'to reference. Learn more about using refs safely here: ' +
+          'https://reactjs.org/link/strict-mode-find-node',
+      );
+    }
+
     const owner = (ReactCurrentOwner.current: any);
     if (owner !== null && owner.stateNode !== null) {
       const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;

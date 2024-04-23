@@ -31,7 +31,8 @@ module.exports = function shouldIgnoreConsoleError(format, args) {
           'uses the legacy childContextTypes API which is no longer supported and will be removed'
         ) !== -1 ||
         format.indexOf('ReactDOMTestUtils is deprecated') !== -1 ||
-        format.indexOf('`ReactDOMTestUtils.act` is deprecated') !== -1
+        format.indexOf('`ReactDOMTestUtils.act` is deprecated') !== -1 ||
+        format.indexOf('findDOMNode is deprecated and will be removed') !== -1
       ) {
         // This is a backported warning. In `main`, there's a different warning
         // (and it's fully tested). Not going to bother upgrading all the tests
