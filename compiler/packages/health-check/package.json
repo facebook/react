@@ -7,6 +7,7 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
   },
