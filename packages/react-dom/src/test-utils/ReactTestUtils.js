@@ -34,7 +34,7 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 
-const act = React.unstable_act;
+const reactAct = React.unstable_act;
 
 function Event(suffix) {}
 
@@ -121,7 +121,23 @@ function validateClassInstance(inst, methodName) {
  * utilities will suffice for testing purposes.
  * @lends ReactTestUtils
  */
+
+let didWarnAboutReactTestUtilsDeprecation = false;
+
 function renderIntoDocument(element) {
+  if (__DEV__) {
+    if (!didWarnAboutReactTestUtilsDeprecation) {
+      didWarnAboutReactTestUtilsDeprecation = true;
+      console.error(
+        'ReactDOMTestUtils is deprecated and will be removed in a future ' +
+          'major release, because it exposes internal implementation details ' +
+          'that are highly likely to change between releases. Upgrade to a ' +
+          'modern testing library, such as @testing-library/react. See ' +
+          'https://react.dev/warnings/react-dom-test-utils for more info.',
+      );
+    }
+  }
+
   const div = document.createElement('div');
   // None of our tests actually require attaching the container to the
   // DOM, and doing so creates a mess that we rely on test isolation to
@@ -711,6 +727,23 @@ function buildSimulators() {
 }
 buildSimulators();
 
+let didWarnAboutUsingAct = false;
+export const act = __DEV__
+  ? function actWithWarning(callback) {
+      if (__DEV__) {
+        if (!didWarnAboutUsingAct) {
+          didWarnAboutUsingAct = true;
+          console.error(
+            '`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. ' +
+              'Import `act` from `react` instead of `react-dom/test-utils`. ' +
+              'See https://react.dev/warnings/react-dom-test-utils for more info.',
+          );
+        }
+      }
+      return reactAct(callback);
+    }
+  : reactAct;
+
 export {
   renderIntoDocument,
   isElement,
@@ -729,5 +762,4 @@ export {
   mockComponent,
   nativeTouchData,
   Simulate,
-  act,
 };

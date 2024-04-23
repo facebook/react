@@ -493,8 +493,11 @@ function runActTests(label, render, unmount, rerender) {
         // it's annoying that we have to wait a tick before this warning comes in
         await sleep(0);
         if (__DEV__) {
-          expect(console.error.calls.count()).toEqual(1);
+          expect(console.error.calls.count()).toEqual(2);
           expect(console.error.calls.argsFor(0)[0]).toMatch(
+            '`ReactDOMTestUtils.act` is deprecated ',
+          );
+          expect(console.error.calls.argsFor(1)[0]).toMatch(
             'You called act(async () => ...) without await.',
           );
         }
@@ -516,11 +519,14 @@ function runActTests(label, render, unmount, rerender) {
 
         await sleep(150);
         if (__DEV__) {
-          expect(console.error).toHaveBeenCalledTimes(2);
+          expect(console.error).toHaveBeenCalledTimes(3);
           expect(console.error.calls.argsFor(0)[0]).toMatch(
-            'You seem to have overlapping act() calls',
+            '`ReactDOMTestUtils.act` is deprecated ',
           );
           expect(console.error.calls.argsFor(1)[0]).toMatch(
+            'You seem to have overlapping act() calls',
+          );
+          expect(console.error.calls.argsFor(2)[0]).toMatch(
             'You seem to have overlapping act() calls',
           );
         }

@@ -16,6 +16,8 @@ let usingPartialRenderer;
 const util = require('util');
 const realConsoleError = console.error;
 
+const shouldIgnoreConsoleError = require('../../../../scripts/jest/shouldIgnoreConsoleError');
+
 describe('ReactDOMServerHydration', () => {
   let container;
 
@@ -55,6 +57,9 @@ describe('ReactDOMServerHydration', () => {
     if (format.indexOf('Error: Uncaught [') === 0) {
       // Ignore errors captured by jsdom and their stacks.
       // We only want console errors in this suite.
+      return null;
+    }
+    if (shouldIgnoreConsoleError(format, ...rest)) {
       return null;
     }
     rest[rest.length - 1] = normalizeCodeLocInfo(rest[rest.length - 1]);
