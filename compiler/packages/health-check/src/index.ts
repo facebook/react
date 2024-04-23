@@ -6,7 +6,9 @@
  */
 
 import {
+  ErrorSeverity,
   runReactForgetBabelPlugin,
+  type CompilerErrorDetailOptions,
   type PluginOptions,
 } from "babel-plugin-react-forget/src";
 import { LoggerEvent } from "babel-plugin-react-forget/src/Entrypoint";
@@ -15,7 +17,8 @@ import * as fs from "fs/promises";
 import yargs from "yargs/yargs";
 
 const SUCCESS: Array<LoggerEvent> = [];
-const FAILURES: Array<LoggerEvent> = [];
+const ACTIONABLE_FAILURES: Array<LoggerEvent> = [];
+const OTHER_FAILURES: Array<LoggerEvent> = [];
 
 const logger = {
   logEvent(_: string | null, event: LoggerEvent) {
@@ -25,7 +28,11 @@ const logger = {
         return;
       }
       case "CompileError": {
-        FAILURES.push(event);
+        if (isActionableDiagnostic(event.detail)) {
+          ACTIONABLE_FAILURES.push(event);
+          return;
+        }
+        OTHER_FAILURES.push(event);
         return;
       }
       case "CompileDiagnostic":
@@ -41,6 +48,21 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: "critical_errors",
   logger,
 };
+
+function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
+  switch (detail.severity) {
+    case ErrorSeverity.InvalidReact:
+    case ErrorSeverity.InvalidJS:
+      return true;
+    case ErrorSeverity.InvalidConfig:
+    case ErrorSeverity.Invariant:
+    case ErrorSeverity.CannotPreserveMemoization:
+    case ErrorSeverity.Todo:
+      return false;
+    default:
+      throw new Error("Unhandled error severity");
+  }
+}
 
 function compile(sourceCode: string, filename: string) {
   try {
@@ -91,7 +113,7 @@ async function main() {
   }
 
   console.log(`Successful compilation: ${SUCCESS.length}`);
-  console.log(`Failed compilation: ${FAILURES.length}`);
+  console.log(`Failed compilation: ${ACTIONABLE_FAILURES.length}`);
 }
 
 main();

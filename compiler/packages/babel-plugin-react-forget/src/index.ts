@@ -11,6 +11,7 @@ export {
   CompilerErrorDetail,
   CompilerSuggestionOperation,
   ErrorSeverity,
+  type CompilerErrorDetailOptions,
 } from "./CompilerError";
 export {
   compileFn as compile,
@@ -32,7 +33,6 @@ export {
   type SourceLocation,
 } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
-
 declare global {
   let __DEV__: boolean | null | undefined;
 }
