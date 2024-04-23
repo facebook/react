@@ -799,6 +799,7 @@ function getReversePostorderedBlocks(func: HIR): HIR["blocks"] {
         visit(terminal.block);
         break;
       }
+      case "unreachable":
       case "unsupported": {
         break;
       }

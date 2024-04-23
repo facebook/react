@@ -853,6 +853,7 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
+    case "unreachable":
     case "unsupported": {
       return terminal;
     }
@@ -877,6 +878,7 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "goto":
     case "return":
     case "throw":
+    case "unreachable":
     case "unsupported": {
       return null;
     }
@@ -915,6 +917,7 @@ export function mapOptionalFallthroughs(
     case "goto":
     case "return":
     case "throw":
+    case "unreachable":
     case "unsupported": {
       return;
     }
@@ -1085,6 +1088,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.block;
       break;
     }
+    case "unreachable":
     case "unsupported":
       break;
     default: {
@@ -1144,6 +1148,7 @@ export function mapTerminalOperands(
     case "for-of":
     case "for-in":
     case "goto":
+    case "unreachable":
     case "unsupported":
     case "scope": {
       // no-op
@@ -1201,6 +1206,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "for-of":
     case "for-in":
     case "goto":
+    case "unreachable":
     case "unsupported":
     case "scope": {
       // no-op

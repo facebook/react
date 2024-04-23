@@ -817,6 +817,10 @@ class Driver {
 
         break;
       }
+      case "unreachable": {
+        // noop
+        break;
+      }
       case "unsupported": {
         CompilerError.invariant(false, {
           reason: "Unexpected unsupported terminal",

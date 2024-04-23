@@ -341,6 +341,7 @@ export type BasicBlock = {
  */
 export type Terminal =
   | UnsupportedTerminal
+  | UnreachableTerminal
   | ThrowTerminal
   | ReturnTerminal
   | GotoTerminal
@@ -384,6 +385,18 @@ export type UnsupportedTerminal = {
   id: InstructionId;
   loc: SourceLocation;
 };
+
+/**
+ * Terminal for an unreachable block.
+ * Unreachable blocks are emitted when all control flow paths of a if/switch/try block diverge
+ * before reaching the fallthrough.
+ */
+export type UnreachableTerminal = {
+  kind: "unreachable";
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
 export type ThrowTerminal = {
   kind: "throw";
   value: Place;

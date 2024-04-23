@@ -121,6 +121,7 @@ export function printMixedHIR(
     case "throw":
     case "while":
     case "for":
+    case "unreachable":
     case "unsupported":
     case "goto":
     case "do-while":
@@ -259,6 +260,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "sequence": {
       value = `[${terminal.id}] Sequence block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "unreachable": {
+      value = `[${terminal.id}] Unreachable`;
       break;
     }
     case "unsupported": {
