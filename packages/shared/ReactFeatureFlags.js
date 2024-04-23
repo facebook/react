@@ -78,7 +78,6 @@ export const enableLegacyFBSupport = false;
 
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
-export const enableFetchInstrumentation = true;
 
 export const enableBinaryFlight = __EXPERIMENTAL__;
 export const enableFlightReadableStream = __EXPERIMENTAL__;
