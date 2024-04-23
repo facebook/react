@@ -223,7 +223,25 @@ var RulesOfHooks = {
         _iterator.f();
       }
     }
+    /**
+     * SourceCode#getText that also works down to ESLint 3.0.0
+     */
 
+
+    var getSource = typeof context.getSource === 'function' ? function (node) {
+      return context.getSource(node);
+    } : function (node) {
+      return context.sourceCode.getText(node);
+    };
+    /**
+     * SourceCode#getScope that also works down to ESLint 3.0.0
+     */
+
+    var getScope = typeof context.getScope === 'function' ? function () {
+      return context.getScope();
+    } : function (node) {
+      return context.sourceCode.getScope(node);
+    };
     return {
       // Maintain code segment path stack as we traverse.
       onCodePathSegmentStart: function (segment) {
@@ -609,7 +627,7 @@ var RulesOfHooks = {
                 if (cycled && !isUseIdentifier(hook)) {
                   context.report({
                     node: hook,
-                    message: "React Hook \"" + context.getSource(hook) + "\" may be executed " + 'more than once. Possibly because it is called in a loop. ' + 'React Hooks must be called in the exact same order in ' + 'every component render.'
+                    message: "React Hook \"" + getSource(hook) + "\" may be executed " + 'more than once. Possibly because it is called in a loop. ' + 'React Hooks must be called in the exact same order in ' + 'every component render.'
                   });
                 } // If this is not a valid code path for React hooks then we need to
                 // log a warning for every hook in this code path.
@@ -625,7 +643,7 @@ var RulesOfHooks = {
                   if (isAsyncFunction) {
                     context.report({
                       node: hook,
-                      message: "React Hook \"" + context.getSource(hook) + "\" cannot be " + 'called in an async function.'
+                      message: "React Hook \"" + getSource(hook) + "\" cannot be " + 'called in an async function.'
                     });
                   } // Report an error if a hook does not reach all finalizing code
                   // path segments.
@@ -635,7 +653,7 @@ var RulesOfHooks = {
 
                   if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd && !isUseIdentifier(hook) // `use(...)` can be called conditionally.
                   ) {
-                      var message = "React Hook \"" + context.getSource(hook) + "\" is called " + 'conditionally. React Hooks must be called in the exact ' + 'same order in every component render.' + (possiblyHasEarlyReturn ? ' Did you accidentally call a React Hook after an' + ' early return?' : '');
+                      var message = "React Hook \"" + getSource(hook) + "\" is called " + 'conditionally. React Hooks must be called in the exact ' + 'same order in every component render.' + (possiblyHasEarlyReturn ? ' Did you accidentally call a React Hook after an' + ' early return?' : '');
                       context.report({
                         node: hook,
                         message: message
@@ -643,7 +661,7 @@ var RulesOfHooks = {
                     }
                 } else if (codePathNode.parent && (codePathNode.parent.type === 'MethodDefinition' || codePathNode.parent.type === 'ClassProperty') && codePathNode.parent.value === codePathNode) {
                   // Custom message for hooks inside a class
-                  var _message = "React Hook \"" + context.getSource(hook) + "\" cannot be called " + 'in a class component. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
+                  var _message = "React Hook \"" + getSource(hook) + "\" cannot be called " + 'in a class component. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
 
                   context.report({
                     node: hook,
@@ -651,7 +669,7 @@ var RulesOfHooks = {
                   });
                 } else if (codePathFunctionName) {
                   // Custom message if we found an invalid function name.
-                  var _message2 = "React Hook \"" + context.getSource(hook) + "\" is called in " + ("function \"" + context.getSource(codePathFunctionName) + "\" ") + 'that is neither a React function component nor a custom ' + 'React Hook function.' + ' React component names must start with an uppercase letter.' + ' React Hook names must start with the word "use".';
+                  var _message2 = "React Hook \"" + getSource(hook) + "\" is called in " + ("function \"" + getSource(codePathFunctionName) + "\" ") + 'that is neither a React function component nor a custom ' + 'React Hook function.' + ' React component names must start with an uppercase letter.' + ' React Hook names must start with the word "use".';
 
                   context.report({
                     node: hook,
@@ -659,7 +677,7 @@ var RulesOfHooks = {
                   });
                 } else if (codePathNode.type === 'Program') {
                   // These are dangerous if you have inline requires enabled.
-                  var _message3 = "React Hook \"" + context.getSource(hook) + "\" cannot be called " + 'at the top level. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
+                  var _message3 = "React Hook \"" + getSource(hook) + "\" cannot be called " + 'at the top level. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
 
                   context.report({
                     node: hook,
@@ -673,7 +691,7 @@ var RulesOfHooks = {
                   // uncommon cases doesn't matter.
                   // `use(...)` can be called in callbacks.
                   if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
-                    var _message4 = "React Hook \"" + context.getSource(hook) + "\" cannot be called " + 'inside a callback. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
+                    var _message4 = "React Hook \"" + getSource(hook) + "\" cannot be called " + 'inside a callback. React Hooks must be called in a ' + 'React function component or a custom React Hook function.';
 
                     context.report({
                       node: hook,
@@ -728,7 +746,7 @@ var RulesOfHooks = {
         if (lastEffect == null && useEffectEventFunctions.has(node) && node.parent.type !== 'CallExpression') {
           context.report({
             node: node,
-            message: "`" + context.getSource(node) + "` is a function created with React Hook \"useEffectEvent\", and can only be called from " + 'the same component. They cannot be assigned to variables or passed down.'
+            message: "`" + getSource(node) + "` is a function created with React Hook \"useEffectEvent\", and can only be called from " + 'the same component. They cannot be assigned to variables or passed down.'
           });
         }
       },
@@ -740,13 +758,13 @@ var RulesOfHooks = {
       FunctionDeclaration: function (node) {
         // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       },
       ArrowFunctionExpression: function (node) {
         // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEffectEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(getScope(node));
         }
       }
     };
@@ -852,7 +870,25 @@ var ExhaustiveDeps = {
 
       context.report(problem);
     }
+    /**
+     * SourceCode#getText that also works down to ESLint 3.0.0
+     */
 
+
+    var getSource = typeof context.getSource === 'function' ? function (node) {
+      return context.getSource(node);
+    } : function (node) {
+      return context.sourceCode.getText(node);
+    };
+    /**
+     * SourceCode#getScope that also works down to ESLint 3.0.0
+     */
+
+    var getScope = typeof context.getScope === 'function' ? function () {
+      return context.getScope();
+    } : function (node) {
+      return context.sourceCode.getScope(node);
+    };
     var scopeManager = context.getSourceCode().scopeManager; // Should be shared between visitors.
 
     var setStateCallSites = new WeakMap();
@@ -1299,7 +1335,7 @@ var ExhaustiveDeps = {
         staleAssignments.add(key);
         reportProblem({
           node: writeExpr,
-          message: "Assignments to the '" + key + "' variable from inside React Hook " + (context.getSource(reactiveHook) + " will be lost after each ") + "render. To preserve the value over time, store it in a useRef " + "Hook and keep the mutable value in the '.current' property. " + "Otherwise, you can move this variable directly inside " + (context.getSource(reactiveHook) + ".")
+          message: "Assignments to the '" + key + "' variable from inside React Hook " + (getSource(reactiveHook) + " will be lost after each ") + "render. To preserve the value over time, store it in a useRef " + "Hook and keep the mutable value in the '.current' property. " + "Otherwise, you can move this variable directly inside " + (getSource(reactiveHook) + ".")
         });
       } // Remember which deps are stable and report bad usage first.
 
@@ -1399,7 +1435,7 @@ var ExhaustiveDeps = {
         // the user this in an error.
         reportProblem({
           node: declaredDependenciesNode,
-          message: "React Hook " + context.getSource(reactiveHook) + " was passed a " + 'dependency list that is not an array literal. This means we ' + "can't statically verify whether you've passed the correct " + 'dependencies.'
+          message: "React Hook " + getSource(reactiveHook) + " was passed a " + 'dependency list that is not an array literal. This means we ' + "can't statically verify whether you've passed the correct " + 'dependencies.'
         });
       } else {
         var arrayExpression = isTSAsArrayExpression ? declaredDependenciesNode.expression : declaredDependenciesNode;
@@ -1413,7 +1449,7 @@ var ExhaustiveDeps = {
           if (declaredDependencyNode.type === 'SpreadElement') {
             reportProblem({
               node: declaredDependencyNode,
-              message: "React Hook " + context.getSource(reactiveHook) + " has a spread " + "element in its dependency array. This means we can't " + "statically verify whether you've passed the " + 'correct dependencies.'
+              message: "React Hook " + getSource(reactiveHook) + " has a spread " + "element in its dependency array. This means we can't " + "statically verify whether you've passed the " + 'correct dependencies.'
             });
             return;
           }
@@ -1421,9 +1457,9 @@ var ExhaustiveDeps = {
           if (useEffectEventVariables.has(declaredDependencyNode)) {
             reportProblem({
               node: declaredDependencyNode,
-              message: 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' + ("Remove `" + context.getSource(declaredDependencyNode) + "` from the list."),
+              message: 'Functions returned from `useEffectEvent` must not be included in the dependency array. ' + ("Remove `" + getSource(declaredDependencyNode) + "` from the list."),
               suggest: [{
-                desc: "Remove the dependency `" + context.getSource(declaredDependencyNode) + "`",
+                desc: "Remove the dependency `" + getSource(declaredDependencyNode) + "`",
                 fix: function (fixer) {
                   return fixer.removeRange(declaredDependencyNode.range);
                 }
@@ -1454,7 +1490,7 @@ var ExhaustiveDeps = {
               } else {
                 reportProblem({
                   node: declaredDependencyNode,
-                  message: "React Hook " + context.getSource(reactiveHook) + " has a " + "complex expression in the dependency array. " + 'Extract it to a separate variable so it can be statically checked.'
+                  message: "React Hook " + getSource(reactiveHook) + " has a " + "complex expression in the dependency array. " + 'Extract it to a separate variable so it can be statically checked.'
                 });
               }
 
@@ -1687,7 +1723,7 @@ var ExhaustiveDeps = {
         }
 
         if (isPropsOnlyUsedInMembers) {
-          extraWarning = " However, 'props' will change when *any* prop changes, so the " + "preferred fix is to destructure the 'props' object outside of " + ("the " + reactiveHookName + " call and refer to those specific props ") + ("inside " + context.getSource(reactiveHook) + ".");
+          extraWarning = " However, 'props' will change when *any* prop changes, so the " + "preferred fix is to destructure the 'props' object outside of " + ("the " + reactiveHookName + " call and refer to those specific props ") + ("inside " + getSource(reactiveHook) + ".");
         }
       }
 
@@ -1832,7 +1868,7 @@ var ExhaustiveDeps = {
 
       reportProblem({
         node: declaredDependenciesNode,
-        message: "React Hook " + context.getSource(reactiveHook) + " has " + ( // To avoid a long message, show the next actionable item.
+        message: "React Hook " + getSource(reactiveHook) + " has " + ( // To avoid a long message, show the next actionable item.
         getWarningMessage(missingDependencies, 'a', 'missing', 'include') || getWarningMessage(unnecessaryDependencies, 'an', 'unnecessary', 'exclude') || getWarningMessage(duplicateDependencies, 'a', 'duplicate', 'omit')) + extraWarning,
         suggest: [{
           desc: "Update the dependencies array to be: [" + suggestedDeps.map(formatDependency).join(', ') + "]",
@@ -1914,7 +1950,7 @@ var ExhaustiveDeps = {
           } // We'll do our best effort to find it, complain otherwise.
 
 
-          var variable = context.getScope().set.get(callback.name);
+          var variable = getScope(callback).set.get(callback.name);
 
           if (variable == null || variable.defs == null) {
             // If it's not in scope, we don't care.
