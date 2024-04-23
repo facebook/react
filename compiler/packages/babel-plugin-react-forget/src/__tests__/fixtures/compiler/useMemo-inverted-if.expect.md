@@ -28,14 +28,14 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function Component(props) {
   let t0;
-  bb10: {
-    bb2: {
+  bb0: {
+    bb1: {
       if (props.cond) {
-        break bb2;
+        break bb1;
       }
 
       t0 = props.a;
-      break bb10;
+      break bb0;
     }
 
     t0 = props.b;

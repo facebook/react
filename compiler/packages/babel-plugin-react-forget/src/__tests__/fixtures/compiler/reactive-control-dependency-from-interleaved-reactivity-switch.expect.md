@@ -55,10 +55,10 @@ function Component(props) {
   const c = [a];
 
   let x;
-  bb1: switch (c[0][0]) {
+  bb0: switch (c[0][0]) {
     case true: {
       x = 1;
-      break bb1;
+      break bb0;
     }
     default: {
       x = 2;

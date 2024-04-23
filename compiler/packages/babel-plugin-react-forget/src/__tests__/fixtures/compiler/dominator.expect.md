@@ -49,23 +49,23 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function Component(props) {
   let x = 0;
-  bb1: if (props.a) {
+  bb0: if (props.a) {
     x = 1;
   } else {
     if (props.b) {
     } else {
-      break bb1;
+      break bb0;
     }
 
     x = 3;
   }
-  bb10: bb12: switch (props.c) {
+  bb1: bb2: switch (props.c) {
     case "a": {
       x = 4;
-      break bb12;
+      break bb2;
     }
     case "b": {
-      break bb10;
+      break bb1;
     }
     case "c": {
     }

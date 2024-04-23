@@ -26,7 +26,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a, b) {
   const $ = useMemoCache(2);
   let t0;
-  bb6: {
+  bb0: {
     if (a) {
       let t1;
       if ($[0] !== b) {
@@ -37,7 +37,7 @@ function component(a, b) {
         t1 = $[1];
       }
       t0 = t1;
-      break bb6;
+      break bb0;
     }
     t0 = undefined;
   }

@@ -73,12 +73,12 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb9: {
+    bb0: {
       const x = [];
       if (ENABLE_FEATURE) {
         x.push(42);
         t0 = x;
-        break bb9;
+        break bb0;
       } else {
         console.log("fallthrough");
       }

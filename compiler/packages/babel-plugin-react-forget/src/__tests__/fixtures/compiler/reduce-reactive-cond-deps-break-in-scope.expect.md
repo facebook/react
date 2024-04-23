@@ -36,9 +36,9 @@ function useFoo(t0) {
   let x;
   if ($[0] !== objIsNull || $[1] !== obj) {
     x = [];
-    bb1: {
+    bb0: {
       if (objIsNull) {
-        break bb1;
+        break bb0;
       } else {
         x.push(obj.a);
       }

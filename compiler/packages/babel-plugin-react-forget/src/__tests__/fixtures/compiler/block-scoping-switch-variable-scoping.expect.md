@@ -44,10 +44,10 @@ function Component(props) {
     t1 = $[1];
   }
   const handlers = t1;
-  bb2: switch (props.test) {
+  bb0: switch (props.test) {
     case true: {
       console.log(handlers.value);
-      break bb2;
+      break bb0;
     }
     default: {
     }

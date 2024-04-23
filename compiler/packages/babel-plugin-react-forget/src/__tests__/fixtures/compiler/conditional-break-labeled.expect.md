@@ -39,9 +39,9 @@ function Component(props) {
   if ($[0] !== props) {
     a = [];
     a.push(props.a);
-    bb1: {
+    bb0: {
       if (props.b) {
-        break bb1;
+        break bb0;
       }
 
       a.push(props.c);

@@ -48,10 +48,10 @@ function Component(t0) {
   const $ = useMemoCache(2);
   const { value } = t0;
   let x;
-  bb1: switch (GLOBAL) {
+  bb0: switch (GLOBAL) {
     case value: {
       x = 1;
-      break bb1;
+      break bb0;
     }
     default: {
       x = 2;

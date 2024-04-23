@@ -45,8 +45,8 @@ function useFoo(t0) {
   let x;
   if ($[0] !== cond || $[1] !== input) {
     x = [];
-    bb1: if (cond) {
-      break bb1;
+    bb0: if (cond) {
+      break bb0;
     } else {
       let t1;
       if ($[3] !== input.a.b) {

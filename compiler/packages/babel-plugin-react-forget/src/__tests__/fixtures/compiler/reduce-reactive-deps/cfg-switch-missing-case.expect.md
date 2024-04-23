@@ -43,14 +43,14 @@ function useCondDepInSwitchMissingCase(props, other) {
   let x;
   if ($[0] !== other || $[1] !== props) {
     x = {};
-    bb1: switch (identity(other)) {
+    bb0: switch (identity(other)) {
       case 1: {
         x.a = props.a.b;
-        break bb1;
+        break bb0;
       }
       case 2: {
         x.b = 42;
-        break bb1;
+        break bb0;
       }
       default: {
         x.c = props.a.b;

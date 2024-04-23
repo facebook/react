@@ -33,6 +33,7 @@ export { pruneTemporaryLValues as pruneUnusedLValues } from "./PruneTemporaryLVa
 export { pruneUnusedLabels } from "./PruneUnusedLabels";
 export { pruneUnusedScopes } from "./PruneUnusedScopes";
 export { renameVariables } from "./RenameVariables";
+export { stabilizeBlockIds } from "./StabilizeBlockIds";
 export {
   ReactiveFunctionTransform,
   eachReactiveValueOperand,

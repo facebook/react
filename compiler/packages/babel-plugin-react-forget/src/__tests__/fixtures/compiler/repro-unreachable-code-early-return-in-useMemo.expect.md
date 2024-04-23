@@ -52,10 +52,10 @@ function Component(t0) {
   const $ = useMemoCache(7);
   const { value } = t0;
   let t1;
-  bb13: {
+  bb0: {
     if (value == null) {
       t1 = null;
-      break bb13;
+      break bb0;
     }
     try {
       let t3;

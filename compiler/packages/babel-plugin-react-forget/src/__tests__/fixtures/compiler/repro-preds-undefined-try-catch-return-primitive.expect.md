@@ -37,15 +37,15 @@ import { useMemo } from "react";
 const checkforTouchEvents = true;
 function useSupportsTouchEvent() {
   let t0;
-  bb15: {
+  bb0: {
     if (checkforTouchEvents) {
       try {
         document.createEvent("TouchEvent");
         t0 = true;
-        break bb15;
+        break bb0;
       } catch {
         t0 = false;
-        break bb15;
+        break bb0;
       }
     }
     t0 = undefined;

@@ -76,12 +76,12 @@ function ComponentA(props) {
   let t0;
   if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb8: {
+    bb0: {
       a_DEBUG = [];
       a_DEBUG.push(props.a);
       if (props.b) {
         t0 = null;
-        break bb8;
+        break bb0;
       }
 
       a_DEBUG.push(props.d);
@@ -130,13 +130,13 @@ function ComponentC(props) {
   let t0;
   if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb8: {
+    bb0: {
       a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
         t0 = null;
-        break bb8;
+        break bb0;
       }
 
       a.push(props.d);
@@ -163,13 +163,13 @@ function ComponentD(props) {
   let t0;
   if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb8: {
+    bb0: {
       a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
         t0 = a;
-        break bb8;
+        break bb0;
       }
 
       a.push(props.d);

@@ -66,6 +66,7 @@ import {
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
+import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import {
@@ -363,6 +364,13 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "ExtractScopeDeclarationsFromDestructuring",
+    value: reactiveFunction,
+  });
+
+  stabilizeBlockIds(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "StabilizeBlockIds",
     value: reactiveFunction,
   });
 

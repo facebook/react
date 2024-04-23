@@ -47,14 +47,14 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   let x;
-  bb1: switch (props.cond) {
+  bb0: switch (props.cond) {
     case true: {
       x = 1;
-      break bb1;
+      break bb0;
     }
     case false: {
       x = 2;
-      break bb1;
+      break bb0;
     }
     default: {
       x = 3;

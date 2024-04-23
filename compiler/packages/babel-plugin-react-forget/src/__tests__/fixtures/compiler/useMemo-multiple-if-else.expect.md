@@ -34,7 +34,7 @@ import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(3);
   let t0;
-  bb9: {
+  bb0: {
     let y;
     if ($[0] !== props) {
       y = [];
@@ -43,7 +43,7 @@ function Component(props) {
       }
       if (props.cond2) {
         t0 = y;
-        break bb9;
+        break bb0;
       }
 
       y.push(props.b);

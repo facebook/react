@@ -44,14 +44,14 @@ function useCondDepInSwitch(props, other) {
   let x;
   if ($[0] !== other || $[1] !== props.a.b) {
     x = {};
-    bb1: switch (identity(other)) {
+    bb0: switch (identity(other)) {
       case 1: {
         x.a = props.a.b;
-        break bb1;
+        break bb0;
       }
       case 2: {
         x.b = props.a.b;
-        break bb1;
+        break bb0;
       }
       default: {
         x.c = props.a.b;

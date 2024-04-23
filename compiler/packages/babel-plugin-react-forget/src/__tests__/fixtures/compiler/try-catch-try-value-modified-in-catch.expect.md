@@ -34,7 +34,7 @@ function Component(props) {
   let t0;
   if ($[0] !== props.y || $[1] !== props.e) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb19: {
+    bb0: {
       try {
         const y = [];
         y.push(props.y);
@@ -43,11 +43,11 @@ function Component(props) {
         const e = t1;
         e.push(props.e);
         t0 = e;
-        break bb19;
+        break bb0;
       }
 
       t0 = null;
-      break bb19;
+      break bb0;
     }
     $[0] = props.y;
     $[1] = props.e;

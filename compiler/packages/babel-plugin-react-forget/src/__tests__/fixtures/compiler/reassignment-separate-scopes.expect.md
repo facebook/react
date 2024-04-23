@@ -62,7 +62,7 @@ function foo(a, b, c) {
     t0 = $[3];
   }
   const y = t0;
-  bb3: switch (b) {
+  bb0: switch (b) {
     case 0: {
       if ($[4] !== b) {
         x = [];
@@ -72,7 +72,7 @@ function foo(a, b, c) {
       } else {
         x = $[5];
       }
-      break bb3;
+      break bb0;
     }
     default: {
       if ($[6] !== c) {

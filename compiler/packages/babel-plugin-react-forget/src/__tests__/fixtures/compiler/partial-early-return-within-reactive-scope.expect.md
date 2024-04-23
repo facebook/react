@@ -35,12 +35,12 @@ function Component(props) {
   let t0;
   if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb12: {
+    bb0: {
       const x = [];
       if (props.cond) {
         x.push(props.a);
         t0 = x;
-        break bb12;
+        break bb0;
       } else {
         let t1;
         if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
@@ -52,7 +52,7 @@ function Component(props) {
         y = t1;
         if (props.b) {
           t0 = undefined;
-          break bb12;
+          break bb0;
         }
       }
     }

@@ -40,8 +40,8 @@ function useFoo(t0) {
   let x;
   if ($[0] !== cond || $[1] !== input.a.b) {
     x = [];
-    bb1: if (cond) {
-      break bb1;
+    bb0: if (cond) {
+      break bb0;
     }
 
     x.push(input.a.b);

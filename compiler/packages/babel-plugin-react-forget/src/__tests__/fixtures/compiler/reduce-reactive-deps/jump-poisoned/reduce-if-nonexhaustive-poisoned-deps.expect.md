@@ -46,12 +46,12 @@ function useFoo(t0) {
   let t1;
   if ($[0] !== cond || $[1] !== hasAB || $[2] !== input) {
     t1 = Symbol.for("react.early_return_sentinel");
-    bb11: {
+    bb0: {
       x = [];
       if (cond) {
         if (!hasAB) {
           t1 = null;
-          break bb11;
+          break bb0;
         }
         let t2;
         if ($[5] !== input.a.b) {

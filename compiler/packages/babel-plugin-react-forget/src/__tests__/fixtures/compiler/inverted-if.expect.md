@@ -31,10 +31,10 @@ function foo(a, b, c, d) {
   let y;
   if ($[0] !== a || $[1] !== b || $[2] !== c || $[3] !== d) {
     y = [];
-    bb1: if (a) {
+    bb0: if (a) {
       if (b) {
         y.push(c);
-        break bb1;
+        break bb0;
       }
 
       y.push(d);

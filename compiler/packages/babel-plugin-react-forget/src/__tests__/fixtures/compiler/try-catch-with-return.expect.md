@@ -37,19 +37,19 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb26: {
+    bb0: {
       x = [];
       try {
         const y = shallowCopy({});
         if (y == null) {
           t0 = undefined;
-          break bb26;
+          break bb0;
         }
 
         x.push(throwInput(y));
       } catch {
         t0 = null;
-        break bb26;
+        break bb0;
       }
     }
     $[0] = x;

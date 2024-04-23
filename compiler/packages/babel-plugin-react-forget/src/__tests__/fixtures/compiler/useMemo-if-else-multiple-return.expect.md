@@ -21,7 +21,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
   let t0;
-  bb7: {
+  bb0: {
     if (props.cond) {
       let t1;
       if ($[0] !== props.a) {
@@ -32,7 +32,7 @@ function Component(props) {
         t1 = $[1];
       }
       t0 = t1;
-      break bb7;
+      break bb0;
     }
     let t1;
     if ($[2] !== props.b) {

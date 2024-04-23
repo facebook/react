@@ -28,14 +28,14 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function useHook(a, b) {
-  bb1: switch (a) {
+  bb0: switch (a) {
     case 1: {
       if (b == null) {
         return;
       }
 
       console.log(b);
-      break bb1;
+      break bb0;
     }
     case 2: {
       return;

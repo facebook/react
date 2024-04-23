@@ -32,7 +32,7 @@ function Component(t0) {
   const $ = useMemoCache(2);
   const { propA, propB } = t0;
   let t1;
-  bb6: {
+  bb0: {
     if (propA) {
       let t2;
       if ($[0] !== propB.x.y) {
@@ -43,7 +43,7 @@ function Component(t0) {
         t2 = $[1];
       }
       t1 = t2;
-      break bb6;
+      break bb0;
     }
     t1 = undefined;
   }

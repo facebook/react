@@ -29,10 +29,10 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function Component(props) {
   let t0;
-  bb8: switch (props.key) {
+  bb0: switch (props.key) {
     case "key": {
       t0 = props.value;
-      break bb8;
+      break bb0;
     }
     default: {
       t0 = props.defaultValue;

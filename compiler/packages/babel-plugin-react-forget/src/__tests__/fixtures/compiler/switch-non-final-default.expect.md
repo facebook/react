@@ -38,9 +38,9 @@ function Component(props) {
   let y;
   if ($[0] !== props) {
     x = [];
-    bb1: switch (props.p0) {
+    bb0: switch (props.p0) {
       case 1: {
-        break bb1;
+        break bb0;
       }
       case true: {
         x.push(props.p2);
@@ -54,7 +54,7 @@ function Component(props) {
         y = t0;
       }
       default: {
-        break bb1;
+        break bb0;
       }
       case false: {
         y = x;

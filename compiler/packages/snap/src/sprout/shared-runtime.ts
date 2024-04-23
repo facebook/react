@@ -157,6 +157,12 @@ export function throwInput(x: Object): never {
   throw x;
 }
 
+export function throwErrorWithMessageIf(cond: boolean, message: string): void {
+  if (cond) {
+    throw new Error(message);
+  }
+}
+
 export function logValue<T>(value: T): void {
   console.log(value);
 }

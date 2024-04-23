@@ -38,11 +38,11 @@ function useHook(cond) {
   let log;
   if ($[0] !== cond) {
     log = [];
-    bb1: switch (CONST_STRING0) {
+    bb0: switch (CONST_STRING0) {
       case CONST_STRING0: {
         log.push(`@A`);
         if (cond) {
-          break bb1;
+          break bb0;
         }
 
         log.push(`@B`);

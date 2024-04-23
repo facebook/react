@@ -43,12 +43,12 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function Component(props) {
   if (props.cond) {
-    bb3: switch (props.test) {
+    bb0: switch (props.test) {
       case 0: {
-        break bb3;
+        break bb0;
       }
       case 1: {
-        break bb3;
+        break bb0;
       }
       case 2: {
       }

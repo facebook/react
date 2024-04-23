@@ -25,10 +25,10 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b, c) {
-  bb1: if (a) {
+  bb0: if (a) {
     while (b) {
       if (c) {
-        break bb1;
+        break bb0;
       }
     }
   }

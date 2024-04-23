@@ -33,16 +33,16 @@ function Component(props) {
   let t0;
   if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
-    bb9: {
+    bb0: {
       const object = makeObject_Primitives();
       if (props.cond) {
         object.value = 1;
         t0 = object;
-        break bb9;
+        break bb0;
       } else {
         object.value = props.value;
         t0 = object;
-        break bb9;
+        break bb0;
       }
     }
     $[0] = props;
