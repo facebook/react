@@ -281,6 +281,7 @@ interface Reference {}
 
 export type Request = {
   status: 0 | 1 | 2,
+  epoch: number,
   flushScheduled: boolean,
   fatalError: mixed,
   destination: null | Destination,
@@ -378,6 +379,7 @@ export function createRequest(
   const hints = createHints();
   const request: Request = ({
     status: OPEN,
+    epoch: 0,
     flushScheduled: false,
     fatalError: null,
     destination: null,
@@ -1236,8 +1238,7 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
-    request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+    startPerformingWork(request);
   }
 }
 
@@ -3003,9 +3004,6 @@ function performWork(request: Request): void {
       const task = pingedTasks[i];
       retryTask(request, task);
     }
-    if (request.destination !== null) {
-      flushCompletedChunks(request, request.destination);
-    }
   } catch (error) {
     logRecoverableError(request, error);
     fatalError(request, error);
@@ -3093,7 +3091,6 @@ function flushCompletedChunks(
     }
     errorChunks.splice(0, i);
   } finally {
-    request.flushScheduled = false;
     completeWriting(destination);
   }
   flushBuffered(destination);
@@ -3107,13 +3104,29 @@ function flushCompletedChunks(
   }
 }
 
-export function startWork(request: Request): void {
-  request.flushScheduled = request.destination !== null;
+function completeWorkEpoch(request: Request) {
+  request.epoch++;
+  const destination = request.destination;
+  if (destination) {
+    flushCompletedChunks(request, destination);
+  }
+}
+
+function startPerformingWork(request: Request): void {
+  request.epoch++;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }
+  scheduleWork(() => {
+    completeWorkEpoch(request);
+  });
+}
+
+export function startWork(request: Request): void {
+  request.flushScheduled = request.destination !== null;
+  startPerformingWork(request);
 }
 
 function enqueueFlush(request: Request): void {
@@ -3125,9 +3138,31 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedChunks(request, destination));
+    const currentEpoch = request.epoch;
+    scheduleWork(() => {
+      // In builds where scheduleWork is synchronous this will always initiate a
+      // flush immediately. That's not ideal but it's not what we're optimizing for
+      // and we ought to consider not using the sync form except for legacy. Regardless
+      // the logic is still sound because the epoch and destination could not have
+      // changed so while we're doing unecessary checks here it still preserves the same
+      // semantics as the async case.
+
+      request.flushScheduled = false;
+      if (currentEpoch !== request.epoch) {
+        // We scheduled this flush when no work was being performed but since
+        // then we've started a new epoch (we're either rendering or we've already flushed)
+        // so we don't need to flush here anymore.
+        return;
+      }
+
+      // We need to existence check destination again here because it might go away
+      // in between the enqueueFlush call and the work execution
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedChunks(request, destination);
+      }
+    });
   }
 }
 

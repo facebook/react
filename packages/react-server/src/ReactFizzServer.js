@@ -298,6 +298,7 @@ const CLOSED = 2;
 
 export opaque type Request = {
   destination: null | Destination,
+  epoch: number,
   flushScheduled: boolean,
   +resumableState: ResumableState,
   +renderState: RenderState,
@@ -380,6 +381,7 @@ export function createRequest(
   const abortSet: Set<Task> = new Set();
   const request: Request = {
     destination: null,
+    epoch: 0,
     flushScheduled: false,
     resumableState,
     renderState,
@@ -492,6 +494,7 @@ export function resumeRequest(
   const abortSet: Set<Task> = new Set();
   const request: Request = {
     destination: null,
+    epoch: 0,
     flushScheduled: false,
     resumableState: postponedState.resumableState,
     renderState,
@@ -593,9 +596,8 @@ export function resolveRequest(): null | Request {
 function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
-  if (request.pingedTasks.length === 1) {
-    request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+  if (pingedTasks.length === 1) {
+    startPerformingWork(request);
   }
 }
 
@@ -3815,9 +3817,6 @@ export function performWork(request: Request): void {
       retryTask(request, task);
     }
     pingedTasks.splice(0, i);
-    if (request.destination !== null) {
-      flushCompletedQueues(request, request.destination);
-    }
   } catch (error) {
     const errorInfo: ThrownInfo = {};
     logRecoverableError(request, error, errorInfo);
@@ -4279,7 +4278,6 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
-      request.flushScheduled = false;
       // We write the trailing tags but only if don't have any data to resume.
       // If we need to resume we'll write the postamble in the resume instead.
       if (!enablePostpone || request.trackedPostpones === null) {
@@ -4306,13 +4304,28 @@ function flushCompletedQueues(
   }
 }
 
-export function startWork(request: Request): void {
-  request.flushScheduled = request.destination !== null;
+function completeWorkEpoch(request: Request) {
+  request.epoch++;
+  const destination = request.destination;
+  if (destination) {
+    flushCompletedQueues(request, destination);
+  }
+}
+
+function startPerformingWork(request: Request): void {
+  request.epoch++;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }
+  scheduleWork(() => {
+    completeWorkEpoch(request);
+  });
+}
+
+export function startWork(request: Request): void {
+  startPerformingWork(request);
   if (request.trackedPostpones === null) {
     // this is either a regular render or a resume. For regular render we want
     // to call emitEarlyPreloads after the first performWork because we want
@@ -4352,14 +4365,28 @@ function enqueueFlush(request: Request): void {
     request.destination !== null
   ) {
     request.flushScheduled = true;
+    const currentEpoch = request.epoch;
     scheduleWork(() => {
+      // In builds where scheduleWork is synchronous this will always initiate a
+      // flush immediately. That's not ideal but it's not what we're optimizing for
+      // and we ought to consider not using the sync form except for legacy. Regardless
+      // the logic is still sound because the epoch and destination could not have
+      // changed so while we're doing unecessary checks here it still preserves the same
+      // semantics as the async case.
+
+      request.flushScheduled = false;
+      if (currentEpoch !== request.epoch) {
+        // We scheduled this flush when no work was being performed but since
+        // then we've started a new epoch (we're either rendering or we've already flushed)
+        // so we don't need to flush here anymore.
+        return;
+      }
+
       // We need to existence check destination again here because it might go away
       // in between the enqueueFlush call and the work execution
       const destination = request.destination;
       if (destination) {
         flushCompletedQueues(request, destination);
-      } else {
-        request.flushScheduled = false;
       }
     });
   }
