@@ -19,12 +19,13 @@ import {
 } from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
+  disableDefaultPropsExceptForClasses,
   disableLegacyContext,
+  disableStringRefs,
   enableDebugTracing,
-  enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableRefAsProp,
-  disableDefaultPropsExceptForClasses,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -819,7 +820,9 @@ function mountClassInstance(
   const instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = {};
+  if (!disableStringRefs) {
+    instance.refs = {};
+  }
 
   initializeUpdateQueue(workInProgress);
 
