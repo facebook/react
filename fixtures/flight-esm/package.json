@@ -13,7 +13,7 @@
     "prompts": "^2.4.2",
     "react": "experimental",
     "react-dom": "experimental",
-    "undici": "^5.20.0"
+    "undici": "^5.28.4"
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
