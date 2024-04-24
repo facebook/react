@@ -60,18 +60,29 @@ describe('ReactES6Class', () => {
 
   it('throws if no render function is defined', () => {
     class Foo extends React.Component {}
-    expect(() => {
-      expect(() => ReactDOM.flushSync(() => root.render(<Foo />))).toThrow();
-    }).toErrorDev([
-      // A failed component renders four times in DEV in concurrent mode
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
+    const caughtErrors = [];
+    function errorHandler(event) {
+      event.preventDefault();
+      caughtErrors.push(event.error);
+    }
+    window.addEventListener('error', errorHandler);
+    try {
+      expect(() => {
+        ReactDOM.flushSync(() => root.render(<Foo />));
+      }).toErrorDev([
+        // A failed component renders twice in DEV in concurrent mode
+        'Warning: No `render` method found on the Foo instance: ' +
+          'you may have forgotten to define `render`.',
+        'Warning: No `render` method found on the Foo instance: ' +
+          'you may have forgotten to define `render`.',
+      ]);
+    } finally {
+      window.removeEventListener('error', errorHandler);
+    }
+    expect(caughtErrors).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining('is not a function'),
+      }),
     ]);
   });
 
@@ -576,29 +587,24 @@ describe('ReactES6Class', () => {
     });
   }
 
-  it('supports string refs', () => {
-    class Foo extends React.Component {
-      render() {
-        return <Inner name="foo" ref="inner" />;
+  if (!require('shared/ReactFeatureFlags').disableStringRefs) {
+    it('supports string refs', () => {
+      class Foo extends React.Component {
+        render() {
+          return <Inner name="foo" ref="inner" />;
+        }
       }
-    }
-    const ref = React.createRef();
-    expect(() => {
-      test(<Foo ref={ref} />, 'DIV', 'foo');
-    }).toErrorDev([
-      'Warning: Component "Foo" contains the string ref "inner". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in Foo (at **)',
-    ]);
-    expect(ref.current.refs.inner.getName()).toBe('foo');
-  });
-
-  it('supports drilling through to the DOM using findDOMNode', () => {
-    const ref = React.createRef();
-    test(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
-    const node = ReactDOM.findDOMNode(ref.current);
-    expect(node).toBe(container.firstChild);
-  });
+      const ref = React.createRef();
+      expect(() => {
+        test(<Foo ref={ref} />, 'DIV', 'foo');
+      }).toErrorDev([
+        'Warning: Component "Foo" contains the string ref "inner". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+          '    in Inner (at **)',
+      ]);
+      expect(ref.current.refs.inner.getName()).toBe('foo');
+    });
+  }
 });

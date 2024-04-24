@@ -25,6 +25,7 @@ import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
+import {LegacyRoot} from './ReactRootTags';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
@@ -61,7 +62,8 @@ import {
   scheduleInitialHydrationOnRoot,
   flushRoot,
   batchedUpdates,
-  flushSync,
+  flushSyncFromReconciler,
+  flushSyncWork,
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
@@ -87,10 +89,6 @@ import {
   higherPriorityLane,
 } from './ReactFiberLane';
 import {
-  getCurrentUpdatePriority,
-  runWithPriority,
-} from './ReactEventPriorities';
-import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
@@ -111,6 +109,11 @@ export {
   observeVisibleRects,
 } from './ReactTestSelectors';
 export {startHostTransition} from './ReactFiberHooks';
+export {
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
+} from './ReactFiberErrorLogger';
 
 type OpaqueRoot = FiberRoot;
 
@@ -209,7 +212,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which is inside StrictMode. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -220,7 +223,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which renders StrictMode children. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-find-node',
+                'https://react.dev/link/strict-mode-find-node',
               methodName,
               methodName,
               componentName,
@@ -249,7 +252,21 @@ export function createContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
@@ -263,6 +280,8 @@ export function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     null,
@@ -279,7 +298,21 @@ export function createHydrationContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: (error: mixed) => void,
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
@@ -293,6 +326,8 @@ export function createHydrationContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState,
@@ -324,11 +359,51 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
+  const current = container.current;
+  const lane = requestUpdateLane(current);
+  updateContainerImpl(
+    current,
+    lane,
+    element,
+    container,
+    parentComponent,
+    callback,
+  );
+  return lane;
+}
+
+export function updateContainerSync(
+  element: ReactNodeList,
+  container: OpaqueRoot,
+  parentComponent: ?React$Component<any, any>,
+  callback: ?Function,
+): Lane {
+  if (container.tag === LegacyRoot) {
+    flushPassiveEffects();
+  }
+  const current = container.current;
+  updateContainerImpl(
+    current,
+    SyncLane,
+    element,
+    container,
+    parentComponent,
+    callback,
+  );
+  return SyncLane;
+}
+
+function updateContainerImpl(
+  rootFiber: Fiber,
+  lane: Lane,
+  element: ReactNodeList,
+  container: OpaqueRoot,
+  parentComponent: ?React$Component<any, any>,
+  callback: ?Function,
+): void {
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
-  const current = container.current;
-  const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
@@ -368,7 +443,7 @@ export function updateContainer(
     if (__DEV__) {
       if (typeof callback !== 'function') {
         console.error(
-          'render(...): Expected the last optional `callback` argument to be a ' +
+          'Expected the last optional `callback` argument to be a ' +
             'function. Instead received: %s.',
           callback,
         );
@@ -377,20 +452,19 @@ export function updateContainer(
     update.callback = callback;
   }
 
-  const root = enqueueUpdate(current, update, lane);
+  const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, current, lane);
-    entangleTransitions(root, current, lane);
+    scheduleUpdateOnFiber(root, rootFiber, lane);
+    entangleTransitions(root, rootFiber, lane);
   }
-
-  return lane;
 }
 
 export {
   batchedUpdates,
   deferredUpdates,
   discreteUpdates,
-  flushSync,
+  flushSyncFromReconciler,
+  flushSyncWork,
   isAlreadyRendering,
   flushPassiveEffects,
 };
@@ -423,12 +497,11 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       break;
     }
     case SuspenseComponent: {
-      flushSync(() => {
-        const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
-        if (root !== null) {
-          scheduleUpdateOnFiber(root, fiber, SyncLane);
-        }
-      });
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+      if (root !== null) {
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
+      }
+      flushSyncWork();
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
@@ -487,8 +560,6 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
-
-export {getCurrentUpdatePriority, runWithPriority};
 
 export {findHostInstance};
 
@@ -788,7 +859,6 @@ function getCurrentFiberForDevTools() {
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
-  const {ReactCurrentDispatcher} = ReactSharedInternals;
 
   return injectInternals({
     bundleType: devToolsConfig.bundleType,
@@ -804,7 +874,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
-    currentDispatcherRef: ReactCurrentDispatcher,
+    currentDispatcherRef: ReactSharedInternals,
     findHostInstanceByFiber,
     findFiberByHostInstance:
       findFiberByHostInstance || emptyFindFiberByHostInstance,

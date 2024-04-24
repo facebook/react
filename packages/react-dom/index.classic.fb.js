@@ -9,7 +9,7 @@
 
 import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
 
-import Internals from './src/ReactDOMSharedInternals';
+import Internals from './src/ReactDOMSharedInternalsFB';
 
 // For classic WWW builds, include a few internals that are already in use.
 Object.assign((Internals: any), {
@@ -20,19 +20,12 @@ Object.assign((Internals: any), {
 
 export {
   createPortal,
-  createRoot,
-  hydrateRoot,
-  findDOMNode,
   flushSync,
-  hydrate,
-  render,
-  unmountComponentAtNode,
-  unstable_batchedUpdates,
   unstable_createEventHandle,
-  unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus,
   useFormState,
+  requestFormReset,
   prefetchDNS,
   preconnect,
   preload,
@@ -40,6 +33,16 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './src/client/ReactDOMFB';
 
-export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};
+export {
+  createRoot,
+  hydrateRoot,
+  render,
+  unstable_batchedUpdates,
+  findDOMNode,
+  unstable_renderSubtreeIntoContainer,
+  unmountComponentAtNode,
+} from './src/client/ReactDOMRootFB';
+
+export {Internals as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE};

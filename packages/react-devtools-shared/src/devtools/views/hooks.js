@@ -219,15 +219,18 @@ export function useModalDismissSignal(
       return () => {};
     }
 
-    const handleDocumentKeyDown = (event: any) => {
+    const handleRootNodeKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         dismissCallback();
       }
     };
 
-    const handleDocumentClick = (event: any) => {
+    const handleRootNodeClick: MouseEventHandler = event => {
       if (
         modalRef.current !== null &&
+        /* $FlowExpectedError[incompatible-call] Instead of dealing with possibly multiple realms
+         and multiple Node references to comply with Flow (e.g. checking with `event.target instanceof Node`)
+         just delegate it to contains call */
         !modalRef.current.contains(event.target)
       ) {
         event.stopPropagation();
@@ -237,7 +240,7 @@ export function useModalDismissSignal(
       }
     };
 
-    let ownerDocument = null;
+    let modalRootNode = null;
 
     // Delay until after the current call stack is empty,
     // in case this effect is being run while an event is currently bubbling.
@@ -248,12 +251,12 @@ export function useModalDismissSignal(
       // It's important to listen to the ownerDocument to support the browser extension.
       // Here we use portals to render individual tabs (e.g. Profiler),
       // and the root document might belong to a different window.
-      const div = modalRef.current;
-      if (div != null) {
-        ownerDocument = div.ownerDocument;
-        ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+      const modalDOMElement = modalRef.current;
+      if (modalDOMElement != null) {
+        modalRootNode = modalDOMElement.getRootNode();
+        modalRootNode.addEventListener('keydown', handleRootNodeKeyDown);
         if (dismissOnClickOutside) {
-          ownerDocument.addEventListener('click', handleDocumentClick, true);
+          modalRootNode.addEventListener('click', handleRootNodeClick, true);
         }
       }
     }, 0);
@@ -263,9 +266,9 @@ export function useModalDismissSignal(
         clearTimeout(timeoutID);
       }
 
-      if (ownerDocument !== null) {
-        ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick, true);
+      if (modalRootNode !== null) {
+        modalRootNode.removeEventListener('keydown', handleRootNodeKeyDown);
+        modalRootNode.removeEventListener('click', handleRootNodeClick, true);
       }
     };
   }, [modalRef, dismissCallback, dismissOnClickOutside]);

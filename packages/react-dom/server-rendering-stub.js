@@ -13,7 +13,7 @@
 import ReactVersion from 'shared/ReactVersion';
 export {ReactVersion as version};
 
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './src/ReactDOMSharedInternals';
 
 export {
   createPortal,
@@ -50,7 +50,7 @@ export function experimental_useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   if (__DEV__) {
     console.error(
       'useFormState is now in canary. Remove the experimental_ prefix. ' +

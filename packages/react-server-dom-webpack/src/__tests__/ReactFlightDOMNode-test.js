@@ -9,6 +9,9 @@
 
 'use strict';
 
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
 global.setImmediate = cb => cb();
@@ -257,5 +260,96 @@ describe('ReactFlightDOMNode', () => {
     expect(result).toEqual(
       '<script src="/path/to/chunk.js" async="" nonce="r4nd0m"></script><span>Client Component</span>',
     );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+
+    const rscStream = ReactServerDOMServer.renderToPipeableStream(
+      s,
+      {},
+      {
+        onError(error) {
+          return error.message;
+        },
+      },
+    );
+
+    const writable = new Stream.PassThrough();
+    rscStream.pipe(writable);
+
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    writable.destroy(reason);
+
+    await new Promise(resolve => {
+      writable.on('error', () => {
+        resolve();
+      });
+    });
+
+    expect(cancelReason.message).toBe(
+      'The destination stream errored while writing data.',
+    );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we abort', async () => {
+    const errors = [];
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    const rscStream = ReactServerDOMServer.renderToPipeableStream(
+      s,
+      {},
+      {
+        onError(x) {
+          errors.push(x);
+          return x.message;
+        },
+      },
+    );
+
+    const readable = new Stream.PassThrough();
+    rscStream.pipe(readable);
+
+    const result = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
+    const reader = result.getReader();
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    rscStream.abort(reason);
+
+    expect(cancelReason).toBe(reason);
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
   });
 });

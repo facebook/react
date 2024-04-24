@@ -111,7 +111,6 @@ describe('ReactFlightDOMForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
-  // @gate enableFormActions
   it('can submit a passed server action without hydrating it', async () => {
     let foo = null;
 

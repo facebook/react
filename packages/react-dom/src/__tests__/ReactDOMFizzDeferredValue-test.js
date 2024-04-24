@@ -111,9 +111,11 @@ describe('ReactDOMFizzForm', () => {
       await readIntoContainer(stream);
       expect(container.textContent).toEqual('Loading...');
 
+      assertLog(['Loading...']);
       // After hydration, it's updated to the final value
       await act(() => ReactDOMClient.hydrateRoot(container, <App />));
       expect(container.textContent).toEqual('Final');
+      assertLog(['Loading...', 'Final']);
     },
   );
 

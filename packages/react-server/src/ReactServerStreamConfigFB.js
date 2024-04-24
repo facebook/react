@@ -21,7 +21,7 @@ export opaque type BinaryChunk = string;
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 
@@ -58,12 +58,6 @@ export function typedArrayToBinaryChunk(
   content: $ArrayBufferView,
 ): BinaryChunk {
   throw new Error('Not implemented.');
-}
-
-export function clonePrecomputedChunk(
-  chunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return chunk;
 }
 
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {

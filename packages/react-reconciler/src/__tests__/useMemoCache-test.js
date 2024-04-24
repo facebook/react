@@ -10,7 +10,9 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 let act;
+let assertLog;
 let useState;
 let useMemoCache;
 let MemoCacheSentinel;
@@ -22,7 +24,9 @@ describe('useMemoCache()', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
     useState = React.useState;
     useMemoCache = React.unstable_useMemoCache;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
@@ -362,5 +366,259 @@ describe('useMemoCache()', () => {
     expect(root).toMatchRenderedOutput('count 1');
     expect(Text).toBeCalledTimes(3);
     expect(data).toBe(data1); // confirm that the cache persisted across renders
+  });
+
+  // @gate enableUseMemoCacheHook
+  test('reuses computations from suspended/interrupted render attempts during an update', async () => {
+    // This test demonstrates the benefit of a shared memo cache. By "shared" I
+    // mean multiple concurrent render attempts of the same component/hook use
+    // the same cache. (When the feature flag is off, we don't do this — the
+    // cache is copy-on-write.)
+    //
+    // If an update is interrupted, either because it suspended or because of
+    // another update, we can reuse the memoized computations from the previous
+    // attempt. We can do this because the React Compiler performs atomic writes
+    // to the memo cache, i.e. it will not record the inputs to a memoization
+    // without also recording its output.
+    //
+    // This gives us a form of "resuming" within components and hooks.
+    //
+    // This only works when updating a component that already mounted. It has no
+    // impact during initial render, because the memo cache is stored on the
+    // fiber, and since we have not implemented resuming for fibers, it's always
+    // a fresh memo cache, anyway.
+    //
+    // However, this alone is pretty useful — it happens whenever you update the
+    // UI with fresh data after a mutation/action, which is extremely common in
+    // a Suspense-driven (e.g. RSC or Relay) app. That's the scenario that this
+    // test simulates.
+    //
+    // So the impact of this feature is faster data mutations/actions.
+
+    function someExpensiveProcessing(t) {
+      Scheduler.log(`Some expensive processing... [${t}]`);
+      return t;
+    }
+
+    function useWithLog(t, msg) {
+      try {
+        return React.use(t);
+      } catch (x) {
+        Scheduler.log(`Suspend! [${msg}]`);
+        throw x;
+      }
+    }
+
+    // Original code:
+    //
+    //   function Data({chunkA, chunkB}) {
+    //     const a = someExpensiveProcessing(useWithLog(chunkA, 'chunkA'));
+    //     const b = useWithLog(chunkB, 'chunkB');
+    //     return (
+    //       <>
+    //         {a}
+    //         {b}
+    //       </>
+    //     );
+    //   }
+    //
+    //   function Input() {
+    //     const [input, _setText] = useState('');
+    //     return input;
+    //   }
+    //
+    //   function App({chunkA, chunkB}) {
+    //     return (
+    //       <>
+    //         <div>
+    //           Input: <Input />
+    //         </div>
+    //         <div>
+    //           Data: <Data chunkA={chunkA} chunkB={chunkB} />
+    //         </div>
+    //       </>
+    //     );
+    //   }
+    function Data(t0) {
+      const $ = useMemoCache(5);
+      const {chunkA, chunkB} = t0;
+      const t1 = useWithLog(chunkA, 'chunkA');
+      let t2;
+
+      if ($[0] !== t1) {
+        t2 = someExpensiveProcessing(t1);
+        $[0] = t1;
+        $[1] = t2;
+      } else {
+        t2 = $[1];
+      }
+
+      const a = t2;
+      const b = useWithLog(chunkB, 'chunkB');
+      let t3;
+
+      if ($[2] !== a || $[3] !== b) {
+        t3 = (
+          <>
+            {a}
+            {b}
+          </>
+        );
+        $[2] = a;
+        $[3] = b;
+        $[4] = t3;
+      } else {
+        t3 = $[4];
+      }
+
+      return t3;
+    }
+
+    let setInput;
+    function Input() {
+      const [input, _set] = useState('');
+      setInput = _set;
+      return input;
+    }
+
+    function App(t0) {
+      const $ = useMemoCache(4);
+      const {chunkA, chunkB} = t0;
+      let t1;
+
+      if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
+        t1 = (
+          <div>
+            Input: <Input />
+          </div>
+        );
+        $[0] = t1;
+      } else {
+        t1 = $[0];
+      }
+
+      let t2;
+
+      if ($[1] !== chunkA || $[2] !== chunkB) {
+        t2 = (
+          <>
+            {t1}
+            <div>
+              Data: <Data chunkA={chunkA} chunkB={chunkB} />
+            </div>
+          </>
+        );
+        $[1] = chunkA;
+        $[2] = chunkB;
+        $[3] = t2;
+      } else {
+        t2 = $[3];
+      }
+
+      return t2;
+    }
+
+    function createInstrumentedResolvedPromise(value) {
+      return {
+        then() {},
+        status: 'fulfilled',
+        value,
+      };
+    }
+
+    function createDeferred() {
+      let resolve;
+      const p = new Promise(res => {
+        resolve = res;
+      });
+      p.resolve = resolve;
+      return p;
+    }
+
+    // Initial render. We pass the data in as two separate "chunks" to simulate
+    // a stream (e.g. RSC).
+    const root = ReactNoop.createRoot();
+    const initialChunkA = createInstrumentedResolvedPromise('A1');
+    const initialChunkB = createInstrumentedResolvedPromise('B1');
+    await act(() =>
+      root.render(<App chunkA={initialChunkA} chunkB={initialChunkB} />),
+    );
+    assertLog(['Some expensive processing... [A1]']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Input: </div>
+        <div>Data: A1B1</div>
+      </>,
+    );
+
+    // Update the UI in a transition. This would happen after a data mutation.
+    const updatedChunkA = createDeferred();
+    const updatedChunkB = createDeferred();
+    await act(() => {
+      React.startTransition(() => {
+        root.render(<App chunkA={updatedChunkA} chunkB={updatedChunkB} />);
+      });
+    });
+    assertLog(['Suspend! [chunkA]']);
+
+    // The data starts to stream in. Loading the data in the first chunk
+    // triggers an expensive computation in the UI. Later, we'll test whether
+    // this computation is reused.
+    await act(() => updatedChunkA.resolve('A2'));
+    assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
+
+    // The second chunk hasn't loaded yet, so we're still showing the
+    // initial UI.
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Input: </div>
+        <div>Data: A1B1</div>
+      </>,
+    );
+
+    // While waiting for the data to finish loading, update a different part of
+    // the screen. This interrupts the refresh transition.
+    //
+    // In a real app, this might be an input or hover event.
+    await act(() => setInput('hi!'));
+
+    // Once the input has updated, we go back to rendering the transition.
+    if (gate(flags => flags.enableNoCloningMemoCache)) {
+      // We did not have process the first chunk again. We reused the
+      // computation from the earlier attempt.
+      assertLog(['Suspend! [chunkB]']);
+    } else {
+      // Because we clone/reset the memo cache after every aborted attempt, we
+      // must process the first chunk again.
+      assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
+    }
+
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Input: hi!</div>
+        <div>Data: A1B1</div>
+      </>,
+    );
+
+    // Finish loading the data.
+    await act(() => updatedChunkB.resolve('B2'));
+    if (gate(flags => flags.enableNoCloningMemoCache)) {
+      // We did not have process the first chunk again. We reused the
+      // computation from the earlier attempt.
+      assertLog([]);
+    } else {
+      // Because we clone/reset the memo cache after every aborted attempt, we
+      // must process the first chunk again.
+      //
+      // That's three total times we've processed the first chunk, compared to
+      // just once when enableNoCloningMemoCache is on.
+      assertLog(['Some expensive processing... [A2]']);
+    }
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Input: hi!</div>
+        <div>Data: A2B2</div>
+      </>,
+    );
   });
 });

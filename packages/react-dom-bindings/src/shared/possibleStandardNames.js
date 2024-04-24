@@ -82,6 +82,7 @@ const possibleStandardNames = {
   id: 'id',
   imagesizes: 'imageSizes',
   imagesrcset: 'imageSrcSet',
+  inert: 'inert',
   innerhtml: 'innerHTML',
   inputmode: 'inputMode',
   integrity: 'integrity',

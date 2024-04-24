@@ -13,8 +13,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {warnsIfNotActing} from './ReactFiberConfig';
 
-const {ReactCurrentActQueue} = ReactSharedInternals;
-
 export function isLegacyActEnvironment(fiber: Fiber): boolean {
   if (__DEV__) {
     // Legacy mode. We preserve the behavior of React 17's act. It assumes an
@@ -47,7 +45,10 @@ export function isConcurrentActEnvironment(): void | boolean {
           IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
-    if (!isReactActEnvironmentGlobal && ReactCurrentActQueue.current !== null) {
+    if (
+      !isReactActEnvironmentGlobal &&
+      ReactSharedInternals.actQueue !== null
+    ) {
       // TODO: Include link to relevant documentation page.
       console.error(
         'The current testing environment is not configured to support ' +

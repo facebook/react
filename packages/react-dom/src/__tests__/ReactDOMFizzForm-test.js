@@ -23,7 +23,7 @@ let ReactDOMServer;
 let ReactDOMClient;
 let useFormStatus;
 let useOptimistic;
-let useFormState;
+let useActionState;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -32,11 +32,16 @@ describe('ReactDOMFizzForm', () => {
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useFormStatus = require('react-dom').useFormStatus;
-    useFormState = require('react-dom').useFormState;
     useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
+    if (__VARIANT__) {
+      // Remove after API is deleted.
+      useActionState = require('react-dom').useFormState;
+    } else {
+      useActionState = require('react').useActionState;
+    }
   });
 
   afterEach(() => {
@@ -76,7 +81,6 @@ describe('ReactDOMFizzForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
-  // @gate enableFormActions
   it('should allow passing a function to form action during SSR', async () => {
     const ref = React.createRef();
     let foo;
@@ -103,7 +107,6 @@ describe('ReactDOMFizzForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('should allow passing a function to an input/button formAction', async () => {
     const inputRef = React.createRef();
     const buttonRef = React.createRef();
@@ -162,7 +165,6 @@ describe('ReactDOMFizzForm', () => {
     expect(rootActionCalled).toBe(false);
   });
 
-  // @gate enableFormActions || !__DEV__
   it('should warn when passing a function action during SSR and string during hydration', async () => {
     function action(formData) {}
     function App({isClient}) {
@@ -180,11 +182,11 @@ describe('ReactDOMFizzForm', () => {
         ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
       });
     }).toErrorDev(
-      'Prop `action` did not match. Server: "function" Client: "action"',
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 
-  // @gate enableFormActions || !__DEV__
   it('should ideally warn when passing a string during SSR and function during hydration', async () => {
     function action(formData) {}
     function App({isClient}) {
@@ -203,7 +205,6 @@ describe('ReactDOMFizzForm', () => {
     });
   });
 
-  // @gate enableFormActions || !__DEV__
   it('should reset form fields after you update away from hydrated function', async () => {
     const formRef = React.createRef();
     const inputRef = React.createRef();
@@ -259,7 +260,6 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
   });
 
-  // @gate enableFormActions || !__DEV__
   it('should reset form fields after you remove a hydrated function', async () => {
     const formRef = React.createRef();
     const inputRef = React.createRef();
@@ -305,7 +305,6 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
   });
 
-  // @gate enableFormActions || !__DEV__
   it('should restore the form fields even if they were incorrectly set', async () => {
     const formRef = React.createRef();
     const inputRef = React.createRef();
@@ -346,7 +345,12 @@ describe('ReactDOMFizzForm', () => {
       await act(async () => {
         root = ReactDOMClient.hydrateRoot(container, <App />);
       });
-    }).toErrorDev(['Prop `formTarget` did not match.']);
+    }).toErrorDev(
+      [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      ],
+      {withoutStack: true},
+    );
     await act(async () => {
       root.render(<App isUpdate={true} />);
     });
@@ -368,7 +372,6 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it('useFormStatus is not pending during server render', async () => {
     function App() {
@@ -384,7 +387,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toBe('Pending: false');
   });
 
-  // @gate enableFormActions
   it('should replay a form action after hydration', async () => {
     let foo;
     function action(formData) {
@@ -412,7 +414,6 @@ describe('ReactDOMFizzForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('should replay input/button formAction', async () => {
     let rootActionCalled = false;
     let savedTitle = null;
@@ -472,15 +473,14 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toBe('hi');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState returns initial state', async () => {
+  it('useActionState returns initial state', async () => {
     async function action(state) {
       return state;
     }
 
     function App() {
-      const [state] = useFormState(action, 0);
+      const [state] = useActionState(action, 0);
       return state;
     }
 
@@ -494,7 +494,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toBe('0');
   });
 
-  // @gate enableFormActions
   it('can provide a custom action on the server for actions', async () => {
     const ref = React.createRef();
     let foo;
@@ -546,7 +545,6 @@ describe('ReactDOMFizzForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can provide a custom action on buttons the server for actions', async () => {
     const hiddenRef = React.createRef();
     const inputRef = React.createRef();
@@ -626,7 +624,6 @@ describe('ReactDOMFizzForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can hydrate hidden fields in the beginning of a form', async () => {
     const hiddenRef = React.createRef();
 
