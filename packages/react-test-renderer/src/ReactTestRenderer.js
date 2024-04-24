@@ -475,7 +475,7 @@ function create(
       enableReactTestRendererWarning === true &&
       global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true
     ) {
-      console.warn(
+      console.error(
         'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       );
     }
