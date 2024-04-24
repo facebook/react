@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fca7ed5acdad0291a3b263d96d523766>>
+ * @generated SignedSource<<90a5fdd3d2d77ff49898cf96e4b802da>>
  */
 
 "use strict";
@@ -54,12 +54,11 @@ var ReactNoopUpdateQueue = {
     enqueueReplaceState: function () {},
     enqueueSetState: function () {}
   },
-  assign = Object.assign,
-  emptyObject = {};
+  assign = Object.assign;
 function Component(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = emptyObject;
+  this.refs = {};
   this.updater = updater || ReactNoopUpdateQueue;
 }
 Component.prototype.isReactComponent = {};
@@ -82,7 +81,7 @@ ComponentDummy.prototype = Component.prototype;
 function PureComponent(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = emptyObject;
+  this.refs = {};
   this.updater = updater || ReactNoopUpdateQueue;
 }
 var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
@@ -683,7 +682,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-canary-966142ac";
+exports.version = "19.0.0-canary-64485d5e";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

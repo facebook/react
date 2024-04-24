@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<326542d2f2bb8bbc5fb69f5994f1ea0f>>
+ * @generated SignedSource<<eb0c79f9647d9ccb19601e79d168e28a>>
  */
 
 'use strict';
@@ -14202,7 +14202,14 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = {};
+
+  {
+    // When string refs are used in create-react-class legacy components,
+    // we need to make refs writable unless we patch all such copies of the
+    // class code that sets to a frozen emptyObject.
+    instance.refs = {};
+  }
+
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
 
@@ -26474,7 +26481,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-2d608505';
+var ReactVersion = '19.0.0-canary-f458e15c';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
