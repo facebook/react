@@ -128,6 +128,7 @@ jobs:
     parallelism: 40
     steps:
       - checkout
+      - run: echo "running yarn build"
       - setup_node_modules
       - run: yarn build
       - persist_to_workspace:
