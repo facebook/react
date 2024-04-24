@@ -122,8 +122,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
         place.loc,
         new CompilerErrorDetail({
           description: null,
-          reason:
-            "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+          reason,
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
@@ -140,7 +139,24 @@ export function validateHooksUsage(fn: HIRFunction): void {
         new CompilerErrorDetail({
           description: null,
           reason:
-            "Hooks may not be referenced as normal values, they must be called. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+            "Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values",
+          loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
+        })
+      );
+    }
+  }
+  function recordDynamicHookUsageError(place: Place): void {
+    const previousError =
+      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
+    if (previousError === undefined) {
+      recordError(
+        place.loc,
+        new CompilerErrorDetail({
+          description: null,
+          reason:
+            "Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks",
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
@@ -224,7 +240,10 @@ export function validateHooksUsage(fn: HIRFunction): void {
         case "StoreLocal":
         case "StoreContext": {
           visitPlace(instr.value.value);
-          const kind = getKindForPlace(instr.value.value);
+          const kind = joinKinds(
+            getKindForPlace(instr.value.value),
+            getKindForPlace(instr.value.lvalue.place)
+          );
           setKind(instr.value.lvalue.place, kind);
           setKind(instr.lvalue, kind);
           break;
@@ -298,10 +317,11 @@ export function validateHooksUsage(fn: HIRFunction): void {
             calleeKind === Kind.KnownHook || calleeKind === Kind.PotentialHook;
           if (isHookCallee && !unconditionalBlocks.has(block.id)) {
             recordConditionalHookError(instr.value.callee);
+          } else if (calleeKind === Kind.PotentialHook) {
+            recordDynamicHookUsageError(instr.value.callee);
           }
           /**
-           * We intentionally skip the callee because known/potential hooks
-           * are always allowed to be called.
+           * We intentionally skip the callee because it's validated above
            */
           for (const operand of eachInstructionOperand(instr)) {
             if (operand === instr.value.callee) {
@@ -317,10 +337,11 @@ export function validateHooksUsage(fn: HIRFunction): void {
             calleeKind === Kind.KnownHook || calleeKind === Kind.PotentialHook;
           if (isHookCallee && !unconditionalBlocks.has(block.id)) {
             recordConditionalHookError(instr.value.property);
+          } else if (calleeKind === Kind.PotentialHook) {
+            recordDynamicHookUsageError(instr.value.property);
           }
           /*
-           * We intentionally skip the callee because known/potential hooks
-           * are always allowed to be called as methods (`React.useState()`).
+           * We intentionally skip the property because it's validated above
            */
           for (const operand of eachInstructionOperand(instr)) {
             if (operand === instr.value.property) {
