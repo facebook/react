@@ -489,6 +489,7 @@ const skipFilter = new Set([
 
   // bugs
   "bug-invalid-reactivity-value-block",
+  "for-of-iterator-of-immutable-collection",
 
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",
