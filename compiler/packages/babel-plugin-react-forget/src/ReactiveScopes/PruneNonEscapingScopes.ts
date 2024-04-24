@@ -474,9 +474,7 @@ function computeMemoizationInputs(
       };
     }
     case "Await":
-    case "TypeCastExpression":
-    case "GetIterator":
-    case "NextIterableOf": {
+    case "TypeCastExpression": {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:
@@ -484,6 +482,26 @@ function computeMemoizationInputs(
             ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
             : [],
         rvalues: [value.value],
+      };
+    }
+    case "NextIterableOf": {
+      return {
+        // Indirection for the inner value, memoized if the value is
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
+        rvalues: [value.iterator, value.collection],
+      };
+    }
+    case "GetIterator": {
+      return {
+        // Indirection for the inner value, memoized if the value is
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
+        rvalues: [value.collection],
       };
     }
     case "LoadLocal": {

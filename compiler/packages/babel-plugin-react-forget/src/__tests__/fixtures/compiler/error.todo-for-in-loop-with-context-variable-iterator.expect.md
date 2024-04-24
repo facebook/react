@@ -48,7 +48,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 14 |     );
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 15 |   }
-     | ^^^^ Todo: Support non-trivial ForOf inits (8:15)
+     | ^^^^ Todo: Support non-trivial for..in inits (8:15)
   16 |   return <div>{items}</div>;
   17 | }
   18 |

@@ -650,17 +650,16 @@ function codegenTerminal(
         codegenBlock(cx, terminal.loop)
       );
     }
-    case "for-in":
-    case "for-of": {
+    case "for-in": {
       CompilerError.invariant(terminal.init.kind === "SequenceExpression", {
-        reason: `Expected a sequence expression init for ForOf`,
+        reason: `Expected a sequence expression init for for..in`,
         description: `Got \`${terminal.init.kind}\` expression instead`,
         loc: terminal.init.loc,
         suggestions: null,
       });
       if (terminal.init.instructions.length !== 2) {
         CompilerError.throwTodo({
-          reason: "Support non-trivial ForOf inits",
+          reason: "Support non-trivial for..in inits",
           description: null,
           loc: terminal.init.loc,
           suggestions: null,
@@ -704,14 +703,14 @@ function codegenTerminal(
           });
         case InstructionKind.Catch:
           CompilerError.invariant(false, {
-            reason: "Unexpected catch variable as for-of collection",
+            reason: "Unexpected catch variable as for..in collection",
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
           });
         case InstructionKind.HoistedConst:
           CompilerError.invariant(false, {
-            reason: "Unexpected HoistedConst variable in for-of collection",
+            reason: "Unexpected HoistedConst variable in for..in collection",
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -722,31 +721,112 @@ function codegenTerminal(
             `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
           );
       }
-      if (terminal.kind === "for-of") {
-        return t.forOfStatement(
-          /*
-           * Special handling here since we only want the VariableDeclarators without any inits
-           * This needs to be updated when we handle non-trivial ForOf inits
-           */
-          createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
-            t.variableDeclarator(lval, null),
-          ]),
-          codegenInstructionValueToExpression(cx, iterableCollection.value),
-          codegenBlock(cx, terminal.loop)
-        );
-      } else {
-        return t.forInStatement(
-          /*
-           * Special handling here since we only want the VariableDeclarators without any inits
-           * This needs to be updated when we handle non-trivial ForOf inits
-           */
-          createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
-            t.variableDeclarator(lval, null),
-          ]),
-          codegenInstructionValueToExpression(cx, iterableCollection.value),
-          codegenBlock(cx, terminal.loop)
-        );
+      return t.forInStatement(
+        /*
+         * Special handling here since we only want the VariableDeclarators without any inits
+         * This needs to be updated when we handle non-trivial ForOf inits
+         */
+        createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+          t.variableDeclarator(lval, null),
+        ]),
+        codegenInstructionValueToExpression(cx, iterableCollection.value),
+        codegenBlock(cx, terminal.loop)
+      );
+    }
+    case "for-of": {
+      CompilerError.invariant(
+        terminal.init.kind === "SequenceExpression" &&
+          terminal.init.instructions.length === 1 &&
+          terminal.init.instructions[0].value.kind === "GetIterator",
+        {
+          reason: `Expected a single-expression sequence expression init for for..of`,
+          description: `Got \`${terminal.init.kind}\` expression instead`,
+          loc: terminal.init.loc,
+          suggestions: null,
+        }
+      );
+      const iterableCollection = terminal.init.instructions[0].value;
+
+      CompilerError.invariant(terminal.test.kind === "SequenceExpression", {
+        reason: `Expected a sequence expression test for for..of`,
+        description: `Got \`${terminal.init.kind}\` expression instead`,
+        loc: terminal.test.loc,
+        suggestions: null,
+      });
+      if (terminal.test.instructions.length !== 2) {
+        CompilerError.throwTodo({
+          reason: "Support non-trivial for..of inits",
+          description: null,
+          loc: terminal.init.loc,
+          suggestions: null,
+        });
       }
+      const iterableItem = terminal.test.instructions[1];
+      let lval: t.LVal;
+      switch (iterableItem.value.kind) {
+        case "StoreLocal": {
+          lval = codegenLValue(cx, iterableItem.value.lvalue.place);
+          break;
+        }
+        case "Destructure": {
+          lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
+          break;
+        }
+        default:
+          CompilerError.invariant(false, {
+            reason: `Expected a StoreLocal or Destructure to be assigned to the collection`,
+            description: `Found ${iterableItem.value.kind}`,
+            loc: iterableItem.value.loc,
+            suggestions: null,
+          });
+      }
+      let varDeclKind: "const" | "let";
+      switch (iterableItem.value.lvalue.kind) {
+        case InstructionKind.Const:
+          varDeclKind = "const" as const;
+          break;
+        case InstructionKind.Let:
+          varDeclKind = "let" as const;
+          break;
+        case InstructionKind.Reassign:
+          CompilerError.invariant(false, {
+            reason:
+              "Destructure should never be Reassign as it would be an Object/ArrayPattern",
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.Catch:
+          CompilerError.invariant(false, {
+            reason: "Unexpected catch variable as for..of collection",
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.HoistedConst:
+          CompilerError.invariant(false, {
+            reason: "Unexpected HoistedConst variable in for..of collection",
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        default:
+          assertExhaustive(
+            iterableItem.value.lvalue.kind,
+            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
+          );
+      }
+      return t.forOfStatement(
+        /*
+         * Special handling here since we only want the VariableDeclarators without any inits
+         * This needs to be updated when we handle non-trivial ForOf inits
+         */
+        createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+          t.variableDeclarator(lval, null),
+        ]),
+        codegenInstructionValueToExpression(cx, iterableCollection),
+        codegenBlock(cx, terminal.loop)
+      );
     }
     case "if": {
       const test = codegenPlaceToExpression(cx, terminal.test);
@@ -1773,11 +1853,11 @@ function codegenInstructionValue(
       break;
     }
     case "GetIterator": {
-      value = codegenPlaceToExpression(cx, instrValue.value);
+      value = codegenPlaceToExpression(cx, instrValue.collection);
       break;
     }
     case "NextIterableOf": {
-      value = codegenPlaceToExpression(cx, instrValue.value);
+      value = codegenPlaceToExpression(cx, instrValue.iterator);
       break;
     }
     case "NextPropertyOf": {

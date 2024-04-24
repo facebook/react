@@ -132,6 +132,7 @@ export class ReactiveFunctionVisitor<TState = void> {
       }
       case "for-of": {
         this.visitValue(terminal.id, terminal.init, state);
+        this.visitValue(terminal.id, terminal.test, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
@@ -491,6 +492,10 @@ export class ReactiveFunctionTransform<
         const init = this.transformValue(terminal.id, terminal.init, state);
         if (init.kind === "replace") {
           terminal.init = init.value;
+        }
+        const test = this.transformValue(terminal.id, terminal.test, state);
+        if (test.kind === "replace") {
+          terminal.test = test.value;
         }
         this.visitBlock(terminal.loop, state);
         break;

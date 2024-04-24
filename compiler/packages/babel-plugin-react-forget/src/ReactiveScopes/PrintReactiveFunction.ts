@@ -318,6 +318,8 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       writer.writeLine(`[${terminal.id}] for-of (`);
       writer.indented(() => {
         writeReactiveValue(writer, terminal.init);
+        writer.writeLine(";");
+        writeReactiveValue(writer, terminal.test);
       });
       writer.writeLine(") {");
       writeReactiveInstructions(writer, terminal.loop);

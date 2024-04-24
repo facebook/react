@@ -26,6 +26,7 @@ import {
   Type,
   ValueKind,
   ValueReason,
+  isArrayType,
   isMutableEffect,
   isObjectType,
 } from "../HIR/HIR";
@@ -1811,27 +1812,78 @@ function inferBlock(
         continue;
       }
       case "GetIterator": {
-        effect = { kind: Effect.Capture, reason: ValueReason.Other };
+        /**
+         * This instruction represents the step of retrieving an iterator from the collection
+         * in `for (... of <collection>)` syntax. We model two cases:
+         *
+         * 1. The collection is immutable or a known collection type (e.g. Array). In this case
+         *    we infer that the iterator produced won't be the same as the collection itself.
+         *    If the collection is an Array, this is because it will produce a native Array
+         *    iterator. If the collection is already frozen, we assume it must be of some
+         *    type that returns a separate iterator. In theory you could pass an Iterator
+         *    as props to a component and then for..of over that in the component body, but
+         *    this already violates React's rules so we assume you're not doing this.
+         * 2. The collection could be an Iterator itself, such that advancing the iterator
+         *    (modeled with NextIterableOf) mutates the collection itself.
+         */
+        const kind = state.kind(instrValue.collection).kind;
+        const isMutable =
+          kind === ValueKind.Mutable || kind === ValueKind.Context;
+        if (!isMutable || isArrayType(instrValue.collection.identifier)) {
+          // Case 1, assume iterator is a separate mutable object
+          effect = {
+            kind: Effect.Read,
+            reason: ValueReason.Other,
+          };
+          valueKind = {
+            kind: ValueKind.Mutable,
+            reason: new Set([ValueReason.Other]),
+            context: new Set(),
+          };
+        } else {
+          // Case 2, assume that the iterator could be the (mutable) collection itself
+          effect = {
+            kind: Effect.Capture,
+            reason: ValueReason.Other,
+          };
+          valueKind = state.kind(instrValue.collection);
+        }
         lvalueEffect = Effect.Store;
-        valueKind = {
-          kind: ValueKind.Mutable,
-          reason: new Set([ValueReason.Other]),
-          context: new Set(),
-        };
         break;
       }
       case "NextIterableOf": {
-        effect = {
-          kind: Effect.Capture,
-          reason: ValueReason.Other,
-        };
-        lvalueEffect = Effect.Store;
-        valueKind = {
-          kind: ValueKind.Mutable,
-          reason: new Set([ValueReason.Other]),
-          context: new Set(),
-        };
-        break;
+        /**
+         * This instruction represents advancing an iterator with .next(). We use a
+         * conditional mutate to model the two cases for GetIterator:
+         * - If the collection is a mutable iterator, we want to model the fact that
+         *   advancing the iterator will mutate it
+         * - If the iterator may be different from the collection and the collection
+         *   is frozen, we don't want to report a false positive "cannot mutate" error.
+         *
+         * ConditionallyMutate reflects this "mutate if mutable" semantic.
+         */
+        state.referenceAndRecordEffects(
+          instrValue.iterator,
+          Effect.ConditionallyMutate,
+          ValueReason.Other,
+          functionEffects
+        );
+        /**
+         * Regardless of the effect on the iterator, the *result* of advancing the iterator
+         * is to extract a value from the collection. We use a Capture effect to reflect this
+         * aliasing, and then initialize() the lvalue to the same kind as the colleciton to
+         * ensure that the item is mutable or frozen if the collection is mutable/frozen.
+         */
+        state.referenceAndRecordEffects(
+          instrValue.collection,
+          Effect.Capture,
+          ValueReason.Other,
+          functionEffects
+        );
+        state.initialize(instrValue, state.kind(instrValue.collection));
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
+        continue;
       }
       case "NextPropertyOf": {
         effect = { kind: Effect.Read, reason: ValueReason.Other };

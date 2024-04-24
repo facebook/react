@@ -245,7 +245,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "for-of": {
-      value = `[${terminal.id}] ForOf init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
+      value = `[${terminal.id}] ForOf init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "for-in": {
@@ -610,11 +610,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "GetIterator": {
-      value = `GetIterator ${printPlace(instrValue.value)}`;
+      value = `GetIterator collection=${printPlace(instrValue.collection)}`;
       break;
     }
     case "NextIterableOf": {
-      value = `NextIterableOf ${printPlace(instrValue.value)}`;
+      value = `NextIterableOf iterator=${printPlace(
+        instrValue.iterator
+      )} collection=${printPlace(instrValue.collection)}`;
       break;
     }
     case "NextPropertyOf": {

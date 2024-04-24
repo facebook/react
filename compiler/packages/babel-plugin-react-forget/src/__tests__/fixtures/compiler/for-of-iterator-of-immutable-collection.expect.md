@@ -37,20 +37,12 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Router(t0) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(3);
   const { title, mapping } = t0;
   let array;
   if ($[0] !== mapping || $[1] !== title) {
     array = [];
-    let t1;
-    if ($[3] !== mapping) {
-      t1 = mapping.values();
-      $[3] = mapping;
-      $[4] = t1;
-    } else {
-      t1 = $[4];
-    }
-    for (const entry of t1) {
+    for (const entry of mapping.values()) {
       array.push([title, entry]);
     }
     $[0] = mapping;
@@ -84,3 +76,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) [["Foo","/about"],["Foo","/contact"]]
+[["Bar","/about"],["Bar","/contact"]]

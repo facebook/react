@@ -208,9 +208,13 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
-    case "GetIterator":
+    case "GetIterator": {
+      yield instrValue.collection;
+      break;
+    }
     case "NextIterableOf": {
-      yield instrValue.value;
+      yield instrValue.iterator;
+      yield instrValue.collection;
       break;
     }
     case "NextPropertyOf": {
@@ -528,9 +532,13 @@ export function mapInstructionValueOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "GetIterator":
+    case "GetIterator": {
+      instrValue.collection = fn(instrValue.collection);
+      break;
+    }
     case "NextIterableOf": {
-      instrValue.value = fn(instrValue.value);
+      instrValue.iterator = fn(instrValue.iterator);
+      instrValue.collection = fn(instrValue.collection);
       break;
     }
     case "NextPropertyOf": {
@@ -769,11 +777,13 @@ export function mapTerminalSuccessors(
     case "for-of": {
       const init = fn(terminal.init);
       const loop = fn(terminal.loop);
+      const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "for-of",
         loc: terminal.loc,
         init,
+        test,
         loop,
         fallthrough,
         id: makeInstructionId(0),

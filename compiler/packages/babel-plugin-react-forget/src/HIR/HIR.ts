@@ -234,6 +234,7 @@ export type ReactiveForTerminal = {
 export type ReactiveForOfTerminal = {
   kind: "for-of";
   init: ReactiveValue;
+  test: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
   loc: SourceLocation;
@@ -502,6 +503,7 @@ export type ForOfTerminal = {
   kind: "for-of";
   loc: SourceLocation;
   init: BlockId;
+  test: BlockId;
   loop: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -958,12 +960,13 @@ export type InstructionValue =
     }
   | {
       kind: "GetIterator";
-      value: Place; // the collection
+      collection: Place; // the collection
       loc: SourceLocation;
     }
   | {
       kind: "NextIterableOf";
-      value: Place; // the iterator created with GetIterator
+      iterator: Place; // the iterator created with GetIterator
+      collection: Place; // the collection being iterated over (which may be an iterable or iterator)
       loc: SourceLocation;
     }
   | {
@@ -1440,6 +1443,10 @@ export function isObjectType(id: Identifier): boolean {
 
 export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === "Primitive";
+}
+
+export function isArrayType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInArray";
 }
 
 export function isRefValueType(id: Identifier): boolean {

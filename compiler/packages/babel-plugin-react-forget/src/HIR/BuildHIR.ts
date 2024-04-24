@@ -1006,6 +1006,7 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.ForOfStatement>;
       const continuationBlock = builder.reserve("block");
       const initBlock = builder.reserve("loop");
+      const testBlock = builder.reserve("loop");
 
       const loopBlock = builder.enter("block", (_blockId) => {
         return builder.loop(label, initBlock.id, continuationBlock.id, () => {
@@ -1028,6 +1029,7 @@ function lowerStatement(
           kind: "for-of",
           loc,
           init: initBlock.id,
+          test: testBlock.id,
           loop: loopBlock,
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
@@ -1040,6 +1042,22 @@ function lowerStatement(
        * right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
        * instructions when we handle other syntax like Patterns)
        */
+      const iterator = lowerValueToTemporary(builder, {
+        kind: "GetIterator",
+        loc: value.loc,
+        collection: { ...value },
+      });
+      builder.terminateWithContinuation(
+        {
+          id: makeInstructionId(0),
+          kind: "goto",
+          block: testBlock.id,
+          variant: GotoVariant.Break,
+          loc: stmt.node.loc ?? GeneratedSource,
+        },
+        testBlock
+      );
+
       const left = stmt.get("left");
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
@@ -1055,7 +1073,8 @@ function lowerStatement(
         const nextIterableOf = lowerValueToTemporary(builder, {
           kind: "NextIterableOf",
           loc: leftLoc,
-          value,
+          iterator: { ...iterator },
+          collection: { ...value },
         });
         const assign = lowerAssignment(
           builder,

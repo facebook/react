@@ -471,6 +471,31 @@ class Driver {
           };
         }
 
+        const test = this.visitValueBlock(terminal.test, terminal.loc);
+        const testBlock = this.cx.ir.blocks.get(test.block)!;
+        let testValue = test.value;
+        if (testValue.kind === "SequenceExpression") {
+          const last = testBlock.instructions.at(-1)!;
+          testValue.instructions.push(last);
+          testValue.value = {
+            kind: "Primitive",
+            value: undefined,
+            loc: terminal.loc,
+          };
+        } else {
+          testValue = {
+            kind: "SequenceExpression",
+            instructions: [testBlock.instructions.at(-1)!],
+            id: terminal.id,
+            loc: terminal.loc,
+            value: {
+              kind: "Primitive",
+              value: undefined,
+              loc: terminal.loc,
+            },
+          };
+        }
+
         let loopBody: ReactiveBlock;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
@@ -488,6 +513,7 @@ class Driver {
             kind: "for-of",
             loc: terminal.loc,
             init: initValue,
+            test: testValue,
             loop: loopBody,
             id: terminal.id,
           },
