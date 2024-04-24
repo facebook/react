@@ -63,7 +63,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-bd72d7f5';
+var ReactVersion = '19.0.0-www-classic-82bda7e4';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -12027,7 +12027,14 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = {};
+
+  {
+    // When string refs are used in create-react-class legacy components,
+    // we need to make refs writable unless we patch all such copies of the
+    // class code that sets to a frozen emptyObject.
+    instance.refs = {};
+  }
+
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
 

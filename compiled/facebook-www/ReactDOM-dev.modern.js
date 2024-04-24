@@ -26530,7 +26530,14 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = {};
+
+  {
+    // When string refs are used in create-react-class legacy components,
+    // we need to make refs writable unless we patch all such copies of the
+    // class code that sets to a frozen emptyObject.
+    instance.refs = {};
+  }
+
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
 
@@ -38738,7 +38745,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-a883b293';
+var ReactVersion = '19.0.0-www-modern-2066293e';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
