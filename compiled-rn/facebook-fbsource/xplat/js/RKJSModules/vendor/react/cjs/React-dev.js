@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d7190ab854f8773414d6c6f329023c5e>>
+ * @generated SignedSource<<5657642071f954739542e489d20fe745>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-canary-086a539f';
+var ReactVersion = '19.0.0-canary-bbf3fbcd';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -1640,8 +1640,7 @@ function createElement(type, config, children) {
       !('key' in config)) {
         didWarnAboutOldJSXRuntime = true;
 
-        warn('Your app (or one of its dependencies) is using an outdated JSX ' + 'transform. Update to the modern JSX transform for ' + 'faster performance: ' + // TODO: Create a short link for this
-        'https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html');
+        warn('Your app (or one of its dependencies) is using an outdated JSX ' + 'transform. Update to the modern JSX transform for ' + 'faster performance: https://react.dev/link/new-jsx-transform');
       }
     }
 
