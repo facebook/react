@@ -60,26 +60,25 @@ describe('ReactTestRenderer', () => {
     ReactFeatureFlags.enableReactTestRendererWarning = false;
   });
 
+  // @gate __DEV__
   it('should warn if enableReactTestRendererWarning is enabled', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     ReactFeatureFlags.enableReactTestRendererWarning = true;
-    expect(() => {
-      ReactTestRenderer.create(<div />);
-    }).toWarnDev(
+    ReactTestRenderer.create(<div />);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error.mock.calls[0][0]).toContain(
       'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
-      {withoutStack: true},
     );
+    console.error.mockRestore();
   });
 
-  // @gate __DEV__
   it('should not warn if enableReactTestRendererWarning is enabled but the RN global is set', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
     ReactFeatureFlags.enableReactTestRendererWarning = true;
-    expect(() => {
-      ReactTestRenderer.create(<div />);
-    }).not.toWarnDev(
-      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
-      {withoutStack: true},
-    );
+    ReactTestRenderer.create(<div />);
+    expect(console.error).toHaveBeenCalledTimes(0);
+    console.error.mockRestore();
   });
 
   describe('root tags', () => {

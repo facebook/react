@@ -31,6 +31,7 @@ ignoreErrors([
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
   'Warning: ReactDOM.render was removed in React 19',
+  'Warning: react-test-renderer is deprecated',
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);

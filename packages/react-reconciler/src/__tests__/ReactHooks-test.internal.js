@@ -19,6 +19,7 @@ let Scheduler;
 let ReactDOMServer;
 let act;
 let assertLog;
+let assertConsoleErrorDev;
 let waitForAll;
 let waitForThrow;
 
@@ -35,6 +36,7 @@ describe('ReactHooks', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
   });
@@ -1810,7 +1812,6 @@ describe('ReactHooks', () => {
   // Regression test for #14674
   it('does not swallow original error when updating another component in render phase', async () => {
     const {useState} = React;
-    spyOnDev(console, 'error').mockImplementation(() => {});
 
     let _setState;
     function A() {
@@ -1837,14 +1838,10 @@ describe('ReactHooks', () => {
         );
       });
     }).rejects.toThrow('Hello');
-
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.mock.calls[0][0]).toContain(
-        'Warning: Cannot update a component (`%s`) while rendering ' +
-          'a different component (`%s`).',
-      );
-    }
+    assertConsoleErrorDev([
+      'Warning: Cannot update a component (`A`) while rendering ' +
+        'a different component (`B`).',
+    ]);
   });
 
   // Regression test for https://github.com/facebook/react/issues/15057

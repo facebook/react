@@ -7,6 +7,7 @@ let waitFor;
 let waitForAll;
 let waitForThrow;
 let assertLog;
+let assertConsoleErrorDev;
 let act;
 
 let fakeModuleCache;
@@ -34,6 +35,7 @@ describe('ReactLazy', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     act = InternalTestUtils.act;
 
     fakeModuleCache = new Map();
@@ -205,8 +207,6 @@ describe('ReactLazy', () => {
   });
 
   it('does not support arbitrary promises, only module objects', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     const LazyText = lazy(async () => Text);
 
     const root = ReactTestRenderer.create(null, {
@@ -228,13 +228,11 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
+    assertConsoleErrorDev([
+      'Expected the result of a dynamic import() call',
+      'Expected the result of a dynamic import() call',
+    ]);
     expect(root).not.toMatchRenderedOutput('Hi');
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.mock.calls[0][0]).toContain(
-        'Expected the result of a dynamic import() call',
-      );
-    }
   });
 
   it('throws if promise rejects', async () => {
