@@ -25,7 +25,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var ReactVersion = '19.0.0-www-modern-367021cf';
+          var ReactVersion = '19.0.0-www-modern-3c57619e';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -1713,8 +1713,7 @@ function createElement(type, config, children) {
       !('key' in config)) {
         didWarnAboutOldJSXRuntime = true;
 
-        warn('Your app (or one of its dependencies) is using an outdated JSX ' + 'transform. Update to the modern JSX transform for ' + 'faster performance: ' + // TODO: Create a short link for this
-        'https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html');
+        warn('Your app (or one of its dependencies) is using an outdated JSX ' + 'transform. Update to the modern JSX transform for ' + 'faster performance: https://react.dev/link/new-jsx-transform');
       }
     }
 
