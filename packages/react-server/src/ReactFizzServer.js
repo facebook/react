@@ -296,10 +296,14 @@ const OPEN = 0;
 const CLOSING = 1;
 const CLOSED = 2;
 
+type ScheduleState = 10 | 11 | 12;
+const IDLE = 10;
+const WORK = 11;
+const FLUSH = 12;
+
 export opaque type Request = {
   destination: null | Destination,
-  epoch: number,
-  flushScheduled: boolean,
+  schedule: ScheduleState,
   +resumableState: ResumableState,
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
@@ -381,8 +385,7 @@ export function createRequest(
   const abortSet: Set<Task> = new Set();
   const request: Request = {
     destination: null,
-    epoch: 0,
-    flushScheduled: false,
+    schedule: IDLE,
     resumableState,
     renderState,
     rootFormatContext,
@@ -494,8 +497,7 @@ export function resumeRequest(
   const abortSet: Set<Task> = new Set();
   const request: Request = {
     destination: null,
-    epoch: 0,
-    flushScheduled: false,
+    schedule: IDLE,
     resumableState: postponedState.resumableState,
     renderState,
     rootFormatContext: postponedState.rootFormatContext,
@@ -4304,8 +4306,8 @@ function flushCompletedQueues(
   }
 }
 
-function completeWorkEpoch(request: Request) {
-  request.epoch++;
+function flushWork(request: Request) {
+  request.schedule = IDLE;
   const destination = request.destination;
   if (destination) {
     flushCompletedQueues(request, destination);
@@ -4313,14 +4315,14 @@ function completeWorkEpoch(request: Request) {
 }
 
 function startPerformingWork(request: Request): void {
-  request.epoch++;
+  request.schedule = WORK;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }
   scheduleWork(() => {
-    completeWorkEpoch(request);
+    flushWork(request);
   });
 }
 
@@ -4357,30 +4359,22 @@ function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
 
 function enqueueFlush(request: Request): void {
   if (
-    request.flushScheduled === false &&
+    request.schedule === IDLE &&
     // If there are pinged tasks we are going to flush anyway after work completes
     request.pingedTasks.length === 0 &&
     // If there is no destination there is nothing we can flush to. A flush will
     // happen when we start flowing again
     request.destination !== null
   ) {
-    request.flushScheduled = true;
-    const currentEpoch = request.epoch;
+    request.schedule = FLUSH;
     scheduleWork(() => {
-      // In builds where scheduleWork is synchronous this will always initiate a
-      // flush immediately. That's not ideal but it's not what we're optimizing for
-      // and we ought to consider not using the sync form except for legacy. Regardless
-      // the logic is still sound because the epoch and destination could not have
-      // changed so while we're doing unecessary checks here it still preserves the same
-      // semantics as the async case.
-
-      request.flushScheduled = false;
-      if (currentEpoch !== request.epoch) {
-        // We scheduled this flush when no work was being performed but since
-        // then we've started a new epoch (we're either rendering or we've already flushed)
-        // so we don't need to flush here anymore.
+      if (request.schedule !== FLUSH) {
+        // We already flushed or we started a new render and will let that finish first
+        // which will end up flushing so we have nothing to do here.
         return;
       }
+
+      request.schedule = IDLE;
 
       // We need to existence check destination again here because it might go away
       // in between the enqueueFlush call and the work execution
