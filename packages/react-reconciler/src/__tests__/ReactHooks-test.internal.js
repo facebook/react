@@ -1131,7 +1131,11 @@ describe('ReactHooks', () => {
         '1. useReducer                 useReducer\n' +
         '2. useState                   useRef\n' +
         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+          ]),
     ]);
   });
 
@@ -1194,8 +1198,12 @@ describe('ReactHooks', () => {
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
 
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'Context can only be read while React is rendering',
+            'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+          ]),
     ]);
 
     function Valid() {
@@ -1235,8 +1243,12 @@ describe('ReactHooks', () => {
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
 
-      'Context can only be read while React is rendering',
-      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'Context can only be read while React is rendering',
+            'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+          ]),
     ]);
   });
 

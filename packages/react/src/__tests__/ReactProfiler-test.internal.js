@@ -1013,6 +1013,7 @@ describe(`onRender`, () => {
     });
 
     it('should accumulate actual time after an error handled by componentDidCatch()', async () => {
+      const enableUnifiedSyncLane = gate(flags => flags.enableUnifiedSyncLane);
       const callback = jest.fn();
 
       const ThrowsError = ({unused}) => {
@@ -1066,10 +1067,10 @@ describe(`onRender`, () => {
 
       // start time: 5 initially + 14 of work
       // Add an additional 3 (ThrowsError) if we replayed the failed work
-      expect(mountCall[4]).toBe(19);
+      expect(mountCall[4]).toBe(enableUnifiedSyncLane ? 5 : 19);
       // commit time: 19 initially + 14 of work
       // Add an additional 6 (ThrowsError *2) if we replayed the failed work
-      expect(mountCall[5]).toBe(33);
+      expect(mountCall[5]).toBe(enableUnifiedSyncLane ? 19 : 33);
 
       // The update includes the ErrorBoundary and its fallback child
       expect(updateCall[1]).toBe('nested-update');
@@ -1078,13 +1079,14 @@ describe(`onRender`, () => {
       // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
       expect(updateCall[3]).toBe(22);
       // start time
-      expect(updateCall[4]).toBe(33);
+      expect(updateCall[4]).toBe(enableUnifiedSyncLane ? 19 : 33);
       // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
       // Add an additional 3 (ThrowsError) if we replayed the failed work
-      expect(updateCall[5]).toBe(55);
+      expect(updateCall[5]).toBe(enableUnifiedSyncLane ? 41 : 55);
     });
 
     it('should accumulate actual time after an error handled by getDerivedStateFromError()', async () => {
+      const enableUnifiedSyncLane = gate(flags => flags.enableUnifiedSyncLane);
       const callback = jest.fn();
 
       const ThrowsError = ({unused}) => {
@@ -1136,9 +1138,9 @@ describe(`onRender`, () => {
       // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
       expect(mountCall[3]).toBe(22);
       // start time
-      expect(mountCall[4]).toBe(44);
+      expect(mountCall[4]).toBe(enableUnifiedSyncLane ? 5 : 44);
       // commit time
-      expect(mountCall[5]).toBe(83);
+      expect(mountCall[5]).toBe(enableUnifiedSyncLane ? 44 : 83);
     });
 
     it('should reset the fiber stack correct after a "complete" phase error', async () => {

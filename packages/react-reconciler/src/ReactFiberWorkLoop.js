@@ -929,8 +929,14 @@ export function performConcurrentWorkOnRoot(
           continue;
         }
 
-        // Check if something threw
-        if (exitStatus === RootErrored) {
+        // Check if something threw.
+        // We only need to retry during hydration or concurrent render.
+        // A sync render does not need to recover.
+        const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
+        if (
+          exitStatus === RootErrored &&
+          (renderWasConcurrent || wasRootDehydrated)
+        ) {
           const lanesThatJustErrored = lanes;
           const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
             root,
@@ -1358,14 +1364,13 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   }
 
   let exitStatus = renderRootSync(root, lanes);
+  const wasRootDehydrated = supportsHydration && isRootDehydrated(root);
   if (
     (disableLegacyMode || root.tag !== LegacyRoot) &&
-    exitStatus === RootErrored
+    exitStatus === RootErrored &&
+    wasRootDehydrated
   ) {
-    // If something threw an error, try rendering one more time. We'll render
-    // synchronously to block concurrent data mutations, and we'll includes
-    // all pending updates are included. If it still fails after the second
-    // attempt, we'll give up and commit the resulting tree.
+    // If something threw an error and we have work to do, try rendering one more time.
     const originallyAttemptedLanes = lanes;
     const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
       root,

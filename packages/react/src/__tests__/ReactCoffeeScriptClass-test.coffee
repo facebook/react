@@ -56,11 +56,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       ReactDOM.flushSync ->
         root.render React.createElement(Foo)
-    ).toErrorDev([
-      # A failed component renders twice in DEV in concurrent mode
-      'No `render` method found on the Foo instance',
-      'No `render` method found on the Foo instance',
-    ])
+    ).toErrorDev(['No `render` method found on the Foo instance'])
     window.removeEventListener 'error', errorHandler;
     expect(caughtErrors).toEqual([
       expect.objectContaining(

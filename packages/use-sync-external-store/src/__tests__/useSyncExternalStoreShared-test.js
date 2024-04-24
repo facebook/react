@@ -601,11 +601,12 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       });
     }
     assertLog(
-      gate(flags => flags.enableUseSyncExternalStoreShim)
+      gate(flags => flags.enableUseSyncExternalStoreShim) ||
+        gate(flags => flags.enableUnifiedSyncLane)
         ? ['Error in getSnapshot']
         : [
             'Error in getSnapshot',
-            // In a concurrent root, React renders a second time to attempt to
+            // In a non-blocking update, React renders a second time to attempt to
             // recover from the error.
             'Error in getSnapshot',
           ],

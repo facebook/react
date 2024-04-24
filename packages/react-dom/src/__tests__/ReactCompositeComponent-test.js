@@ -1186,8 +1186,12 @@ describe('ReactCompositeComponent', () => {
     }).toErrorDev([
       'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
-      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
-        'did you accidentally return an object from the constructor?',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
+              'did you accidentally return an object from the constructor?',
+          ]),
     ]);
   });
 
@@ -1226,8 +1230,12 @@ describe('ReactCompositeComponent', () => {
     }).toErrorDev([
       'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
         'you may have forgotten to define `render`.',
-      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
-        'you may have forgotten to define `render`.',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : [
+            'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+              'you may have forgotten to define `render`.',
+          ]),
     ]);
   });
 

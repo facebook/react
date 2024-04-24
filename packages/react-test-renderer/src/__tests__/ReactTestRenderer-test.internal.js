@@ -626,8 +626,9 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([
       'Boundary render',
       'Angry render',
-      'Boundary render',
-      'Angry render',
+      ...(gate(flags => flags.enableUnifiedSyncLane)
+        ? []
+        : ['Boundary render', 'Angry render']),
       'Boundary componentDidMount',
       'Boundary componentDidCatch',
       'Boundary render',
