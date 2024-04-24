@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eb0bcf528c3de17c6744b81c980f6aec>>
+ * @generated SignedSource<<901259dbb520cffda8ebd0f1c24b61d7>>
  */
 
 'use strict';
@@ -8673,14 +8673,14 @@ function updateMemo(nextCreate, deps) {
 
 function mountDeferredValue(value, initialValue) {
   var hook = mountWorkInProgressHook();
-  return mountDeferredValueImpl(hook, value, initialValue);
+  return mountDeferredValueImpl(hook, value);
 }
 
 function updateDeferredValue(value, initialValue) {
   var hook = updateWorkInProgressHook();
   var resolvedCurrentHook = currentHook;
   var prevValue = resolvedCurrentHook.memoizedState;
-  return updateDeferredValueImpl(hook, prevValue, value, initialValue);
+  return updateDeferredValueImpl(hook, prevValue, value);
 }
 
 function rerenderDeferredValue(value, initialValue) {
@@ -8688,29 +8688,16 @@ function rerenderDeferredValue(value, initialValue) {
 
   if (currentHook === null) {
     // This is a rerender during a mount.
-    return mountDeferredValueImpl(hook, value, initialValue);
+    return mountDeferredValueImpl(hook, value);
   } else {
     // This is a rerender during an update.
     var prevValue = currentHook.memoizedState;
-    return updateDeferredValueImpl(hook, prevValue, value, initialValue);
+    return updateDeferredValueImpl(hook, prevValue, value);
   }
 }
 
 function mountDeferredValueImpl(hook, value, initialValue) {
-  if (// When `initialValue` is provided, we defer the initial render even if the
-  // current render is not synchronous.
-  initialValue !== undefined && // However, to avoid waterfalls, we do not defer if this render
-  // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
-  // is part of the render lanes.
-  !includesSomeLane(renderLanes, DeferredLane)) {
-    // Render with the initial value
-    hook.memoizedState = initialValue; // Schedule a deferred render to switch to the final value.
-
-    var deferredLane = requestDeferredLane();
-    currentlyRenderingFiber$1.lanes = mergeLanes(currentlyRenderingFiber$1.lanes, deferredLane);
-    markSkippedUpdateLanes(deferredLane);
-    return initialValue;
-  } else {
+  {
     hook.memoizedState = value;
     return value;
   }
@@ -8727,7 +8714,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
     if (isCurrentTreeHidden()) {
       // Revealing a prerendered tree is considered the same as mounting new
       // one, so we reuse the "mount" path in this case.
-      var resultValue = mountDeferredValueImpl(hook, value, initialValue); // Unlike during an actual mount, we need to mark this as an update if
+      var resultValue = mountDeferredValueImpl(hook, value); // Unlike during an actual mount, we need to mark this as an update if
       // the value changed.
 
       if (!objectIs(resultValue, prevValue)) {
@@ -9332,7 +9319,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
-      return mountDeferredValue(value, initialValue);
+      return mountDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -9471,7 +9458,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return mountDeferredValue(value, initialValue);
+      return mountDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -9611,7 +9598,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value, initialValue);
+      return updateDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -9751,7 +9738,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return rerenderDeferredValue(value, initialValue);
+      return rerenderDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -9907,7 +9894,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value, initialValue);
+      return mountDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -10071,7 +10058,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value, initialValue);
+      return updateDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -10235,7 +10222,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value, initialValue);
+      return rerenderDeferredValue(value);
     },
     useTransition: function () {
       currentHookNameInDev = 'useTransition';
@@ -22996,7 +22983,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-d851d267';
+var ReactVersion = '19.0.0-canary-5e828dec';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
