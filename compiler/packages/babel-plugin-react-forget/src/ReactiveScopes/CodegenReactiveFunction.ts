@@ -1772,6 +1772,10 @@ function codegenInstructionValue(
       value = t.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
       break;
     }
+    case "GetIterator": {
+      value = codegenPlaceToExpression(cx, instrValue.value);
+      break;
+    }
     case "NextIterableOf": {
       value = codegenPlaceToExpression(cx, instrValue.value);
       break;

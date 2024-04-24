@@ -957,8 +957,13 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
-      kind: "NextIterableOf";
+      kind: "GetIterator";
       value: Place; // the collection
+      loc: SourceLocation;
+    }
+  | {
+      kind: "NextIterableOf";
+      value: Place; // the iterator created with GetIterator
       loc: SourceLocation;
     }
   | {

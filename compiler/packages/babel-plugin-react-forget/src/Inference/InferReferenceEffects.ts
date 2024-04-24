@@ -1810,8 +1810,21 @@ function inferBlock(
         }
         continue;
       }
-      case "NextIterableOf": {
+      case "GetIterator": {
         effect = { kind: Effect.Capture, reason: ValueReason.Other };
+        lvalueEffect = Effect.Store;
+        valueKind = {
+          kind: ValueKind.Mutable,
+          reason: new Set([ValueReason.Other]),
+          context: new Set(),
+        };
+        break;
+      }
+      case "NextIterableOf": {
+        effect = {
+          kind: Effect.Capture,
+          reason: ValueReason.Other,
+        };
         lvalueEffect = Effect.Store;
         valueKind = {
           kind: ValueKind.Mutable,

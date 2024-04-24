@@ -188,6 +188,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "JSXText":
     case "TemplateLiteral":
     case "Primitive":
+    case "GetIterator":
     case "NextIterableOf":
     case "NextPropertyOf":
     case "Debugger":

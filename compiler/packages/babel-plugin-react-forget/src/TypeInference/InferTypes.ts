@@ -337,6 +337,7 @@ function* generateInstructionTypes(
     case "ComputedLoad":
     case "TaggedTemplateExpression":
     case "Await":
+    case "GetIterator":
     case "NextIterableOf":
     case "UnsupportedNode":
     case "Debugger":

@@ -325,6 +325,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       // Potentially safe to prune, since they should just be creating new values
       return false;
     }
+    case "GetIterator":
     case "NextPropertyOf":
     case "NextIterableOf": {
       /*

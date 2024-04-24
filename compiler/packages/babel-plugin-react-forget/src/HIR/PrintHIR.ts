@@ -609,6 +609,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `Await ${printPlace(instrValue.value)}`;
       break;
     }
+    case "GetIterator": {
+      value = `GetIterator ${printPlace(instrValue.value)}`;
+      break;
+    }
     case "NextIterableOf": {
       value = `NextIterableOf ${printPlace(instrValue.value)}`;
       break;
