@@ -30838,7 +30838,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-6d6c2bc1';
+var ReactVersion = '19.0.0-www-classic-fa4f664d';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -40910,201 +40910,6 @@ function getEventPriority(domEventName) {
   }
 }
 
-function ReactDOMRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-} // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = // $FlowFixMe[missing-this-annot]
-function (children) {
-  var root = this._internalRoot;
-
-  if (root === null) {
-    throw new Error('Cannot update an unmounted root.');
-  }
-
-  {
-    if (typeof arguments[1] === 'function') {
-      error('does not support the second callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
-    } else if (isValidContainer(arguments[1])) {
-      error('You passed a container to the second argument of root.render(...). ' + "You don't need to pass it again since you already passed it to create the root.");
-    } else if (typeof arguments[1] !== 'undefined') {
-      error('You passed a second argument to root.render(...) but it only accepts ' + 'one argument.');
-    }
-  }
-
-  updateContainer(children, root, null, null);
-}; // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = // $FlowFixMe[missing-this-annot]
-function () {
-  {
-    if (typeof arguments[0] === 'function') {
-      error('does not support a callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
-    }
-  }
-
-  var root = this._internalRoot;
-
-  if (root !== null) {
-    this._internalRoot = null;
-    var container = root.containerInfo;
-
-    {
-      if (isAlreadyRendering()) {
-        error('Attempted to synchronously unmount a root while React was already ' + 'rendering. React cannot finish unmounting the root until the ' + 'current render has completed, which may lead to a race condition.');
-      }
-    }
-
-    updateContainerSync(null, root, null, null);
-    flushSyncWork();
-    unmarkContainerAsRoot(container);
-  }
-};
-
-function createRoot$1(container, options) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  warnIfReactDOMContainerInDEV(container);
-  var isStrictMode = false;
-  var concurrentUpdatesByDefaultOverride = false;
-  var identifierPrefix = '';
-  var onUncaughtError = defaultOnUncaughtError;
-  var onCaughtError = defaultOnCaughtError;
-  var onRecoverableError = defaultOnRecoverableError;
-  var transitionCallbacks = null;
-
-  if (options !== null && options !== undefined) {
-    {
-      if (options.hydrate) {
-        warn('hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead.');
-      } else {
-        if (typeof options === 'object' && options !== null && options.$$typeof === REACT_ELEMENT_TYPE) {
-          error('You passed a JSX element to createRoot. You probably meant to ' + 'call root.render instead. ' + 'Example usage:\n\n' + '  let root = createRoot(domContainer);\n' + '  root.render(<App />);');
-        }
-      }
-    }
-
-    if (options.unstable_strictMode === true) {
-      isStrictMode = true;
-    }
-
-    if (options.unstable_concurrentUpdatesByDefault === true) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
-
-    if (options.identifierPrefix !== undefined) {
-      identifierPrefix = options.identifierPrefix;
-    }
-
-    if (options.onUncaughtError !== undefined) {
-      onUncaughtError = options.onUncaughtError;
-    }
-
-    if (options.onCaughtError !== undefined) {
-      onCaughtError = options.onCaughtError;
-    }
-
-    if (options.onRecoverableError !== undefined) {
-      onRecoverableError = options.onRecoverableError;
-    }
-
-    if (options.unstable_transitionCallbacks !== undefined) {
-      transitionCallbacks = options.unstable_transitionCallbacks;
-    }
-  }
-
-  var root = createContainer(container, ConcurrentRoot, null, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks);
-  markContainerAsRoot(root.current, container);
-  var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
-  listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  return new ReactDOMRoot(root);
-} // $FlowFixMe[missing-this-annot]
-
-function ReactDOMHydrationRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-}
-
-function scheduleHydration(target) {
-  if (target) {
-    queueExplicitHydrationTarget(target);
-  }
-} // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
-function hydrateRoot$1(container, initialChildren, options) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  warnIfReactDOMContainerInDEV(container);
-
-  {
-    if (initialChildren === undefined) {
-      error('Must provide initial children as second argument to hydrateRoot. ' + 'Example usage: hydrateRoot(domContainer, <App />)');
-    }
-  } // For now we reuse the whole bag of options since they contain
-  // the hydration callbacks.
-
-
-  var hydrationCallbacks = options != null ? options : null;
-  var isStrictMode = false;
-  var concurrentUpdatesByDefaultOverride = false;
-  var identifierPrefix = '';
-  var onUncaughtError = defaultOnUncaughtError;
-  var onCaughtError = defaultOnCaughtError;
-  var onRecoverableError = defaultOnRecoverableError;
-  var transitionCallbacks = null;
-  var formState = null;
-
-  if (options !== null && options !== undefined) {
-    if (options.unstable_strictMode === true) {
-      isStrictMode = true;
-    }
-
-    if (options.unstable_concurrentUpdatesByDefault === true) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
-
-    if (options.identifierPrefix !== undefined) {
-      identifierPrefix = options.identifierPrefix;
-    }
-
-    if (options.onUncaughtError !== undefined) {
-      onUncaughtError = options.onUncaughtError;
-    }
-
-    if (options.onCaughtError !== undefined) {
-      onCaughtError = options.onCaughtError;
-    }
-
-    if (options.onRecoverableError !== undefined) {
-      onRecoverableError = options.onRecoverableError;
-    }
-
-    if (options.unstable_transitionCallbacks !== undefined) {
-      transitionCallbacks = options.unstable_transitionCallbacks;
-    }
-
-    {
-      if (options.formState !== undefined) {
-        formState = options.formState;
-      }
-    }
-  }
-
-  var root = createHydrationContainer(initialChildren, null, container, ConcurrentRoot, hydrationCallbacks, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks, formState);
-  markContainerAsRoot(root.current, container); // This can't be a comment node since hydration doesn't work on comment nodes anyway.
-
-  listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  return new ReactDOMHydrationRoot(root);
-}
 function isValidContainer(node) {
   return !!(node && (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE || node.nodeType === COMMENT_NODE && node.nodeValue === ' react-mount-point-unstable '));
 } // TODO: Remove this function which also includes comment nodes.
@@ -41112,18 +40917,6 @@ function isValidContainer(node) {
 
 function isValidContainerLegacy(node) {
   return !!(node && (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE || node.nodeType === COMMENT_NODE && node.nodeValue === ' react-mount-point-unstable '));
-}
-
-function warnIfReactDOMContainerInDEV(container) {
-  {
-    if (isContainerMarkedAsRoot(container)) {
-      if (container._reactRootContainer) {
-        error('You are calling ReactDOMClient.createRoot() on a container that was previously ' + 'passed to ReactDOM.render(). This is not supported.');
-      } else {
-        error('You are calling ReactDOMClient.createRoot() on a container that ' + 'has already been passed to createRoot() before. Instead, call ' + 'root.render() on the existing root instead if you want to update it.');
-      }
-    }
-  }
 }
 
 function isValidEventTarget(target) {
@@ -41546,6 +41339,214 @@ var foundDevTools = injectIntoDevTools({
       if (/^(https?|file):$/.test(protocol)) {
         // eslint-disable-next-line react-internal/no-production-logging
         console.info('%cDownload the React DevTools ' + 'for a better development experience: ' + 'https://react.dev/link/react-devtools' + (protocol === 'file:' ? '\nYou might need to use a local HTTP server (instead of file://): ' + 'https://react.dev/link/react-devtools-faq' : ''), 'font-weight:bold');
+      }
+    }
+  }
+}
+
+function ReactDOMRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+} // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = // $FlowFixMe[missing-this-annot]
+function (children) {
+  var root = this._internalRoot;
+
+  if (root === null) {
+    throw new Error('Cannot update an unmounted root.');
+  }
+
+  {
+    if (typeof arguments[1] === 'function') {
+      error('does not support the second callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
+    } else if (isValidContainer(arguments[1])) {
+      error('You passed a container to the second argument of root.render(...). ' + "You don't need to pass it again since you already passed it to create the root.");
+    } else if (typeof arguments[1] !== 'undefined') {
+      error('You passed a second argument to root.render(...) but it only accepts ' + 'one argument.');
+    }
+  }
+
+  updateContainer(children, root, null, null);
+}; // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = // $FlowFixMe[missing-this-annot]
+function () {
+  {
+    if (typeof arguments[0] === 'function') {
+      error('does not support a callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
+    }
+  }
+
+  var root = this._internalRoot;
+
+  if (root !== null) {
+    this._internalRoot = null;
+    var container = root.containerInfo;
+
+    {
+      if (isAlreadyRendering()) {
+        error('Attempted to synchronously unmount a root while React was already ' + 'rendering. React cannot finish unmounting the root until the ' + 'current render has completed, which may lead to a race condition.');
+      }
+    }
+
+    updateContainerSync(null, root, null, null);
+    flushSyncWork();
+    unmarkContainerAsRoot(container);
+  }
+};
+
+function createRoot$1(container, options) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
+  warnIfReactDOMContainerInDEV(container);
+  var isStrictMode = false;
+  var concurrentUpdatesByDefaultOverride = false;
+  var identifierPrefix = '';
+  var onUncaughtError = defaultOnUncaughtError;
+  var onCaughtError = defaultOnCaughtError;
+  var onRecoverableError = defaultOnRecoverableError;
+  var transitionCallbacks = null;
+
+  if (options !== null && options !== undefined) {
+    {
+      if (options.hydrate) {
+        warn('hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead.');
+      } else {
+        if (typeof options === 'object' && options !== null && options.$$typeof === REACT_ELEMENT_TYPE) {
+          error('You passed a JSX element to createRoot. You probably meant to ' + 'call root.render instead. ' + 'Example usage:\n\n' + '  let root = createRoot(domContainer);\n' + '  root.render(<App />);');
+        }
+      }
+    }
+
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+
+    if (options.unstable_concurrentUpdatesByDefault === true) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
+
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
+  }
+
+  var root = createContainer(container, ConcurrentRoot, null, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks);
+  markContainerAsRoot(root.current, container);
+  var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  return new ReactDOMRoot(root);
+} // $FlowFixMe[missing-this-annot]
+
+function ReactDOMHydrationRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+}
+
+function scheduleHydration(target) {
+  if (target) {
+    queueExplicitHydrationTarget(target);
+  }
+} // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
+function hydrateRoot$1(container, initialChildren, options) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
+  warnIfReactDOMContainerInDEV(container);
+
+  {
+    if (initialChildren === undefined) {
+      error('Must provide initial children as second argument to hydrateRoot. ' + 'Example usage: hydrateRoot(domContainer, <App />)');
+    }
+  } // For now we reuse the whole bag of options since they contain
+  // the hydration callbacks.
+
+
+  var hydrationCallbacks = options != null ? options : null;
+  var isStrictMode = false;
+  var concurrentUpdatesByDefaultOverride = false;
+  var identifierPrefix = '';
+  var onUncaughtError = defaultOnUncaughtError;
+  var onCaughtError = defaultOnCaughtError;
+  var onRecoverableError = defaultOnRecoverableError;
+  var transitionCallbacks = null;
+  var formState = null;
+
+  if (options !== null && options !== undefined) {
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+
+    if (options.unstable_concurrentUpdatesByDefault === true) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
+
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
+
+    {
+      if (options.formState !== undefined) {
+        formState = options.formState;
+      }
+    }
+  }
+
+  var root = createHydrationContainer(initialChildren, null, container, ConcurrentRoot, hydrationCallbacks, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks, formState);
+  markContainerAsRoot(root.current, container); // This can't be a comment node since hydration doesn't work on comment nodes anyway.
+
+  listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  return new ReactDOMHydrationRoot(root);
+}
+
+function warnIfReactDOMContainerInDEV(container) {
+  {
+    if (isContainerMarkedAsRoot(container)) {
+      if (container._reactRootContainer) {
+        error('You are calling ReactDOMClient.createRoot() on a container that was previously ' + 'passed to ReactDOM.render(). This is not supported.');
+      } else {
+        error('You are calling ReactDOMClient.createRoot() on a container that ' + 'has already been passed to createRoot() before. Instead, call ' + 'root.render() on the existing root instead if you want to update it.');
       }
     }
   }

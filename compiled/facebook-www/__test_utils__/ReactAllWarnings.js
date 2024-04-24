@@ -208,6 +208,7 @@ export default [
   "Profiler must specify an \"id\" of type `string` as a prop. Received the type `%s` instead.",
   "React Context Providers cannot be passed to Server Functions from the Client.%s",
   "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://react.dev/link/react-polyfills",
+  "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills",
   "React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.",
   "React encountered a <link rel=\"stylesheet\" href=\"%s\" ... /> with a `precedence` prop that also included %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.",
   "React encountered a `<link rel=\"stylesheet\" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.",
@@ -329,8 +330,6 @@ export default [
   "You are calling ReactDOM.unmountComponentAtNode() on a container that was previously passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?",
   "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it.",
   "You are calling ReactDOMClient.createRoot() on a container that was previously passed to ReactDOM.render(). This is not supported.",
-  "You are importing createRoot from \"react-dom\" which is not supported. You should instead import it from \"react-dom/client\".",
-  "You are importing hydrateRoot from \"react-dom\" which is not supported. You should instead import it from \"react-dom/client\".",
   "You are mounting a new %s component when a previous one has not first unmounted. It is an error to render more than one %s component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
   "You are setting the style `{ %s: ... }` as a prop. You should nest it in a style object. E.g. `{ style: { %s: ... } }`",
   "You are using an outdated, pre-release alpha of React 18 that does not support useSyncExternalStore. The use-sync-external-store shim will not work correctly. Upgrade to a newer pre-release.",
@@ -392,8 +391,6 @@ export default [
   "unmountComponentAtNode was removed in React 19. Use root.unmount() instead.",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by React and is not a top-level container. %s",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
-  "useFormState is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
-  "useFormStatus is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
   "useInsertionEffect must not schedule updates.",
   "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release."
 ];

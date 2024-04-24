@@ -2449,42 +2449,42 @@ function lanesToEventPriority(lanes) {
   return IdleEventPriority;
 }
 
-function noop$4() {}
+function noop$3() {}
 
-var DefaultDispatcher$1 = {
+var DefaultDispatcher = {
   f
   /* flushSyncWork */
-  : noop$4,
+  : noop$3,
   r
   /* requestFormReset */
-  : noop$4,
+  : noop$3,
   D
   /* prefetchDNS */
-  : noop$4,
+  : noop$3,
   C
   /* preconnect */
-  : noop$4,
+  : noop$3,
   L
   /* preload */
-  : noop$4,
+  : noop$3,
   m
   /* preloadModule */
-  : noop$4,
+  : noop$3,
   X
   /* preinitScript */
-  : noop$4,
+  : noop$3,
   S
   /* preinitStyle */
-  : noop$4,
+  : noop$3,
   M
   /* preinitModuleScript */
-  : noop$4
+  : noop$3
 };
-var Internals$1 = {
+var Internals = {
   Events: null,
   d
   /* ReactDOMCurrentDispatcher */
-  : DefaultDispatcher$1,
+  : DefaultDispatcher,
   p
   /* currentUpdatePriority */
   : NoEventPriority,
@@ -2531,6 +2531,13 @@ function useFormState(action, initialState, permalink) {
 
     return dispatcher.useFormState(action, initialState, permalink);
   }
+}
+function requestFormReset$2(form) {
+  Internals.d
+  /* ReactDOMCurrentDispatcher */
+  .r(
+  /* requestFormReset */
+  form);
 }
 
 var valueStack = [];
@@ -2823,16 +2830,16 @@ function setCurrentUpdatePriority(newPriority, // Closure will consistently not 
 // callsite it seems to inline it even when the internal length of the function
 // is much longer. I hope this is consistent enough to rely on across builds
 IntentionallyUnusedArgument) {
-  Internals$1.p
+  Internals.p
   /* currentUpdatePriority */
   = newPriority;
 }
 function getCurrentUpdatePriority() {
-  return Internals$1.p;
+  return Internals.p;
   /* currentUpdatePriority */
 }
 function resolveUpdatePriority() {
-  var updatePriority = Internals$1.p;
+  var updatePriority = Internals.p;
   /* currentUpdatePriority */
 
   if (updatePriority !== NoEventPriority) {
@@ -9698,7 +9705,7 @@ function isThenableResolved(thenable) {
   return status === 'fulfilled' || status === 'rejected';
 }
 
-function noop$3() {}
+function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   if (ReactSharedInternals.actQueue !== null) {
@@ -9741,7 +9748,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // intentionally ignore.
 
 
-      thenable.then(noop$3, noop$3);
+      thenable.then(noop$2, noop$2);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -9774,7 +9781,7 @@ function trackUsedThenable(thenableState, thenable, index) {
           // some custom userspace implementation. We treat it as "pending".
           // Attach a dummy listener, to ensure that any lazy initialization can
           // happen. Flight lazily parses JSON when the value is actually awaited.
-          thenable.then(noop$3, noop$3);
+          thenable.then(noop$2, noop$2);
         } else {
           // This is an uncached thenable that we haven't seen before.
           // Detect infinite ping loops caused by uncached promises.
@@ -13616,7 +13623,7 @@ function startHostTransition(formFiber, pendingState, callback, formData) {
   // once more of this function is implemented.
   function () {
     // Automatically reset the form when the action completes.
-    requestFormReset$2(formFiber);
+    requestFormReset$1(formFiber);
     return callback(formData);
   });
 }
@@ -13685,7 +13692,7 @@ function ensureFormComponentIsStateful(formFiber) {
   return stateHook;
 }
 
-function requestFormReset$2(formFiber) {
+function requestFormReset$1(formFiber) {
   var transition = requestCurrentTransition();
 
   {
@@ -31394,7 +31401,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-678f6022';
+var ReactVersion = '19.0.0-www-classic-b847fa95';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -35370,7 +35377,7 @@ function checkForUnmatchedText(serverText, clientText) {
   return false;
 }
 
-function noop$2() {}
+function noop$1() {}
 
 function trapClickOnNonInteractiveElement(node) {
   // Mobile Safari does not fire properly bubble click events on
@@ -35382,7 +35389,7 @@ function trapClickOnNonInteractiveElement(node) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = noop$2;
+  node.onclick = noop$1;
 }
 var xlinkNamespace = 'http://www.w3.org/1999/xlink';
 var xmlNamespace = 'http://www.w3.org/XML/1998/namespace';
@@ -39273,10 +39280,10 @@ function getDocumentFromRoot(root) {
   return root.ownerDocument || root;
 }
 
-var previousDispatcher = Internals$1.d;
+var previousDispatcher = Internals.d;
 /* ReactDOMCurrentDispatcher */
 
-Internals$1.d
+Internals.d
 /* ReactDOMCurrentDispatcher */
 = {
   f
@@ -39284,7 +39291,7 @@ Internals$1.d
   : previousDispatcher.f
   /* flushSyncWork */
   ,
-  r: requestFormReset$1,
+  r: requestFormReset,
   D
   /* prefetchDNS */
   : prefetchDNS$1,
@@ -39308,11 +39315,11 @@ Internals$1.d
   : preinitModuleScript
 };
 
-function requestFormReset$1(form) {
+function requestFormReset(form) {
   var formInst = getInstanceFromNode(form);
 
   if (formInst !== null && formInst.tag === HostComponent && formInst.type === 'form') {
-    requestFormReset$2(formInst);
+    requestFormReset$1(formInst);
   } else {
     // This form was either not rendered by this React renderer (or it's an
     // invalid type). Try the next one.
@@ -40379,13 +40386,13 @@ var suspendedState = null; // We use a noop function when we begin suspending be
 // provide the actual unsuspend function and that will get completed when the count
 // hits zero or it will get cancelled if the root starts new work.
 
-function noop$1() {}
+function noop() {}
 
 function startSuspendingCommit() {
   suspendedState = {
     stylesheets: null,
     count: 0,
-    unsuspend: noop$1
+    unsuspend: noop
   };
 }
 function suspendResource(hoistableRoot, resource, props) {
@@ -41598,201 +41605,6 @@ function getEventPriority(domEventName) {
   }
 }
 
-function ReactDOMRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-} // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = // $FlowFixMe[missing-this-annot]
-function (children) {
-  var root = this._internalRoot;
-
-  if (root === null) {
-    throw new Error('Cannot update an unmounted root.');
-  }
-
-  {
-    if (typeof arguments[1] === 'function') {
-      error('does not support the second callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
-    } else if (isValidContainer(arguments[1])) {
-      error('You passed a container to the second argument of root.render(...). ' + "You don't need to pass it again since you already passed it to create the root.");
-    } else if (typeof arguments[1] !== 'undefined') {
-      error('You passed a second argument to root.render(...) but it only accepts ' + 'one argument.');
-    }
-  }
-
-  updateContainer(children, root, null, null);
-}; // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = // $FlowFixMe[missing-this-annot]
-function () {
-  {
-    if (typeof arguments[0] === 'function') {
-      error('does not support a callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
-    }
-  }
-
-  var root = this._internalRoot;
-
-  if (root !== null) {
-    this._internalRoot = null;
-    var container = root.containerInfo;
-
-    {
-      if (isAlreadyRendering()) {
-        error('Attempted to synchronously unmount a root while React was already ' + 'rendering. React cannot finish unmounting the root until the ' + 'current render has completed, which may lead to a race condition.');
-      }
-    }
-
-    updateContainerSync(null, root, null, null);
-    flushSyncWork();
-    unmarkContainerAsRoot(container);
-  }
-};
-
-function createRoot$2(container, options) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  warnIfReactDOMContainerInDEV(container);
-  var isStrictMode = false;
-  var concurrentUpdatesByDefaultOverride = false;
-  var identifierPrefix = '';
-  var onUncaughtError = defaultOnUncaughtError;
-  var onCaughtError = defaultOnCaughtError;
-  var onRecoverableError = defaultOnRecoverableError;
-  var transitionCallbacks = null;
-
-  if (options !== null && options !== undefined) {
-    {
-      if (options.hydrate) {
-        warn('hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead.');
-      } else {
-        if (typeof options === 'object' && options !== null && options.$$typeof === REACT_ELEMENT_TYPE) {
-          error('You passed a JSX element to createRoot. You probably meant to ' + 'call root.render instead. ' + 'Example usage:\n\n' + '  let root = createRoot(domContainer);\n' + '  root.render(<App />);');
-        }
-      }
-    }
-
-    if (options.unstable_strictMode === true) {
-      isStrictMode = true;
-    }
-
-    if (options.unstable_concurrentUpdatesByDefault === true) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
-
-    if (options.identifierPrefix !== undefined) {
-      identifierPrefix = options.identifierPrefix;
-    }
-
-    if (options.onUncaughtError !== undefined) {
-      onUncaughtError = options.onUncaughtError;
-    }
-
-    if (options.onCaughtError !== undefined) {
-      onCaughtError = options.onCaughtError;
-    }
-
-    if (options.onRecoverableError !== undefined) {
-      onRecoverableError = options.onRecoverableError;
-    }
-
-    if (options.unstable_transitionCallbacks !== undefined) {
-      transitionCallbacks = options.unstable_transitionCallbacks;
-    }
-  }
-
-  var root = createContainer(container, ConcurrentRoot, null, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks);
-  markContainerAsRoot(root.current, container);
-  var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
-  listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  return new ReactDOMRoot(root);
-} // $FlowFixMe[missing-this-annot]
-
-function ReactDOMHydrationRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-}
-
-function scheduleHydration(target) {
-  if (target) {
-    queueExplicitHydrationTarget(target);
-  }
-} // $FlowFixMe[prop-missing] found when upgrading Flow
-
-
-ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
-function hydrateRoot$2(container, initialChildren, options) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  warnIfReactDOMContainerInDEV(container);
-
-  {
-    if (initialChildren === undefined) {
-      error('Must provide initial children as second argument to hydrateRoot. ' + 'Example usage: hydrateRoot(domContainer, <App />)');
-    }
-  } // For now we reuse the whole bag of options since they contain
-  // the hydration callbacks.
-
-
-  var hydrationCallbacks = options != null ? options : null;
-  var isStrictMode = false;
-  var concurrentUpdatesByDefaultOverride = false;
-  var identifierPrefix = '';
-  var onUncaughtError = defaultOnUncaughtError;
-  var onCaughtError = defaultOnCaughtError;
-  var onRecoverableError = defaultOnRecoverableError;
-  var transitionCallbacks = null;
-  var formState = null;
-
-  if (options !== null && options !== undefined) {
-    if (options.unstable_strictMode === true) {
-      isStrictMode = true;
-    }
-
-    if (options.unstable_concurrentUpdatesByDefault === true) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
-
-    if (options.identifierPrefix !== undefined) {
-      identifierPrefix = options.identifierPrefix;
-    }
-
-    if (options.onUncaughtError !== undefined) {
-      onUncaughtError = options.onUncaughtError;
-    }
-
-    if (options.onCaughtError !== undefined) {
-      onCaughtError = options.onCaughtError;
-    }
-
-    if (options.onRecoverableError !== undefined) {
-      onRecoverableError = options.onRecoverableError;
-    }
-
-    if (options.unstable_transitionCallbacks !== undefined) {
-      transitionCallbacks = options.unstable_transitionCallbacks;
-    }
-
-    {
-      if (options.formState !== undefined) {
-        formState = options.formState;
-      }
-    }
-  }
-
-  var root = createHydrationContainer(initialChildren, null, container, ConcurrentRoot, hydrationCallbacks, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks, formState);
-  markContainerAsRoot(root.current, container); // This can't be a comment node since hydration doesn't work on comment nodes anyway.
-
-  listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  return new ReactDOMHydrationRoot(root);
-}
 function isValidContainer(node) {
   return !!(node && (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE || node.nodeType === COMMENT_NODE && node.nodeValue === ' react-mount-point-unstable '));
 } // TODO: Remove this function which also includes comment nodes.
@@ -41800,18 +41612,6 @@ function isValidContainer(node) {
 
 function isValidContainerLegacy(node) {
   return !!(node && (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE || node.nodeType === COMMENT_NODE && node.nodeValue === ' react-mount-point-unstable '));
-}
-
-function warnIfReactDOMContainerInDEV(container) {
-  {
-    if (isContainerMarkedAsRoot(container)) {
-      if (container._reactRootContainer) {
-        error('You are calling ReactDOMClient.createRoot() on a container that was previously ' + 'passed to ReactDOM.render(). This is not supported.');
-      } else {
-        error('You are calling ReactDOMClient.createRoot() on a container that ' + 'has already been passed to createRoot() before. Instead, call ' + 'root.render() on the existing root instead if you want to update it.');
-      }
-    }
-  }
 }
 
 function isValidEventTarget(target) {
@@ -41930,7 +41730,7 @@ function prefetchDNS(href) {
   }
 
   if (typeof href === 'string') {
-    Internals$1.d
+    Internals.d
     /* ReactDOMCurrentDispatcher */
     .D(
     /* prefetchDNS */
@@ -41953,7 +41753,7 @@ function preconnect(href, options) {
 
   if (typeof href === 'string') {
     var crossOrigin = options ? getCrossOriginString(options.crossOrigin) : null;
-    Internals$1.d
+    Internals.d
     /* ReactDOMCurrentDispatcher */
     .C(
     /* preconnect */
@@ -41986,7 +41786,7 @@ function preload(href, options) {
   typeof options === 'object' && options !== null && typeof options.as === 'string') {
     var as = options.as;
     var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
-    Internals$1.d
+    Internals.d
     /* ReactDOMCurrentDispatcher */
     .L(
     /* preload */
@@ -42028,7 +41828,7 @@ function preloadModule(href, options) {
   if (typeof href === 'string') {
     if (options) {
       var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-      Internals$1.d
+      Internals.d
       /* ReactDOMCurrentDispatcher */
       .m(
       /* preloadModule */
@@ -42038,7 +41838,7 @@ function preloadModule(href, options) {
         integrity: typeof options.integrity === 'string' ? options.integrity : undefined
       });
     } else {
-      Internals$1.d
+      Internals.d
       /* ReactDOMCurrentDispatcher */
       .m(
       /* preloadModule */
@@ -42067,7 +41867,7 @@ function preinit(href, options) {
     var fetchPriority = typeof options.fetchPriority === 'string' ? options.fetchPriority : undefined;
 
     if (as === 'style') {
-      Internals$1.d
+      Internals.d
       /* ReactDOMCurrentDispatcher */
       .S(
       /* preinitStyle */
@@ -42077,7 +41877,7 @@ function preinit(href, options) {
         fetchPriority: fetchPriority
       });
     } else if (as === 'script') {
-      Internals$1.d
+      Internals.d
       /* ReactDOMCurrentDispatcher */
       .X(
       /* preinitScript */
@@ -42133,7 +41933,7 @@ function preinitModule(href, options) {
     if (typeof options === 'object' && options !== null) {
       if (options.as == null || options.as === 'script') {
         var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
-        Internals$1.d
+        Internals.d
         /* ReactDOMCurrentDispatcher */
         .M(
         /* preinitModuleScript */
@@ -42144,7 +41944,7 @@ function preinitModule(href, options) {
         });
       }
     } else if (options == null) {
-      Internals$1.d
+      Internals.d
       /* ReactDOMCurrentDispatcher */
       .M(
       /* preinitModuleScript */
@@ -42200,12 +42000,12 @@ function flushSyncFromReconciler(fn) {
 
 var flushSync = flushSyncFromReconciler;
 
-function findDOMNode$2(componentOrElement) {
+function findDOMNode$1(componentOrElement) {
   return findHostInstance(componentOrElement);
 } // Expose findDOMNode on internals
 
 
-Internals$1.findDOMNode = findDOMNode$2;
+Internals.findDOMNode = findDOMNode$1;
 
 function unstable_batchedUpdates(fn, a) {
   // batchedUpdates was a legacy mode feature that is a no-op outside of
@@ -42215,10 +42015,10 @@ function unstable_batchedUpdates(fn, a) {
 }
 // This is an array for better minification.
 
-Internals$1.Events
+Internals.Events
 /* Events */
 = [getInstanceFromNode, getNodeFromInstance, getFiberCurrentPropsFromNode, enqueueStateRestore, restoreStateIfNeeded, unstable_batchedUpdates];
-var foundDevTools$1 = injectIntoDevTools({
+var foundDevTools = injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 1 ,
   version: ReactVersion,
@@ -42226,14 +42026,222 @@ var foundDevTools$1 = injectIntoDevTools({
 });
 
 {
-  if (!foundDevTools$1 && canUseDOM && window.top === window.self) {
+  if (!foundDevTools && canUseDOM && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (navigator.userAgent.indexOf('Chrome') > -1 && navigator.userAgent.indexOf('Edge') === -1 || navigator.userAgent.indexOf('Firefox') > -1) {
-      var protocol$1 = window.location.protocol; // Don't warn in exotic cases like chrome-extension://.
+      var protocol = window.location.protocol; // Don't warn in exotic cases like chrome-extension://.
 
-      if (/^(https?|file):$/.test(protocol$1)) {
+      if (/^(https?|file):$/.test(protocol)) {
         // eslint-disable-next-line react-internal/no-production-logging
-        console.info('%cDownload the React DevTools ' + 'for a better development experience: ' + 'https://react.dev/link/react-devtools' + (protocol$1 === 'file:' ? '\nYou might need to use a local HTTP server (instead of file://): ' + 'https://react.dev/link/react-devtools-faq' : ''), 'font-weight:bold');
+        console.info('%cDownload the React DevTools ' + 'for a better development experience: ' + 'https://react.dev/link/react-devtools' + (protocol === 'file:' ? '\nYou might need to use a local HTTP server (instead of file://): ' + 'https://react.dev/link/react-devtools-faq' : ''), 'font-weight:bold');
+      }
+    }
+  }
+}
+
+function ReactDOMRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+} // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = // $FlowFixMe[missing-this-annot]
+function (children) {
+  var root = this._internalRoot;
+
+  if (root === null) {
+    throw new Error('Cannot update an unmounted root.');
+  }
+
+  {
+    if (typeof arguments[1] === 'function') {
+      error('does not support the second callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
+    } else if (isValidContainer(arguments[1])) {
+      error('You passed a container to the second argument of root.render(...). ' + "You don't need to pass it again since you already passed it to create the root.");
+    } else if (typeof arguments[1] !== 'undefined') {
+      error('You passed a second argument to root.render(...) but it only accepts ' + 'one argument.');
+    }
+  }
+
+  updateContainer(children, root, null, null);
+}; // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = // $FlowFixMe[missing-this-annot]
+function () {
+  {
+    if (typeof arguments[0] === 'function') {
+      error('does not support a callback argument. ' + 'To execute a side effect after rendering, declare it in a component body with useEffect().');
+    }
+  }
+
+  var root = this._internalRoot;
+
+  if (root !== null) {
+    this._internalRoot = null;
+    var container = root.containerInfo;
+
+    {
+      if (isAlreadyRendering()) {
+        error('Attempted to synchronously unmount a root while React was already ' + 'rendering. React cannot finish unmounting the root until the ' + 'current render has completed, which may lead to a race condition.');
+      }
+    }
+
+    updateContainerSync(null, root, null, null);
+    flushSyncWork();
+    unmarkContainerAsRoot(container);
+  }
+};
+
+function createRoot$1(container, options) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
+  warnIfReactDOMContainerInDEV(container);
+  var isStrictMode = false;
+  var concurrentUpdatesByDefaultOverride = false;
+  var identifierPrefix = '';
+  var onUncaughtError = defaultOnUncaughtError;
+  var onCaughtError = defaultOnCaughtError;
+  var onRecoverableError = defaultOnRecoverableError;
+  var transitionCallbacks = null;
+
+  if (options !== null && options !== undefined) {
+    {
+      if (options.hydrate) {
+        warn('hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead.');
+      } else {
+        if (typeof options === 'object' && options !== null && options.$$typeof === REACT_ELEMENT_TYPE) {
+          error('You passed a JSX element to createRoot. You probably meant to ' + 'call root.render instead. ' + 'Example usage:\n\n' + '  let root = createRoot(domContainer);\n' + '  root.render(<App />);');
+        }
+      }
+    }
+
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+
+    if (options.unstable_concurrentUpdatesByDefault === true) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
+
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
+  }
+
+  var root = createContainer(container, ConcurrentRoot, null, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks);
+  markContainerAsRoot(root.current, container);
+  var rootContainerElement = container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  listenToAllSupportedEvents(rootContainerElement); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  return new ReactDOMRoot(root);
+} // $FlowFixMe[missing-this-annot]
+
+function ReactDOMHydrationRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+}
+
+function scheduleHydration(target) {
+  if (target) {
+    queueExplicitHydrationTarget(target);
+  }
+} // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
+function hydrateRoot$1(container, initialChildren, options) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
+  warnIfReactDOMContainerInDEV(container);
+
+  {
+    if (initialChildren === undefined) {
+      error('Must provide initial children as second argument to hydrateRoot. ' + 'Example usage: hydrateRoot(domContainer, <App />)');
+    }
+  } // For now we reuse the whole bag of options since they contain
+  // the hydration callbacks.
+
+
+  var hydrationCallbacks = options != null ? options : null;
+  var isStrictMode = false;
+  var concurrentUpdatesByDefaultOverride = false;
+  var identifierPrefix = '';
+  var onUncaughtError = defaultOnUncaughtError;
+  var onCaughtError = defaultOnCaughtError;
+  var onRecoverableError = defaultOnRecoverableError;
+  var transitionCallbacks = null;
+  var formState = null;
+
+  if (options !== null && options !== undefined) {
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+
+    if (options.unstable_concurrentUpdatesByDefault === true) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
+
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
+
+    {
+      if (options.formState !== undefined) {
+        formState = options.formState;
+      }
+    }
+  }
+
+  var root = createHydrationContainer(initialChildren, null, container, ConcurrentRoot, hydrationCallbacks, isStrictMode, concurrentUpdatesByDefaultOverride, identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transitionCallbacks, formState);
+  markContainerAsRoot(root.current, container); // This can't be a comment node since hydration doesn't work on comment nodes anyway.
+
+  listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  return new ReactDOMHydrationRoot(root);
+}
+
+function warnIfReactDOMContainerInDEV(container) {
+  {
+    if (isContainerMarkedAsRoot(container)) {
+      if (container._reactRootContainer) {
+        error('You are calling ReactDOMClient.createRoot() on a container that was previously ' + 'passed to ReactDOM.render(). This is not supported.');
+      } else {
+        error('You are calling ReactDOMClient.createRoot() on a container that ' + 'has already been passed to createRoot() before. Instead, call ' + 'root.render() on the existing root instead if you want to update it.');
       }
     }
   }
@@ -42276,6 +42284,19 @@ function wwwOnCaughtError(error, errorInfo) {
   }
 
   defaultOnCaughtError(error, errorInfo);
+}
+
+function createRoot(container, options) {
+  return createRoot$1(container, assign({
+    onUncaughtError: wwwOnUncaughtError,
+    onCaughtError: wwwOnCaughtError
+  }, options));
+}
+function hydrateRoot(container, initialChildren, options) {
+  return hydrateRoot$1(container, initialChildren, assign({
+    onUncaughtError: wwwOnUncaughtError,
+    onCaughtError: wwwOnCaughtError
+  }, options));
 }
 var topLevelUpdateWarnings;
 
@@ -42415,7 +42436,7 @@ function legacyRenderSubtreeIntoContainer(parentComponent, children, container, 
   return getPublicRootInstance(root);
 }
 
-function findDOMNode$1(componentOrElement) {
+function findDOMNode(componentOrElement) {
   {
     var owner = ReactSharedInternals.owner;
 
@@ -42529,141 +42550,13 @@ function unmountComponentAtNode(container) {
   }
 }
 
-assign(Internals$1, {
+assign(Internals, {
   ReactBrowserEventEmitter: {
     isEnabled: isEnabled
   }
 });
 
-function noop() {}
-
-function requestFormReset(element) {
-  throw new Error('Invalid form element. requestFormReset must be passed a form that was ' + 'rendered by React.');
-}
-
-var DefaultDispatcher = {
-  f
-  /* flushSyncWork */
-  : noop,
-  r
-  /* requestFormReset */
-  : requestFormReset,
-  D
-  /* prefetchDNS */
-  : noop,
-  C
-  /* preconnect */
-  : noop,
-  L
-  /* preload */
-  : noop,
-  m
-  /* preloadModule */
-  : noop,
-  X
-  /* preinitScript */
-  : noop,
-  S
-  /* preinitStyle */
-  : noop,
-  M
-  /* preinitModuleScript */
-  : noop
-};
-var Internals = {
-  d
-  /* ReactDOMCurrentDispatcher */
-  : DefaultDispatcher,
-  p
-  /* currentUpdatePriority */
-  : NoEventPriority,
-  findDOMNode: null,
-  usingClientEntryPoint: false
-};
-
-{
-  if (typeof Map !== 'function' || // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
-  Map.prototype == null || typeof Map.prototype.forEach !== 'function' || typeof Set !== 'function' || // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
-  Set.prototype == null || typeof Set.prototype.clear !== 'function' || typeof Set.prototype.forEach !== 'function') {
-    error('React depends on Map and Set built-in types. Make sure that you load a ' + 'polyfill in older browsers. https://react.dev/link/react-polyfills');
-  }
-}
-
-function createRoot$1(container, options) {
-  {
-    if (!Internals.usingClientEntryPoint) {
-      error('You are importing createRoot from "react-dom" which is not supported. ' + 'You should instead import it from "react-dom/client".');
-    }
-  }
-
-  return createRoot$2(container, options);
-}
-
-function hydrateRoot$1(container, initialChildren, options) {
-  {
-    if (!Internals.usingClientEntryPoint) {
-      error('You are importing hydrateRoot from "react-dom" which is not supported. ' + 'You should instead import it from "react-dom/client".');
-    }
-  }
-
-  return hydrateRoot$2(container, initialChildren, options);
-} // Overload the definition to the two valid signatures.
-
-function findDOMNode(componentOrElement) {
-  return findHostInstance(componentOrElement);
-} // Expose findDOMNode on internals
-
-
-Internals.findDOMNode = findDOMNode;
-var foundDevTools = injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: 1 ,
-  version: ReactVersion,
-  rendererPackageName: 'react-dom'
-});
-
-{
-  if (!foundDevTools && canUseDOM && window.top === window.self) {
-    // If we're in Chrome or Firefox, provide a download link if not installed.
-    if (navigator.userAgent.indexOf('Chrome') > -1 && navigator.userAgent.indexOf('Edge') === -1 || navigator.userAgent.indexOf('Firefox') > -1) {
-      var protocol = window.location.protocol; // Don't warn in exotic cases like chrome-extension://.
-
-      if (/^(https?|file):$/.test(protocol)) {
-        // eslint-disable-next-line react-internal/no-production-logging
-        console.info('%cDownload the React DevTools ' + 'for a better development experience: ' + 'https://react.dev/link/react-devtools' + (protocol === 'file:' ? '\nYou might need to use a local HTTP server (instead of file://): ' + 'https://react.dev/link/react-devtools-faq' : ''), 'font-weight:bold');
-      }
-    }
-  }
-}
-
-function createRoot(container, options) {
-  {
-    Internals.usingClientEntryPoint = true;
-  }
-
-  try {
-    return createRoot$1(container, options);
-  } finally {
-    {
-      Internals.usingClientEntryPoint = false;
-    }
-  }
-}
-function hydrateRoot(container, children, options) {
-  {
-    Internals.usingClientEntryPoint = true;
-  }
-
-  try {
-    return hydrateRoot$1(container, children, options);
-  } finally {
-    {
-      Internals.usingClientEntryPoint = false;
-    }
-  }
-}
-
-exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = Internals$1;
+exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = Internals;
 exports.createComponentSelector = createComponentSelector;
 exports.createHasPseudoClassSelector = createHasPseudoClassSelector;
 exports.createPortal = createPortal;
@@ -42673,7 +42566,7 @@ exports.createTestNameSelector = createTestNameSelector;
 exports.createTextSelector = createTextSelector;
 exports.findAllNodes = findAllNodes;
 exports.findBoundingRects = findBoundingRects;
-exports.findDOMNode = findDOMNode$1;
+exports.findDOMNode = findDOMNode;
 exports.flushSync = flushSync;
 exports.focusWithin = focusWithin;
 exports.getFindAllNodesFailureDescription = getFindAllNodesFailureDescription;
@@ -42686,6 +42579,7 @@ exports.preinitModule = preinitModule;
 exports.preload = preload;
 exports.preloadModule = preloadModule;
 exports.render = render;
+exports.requestFormReset = requestFormReset$2;
 exports.unmountComponentAtNode = unmountComponentAtNode;
 exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;

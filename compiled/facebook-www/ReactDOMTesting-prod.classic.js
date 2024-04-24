@@ -12819,52 +12819,8 @@ function attemptContinuousHydration(fiber) {
     markRetryLaneIfNotHydrated(fiber, 67108864);
   }
 }
-function findHostInstanceByFiber(fiber) {
-  fiber = findCurrentHostFiber(fiber);
-  return null === fiber ? null : fiber.stateNode;
-}
 function emptyFindFiberByHostInstance() {
   return null;
-}
-function injectIntoDevTools(devToolsConfig) {
-  devToolsConfig = {
-    bundleType: devToolsConfig.bundleType,
-    version: devToolsConfig.version,
-    rendererPackageName: devToolsConfig.rendererPackageName,
-    rendererConfig: devToolsConfig.rendererConfig,
-    overrideHookState: null,
-    overrideHookStateDeletePath: null,
-    overrideHookStateRenamePath: null,
-    overrideProps: null,
-    overridePropsDeletePath: null,
-    overridePropsRenamePath: null,
-    setErrorHandler: null,
-    setSuspenseHandler: null,
-    scheduleUpdate: null,
-    currentDispatcherRef: ReactSharedInternals,
-    findHostInstanceByFiber: findHostInstanceByFiber,
-    findFiberByHostInstance:
-      devToolsConfig.findFiberByHostInstance || emptyFindFiberByHostInstance,
-    findHostInstancesForRefresh: null,
-    scheduleRefresh: null,
-    scheduleRoot: null,
-    setRefreshHandler: null,
-    getCurrentFiber: null,
-    reconcilerVersion: "19.0.0-www-classic-b7cce8fb"
-  };
-  if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
-    devToolsConfig = !1;
-  else {
-    var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
-    if (hook.isDisabled || !hook.supportsFiber) devToolsConfig = !0;
-    else {
-      try {
-        (rendererID = hook.inject(devToolsConfig)), (injectedHook = hook);
-      } catch (err) {}
-      devToolsConfig = hook.checkDCE ? !0 : !1;
-    }
-  }
-  return devToolsConfig;
 }
 var isInsideEventHandler = !1;
 function batchedUpdates(fn, a, b) {
@@ -13399,14 +13355,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$354;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1533 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1533) {
-      var element$jscomp$inline_1534 = document.createElement("div");
-      element$jscomp$inline_1534.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1533 =
-        "function" === typeof element$jscomp$inline_1534.oninput;
+    var isSupported$jscomp$inline_1535 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1535) {
+      var element$jscomp$inline_1536 = document.createElement("div");
+      element$jscomp$inline_1536.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1535 =
+        "function" === typeof element$jscomp$inline_1536.oninput;
     }
-    JSCompiler_inline_result$jscomp$354 = isSupported$jscomp$inline_1533;
+    JSCompiler_inline_result$jscomp$354 = isSupported$jscomp$inline_1535;
   } else JSCompiler_inline_result$jscomp$354 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$354 &&
@@ -13787,20 +13743,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1574 = 0;
-  i$jscomp$inline_1574 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1574++
+  var i$jscomp$inline_1576 = 0;
+  i$jscomp$inline_1576 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1576++
 ) {
-  var eventName$jscomp$inline_1575 =
-      simpleEventPluginEvents[i$jscomp$inline_1574],
-    domEventName$jscomp$inline_1576 =
-      eventName$jscomp$inline_1575.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1577 =
-      eventName$jscomp$inline_1575[0].toUpperCase() +
-      eventName$jscomp$inline_1575.slice(1);
+  var eventName$jscomp$inline_1577 =
+      simpleEventPluginEvents[i$jscomp$inline_1576],
+    domEventName$jscomp$inline_1578 =
+      eventName$jscomp$inline_1577.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1579 =
+      eventName$jscomp$inline_1577[0].toUpperCase() +
+      eventName$jscomp$inline_1577.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1576,
-    "on" + capitalizedEvent$jscomp$inline_1577
+    domEventName$jscomp$inline_1578,
+    "on" + capitalizedEvent$jscomp$inline_1579
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17313,44 +17269,6 @@ function getEventPriority(domEventName) {
       return 32;
   }
 }
-function ReactDOMRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-}
-ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
-  function (children) {
-    var root = this._internalRoot;
-    if (null === root) throw Error(formatProdErrorMessage(409));
-    updateContainer(children, root, null, null);
-  };
-ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
-  function () {
-    var root = this._internalRoot;
-    if (null !== root) {
-      this._internalRoot = null;
-      var container = root.containerInfo;
-      updateContainerSync(null, root, null, null);
-      flushSyncWork();
-      container[internalContainerInstanceKey] = null;
-    }
-  };
-function ReactDOMHydrationRoot(internalRoot) {
-  this._internalRoot = internalRoot;
-}
-ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
-  if (target) {
-    var updatePriority = resolveUpdatePriority();
-    target = { blockedOn: null, target: target, priority: updatePriority };
-    for (
-      var i = 0;
-      i < queuedExplicitHydrationTargets.length &&
-      0 !== updatePriority &&
-      updatePriority < queuedExplicitHydrationTargets[i].priority;
-      i++
-    );
-    queuedExplicitHydrationTargets.splice(i, 0, target);
-    0 === i && attemptExplicitHydrationTarget(target);
-  }
-};
 function isValidContainer(node) {
   return !(
     !node ||
@@ -17410,12 +17328,92 @@ Internals.Events = [
     return fn(a);
   }
 ];
-injectIntoDevTools({
+var devToolsConfig$jscomp$inline_1754 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-b7cce8fb",
+  version: "19.0.0-www-classic-dbc68783",
   rendererPackageName: "react-dom"
-});
+};
+var internals$jscomp$inline_2203 = {
+  bundleType: devToolsConfig$jscomp$inline_1754.bundleType,
+  version: devToolsConfig$jscomp$inline_1754.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1754.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1754.rendererConfig,
+  overrideHookState: null,
+  overrideHookStateDeletePath: null,
+  overrideHookStateRenamePath: null,
+  overrideProps: null,
+  overridePropsDeletePath: null,
+  overridePropsRenamePath: null,
+  setErrorHandler: null,
+  setSuspenseHandler: null,
+  scheduleUpdate: null,
+  currentDispatcherRef: ReactSharedInternals,
+  findHostInstanceByFiber: function (fiber) {
+    fiber = findCurrentHostFiber(fiber);
+    return null === fiber ? null : fiber.stateNode;
+  },
+  findFiberByHostInstance:
+    devToolsConfig$jscomp$inline_1754.findFiberByHostInstance ||
+    emptyFindFiberByHostInstance,
+  findHostInstancesForRefresh: null,
+  scheduleRefresh: null,
+  scheduleRoot: null,
+  setRefreshHandler: null,
+  getCurrentFiber: null,
+  reconcilerVersion: "19.0.0-www-classic-dbc68783"
+};
+if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
+  var hook$jscomp$inline_2204 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (
+    !hook$jscomp$inline_2204.isDisabled &&
+    hook$jscomp$inline_2204.supportsFiber
+  )
+    try {
+      (rendererID = hook$jscomp$inline_2204.inject(
+        internals$jscomp$inline_2203
+      )),
+        (injectedHook = hook$jscomp$inline_2204);
+    } catch (err) {}
+}
+function ReactDOMRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+}
+ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
+  function (children) {
+    var root = this._internalRoot;
+    if (null === root) throw Error(formatProdErrorMessage(409));
+    updateContainer(children, root, null, null);
+  };
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
+  function () {
+    var root = this._internalRoot;
+    if (null !== root) {
+      this._internalRoot = null;
+      var container = root.containerInfo;
+      updateContainerSync(null, root, null, null);
+      flushSyncWork();
+      container[internalContainerInstanceKey] = null;
+    }
+  };
+function ReactDOMHydrationRoot(internalRoot) {
+  this._internalRoot = internalRoot;
+}
+ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
+  if (target) {
+    var updatePriority = resolveUpdatePriority();
+    target = { blockedOn: null, target: target, priority: updatePriority };
+    for (
+      var i = 0;
+      i < queuedExplicitHydrationTargets.length &&
+      0 !== updatePriority &&
+      updatePriority < queuedExplicitHydrationTargets[i].priority;
+      i++
+    );
+    queuedExplicitHydrationTargets.splice(i, 0, target);
+    0 === i && attemptExplicitHydrationTarget(target);
+  }
+};
 var ReactFiberErrorDialogWWW = require("ReactFiberErrorDialog");
 if ("function" !== typeof ReactFiberErrorDialogWWW.showErrorDialog)
   throw Error(formatProdErrorMessage(320));
@@ -17543,12 +17541,6 @@ assign(Internals, {
     }
   }
 });
-injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: 0,
-  version: "19.0.0-www-classic-b7cce8fb",
-  rendererPackageName: "react-dom"
-});
 exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
   Internals;
 exports.createComponentSelector = function (component) {
@@ -17567,6 +17559,10 @@ exports.createRoleSelector = function (role) {
   return { $$typeof: ROLE_TYPE, value: role };
 };
 exports.createRoot = function (container, options) {
+  options = assign(
+    { onUncaughtError: wwwOnUncaughtError, onCaughtError: wwwOnCaughtError },
+    options
+  );
   if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
@@ -17766,7 +17762,11 @@ exports.getFindAllNodesFailureDescription = function (hostRoot, selectors) {
   }
   return null;
 };
-exports.hydrateRoot = function (container, children, options) {
+exports.hydrateRoot = function (container, initialChildren, options) {
+  options = assign(
+    { onUncaughtError: wwwOnUncaughtError, onCaughtError: wwwOnCaughtError },
+    options
+  );
   if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
@@ -17791,8 +17791,8 @@ exports.hydrateRoot = function (container, children, options) {
     void 0 !== options.unstable_transitionCallbacks &&
       (transitionCallbacks = options.unstable_transitionCallbacks),
     void 0 !== options.formState && (formState = options.formState));
-  children = createHydrationContainer(
-    children,
+  initialChildren = createHydrationContainer(
+    initialChildren,
     null,
     container,
     1,
@@ -17806,9 +17806,9 @@ exports.hydrateRoot = function (container, children, options) {
     transitionCallbacks,
     formState
   );
-  container[internalContainerInstanceKey] = children.current;
+  container[internalContainerInstanceKey] = initialChildren.current;
   listenToAllSupportedEvents(container);
-  return new ReactDOMHydrationRoot(children);
+  return new ReactDOMHydrationRoot(initialChildren);
 };
 exports.observeVisibleRects = function (
   hostRoot,
@@ -17947,6 +17947,9 @@ exports.render = function (element, container, callback) {
     callback
   );
 };
+exports.requestFormReset = function (form) {
+  Internals.d.r(form);
+};
 exports.unmountComponentAtNode = function (container) {
   if (!isValidContainerLegacy(container))
     throw Error(formatProdErrorMessage(299));
@@ -18013,4 +18016,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-b7cce8fb";
+exports.version = "19.0.0-www-classic-dbc68783";
