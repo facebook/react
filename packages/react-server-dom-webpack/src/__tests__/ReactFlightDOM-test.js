@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -17,7 +18,6 @@ global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
 
 let act;
 let use;
@@ -73,7 +73,7 @@ describe('ReactFlightDOM', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server.node');
     ReactDOMStaticServer = require('react-dom/static.node');
-    ReactServerDOMClient = require('react-server-dom-webpack/client');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.browser');
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -91,6 +91,13 @@ describe('ReactFlightDOM', () => {
       }
     };
   });
+
+  async function FlightAct(callback: Function) {
+    // execute the callback and await it if async
+    await callback();
+    // wait one more task
+    await new Promise(resolve => setImmediate(resolve));
+  }
 
   function getTestStream() {
     const writable = new Stream.PassThrough();
@@ -1798,18 +1805,20 @@ describe('ReactFlightDOM', () => {
     class InvalidValue {}
 
     const {writable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} invalid={InvalidValue} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    await FlightAct(() => {
+      const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
-    );
-    pipe(writable);
+      );
+      pipe(writable);
+    });
 
     expect(reportedErrors.length).toBe(1);
     if (__DEV__) {
@@ -1827,5 +1836,52 @@ describe('ReactFlightDOM', () => {
           '                          ^^^^^^^^^^^^^^^^^^^^^',
       );
     }
+  });
+
+  it('empties the microtask queue of work before flushing', async () => {
+    function ClientEntrypoint({response}) {
+      return use(response);
+    }
+    async function App() {
+      return <Component />;
+    }
+
+    async function Component() {
+      return <div>Hi</div>;
+    }
+
+    const errors = [];
+    const {writable, readable} = getTestStream();
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    await FlightAct(async () => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      );
+      pipe(writable);
+
+      // we explicitly wait one macrotask before aborting
+      await new Promise(r => setImmediate(r));
+      abort(
+        new Error(
+          'This abort should be unobserved since the entire flight render should complete within the first work loop',
+        ),
+      );
+    });
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ClientEntrypoint response={response} />);
+    });
+
+    expect(errors).toEqual([]);
+    expect(container.innerHTML).toBe('<div>Hi</div>');
   });
 });

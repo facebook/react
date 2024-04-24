@@ -5986,22 +5986,6 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    // TODO: The `act` implementation in this file doesn't unwrap microtasks
-    // automatically. We can't use the same `act` we use for Fiber tests
-    // because that relies on the mock Scheduler. Doesn't affect any public
-    // API but we might want to fix this for our own internal tests.
-    //
-    // For now, wait for each promise in sequence.
-    await act(async () => {
-      await promiseA;
-    });
-    await act(async () => {
-      await promiseB;
-    });
-    await act(async () => {
-      await promiseC;
-    });
-
     expect(getVisibleChildren(container)).toEqual('ABC');
 
     ReactDOMClient.hydrateRoot(container, <App />);

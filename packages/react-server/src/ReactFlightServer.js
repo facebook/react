@@ -1241,6 +1241,14 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
+    if (request.schedule === WORK) {
+      // We're pinging in a microtask or a macrotask interleaving the prior
+      // work task and the scheduled flush task. Either way we render it synchronously.
+      performWork(request);
+      return;
+    }
+    // We're pinging in a new task, we can schedule a new work epoch and let
+    // additional pings queue.
     startPerformingWork(request);
   }
 }
