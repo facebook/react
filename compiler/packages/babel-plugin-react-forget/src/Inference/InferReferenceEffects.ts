@@ -1824,7 +1824,7 @@ function inferBlock(
          *    as props to a component and then for..of over that in the component body, but
          *    this already violates React's rules so we assume you're not doing this.
          * 2. The collection could be an Iterator itself, such that advancing the iterator
-         *    (modeled with NextIterableOf) mutates the collection itself.
+         *    (modeled with IteratorNext) mutates the collection itself.
          */
         const kind = state.kind(instrValue.collection).kind;
         const isMutable =
@@ -1851,7 +1851,7 @@ function inferBlock(
         lvalueEffect = Effect.Store;
         break;
       }
-      case "NextIterableOf": {
+      case "IteratorNext": {
         /**
          * This instruction represents advancing an iterator with .next(). We use a
          * conditional mutate to model the two cases for GetIterator:

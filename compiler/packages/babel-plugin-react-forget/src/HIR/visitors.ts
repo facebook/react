@@ -212,7 +212,7 @@ export function* eachInstructionValueOperand(
       yield instrValue.collection;
       break;
     }
-    case "NextIterableOf": {
+    case "IteratorNext": {
       yield instrValue.iterator;
       yield instrValue.collection;
       break;
@@ -536,7 +536,7 @@ export function mapInstructionValueOperands(
       instrValue.collection = fn(instrValue.collection);
       break;
     }
-    case "NextIterableOf": {
+    case "IteratorNext": {
       instrValue.iterator = fn(instrValue.iterator);
       instrValue.collection = fn(instrValue.collection);
       break;

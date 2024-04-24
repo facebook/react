@@ -189,7 +189,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "TemplateLiteral":
     case "Primitive":
     case "GetIterator":
-    case "NextIterableOf":
+    case "IteratorNext":
     case "NextPropertyOf":
     case "Debugger":
     case "StartMemoize":

@@ -484,7 +484,7 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "NextIterableOf": {
+    case "IteratorNext": {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:

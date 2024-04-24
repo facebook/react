@@ -613,8 +613,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `GetIterator collection=${printPlace(instrValue.collection)}`;
       break;
     }
-    case "NextIterableOf": {
-      value = `NextIterableOf iterator=${printPlace(
+    case "IteratorNext": {
+      value = `IteratorNext iterator=${printPlace(
         instrValue.iterator
       )} collection=${printPlace(instrValue.collection)}`;
       break;

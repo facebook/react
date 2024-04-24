@@ -1856,7 +1856,7 @@ function codegenInstructionValue(
       value = codegenPlaceToExpression(cx, instrValue.collection);
       break;
     }
-    case "NextIterableOf": {
+    case "IteratorNext": {
       value = codegenPlaceToExpression(cx, instrValue.iterator);
       break;
     }

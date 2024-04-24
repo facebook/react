@@ -1070,8 +1070,8 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get("id");
-        const nextIterableOf = lowerValueToTemporary(builder, {
-          kind: "NextIterableOf",
+        const advanceIterator = lowerValueToTemporary(builder, {
+          kind: "IteratorNext",
           loc: leftLoc,
           iterator: { ...iterator },
           collection: { ...value },
@@ -1081,7 +1081,7 @@ function lowerStatement(
           leftLoc,
           InstructionKind.Let,
           id,
-          nextIterableOf,
+          advanceIterator,
           "Assignment"
         );
         test = lowerValueToTemporary(builder, assign);
@@ -1157,7 +1157,7 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get("id");
-        const nextIterableOf = lowerValueToTemporary(builder, {
+        const nextPropertyTemp = lowerValueToTemporary(builder, {
           kind: "NextPropertyOf",
           loc: leftLoc,
           value,
@@ -1167,7 +1167,7 @@ function lowerStatement(
           leftLoc,
           InstructionKind.Let,
           id,
-          nextIterableOf,
+          nextPropertyTemp,
           "Assignment"
         );
         test = lowerValueToTemporary(builder, assign);

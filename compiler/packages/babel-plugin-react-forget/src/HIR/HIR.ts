@@ -964,7 +964,7 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
-      kind: "NextIterableOf";
+      kind: "IteratorNext";
       iterator: Place; // the iterator created with GetIterator
       collection: Place; // the collection being iterated over (which may be an iterable or iterator)
       loc: SourceLocation;

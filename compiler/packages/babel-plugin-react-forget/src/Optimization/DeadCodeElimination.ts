@@ -327,9 +327,9 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     }
     case "GetIterator":
     case "NextPropertyOf":
-    case "NextIterableOf": {
+    case "IteratorNext": {
       /*
-       * Technically a NextIterableOf/NextPropertyOf will never be unused because it's
+       * Technically a IteratorNext/NextPropertyOf will never be unused because it's
        * always used later by another StoreLocal or Destructure instruction, but conceptually
        * we can't prune
        */
