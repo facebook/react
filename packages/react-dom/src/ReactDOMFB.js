@@ -9,7 +9,7 @@
 
 import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
 
-import Internals from './src/ReactDOMSharedInternalsFB';
+import Internals from './ReactDOMSharedInternalsFB';
 
 // For classic WWW builds, include a few internals that are already in use.
 Object.assign((Internals: any), {
@@ -17,6 +17,8 @@ Object.assign((Internals: any), {
     isEnabled,
   },
 });
+
+export {Internals as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE};
 
 export {
   createPortal,
@@ -33,7 +35,7 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOMFB';
+} from './client/ReactDOMClientFB';
 
 export {
   createRoot,
@@ -43,6 +45,4 @@ export {
   findDOMNode,
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
-} from './src/client/ReactDOMRootFB';
-
-export {Internals as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE};
+} from './client/ReactDOMRootFB';

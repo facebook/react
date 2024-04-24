@@ -7,4 +7,6 @@
  * @flow
  */
 
-export {createRoot, hydrateRoot, version} from './src/client/ReactDOMClient';
+// This entrypoint should track the /client entrypoint
+export * from './client';
+export * from './index';

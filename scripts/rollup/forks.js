@@ -91,9 +91,9 @@ const forks = Object.freeze({
   ) => {
     if (
       entry === 'react-dom' ||
-      entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMServer.js' ||
-      entry === 'react-dom/unstable_testing'
+      entry === 'react-dom/src/ReactDOMFB.js' ||
+      entry === 'react-dom/src/ReactDOMTestingFB.js' ||
+      entry === 'react-dom/src/ReactDOMServer.js'
     ) {
       if (
         bundleType === FB_WWW_DEV ||

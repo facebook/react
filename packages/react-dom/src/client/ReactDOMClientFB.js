@@ -8,18 +8,9 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {
-  RootType,
-  HydrateRootOptions,
-  CreateRootOptions,
-} from './ReactDOMRoot';
 
 import {disableLegacyMode} from 'shared/ReactFeatureFlags';
-import {
-  createRoot as createRootImpl,
-  hydrateRoot as hydrateRootImpl,
-  isValidContainer,
-} from './ReactDOMRoot';
+import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 import {runWithPriority} from 'react-dom-bindings/src/client/ReactDOMUpdatePriority';
 import {flushSync as flushSyncIsomorphic} from '../shared/ReactDOMFlushSync';
@@ -34,8 +25,17 @@ import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 
-import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import Internals from '../ReactDOMSharedInternals';
+import {
+  getClosestInstanceFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
+import Internals from '../ReactDOMSharedInternalsFB';
 
 export {
   prefetchDNS,
@@ -84,37 +84,6 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
-function createRoot(
-  container: Element | Document | DocumentFragment,
-  options?: CreateRootOptions,
-): RootType {
-  if (__DEV__) {
-    if (!Internals.usingClientEntryPoint) {
-      console.error(
-        'You are importing createRoot from "react-dom" which is not supported. ' +
-          'You should instead import it from "react-dom/client".',
-      );
-    }
-  }
-  return createRootImpl(container, options);
-}
-
-function hydrateRoot(
-  container: Document | Element,
-  initialChildren: ReactNodeList,
-  options?: HydrateRootOptions,
-): RootType {
-  if (__DEV__) {
-    if (!Internals.usingClientEntryPoint) {
-      console.error(
-        'You are importing hydrateRoot from "react-dom" which is not supported. ' +
-          'You should instead import it from "react-dom/client".',
-      );
-    }
-  }
-  return hydrateRootImpl(container, initialChildren, options);
-}
-
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 declare function flushSyncFromReconciler<R>(fn: () => R): R;
@@ -159,15 +128,23 @@ export {
   unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
-  // exposeConcurrentModeAPIs
-  createRoot,
-  hydrateRoot,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
   // TODO: Remove this once callers migrate to alternatives.
   // This should only be used by React internals.
   runWithPriority as unstable_runWithPriority,
 };
+
+// Keep in sync with ReactTestUtils.js.
+// This is an array for better minification.
+Internals.Events /* Events */ = [
+  getInstanceFromNode,
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+  unstable_batchedUpdates,
+];
 
 const foundDevTools = injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,
