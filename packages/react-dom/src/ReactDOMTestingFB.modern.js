@@ -7,7 +7,7 @@
  * @flow
  */
 
-export * from './client.js';
+export * from './ReactDOMFB.modern';
 
 export {
   createComponentSelector,

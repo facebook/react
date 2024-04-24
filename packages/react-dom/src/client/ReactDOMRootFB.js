@@ -36,7 +36,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {isValidContainerLegacy} from './ReactDOMRoot';
+import {isValidContainerLegacy} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,

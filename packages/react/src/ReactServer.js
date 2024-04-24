@@ -7,9 +7,6 @@
  * @flow
  */
 
-// Patch fetch
-import './ReactFetch';
-
 export {default as __SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './ReactSharedInternalsServer';
 
 import {forEach, map, count, toArray, only} from './ReactChildren';

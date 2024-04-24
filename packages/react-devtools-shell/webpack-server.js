@@ -124,6 +124,8 @@ const makeConfig = (entry, alias) => ({
   },
 });
 
+const clientAsSeparateBuild = semver.gte(REACT_VERSION, '19.0.0');
+
 const app = makeConfig(
   {
     'app-index': './src/app/index.js',
@@ -142,8 +144,14 @@ const app = makeConfig(
     react: resolve(builtModulesDir, 'react'),
     'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
     'react-devtools-feature-flags': resolveFeatureFlags('shell'),
-    'react-dom/client': resolve(builtModulesDir, 'react-dom/client'),
-    'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
+    'react-dom/client': resolve(
+      builtModulesDir,
+      clientAsSeparateBuild ? 'react-dom/unstable_testing' : 'react-dom/client',
+    ),
+    'react-dom': resolve(
+      builtModulesDir,
+      clientAsSeparateBuild ? 'react-dom' : 'react-dom/unstable_testing',
+    ),
     'react-is': resolve(builtModulesDir, 'react-is'),
     scheduler: resolve(builtModulesDir, 'scheduler'),
   },

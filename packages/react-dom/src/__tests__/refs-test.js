@@ -706,4 +706,101 @@ describe('refs return clean up function', () => {
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
+
+  it('handles detaching refs with either cleanup function or null argument', async () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    const setup2 = jest.fn();
+    const nullHandler = jest.fn();
+
+    function _onRefChangeWithCleanup(_ref) {
+      if (_ref) {
+        setup(_ref.id);
+      } else {
+        nullHandler();
+      }
+      return cleanUp;
+    }
+
+    function _onRefChangeWithoutCleanup(_ref) {
+      if (_ref) {
+        setup2(_ref.id);
+      } else {
+        nullHandler();
+      }
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div id="test-div" ref={_onRefChangeWithCleanup} />);
+    });
+
+    expect(setup).toBeCalledWith('test-div');
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    await act(() => {
+      root.render(<div id="test-div2" ref={_onRefChangeWithoutCleanup} />);
+    });
+
+    // Existing setup call was not called again
+    expect(setup).toHaveBeenCalledTimes(1);
+    // No null call because cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+    // Now we have a cleanup
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+
+    // New ref is setup
+    expect(setup2).toBeCalledWith('test-div2');
+    expect(setup2).toHaveBeenCalledTimes(1);
+
+    // Now, render with the original ref again
+    await act(() => {
+      root.render(<div id="test-div3" ref={_onRefChangeWithCleanup} />);
+    });
+
+    // Setup was not called again
+    expect(setup2).toBeCalledWith('test-div2');
+    expect(setup2).toHaveBeenCalledTimes(1);
+
+    // Null handler hit because no cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(1);
+
+    // Original setup hit one more time
+    expect(setup).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls cleanup function on unmount', async () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    const nullHandler = jest.fn();
+
+    function _onRefChangeWithCleanup(_ref) {
+      if (_ref) {
+        setup(_ref.id);
+      } else {
+        nullHandler();
+      }
+      return cleanUp;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div id="test-div" ref={_onRefChangeWithCleanup} />);
+    });
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+
+    root.unmount();
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    // Now cleanup has been called
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    // Ref callback never called with null when cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+  });
 });

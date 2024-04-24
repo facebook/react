@@ -7,13 +7,13 @@
  * @flow
  */
 
-export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './src/ReactDOMSharedInternals';
+export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './ReactDOMSharedInternalsFB';
+
 export {
   createPortal,
-  createRoot,
-  hydrateRoot,
   flushSync,
   unstable_batchedUpdates,
+  unstable_createEventHandle,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus,
   useFormState,
@@ -25,4 +25,6 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './client/ReactDOMClientFB';
+
+export {createRoot, hydrateRoot} from './client/ReactDOMRootFB';

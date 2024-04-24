@@ -738,9 +738,7 @@ export function createElement(type, config, children) {
         console.warn(
           'Your app (or one of its dependencies) is using an outdated JSX ' +
             'transform. Update to the modern JSX transform for ' +
-            'faster performance: ' +
-            // TODO: Create a short link for this
-            'https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html',
+            'faster performance: https://react.dev/link/new-jsx-transform',
         );
       }
     }

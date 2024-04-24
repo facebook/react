@@ -20,11 +20,6 @@ type ReactDOMInternals = {
     | ((
         componentOrElement: React$Component<any, any>,
       ) => null | Element | Text),
-  usingClientEntryPoint: boolean,
-};
-
-export type ReactDOMInternalsDev = ReactDOMInternals & {
-  usingClientEntryPoint: boolean,
 };
 
 function noop() {}
@@ -52,7 +47,6 @@ const Internals: ReactDOMInternals = {
   d /* ReactDOMCurrentDispatcher */: DefaultDispatcher,
   p /* currentUpdatePriority */: NoEventPriority,
   findDOMNode: null,
-  usingClientEntryPoint: false,
 };
 
 export default Internals;
