@@ -63,7 +63,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-bcf613fa';
+var ReactVersion = '19.0.0-www-classic-58e69eb4';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2751,7 +2751,7 @@ function commitTextUpdate(textInstance, oldText, newText) {// Noop
 }
 function commitMount(instance, type, newProps) {// Noop
 }
-function commitUpdate(instance, updatePayload, type, oldProps, newProps) {
+function commitUpdate(instance, type, oldProps, newProps) {
   instance._applyProps(instance, newProps, oldProps);
 }
 function hideInstance(instance) {
@@ -20204,13 +20204,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }

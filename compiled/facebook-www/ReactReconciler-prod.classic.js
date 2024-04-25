@@ -8401,13 +8401,10 @@ module.exports = function ($$$config) {
                       root,
                       finishedWork.memoizedProps
                     );
-            else if (null === root && null !== finishedWork.stateNode) {
-              flags = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+            else if (null === root && null !== finishedWork.stateNode)
               try {
                 commitUpdate(
                   finishedWork.stateNode,
-                  flags,
                   finishedWork.type,
                   current.memoizedProps,
                   finishedWork.memoizedProps,
@@ -8420,7 +8417,6 @@ module.exports = function ($$$config) {
                   error$147
                 );
               }
-            }
           break;
         }
       case 27:
@@ -8462,22 +8458,13 @@ module.exports = function ($$$config) {
             hoistableRoot = finishedWork.memoizedProps;
             current = null !== current ? current.memoizedProps : hoistableRoot;
             props = finishedWork.type;
-            var updatePayload$150 = finishedWork.updateQueue;
-            finishedWork.updateQueue = null;
             try {
-              commitUpdate(
-                root,
-                updatePayload$150,
-                props,
-                current,
-                hoistableRoot,
-                finishedWork
-              );
-            } catch (error$151) {
+              commitUpdate(root, props, current, hoistableRoot, finishedWork);
+            } catch (error$150) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$151
+                error$150
               );
             }
           }
@@ -8495,11 +8482,11 @@ module.exports = function ($$$config) {
           current = null !== current ? current.memoizedProps : root;
           try {
             commitTextUpdate(flags, current, root);
-          } catch (error$152) {
+          } catch (error$151) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$152
+              error$151
             );
           }
         }
@@ -8522,11 +8509,11 @@ module.exports = function ($$$config) {
           )
             try {
               commitHydratedContainer(root.containerInfo);
-            } catch (error$153) {
+            } catch (error$152) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$153
+                error$152
               );
             }
           if (supportsPersistence) {
@@ -8534,11 +8521,11 @@ module.exports = function ($$$config) {
             current = root.pendingChildren;
             try {
               replaceContainerChildren(flags, current);
-            } catch (error$154) {
+            } catch (error$153) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$154
+                error$153
               );
             }
           }
@@ -8563,11 +8550,11 @@ module.exports = function ($$$config) {
           current = current.pendingChildren;
           try {
             replaceContainerChildren(flags, current);
-          } catch (error$158) {
+          } catch (error$157) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$158
+              error$157
             );
           }
         }
@@ -8583,20 +8570,19 @@ module.exports = function ($$$config) {
             : root && !current && (globalMostRecentFallbackTime = now()));
         if (flags & 4) {
           try {
-            if (
-              null !== finishedWork.memoizedState &&
-              ((updatePayload$150 =
-                finishedWork.memoizedProps.suspenseCallback),
-              "function" === typeof updatePayload$150)
-            ) {
-              var retryQueue = finishedWork.updateQueue;
-              null !== retryQueue && updatePayload$150(new Set(retryQueue));
+            if (null !== finishedWork.memoizedState) {
+              var suspenseCallback =
+                finishedWork.memoizedProps.suspenseCallback;
+              if ("function" === typeof suspenseCallback) {
+                var retryQueue = finishedWork.updateQueue;
+                null !== retryQueue && suspenseCallback(new Set(retryQueue));
+              }
             }
-          } catch (error$159) {
+          } catch (error$158) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$159
+              error$158
             );
           }
           flags = finishedWork.updateQueue;
@@ -8609,13 +8595,13 @@ module.exports = function ($$$config) {
         flags & 512 &&
           null !== current &&
           safelyDetachRef(current, current.return);
-        updatePayload$150 = null !== finishedWork.memoizedState;
+        suspenseCallback = null !== finishedWork.memoizedState;
         retryQueue = null !== current && null !== current.memoizedState;
         if (finishedWork.mode & 1) {
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
             prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
           offscreenSubtreeIsHidden =
-            prevOffscreenSubtreeIsHidden || updatePayload$150;
+            prevOffscreenSubtreeIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8629,10 +8615,10 @@ module.exports = function ($$$config) {
         root._visibility |= root._pendingVisibility & 2;
         if (
           flags & 8192 &&
-          ((root._visibility = updatePayload$150
+          ((root._visibility = suspenseCallback
             ? root._visibility & -2
             : root._visibility | 1),
-          updatePayload$150 &&
+          suspenseCallback &&
             ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
             null === current ||
               retryQueue ||
@@ -8654,7 +8640,7 @@ module.exports = function ($$$config) {
                   current = root;
                   try {
                     (hoistableRoot = root.stateNode),
-                      updatePayload$150
+                      suspenseCallback
                         ? hideInstance(hoistableRoot)
                         : unhideInstance(root.stateNode, root.memoizedProps);
                   } catch (error) {
@@ -8669,7 +8655,7 @@ module.exports = function ($$$config) {
                 if (null === current)
                   try {
                     (props = root.stateNode),
-                      updatePayload$150
+                      suspenseCallback
                         ? hideTextInstance(props)
                         : unhideTextInstance(props, root.memoizedProps);
                   } catch (error$136) {
@@ -9261,9 +9247,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$165 = finishedWork.stateNode;
+          var instance$164 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$165._visibility & 4
+            ? instance$164._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9276,7 +9262,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-              : ((instance$165._visibility |= 4),
+              : ((instance$164._visibility |= 4),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9284,7 +9270,7 @@ module.exports = function ($$$config) {
                   committedTransitions,
                   includeWorkInProgressEffects
                 ))
-            : ((instance$165._visibility |= 4),
+            : ((instance$164._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9297,7 +9283,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$165
+              instance$164
             );
           break;
         case 24:
@@ -10360,8 +10346,8 @@ module.exports = function ($$$config) {
         }
         workLoopSync();
         break;
-      } catch (thrownValue$176) {
-        handleThrow(root, thrownValue$176);
+      } catch (thrownValue$175) {
+        handleThrow(root, thrownValue$175);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10468,8 +10454,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$178) {
-        handleThrow(root, thrownValue$178);
+      } catch (thrownValue$177) {
+        handleThrow(root, thrownValue$177);
       }
     while (1);
     resetContextDependencies();
@@ -10708,12 +10694,12 @@ module.exports = function ($$$config) {
       var prevExecutionContext = executionContext;
       executionContext |= 4;
       ReactSharedInternals.owner = null;
-      var shouldFireAfterActiveInstanceBlur$182 = commitBeforeMutationEffects(
+      var shouldFireAfterActiveInstanceBlur$181 = commitBeforeMutationEffects(
         root,
         finishedWork
       );
       commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$182 && afterActiveInstanceBlur();
+      shouldFireAfterActiveInstanceBlur$181 && afterActiveInstanceBlur();
       resetAfterCommit(root.containerInfo);
       root.current = finishedWork;
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
@@ -12636,7 +12622,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-6828a4f8"
+      reconcilerVersion: "19.0.0-www-classic-baab5f8d"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

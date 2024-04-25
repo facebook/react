@@ -24203,12 +24203,8 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 acquireResource(hoistableRoot, newResource, finishedWork.memoizedProps);
               }
             } else if (newResource === null && finishedWork.stateNode !== null) {
-              // We may have an update on a Hoistable element
-              var updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
-
               try {
-                commitUpdate(finishedWork.stateNode, updatePayload, finishedWork.type, current.memoizedProps, finishedWork.memoizedProps, finishedWork);
+                commitUpdate(finishedWork.stateNode, finishedWork.type, current.memoizedProps, finishedWork.memoizedProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -24276,13 +24272,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -30574,7 +30567,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-d1cd2d1b';
+var ReactVersion = '19.0.0-www-modern-53476f61';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -37499,7 +37492,7 @@ function commitMount(domElement, type, newProps, internalInstanceHandle) {
       }
   }
 }
-function commitUpdate(domElement, updatePayload, type, oldProps, newProps, internalInstanceHandle) {
+function commitUpdate(domElement, type, oldProps, newProps, internalInstanceHandle) {
   // Diff and update the properties.
   updateProperties(domElement, type, oldProps, newProps); // Update the props handle so that we know which props are the ones with
   // with current event handlers.

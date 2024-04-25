@@ -7494,7 +7494,6 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (flags & 4 && ((flags = finishedWork.stateNode), null != flags)) {
         var newProps = finishedWork.memoizedProps;
         current = null !== current ? current.memoizedProps : newProps;
-        finishedWork.updateQueue = null;
         try {
           flags._applyProps(flags, newProps, current);
         } catch (error$108) {
@@ -10101,19 +10100,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1088 = {
+  devToolsConfig$jscomp$inline_1087 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-f1a1a01e",
+    version: "19.0.0-www-modern-3903b043",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1316 = {
-  bundleType: devToolsConfig$jscomp$inline_1088.bundleType,
-  version: devToolsConfig$jscomp$inline_1088.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1088.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1088.rendererConfig,
+var internals$jscomp$inline_1315 = {
+  bundleType: devToolsConfig$jscomp$inline_1087.bundleType,
+  version: devToolsConfig$jscomp$inline_1087.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1087.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1087.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10130,26 +10129,26 @@ var internals$jscomp$inline_1316 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1088.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1087.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-f1a1a01e"
+  reconcilerVersion: "19.0.0-www-modern-3903b043"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1317 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1317.isDisabled &&
-    hook$jscomp$inline_1317.supportsFiber
+    !hook$jscomp$inline_1316.isDisabled &&
+    hook$jscomp$inline_1316.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1317.inject(
-        internals$jscomp$inline_1316
+      (rendererID = hook$jscomp$inline_1316.inject(
+        internals$jscomp$inline_1315
       )),
-        (injectedHook = hook$jscomp$inline_1317);
+        (injectedHook = hook$jscomp$inline_1316);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

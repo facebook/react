@@ -21413,12 +21413,8 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
                 acquireResource(hoistableRoot, newResource, finishedWork.memoizedProps);
               }
             } else if (newResource === null && finishedWork.stateNode !== null) {
-              // We may have an update on a Hoistable element
-              var updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
-
               try {
-                commitUpdate(finishedWork.stateNode, updatePayload, finishedWork.type, current.memoizedProps, finishedWork.memoizedProps, finishedWork);
+                commitUpdate(finishedWork.stateNode, finishedWork.type, current.memoizedProps, finishedWork.memoizedProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -21486,13 +21482,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -27921,7 +27914,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-c15ac874';
+var ReactVersion = '19.0.0-www-modern-93eabe05';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

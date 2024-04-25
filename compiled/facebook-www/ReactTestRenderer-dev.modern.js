@@ -2075,7 +2075,7 @@ function shouldAttemptEagerTransition() {
 var scheduleTimeout = setTimeout;
 var cancelTimeout = clearTimeout;
 var noTimeout = -1; // -------------------
-function commitUpdate(instance, updatePayload, type, oldProps, newProps, internalInstanceHandle) {
+function commitUpdate(instance, type, oldProps, newProps, internalInstanceHandle) {
   instance.type = type;
   instance.props = newProps;
 }
@@ -17930,13 +17930,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -23117,7 +23114,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-61f7bcb2';
+var ReactVersion = '19.0.0-www-modern-06511870';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
