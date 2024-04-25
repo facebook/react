@@ -19,13 +19,12 @@ import {
 } from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
-  disableDefaultPropsExceptForClasses,
   disableLegacyContext,
-  disableStringRefs,
   enableDebugTracing,
+  enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableRefAsProp,
-  enableSchedulingProfiler,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -820,12 +819,7 @@ function mountClassInstance(
   const instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  if (!disableStringRefs) {
-    // When string refs are used in create-react-class legacy components,
-    // we need to make refs writable unless we patch all such copies of the
-    // class code that sets to a frozen emptyObject.
-    instance.refs = {};
-  }
+  instance.refs = {};
 
   initializeUpdateQueue(workInProgress);
 
