@@ -1,4 +1,5 @@
-// @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { useState } from "react";
+
 function Component(props) {
   const [_state, setState] = useState();
   const a = () => {
@@ -7,8 +8,8 @@ function Component(props) {
   const b = () => {
     return (
       <>
-        <div onClick={() => onClick(true)} />
-        <div onClick={() => onClick(false)} />
+        <div onClick={() => onClick(true)}>a</div>
+        <div onClick={() => onClick(false)}>b</div>
       </>
     );
   };
@@ -19,7 +20,7 @@ function Component(props) {
   return <div>{a()}</div>;
 }
 
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  props: [{}],
+  params: [{}],
 };

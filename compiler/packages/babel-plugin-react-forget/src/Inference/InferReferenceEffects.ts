@@ -1640,17 +1640,6 @@ function inferBlock(
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         const valueKind = state.kind(instrValue.place);
-        CompilerError.invariant(
-          valueKind.kind === ValueKind.Mutable ||
-            valueKind.kind === ValueKind.Context,
-          {
-            reason:
-              "[InferReferenceEffects] Context variables are always mutable.",
-            description: null,
-            loc: instrValue.loc,
-            suggestions: null,
-          }
-        );
         state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
         continue;
