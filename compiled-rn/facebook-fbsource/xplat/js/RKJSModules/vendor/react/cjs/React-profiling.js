@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fca7ed5acdad0291a3b263d96d523766>>
+ * @generated SignedSource<<32d5e348978f815554e5015b9471046b>>
  */
 
 "use strict";
@@ -90,8 +90,12 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  ReactSharedInternals = { H: null, C: null, T: null, owner: null },
+  ReactSharedInternals = { H: null, A: null, T: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
+function getOwner() {
+  var dispatcher = ReactSharedInternals.A;
+  return null === dispatcher ? null : dispatcher.getOwner();
+}
 function ReactElement(type, key, _ref, self, source, owner, props) {
   return {
     $$typeof: REACT_LEGACY_ELEMENT_TYPE,
@@ -108,8 +112,7 @@ function jsxProd(type, config, maybeKey) {
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
   void 0 !== config.ref &&
-    ((ref = config.ref),
-    (ref = coerceStringRef(ref, ReactSharedInternals.owner, type)));
+    ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type)));
   maybeKey = {};
   for (var propName in config)
     "key" !== propName &&
@@ -121,15 +124,7 @@ function jsxProd(type, config, maybeKey) {
       void 0 === maybeKey[propName$0] &&
         (maybeKey[propName$0] = config[propName$0]);
   }
-  return ReactElement(
-    type,
-    key,
-    ref,
-    void 0,
-    void 0,
-    ReactSharedInternals.owner,
-    maybeKey
-  );
+  return ReactElement(type, key, ref, void 0, void 0, getOwner(), maybeKey);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
@@ -455,7 +450,7 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((owner = ReactSharedInternals.owner),
+      ((owner = getOwner()),
       (ref = config.ref),
       (ref = coerceStringRef(ref, owner, element.type)));
     void 0 !== config.key && (key = "" + config.key);
@@ -516,8 +511,7 @@ exports.createElement = function (type, config, children) {
     ref = null;
   if (null != config)
     for (propName in (void 0 !== config.ref &&
-      ((ref = config.ref),
-      (ref = coerceStringRef(ref, ReactSharedInternals.owner, type))),
+      ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
@@ -537,15 +531,7 @@ exports.createElement = function (type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return ReactElement(
-    type,
-    key,
-    ref,
-    void 0,
-    void 0,
-    ReactSharedInternals.owner,
-    props
-  );
+  return ReactElement(type, key, ref, void 0, void 0, getOwner(), props);
 };
 exports.createRef = function () {
   return { current: null };
@@ -608,7 +594,7 @@ exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_getCacheForType = function (resourceType) {
-  var dispatcher = ReactSharedInternals.C;
+  var dispatcher = ReactSharedInternals.A;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
 };
 exports.unstable_useCacheRefresh = function () {
@@ -683,7 +669,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-beta-966142ac";
+exports.version = "19.0.0-beta-0c71ce9a";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

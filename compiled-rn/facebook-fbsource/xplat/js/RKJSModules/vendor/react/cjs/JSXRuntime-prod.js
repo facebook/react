@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<62661c1c6567dce2b9c9ba9b3170fc16>>
+ * @generated SignedSource<<33a22d7e025b0504577f8d6f9a29d73e>>
  */
 
 "use strict";
@@ -34,6 +34,10 @@ function formatProdErrorMessage(code) {
 }
 var ReactSharedInternals =
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+function getOwner() {
+  var dispatcher = ReactSharedInternals.A;
+  return null === dispatcher ? null : dispatcher.getOwner();
+}
 function jsxProd(type, config, maybeKey) {
   var key = null,
     ref = null;
@@ -41,7 +45,7 @@ function jsxProd(type, config, maybeKey) {
   void 0 !== config.key && (key = "" + config.key);
   if (void 0 !== config.ref)
     a: {
-      (ref = config.ref), (maybeKey = ReactSharedInternals.owner);
+      (ref = config.ref), (maybeKey = getOwner());
       if ("string" !== typeof ref)
         if ("number" === typeof ref || "boolean" === typeof ref) ref = "" + ref;
         else break a;
@@ -62,13 +66,14 @@ function jsxProd(type, config, maybeKey) {
       void 0 === maybeKey[propName$0] &&
         (maybeKey[propName$0] = config[propName$0]);
   }
+  propName$0 = getOwner();
   return {
     $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
     ref: ref,
     props: maybeKey,
-    _owner: ReactSharedInternals.owner
+    _owner: propName$0
   };
 }
 function stringRefAsCallbackRef(stringRef, type, owner, value) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ee4321bdef77b565a51cfdfedf47ac9b>>
+ * @generated SignedSource<<d0205c5405c0a28da5aef95cacca169a>>
  */
 
 'use strict';
@@ -2768,6 +2768,11 @@ var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that 
 
 var StaticMask = LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
 
+var currentOwner = null;
+function setCurrentOwner(fiber) {
+  currentOwner = fiber;
+}
+
 function getNearestMountedFiber(fiber) {
   var node = fiber;
   var nearestMounted = fiber;
@@ -2811,7 +2816,7 @@ function isFiberMounted(fiber) {
 }
 function isMounted(component) {
   {
-    var owner = ReactSharedInternals.owner;
+    var owner = currentOwner;
 
     if (owner !== null && owner.tag === ClassComponent) {
       var ownerFiber = owner;
@@ -15185,7 +15190,7 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   }
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, render, propsWithoutRef, ref, renderLanes);
     setIsRendering(false);
@@ -15668,7 +15673,7 @@ function updateFunctionComponent(current, workInProgress, Component, nextProps, 
   }
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, Component, nextProps, context, renderLanes);
     setIsRendering(false);
@@ -15820,7 +15825,7 @@ function finishClassComponent(current, workInProgress, Component, shouldUpdate, 
   var instance = workInProgress.stateNode; // Rerender
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
   }
 
   var nextChildren;
@@ -17154,7 +17159,7 @@ function updateContextConsumer(current, workInProgress, renderLanes) {
   var newChildren;
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     newChildren = render(newValue);
     setIsRendering(false);
@@ -22495,9 +22500,15 @@ function getCacheForType(resourceType) {
   return cacheForType;
 }
 
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
   getCacheForType: getCacheForType
 };
+
+{
+  DefaultAsyncDispatcher.getOwner = function () {
+    return currentOwner;
+  };
+}
 
 if (typeof Symbol === 'function' && Symbol.for) {
   var symbolFor = Symbol.for;
@@ -23450,7 +23461,7 @@ function handleThrow(root, thrownValue) {
   resetCurrentFiber();
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 
   if (thrownValue === SuspenseException) {
@@ -23606,17 +23617,17 @@ function popDispatcher(prevDispatcher) {
   ReactSharedInternals.H = prevDispatcher;
 }
 
-function pushCacheDispatcher() {
+function pushAsyncDispatcher() {
   {
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
-    return prevCacheDispatcher;
+    var prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
+    return prevAsyncDispatcher;
   }
 }
 
-function popCacheDispatcher(prevCacheDispatcher) {
+function popAsyncDispatcher(prevAsyncDispatcher) {
   {
-    ReactSharedInternals.C = prevCacheDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
 
@@ -23674,7 +23685,7 @@ function renderRootSync(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   var prevDispatcher = pushDispatcher();
-  var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
+  var prevAsyncDispatcher = pushAsyncDispatcher(); // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
 
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
@@ -23770,7 +23781,7 @@ function renderRootSync(root, lanes) {
   resetContextDependencies();
   executionContext = prevExecutionContext;
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
 
   if (workInProgress !== null) {
     // This is a sync render, so we should have finished the whole tree.
@@ -23803,7 +23814,7 @@ function renderRootConcurrent(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   var prevDispatcher = pushDispatcher();
-  var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
+  var prevAsyncDispatcher = pushAsyncDispatcher(); // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
 
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
@@ -24032,7 +24043,7 @@ function renderRootConcurrent(root, lanes) {
 
   resetContextDependencies();
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
   executionContext = prevExecutionContext;
 
 
@@ -24096,7 +24107,7 @@ function performUnitOfWork(unitOfWork) {
   }
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -24196,7 +24207,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   }
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -24526,7 +24537,7 @@ function commitRootImpl(root, recoverableErrors, transitions, didIncludeRenderPh
     executionContext |= CommitContext; // Reset this to null before calling lifecycles
 
     {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     } // The commit phase is broken into several sub-phases. We do a separate pass
     // of the effect list for each phase: all mutation effects come before all
     // layout effects, and so on.
@@ -26476,7 +26487,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-a5fea518';
+var ReactVersion = '19.0.0-beta-0126d00e';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -27026,7 +27037,7 @@ function injectIntoDevTools(devToolsConfig) {
 
 function findHostInstance_DEPRECATED(componentOrHandle) {
   {
-    var owner = ReactSharedInternals.owner;
+    var owner = currentOwner;
 
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
@@ -27067,7 +27078,7 @@ function findHostInstance_DEPRECATED(componentOrHandle) {
 }
 function findNodeHandle(componentOrHandle) {
   {
-    var owner = ReactSharedInternals.owner;
+    var owner = currentOwner;
 
     if (owner !== null && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {

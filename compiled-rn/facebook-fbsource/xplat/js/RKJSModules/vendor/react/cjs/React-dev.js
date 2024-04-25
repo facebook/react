@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5657642071f954739542e489d20fe745>>
+ * @generated SignedSource<<a487e3f84fa0dfc3fc634dfba8721564>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-bbf3fbcd';
+var ReactVersion = '19.0.0-beta-77a60a06';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -88,13 +88,9 @@ function getIteratorFn(maybeIterable) {
 
 var ReactSharedInternals = {
   H: null,
-  C: null,
+  A: null,
   T: null
 };
-
-{
-  ReactSharedInternals.owner = null;
-}
 
 {
   ReactSharedInternals.actQueue = null;
@@ -1217,6 +1213,19 @@ function getComponentNameFromFiber(fiber) {
 }
 
 var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+
+function getOwner() {
+  {
+    var dispatcher = ReactSharedInternals.A;
+
+    if (dispatcher === null) {
+      return null;
+    }
+
+    return dispatcher.getOwner();
+  }
+}
+
 var specialPropKeyWarningShown;
 var specialPropRefWarningShown;
 var didWarnAboutStringRefs;
@@ -1256,11 +1265,13 @@ function hasValidKey(config) {
 
 function warnIfStringRefCannotBeAutoConverted(config, self) {
   {
-    if (typeof config.ref === 'string' && ReactSharedInternals.owner && self && ReactSharedInternals.owner.stateNode !== self) {
-      var componentName = getComponentNameFromType(ReactSharedInternals.owner.type);
+    var owner;
+
+    if (typeof config.ref === 'string' && (owner = getOwner()) && self && owner.stateNode !== self) {
+      var componentName = getComponentNameFromType(owner.type);
 
       if (!didWarnAboutStringRefs[componentName]) {
-        error('Component "%s" contains the string ref "%s". ' + 'Support for string refs will be removed in a future major release. ' + 'This case cannot be automatically converted to an arrow function. ' + 'We ask you to manually fix this case by using useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-string-ref', getComponentNameFromType(ReactSharedInternals.owner.type), config.ref);
+        error('Component "%s" contains the string ref "%s". ' + 'Support for string refs will be removed in a future major release. ' + 'This case cannot be automatically converted to an arrow function. ' + 'We ask you to manually fix this case by using useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-string-ref', getComponentNameFromType(owner.type), config.ref);
 
         didWarnAboutStringRefs[componentName] = true;
       }
@@ -1517,7 +1528,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
         ref = config.ref;
 
         {
-          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
+          ref = coerceStringRef(ref, getOwner(), type);
         }
       }
 
@@ -1569,7 +1580,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    var element = ReactElement(type, key, ref, self, source, ReactSharedInternals.owner, props);
+    var element = ReactElement(type, key, ref, self, source, getOwner(), props);
 
     if (type === REACT_FRAGMENT_TYPE) {
       validateFragmentProps(element);
@@ -1649,7 +1660,7 @@ function createElement(type, config, children) {
         ref = config.ref;
 
         {
-          ref = coerceStringRef(ref, ReactSharedInternals.owner, type);
+          ref = coerceStringRef(ref, getOwner(), type);
         }
       }
 
@@ -1728,7 +1739,7 @@ function createElement(type, config, children) {
     }
   }
 
-  var element = ReactElement(type, key, ref, undefined, undefined, ReactSharedInternals.owner, props);
+  var element = ReactElement(type, key, ref, undefined, undefined, getOwner(), props);
 
   if (type === REACT_FRAGMENT_TYPE) {
     validateFragmentProps(element);
@@ -1762,7 +1773,7 @@ function cloneElement(element, config, children) {
 
   if (config != null) {
     if (hasValidRef(config)) {
-      owner = ReactSharedInternals.owner;
+      owner = getOwner() ;
 
       {
         // Silently steal the ref from the parent.
@@ -1840,8 +1851,10 @@ function cloneElement(element, config, children) {
 
 function getDeclarationErrorAddendum() {
   {
-    if (ReactSharedInternals.owner) {
-      var name = getComponentNameFromType(ReactSharedInternals.owner.type);
+    var owner = getOwner();
+
+    if (owner) {
+      var name = getComponentNameFromType(owner.type);
 
       if (name) {
         return '\n\nCheck the render method of `' + name + '`.';
@@ -1948,7 +1961,7 @@ function validateExplicitKey(element, parentType) {
 
     var childOwner = '';
 
-    if (element && element._owner != null && element._owner !== ReactSharedInternals.owner) {
+    if (element && element._owner != null && element._owner !== getOwner()) {
       var ownerName = null;
 
       if (typeof element._owner.tag === 'number') {
@@ -2780,7 +2793,7 @@ function resolveDispatcher() {
 }
 
 function getCacheForType(resourceType) {
-  var dispatcher = ReactSharedInternals.C;
+  var dispatcher = ReactSharedInternals.A;
 
   if (!dispatcher) {
     // If there is no dispatcher, then we treat this as not being cached.
