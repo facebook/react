@@ -3041,14 +3041,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -10107,7 +10106,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-fad207b4",
+    version: "19.0.0-www-modern-f1a1a01e",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1316 = {
@@ -10138,7 +10137,7 @@ var internals$jscomp$inline_1316 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-fad207b4"
+  reconcilerVersion: "19.0.0-www-modern-f1a1a01e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1317 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

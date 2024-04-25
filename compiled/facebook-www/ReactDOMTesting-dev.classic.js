@@ -13317,9 +13317,14 @@ function imperativeHandleEffect(create, ref) {
   if (typeof ref === 'function') {
     var refCallback = ref;
     var inst = create();
-    refCallback(inst);
+    var refCleanup = refCallback(inst);
     return function () {
-      refCallback(null);
+      if (typeof refCleanup === 'function') {
+        // $FlowFixMe[incompatible-use] we need to assume no parameters
+        refCleanup();
+      } else {
+        refCallback(null);
+      }
     };
   } else if (ref !== null && ref !== undefined) {
     var refObject = ref;
@@ -31401,7 +31406,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-b847fa95';
+var ReactVersion = '19.0.0-www-classic-a7b75c74';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {

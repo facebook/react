@@ -63,7 +63,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-3ebdca5b';
+var ReactVersion = '19.0.0-www-modern-a482793f';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -9288,9 +9288,14 @@ function imperativeHandleEffect(create, ref) {
   if (typeof ref === 'function') {
     var refCallback = ref;
     var inst = create();
-    refCallback(inst);
+    var refCleanup = refCallback(inst);
     return function () {
-      refCallback(null);
+      if (typeof refCleanup === 'function') {
+        // $FlowFixMe[incompatible-use] we need to assume no parameters
+        refCleanup();
+      } else {
+        refCallback(null);
+      }
     };
   } else if (ref !== null && ref !== undefined) {
     var refObject = ref;

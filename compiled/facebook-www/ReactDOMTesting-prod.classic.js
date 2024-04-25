@@ -4095,14 +4095,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -17331,7 +17330,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1754 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-dbc68783",
+  version: "19.0.0-www-classic-9442cd50",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2203 = {
@@ -17361,7 +17360,7 @@ var internals$jscomp$inline_2203 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-dbc68783"
+  reconcilerVersion: "19.0.0-www-classic-9442cd50"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2204 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18016,4 +18015,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-dbc68783";
+exports.version = "19.0.0-www-classic-9442cd50";

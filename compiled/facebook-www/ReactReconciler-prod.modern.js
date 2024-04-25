@@ -3002,14 +3002,13 @@ module.exports = function ($$$config) {
     return updateEffectImpl(4, 4, create, deps);
   }
   function imperativeHandleEffect(create, ref) {
-    if ("function" === typeof ref)
-      return (
-        (create = create()),
-        ref(create),
-        function () {
-          ref(null);
-        }
-      );
+    if ("function" === typeof ref) {
+      create = create();
+      var refCleanup = ref(create);
+      return function () {
+        "function" === typeof refCleanup ? refCleanup() : ref(null);
+      };
+    }
     if (null !== ref && void 0 !== ref)
       return (
         (create = create()),
@@ -12154,7 +12153,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-dca36832"
+      reconcilerVersion: "19.0.0-www-modern-0fe86052"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
