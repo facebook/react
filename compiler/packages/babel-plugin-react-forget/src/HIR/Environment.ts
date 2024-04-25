@@ -207,7 +207,7 @@ const EnvironmentConfigSchema = z.object({
    * in this allowlist. You can enable this validation with no additional allowlisted calls by setting
    * this option to the empty array.
    */
-  validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default([]),
+  validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
