@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb882aa4fe69a9a336a3204fe1875ad1>>
+ * @generated SignedSource<<ee4321bdef77b565a51cfdfedf47ac9b>>
  */
 
 'use strict';
@@ -5168,7 +5168,7 @@ function commitTextUpdate(textInstance, oldText, newText) {
 }
 function commitMount(instance, type, newProps, internalInstanceHandle) {// Noop
 }
-function commitUpdate(instance, updatePayloadTODO, type, oldProps, newProps, internalInstanceHandle) {
+function commitUpdate(instance, type, oldProps, newProps, internalInstanceHandle) {
   var viewConfig = instance.viewConfig;
   updateFiberProps(instance._nativeTag, newProps);
   var updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // Avoid the overhead of bridge calls if there's no update.
@@ -21088,13 +21088,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -26479,7 +26476,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-be3bb958';
+var ReactVersion = '19.0.0-canary-a5fea518';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8912877d0e4069bef75f6199a4eb9f6d>>
+ * @generated SignedSource<<6224a7e892eb62fd99b5ad51269d20b3>>
  */
 
 "use strict";
@@ -8344,7 +8344,6 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (flags & 4 && ((flags = finishedWork.stateNode), null != flags)) {
         var newProps = finishedWork.memoizedProps;
         current = null !== current ? current.memoizedProps : newProps;
-        finishedWork.updateQueue = null;
         try {
           var viewConfig = flags.viewConfig;
           instanceProps.set(flags._nativeTag, newProps);
@@ -10828,10 +10827,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1177 = {
+  devToolsConfig$jscomp$inline_1176 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-b761b2f6",
+    version: "19.0.0-canary-7e594775",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10847,11 +10846,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1461 = {
-  bundleType: devToolsConfig$jscomp$inline_1177.bundleType,
-  version: devToolsConfig$jscomp$inline_1177.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1177.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1177.rendererConfig,
+var internals$jscomp$inline_1460 = {
+  bundleType: devToolsConfig$jscomp$inline_1176.bundleType,
+  version: devToolsConfig$jscomp$inline_1176.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1176.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1176.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10867,26 +10866,26 @@ var internals$jscomp$inline_1461 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1177.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1176.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-b761b2f6"
+  reconcilerVersion: "19.0.0-canary-7e594775"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1462 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1461 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1462.isDisabled &&
-    hook$jscomp$inline_1462.supportsFiber
+    !hook$jscomp$inline_1461.isDisabled &&
+    hook$jscomp$inline_1461.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1462.inject(
-        internals$jscomp$inline_1461
+      (rendererID = hook$jscomp$inline_1461.inject(
+        internals$jscomp$inline_1460
       )),
-        (injectedHook = hook$jscomp$inline_1462);
+        (injectedHook = hook$jscomp$inline_1461);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

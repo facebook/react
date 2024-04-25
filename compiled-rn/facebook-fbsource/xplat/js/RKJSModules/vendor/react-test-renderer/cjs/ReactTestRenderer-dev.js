@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb318884da183acc9563b8991ac1663b>>
+ * @generated SignedSource<<c3ec935f7569a8a6d52e0966b2837ffe>>
  */
 
 'use strict';
@@ -2323,7 +2323,7 @@ function shouldAttemptEagerTransition() {
 var scheduleTimeout = setTimeout;
 var cancelTimeout = clearTimeout;
 var noTimeout = -1; // -------------------
-function commitUpdate(instance, updatePayload, type, oldProps, newProps, internalInstanceHandle) {
+function commitUpdate(instance, type, oldProps, newProps, internalInstanceHandle) {
   instance.type = type;
   instance.props = newProps;
 }
@@ -17760,13 +17760,10 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
               // this case.
 
               var oldProps = current !== null ? current.memoizedProps : newProps;
-              var type = finishedWork.type; // TODO: Type the updateQueue to be specific to host components.
-
-              var _updatePayload = finishedWork.updateQueue;
-              finishedWork.updateQueue = null;
+              var type = finishedWork.type;
 
               try {
-                commitUpdate(_instance2, _updatePayload, type, oldProps, newProps, finishedWork);
+                commitUpdate(_instance2, type, oldProps, newProps, finishedWork);
               } catch (error) {
                 captureCommitPhaseError(finishedWork, finishedWork.return, error);
               }
@@ -22981,7 +22978,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-03549b3a';
+var ReactVersion = '19.0.0-canary-6e32de0b';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
