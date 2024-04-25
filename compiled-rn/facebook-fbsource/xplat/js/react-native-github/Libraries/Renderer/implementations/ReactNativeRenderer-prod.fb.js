@@ -10830,7 +10830,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1176 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-7e594775",
+    version: "19.0.0-beta-7e594775",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10873,7 +10873,7 @@ var internals$jscomp$inline_1460 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-7e594775"
+  reconcilerVersion: "19.0.0-beta-7e594775"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1461 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

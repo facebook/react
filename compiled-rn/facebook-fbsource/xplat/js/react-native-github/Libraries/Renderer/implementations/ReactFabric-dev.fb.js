@@ -26064,7 +26064,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-86571a2a';
+var ReactVersion = '19.0.0-beta-86571a2a';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
