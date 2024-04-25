@@ -639,7 +639,7 @@ workflows:
           # because this used to be called the "next" channel and some
           # downstream consumers might still expect that tag. We can remove this
           # after some time has elapsed and the change has been communicated.
-          dist_tag: "canary,next"
+          dist_tag: "canary,next,beta"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -668,7 +668,7 @@ workflows:
           name: Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "canary,next"
+          dist_tag: "canary,next,beta"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
