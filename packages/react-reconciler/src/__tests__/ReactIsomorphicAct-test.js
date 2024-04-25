@@ -20,7 +20,7 @@ describe('isomorphic act()', () => {
     ReactNoop = require('react-noop-renderer');
     DiscreteEventPriority = require('react-reconciler/constants')
       .DiscreteEventPriority;
-    act = React.unstable_act;
+    act = gate(flags => flags.variant) ? React.act : React.unstable_act;
   });
 
   beforeEach(() => {
