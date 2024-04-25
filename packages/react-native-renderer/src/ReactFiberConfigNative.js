@@ -348,7 +348,6 @@ export function commitMount(
 
 export function commitUpdate(
   instance: Instance,
-  updatePayloadTODO: Object,
   type: string,
   oldProps: Props,
   newProps: Props,

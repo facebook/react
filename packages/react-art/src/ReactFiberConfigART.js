@@ -415,13 +415,7 @@ export function commitMount(instance, type, newProps) {
   // Noop
 }
 
-export function commitUpdate(
-  instance,
-  updatePayload,
-  type,
-  oldProps,
-  newProps,
-) {
+export function commitUpdate(instance, type, oldProps, newProps) {
   instance._applyProps(instance, newProps, oldProps);
 }
 
