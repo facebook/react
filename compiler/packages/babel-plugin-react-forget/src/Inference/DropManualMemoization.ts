@@ -301,7 +301,7 @@ function extractManualMemoizationArgs(
     );
     if (maybeDepsList == null) {
       CompilerError.throwInvalidReact({
-        reason: `Expected the dependency list to be an array literal without rest spreads`,
+        reason: `Expected the dependency list for ${kind} to be an array literal`,
         suggestions: null,
         loc: depsListPlace.loc,
       });
