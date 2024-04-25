@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eb0c79f9647d9ccb19601e79d168e28a>>
+ * @generated SignedSource<<429d382e81c12cadfefde85a5059684a>>
  */
 
 'use strict';
@@ -11764,9 +11764,14 @@ function imperativeHandleEffect(create, ref) {
   if (typeof ref === 'function') {
     var refCallback = ref;
     var inst = create();
-    refCallback(inst);
+    var refCleanup = refCallback(inst);
     return function () {
-      refCallback(null);
+      if (typeof refCleanup === 'function') {
+        // $FlowFixMe[incompatible-use] we need to assume no parameters
+        refCleanup();
+      } else {
+        refCallback(null);
+      }
     };
   } else if (ref !== null && ref !== undefined) {
     var refObject = ref;
@@ -26481,7 +26486,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-canary-f458e15c';
+var ReactVersion = '19.0.0-canary-6d8999b7';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

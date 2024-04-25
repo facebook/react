@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d38368a6891386f36d782c6374663f3b>>
+ * @generated SignedSource<<7f692e85122cfe7dc3f7349af67afd3f>>
  */
 
 "use strict";
@@ -4559,14 +4559,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -11538,7 +11537,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1257 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-canary-e234a1a7",
+    version: "19.0.0-canary-c42c3217",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11594,7 +11593,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-e234a1a7"
+  reconcilerVersion: "19.0.0-canary-c42c3217"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

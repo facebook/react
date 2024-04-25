@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d3b7614abf5c86177b115750e157b71a>>
+ * @generated SignedSource<<06016018fb347358b18b57d695069089>>
  */
 
 "use strict";
@@ -4384,14 +4384,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -10610,7 +10609,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1108 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-44e696d7",
+    version: "19.0.0-canary-b5226534",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10653,7 +10652,7 @@ var internals$jscomp$inline_1375 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-44e696d7"
+  reconcilerVersion: "19.0.0-canary-b5226534"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1376 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

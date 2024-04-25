@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e5a82a39e932ccf268d8c43e0fd08541>>
+ * @generated SignedSource<<0348b9e6ebecc00eaa767ca2f98fb9d8>>
  */
 
 "use strict";
@@ -4506,14 +4506,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -11315,7 +11314,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1188 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-canary-1d21c404",
+    version: "19.0.0-canary-7c054062",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11371,7 +11370,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-1d21c404"
+  reconcilerVersion: "19.0.0-canary-7c054062"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c6fc72b49d174b33d4572246c49e569a>>
+ * @generated SignedSource<<bbd5884892e3e7b30fece4b277837a1e>>
  */
 
 "use strict";
@@ -2824,14 +2824,13 @@ function updateLayoutEffect(create, deps) {
   return updateEffectImpl(4, 4, create, deps);
 }
 function imperativeHandleEffect(create, ref) {
-  if ("function" === typeof ref)
-    return (
-      (create = create()),
-      ref(create),
-      function () {
-        ref(null);
-      }
-    );
+  if ("function" === typeof ref) {
+    create = create();
+    var refCleanup = ref(create);
+    return function () {
+      "function" === typeof refCleanup ? refCleanup() : ref(null);
+    };
+  }
   if (null !== ref && void 0 !== ref)
     return (
       (create = create()),
@@ -9152,7 +9151,7 @@ var devToolsConfig$jscomp$inline_1028 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-canary-e1a9c38c",
+  version: "19.0.0-canary-23c765d3",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1247 = {
@@ -9183,7 +9182,7 @@ var internals$jscomp$inline_1247 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-canary-e1a9c38c"
+  reconcilerVersion: "19.0.0-canary-23c765d3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1248 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
