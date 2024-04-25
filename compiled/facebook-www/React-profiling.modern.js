@@ -55,11 +55,12 @@ var ReactNoopUpdateQueue = {
     enqueueReplaceState: function () {},
     enqueueSetState: function () {}
   },
-  assign = Object.assign;
+  assign = Object.assign,
+  emptyObject = {};
 function Component(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = {};
+  this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
 Component.prototype.isReactComponent = {};
@@ -82,7 +83,7 @@ ComponentDummy.prototype = Component.prototype;
 function PureComponent(props, context, updater) {
   this.props = props;
   this.context = context;
-  this.refs = {};
+  this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
 var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
@@ -698,7 +699,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-6fc95490";
+exports.version = "19.0.0-www-modern-d5860266";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

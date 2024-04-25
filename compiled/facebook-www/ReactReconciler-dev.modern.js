@@ -12540,14 +12540,7 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   var instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-
-  {
-    // When string refs are used in create-react-class legacy components,
-    // we need to make refs writable unless we patch all such copies of the
-    // class code that sets to a frozen emptyObject.
-    instance.refs = {};
-  }
-
+  instance.refs = {};
   initializeUpdateQueue(workInProgress);
   var contextType = ctor.contextType;
 
@@ -27928,7 +27921,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-15a2a984';
+var ReactVersion = '19.0.0-www-modern-c15ac874';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
