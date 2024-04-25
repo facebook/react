@@ -241,16 +241,6 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
   const joinedScopes: DisjointSet<ReactiveScope> =
     mergeOverlappingScopes(rootNode);
 
-  joinedScopes.forEach((scope, groupScope) => {
-    if (scope !== groupScope) {
-      groupScope.range.start = makeInstructionId(
-        Math.min(groupScope.range.start, scope.range.start)
-      );
-      groupScope.range.end = makeInstructionId(
-        Math.max(groupScope.range.end, scope.range.end)
-      );
-    }
-  });
   /**
    * Join scopes that begin and end at the same instructions
    */
@@ -269,6 +259,18 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       }
     }
   }
+
+  joinedScopes.forEach((scope, groupScope) => {
+    if (scope !== groupScope) {
+      groupScope.range.start = makeInstructionId(
+        Math.min(groupScope.range.start, scope.range.start)
+      );
+      groupScope.range.end = makeInstructionId(
+        Math.max(groupScope.range.end, scope.range.end)
+      );
+    }
+  });
+
   for (const [place, originalScope] of placeScopes) {
     const nextScope = joinedScopes.find(originalScope);
     if (nextScope !== null && nextScope !== originalScope) {
