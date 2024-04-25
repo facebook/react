@@ -531,7 +531,11 @@ class InferenceState {
                 ? new Set([place])
                 : valueKind.context,
           };
-        } else if (valueKind.kind !== ValueKind.Mutable) {
+        } else if (
+          valueKind.kind !== ValueKind.Mutable &&
+          // We ignore mutations of primitives since this is not a React-specific problem
+          valueKind.kind !== ValueKind.Primitive
+        ) {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
@@ -566,7 +570,11 @@ class InferenceState {
                 ? new Set([place])
                 : valueKind.context,
           };
-        } else if (valueKind.kind !== ValueKind.Mutable) {
+        } else if (
+          valueKind.kind !== ValueKind.Mutable &&
+          // We ignore mutations of primitives since this is not a React-specific problem
+          valueKind.kind !== ValueKind.Primitive
+        ) {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
@@ -601,7 +609,8 @@ class InferenceState {
       }
       case Effect.Capture: {
         if (
-          valueKind.kind === ValueKind.Immutable ||
+          valueKind.kind === ValueKind.Primitive ||
+          valueKind.kind === ValueKind.Global ||
           valueKind.kind === ValueKind.Frozen ||
           valueKind.kind === ValueKind.MaybeFrozen
         ) {
@@ -876,9 +885,20 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
       // context | immutable
       return ValueKind.Context;
     }
-  } else {
-    // frozen | immutable
+  } else if (a === ValueKind.Frozen || b === ValueKind.Frozen) {
     return ValueKind.Frozen;
+  } else if (a === ValueKind.Global || b === ValueKind.Global) {
+    return ValueKind.Global;
+  } else {
+    CompilerError.invariant(
+      a === ValueKind.Primitive && b == ValueKind.Primitive,
+      {
+        reason: `Unexpected value kind in mergeValues()`,
+        description: `Found kinds ${a} and ${b}`,
+        loc: GeneratedSource,
+      }
+    );
+    return ValueKind.Primitive;
   }
 }
 
@@ -940,7 +960,7 @@ function inferBlock(
     switch (instrValue.kind) {
       case "BinaryExpression": {
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -1066,7 +1086,7 @@ function inferBlock(
       }
       case "UnaryExpression": {
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -1121,7 +1141,7 @@ function inferBlock(
          * an immutable string
          */
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -1143,7 +1163,7 @@ function inferBlock(
       }
       case "LoadGlobal":
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Global,
           reason: new Set([ValueReason.Global]),
           context: new Set(),
         };
@@ -1152,7 +1172,7 @@ function inferBlock(
       case "JSXText":
       case "Primitive": {
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -1454,7 +1474,7 @@ function inferBlock(
       case "PropertyDelete": {
         // `delete` returns a boolean (immutable) and modifies the object
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -1517,7 +1537,7 @@ function inferBlock(
           functionEffects
         );
         state.initialize(instrValue, {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         });
@@ -1605,7 +1625,7 @@ function inferBlock(
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         state.initialize(instrValue, {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         });
@@ -1656,7 +1676,7 @@ function inferBlock(
                 context: new Set(),
               }
             : {
-                kind: ValueKind.Immutable,
+                kind: ValueKind.Primitive,
                 reason: new Set([ValueReason.Other]),
                 context: new Set(),
               }
@@ -1878,7 +1898,7 @@ function inferBlock(
         effect = { kind: Effect.Read, reason: ValueReason.Other };
         lvalueEffect = Effect.Store;
         valueKind = {
-          kind: ValueKind.Immutable,
+          kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
@@ -2009,7 +2029,8 @@ function areArgumentsImmutableAndNonMutating(
     const place = arg.kind === "Identifier" ? arg : arg.place;
     const kind = state.kind(place).kind;
     switch (kind) {
-      case ValueKind.Immutable:
+      case ValueKind.Global:
+      case ValueKind.Primitive:
       case ValueKind.Frozen: {
         /*
          * Only immutable values, or frozen lambdas are allowed.

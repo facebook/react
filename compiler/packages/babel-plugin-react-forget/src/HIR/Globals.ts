@@ -89,7 +89,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: null,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       /*
@@ -130,7 +130,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
     ]),
@@ -147,7 +147,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
@@ -157,7 +157,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
@@ -167,7 +167,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
@@ -177,7 +177,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
@@ -187,7 +187,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
@@ -197,7 +197,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
-          returnValueKind: ValueKind.Immutable,
+          returnValueKind: ValueKind.Primitive,
         }),
       ],
     ]),
@@ -209,7 +209,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
@@ -219,7 +219,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
@@ -229,7 +229,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   // TODO: rest of Global objects

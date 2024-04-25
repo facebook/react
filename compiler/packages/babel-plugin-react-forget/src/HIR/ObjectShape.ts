@@ -235,7 +235,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       restParam: Effect.Capture,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Store,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
@@ -284,7 +284,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
        * the array object itself is not modified
        */
       calleeEffect: Effect.ConditionallyMutate,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
     }),
@@ -301,7 +301,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
        * the array object itself is not modified
        */
       calleeEffect: Effect.ConditionallyMutate,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
     }),
@@ -330,7 +330,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
        * the array object itself is not modified
        */
       calleeEffect: Effect.ConditionallyMutate,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
       noAlias: true,
       mutableOnlyIfOperandsAreMutable: true,
     }),
@@ -342,7 +342,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       restParam: Effect.ConditionallyMutate,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   // TODO: rest of Array properties
@@ -357,7 +357,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
       restParam: null,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   /*
@@ -378,7 +378,7 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
         restParam: Effect.Freeze,
         returnType: PRIMITIVE_TYPE,
         calleeEffect: Effect.Read,
-        returnValueKind: ValueKind.Immutable,
+        returnValueKind: ValueKind.Primitive,
       },
       BuiltInSetStateId
     ),
@@ -401,7 +401,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
       restParam: Effect.Read,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
-      returnValueKind: ValueKind.Immutable,
+      returnValueKind: ValueKind.Primitive,
     }),
   ],
   [

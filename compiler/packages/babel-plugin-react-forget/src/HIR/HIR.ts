@@ -1244,7 +1244,8 @@ export enum ValueReason {
 export enum ValueKind {
   MaybeFrozen = "maybefrozen",
   Frozen = "frozen",
-  Immutable = "immutable",
+  Primitive = "primitive",
+  Global = "global",
   Mutable = "mutable",
   Context = "context",
 }
