@@ -203,7 +203,8 @@ import {
   resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
-import {DefaultCacheDispatcher} from './ReactFiberCache';
+import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
+import {setCurrentOwner} from './ReactFiberCurrentOwner';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
@@ -1684,7 +1685,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   resetHooksAfterThrow();
   resetCurrentDebugFiberInDEV();
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 
   if (thrownValue === SuspenseException) {
@@ -1874,19 +1875,19 @@ function popDispatcher(prevDispatcher: any) {
   ReactSharedInternals.H = prevDispatcher;
 }
 
-function pushCacheDispatcher() {
-  if (enableCache) {
-    const prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
-    return prevCacheDispatcher;
+function pushAsyncDispatcher() {
+  if (enableCache || __DEV__ || !disableStringRefs) {
+    const prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
+    return prevAsyncDispatcher;
   } else {
     return null;
   }
 }
 
-function popCacheDispatcher(prevCacheDispatcher: any) {
-  if (enableCache) {
-    ReactSharedInternals.C = prevCacheDispatcher;
+function popAsyncDispatcher(prevAsyncDispatcher: any) {
+  if (enableCache || __DEV__ || !disableStringRefs) {
+    ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
 
@@ -1963,7 +1964,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);
-  const prevCacheDispatcher = pushCacheDispatcher();
+  const prevAsyncDispatcher = pushAsyncDispatcher();
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -2061,7 +2062,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   executionContext = prevExecutionContext;
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
 
   if (workInProgress !== null) {
     // This is a sync render, so we should have finished the whole tree.
@@ -2104,7 +2105,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);
-  const prevCacheDispatcher = pushCacheDispatcher();
+  const prevAsyncDispatcher = pushAsyncDispatcher();
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -2317,7 +2318,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   resetContextDependencies();
 
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
   executionContext = prevExecutionContext;
 
   if (__DEV__) {
@@ -2386,7 +2387,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   }
 
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -2501,7 +2502,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   }
 
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -2894,7 +2895,7 @@ function commitRootImpl(
 
     // Reset this to null before calling lifecycles
     if (__DEV__ || !disableStringRefs) {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     }
 
     // The commit phase is broken into several sub-phases. We do a separate pass

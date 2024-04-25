@@ -111,7 +111,7 @@ import {
   getActionStateCount,
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
-import {DefaultCacheDispatcher} from './ReactFizzCache';
+import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
@@ -148,6 +148,7 @@ import {
   enableRefAsProp,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
+  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -3791,10 +3792,10 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
-  let prevCacheDispatcher = null;
-  if (enableCache) {
-    prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+  let prevAsyncDispatcher = null;
+  if (enableCache || __DEV__ || !disableStringRefs) {
+    prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
 
   const prevRequest = currentRequest;
@@ -3826,7 +3827,7 @@ export function performWork(request: Request): void {
     setCurrentResumableState(prevResumableState);
     ReactSharedInternals.H = prevDispatcher;
     if (enableCache) {
-      ReactSharedInternals.C = prevCacheDispatcher;
+      ReactSharedInternals.A = prevAsyncDispatcher;
     }
 
     if (__DEV__) {

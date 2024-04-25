@@ -61,7 +61,7 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {currentOwner} from 'react-reconciler/src/ReactFiberCurrentOwner';
 
 import assign from 'shared/assign';
 
@@ -342,7 +342,7 @@ export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
-    const owner = (ReactSharedInternals.owner: any);
+    const owner = currentOwner;
     if (owner !== null && owner.stateNode !== null) {
       const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
       if (!warnedAboutRefsInRender) {

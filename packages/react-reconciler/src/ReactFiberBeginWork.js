@@ -91,7 +91,6 @@ import {
   Passive,
   DidDefer,
 } from './ReactFiberFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -297,6 +296,7 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
+import {setCurrentOwner} from './ReactFiberCurrentOwner';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -432,7 +432,7 @@ function updateForwardRef(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -1150,7 +1150,7 @@ function updateFunctionComponent(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
@@ -1373,7 +1373,7 @@ function finishClassComponent(
 
   // Rerender
   if (__DEV__ || !disableStringRefs) {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
   }
   let nextChildren;
   if (
@@ -3419,7 +3419,7 @@ function updateContextConsumer(
   }
   let newChildren;
   if (__DEV__) {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     newChildren = render(newValue);
     setIsRendering(false);

@@ -44,7 +44,7 @@ function resolveDispatcher() {
 }
 
 export function getCacheForType<T>(resourceType: () => T): T {
-  const dispatcher = ReactSharedInternals.C;
+  const dispatcher = ReactSharedInternals.A;
   if (!dispatcher) {
     // If there is no dispatcher, then we treat this as not being cached.
     return resourceType();
