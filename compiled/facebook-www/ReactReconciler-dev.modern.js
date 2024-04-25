@@ -95,8 +95,6 @@ function set(key, value) {
   key._reactInternals = value;
 }
 
-var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
 
@@ -589,6 +587,11 @@ var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that 
 
 var StaticMask = LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
 
+var currentOwner = null;
+function setCurrentOwner(fiber) {
+  currentOwner = fiber;
+}
+
 function getNearestMountedFiber(fiber) {
   var node = fiber;
   var nearestMounted = fiber;
@@ -629,7 +632,7 @@ function getNearestMountedFiber(fiber) {
 }
 function isMounted(component) {
   {
-    var owner = ReactSharedInternals.owner;
+    var owner = currentOwner;
 
     if (owner !== null && owner.tag === ClassComponent) {
       var ownerFiber = owner;
@@ -898,6 +901,8 @@ var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
 function isArray(a) {
   return isArrayImpl(a);
 }
+
+var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
 
 // This is a host config that's used for the `react-reconciler` package on npm.
 // It is only used by third-party renderers.
@@ -13705,7 +13710,7 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   }
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, render, propsWithoutRef, ref, renderLanes);
     hasId = checkDidRenderIdHook();
@@ -14238,7 +14243,7 @@ function updateFunctionComponent(current, workInProgress, Component, nextProps, 
   }
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, Component, nextProps, context, renderLanes);
     hasId = checkDidRenderIdHook();
@@ -14394,7 +14399,7 @@ function finishClassComponent(current, workInProgress, Component, shouldUpdate, 
   var instance = workInProgress.stateNode; // Rerender
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
   }
 
   var nextChildren;
@@ -15875,7 +15880,7 @@ function updateContextConsumer(current, workInProgress, renderLanes) {
   var newChildren;
 
   {
-    ReactSharedInternals.owner = workInProgress;
+    setCurrentOwner(workInProgress);
     setIsRendering(true);
     newChildren = render(newValue);
     setIsRendering(false);
@@ -23096,9 +23101,15 @@ function getCacheForType(resourceType) {
   return cacheForType;
 }
 
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
   getCacheForType: getCacheForType
 };
+
+{
+  DefaultAsyncDispatcher.getOwner = function () {
+    return currentOwner;
+  };
+}
 
 var COMPONENT_TYPE = 0;
 var HAS_PSEUDO_CLASS_TYPE = 1;
@@ -24747,7 +24758,7 @@ function handleThrow(root, thrownValue) {
   resetCurrentFiber();
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 
   if (thrownValue === SuspenseException) {
@@ -24903,17 +24914,17 @@ function popDispatcher(prevDispatcher) {
   ReactSharedInternals.H = prevDispatcher;
 }
 
-function pushCacheDispatcher() {
+function pushAsyncDispatcher() {
   {
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
-    return prevCacheDispatcher;
+    var prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
+    return prevAsyncDispatcher;
   }
 }
 
-function popCacheDispatcher(prevCacheDispatcher) {
+function popAsyncDispatcher(prevAsyncDispatcher) {
   {
-    ReactSharedInternals.C = prevCacheDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
 
@@ -24971,7 +24982,7 @@ function renderRootSync(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   var prevDispatcher = pushDispatcher();
-  var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
+  var prevAsyncDispatcher = pushAsyncDispatcher(); // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
 
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
@@ -25073,7 +25084,7 @@ function renderRootSync(root, lanes) {
   resetContextDependencies();
   executionContext = prevExecutionContext;
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
 
   if (workInProgress !== null) {
     // This is a sync render, so we should have finished the whole tree.
@@ -25112,7 +25123,7 @@ function renderRootConcurrent(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   var prevDispatcher = pushDispatcher();
-  var prevCacheDispatcher = pushCacheDispatcher(); // If the root or lanes have changed, throw out the existing stack
+  var prevAsyncDispatcher = pushAsyncDispatcher(); // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
 
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
@@ -25347,7 +25358,7 @@ function renderRootConcurrent(root, lanes) {
 
   resetContextDependencies();
   popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
+  popAsyncDispatcher(prevAsyncDispatcher);
   executionContext = prevExecutionContext;
 
   {
@@ -25417,7 +25428,7 @@ function performUnitOfWork(unitOfWork) {
   }
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -25512,7 +25523,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   }
 
   {
-    ReactSharedInternals.owner = null;
+    setCurrentOwner(null);
   }
 }
 
@@ -25853,7 +25864,7 @@ function commitRootImpl(root, recoverableErrors, transitions, didIncludeRenderPh
     executionContext |= CommitContext; // Reset this to null before calling lifecycles
 
     {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     } // The commit phase is broken into several sub-phases. We do a separate pass
     // of the effect list for each phase: all mutation effects come before all
     // layout effects, and so on.
@@ -27914,7 +27925,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-93eabe05';
+var ReactVersion = '19.0.0-www-modern-30613c5e';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

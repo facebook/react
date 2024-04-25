@@ -3307,9 +3307,12 @@ var HooksDispatcher = {
 HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
 var currentResumableState = null,
-  DefaultCacheDispatcher = {
+  DefaultAsyncDispatcher = {
     getCacheForType: function () {
       throw Error(formatProdErrorMessage(248));
+    },
+    getOwner: function () {
+      return null;
     }
   },
   prefix;
@@ -4968,8 +4971,8 @@ function performWork(request$jscomp$2) {
     var prevContext = currentActiveSnapshot,
       prevDispatcher = ReactSharedInternals.H;
     ReactSharedInternals.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+    var prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request$jscomp$2;
     var prevResumableState = currentResumableState;
@@ -5127,7 +5130,7 @@ function performWork(request$jscomp$2) {
     } finally {
       (currentResumableState = prevResumableState),
         (ReactSharedInternals.H = prevDispatcher),
-        (ReactSharedInternals.C = prevCacheDispatcher),
+        (ReactSharedInternals.A = prevAsyncDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }
@@ -5688,4 +5691,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-51a6eefd";
+exports.version = "19.0.0-www-classic-a976e819";

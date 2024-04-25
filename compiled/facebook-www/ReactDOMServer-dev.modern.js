@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-modern-b5a582ea';
+var ReactVersion = '19.0.0-www-modern-f9bdfca0';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -8841,9 +8841,16 @@ function getCacheForType(resourceType) {
   throw new Error('Not implemented.');
 }
 
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
   getCacheForType: getCacheForType
 };
+
+{
+  // Fizz never tracks owner but the JSX runtime looks for this.
+  DefaultAsyncDispatcher.getOwner = function () {
+    return null;
+  };
+}
 
 // Helpers to patch console.logs to avoid logging during side-effect free
 // replaying on render function. This currently only patches the object
@@ -11458,11 +11465,11 @@ function performWork(request) {
   var prevContext = getActiveContext();
   var prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
-  var prevCacheDispatcher = null;
+  var prevAsyncDispatcher = null;
 
   {
-    prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+    prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
 
   var prevRequest = currentRequest;
@@ -11500,7 +11507,7 @@ function performWork(request) {
     ReactSharedInternals.H = prevDispatcher;
 
     {
-      ReactSharedInternals.C = prevCacheDispatcher;
+      ReactSharedInternals.A = prevAsyncDispatcher;
     }
 
     {

@@ -36,9 +36,7 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
-var ReactSharedInternals =
-    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -221,6 +219,7 @@ function getComponentNameFromFiber(fiber) {
   }
   return null;
 }
+var currentOwner = null;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -352,6 +351,8 @@ function doesFiberContain(parentFiber, childFiber) {
   return !1;
 }
 var currentReplayingEvent = null,
+  ReactSharedInternals =
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -6034,7 +6035,7 @@ function finishClassComponent(
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
   shouldUpdate = workInProgress.stateNode;
-  ReactSharedInternals.owner = workInProgress;
+  currentOwner = workInProgress;
   if (
     didCaptureError &&
     "function" !== typeof Component.getDerivedStateFromError
@@ -11302,7 +11303,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
       }
   }
 }
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -11310,6 +11311,9 @@ var DefaultCacheDispatcher = {
         ((cacheForType = resourceType()),
         cache.data.set(resourceType, cacheForType));
       return cacheForType;
+    },
+    getOwner: function () {
+      return currentOwner;
     }
   },
   postPaintCallbackScheduled = !1,
@@ -11867,7 +11871,7 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
@@ -11945,10 +11949,10 @@ function pushDispatcher() {
   ReactSharedInternals.H = ContextOnlyDispatcher;
   return null === prevDispatcher ? ContextOnlyDispatcher : prevDispatcher;
 }
-function pushCacheDispatcher() {
-  var prevCacheDispatcher = ReactSharedInternals.C;
-  ReactSharedInternals.C = DefaultCacheDispatcher;
-  return prevCacheDispatcher;
+function pushAsyncDispatcher() {
+  var prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  return prevAsyncDispatcher;
 }
 function renderDidSuspendDelayIfPossible() {
   workInProgressRootExitStatus = 4;
@@ -11965,7 +11969,7 @@ function renderRootSync(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= 2;
   var prevDispatcher = pushDispatcher(),
-    prevCacheDispatcher = pushCacheDispatcher();
+    prevAsyncDispatcher = pushAsyncDispatcher();
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
     if (isDevToolsPresent) {
       var memoizedUpdaters = root.memoizedUpdaters;
@@ -12010,7 +12014,7 @@ function renderRootSync(root, lanes) {
   resetContextDependencies();
   executionContext = prevExecutionContext;
   ReactSharedInternals.H = prevDispatcher;
-  ReactSharedInternals.C = prevCacheDispatcher;
+  ReactSharedInternals.A = prevAsyncDispatcher;
   if (null !== workInProgress) throw Error(formatProdErrorMessage(261));
   enableSchedulingProfiler && markRenderStopped();
   workInProgressRoot = null;
@@ -12025,7 +12029,7 @@ function renderRootConcurrent(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= 2;
   var prevDispatcher = pushDispatcher(),
-    prevCacheDispatcher = pushCacheDispatcher();
+    prevAsyncDispatcher = pushAsyncDispatcher();
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
     if (isDevToolsPresent) {
       var memoizedUpdaters = root.memoizedUpdaters;
@@ -12125,7 +12129,7 @@ function renderRootConcurrent(root, lanes) {
   while (1);
   resetContextDependencies();
   ReactSharedInternals.H = prevDispatcher;
-  ReactSharedInternals.C = prevCacheDispatcher;
+  ReactSharedInternals.A = prevAsyncDispatcher;
   executionContext = prevExecutionContext;
   if (null !== workInProgress)
     return (
@@ -12157,7 +12161,7 @@ function performUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate,
@@ -12216,7 +12220,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -12382,7 +12386,7 @@ function commitRootImpl(
     Internals.p = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    ReactSharedInternals.owner = null;
+    currentOwner = null;
     var shouldFireAfterActiveInstanceBlur$213 = commitBeforeMutationEffects(
       root,
       finishedWork
@@ -13827,14 +13831,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$372;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1589 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1589) {
-      var element$jscomp$inline_1590 = document.createElement("div");
-      element$jscomp$inline_1590.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1589 =
-        "function" === typeof element$jscomp$inline_1590.oninput;
+    var isSupported$jscomp$inline_1599 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1599) {
+      var element$jscomp$inline_1600 = document.createElement("div");
+      element$jscomp$inline_1600.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1599 =
+        "function" === typeof element$jscomp$inline_1600.oninput;
     }
-    JSCompiler_inline_result$jscomp$372 = isSupported$jscomp$inline_1589;
+    JSCompiler_inline_result$jscomp$372 = isSupported$jscomp$inline_1599;
   } else JSCompiler_inline_result$jscomp$372 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$372 &&
@@ -14215,20 +14219,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1630 = 0;
-  i$jscomp$inline_1630 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1630++
+  var i$jscomp$inline_1640 = 0;
+  i$jscomp$inline_1640 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1640++
 ) {
-  var eventName$jscomp$inline_1631 =
-      simpleEventPluginEvents[i$jscomp$inline_1630],
-    domEventName$jscomp$inline_1632 =
-      eventName$jscomp$inline_1631.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1633 =
-      eventName$jscomp$inline_1631[0].toUpperCase() +
-      eventName$jscomp$inline_1631.slice(1);
+  var eventName$jscomp$inline_1641 =
+      simpleEventPluginEvents[i$jscomp$inline_1640],
+    domEventName$jscomp$inline_1642 =
+      eventName$jscomp$inline_1641.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1643 =
+      eventName$jscomp$inline_1641[0].toUpperCase() +
+      eventName$jscomp$inline_1641.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1632,
-    "on" + capitalizedEvent$jscomp$inline_1633
+    domEventName$jscomp$inline_1642,
+    "on" + capitalizedEvent$jscomp$inline_1643
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17743,10 +17747,10 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1808 = {
+var devToolsConfig$jscomp$inline_1818 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-1f432af0",
+  version: "19.0.0-www-classic-768ff957",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17764,10 +17768,10 @@ var devToolsConfig$jscomp$inline_1808 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1808.bundleType,
-  version: devToolsConfig$jscomp$inline_1808.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1808.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1808.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1818.bundleType,
+  version: devToolsConfig$jscomp$inline_1818.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1818.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1818.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17783,14 +17787,14 @@ var devToolsConfig$jscomp$inline_1808 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1808.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1818.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-1f432af0"
+  reconcilerVersion: "19.0.0-www-classic-768ff957"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -18281,7 +18285,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-1f432af0";
+exports.version = "19.0.0-www-classic-768ff957";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

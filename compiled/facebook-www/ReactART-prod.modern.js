@@ -59,9 +59,7 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
-var ReactSharedInternals =
-    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
@@ -115,6 +113,7 @@ function getIteratorFn(maybeIterable) {
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
 Symbol.for("react.client.reference");
+var currentOwner = null;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -232,6 +231,8 @@ function doesFiberContain(parentFiber, childFiber) {
   return !1;
 }
 var isArrayImpl = Array.isArray,
+  ReactSharedInternals =
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   TYPES = {
     CLIPPING_RECTANGLE: "ClippingRectangle",
     GROUP: "Group",
@@ -4592,7 +4593,7 @@ function updateClassComponent(
   nextProps = 0 !== (workInProgress.flags & 128);
   context || nextProps
     ? ((context = workInProgress.stateNode),
-      (ReactSharedInternals.owner = workInProgress),
+      (currentOwner = workInProgress),
       (Component =
         nextProps && "function" !== typeof Component.getDerivedStateFromError
           ? null
@@ -8449,7 +8450,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
       }
   }
 }
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
     getCacheForType: function (resourceType) {
       var cache = readContext(CacheContext),
         cacheForType = cache.data.get(resourceType);
@@ -8457,6 +8458,9 @@ var DefaultCacheDispatcher = {
         ((cacheForType = resourceType()),
         cache.data.set(resourceType, cacheForType));
       return cacheForType;
+    },
+    getOwner: function () {
+      return currentOwner;
     }
   },
   PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
@@ -8958,7 +8962,7 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
     var handler = suspenseHandlerStackCursor.current;
@@ -9000,10 +9004,10 @@ function pushDispatcher() {
   ReactSharedInternals.H = ContextOnlyDispatcher;
   return null === prevDispatcher ? ContextOnlyDispatcher : prevDispatcher;
 }
-function pushCacheDispatcher() {
-  var prevCacheDispatcher = ReactSharedInternals.C;
-  ReactSharedInternals.C = DefaultCacheDispatcher;
-  return prevCacheDispatcher;
+function pushAsyncDispatcher() {
+  var prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  return prevAsyncDispatcher;
 }
 function renderDidSuspendDelayIfPossible() {
   workInProgressRootExitStatus = 4;
@@ -9020,7 +9024,7 @@ function renderRootSync(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= 2;
   var prevDispatcher = pushDispatcher(),
-    prevCacheDispatcher = pushCacheDispatcher();
+    prevAsyncDispatcher = pushAsyncDispatcher();
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
     (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
       prepareFreshStack(root, lanes);
@@ -9056,7 +9060,7 @@ function renderRootSync(root, lanes) {
   resetContextDependencies();
   executionContext = prevExecutionContext;
   ReactSharedInternals.H = prevDispatcher;
-  ReactSharedInternals.C = prevCacheDispatcher;
+  ReactSharedInternals.A = prevAsyncDispatcher;
   if (null !== workInProgress) throw Error(formatProdErrorMessage(261));
   workInProgressRoot = null;
   workInProgressRootRenderLanes = 0;
@@ -9070,7 +9074,7 @@ function renderRootConcurrent(root, lanes) {
   var prevExecutionContext = executionContext;
   executionContext |= 2;
   var prevDispatcher = pushDispatcher(),
-    prevCacheDispatcher = pushCacheDispatcher();
+    prevAsyncDispatcher = pushAsyncDispatcher();
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
     (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
       (workInProgressRootRenderTargetTime = now() + 500),
@@ -9160,7 +9164,7 @@ function renderRootConcurrent(root, lanes) {
   while (1);
   resetContextDependencies();
   ReactSharedInternals.H = prevDispatcher;
-  ReactSharedInternals.C = prevCacheDispatcher;
+  ReactSharedInternals.A = prevAsyncDispatcher;
   executionContext = prevExecutionContext;
   if (null !== workInProgress) return 0;
   workInProgressRoot = null;
@@ -9176,7 +9180,7 @@ function performUnitOfWork(unitOfWork) {
   var next = beginWork(unitOfWork.alternate, unitOfWork, entangledRenderLanes);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate;
@@ -9228,7 +9232,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  ReactSharedInternals.owner = null;
+  currentOwner = null;
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -9379,7 +9383,7 @@ function commitRootImpl(
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    ReactSharedInternals.owner = null;
+    currentOwner = null;
     commitBeforeMutationEffects(root, finishedWork);
     commitMutationEffectsOnFiber(finishedWork, root);
     root.current = finishedWork;
@@ -10100,19 +10104,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1087 = {
+  devToolsConfig$jscomp$inline_1097 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-3903b043",
+    version: "19.0.0-www-modern-94d3d045",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1315 = {
-  bundleType: devToolsConfig$jscomp$inline_1087.bundleType,
-  version: devToolsConfig$jscomp$inline_1087.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1087.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1087.rendererConfig,
+var internals$jscomp$inline_1327 = {
+  bundleType: devToolsConfig$jscomp$inline_1097.bundleType,
+  version: devToolsConfig$jscomp$inline_1097.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1097.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1097.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10129,26 +10133,26 @@ var internals$jscomp$inline_1315 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1087.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1097.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-3903b043"
+  reconcilerVersion: "19.0.0-www-modern-94d3d045"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1328 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1316.isDisabled &&
-    hook$jscomp$inline_1316.supportsFiber
+    !hook$jscomp$inline_1328.isDisabled &&
+    hook$jscomp$inline_1328.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1316.inject(
-        internals$jscomp$inline_1315
+      (rendererID = hook$jscomp$inline_1328.inject(
+        internals$jscomp$inline_1327
       )),
-        (injectedHook = hook$jscomp$inline_1316);
+        (injectedHook = hook$jscomp$inline_1328);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

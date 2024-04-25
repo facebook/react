@@ -4303,7 +4303,7 @@ module.exports = function ($$$config) {
     nextProps = 0 !== (workInProgress.flags & 128);
     context || nextProps
       ? ((context = workInProgress.stateNode),
-        (ReactSharedInternals.owner = workInProgress),
+        (currentOwner = workInProgress),
         (Component =
           nextProps && "function" !== typeof Component.getDerivedStateFromError
             ? null
@@ -9825,7 +9825,7 @@ module.exports = function ($$$config) {
   function handleThrow(root, thrownValue) {
     currentlyRenderingFiber$1 = null;
     ReactSharedInternals.H = ContextOnlyDispatcher;
-    ReactSharedInternals.owner = null;
+    currentOwner = null;
     thrownValue === SuspenseException
       ? ((thrownValue = getSuspendedThenable()),
         (workInProgressSuspendedReason =
@@ -9873,10 +9873,10 @@ module.exports = function ($$$config) {
     ReactSharedInternals.H = ContextOnlyDispatcher;
     return null === prevDispatcher ? ContextOnlyDispatcher : prevDispatcher;
   }
-  function pushCacheDispatcher() {
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
-    return prevCacheDispatcher;
+  function pushAsyncDispatcher() {
+    var prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
+    return prevAsyncDispatcher;
   }
   function renderDidSuspendDelayIfPossible() {
     workInProgressRootExitStatus = 4;
@@ -9893,7 +9893,7 @@ module.exports = function ($$$config) {
     var prevExecutionContext = executionContext;
     executionContext |= 2;
     var prevDispatcher = pushDispatcher(),
-      prevCacheDispatcher = pushCacheDispatcher();
+      prevAsyncDispatcher = pushAsyncDispatcher();
     if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
       (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
         prepareFreshStack(root, lanes);
@@ -9929,7 +9929,7 @@ module.exports = function ($$$config) {
     resetContextDependencies();
     executionContext = prevExecutionContext;
     ReactSharedInternals.H = prevDispatcher;
-    ReactSharedInternals.C = prevCacheDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
     if (null !== workInProgress) throw Error(formatProdErrorMessage(261));
     workInProgressRoot = null;
     workInProgressRootRenderLanes = 0;
@@ -9943,7 +9943,7 @@ module.exports = function ($$$config) {
     var prevExecutionContext = executionContext;
     executionContext |= 2;
     var prevDispatcher = pushDispatcher(),
-      prevCacheDispatcher = pushCacheDispatcher();
+      prevAsyncDispatcher = pushAsyncDispatcher();
     if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
       (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
         (workInProgressRootRenderTargetTime = now() + 500),
@@ -10035,7 +10035,7 @@ module.exports = function ($$$config) {
     while (1);
     resetContextDependencies();
     ReactSharedInternals.H = prevDispatcher;
-    ReactSharedInternals.C = prevCacheDispatcher;
+    ReactSharedInternals.A = prevAsyncDispatcher;
     executionContext = prevExecutionContext;
     if (null !== workInProgress) return 0;
     workInProgressRoot = null;
@@ -10055,7 +10055,7 @@ module.exports = function ($$$config) {
     );
     unitOfWork.memoizedProps = unitOfWork.pendingProps;
     null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
-    ReactSharedInternals.owner = null;
+    currentOwner = null;
   }
   function replaySuspendedUnitOfWork(unitOfWork) {
     var current = unitOfWork.alternate;
@@ -10113,7 +10113,7 @@ module.exports = function ($$$config) {
     null === current
       ? completeUnitOfWork(unitOfWork)
       : (workInProgress = current);
-    ReactSharedInternals.owner = null;
+    currentOwner = null;
   }
   function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
     resetContextDependencies();
@@ -10264,7 +10264,7 @@ module.exports = function ($$$config) {
       setCurrentUpdatePriority(2);
       var prevExecutionContext = executionContext;
       executionContext |= 4;
-      ReactSharedInternals.owner = null;
+      currentOwner = null;
       var shouldFireAfterActiveInstanceBlur$172 = commitBeforeMutationEffects(
         root,
         finishedWork
@@ -10995,8 +10995,6 @@ module.exports = function ($$$config) {
   var React = require("react"),
     Scheduler = require("scheduler"),
     assign = Object.assign,
-    ReactSharedInternals =
-      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
     dynamicFeatureFlags = require("ReactFeatureFlags"),
     enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableLazyContextPropagation =
@@ -11047,7 +11045,10 @@ module.exports = function ($$$config) {
     REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
     MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
     REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
+    currentOwner = null,
     isArrayImpl = Array.isArray,
+    ReactSharedInternals =
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
     getPublicInstance = $$$config.getPublicInstance,
     getRootHostContext = $$$config.getRootHostContext,
     getChildHostContext = $$$config.getChildHostContext,
@@ -11718,7 +11719,7 @@ module.exports = function ($$$config) {
     hostParentIsContainer = !1,
     currentHoistableRoot = null,
     suspenseyCommitFlag = 8192,
-    DefaultCacheDispatcher = {
+    DefaultAsyncDispatcher = {
       getCacheForType: function (resourceType) {
         var cache = readContext(CacheContext),
           cacheForType = cache.data.get(resourceType);
@@ -11726,6 +11727,9 @@ module.exports = function ($$$config) {
           ((cacheForType = resourceType()),
           cache.data.set(resourceType, cacheForType));
         return cacheForType;
+      },
+      getOwner: function () {
+        return currentOwner;
       }
     },
     COMPONENT_TYPE = 0,
@@ -12139,7 +12143,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-4ae24703"
+      reconcilerVersion: "19.0.0-www-modern-14c8fd79"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

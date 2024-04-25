@@ -3190,9 +3190,12 @@ var HooksDispatcher = {
 HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
 var currentResumableState = null,
-  DefaultCacheDispatcher = {
+  DefaultAsyncDispatcher = {
     getCacheForType: function () {
       throw Error("Not implemented.");
+    },
+    getOwner: function () {
+      return null;
     }
   },
   prefix;
@@ -5275,8 +5278,8 @@ exports.renderNextChunk = function (stream) {
     var prevContext = currentActiveSnapshot,
       prevDispatcher = ReactSharedInternals.H;
     ReactSharedInternals.H = HooksDispatcher;
-    var prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+    var prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
     var prevRequest = currentRequest;
     currentRequest = request;
     var prevResumableState = currentResumableState;
@@ -5437,7 +5440,7 @@ exports.renderNextChunk = function (stream) {
     } finally {
       (currentResumableState = prevResumableState),
         (ReactSharedInternals.H = prevDispatcher),
-        (ReactSharedInternals.C = prevCacheDispatcher),
+        (ReactSharedInternals.A = prevAsyncDispatcher),
         prevDispatcher === HooksDispatcher && switchContext(prevContext),
         (currentRequest = prevRequest);
     }

@@ -8756,9 +8756,16 @@ function getCacheForType(resourceType) {
   throw new Error('Not implemented.');
 }
 
-var DefaultCacheDispatcher = {
+var DefaultAsyncDispatcher = {
   getCacheForType: getCacheForType
 };
+
+{
+  // Fizz never tracks owner but the JSX runtime looks for this.
+  DefaultAsyncDispatcher.getOwner = function () {
+    return null;
+  };
+}
 
 // Helpers to patch console.logs to avoid logging during side-effect free
 // replaying on render function. This currently only patches the object
@@ -11370,11 +11377,11 @@ function performWork(request) {
   var prevContext = getActiveContext();
   var prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
-  var prevCacheDispatcher = null;
+  var prevAsyncDispatcher = null;
 
   {
-    prevCacheDispatcher = ReactSharedInternals.C;
-    ReactSharedInternals.C = DefaultCacheDispatcher;
+    prevAsyncDispatcher = ReactSharedInternals.A;
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
 
   var prevRequest = currentRequest;
@@ -11412,7 +11419,7 @@ function performWork(request) {
     ReactSharedInternals.H = prevDispatcher;
 
     {
-      ReactSharedInternals.C = prevCacheDispatcher;
+      ReactSharedInternals.A = prevAsyncDispatcher;
     }
 
     {
