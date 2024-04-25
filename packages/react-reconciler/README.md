@@ -320,23 +320,27 @@ This method should mutate the `container` root node and remove all children from
 
 #### `maySuspendCommit(type, props)`
 
-This method should determine if this combination of type and props may need to suspend.
+This method is called during render to determine if the Host Component type and props require some kind of loading process to complete before committing an update.
 
 #### `preloadInstance(type, props)`
 
-This method should kick off any preloading of resources required. Return `true` to indicate it's already loaded or `false` to trigger a fallback.
+This method may be called during render if the Host Component type and props might suspend a commit. It can be used to initiate any work that might shorten the duration of a suspended commit.
 
 #### `startSuspendingCommit()`
 
-This method begins Suspense on something that isn't associated with a particular node.
+This method is called just before the commit phase. Use it to set up any necessary state while any Host Components that might suspend this commit are evaluated to determine if the commit must be suspended.
 
 #### `suspendInstance(type, props)`
 
-This method prevents a tree from being displayed without blocking the components from being evaluated. Consider it Suspense for the commit phase.
+This method is called after `startSuspendingCommit` for each Host Component that indicated it might suspend a commit.
 
 #### `waitForCommitToBeReady()`
 
-This method determines if the renderer is ready to commit or if React should suspend. If it is not ready, return a callback to subscribe to a ready event.
+This method is called after all `suspendInstance` calls are complete.
+
+Return `null` if the commit can happen immediately.
+
+Return `(initiateCommit: Function) => Function` if the commit must be suspended. The argument to this callback will initiate the commit when called. The return value is a cancellation function that the Reconciler can use to abort the commit.
 
 ### Persistence Methods
 
