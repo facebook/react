@@ -21,16 +21,21 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
+  disableDefaultPropsExceptForClasses,
   enableAsyncActions,
-  enableEarlyReturnForPropDiffing,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
+  enableEarlyReturnForPropDiffing,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
   enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
   useModernStrictMode,
-  disableDefaultPropsExceptForClasses,
+
+  // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
+  // because JSX is an extremely hot path.
+  disableStringRefs,
+  enableRefAsProp,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -92,11 +97,6 @@ export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
-
-// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
-// because JSX is an extremely hot path.
-export const enableRefAsProp = false;
-export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
