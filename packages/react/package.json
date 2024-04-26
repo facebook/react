@@ -30,7 +30,7 @@
       "default": "./jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
-      "react-server": "./jsx-dev-runtime.js",
+      "react-server": "./jsx-dev-runtime.react-server.js",
       "default": "./jsx-dev-runtime.js"
     },
     "./src/*": "./src/*"
