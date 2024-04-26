@@ -22,8 +22,6 @@ import {
   mapTerminalSuccessors,
   terminalFallthrough,
 } from "../HIR/visitors";
-import DisjointSet from "../Utils/DisjointSet";
-import { retainWhere } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 
 /*
@@ -237,46 +235,6 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
   }
 
   // console.log(_debug(rootNode));
-
-  const joinedScopes: DisjointSet<ReactiveScope> =
-    mergeOverlappingScopes(rootNode);
-
-  /**
-   * Join scopes that begin and end at the same instructions
-   */
-  {
-    const allScopes = [...new Set(placeScopes.values())].sort(
-      (a, b) => a.range.start - b.range.start
-    );
-    for (let i = 1; i < allScopes.length; i++) {
-      const prev = allScopes[i - 1];
-      const curr = allScopes[i];
-      if (
-        prev.range.start === curr.range.start &&
-        prev.range.end === curr.range.end
-      ) {
-        joinedScopes.union([prev, curr]);
-      }
-    }
-  }
-
-  joinedScopes.forEach((scope, groupScope) => {
-    if (scope !== groupScope) {
-      groupScope.range.start = makeInstructionId(
-        Math.min(groupScope.range.start, scope.range.start)
-      );
-      groupScope.range.end = makeInstructionId(
-        Math.max(groupScope.range.end, scope.range.end)
-      );
-    }
-  });
-
-  for (const [place, originalScope] of placeScopes) {
-    const nextScope = joinedScopes.find(originalScope);
-    if (nextScope !== null && nextScope !== originalScope) {
-      place.identifier.scope = nextScope;
-    }
-  }
 }
 
 type BlockNode = {
@@ -317,93 +275,4 @@ function _printNode(
     }
     out.push(`${prefix}]`);
   }
-}
-
-type ScopeItem = {
-  scope: ReactiveScope;
-  shadowedBy: ReactiveScope | null;
-};
-class BlockItem {
-  seen: Set<ReactiveScope> = new Set();
-  scopes: Array<ScopeItem> = [];
-}
-
-function mergeOverlappingScopes(root: BlockNode): DisjointSet<ReactiveScope> {
-  const seen = new Set<ReactiveScope>();
-  const joined = new DisjointSet<ReactiveScope>();
-
-  function visit(node: BlockNode, stack: Array<BlockItem>): void {
-    const currentBlock = stack.at(-1)!;
-    child: for (const child of node.children) {
-      retainWhere(currentBlock.scopes, (item) => {
-        if (item.scope.range.end > child.id) {
-          return true;
-        } else {
-          currentBlock.seen.delete(item.scope);
-          return false;
-        }
-      });
-      if (child.kind === "node") {
-        visit(child, [...stack, new BlockItem()]);
-      } else {
-        const scope = child.scope;
-        if (!seen.has(scope)) {
-          seen.add(scope);
-          currentBlock.seen.add(scope);
-          currentBlock.scopes.push({ shadowedBy: null, scope });
-          continue;
-        }
-
-        let index = stack.length - 1;
-        let nextBlock = currentBlock;
-        while (!nextBlock.seen.has(scope)) {
-          joined.union([scope, ...nextBlock.scopes.map((s) => s.scope)]);
-          index--;
-          if (index < 0) {
-            currentBlock.seen.add(scope);
-            currentBlock.scopes.push({ shadowedBy: null, scope });
-            continue child;
-          }
-          nextBlock = stack[index]!;
-        }
-
-        // Handle interleaving within a given block scope
-        let found = false;
-        for (let i = 0; i < nextBlock.scopes.length; i++) {
-          const current = nextBlock.scopes[i]!;
-          if (current.scope.id === scope.id) {
-            found = true;
-            if (current.shadowedBy !== null) {
-              joined.union([current.shadowedBy, current.scope]);
-            }
-          } else if (found && current.shadowedBy === null) {
-            // `scope` is shadowing `current` and may interleave
-            current.shadowedBy = scope;
-            if (current.scope.range.end > scope.range.end) {
-              /*
-               * Current is shadowed by `scope`, and we know that `current` will mutate
-               * again (per its range), so the scopes are already known to interleave.
-               *
-               * Eagerly extend the ranges of the scopes so that we don't prematurely end
-               * a scope relative to its eventual post-merge mutable range
-               */
-              const end = makeInstructionId(
-                Math.max(current.scope.range.end, scope.range.end)
-              );
-              current.scope.range.end = end;
-              scope.range.end = end;
-              joined.union([current.scope, scope]);
-            }
-          }
-        }
-        if (!currentBlock.seen.has(scope)) {
-          currentBlock.seen.add(scope);
-          currentBlock.scopes.push({ shadowedBy: null, scope });
-        }
-      }
-    }
-  }
-
-  visit(root, [new BlockItem()]);
-  return joined;
 }

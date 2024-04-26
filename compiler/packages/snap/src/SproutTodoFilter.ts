@@ -334,7 +334,6 @@ const skipFilter = new Set([
   "ssa-property-alias-mutate-inside-if",
   "ssa-renaming-ternary-destruction-with-mutation",
   "ssa-renaming-ternary-with-mutation",
-  "ssa-renaming-unconditional-ternary-with-mutation",
   "ssa-renaming-unconditional-with-mutation",
   "ssa-renaming-via-destructuring-with-mutation",
   "ssa-renaming-with-mutation",

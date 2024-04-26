@@ -18,6 +18,7 @@ import {
   assertValidMutableRanges,
   lower,
   mergeConsecutiveBlocks,
+  mergeOverlappingReactiveScopesHIR,
   pruneUnusedLabelsHIR,
 } from "../HIR";
 import {
@@ -249,6 +250,13 @@ function* runWithEnvironment(
     yield log({
       kind: "hir",
       name: "AlignReactiveScopesToBlockScopesHIR",
+      value: hir,
+    });
+
+    mergeOverlappingReactiveScopesHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "MergeOverlappingReactiveScopesHIR",
       value: hir,
     });
 
