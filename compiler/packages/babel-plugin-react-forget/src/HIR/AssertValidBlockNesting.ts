@@ -124,17 +124,24 @@ export function assertValidBlockNesting(fn: HIRFunction): void {
 
   blocks.sort(nestedRangeComparator);
 
-  for (let i = 1; i < blocks.length; i++) {
-    const last = blocks[i - 1];
+  let active: Array<Block> = [];
+  for (let i = 0; i < blocks.length; i++) {
     const curr = blocks[i];
-
-    const blocksDisjoint = curr.start >= last.end;
-    const blocksNested = curr.end <= last.end;
-
-    CompilerError.invariant(blocksDisjoint || blocksNested, {
-      reason: "Invalid nesting in program blocks or scopes",
-      description: `Blocks overlap but are not nested: ${last.kind}@${last.id}(${last.start}:${last.end}) ${curr.kind}@${curr.id}(${curr.start}:${curr.end})`,
-      loc: GeneratedSource,
-    });
+    for (let i = active.length - 1; i >= 0; i--) {
+      const maybeParent = active[i];
+      const disjoint = curr.start >= maybeParent.end;
+      const nested = curr.end <= maybeParent.end;
+      CompilerError.invariant(disjoint || nested, {
+        reason: "Invalid nesting in program blocks or scopes",
+        description: `Blocks overlap but are not nested: ${maybeParent.kind}@${maybeParent.id}(${maybeParent.start}:${maybeParent.end}) ${curr.kind}@${curr.id}(${curr.start}:${curr.end})`,
+        loc: GeneratedSource,
+      });
+      if (disjoint) {
+        active.length = i;
+      } else {
+        break;
+      }
+    }
+    active.push(curr);
   }
 }
