@@ -11,7 +11,7 @@ Read the [React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upg
 - Warn for deprecated `test-utils` methods [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
 - Warn for deprecated ` unmountComponentAtNode` [8a015b](https://github.com/facebook/react/commit/8a015b68cc060079878e426610e64e86fb328f8d)
 - Warn for deprecated Legacy Context outside StrictMode [415ee0](https://github.com/facebook/react/commit/415ee0e6ea0fe3e288e65868df2e3241143d5f7f)
-- Warn when deprecated using string refs outside StrictMode [#25383](https://github.com/facebook/react/pull/25383)
+- Warn for deprecated string refs outside StrictMode [#25383](https://github.com/facebook/react/pull/25383)
 - Warn for deprecated `defaultProps` for function components [#25699](https://github.com/facebook/react/pull/25699)
 - Warn when spreading `key` [#25697](https://github.com/facebook/react/pull/25697)
 - Warn when using `act` from `test-utils` [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
