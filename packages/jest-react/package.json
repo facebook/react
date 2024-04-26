@@ -20,8 +20,8 @@
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
     "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
-    "react": "^18.3.0",
-    "react-test-renderer": "^18.3.0"
+    "react": "^18.3.1",
+    "react-test-renderer": "^18.3.1"
   },
   "files": [
     "LICENSE",
