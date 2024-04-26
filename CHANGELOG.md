@@ -1,8 +1,8 @@
-## 18.3.0 (April 25, 2022)
+## 18.3.0 (April 25, 2024)
 
 This release is identical to 18.2 but adds warnings for deprecated APIs and other changes that are needed for React 19.
 
-React the [React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide) for more info.
+Read the [React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide) for more info.
 
 ### React
 
