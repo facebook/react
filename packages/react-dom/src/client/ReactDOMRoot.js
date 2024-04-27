@@ -283,6 +283,30 @@ export function hydrateRoot(
           'Example usage: hydrateRoot(domContainer, <App />)',
       );
     }
+    if (
+      typeof initialChildren === 'object' &&
+      initialChildren !== null &&
+      (!('$$typeof' in initialChildren) ||
+        (initialChildren: any).$$typeof !== REACT_ELEMENT_TYPE)
+    ) {
+      console.error(
+        'Warning: You passed an options object as the second argument to `hydrateRoot(...)`, did you forget to pass a React element?',
+      );
+    }
+
+    if (
+      typeof options === 'object' &&
+      options !== null &&
+      (options: any).$$typeof === REACT_ELEMENT_TYPE
+    ) {
+      console.error(
+        'You passed a JSX element as an options to hydrateRoot. You probably meant to ' +
+          'call root.render instead. ' +
+          'Example usage:\n\n' +
+          '  let root = hydrateRoot(domContainer, <App />, {...options});\n' +
+          '  root.render(<App />);',
+      );
+    }
   }
 
   // For now we reuse the whole bag of options since they contain

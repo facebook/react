@@ -419,6 +419,37 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  it('warn if options is passed as second argument to hydrateRoot', async () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(container, {
+        onUncaughtError: error => {
+          console.error(error);
+        },
+      }),
+    ).toErrorDev(
+      'Warning: You passed an options object as the second argument to `hydrateRoot(...)`, did you forget to pass a React element?',
+      {withoutStack: true},
+    );
+  });
+
+  it('warn if element is passed as options to hydrateRoot', async () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(
+        container,
+        <div>
+          <span />
+        </div>,
+        <div>
+          <span />
+        </div>,
+      ),
+    ).toErrorDev(
+      'You passed a JSX element as an options to hydrateRoot. You probably meant to ' +
+        'call root.render instead. ',
+      {withoutStack: true},
+    );
+  });
+
   it('warn if JSX passed to createRoot', async () => {
     function App() {
       return 'Child';
