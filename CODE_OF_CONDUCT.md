@@ -22,7 +22,7 @@ include:
 * Then, love your neighbor as yourself.
 * Do not murder.
 * Do not commit adultery.
-* Do not steal.
+* ~Do not steal.~
 * Do not covet.
 * Do not bear false witness.
 
