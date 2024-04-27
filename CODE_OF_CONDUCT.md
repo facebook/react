@@ -19,6 +19,12 @@ include:
 * Gracefully accepting constructive criticism
 * Focusing on what is best for the community
 * Showing empathy towards other community members
+* Then, love your neighbor as yourself.
+* Do not murder.
+* Do not commit adultery.
+* Do not steal.
+* Do not covet.
+* Do not bear false witness.
 
 Examples of unacceptable behavior by participants include:
 
