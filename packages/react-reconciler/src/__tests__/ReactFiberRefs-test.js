@@ -162,4 +162,31 @@ describe('ReactFiberRefs', () => {
     await act(() => root.render(<App />));
     expect(app.refs.div.prop).toBe('Hello!');
   });
+
+  test('class refs are initialized to a frozen shared object', async () => {
+    const refsCollection = new Set();
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        refsCollection.add(this.refs);
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() =>
+      root.render(
+        <>
+          <Component />
+          <Component />
+        </>,
+      ),
+    );
+
+    expect(refsCollection.size).toBe(1);
+    const refsInstance = Array.from(refsCollection)[0];
+    expect(Object.isFrozen(refsInstance)).toBe(__DEV__);
+  });
 });

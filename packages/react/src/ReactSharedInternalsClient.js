@@ -8,19 +8,15 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
-  C: null | CacheDispatcher, // ReactCurrentCache for Cache
+  A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | BatchConfigTransition, // ReactCurrentBatchConfig for Transitions
 
-  // DEV-only-ish
-  owner: null | Fiber, // ReactCurrentOwner is Fiber on the Client, null in Fizz. Flight uses SharedStateServer.
+  // DEV-only
 
   // ReactCurrentActQueue
   actQueue: null | Array<RendererTask>,
@@ -47,13 +43,9 @@ export type RendererTask = boolean => RendererTask | null;
 
 const ReactSharedInternals: SharedStateClient = ({
   H: null,
-  C: null,
+  A: null,
   T: null,
 }: any);
-
-if (__DEV__ || !disableStringRefs) {
-  ReactSharedInternals.owner = null;
-}
 
 if (__DEV__) {
   ReactSharedInternals.actQueue = null;

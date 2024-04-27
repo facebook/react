@@ -89,7 +89,11 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {DefaultCacheDispatcher} from './flight/ReactFlightServerCache';
+import {
+  DefaultAsyncDispatcher,
+  currentOwner,
+  setCurrentOwner,
+} from './flight/ReactFlightAsyncDispatcher';
 
 import {
   getIteratorFn,
@@ -158,7 +162,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        const owner: null | ReactComponentInfo = ReactSharedInternals.owner;
+        const owner: null | ReactComponentInfo = currentOwner;
         emitConsoleChunk(request, id, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
@@ -360,14 +364,14 @@ export function createRequest(
   environmentName: void | string,
 ): Request {
   if (
-    ReactSharedInternals.C !== null &&
-    ReactSharedInternals.C !== DefaultCacheDispatcher
+    ReactSharedInternals.A !== null &&
+    ReactSharedInternals.A !== DefaultAsyncDispatcher
   ) {
     throw new Error(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
-  ReactSharedInternals.C = DefaultCacheDispatcher;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
@@ -856,11 +860,11 @@ function renderFunctionComponent<Props>(
   const secondArg = undefined;
   let result;
   if (__DEV__) {
-    ReactSharedInternals.owner = componentDebugInfo;
+    setCurrentOwner(componentDebugInfo);
     try {
       result = Component(props, secondArg);
     } finally {
-      ReactSharedInternals.owner = null;
+      setCurrentOwner(null);
     }
   } else {
     result = Component(props, secondArg);

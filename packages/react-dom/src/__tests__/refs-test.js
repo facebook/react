@@ -9,22 +9,15 @@
 
 'use strict';
 
-let React = require('react');
-let ReactDOMClient = require('react-dom/client');
-let act = require('internal-test-utils').act;
+const React = require('react');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 // This is testing if string refs are deleted from `instance.refs`
 // Once support for string refs is removed, this test can be removed.
 // Detaching is already tested in refs-detruction-test.js
 describe('reactiverefs', () => {
   let container;
-
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
-  });
 
   afterEach(() => {
     if (container) {
@@ -199,11 +192,6 @@ describe('reactiverefs', () => {
 describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
-
     RefHopsAround = class extends React.Component {
       container = null;
       state = {count: 0};
@@ -802,5 +790,98 @@ describe('refs return clean up function', () => {
     expect(cleanUp).toHaveBeenCalledTimes(1);
     // Ref callback never called with null when cleanup is returned
     expect(nullHandler).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('useImerativeHandle refs', () => {
+  const ImperativeHandleComponent = React.forwardRef(({name}, ref) => {
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        greet() {
+          return `Hello ${name}`;
+        },
+      }),
+      [name],
+    );
+    return null;
+  });
+
+  it('should work with object style refs', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    const ref = React.createRef();
+
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Alice" ref={ref} />);
+    });
+    expect(ref.current.greet()).toBe('Hello Alice');
+    await act(() => {
+      root.render(null);
+    });
+    expect(ref.current).toBe(null);
+  });
+
+  it('should work with callback style refs', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let current = null;
+
+    await act(async () => {
+      root.render(
+        <ImperativeHandleComponent
+          name="Alice"
+          ref={r => {
+            current = r;
+          }}
+        />,
+      );
+    });
+    expect(current.greet()).toBe('Hello Alice');
+    await act(() => {
+      root.render(null);
+    });
+    expect(current).toBe(null);
+  });
+
+  it('should work with callback style refs with cleanup function', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    let cleanupCalls = 0;
+    let createCalls = 0;
+    let current = null;
+
+    const ref = r => {
+      current = r;
+      createCalls++;
+      return () => {
+        current = null;
+        cleanupCalls++;
+      };
+    };
+
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Alice" ref={ref} />);
+    });
+    expect(current.greet()).toBe('Hello Alice');
+    expect(createCalls).toBe(1);
+    expect(cleanupCalls).toBe(0);
+
+    // update a dep should recreate the ref
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Bob" ref={ref} />);
+    });
+    expect(current.greet()).toBe('Hello Bob');
+    expect(createCalls).toBe(2);
+    expect(cleanupCalls).toBe(1);
+
+    // unmounting should call cleanup
+    await act(() => {
+      root.render(null);
+    });
+    expect(current).toBe(null);
+    expect(createCalls).toBe(2);
+    expect(cleanupCalls).toBe(2);
   });
 });

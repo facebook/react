@@ -13,7 +13,6 @@ import type {
   SuspenseInstance,
   Container,
   ChildSet,
-  UpdatePayload,
   HoistableRoot,
   FormInstance,
 } from './ReactFiberConfig';
@@ -2676,14 +2675,9 @@ function commitMutationEffectsOnFiber(
               );
             }
           } else if (newResource === null && finishedWork.stateNode !== null) {
-            // We may have an update on a Hoistable element
-            const updatePayload: null | UpdatePayload =
-              (finishedWork.updateQueue: any);
-            finishedWork.updateQueue = null;
             try {
               commitUpdate(
                 finishedWork.stateNode,
-                updatePayload,
                 finishedWork.type,
                 current.memoizedProps,
                 finishedWork.memoizedProps,
@@ -2754,19 +2748,8 @@ function commitMutationEffectsOnFiber(
             const oldProps =
               current !== null ? current.memoizedProps : newProps;
             const type = finishedWork.type;
-            // TODO: Type the updateQueue to be specific to host components.
-            const updatePayload: null | UpdatePayload =
-              (finishedWork.updateQueue: any);
-            finishedWork.updateQueue = null;
             try {
-              commitUpdate(
-                instance,
-                updatePayload,
-                type,
-                oldProps,
-                newProps,
-                finishedWork,
-              );
+              commitUpdate(instance, type, oldProps, newProps, finishedWork);
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }

@@ -651,7 +651,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         commitUpdate(
           instance: Instance,
-          updatePayload: Object,
           type: string,
           oldProps: Props,
           newProps: Props,
