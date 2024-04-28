@@ -149,6 +149,19 @@ const bundles = [
     externals: ['react', 'ReactNativeInternalFeatureFlags'],
   },
 
+  /******* React JSX DEV Runtime React Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react/src/jsx/ReactJSXServer.js',
+    name: 'react-jsx-dev-runtime.react-server',
+    condition: 'react-server',
+    global: 'JSXDEVRuntime',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
