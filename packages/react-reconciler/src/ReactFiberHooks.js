@@ -2187,7 +2187,7 @@ function mountActionState<S, P>(
 
   // Pending state. This is used to store the pending state of the action.
   // Tracked optimistically, like a transition pending state.
-  const pendingStateHook = mountStateImpl((false: Thenable<boolean> | boolean));
+  const pendingStateHook = mountStateImpl((false: boolean));
   const setPendingState: boolean => void = (dispatchOptimisticSetState.bind(
     null,
     currentlyRenderingFiber,
