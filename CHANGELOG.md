@@ -1,3 +1,7 @@
+## 18.3.1 (April 26, 2024)
+
+- Export `act` from `react` [f1338f](https://github.com/facebook/react/commit/f1338f8080abd1386454a10bbf93d67bfe37ce85)
+
 ## 18.3.0 (April 25, 2024)
 
 This release is identical to 18.2 but adds warnings for deprecated APIs and other changes that are needed for React 19.
