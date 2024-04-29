@@ -444,16 +444,62 @@ function diffProperties(
   return updatePayload;
 }
 
+function fastAddProperties(updatePayload, nextProps, validAttributes) {
+  var attributeConfig;
+  var nextProp;
+
+  for (var propKey in nextProps) {
+
+    nextProp = nextProps[propKey];
+
+    if (nextProp === undefined) {
+      continue;
+    }
+
+    attributeConfig = validAttributes[propKey];
+
+    if (attributeConfig === undefined) {
+      continue;
+    }
+
+    if (typeof nextProp === "function") {
+      nextProp = true;
+    }
+
+    if (typeof attributeConfig !== "object") {
+      if (!updatePayload) {
+        updatePayload = {};
+      }
+      updatePayload[propKey] = nextProp;
+      continue;
+    }
+
+    if (typeof attributeConfig.process === "function") {
+      if (!updatePayload) {
+        updatePayload = {};
+      }
+      updatePayload[propKey] = attributeConfig.process(nextProp);
+      continue;
+    }
+
+    if (isArray(nextProp)) {
+      for (var i = 0; i < nextProp.length; i++) {
+        updatePayload = fastAddProperties(updatePayload, nextProp[i], attributeConfig);
+      }
+      continue;
+    }
+
+    updatePayload = fastAddProperties(updatePayload, nextProp, attributeConfig);
+  }
+
+  return updatePayload;
+}
+
 /**
  * addProperties adds all the valid props to the payload after being processed.
  */
-function addProperties(
-  updatePayload: null | Object,
-  props: Object,
-  validAttributes: AttributeConfiguration,
-): null | Object {
-  // TODO: Fast path
-  return diffProperties(updatePayload, emptyObject, props, validAttributes);
+function addProperties(updatePayload, props, validAttributes) {
+  return fastAddProperties(updatePayload, props, validAttributes);
 }
 
 /**
