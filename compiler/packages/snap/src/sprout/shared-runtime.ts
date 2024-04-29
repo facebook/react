@@ -314,3 +314,10 @@ export const ObjectWithHooks = {
     return arg;
   },
 };
+
+export function useFragment(...args: Array<any>): Object {
+  return {
+    a: [1, 2, 3],
+    b: { c: { d: 4 } },
+  };
+}
