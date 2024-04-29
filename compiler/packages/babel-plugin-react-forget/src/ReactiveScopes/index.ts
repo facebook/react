@@ -8,6 +8,7 @@
 export { alignObjectMethodScopes } from "./AlignObjectMethodScopes";
 export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
 export { assertScopeInstructionsWithinScopes } from "./AssertScopeInstructionsWithinScope";
+export { assertWellFormedBreakTargets } from "./AssertWellFormedBreakTargets";
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
 export {

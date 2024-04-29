@@ -46,6 +46,7 @@ import {
   alignObjectMethodScopes,
   alignReactiveScopesToBlockScopes,
   assertScopeInstructionsWithinScopes,
+  assertWellFormedBreakTargets,
   buildReactiveBlocks,
   buildReactiveFunction,
   codegenFunction,
@@ -278,6 +279,8 @@ function* runWithEnvironment(
     name: "BuildReactiveFunction",
     value: reactiveFunction,
   });
+
+  assertWellFormedBreakTargets(reactiveFunction);
 
   pruneUnusedLabels(reactiveFunction);
   yield log({

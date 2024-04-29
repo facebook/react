@@ -813,6 +813,7 @@ class Driver {
         if (fallthroughId !== null) {
           const scheduleId = this.cx.schedule(fallthroughId, "if");
           scheduleIds.push(scheduleId);
+          this.cx.scopeFallthroughs.add(fallthroughId);
         }
 
         let block: ReactiveBlock;
@@ -1169,7 +1170,7 @@ class Driver {
     block: BlockId,
     id: InstructionId,
     loc: SourceLocation
-  ): ReactiveTerminalStatement<ReactiveBreakTerminal> {
+  ): ReactiveTerminalStatement<ReactiveBreakTerminal> | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
       CompilerError.invariant(false, {
@@ -1178,6 +1179,13 @@ class Driver {
         loc: null,
         suggestions: null,
       });
+    }
+    if (this.cx.scopeFallthroughs.has(target.block)) {
+      CompilerError.invariant(target.type === "implicit", {
+        reason: "Expected reactive scope to implicitly break to fallthrough",
+        loc,
+      });
+      return null;
     }
     return {
       kind: "terminal",
@@ -1231,6 +1239,7 @@ class Context {
    */
   emitted: Set<BlockId> = new Set();
 
+  scopeFallthroughs: Set<BlockId> = new Set();
   /*
    * A set of blocks that are already scheduled to be emitted by eg a parent.
    * This allows child nodes to avoid re-emitting the same block and emit eg
@@ -1361,9 +1370,10 @@ class Context {
    *
    * The returned 'block' value should be used as the label if necessary.
    */
-  getBreakTarget(
-    block: BlockId
-  ): { block: BlockId; type: ReactiveTerminalTargetKind } | null {
+  getBreakTarget(block: BlockId): {
+    block: BlockId;
+    type: ReactiveTerminalTargetKind;
+  } {
     let hasPrecedingLoop = false;
     for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
       const target = this.#controlFlowStack[i]!;
@@ -1392,7 +1402,13 @@ class Context {
       }
       hasPrecedingLoop ||= target.type === "loop";
     }
-    return null;
+
+    CompilerError.invariant(false, {
+      reason: "Expected a break target",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
   }
 
   /*
