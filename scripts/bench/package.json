@@ -13,7 +13,7 @@
     "http2": "^3.3.6",
     "lighthouse": "^3.2.1",
     "mime": "^1.3.6",
-    "minimist": "^1.2.3",
+    "minimist": "^1.2.6",
     "ncp": "^2.0.0",
     "nodegit": "^0.18.3",
     "rimraf": "^2.6.1",
