@@ -273,15 +273,46 @@ class ModernClassContextConsumerWithUpdates extends Component<any> {
   }
 }
 
+type LegacyContextState = {
+  supportsLegacyContext: boolean,
+};
+class LegacyContext extends React.Component {
+  state: LegacyContextState = {supportsLegacyContext: true};
+
+  static getDerivedStateFromError(error: any): LegacyContextState {
+    return {supportsLegacyContext: false};
+  }
+
+  componentDidCatch(error: any, info: any) {
+    console.info(
+      'Assuming legacy context is not supported in this React version due to: ',
+      error,
+      info,
+    );
+  }
+
+  render(): React.Node {
+    if (!this.state.supportsLegacyContext) {
+      return <p>This version of React does not support legacy context.</p>;
+    }
+
+    return (
+      <React.Fragment>
+        <LegacyContextProvider>
+          <LegacyContextConsumer />
+        </LegacyContextProvider>
+        <LegacyContextProviderWithUpdates />
+      </React.Fragment>
+    );
+  }
+}
+
 export default function Contexts(): React.Node {
   return (
     <div>
       <h1>Contexts</h1>
       <ul>
-        <LegacyContextProvider>
-          <LegacyContextConsumer />
-        </LegacyContextProvider>
-        <LegacyContextProviderWithUpdates />
+        <LegacyContext />
         <ModernContext.Provider value={contextData}>
           <ModernContext.Consumer>
             {(value: $FlowFixMe) =>

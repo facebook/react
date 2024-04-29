@@ -1,9 +1,11 @@
 'use strict';
 
-const chalk = require('chalk');
-const util = require('util');
-const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
 const {getTestFlags} = require('./TestFlags');
+const {
+  flushAllUnexpectedConsoleCalls,
+  resetAllUnexpectedConsoleCalls,
+  patchConsoleMethods,
+} = require('internal-test-utils/consoleMock');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -61,100 +63,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   });
 
-  // TODO: Consider consolidating this with `yieldValue`. In both cases, tests
-  // should not be allowed to exit without asserting on the entire log.
-  const patchConsoleMethod = (methodName, unexpectedConsoleCallStacks) => {
-    const newMethod = function (format, ...args) {
-      // Ignore uncaught errors reported by jsdom
-      // and React addendums because they're too noisy.
-      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
-        return;
-      }
-
-      // Capture the call stack now so we can warn about it later.
-      // The call stack has helpful information for the test author.
-      // Don't throw yet though b'c it might be accidentally caught and suppressed.
-      const stack = new Error().stack;
-      unexpectedConsoleCallStacks.push([
-        stack.slice(stack.indexOf('\n') + 1),
-        util.format(format, ...args),
-      ]);
-    };
-
-    console[methodName] = newMethod;
-
-    return newMethod;
-  };
-
-  const flushUnexpectedConsoleCalls = (
-    mockMethod,
-    methodName,
-    expectedMatcher,
-    unexpectedConsoleCallStacks
-  ) => {
-    if (
-      console[methodName] !== mockMethod &&
-      !jest.isMockFunction(console[methodName])
-    ) {
-      throw new Error(
-        `Test did not tear down console.${methodName} mock properly.`
-      );
-    }
-    if (unexpectedConsoleCallStacks.length > 0) {
-      const messages = unexpectedConsoleCallStacks.map(
-        ([stack, message]) =>
-          `${chalk.red(message)}\n` +
-          `${stack
-            .split('\n')
-            .map(line => chalk.gray(line))
-            .join('\n')}`
-      );
-
-      const message =
-        `Expected test not to call ${chalk.bold(
-          `console.${methodName}()`
-        )}.\n\n` +
-        'If the warning is expected, test for it explicitly by:\n' +
-        `1. Using the ${chalk.bold('.' + expectedMatcher + '()')} ` +
-        `matcher, or...\n` +
-        `2. Mock it out using ${chalk.bold(
-          'spyOnDev'
-        )}(console, '${methodName}') or ${chalk.bold(
-          'spyOnProd'
-        )}(console, '${methodName}'), and test that the warning occurs.`;
-
-      throw new Error(`${message}\n\n${messages.join('\n\n')}`);
-    }
-  };
-
-  const unexpectedErrorCallStacks = [];
-  const unexpectedWarnCallStacks = [];
-
-  const errorMethod = patchConsoleMethod('error', unexpectedErrorCallStacks);
-  const warnMethod = patchConsoleMethod('warn', unexpectedWarnCallStacks);
-
-  const flushAllUnexpectedConsoleCalls = () => {
-    flushUnexpectedConsoleCalls(
-      errorMethod,
-      'error',
-      'toErrorDev',
-      unexpectedErrorCallStacks
-    );
-    flushUnexpectedConsoleCalls(
-      warnMethod,
-      'warn',
-      'toWarnDev',
-      unexpectedWarnCallStacks
-    );
-    unexpectedErrorCallStacks.length = 0;
-    unexpectedWarnCallStacks.length = 0;
-  };
-
-  const resetAllUnexpectedConsoleCalls = () => {
-    unexpectedErrorCallStacks.length = 0;
-    unexpectedWarnCallStacks.length = 0;
-  };
-
+  // Patch the console to assert that all console error/warn/log calls assert.
+  patchConsoleMethods({includeLog: !!process.env.CI});
   beforeEach(resetAllUnexpectedConsoleCalls);
   afterEach(flushAllUnexpectedConsoleCalls);
 
@@ -241,13 +151,30 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectTestToFail = async (callback, errorMsg) => {
+  const expectTestToFail = async (callback, errorToThrowIfTestSucceeds) => {
     if (callback.length > 0) {
       throw Error(
         'Gated test helpers do not support the `done` callback. Return a ' +
           'promise instead.'
       );
     }
+
+    // Install a global error event handler. We treat global error events as
+    // test failures, same as Jest's default behavior.
+    //
+    // Becaused we installed our own error event handler, Jest will not report a
+    // test failure. Conceptually it's as if we wrapped the entire test event in
+    // a try-catch.
+    let didError = false;
+    const errorEventHandler = () => {
+      didError = true;
+    };
+    // eslint-disable-next-line no-restricted-globals
+    if (typeof addEventListener === 'function') {
+      // eslint-disable-next-line no-restricted-globals
+      addEventListener('error', errorEventHandler);
+    }
+
     try {
       const maybePromise = callback();
       if (
@@ -261,12 +188,21 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // `afterEach` like we normally do. `afterEach` is too late because if it
       // throws, we won't have captured it.
       flushAllUnexpectedConsoleCalls();
-    } catch (error) {
-      // Failed as expected
-      resetAllUnexpectedConsoleCalls();
-      return;
+    } catch (testError) {
+      didError = true;
     }
-    throw Error(errorMsg);
+    resetAllUnexpectedConsoleCalls();
+    // eslint-disable-next-line no-restricted-globals
+    if (typeof removeEventListener === 'function') {
+      // eslint-disable-next-line no-restricted-globals
+      removeEventListener('error', errorEventHandler);
+    }
+
+    if (!didError) {
+      // The test did not error like we expected it to. Report this to Jest as
+      // a failure.
+      throw errorToThrowIfTestSucceeds;
+    }
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
@@ -284,8 +220,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate);
       test(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
   global._test_gate_focus = (gateFn, testName, callback) => {
@@ -302,8 +240,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test.only(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate_focus);
       test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
 

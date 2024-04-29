@@ -77,7 +77,7 @@ describe('InspectedElement', () => {
     // Used by inspectElementAtIndex() helper function
     utils.act(() => {
       testRendererInstance = TestRenderer.create(null, {
-        isConcurrent: true,
+        unstable_isConcurrent: true,
       });
     });
 
@@ -356,7 +356,7 @@ describe('InspectedElement', () => {
         ['An update to %s inside a test was not wrapped in act'],
         () => {
           testRendererInstance = TestRenderer.create(null, {
-            isConcurrent: true,
+            unstable_isConcurrent: true,
           });
         },
       );
@@ -424,7 +424,9 @@ describe('InspectedElement', () => {
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "a": 1,
@@ -485,7 +487,9 @@ describe('InspectedElement', () => {
     targetRenderCount = 0;
 
     let inspectedElement = await inspectElementAtIndex(1);
-    expect(targetRenderCount).toBe(1);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "a": 1,
@@ -506,7 +510,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -555,7 +559,9 @@ describe('InspectedElement', () => {
     const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement).not.toBe(null);
-    expect(targetRenderCount).toBe(2);
+    // One more because we call render function for generating component stack,
+    // which is required for defining source location
+    expect(targetRenderCount).toBe(3);
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.log).toHaveBeenCalledTimes(1);
@@ -2063,7 +2069,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -2123,7 +2129,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          isConcurrent: true,
+          unstable_isConcurrent: true,
         });
       },
     );
@@ -2153,7 +2159,7 @@ describe('InspectedElement', () => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
       withErrorsOrWarningsIgnored(
-        ['ReactDOM.hydrate is no longer supported in React 18'],
+        ['ReactDOM.hydrate has not been supported since React 18'],
         () => {
           ReactDOM.hydrate(<Example />, container);
         },
@@ -2399,7 +2405,7 @@ describe('InspectedElement', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>,
-          {isConcurrent: true},
+          {unstable_isConcurrent: true},
         );
       }, false);
       await utils.actAsync(() => {
@@ -2558,7 +2564,7 @@ describe('InspectedElement', () => {
         {
           "errors": [
             [
-              "Warning: Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.
+              "Warning: Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
             at Example",
               1,
             ],
@@ -2937,7 +2943,7 @@ describe('InspectedElement', () => {
           ['An update to %s inside a test was not wrapped in act'],
           () => {
             testRendererInstance = TestRenderer.create(null, {
-              isConcurrent: true,
+              unstable_isConcurrent: true,
             });
           },
         );

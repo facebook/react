@@ -74,6 +74,7 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should support defaultProps', async () => {
     function FunctionComponent({forwardedRef, optional, required}) {
       return (
@@ -192,7 +193,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in p (at **)',
     );
   });
@@ -209,7 +210,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );
@@ -229,7 +230,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );
@@ -248,7 +249,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Outer (at **)\n' +
         '    in p (at **)',
     );
@@ -269,7 +270,7 @@ describe('forwardRef', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+      'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Inner (at **)\n' +
         '    in p (at **)',
     );

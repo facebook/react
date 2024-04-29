@@ -657,12 +657,31 @@ describe('ReactDOMInput', () => {
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
+  it('should render bigint defaultValue for SSR', () => {
+    const markup = ReactDOMServer.renderToString(
+      <input type="text" defaultValue={5n} />,
+    );
+    const div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('5');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
+  });
+
   it('should render value for SSR', () => {
     const element = <input type="text" value="1" onChange={() => {}} />;
     const markup = ReactDOMServer.renderToString(element);
     const div = document.createElement('div');
     div.innerHTML = markup;
     expect(div.firstChild.getAttribute('value')).toBe('1');
+    expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
+  });
+
+  it('should render bigint value for SSR', () => {
+    const element = <input type="text" value={5n} onChange={() => {}} />;
+    const markup = ReactDOMServer.renderToString(element);
+    const div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('value')).toBe('5');
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
@@ -714,7 +733,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('foobar');
   });
 
-  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', () => {
+  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -725,19 +744,16 @@ describe('ReactDOMInput', () => {
         return '2020-01-01';
       }
     }
-    const legacyContainer = document.createElement('div');
-    document.body.appendChild(legacyContainer);
-    const test = () =>
-      ReactDOM.render(
-        <input defaultValue={new TemporalLike()} type="date" />,
-        legacyContainer,
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<input defaultValue={new TemporalLike()} type="date" />);
+        });
+      }).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+          'strings, not TemporalLike. This value must be coerced to a string before using it here.',
       );
-    expect(() =>
-      expect(test).toThrowError(new TypeError('prod message')),
-    ).toErrorDev(
-      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
-    );
+    }).rejects.toThrowError(new TypeError('prod message'));
   });
 
   it('should throw for text inputs if `defaultValue` is an object where valueOf() throws', async () => {
@@ -828,6 +844,15 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
+  });
+
+  it('should display `value` of bigint 5', async () => {
+    await act(() => {
+      root.render(<input type="text" value={5n} onChange={emptyFunction} />);
+    });
+    const node = container.firstChild;
+
+    expect(node.value).toBe('5');
   });
 
   it('should allow setting `value` to `true`', async () => {
@@ -1707,7 +1732,8 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should control radio buttons if the tree updates during render', () => {
+  // @gate !disableLegacyMode
+  it('should control radio buttons if the tree updates during render in legacy mode', async () => {
     container.remove();
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -1967,7 +1993,7 @@ describe('ReactDOMInput', () => {
         '(specify either the checked prop, or the defaultChecked prop, but not ' +
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
-        'https://reactjs.org/link/controlled-components',
+        'https://react.dev/link/controlled-components',
     );
     root.unmount();
 
@@ -1997,7 +2023,7 @@ describe('ReactDOMInput', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
-        'https://reactjs.org/link/controlled-components',
+        'https://react.dev/link/controlled-components',
     );
     await (() => {
       root.unmount();
@@ -2026,7 +2052,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2049,7 +2075,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     ]);
   });
@@ -2070,7 +2096,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2089,7 +2115,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2113,7 +2139,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2134,7 +2160,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2155,7 +2181,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2176,7 +2202,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2195,7 +2221,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2214,7 +2240,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2233,7 +2259,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2252,7 +2278,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2271,7 +2297,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2290,7 +2316,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2309,7 +2335,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -2373,7 +2399,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
+        'element for the lifetime of the component. More info: https://react.dev/link/controlled-components\n' +
         '    in input (at **)',
     );
   });

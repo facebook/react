@@ -9,9 +9,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -79,21 +76,6 @@ ${source}`;
   /***************** BUN_PROD *****************/
   [BUN_PROD](source, globalName, filename, moduleType) {
     return source;
-  },
-
-  /***************** UMD_DEV *****************/
-  [UMD_DEV](source, globalName, filename, moduleType) {
-    return source;
-  },
-
-  /***************** UMD_PROD *****************/
-  [UMD_PROD](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
-  },
-
-  /***************** UMD_PROFILING *****************/
-  [UMD_PROFILING](source, globalName, filename, moduleType) {
-    return `(function(){${source}})();`;
   },
 
   /***************** NODE_DEV *****************/
@@ -222,6 +204,47 @@ module.exports.default = module.exports;
 Object.defineProperty(module.exports, "__esModule", { value: true });
 `;
   },
+
+  /***************** FB_WWW_DEV (reconciler only) *****************/
+  [FB_WWW_DEV](source, globalName, filename, moduleType) {
+    return `'use strict';
+
+if (__DEV__) {
+  module.exports = function $$$reconciler($$$config) {
+    var exports = {};
+${source}
+    return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+}
+`;
+  },
+
+  /***************** FB_WWW_PROD (reconciler only) *****************/
+  [FB_WWW_PROD](source, globalName, filename, moduleType) {
+    return `module.exports = function $$$reconciler($$$config) {
+
+      var exports = {};
+  ${source}
+      return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+  `;
+  },
+
+  /***************** FB_WWW_PROFILING (reconciler only) *****************/
+  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+    return `module.exports = function $$$reconciler($$$config) {
+      var exports = {};
+  ${source}
+      return exports;
+  };
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+  `;
+  },
 };
 
 const licenseHeaderWrappers = {
@@ -275,42 +298,6 @@ ${source}`;
 
   /***************** BUN_PROD *****************/
   [BUN_PROD](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_DEV *****************/
-  [UMD_DEV](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_PROD *****************/
-  [UMD_PROD](source, globalName, filename, moduleType) {
-    return `/**
- * @license React
- * ${filename}
- *
-${license}
- */
-
-${source}`;
-  },
-
-  /***************** UMD_PROFILING *****************/
-  [UMD_PROFILING](source, globalName, filename, moduleType) {
     return `/**
  * @license React
  * ${filename}
@@ -406,7 +393,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-dev
  * @preventMunge
  * ${getSigningToken()}
  */
@@ -421,7 +407,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-prod
  * @preventMunge
  * ${getSigningToken()}
  */
@@ -436,7 +421,6 @@ ${license}
  *
  * @noflow
  * @nolint
- * @providesModule ${globalName}-profiling
  * @preventMunge
  * ${getSigningToken()}
  */

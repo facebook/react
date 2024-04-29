@@ -24,7 +24,7 @@ import {
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
-import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import {isValidElement, cloneAndReplaceKey} from './jsx/ReactJSXElement';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
@@ -163,6 +163,7 @@ function mapIntoArray(
     invokeCallback = true;
   } else {
     switch (type) {
+      case 'bigint':
       case 'string':
       case 'number':
         invokeCallback = true;

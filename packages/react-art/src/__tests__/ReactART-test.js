@@ -11,7 +11,8 @@
 
 'use strict';
 
-import * as React from 'react';
+const React = require('react');
+const Scheduler = require('scheduler');
 
 import * as ReactART from 'react-art';
 import ARTSVGMode from 'art/modes/svg';
@@ -22,27 +23,28 @@ import Circle from 'react-art/Circle';
 import Rectangle from 'react-art/Rectangle';
 import Wedge from 'react-art/Wedge';
 
+const {act, waitFor} = require('internal-test-utils');
+
 // Isolate DOM renderer.
 jest.resetModules();
-
+// share isomorphic
+jest.mock('scheduler', () => Scheduler);
+jest.mock('react', () => React);
+const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
-
-// Isolate test renderer.
-jest.resetModules();
-const ReactTestRenderer = require('react-test-renderer');
 
 // Isolate the noop renderer
 jest.resetModules();
+// share isomorphic
+jest.mock('scheduler', () => Scheduler);
+jest.mock('react', () => React);
 const ReactNoop = require('react-noop-renderer');
-const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
 let Surface;
 let TestComponent;
 
-let waitFor;
 let groupRef;
 
 const Missing = {};
@@ -73,6 +75,11 @@ describe('ReactART', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
+    // share isomorphic
+    jest.mock('scheduler', () => Scheduler);
+    jest.mock('react', () => React);
+
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -81,8 +88,6 @@ describe('ReactART', () => {
     Group = ReactART.Group;
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
-
-    ({waitFor} = require('internal-test-utils'));
 
     groupRef = React.createRef();
     TestComponent = class extends React.Component {
@@ -414,8 +419,6 @@ describe('ReactART', () => {
       );
     }
 
-    // Using test renderer instead of the DOM renderer here because async
-    // testing APIs for the DOM renderer don't exist.
     ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
@@ -428,7 +431,9 @@ describe('ReactART', () => {
     await waitFor(['A']);
 
     const root = ReactDOMClient.createRoot(container);
-    await act(() => {
+    // We use flush sync here because we expect this to render in between
+    // while the concurrent render is yieldy where as act would flush both.
+    ReactDOM.flushSync(() => {
       root.render(
         <Surface>
           <LogCurrentRenderer />
@@ -439,8 +444,6 @@ describe('ReactART', () => {
       );
     });
 
-    expect(ops).toEqual([null, 'ART']);
-
     ops = [];
     await waitFor(['B', 'C']);
 
@@ -449,124 +452,139 @@ describe('ReactART', () => {
 });
 
 describe('ReactARTComponents', () => {
-  it('should generate a <Shape> with props for drawing the Circle', () => {
-    const circle = ReactTestRenderer.create(
-      <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
-    );
+  let ReactTestRenderer;
+  beforeEach(() => {
+    jest.resetModules();
+    // share isomorphic
+    jest.mock('scheduler', () => Scheduler);
+    jest.mock('react', () => React);
+    // Isolate test renderer.
+    ReactTestRenderer = require('react-test-renderer');
+  });
+
+  it('should generate a <Shape> with props for drawing the Circle', async () => {
+    let circle;
+    await act(() => {
+      circle = ReactTestRenderer.create(
+        <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(circle.toJSON()).toMatchSnapshot();
   });
 
-  it('should warn if radius is missing on a Circle component', () => {
-    expect(() =>
-      ReactTestRenderer.create(
-        <Circle stroke="green" strokeWidth={3} fill="blue" />,
-      ),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Circle (at **)',
-    );
-  });
-
-  it('should generate a <Shape> with props for drawing the Rectangle', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
-    );
+  it('should generate a <Shape> with props for drawing the Rectangle', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with positive width when width prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle width={-50} height={50} />,
-    );
+  it('should generate a <Shape> with positive width when width prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle width={-50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with positive height when height prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle height={-50} width={50} />,
-    );
+  it('should generate a <Shape> with positive height when height prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle height={-50} width={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusTopLeft={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusTopLeft={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusTopRight={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusTopRight={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusBottomRight={-30} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusBottomRight={-30} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
-    );
+  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', () => {
-    const rectangle = ReactTestRenderer.create(
-      <Rectangle
-        radiusTopRight={25}
-        radiusTopLeft={26}
-        width={50}
-        height={40}
-      />,
-    );
+  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', async () => {
+    let rectangle;
+    await act(() => {
+      rectangle = ReactTestRenderer.create(
+        <Rectangle
+          radiusTopRight={25}
+          radiusTopLeft={26}
+          width={50}
+          height={40}
+        />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should warn if width/height is missing on a Rectangle component', () => {
-    expect(() =>
-      ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
-    ).toErrorDev([
-      'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Rectangle (at **)',
-      'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Rectangle (at **)',
-    ]);
-  });
-
-  it('should generate a <Shape> with props for drawing the Wedge', () => {
-    const wedge = ReactTestRenderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
-    );
+  it('should generate a <Shape> with props for drawing the Wedge', async () => {
+    let wedge;
+    await act(() => {
+      wedge = ReactTestRenderer.create(
+        <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(wedge.toJSON()).toMatchSnapshot();
   });
 
-  it('should return null if startAngle equals to endAngle on Wedge', () => {
-    const wedge = ReactTestRenderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
-    );
+  it('should return null if startAngle equals to endAngle on Wedge', async () => {
+    let wedge;
+    await act(() => {
+      wedge = ReactTestRenderer.create(
+        <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
+        {unstable_isConcurrent: true},
+      );
+    });
     expect(wedge.toJSON()).toBeNull();
-  });
-
-  it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
-    expect(() => ReactTestRenderer.create(<Wedge fill="blue" />)).toErrorDev([
-      'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-      'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-      'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-    ]);
   });
 });

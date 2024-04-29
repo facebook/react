@@ -40,18 +40,18 @@ if (__DEV__) {
   didWarnOnInvalidCallback = new Set<string>();
 }
 
-function warnOnInvalidCallback(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed) {
   if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = callerName + '_' + (callback: any);
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const key = String(callback);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
+        'Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
-        callerName,
         callback,
       );
     }
@@ -88,10 +88,9 @@ function warnNoop(
     }
 
     console.error(
-      '%s(...): Can only update a mounting component. ' +
+      'Can only update a mounting component. ' +
         'This usually means you called %s() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the %s component.',
-      callerName,
       callerName,
       componentName,
     );
@@ -117,7 +116,7 @@ const classComponentUpdater = {
       internals.queue.push(payload);
       if (__DEV__) {
         if (callback !== undefined && callback !== null) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback);
         }
       }
     }
@@ -128,7 +127,7 @@ const classComponentUpdater = {
     internals.queue = [payload];
     if (__DEV__) {
       if (callback !== undefined && callback !== null) {
-        warnOnInvalidCallback(callback, 'setState');
+        warnOnInvalidCallback(callback);
       }
     }
   },
@@ -140,7 +139,7 @@ const classComponentUpdater = {
     } else {
       if (__DEV__) {
         if (callback !== undefined && callback !== null) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback);
         }
       }
     }
@@ -293,7 +292,7 @@ export function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://reactjs.org/link/unsafe-component-lifecycles',
+              'https://react.dev/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
@@ -318,13 +317,13 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     if (!renderPresent) {
       if (ctor.prototype && typeof ctor.prototype.render === 'function') {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: you may have forgotten to define `render`.',
           name,
         );
@@ -372,14 +371,14 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     if (disableLegacyContext) {
       if (ctor.childContextTypes) {
         console.error(
-          '%s uses the legacy childContextTypes API which is no longer supported. ' +
+          '%s uses the legacy childContextTypes API which was removed in React 19. ' +
             'Use React.createContext() instead.',
           name,
         );
       }
       if (ctor.contextTypes) {
         console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
             'Use React.createContext() with static contextType instead.',
           name,
         );
@@ -463,9 +462,8 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     const hasMutatedProps = instance.props !== newProps;
     if (instance.props !== undefined && hasMutatedProps) {
       console.error(
-        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
-        name,
         name,
       );
     }
@@ -541,7 +539,7 @@ function callComponentWillMount(type: any, instance: any) {
           console.warn(
             // keep this warning in sync with ReactStrictModeWarning.js
             'componentWillMount has been renamed, and is not recommended for use. ' +
-              'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+              'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
               '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
               'or the constructor.\n' +
               '\nPlease update the following components: %s',

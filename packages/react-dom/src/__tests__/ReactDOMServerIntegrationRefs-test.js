@@ -14,7 +14,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -22,13 +21,11 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -79,6 +76,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(refElement).toBe(e);
     });
 
+    // @gate !disableStringRefs
     it('should have string refs on client when rendered over server markup', async () => {
       class RefsComponent extends React.Component {
         render() {
@@ -101,7 +99,8 @@ describe('ReactDOMServerIntegration', () => {
         'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+          '    in div (at **)\n' +
           '    in RefsComponent (at **)',
       ]);
       expect(component.refs.myDiv).toBe(root.firstChild);

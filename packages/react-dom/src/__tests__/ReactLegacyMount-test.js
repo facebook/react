@@ -13,11 +13,7 @@ const {COMMENT_NODE} = require('react-dom-bindings/src/client/HTMLNodeType');
 
 let React;
 let ReactDOM;
-let ReactDOMServer;
-let ReactTestUtils;
-let Scheduler;
 let ReactDOMClient;
-let assertLog;
 let waitForAll;
 
 describe('ReactMount', () => {
@@ -27,25 +23,21 @@ describe('ReactMount', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
-    Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
-    assertLog = InternalTestUtils.assertLog;
     waitForAll = InternalTestUtils.waitForAll;
   });
 
   describe('unmountComponentAtNode', () => {
+    // @gate !disableLegacyMode
     it('throws when given a non-node', () => {
       const nodeArray = document.getElementsByTagName('div');
       expect(() => {
         ReactDOM.unmountComponentAtNode(nodeArray);
-      }).toThrowError(
-        'unmountComponentAtNode(...): Target container is not a DOM element.',
-      );
+      }).toThrowError('Target container is not a DOM element.');
     });
 
+    // @gate !disableLegacyMode
     it('returns false on non-React containers', () => {
       const d = document.createElement('div');
       d.innerHTML = '<b>hellooo</b>';
@@ -53,6 +45,7 @@ describe('ReactMount', () => {
       expect(d.textContent).toBe('hellooo');
     });
 
+    // @gate !disableLegacyMode
     it('returns true on React containers', () => {
       const d = document.createElement('div');
       ReactDOM.render(<b>hellooo</b>, d);
@@ -62,6 +55,7 @@ describe('ReactMount', () => {
     });
   });
 
+  // @gate !disableLegacyMode
   it('warns when given a factory', () => {
     class Component extends React.Component {
       render() {
@@ -69,7 +63,10 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(Component)).toErrorDev(
+    expect(() => {
+      const container = document.createElement('div');
+      ReactDOM.render(Component, container);
+    }).toErrorDev(
       'Functions are not valid as a React child. ' +
         'This may happen if you return Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.\n' +
@@ -78,6 +75,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should render different components in same root', () => {
     const container = document.createElement('container');
     document.body.appendChild(container);
@@ -89,6 +87,7 @@ describe('ReactMount', () => {
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
+  // @gate !disableLegacyMode
   it('should unmount and remount if the key changes', () => {
     const container = document.createElement('container');
 
@@ -124,6 +123,7 @@ describe('ReactMount', () => {
     expect(mockUnmount).toHaveBeenCalledTimes(1);
   });
 
+  // @gate !disableLegacyMode
   it('should reuse markup if rendering to the same target twice', () => {
     const container = document.createElement('container');
     const instance1 = ReactDOM.render(<div />, container);
@@ -132,23 +132,7 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
-  it('does not warn if mounting into left padded rendered markup', () => {
-    const container = document.createElement('container');
-    container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
-
-    // This should probably ideally warn but we ignore extra markup at the root.
-    ReactDOM.hydrate(<div />, container);
-  });
-
-  it('should warn if mounting into right padded rendered markup', () => {
-    const container = document.createElement('container');
-    container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
-
-    expect(() => ReactDOM.hydrate(<div />, container)).toErrorDev(
-      'Did not expect server HTML to contain the text node " " in <container>.',
-    );
-  });
-
+  // @gate !disableLegacyMode
   it('should not warn if mounting into non-empty node', () => {
     const container = document.createElement('container');
     container.innerHTML = '<div></div>';
@@ -156,6 +140,7 @@ describe('ReactMount', () => {
     ReactDOM.render(<div />, container);
   });
 
+  // @gate !disableLegacyMode
   it('should warn when mounting into document.body', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
@@ -164,24 +149,7 @@ describe('ReactMount', () => {
     ReactDOM.render(<div />, iFrame.contentDocument.body);
   });
 
-  it('should account for escaping on a checksum mismatch', () => {
-    const div = document.createElement('div');
-    const markup = ReactDOMServer.renderToString(
-      <div>This markup contains an nbsp entity: &nbsp; server text</div>,
-    );
-    div.innerHTML = markup;
-
-    expect(() =>
-      ReactDOM.hydrate(
-        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-        div,
-      ),
-    ).toErrorDev(
-      'Server: "This markup contains an nbsp entity:   server text" ' +
-        'Client: "This markup contains an nbsp entity:   client text"',
-    );
-  });
-
+  // @gate !disableLegacyMode
   it('should warn if render removes React-rendered children', () => {
     const container = document.createElement('container');
 
@@ -201,7 +169,7 @@ describe('ReactMount', () => {
     const rootNode = container.firstChild;
 
     expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
-      'Warning: render(...): Replacing React-rendered children with a new ' +
+      'Warning: Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
         'render the new components instead of calling ReactDOM.render.',
@@ -209,6 +177,7 @@ describe('ReactMount', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should warn if the unmounted node was rendered by another copy of React', () => {
     jest.resetModules();
     const ReactDOMOther = require('react-dom');
@@ -238,6 +207,7 @@ describe('ReactMount', () => {
     ReactDOM.unmountComponentAtNode(container);
   });
 
+  // @gate !disableLegacyMode
   it('passes the correct callback context', () => {
     const container = document.createElement('div');
     let calls = 0;
@@ -278,6 +248,7 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
+  // @gate !disableLegacyMode && classic
   it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
@@ -324,6 +295,7 @@ describe('ReactMount', () => {
       expect(mountPoint.nodeType).toBe(COMMENT_NODE);
     });
 
+    // @gate !disableLegacyMode
     it('renders at a comment node', () => {
       function Char(props) {
         return props.children;
@@ -349,6 +321,7 @@ describe('ReactMount', () => {
     });
   });
 
+  // @gate !disableLegacyMode
   it('clears existing children with legacy API', async () => {
     const container = document.createElement('div');
     container.innerHTML = '<div>a</div><div>b</div>';
@@ -371,6 +344,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('dc');
   });
 
+  // @gate !disableLegacyMode
   it('warns when rendering with legacy API into createRoot() container', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -395,16 +369,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('Bye');
   });
 
-  it('callback passed to legacy hydrate() API', () => {
-    const container = document.createElement('div');
-    container.innerHTML = '<div>Hi</div>';
-    ReactDOM.hydrate(<div>Hi</div>, container, () => {
-      Scheduler.log('callback');
-    });
-    expect(container.textContent).toEqual('Hi');
-    assertLog(['callback']);
-  });
-
+  // @gate !disableLegacyMode
   it('warns when unmounting with legacy API (no previous content)', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -432,6 +397,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('');
   });
 
+  // @gate !disableLegacyMode
   it('warns when unmounting with legacy API (has previous content)', async () => {
     const container = document.createElement('div');
     // Currently createRoot().render() doesn't clear this.
@@ -460,6 +426,7 @@ describe('ReactMount', () => {
     expect(container.textContent).toEqual('');
   });
 
+  // @gate !disableLegacyMode
   it('warns when passing legacy container to createRoot()', () => {
     const container = document.createElement('div');
     ReactDOM.render(<div>Hi</div>, container);

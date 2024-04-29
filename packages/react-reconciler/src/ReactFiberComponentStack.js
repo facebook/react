@@ -17,7 +17,6 @@ import {
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
-  IndeterminateComponent,
   ForwardRef,
   SimpleMemoComponent,
   ClassComponent,
@@ -26,33 +25,28 @@ import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
   describeClassComponentFrame,
+  describeDebugInfoFrame,
 } from 'shared/ReactComponentStackFrame';
 
 function describeFiber(fiber: Fiber): string {
-  const owner: null | Function = __DEV__
-    ? fiber._debugOwner
-      ? fiber._debugOwner.type
-      : null
-    : null;
   switch (fiber.tag) {
     case HostHoistable:
     case HostSingleton:
     case HostComponent:
-      return describeBuiltInComponentFrame(fiber.type, owner);
+      return describeBuiltInComponentFrame(fiber.type);
     case LazyComponent:
-      return describeBuiltInComponentFrame('Lazy', owner);
+      return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
-      return describeBuiltInComponentFrame('Suspense', owner);
+      return describeBuiltInComponentFrame('Suspense');
     case SuspenseListComponent:
-      return describeBuiltInComponentFrame('SuspenseList', owner);
+      return describeBuiltInComponentFrame('SuspenseList');
     case FunctionComponent:
-    case IndeterminateComponent:
     case SimpleMemoComponent:
-      return describeFunctionComponentFrame(fiber.type, owner);
+      return describeFunctionComponentFrame(fiber.type);
     case ForwardRef:
-      return describeFunctionComponentFrame(fiber.type.render, owner);
+      return describeFunctionComponentFrame(fiber.type.render);
     case ClassComponent:
-      return describeClassComponentFrame(fiber.type, owner);
+      return describeClassComponentFrame(fiber.type);
     default:
       return '';
   }
@@ -64,6 +58,18 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
     let node: Fiber = workInProgress;
     do {
       info += describeFiber(node);
+      if (__DEV__) {
+        // Add any Server Component stack frames in reverse order.
+        const debugInfo = node._debugInfo;
+        if (debugInfo) {
+          for (let i = debugInfo.length - 1; i >= 0; i--) {
+            const entry = debugInfo[i];
+            if (typeof entry.name === 'string') {
+              info += describeDebugInfoFrame(entry.name, entry.env);
+            }
+          }
+        }
+      }
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);

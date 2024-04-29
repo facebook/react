@@ -125,7 +125,7 @@ export type NativeMethods = $ReadOnly<{|
 |}>;
 
 // This validates that INativeMethods and NativeMethods stay in sync using Flow!
-declare var ensureNativeMethodsAreSynced: NativeMethods;
+declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
@@ -174,6 +174,25 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
   ...InspectorData,
 }>;
 
+export type RenderRootOptions = {
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      // $FlowFixMe[unclear-type] unknown props and state.
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+};
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.
@@ -202,6 +221,7 @@ export type ReactNativeType = {
     element: Element<ElementType>,
     containerTag: number,
     callback: ?() => void,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
@@ -237,6 +257,7 @@ export type ReactFabricType = {
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   getNodeFromInternalInstanceHandle(

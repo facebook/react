@@ -13,8 +13,8 @@ import type {
   SuspenseInstance,
   Container,
   ChildSet,
-  UpdatePayload,
   HoistableRoot,
+  FormInstance,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -40,6 +40,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 
 import {
+  alwaysThrottleRetries,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -51,9 +52,9 @@ import {
   enableCache,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableFloat,
   enableLegacyHidden,
-  alwaysThrottleRetries,
+  disableStringRefs,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -96,6 +97,7 @@ import {
   Visibility,
   ShouldSuspendCommit,
   MaySuspendCommit,
+  FormReset,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -103,7 +105,7 @@ import {
   setCurrentFiber as setCurrentDebugFiberInDEV,
   getCurrentFiber as getCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveClassComponentProps} from './ReactFiberClassComponent';
 import {
   isCurrentUpdateNested,
   getCommitTime,
@@ -162,6 +164,7 @@ import {
   prepareToCommitHoistables,
   suspendInstance,
   suspendResource,
+  resetFormInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -189,7 +192,6 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {doesFiberContain} from './ReactFiberTreeReflection';
-import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
   isDevToolsPresent,
   markComponentPassiveEffectMountStarted,
@@ -226,6 +228,9 @@ if (__DEV__) {
 let offscreenSubtreeIsHidden: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
 
+// Used to track if a form needs to be reset at the end of the mutation phase.
+let needsFormReset = false;
+
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 let nextEffect: Fiber | null = null;
@@ -243,22 +248,12 @@ function shouldProfile(current: Fiber): boolean {
   );
 }
 
-export function reportUncaughtErrorInDEV(error: mixed) {
-  // Wrapping each small part of the commit phase into a guarded
-  // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
-  // But we rely on it to surface errors to DEV tools like overlays
-  // (https://github.com/facebook/react/issues/21712).
-  // As a compromise, rethrow only caught errors in a guard.
-  if (__DEV__) {
-    invokeGuardedCallback(null, () => {
-      throw error;
-    });
-    clearCaughtError();
-  }
-}
-
 function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
-  instance.props = current.memoizedProps;
+  instance.props = resolveClassComponentProps(
+    current.type,
+    current.memoizedProps,
+    current.elementType === current.type,
+  );
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {
     try {
@@ -322,29 +317,19 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         }
       }
     } else if (typeof ref === 'function') {
-      let retVal;
       try {
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            retVal = ref(null);
+            ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          retVal = ref(null);
+          ref(null);
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
-      }
-      if (__DEV__) {
-        if (typeof retVal === 'function') {
-          console.error(
-            'Unexpected return value from a callback ref in %s. ' +
-              'A callback ref should not return a function.',
-            getComponentNameFromFiber(current),
-          );
-        }
       }
     } else {
       // $FlowFixMe[incompatible-use] unable to narrow type to RefObject
@@ -485,7 +470,8 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
             if (
-              finishedWork.type === finishedWork.elementType &&
+              !finishedWork.type.defaultProps &&
+              !('ref' in finishedWork.memoizedProps) &&
               !didWarnAboutReassigningProps
             ) {
               if (instance.props !== finishedWork.memoizedProps) {
@@ -511,9 +497,11 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
             }
           }
           const snapshot = instance.getSnapshotBeforeUpdate(
-            finishedWork.elementType === finishedWork.type
-              ? prevProps
-              : resolveDefaultProps(finishedWork.type, prevProps),
+            resolveClassComponentProps(
+              finishedWork.type,
+              prevProps,
+              finishedWork.elementType === finishedWork.type,
+            ),
             prevState,
           );
           if (__DEV__) {
@@ -702,7 +690,7 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
                 '  }\n' +
                 '  fetchData();\n' +
                 `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
+                'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
             }
@@ -821,7 +809,8 @@ function commitClassLayoutLifecycles(
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
       if (
-        finishedWork.type === finishedWork.elementType &&
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
         !didWarnAboutReassigningProps
       ) {
         if (instance.props !== finishedWork.memoizedProps) {
@@ -862,17 +851,19 @@ function commitClassLayoutLifecycles(
       }
     }
   } else {
-    const prevProps =
-      finishedWork.elementType === finishedWork.type
-        ? current.memoizedProps
-        : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+    const prevProps = resolveClassComponentProps(
+      finishedWork.type,
+      current.memoizedProps,
+      finishedWork.elementType === finishedWork.type,
+    );
     const prevState = current.memoizedState;
     // We could update instance props and state here,
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     if (__DEV__) {
       if (
-        finishedWork.type === finishedWork.elementType &&
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
         !didWarnAboutReassigningProps
       ) {
         if (instance.props !== finishedWork.memoizedProps) {
@@ -932,7 +923,8 @@ function commitClassCallbacks(finishedWork: Fiber) {
     const instance = finishedWork.stateNode;
     if (__DEV__) {
       if (
-        finishedWork.type === finishedWork.elementType &&
+        !finishedWork.type.defaultProps &&
+        !('ref' in finishedWork.memoizedProps) &&
         !didWarnAboutReassigningProps
       ) {
         if (instance.props !== finishedWork.memoizedProps) {
@@ -1119,7 +1111,7 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         recursivelyTraverseLayoutEffects(
           finishedRoot,
           finishedWork,
@@ -1179,7 +1171,8 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case OffscreenComponent: {
-      const isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
+      const isModernRoot =
+        disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
         const isHidden = finishedWork.memoizedState !== null;
         const newOffscreenSubtreeIsHidden =
@@ -1523,9 +1516,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (enableFloat && supportsResources
-          ? node.tag === HostHoistable
-          : false) ||
+        (supportsResources ? node.tag === HostHoistable : false) ||
         (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         if (hostSubtreeRoot === null) {
@@ -1624,7 +1615,11 @@ function commitAttachRef(finishedWork: Fiber) {
       }
     } else {
       if (__DEV__) {
-        if (!ref.hasOwnProperty('current')) {
+        // TODO: We should move these warnings to happen during the render
+        // phase (markRef).
+        if (disableStringRefs && typeof ref === 'string') {
+          console.error('String refs are no longer supported.');
+        } else if (!ref.hasOwnProperty('current')) {
           console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().',
@@ -1743,7 +1738,7 @@ function isHostParent(fiber: Fiber): boolean {
   return (
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
-    (enableFloat && supportsResources ? fiber.tag === HostHoistable : false) ||
+    (supportsResources ? fiber.tag === HostHoistable : false) ||
     (supportsSingletons ? fiber.tag === HostSingleton : false) ||
     fiber.tag === HostPortal
   );
@@ -2021,7 +2016,7 @@ function commitDeletionEffectsOnFiber(
   // that don't modify the stack.
   switch (deletedFiber.tag) {
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         if (!offscreenSubtreeWasHidden) {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
@@ -2268,7 +2263,7 @@ function commitDeletionEffectsOnFiber(
     }
     case OffscreenComponent: {
       safelyDetachRef(deletedFiber, nearestMountedAncestor);
-      if (deletedFiber.mode & ConcurrentMode) {
+      if (disableLegacyMode || deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
         // don't attempt to unmount the effects again.
@@ -2614,7 +2609,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         // We cast because we always set the root at the React root and so it cannot be
         // null while we are processing mutation effects
         const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
@@ -2680,14 +2675,9 @@ function commitMutationEffectsOnFiber(
               );
             }
           } else if (newResource === null && finishedWork.stateNode !== null) {
-            // We may have an update on a Hoistable element
-            const updatePayload: null | UpdatePayload =
-              (finishedWork.updateQueue: any);
-            finishedWork.updateQueue = null;
             try {
               commitUpdate(
                 finishedWork.stateNode,
-                updatePayload,
                 finishedWork.type,
                 current.memoizedProps,
                 finishedWork.memoizedProps,
@@ -2758,21 +2748,24 @@ function commitMutationEffectsOnFiber(
             const oldProps =
               current !== null ? current.memoizedProps : newProps;
             const type = finishedWork.type;
-            // TODO: Type the updateQueue to be specific to host components.
-            const updatePayload: null | UpdatePayload =
-              (finishedWork.updateQueue: any);
-            finishedWork.updateQueue = null;
             try {
-              commitUpdate(
-                instance,
-                updatePayload,
-                type,
-                oldProps,
-                newProps,
-                finishedWork,
-              );
+              commitUpdate(instance, type, oldProps, newProps, finishedWork);
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+          }
+        }
+
+        if (flags & FormReset) {
+          needsFormReset = true;
+          if (__DEV__) {
+            if (finishedWork.type !== 'form') {
+              // Paranoid coding. In case we accidentally start using the
+              // FormReset bit for something else.
+              console.error(
+                'Unexpected host component type. Expected a form. This is a ' +
+                  'bug in React.',
+              );
             }
           }
         }
@@ -2810,7 +2803,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         prepareToCommitHoistables();
 
         const previousHoistableRoot = currentHoistableRoot;
@@ -2852,10 +2845,25 @@ function commitMutationEffectsOnFiber(
           }
         }
       }
+
+      if (needsFormReset) {
+        // A form component requested to be reset during this commit. We do this
+        // after all mutations in the rest of the tree so that `defaultValue`
+        // will already be updated. This way you can update `defaultValue` using
+        // data sent by the server as a result of the form submission.
+        //
+        // Theoretically we could check finishedWork.subtreeFlags & FormReset,
+        // but the FormReset bit is overloaded with other flags used by other
+        // fiber types. So this extra variable lets us skip traversing the tree
+        // except when a form was actually submitted.
+        needsFormReset = false;
+        recursivelyResetForms(finishedWork);
+      }
+
       return;
     }
     case HostPortal: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
         currentHoistableRoot = getHoistableRoot(
           finishedWork.stateNode.containerInfo,
@@ -2945,7 +2953,7 @@ function commitMutationEffectsOnFiber(
       const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
 
-      if (finishedWork.mode & ConcurrentMode) {
+      if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
         // offscreen subtree was already hidden, so that we don't unmount the
         // effects again.
@@ -2991,7 +2999,10 @@ function commitMutationEffectsOnFiber(
           //   - This Offscreen was not hidden before.
           //   - Ancestor Offscreen was not hidden in previous commit.
           if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
-            if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
+            if (
+              disableLegacyMode ||
+              (finishedWork.mode & ConcurrentMode) !== NoMode
+            ) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
             }
@@ -3085,6 +3096,24 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   }
   if (flags & Hydrating) {
     finishedWork.flags &= ~Hydrating;
+  }
+}
+
+function recursivelyResetForms(parentFiber: Fiber) {
+  if (parentFiber.subtreeFlags & FormReset) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      resetFormOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function resetFormOnFiber(fiber: Fiber) {
+  recursivelyResetForms(fiber);
+  if (fiber.tag === HostComponent && fiber.flags & FormReset) {
+    const formInstance: FormInstance = fiber.stateNode;
+    resetFormInstance(formInstance);
   }
 }
 
@@ -3689,7 +3718,7 @@ function commitPassiveMountOnFiber(
             committedTransitions,
           );
         } else {
-          if (finishedWork.mode & ConcurrentMode) {
+          if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
             if (enableCache || enableTransitionTracing) {
@@ -3887,7 +3916,7 @@ export function reconnectPassiveEffects(
             includeWorkInProgressEffects,
           );
         } else {
-          if (finishedWork.mode & ConcurrentMode) {
+          if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
             if (enableCache || enableTransitionTracing) {
@@ -4124,7 +4153,7 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
     }
     case HostRoot:
     case HostPortal: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         const previousHoistableRoot = currentHoistableRoot;
         const container: Container = fiber.stateNode.containerInfo;
         currentHoistableRoot = getHoistableRoot(container);

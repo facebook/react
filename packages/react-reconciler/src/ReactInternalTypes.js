@@ -15,6 +15,7 @@ import type {
   Usable,
   ReactFormState,
   Awaited,
+  ReactComponentInfo,
   ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
@@ -56,7 +57,8 @@ export type HookType =
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
-  | 'useFormState';
+  | 'useFormState'
+  | 'useActionState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -157,15 +159,6 @@ export type Fiber = {
   subtreeFlags: Flags,
   deletions: Array<Fiber> | null,
 
-  // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: Fiber | null,
-
-  // The first and last fiber with side-effect within this subtree. This allows
-  // us to reuse a slice of the linked list when we reuse the work done within
-  // this fiber.
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-
   lanes: Lanes,
   childLanes: Lanes,
 
@@ -201,7 +194,7 @@ export type Fiber = {
   // __DEV__ only
 
   _debugInfo?: ReactDebugInfo | null,
-  _debugOwner?: Fiber | null,
+  _debugOwner?: ReactComponentInfo | Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
 
@@ -268,9 +261,20 @@ type BaseFiberRootProperties = {
   // a reference to.
   identifierPrefix: string,
 
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
 
   formState: ReactFormState<any, any> | null,
@@ -422,10 +426,16 @@ export type Dispatcher = {
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
-  ) => [Awaited<S>, (P) => void],
+  ) => [Awaited<S>, (P) => void, boolean],
+  useActionState?: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
 };
 
-export type CacheDispatcher = {
-  getCacheSignal: () => AbortSignal,
+export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
+  // DEV-only (or !disableStringRefs)
+  getOwner: () => null | Fiber | ReactComponentInfo,
 };

@@ -18,6 +18,7 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -219,7 +220,7 @@ export type InspectedElement = {
   owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
-  source: null, // TODO: Reinstate a way to load this lazily.
+  source: Source | null,
 
   type: ElementType,
 

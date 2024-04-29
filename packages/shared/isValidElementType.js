@@ -23,12 +23,10 @@ import {
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_OFFSCREEN_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {
   enableScopeAPI,
-  enableCacheElement,
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
@@ -53,7 +51,6 @@ export default function isValidElementType(type: mixed): boolean {
     (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCacheElement && type === REACT_CACHE_TYPE) ||
     (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
   ) {
     return true;

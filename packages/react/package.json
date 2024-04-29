@@ -4,8 +4,8 @@
   "keywords": [
     "react"
   ],
-  "version": "18.2.0",
-  "homepage": "https://reactjs.org/",
+  "version": "19.0.0",
+  "homepage": "https://react.dev/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
   "files": [
@@ -13,10 +13,10 @@
     "README.md",
     "index.js",
     "cjs/",
-    "umd/",
     "jsx-runtime.js",
     "jsx-runtime.react-server.js",
     "jsx-dev-runtime.js",
+    "jsx-dev-runtime.react-server.js",
     "react.react-server.js"
   ],
   "main": "index.js",
@@ -30,7 +30,10 @@
       "react-server": "./jsx-runtime.react-server.js",
       "default": "./jsx-runtime.js"
     },
-    "./jsx-dev-runtime": "./jsx-dev-runtime.js",
+    "./jsx-dev-runtime": {
+      "react-server": "./jsx-dev-runtime.react-server.js",
+      "default": "./jsx-dev-runtime.js"
+    },
     "./src/*": "./src/*",
     "./cjs/*": "./cjs/*",
     "./umd/*": "./umd/*"
@@ -42,13 +45,5 @@
   },
   "engines": {
     "node": ">=0.10.0"
-  },
-  "dependencies": {
-    "loose-envify": "^1.1.0"
-  },
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
   }
 }

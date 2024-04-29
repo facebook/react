@@ -26,7 +26,7 @@
 import type {Request} from 'react-server/src/ReactFizzServer';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
-declare var $$$config: any;
+declare const $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type RenderState = mixed;
 export opaque type HoistableState = mixed;
@@ -38,7 +38,7 @@ export type {TransitionStatus};
 export const isPrimaryRenderer = false;
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;
@@ -78,7 +78,6 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
-export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------------

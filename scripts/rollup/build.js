@@ -3,7 +3,6 @@
 const rollup = require('rollup');
 const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('@rollup/plugin-commonjs');
 const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('@rollup/plugin-replace');
@@ -11,7 +10,6 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
-const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -48,9 +46,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -228,10 +223,6 @@ function getRollupOutputOptions(
 
 function getFormat(bundleType) {
   switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case UMD_PROFILING:
-      return `umd`;
     case NODE_ES2015:
     case NODE_DEV:
     case NODE_PROD:
@@ -261,7 +252,6 @@ function isProductionBundleType(bundleType) {
     case NODE_ES2015:
       return true;
     case ESM_DEV:
-    case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
     case FB_WWW_DEV:
@@ -269,10 +259,8 @@ function isProductionBundleType(bundleType) {
     case RN_FB_DEV:
       return false;
     case ESM_PROD:
-    case UMD_PROD:
     case NODE_PROD:
     case BUN_PROD:
-    case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -302,15 +290,12 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case ESM_DEV:
     case ESM_PROD:
-    case UMD_DEV:
-    case UMD_PROD:
     case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
-    case UMD_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -318,10 +303,6 @@ function isProfilingBundleType(bundleType) {
 }
 
 function getBundleTypeFlags(bundleType) {
-  const isUMDBundle =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
   const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
@@ -341,17 +322,10 @@ function getBundleTypeFlags(bundleType) {
 
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
 
-  const shouldBundleDependencies =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
-
   return {
-    isUMDBundle,
     isFBWWWBundle,
     isRNBundle,
     isFBRNBundle,
-    shouldBundleDependencies,
     shouldStayReadable,
   };
 }
@@ -387,32 +361,7 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
-
     const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
-
-    // Any other packages that should specifically _not_ have sourcemaps
-    const sourcemapPackageExcludes = [
-      // Having `//#sourceMappingUrl` for the `react-debug-tools` prod bundle breaks
-      // `ReactDevToolsHooksIntegration-test.js`, because it changes Node's generated
-      // stack traces and thus alters the hook name parsing behavior.
-      // Also, this is an internal-only package that doesn't need sourcemaps anyway
-      'react-debug-tools',
-    ];
-
-    // Generate sourcemaps for true "production" build artifacts
-    // that will be used by bundlers, such as `react-dom.production.min.js`.
-    // Also include profiling builds as well.
-    // UMD builds are rarely used and not worth having sourcemaps.
-    const needsSourcemaps =
-      needsMinifiedByClosure &&
-      // This will only exclude `unstable_server-external-runtime.js` artifact
-      // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
-      // and force `react-dom` to include .map files in npm-package at the root level
-      bundleType !== BROWSER_SCRIPT &&
-      !isUMDBundle &&
-      !sourcemapPackageExcludes.includes(entry) &&
-      !shouldStayReadable;
 
     return [
       // Keep dynamic imports as externals
@@ -463,17 +412,12 @@ function getPlugins(
         values: {
           __DEV__: isProduction ? 'false' : 'true',
           __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-          __UMD__: isUMDBundle ? 'true' : 'false',
           'process.env.NODE_ENV': isProduction
             ? "'production'"
             : "'development'",
           __EXPERIMENTAL__,
         },
       }),
-      // The CommonJS plugin *only* exists to pull "art" into "react-art".
-      // I'm going to port "art" to ES modules to avoid this problem.
-      // Please don't enable this for anything else!
-      isUMDBundle && entry === 'react-art' && commonjs(),
       {
         name: 'top-level-definitions',
         renderChunk(source) {
@@ -487,137 +431,59 @@ function getPlugins(
           );
         },
       },
-      // License and haste headers for artifacts with sourcemaps
-      // For artifacts with sourcemaps we apply these headers
-      // before passing sources to the Closure compiler, which will be building sourcemaps
-      needsSourcemaps && {
-        name: 'license-and-signature-header-for-artifacts-with-sourcemaps',
-        renderChunk(source) {
-          return Wrappers.wrapWithLicenseHeader(
-            source,
-            bundleType,
-            globalName,
-            filename,
-            moduleType
-          );
-        },
-      },
-      // Apply dead code elimination and/or minification.
-      // closure doesn't yet support leaving ESM imports intact
+      // For production builds, compile with Closure. We do this even for the
+      // "non-minified" production builds because Closure is much better at
+      // minification than what most applications use. During this step, we do
+      // preserve the original symbol names, though, so the resulting code is
+      // relatively readable.
+      //
+      // For the minified builds, the names will be mangled later.
+      //
+      // We don't bother with sourcemaps at this step. The sourcemaps we publish
+      // are only for whitespace and symbol renaming; they don't map back to
+      // before Closure was applied.
       needsMinifiedByClosure &&
-        closure(
-          {
-            compilation_level: 'SIMPLE',
-            language_in: 'ECMASCRIPT_2020',
-            language_out:
-              bundleType === NODE_ES2015
-                ? 'ECMASCRIPT_2020'
-                : bundleType === BROWSER_SCRIPT
-                ? 'ECMASCRIPT5'
-                : 'ECMASCRIPT5_STRICT',
-            emit_use_strict:
-              bundleType !== BROWSER_SCRIPT &&
-              bundleType !== ESM_PROD &&
-              bundleType !== ESM_DEV,
-            env: 'CUSTOM',
-            warning_level: 'QUIET',
-            source_map_include_content: true,
-            use_types_for_optimization: false,
-            process_common_js_modules: false,
-            rewrite_polyfills: false,
-            inject_libraries: false,
-            allow_dynamic_import: true,
+        closure({
+          compilation_level: 'SIMPLE',
+          language_in: 'ECMASCRIPT_2020',
+          language_out:
+            bundleType === NODE_ES2015
+              ? 'ECMASCRIPT_2020'
+              : bundleType === BROWSER_SCRIPT
+              ? 'ECMASCRIPT5'
+              : 'ECMASCRIPT5_STRICT',
+          emit_use_strict:
+            bundleType !== BROWSER_SCRIPT &&
+            bundleType !== ESM_PROD &&
+            bundleType !== ESM_DEV,
+          env: 'CUSTOM',
+          warning_level: 'QUIET',
+          source_map_include_content: true,
+          use_types_for_optimization: false,
+          process_common_js_modules: false,
+          rewrite_polyfills: false,
+          inject_libraries: false,
+          allow_dynamic_import: true,
 
-            // Don't let it create global variables in the browser.
-            // https://github.com/facebook/react/issues/10909
-            assume_function_wrapper: !isUMDBundle,
-            renaming: !shouldStayReadable,
-          },
-          {needsSourcemaps}
-        ),
-      // Add the whitespace back if necessary.
-      shouldStayReadable &&
+          // Don't let it create global variables in the browser.
+          // https://github.com/facebook/react/issues/10909
+          assume_function_wrapper: true,
+
+          // Don't rename symbols (variable names, functions, etc). We leave
+          // this up to the application to handle, if they want. Otherwise gzip
+          // takes care of it.
+          renaming: false,
+        }),
+      needsMinifiedByClosure &&
+        // Add the whitespace back
         prettier({
           parser: 'flow',
           singleQuote: false,
           trailingComma: 'none',
           bracketSpacing: true,
         }),
-      needsSourcemaps && {
-        name: 'generate-prod-bundle-sourcemaps',
-        async renderChunk(minifiedCodeWithChangedHeader, chunk, options, meta) {
-          // We want to generate a sourcemap that shows the production bundle source
-          // as it existed before Closure Compiler minified that chunk, rather than
-          // showing the "original" individual source files. This better shows
-          // what is actually running in the app.
-
-          // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
-          const finalSourcemapPath = options.file.replace('.js', '.js.map');
-          const finalSourcemapFilename = path.basename(finalSourcemapPath);
-          const outputFolder = path.dirname(options.file);
-
-          // Read the sourcemap that Closure wrote to disk
-          const sourcemapAfterClosure = JSON.parse(
-            fs.readFileSync(finalSourcemapPath, 'utf8')
-          );
-
-          // Represent the "original" bundle as a file with no `.min` in the name
-          const filenameWithoutMin = filename.replace('.min', '');
-          // There's _one_ artifact where the incoming filename actually contains
-          // a folder name: "use-sync-external-store-shim/with-selector.production.js".
-          // The output path already has the right structure, but we need to strip this
-          // down to _just_ the JS filename.
-          const preMinifiedFilename = path.basename(filenameWithoutMin);
-
-          // CC generated a file list that only contains the tempfile name.
-          // Replace that with a more meaningful "source" name for this bundle
-          // that represents "the bundled source before minification".
-          sourcemapAfterClosure.sources = [preMinifiedFilename];
-          sourcemapAfterClosure.file = filename;
-
-          // All our code is considered "third-party" and should be ignored by default.
-          sourcemapAfterClosure.ignoreList = [0];
-
-          // We'll write the pre-minified source to disk as a separate file.
-          // Because it sits on disk, there's no need to have it in the `sourcesContent` array.
-          // That also makes the file easier to read, and available for use by scripts.
-          // This should be the only file in the array.
-          const [preMinifiedBundleSource] =
-            sourcemapAfterClosure.sourcesContent;
-
-          // Remove this entirely - we're going to write the file to disk instead.
-          delete sourcemapAfterClosure.sourcesContent;
-
-          const preMinifiedBundlePath = path.join(
-            outputFolder,
-            preMinifiedFilename
-          );
-
-          // Write the original source to disk as a separate file
-          fs.writeFileSync(preMinifiedBundlePath, preMinifiedBundleSource);
-
-          // Overwrite the Closure-generated file with the final combined sourcemap
-          fs.writeFileSync(
-            finalSourcemapPath,
-            JSON.stringify(sourcemapAfterClosure)
-          );
-
-          // Add the sourcemap URL to the actual bundle, so that tools pick it up
-          const sourceWithMappingUrl =
-            minifiedCodeWithChangedHeader +
-            `\n//# sourceMappingURL=${finalSourcemapFilename}`;
-
-          return {
-            code: sourceWithMappingUrl,
-            map: null,
-          };
-        },
-      },
-      // License and haste headers for artifacts without sourcemaps
-      // Primarily used for FB-artifacts, which should preserve specific format of the header
-      // Which potentially can be changed by Closure minification
-      !needsSourcemaps && {
-        name: 'license-and-signature-header-for-artifacts-without-sourcemaps',
+      {
+        name: 'license-and-signature-header',
         renderChunk(source) {
           return Wrappers.wrapWithLicenseHeader(
             source,
@@ -733,8 +599,7 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
-    getBundleTypeFlags(bundleType);
+  const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
@@ -743,10 +608,9 @@ async function createBundle(bundle, bundleType) {
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
-  if (!shouldBundleDependencies) {
-    const deps = Modules.getDependencies(bundleType, bundle.entry);
-    externals = externals.concat(deps);
-  }
+
+  const deps = Modules.getDependencies(bundleType, bundle.entry);
+  externals = externals.concat(deps);
 
   const importSideEffects = Modules.getImportSideEffects();
   const pureExternalModules = Object.keys(importSideEffects).filter(
@@ -763,7 +627,7 @@ async function createBundle(bundle, bundleType) {
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
-      if (!shouldBundleDependencies && isProvidedByDependency) {
+      if (isProvidedByDependency) {
         if (id.indexOf('/src/') !== -1) {
           throw Error(
             'You are trying to import ' +
@@ -931,9 +795,6 @@ async function buildEverything() {
       [bundle, NODE_ES2015],
       [bundle, ESM_DEV],
       [bundle, ESM_PROD],
-      [bundle, UMD_DEV],
-      [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],

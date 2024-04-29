@@ -228,6 +228,7 @@ export function convertInspectedElementBackendToFrontend(
     id,
     type,
     owners,
+    source,
     context,
     hooks,
     plugins,
@@ -260,7 +261,9 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    source: null, // TODO: Load source location lazily.
+    // Previous backend implementations (<= 5.0.1) have a different interface for Source, with fileName.
+    // This gates the source features for only compatible backends: >= 5.0.2
+    source: source && source.sourceURL ? source : null,
     type,
     owners:
       owners === null

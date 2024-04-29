@@ -5427,20 +5427,20 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inert=(string)`| (changed)| `<boolean: true>` |
-| `inert=(empty string)`| (changed)| `<boolean: true>` |
+| `inert=(empty string)`| (initial, warning)| `<boolean: false>` |
 | `inert=(array with string)`| (changed)| `<boolean: true>` |
 | `inert=(empty array)`| (changed)| `<boolean: true>` |
 | `inert=(object)`| (changed)| `<boolean: true>` |
 | `inert=(numeric string)`| (changed)| `<boolean: true>` |
 | `inert=(-1)`| (changed)| `<boolean: true>` |
-| `inert=(0)`| (changed)| `<boolean: true>` |
+| `inert=(0)`| (initial)| `<boolean: false>` |
 | `inert=(integer)`| (changed)| `<boolean: true>` |
-| `inert=(NaN)`| (changed, warning)| `<boolean: true>` |
+| `inert=(NaN)`| (initial, warning)| `<boolean: false>` |
 | `inert=(float)`| (changed)| `<boolean: true>` |
-| `inert=(true)`| (initial, warning)| `<boolean: false>` |
-| `inert=(false)`| (initial, warning)| `<boolean: false>` |
-| `inert=(string 'true')`| (changed)| `<boolean: true>` |
-| `inert=(string 'false')`| (changed)| `<boolean: true>` |
+| `inert=(true)`| (changed)| `<boolean: true>` |
+| `inert=(false)`| (initial)| `<boolean: false>` |
+| `inert=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `inert=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `inert=(string 'on')`| (changed)| `<boolean: true>` |
 | `inert=(string 'off')`| (changed)| `<boolean: true>` |
 | `inert=(symbol)`| (initial, warning)| `<boolean: false>` |

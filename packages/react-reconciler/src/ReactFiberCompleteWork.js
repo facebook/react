@@ -38,15 +38,14 @@ import {
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
-  enableFloat,
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
 
 import {
-  IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
   HostRoot,
@@ -67,6 +66,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
@@ -75,8 +75,6 @@ import {
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
-  Ref,
-  RefStatic,
   Placement,
   Update,
   Visibility,
@@ -143,12 +141,11 @@ import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
-  warnIfUnhydratedTailNodes,
   popHydrationState,
   resetHydrationState,
   getIsHydrating,
-  hasUnhydratedTailNodes,
   upgradeHydrationErrorsToRecoverable,
+  emitPendingHydrationWarnings,
 } from './ReactFiberHydrationContext';
 import {
   renderHasNotSuspendedYet,
@@ -184,10 +181,6 @@ import {suspendCommit} from './ReactFiberThenable';
  */
 function markUpdate(workInProgress: Fiber) {
   workInProgress.flags |= Update;
-}
-
-function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref | RefStatic;
 }
 
 /**
@@ -336,7 +329,6 @@ function appendAllChildrenToContainer(
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
-      // eslint-disable-next-line no-labels
       if (node.tag === HostComponent) {
         let instance = node.stateNode;
         if (needsVisibilityToggle && isHidden) {
@@ -749,7 +741,7 @@ function bubbleProperties(completedWork: Fiber) {
     completedWork.alternate !== null &&
     completedWork.alternate.child === completedWork.child;
 
-  let newChildLanes = NoLanes;
+  let newChildLanes: Lanes = NoLanes;
   let subtreeFlags = NoFlags;
 
   if (!didBailout) {
@@ -872,18 +864,6 @@ function completeDehydratedSuspenseBoundary(
   workInProgress: Fiber,
   nextState: SuspenseState | null,
 ): boolean {
-  if (
-    hasUnhydratedTailNodes() &&
-    (workInProgress.mode & ConcurrentMode) !== NoMode &&
-    (workInProgress.flags & DidCapture) === NoFlags
-  ) {
-    warnIfUnhydratedTailNodes(workInProgress);
-    resetHydrationState();
-    workInProgress.flags |= ForceClientRender | DidCapture;
-
-    return false;
-  }
-
   const wasHydrated = popHydrationState(workInProgress);
 
   if (nextState !== null && nextState.dehydrated !== null) {
@@ -914,6 +894,7 @@ function completeDehydratedSuspenseBoundary(
       }
       return false;
     } else {
+      emitPendingHydrationWarnings();
       // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
       // state since we're now exiting out of it. popHydrationState doesn't do that for us.
       resetHydrationState();
@@ -968,7 +949,12 @@ function completeWork(
   // for hydration.
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
-    case IndeterminateComponent:
+    case IncompleteFunctionComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
+      // Fallthrough
+    }
     case LazyComponent:
     case SimpleMemoComponent:
     case FunctionComponent:
@@ -1030,6 +1016,7 @@ function completeWork(
         // that weren't hydrated.
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
+          emitPendingHydrationWarnings();
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);
@@ -1071,7 +1058,7 @@ function completeWork(
       return null;
     }
     case HostHoistable: {
-      if (enableFloat && supportsResources) {
+      if (supportsResources) {
         // The branching here is more complicated than you might expect because
         // a HostHoistable sometimes corresponds to a Resource and sometimes
         // corresponds to an Instance. It can also switch during an update.
@@ -1083,9 +1070,6 @@ function completeWork(
           // @TODO refactor this block to create the instance here in complete
           // phase if we are not hydrating.
           markUpdate(workInProgress);
-          if (workInProgress.ref !== null) {
-            markRef(workInProgress);
-          }
           if (nextResource !== null) {
             // This is a Hoistable Resource
 
@@ -1119,9 +1103,6 @@ function completeWork(
             // We are transitioning to, from, or between Hoistable Resources
             // and require an update
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
           if (nextResource !== null) {
             // This is a Hoistable Resource
@@ -1194,10 +1175,6 @@ function completeWork(
               renderLanes,
             );
           }
-
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
-          }
         } else {
           if (!newProps) {
             if (workInProgress.stateNode === null) {
@@ -1232,11 +1209,6 @@ function completeWork(
             workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
-
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
         bubbleProperties(workInProgress);
         return null;
@@ -1254,10 +1226,6 @@ function completeWork(
           newProps,
           renderLanes,
         );
-
-        if (current.ref !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
       } else {
         if (!newProps) {
           if (workInProgress.stateNode === null) {
@@ -1310,11 +1278,6 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
-
-        if (workInProgress.ref !== null) {
-          // If there is a ref on a host node we need to schedule a callback
-          markRef(workInProgress);
-        }
       }
       bubbleProperties(workInProgress);
 
@@ -1351,9 +1314,7 @@ function completeWork(
         const currentHostContext = getHostContext();
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
-          if (prepareToHydrateHostTextInstance(workInProgress)) {
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostTextInstance(workInProgress);
         } else {
           workInProgress.stateNode = createTextInstance(
             newText,
@@ -1367,7 +1328,6 @@ function completeWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseHandler(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       // Special path for dehydrated boundaries. We may eventually move this
@@ -1388,10 +1348,12 @@ function completeWork(
           );
         if (!fallthroughToNormalSuspensePath) {
           if (workInProgress.flags & ForceClientRender) {
+            popSuspenseHandler(workInProgress);
             // Special case. There were remaining unhydrated nodes. We treat
             // this as a mismatch. Revert to client rendering.
             return workInProgress;
           } else {
+            popSuspenseHandler(workInProgress);
             // Did not finish hydrating, either because this is the initial
             // render or because something suspended.
             return null;
@@ -1400,6 +1362,8 @@ function completeWork(
 
         // Continue with the normal Suspense path.
       }
+
+      popSuspenseHandler(workInProgress);
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
@@ -1516,6 +1480,9 @@ function completeWork(
       bubbleProperties(workInProgress);
       return null;
     case IncompleteClassComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       // Same as class component case. I put it down here so that the tags are
       // sequential to ensure this switch is compiled to a jump table.
       const Component = workInProgress.type;
@@ -1739,15 +1706,15 @@ function completeWork(
           workInProgress.stateNode = scopeInstance;
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
-            markRef(workInProgress);
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
           }
         } else {
           if (workInProgress.ref !== null) {
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
         }
         bubbleProperties(workInProgress);
@@ -1781,7 +1748,11 @@ function completeWork(
         }
       }
 
-      if (!nextIsHidden || (workInProgress.mode & ConcurrentMode) === NoMode) {
+      if (
+        !nextIsHidden ||
+        (!disableLegacyMode &&
+          (workInProgress.mode & ConcurrentMode) === NoMode)
+      ) {
         bubbleProperties(workInProgress);
       } else {
         // Don't bubble properties for hidden children unless we're rendering

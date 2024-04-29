@@ -37,7 +37,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement(ComponentClass);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -71,7 +75,7 @@ describe('ReactCreateElement', () => {
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 
@@ -81,11 +85,12 @@ describe('ReactCreateElement', () => {
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
       {withoutStack: true},
     );
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
@@ -111,7 +116,7 @@ describe('ReactCreateElement', () => {
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://reactjs.org/link/special-props)',
+        'prop. (https://react.dev/link/special-props)',
     );
   });
 
@@ -119,7 +124,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement('div');
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -150,31 +159,49 @@ describe('ReactCreateElement', () => {
     expect(element.props.foo).toBe(1);
   });
 
-  it('extracts key and ref from the config', () => {
+  it('extracts key from the rest of the props', () => {
     const element = React.createElement(ComponentClass, {
       key: '12',
-      ref: '34',
       foo: '56',
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe('34');
-    if (__DEV__) {
-      expect(Object.isFrozen(element)).toBe(true);
-      expect(Object.isFrozen(element.props)).toBe(true);
-    }
-    expect(element.props).toEqual({foo: '56'});
+    const expectation = {foo: '56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
-  it('extracts null key and ref', () => {
+  it('does not extract ref from the rest of the props', () => {
+    const ref = React.createRef();
+    const element = React.createElement(ComponentClass, {
+      key: '12',
+      ref: ref,
+      foo: '56',
+    });
+    expect(element.type).toBe(ComponentClass);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(() => expect(element.ref).toBe(ref)).toErrorDev(
+        'Accessing element.ref was removed in React 19',
+        {withoutStack: true},
+      );
+      const expectation = {foo: '56', ref};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+    } else {
+      const expectation = {foo: '56'};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+      expect(element.ref).toBe(ref);
+    }
+  });
+
+  it('extracts null key', () => {
     const element = React.createElement(ComponentClass, {
       key: null,
-      ref: null,
       foo: '12',
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('null');
-    expect(element.ref).toBe(null);
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -191,7 +218,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement(ComponentClass, props);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -203,7 +234,11 @@ describe('ReactCreateElement', () => {
     const elementA = React.createElement('div');
     const elementB = React.createElement('div', elementA.props);
     expect(elementB.key).toBe(null);
-    expect(elementB.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(elementB.ref).toBe(null);
+    } else {
+      expect(elementB.ref).toBe(null);
+    }
   });
 
   it('coerces the key to a string', () => {
@@ -213,7 +248,11 @@ describe('ReactCreateElement', () => {
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -236,7 +275,11 @@ describe('ReactCreateElement', () => {
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(React.createElement(Wrapper)));
-    expect(element._owner.stateNode).toBe(instance);
+    if (__DEV__ || !gate(flags => flags.disableStringRefs)) {
+      expect(element._owner.stateNode).toBe(instance);
+    } else {
+      expect('_owner' in element).toBe(false);
+    }
   });
 
   it('merges an additional argument onto the children prop', () => {
@@ -422,5 +465,32 @@ describe('ReactCreateElement', () => {
       root.render(React.createElement(Test, {value: +undefined}));
     });
     expect(test.props.value).toBeNaN();
+  });
+
+  it('warns if outdated JSX transform is detected', async () => {
+    // Warns if __self is detected, because that's only passed by a compiler
+    expect(() => {
+      React.createElement('div', {className: 'foo', __self: this});
+    }).toWarnDev(
+      'Your app (or one of its dependencies) is using an outdated ' +
+        'JSX transform.',
+      {
+        withoutStack: true,
+      },
+    );
+
+    // Only warns the first time. Subsequent elements don't warn.
+    React.createElement('div', {className: 'foo', __self: this});
+  });
+
+  it('do not warn about outdated JSX transform if `key` is present', () => {
+    // When a static "key" prop is defined _after_ a spread, the modern JSX
+    // transform outputs `createElement` instead of `jsx`. (This is because with
+    // `jsx`, a spread key always takes precedence over a static key, regardless
+    // of the order, whereas `createElement` respects the order.)
+    //
+    // To avoid a false positive warning, we skip the warning whenever a `key`
+    // prop is present.
+    React.createElement('div', {key: 'foo', __self: this});
   });
 });

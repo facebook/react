@@ -224,11 +224,16 @@ describe('Store component filters', () => {
     `);
   });
 
+  // Disabled: filtering by path was removed, source is now determined lazily, including symbolication if applicable
   // @reactVersion >= 16.0
-  it('should filter by path', async () => {
-    const Component = () => <div>Hi</div>;
+  xit('should filter by path', async () => {
+    // This component should use props object in order to throw for component stack generation
+    // See ReactComponentStackFrame:155 or DevToolsComponentStackFrame:147
+    const Component = props => {
+      return <div>{props.message}</div>;
+    };
 
-    await actAsync(async () => render(<Component />));
+    await actAsync(async () => render(<Component message="Hi" />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component>
@@ -242,13 +247,7 @@ describe('Store component filters', () => {
         ]),
     );
 
-    // TODO: Filtering should work on component location.
-    // expect(store).toMatchInlineSnapshot(`[root]`);
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+    expect(store).toMatchInlineSnapshot(`[root]`);
 
     await actAsync(
       async () =>
@@ -497,19 +496,17 @@ describe('Store component filters', () => {
           ]),
       );
 
-      utils.act(
-        () =>
-          utils.withErrorsOrWarningsIgnored(['test-only:'], () => {
-            render(
-              <React.Fragment>
-                <ComponentWithError />
-                <ComponentWithWarning />
-                <ComponentWithWarningAndError />
-              </React.Fragment>,
-            );
-          }),
-        false,
-      );
+      utils.withErrorsOrWarningsIgnored(['test-only:'], () => {
+        utils.act(() => {
+          render(
+            <React.Fragment>
+              <ComponentWithError />
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+          );
+        }, false);
+      });
 
       expect(store).toMatchInlineSnapshot(``);
       expect(store.errorCount).toBe(0);

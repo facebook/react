@@ -18,8 +18,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactFeatureFlags;
-let ReactTestUtils;
 
 function initModules() {
   jest.resetModules();
@@ -27,14 +25,11 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -632,23 +627,9 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<ClassComponent />));
       });
 
-      if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-        itThrowsWhenRendering(
-          'factory components',
-          async render => {
-            const FactoryComponent = () => {
-              return {
-                render: function () {
-                  return <div>foo</div>;
-                },
-              };
-            };
-            await render(<FactoryComponent />, 1);
-          },
-          'Objects are not valid as a React child (found: object with keys {render})',
-        );
-      } else {
-        itRenders('factory components', async render => {
+      itThrowsWhenRendering(
+        'factory components',
+        async render => {
           const FactoryComponent = () => {
             return {
               render: function () {
@@ -656,9 +637,10 @@ describe('ReactDOMServerIntegration', () => {
               },
             };
           };
-          checkFooDiv(await render(<FactoryComponent />, 1));
-        });
-      }
+          await render(<FactoryComponent />, 1);
+        },
+        'Objects are not valid as a React child (found: object with keys {render})',
+      );
     });
 
     describe('component hierarchies', function () {
@@ -846,16 +828,15 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            (render === clientRenderOnServerString &&
-              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+            render === clientRenderOnServerString
           ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering (or hydration without enableClientRenderFallbackOnTextMismatch) uses JS value with CR.
+            // Client rendering uses JS value with CR.
             // Null character stays.
 
             expectNode(
@@ -879,19 +860,18 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            (render === clientRenderOnServerString &&
-              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+            render === clientRenderOnServerString
           ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
           } else if (render === clientRenderOnServerString) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Hydration without enableClientRenderFallbackOnTextMismatch uses JS value with CR and null character.
+            // Hydration uses JS value with CR and null character.
 
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');

@@ -2,9 +2,10 @@
 
 const {resolve} = require('path');
 const Webpack = require('webpack');
-const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin');
 
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
+const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
+
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -42,7 +43,7 @@ const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : 'nosources-cheap-source-map',
+  devtool: false,
   entry: {
     backend: './src/backend.js',
   },
@@ -87,14 +88,12 @@ module.exports = {
       'process.env.IS_FIREFOX': IS_FIREFOX,
       'process.env.IS_EDGE': IS_EDGE,
     }),
-    new DevToolsIgnorePlugin({
-      shouldIgnorePath: function (path) {
-        if (!__DEV__) {
-          return true;
-        }
-
-        return path.includes('/node_modules/') || path.includes('/webpack/');
-      },
+    new Webpack.SourceMapDevToolPlugin({
+      filename: '[file].map',
+      noSources: !__DEV__,
+    }),
+    new SourceMapIgnoreListPlugin({
+      shouldIgnoreSource: () => !__DEV__,
     }),
   ],
   module: {

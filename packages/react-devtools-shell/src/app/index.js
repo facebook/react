@@ -30,7 +30,8 @@ ignoreErrors([
   'Warning: Legacy context API',
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
-  'Warning: ReactDOM.render is no longer supported in React 18',
+  'Warning: ReactDOM.render was removed in React 19',
+  'Warning: react-test-renderer is deprecated',
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);
@@ -69,6 +70,7 @@ function mountStrictApp(App) {
 }
 
 function mountLegacyApp(App: () => React$Node) {
+  // $FlowFixMe[prop-missing]: These are removed in 19.
   const {render, unmountComponentAtNode} = require('react-dom');
 
   function LegacyRender() {
@@ -77,8 +79,10 @@ function mountLegacyApp(App: () => React$Node) {
 
   const container = createContainer();
 
+  // $FlowFixMe[not-a-function]: These are removed in 19.
   render(createElement(LegacyRender), container);
 
+  // $FlowFixMe: These are removed in 19.
   unmountFunctions.push(() => unmountComponentAtNode(container));
 }
 
