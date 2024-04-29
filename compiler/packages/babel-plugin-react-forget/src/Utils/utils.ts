@@ -45,6 +45,20 @@ export function retainWhere<T>(
   array.length = writeIndex;
 }
 
+export function getOrInsertWith<U, V>(
+  m: Map<U, V>,
+  key: U,
+  makeDefault: () => V
+): V {
+  if (m.has(key)) {
+    return m.get(key) as V;
+  } else {
+    const defaultValue = makeDefault();
+    m.set(key, defaultValue);
+    return defaultValue;
+  }
+}
+
 export function getOrInsertDefault<U, V>(
   m: Map<U, V>,
   key: U,

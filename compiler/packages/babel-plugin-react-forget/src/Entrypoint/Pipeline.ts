@@ -16,6 +16,7 @@ import {
   assertTerminalSuccessorsExist,
   assertValidBlockNesting,
   assertValidMutableRanges,
+  buildReactiveScopeTerminalsHIR,
   lower,
   mergeConsecutiveBlocks,
   mergeOverlappingReactiveScopesHIR,
@@ -238,7 +239,7 @@ function* runWithEnvironment(
     value: hir,
   });
 
-  if (env.config.enableAlignReactiveScopesToBlockScopesHIR) {
+  if (env.config.enableReactiveScopesInHIR) {
     pruneUnusedLabelsHIR(hir);
     yield log({
       kind: "hir",
@@ -259,6 +260,14 @@ function* runWithEnvironment(
       name: "MergeOverlappingReactiveScopesHIR",
       value: hir,
     });
+    assertValidBlockNesting(hir);
+
+    buildReactiveScopeTerminalsHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "BuildReactiveScopeTerminalsHIR",
+      value: hir,
+    });
 
     assertValidBlockNesting(hir);
   }
@@ -277,7 +286,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (!env.config.enableAlignReactiveScopesToBlockScopesHIR) {
+  if (!env.config.enableReactiveScopesInHIR) {
     alignReactiveScopesToBlockScopes(reactiveFunction);
     yield log({
       kind: "reactive",
@@ -291,14 +300,14 @@ function* runWithEnvironment(
       name: "MergeOverlappingReactiveScopes",
       value: reactiveFunction,
     });
-  }
 
-  buildReactiveBlocks(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "BuildReactiveBlocks",
-    value: reactiveFunction,
-  });
+    buildReactiveBlocks(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "BuildReactiveBlocks",
+      value: reactiveFunction,
+    });
+  }
 
   flattenReactiveLoops(reactiveFunction);
   yield log({

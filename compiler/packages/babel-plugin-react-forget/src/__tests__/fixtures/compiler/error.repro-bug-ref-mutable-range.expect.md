@@ -21,7 +21,7 @@ function Foo(props, ref) {
 ## Error
 
 ```
-Invariant: Invalid nesting in program blocks or scopes. Blocks overlap but are not nested: Scope@0(1:21) ProgramBlockSubtree@1(16:23)
+Invariant: Invalid nesting in program blocks or scopes. Items overlap but are not nested: 1:21(16:23)
 ```
           
       

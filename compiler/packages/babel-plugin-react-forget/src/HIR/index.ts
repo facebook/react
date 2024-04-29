@@ -10,6 +10,7 @@ export { assertTerminalSuccessorsExist } from "./AssertTerminalSuccessorsExist";
 export { assertValidBlockNesting } from "./AssertValidBlockNesting";
 export { assertValidMutableRanges } from "./AssertValidMutableRanges";
 export { lower } from "./BuildHIR";
+export { buildReactiveScopeTerminalsHIR } from "./BuildReactiveScopeTerminalsHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
 export {
   Environment,

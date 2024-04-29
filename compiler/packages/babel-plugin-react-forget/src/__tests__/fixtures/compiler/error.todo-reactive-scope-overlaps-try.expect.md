@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-Invariant: Invalid nesting in program blocks or scopes. Blocks overlap but are not nested: ProgramBlockSubtree@0(4:19) Scope@0(5:22)
+Invariant: Invalid nesting in program blocks or scopes. Items overlap but are not nested: 4:19(5:22)
 ```
           
       

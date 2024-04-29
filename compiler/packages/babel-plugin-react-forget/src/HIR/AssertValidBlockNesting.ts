@@ -49,7 +49,7 @@ type Block =
       id: ScopeId;
     } & MutableRange);
 
-function getScopes(fn: HIRFunction): Set<ReactiveScope> {
+export function getScopes(fn: HIRFunction): Set<ReactiveScope> {
   const scopes: Set<ReactiveScope> = new Set();
   function visitPlace(place: Place): void {
     const scope = place.identifier.scope;
@@ -94,11 +94,56 @@ function getScopes(fn: HIRFunction): Set<ReactiveScope> {
  * 6  |
  * 7  ⌟
  */
-function nestedRangeComparator(a: MutableRange, b: MutableRange): number {
+export function rangePreOrderComparator(
+  a: MutableRange,
+  b: MutableRange
+): number {
   const startDiff = a.start - b.start;
   if (startDiff !== 0) return startDiff;
   return b.end - a.end;
 }
+
+export function recursivelyTraverseItems<T, TContext>(
+  items: Array<T>,
+  getRange: (val: T) => MutableRange,
+  context: TContext,
+  enter: (val: T, context: TContext) => void,
+  exit: (val: T, context: TContext) => void
+): void {
+  items.sort((a, b) => rangePreOrderComparator(getRange(a), getRange(b)));
+  let activeItems: Array<T> = [];
+  const ranges = items.map(getRange);
+  for (let i = 0; i < items.length; i++) {
+    const curr = items[i];
+    const currRange = ranges[i];
+    for (let i = activeItems.length - 1; i >= 0; i--) {
+      const maybeParent = activeItems[i];
+      const maybeParentRange = getRange(maybeParent);
+      const disjoint = currRange.start >= maybeParentRange.end;
+      const nested = currRange.end <= maybeParentRange.end;
+      CompilerError.invariant(disjoint || nested, {
+        reason: "Invalid nesting in program blocks or scopes",
+        description: `Items overlap but are not nested: ${maybeParentRange.start}:${maybeParentRange.end}(${currRange.start}:${currRange.end})`,
+        loc: GeneratedSource,
+      });
+      if (disjoint) {
+        exit(maybeParent, context);
+        activeItems.length = i;
+      } else {
+        break;
+      }
+    }
+    enter(curr, context);
+    activeItems.push(curr);
+  }
+
+  let curr = activeItems.pop();
+  while (curr != null) {
+    exit(curr, context);
+    curr = activeItems.pop();
+  }
+}
+const no_op: () => void = () => {};
 
 export function assertValidBlockNesting(fn: HIRFunction): void {
   const scopes = getScopes(fn);
@@ -122,26 +167,5 @@ export function assertValidBlockNesting(fn: HIRFunction): void {
     }
   }
 
-  blocks.sort(nestedRangeComparator);
-
-  let active: Array<Block> = [];
-  for (let i = 0; i < blocks.length; i++) {
-    const curr = blocks[i];
-    for (let i = active.length - 1; i >= 0; i--) {
-      const maybeParent = active[i];
-      const disjoint = curr.start >= maybeParent.end;
-      const nested = curr.end <= maybeParent.end;
-      CompilerError.invariant(disjoint || nested, {
-        reason: "Invalid nesting in program blocks or scopes",
-        description: `Blocks overlap but are not nested: ${maybeParent.kind}@${maybeParent.id}(${maybeParent.start}:${maybeParent.end}) ${curr.kind}@${curr.id}(${curr.start}:${curr.end})`,
-        loc: GeneratedSource,
-      });
-      if (disjoint) {
-        active.length = i;
-      } else {
-        break;
-      }
-    }
-    active.push(curr);
-  }
+  recursivelyTraverseItems(blocks, (block) => block, null, no_op, no_op);
 }

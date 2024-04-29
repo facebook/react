@@ -19,7 +19,7 @@ function foo() {}
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function sequence(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (Math.max(1, 2), foo());
@@ -28,8 +28,13 @@ function sequence(props) {
     t0 = $[0];
   }
   let x = t0;
-  while ((foo(), true)) {
-    x = (foo(), 2);
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    while ((foo(), true)) {
+      x = (foo(), 2);
+    }
+    $[1] = x;
+  } else {
+    x = $[1];
   }
   return x;
 }

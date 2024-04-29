@@ -20,7 +20,7 @@ function Foo() {
 ## Error
 
 ```
-Invariant: Invalid nesting in program blocks or scopes. Blocks overlap but are not nested: Scope@0(2:24) ProgramBlockSubtree@17(18:26)
+Invariant: Invalid nesting in program blocks or scopes. Items overlap but are not nested: 2:24(18:26)
 ```
           
       
