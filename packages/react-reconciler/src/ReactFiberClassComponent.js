@@ -299,7 +299,7 @@ const classComponentUpdater = {
   enqueueForceSyncUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
 
-    const update = createUpdate(lane);
+    const update = createUpdate(SyncLane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
