@@ -25,7 +25,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var ReactVersion = '19.0.0-www-classic-c72bd03a';
+          var ReactVersion = '19.0.0-www-classic-e0403cc2';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -3458,6 +3458,7 @@ exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = ReactSharedInternals;
 exports.act = act;
+exports.c = useMemoCache;
 exports.cache = cache;
 exports.cloneElement = cloneElement;
 exports.createContext = createContext;
