@@ -3936,7 +3936,12 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" as="image" crossorigin="" href="foo.png" />
+          <link
+            rel="preload"
+            as="image"
+            crossorigin="anonymous"
+            href="foo.png"
+          />
           <link rel="preload" as="image" crossorigin="" href="bar.png" />
         </head>
         <body>
@@ -3951,7 +3956,12 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" as="image" crossorigin="" href="foo.png" />
+          <link
+            rel="preload"
+            as="image"
+            crossorigin="anonymous"
+            href="foo.png"
+          />
           <link rel="preload" as="image" crossorigin="" href="bar.png" />
         </head>
         <body>
@@ -5351,6 +5361,7 @@ body {
             <link rel="preconnect" href="foo" />
             <link rel="preconnect" href="foo" crossorigin="" />
             <link rel="preconnect" href="foo" crossorigin="use-credentials" />
+            <link rel="preconnect" href="foo" crossorigin="anonymous" />
           </head>
           <body>hello world</body>
         </html>,
@@ -5368,8 +5379,10 @@ body {
             <link rel="preconnect" href="foo" />
             <link rel="preconnect" href="foo" crossorigin="" />
             <link rel="preconnect" href="foo" crossorigin="use-credentials" />
+            <link rel="preconnect" href="foo" crossorigin="anonymous" />
             <link rel="preconnect" href="bar" />
             <link rel="preconnect" href="bar" crossorigin="" />
+            <link rel="preconnect" href="bar" crossorigin="anonymous" />
             <link rel="preconnect" href="bar" crossorigin="use-credentials" />
           </head>
           <body>hello world</body>

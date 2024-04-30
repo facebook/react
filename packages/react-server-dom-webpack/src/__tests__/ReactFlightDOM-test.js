@@ -1407,22 +1407,32 @@ describe('ReactFlightDOM', () => {
         <head>
           <link rel="dns-prefetch" href="d before" />
           <link rel="preconnect" href="c before" />
-          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="preconnect" href="c2 before" crossorigin="anonymous" />
           <link rel="preload" as="style" href="l before" />
           <link rel="modulepreload" href="lm before" />
-          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
           <script async="" src="i before" />
           <script type="module" async="" src="m before" />
-          <script type="module" async="" src="m2 before" crossorigin="" />
+          <script
+            type="module"
+            async=""
+            src="m2 before"
+            crossorigin="anonymous"
+          />
           <link rel="dns-prefetch" href="d after" />
           <link rel="preconnect" href="c after" />
-          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <link rel="preconnect" href="c2 after" crossorigin="anonymous" />
           <link rel="preload" as="style" href="l after" />
           <link rel="modulepreload" href="lm after" />
-          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
           <script async="" src="i after" />
           <script type="module" async="" src="m after" />
-          <script type="module" async="" src="m2 after" crossorigin="" />
+          <script
+            type="module"
+            async=""
+            src="m2 after"
+            crossorigin="anonymous"
+          />
         </head>
         <body />
       </html>,
@@ -1599,22 +1609,32 @@ describe('ReactFlightDOM', () => {
         <head>
           <link rel="dns-prefetch" href="d before" />
           <link rel="preconnect" href="c before" />
-          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="preconnect" href="c2 before" crossorigin="anonymous" />
           <link rel="dns-prefetch" href="d after" />
           <link rel="preconnect" href="c after" />
-          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <link rel="preconnect" href="c2 after" crossorigin="anonymous" />
           <script async="" src="i before" />
           <script type="module" async="" src="m before" />
-          <script type="module" async="" src="m2 before" crossorigin="" />
+          <script
+            type="module"
+            async=""
+            src="m2 before"
+            crossorigin="anonymous"
+          />
           <script async="" src="i after" />
           <script type="module" async="" src="m after" />
-          <script type="module" async="" src="m2 after" crossorigin="" />
+          <script
+            type="module"
+            async=""
+            src="m2 after"
+            crossorigin="anonymous"
+          />
           <link rel="preload" as="style" href="l before" />
           <link rel="modulepreload" href="lm before" />
-          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
           <link rel="preload" as="style" href="l after" />
           <link rel="modulepreload" href="lm after" />
-          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
         </head>
         <body>
           <p>hello world</p>

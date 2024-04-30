@@ -160,7 +160,12 @@ describe('ReactDOMFizzStaticFloat', () => {
         crossorigin="use-credentials"
         integrity="module-hash"
       />,
-      <link rel="preload" as="style" href="style anon" crossorigin="" />,
+      <link
+        rel="preload"
+        as="style"
+        href="style anon"
+        crossorigin="anonymous"
+      />,
       <link rel="preload" as="script" href="script anon" crossorigin="" />,
       <link
         rel="modulepreload"
@@ -207,7 +212,7 @@ describe('ReactDOMFizzStaticFloat', () => {
             rel="stylesheet"
             data-precedence="default"
             href="style anon"
-            crossorigin=""
+            crossorigin="anonymous"
           />
         </head>
         <body>
@@ -231,7 +236,12 @@ describe('ReactDOMFizzStaticFloat', () => {
               crossorigin="use-credentials"
               integrity="module-hash"
             />
-            <link rel="preload" as="style" href="style anon" crossorigin="" />
+            <link
+              rel="preload"
+              as="style"
+              href="style anon"
+              crossorigin="anonymous"
+            />
             <link rel="preload" as="script" href="script anon" crossorigin="" />
             <link
               rel="modulepreload"

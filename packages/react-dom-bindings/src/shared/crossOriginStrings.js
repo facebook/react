@@ -11,7 +11,7 @@ export opaque type CrossOriginString: string = string;
 
 export function getCrossOriginString(input: ?string): ?CrossOriginString {
   if (typeof input === 'string') {
-    return input === 'use-credentials' ? input : '';
+    return input === 'use-credentials' || input === 'anonymous' ? input : '';
   }
   return undefined;
 }
@@ -24,7 +24,7 @@ export function getCrossOriginStringAs(
     return '';
   }
   if (typeof input === 'string') {
-    return input === 'use-credentials' ? input : '';
+    return input === 'use-credentials' || input === 'anonymous' ? input : '';
   }
   return undefined;
 }
