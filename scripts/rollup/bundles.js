@@ -115,6 +115,17 @@ const bundles = [
     externals: ['react', 'ReactNativeInternalFeatureFlags'],
   },
 
+  /******* Compiler Runtime *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
+    moduleType: ISOMORPHIC,
+    entry: 'react/compiler-runtime',
+    global: 'CompilerRuntime',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
   /******* React JSX Runtime React Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],

@@ -27,8 +27,8 @@ describe('useMemoCache()', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    useMemoCache = require('react/compiler-runtime').c;
     useState = React.useState;
-    useMemoCache = React.unstable_useMemoCache;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
 
     class _ErrorBoundary extends React.Component {

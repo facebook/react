@@ -13,6 +13,7 @@
     "README.md",
     "index.js",
     "cjs/",
+    "compiler-runtime.js",
     "jsx-runtime.js",
     "jsx-runtime.react-server.js",
     "jsx-dev-runtime.js",
@@ -33,6 +34,10 @@
     "./jsx-dev-runtime": {
       "react-server": "./jsx-dev-runtime.react-server.js",
       "default": "./jsx-dev-runtime.js"
+    },
+    "./compiler-runtime": {
+      "react-server": "./compiler-runtime.js",
+      "default": "./compiler-runtime.js"
     },
     "./src/*": "./src/*"
   },
