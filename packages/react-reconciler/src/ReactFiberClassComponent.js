@@ -56,7 +56,7 @@ import {
   cloneUpdateQueue,
   suspendIfUpdateReadFromEntangledAsyncAction,
 } from './ReactFiberClassUpdateQueue';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes, SyncLane} from './ReactFiberLane';
 import {
   cacheContext,
   getMaskedContext,
@@ -293,6 +293,39 @@ const classComponentUpdater = {
 
     if (enableSchedulingProfiler) {
       markForceUpdateScheduled(fiber, lane);
+    }
+  },
+  // $FlowFixMe[missing-local-annot]
+  enqueueForceSyncUpdate(inst: any, callback) {
+    const fiber = getInstance(inst);
+
+    const update = createUpdate(lane);
+    update.tag = ForceUpdate;
+
+    if (callback !== undefined && callback !== null) {
+      if (__DEV__) {
+        warnOnInvalidCallback(callback);
+      }
+      update.callback = callback;
+    }
+
+    const root = enqueueUpdate(fiber, update, SyncLane);
+    if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      entangleTransitions(root, fiber, SyncLane);
+    }
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
+          logForceUpdateScheduled(name, SyncLane);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markForceUpdateScheduled(fiber, SyncLane);
     }
   },
 };
