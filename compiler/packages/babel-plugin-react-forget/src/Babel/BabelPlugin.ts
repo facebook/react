@@ -7,6 +7,10 @@
 
 import type * as BabelCore from "@babel/core";
 import { compileProgram, parsePluginOptions } from "../Entrypoint";
+import {
+  injectReanimatedFlag,
+  pipelineUsesReanimatedPlugin,
+} from "../Entrypoint/Reanimated";
 
 /*
  * The React Forget Babel Plugin
@@ -25,8 +29,12 @@ export default function ReactForgetBabelPlugin(
        * want Forget to run true to source as possible.
        */
       Program(prog, pass): void {
+        let opts = parsePluginOptions(pass.opts);
+        if (pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
+          opts = injectReanimatedFlag(opts);
+        }
         compileProgram(prog, {
-          opts: parsePluginOptions(pass.opts),
+          opts,
           filename: pass.filename ?? null,
           comments: pass.file.ast.comments ?? [],
         });

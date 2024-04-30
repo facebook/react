@@ -98,3 +98,10 @@ export function hasNode<T>(
    */
   return input.node != null;
 }
+
+export function hasOwnProperty<T>(
+  obj: T,
+  key: string | number | symbol
+): key is keyof T {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}

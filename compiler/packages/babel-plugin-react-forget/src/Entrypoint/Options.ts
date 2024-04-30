@@ -9,6 +9,7 @@ import * as t from "@babel/types";
 import { z } from "zod";
 import { CompilerErrorDetailOptions } from "../CompilerError";
 import { ExternalFunction, PartialEnvironmentConfig } from "../HIR/Environment";
+import { hasOwnProperty } from "../Utils/utils";
 
 const PanicThresholdOptionsSchema = z.enum([
   /*
@@ -204,5 +205,5 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
 }
 
 function isCompilerFlag(s: string): s is keyof PluginOptions {
-  return Object.prototype.hasOwnProperty.call(defaultOptions, s);
+  return hasOwnProperty(defaultOptions, s);
 }
