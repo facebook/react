@@ -34,7 +34,6 @@ export {
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,

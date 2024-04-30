@@ -102,7 +102,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-// Enables unstable_useMemoCache hook, intended as a compilation target for
+// Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 // Test this at Meta before enabling.

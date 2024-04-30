@@ -55,7 +55,6 @@ import {
   useId,
   useCacheRefresh,
   use,
-  useMemoCache,
   useOptimistic,
   useActionState,
 } from './ReactHooks';
@@ -117,7 +116,6 @@ export {
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   use,
-  useMemoCache as unstable_useMemoCache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   // enableTransitionTracing

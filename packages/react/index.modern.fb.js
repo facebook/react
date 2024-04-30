@@ -36,7 +36,6 @@ export {
   unstable_TracingMarker,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -58,3 +57,10 @@ export {
   version,
 } from './src/ReactClient';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';
+
+// export for backwards compatibility during upgrade
+export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
+
+// export to match the name of the OSS function typically exported from
+// react/compiler-runtime
+export {useMemoCache as c} from './src/ReactHooks';
