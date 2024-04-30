@@ -3918,6 +3918,50 @@ body {
     );
   });
 
+  it('should handle crossOrigin on image preload', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <img src="foo.png" crossOrigin="anonymous" />
+            <img src="bar.png" crossOrigin="" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" crossorigin="" href="foo.png" />
+          <link rel="preload" as="image" crossorigin="" href="bar.png" />
+        </head>
+        <body>
+          <img src="foo.png" crossorigin="anonymous" />
+          <img src="bar.png" crossorigin="" />
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" crossorigin="" href="foo.png" />
+          <link rel="preload" as="image" crossorigin="" href="bar.png" />
+        </head>
+        <body>
+          <img src="foo.png" crossorigin="anonymous" />
+          <img src="bar.png" crossorigin="" />
+        </body>
+      </html>,
+    );
+  });
+
   it('can emit preloads for non-lazy images that are rendered', async () => {
     function App() {
       ReactDOM.preload('script', {as: 'script'});
