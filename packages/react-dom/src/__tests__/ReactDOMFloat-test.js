@@ -3978,7 +3978,7 @@ body {
         <html>
           <body>
             <img src="foo.png" crossOrigin="" />
-            <img src="foo.png" crossOrigin="anonymous" />
+            <img src="foo.png" crossOrigin="use-credentials" />
           </body>
         </html>
       );
@@ -3994,7 +3994,7 @@ body {
         </head>
         <body>
           <img src="foo.png" crossorigin="" />
-          <img src="foo.png" crossorigin="anonymous" />
+          <img src="foo.png" crossorigin="use-credentials" />
         </body>
       </html>,
     );
