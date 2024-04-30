@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<32d5e348978f815554e5015b9471046b>>
+ * @generated SignedSource<<ce6c9a1ae9253d45b2c46eb5a4f66b63>>
  */
 
 "use strict";
@@ -360,6 +360,9 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
+function useMemoCache(size) {
+  return ReactSharedInternals.H.useMemoCache(size);
+}
 var reportGlobalError =
   "function" === typeof reportError
     ? reportError
@@ -434,6 +437,7 @@ exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
 exports.act = function () {
   throw Error("act(...) is not supported in production builds of React.");
 };
+exports.c = useMemoCache;
 exports.cache = function (fn) {
   return function () {
     return fn.apply(null, arguments);
@@ -600,9 +604,7 @@ exports.unstable_getCacheForType = function (resourceType) {
 exports.unstable_useCacheRefresh = function () {
   return ReactSharedInternals.H.useCacheRefresh();
 };
-exports.unstable_useMemoCache = function (size) {
-  return ReactSharedInternals.H.useMemoCache(size);
-};
+exports.unstable_useMemoCache = useMemoCache;
 exports.use = function (usable) {
   return ReactSharedInternals.H.use(usable);
 };
@@ -669,7 +671,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-beta-0c71ce9a";
+exports.version = "19.0.0-beta-101cb521";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a487e3f84fa0dfc3fc634dfba8721564>>
+ * @generated SignedSource<<0f88cc3fda756e3467304abd247a3db7>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-77a60a06';
+var ReactVersion = '19.0.0-beta-6a68f48e';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -3386,6 +3386,7 @@ exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = ReactSharedInternals;
 exports.act = act;
+exports.c = useMemoCache;
 exports.cache = cache;
 exports.cloneElement = cloneElement;
 exports.createContext = createContext;
