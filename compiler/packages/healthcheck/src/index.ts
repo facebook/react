@@ -14,6 +14,7 @@ import {
 import { LoggerEvent } from "babel-plugin-react-forget/src/Entrypoint";
 import { glob } from "fast-glob";
 import * as fs from "fs/promises";
+import ora from "ora";
 import yargs from "yargs/yargs";
 
 const SUCCESS: Array<LoggerEvent> = [];
@@ -86,6 +87,7 @@ async function main() {
     })
     .parseSync();
 
+  const spinner = ora("Compiling").start();
   let src = argv.src;
 
   // no file extension specified
@@ -109,8 +111,10 @@ async function main() {
 
   for (const path of await glob(src, globOptions)) {
     const source = await fs.readFile(path, "utf-8");
+    spinner.text = `Compiling ${path}`;
     compile(source, path);
   }
+  spinner.stop();
 
   console.log(`Successful compilation: ${SUCCESS.length}`);
   console.log(`Failed compilation: ${ACTIONABLE_FAILURES.length}`);
