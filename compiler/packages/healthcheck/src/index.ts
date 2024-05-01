@@ -20,6 +20,9 @@ import yargs from "yargs/yargs";
 const SUCCESS: Array<LoggerEvent> = [];
 const ACTIONABLE_FAILURES: Array<LoggerEvent> = [];
 const OTHER_FAILURES: Array<LoggerEvent> = [];
+let STRICT_MODE_USAGE = false;
+
+const StrictModeRE = /\<StrictMode\>/;
 
 const logger = {
   logEvent(_: string | null, event: LoggerEvent) {
@@ -113,11 +116,16 @@ async function main() {
     const source = await fs.readFile(path, "utf-8");
     spinner.text = `Compiling ${path}`;
     compile(source, path);
+
+    if (!STRICT_MODE_USAGE) {
+      STRICT_MODE_USAGE = StrictModeRE.exec(source) !== null;
+    }
   }
   spinner.stop();
 
   console.log(`Successful compilation: ${SUCCESS.length}`);
   console.log(`Failed compilation: ${ACTIONABLE_FAILURES.length}`);
+  console.log(`StrictMode usage: ${STRICT_MODE_USAGE}`);
 }
 
 main();
