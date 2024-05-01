@@ -37,7 +37,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ReactDOM = require('react-dom');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
-    useMemoCache = React.unstable_useMemoCache;
+    useMemoCache = require('react/compiler-runtime').c;
   });
 
   it('should inspect the current state of useState hooks', async () => {
