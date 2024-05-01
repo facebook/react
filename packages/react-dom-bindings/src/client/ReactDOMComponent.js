@@ -1815,6 +1815,8 @@ function getPropNameFromAttributeName(attrName: string): string {
       return 'className';
     case 'for':
       return 'htmlFor';
+    case 'popopverTarget':
+      return 'popopverTargetElement';
     // TODO: The rest of the aliases.
     default:
       return attrName;

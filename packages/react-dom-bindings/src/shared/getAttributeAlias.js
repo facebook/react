@@ -10,6 +10,7 @@
 const aliases = new Map([
   ['acceptCharset', 'accept-charset'],
   ['htmlFor', 'for'],
+  ['popoverTargetElement', 'popoverTarget'],
   ['httpEquiv', 'http-equiv'],
   // HTML and SVG attributes, but the SVG attribute is case sensitive.],
   ['crossOrigin', 'crossorigin'],
