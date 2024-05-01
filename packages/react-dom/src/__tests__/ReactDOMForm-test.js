@@ -494,14 +494,7 @@ describe('ReactDOMForm', () => {
     await act(async () => {
       root.render(
         <>
-          <button
-            form="form"
-            name="button"
-            value="outside"
-            ref={outsideButtonRef}>
-            Edit from outside
-          </button>
-          <form id="form" action={action}>
+          <form action={action}>
             <input type="text" name="title" defaultValue="hello" />
             <input type="submit" name="button" value="save" />
             <input type="submit" name="button" value="delete" ref={inputRef} />
@@ -509,6 +502,16 @@ describe('ReactDOMForm', () => {
               Edit
             </button>
           </form>
+          <form id="form" action={action}>
+            <input type="text" name="title" defaultValue="hello" />
+          </form>
+          <button
+            form="form"
+            name="button"
+            value="outside"
+            ref={outsideButtonRef}>
+            Button outside form
+          </button>
           ,
         </>,
       );

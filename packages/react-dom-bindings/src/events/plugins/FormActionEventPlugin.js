@@ -92,8 +92,7 @@ function extractEvents(
       const temp = submitter.ownerDocument.createElement('input');
       temp.name = submitter.name;
       temp.value = submitter.value;
-      const isOutsideForm = !form.contains(submitter);
-      if (isOutsideForm) {
+      if (form.id) {
         temp.setAttribute('form', form.id);
       }
       (submitter.parentNode: any).insertBefore(temp, submitter);
