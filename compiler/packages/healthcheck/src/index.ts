@@ -12,10 +12,12 @@ import {
   type PluginOptions,
 } from "babel-plugin-react-forget/src";
 import { LoggerEvent } from "babel-plugin-react-forget/src/Entrypoint";
+import chalk from "chalk";
 import { glob } from "fast-glob";
 import * as fs from "fs/promises";
 import ora from "ora";
 import yargs from "yargs/yargs";
+import { config } from "./config";
 
 const SUCCESS: Array<LoggerEvent> = [];
 const ACTIONABLE_FAILURES: Array<LoggerEvent> = [];
@@ -41,7 +43,8 @@ const logger = {
       }
       case "CompileDiagnostic":
       case "PipelineError":
-      // TODO(gsn): Silenty fail?
+        OTHER_FAILURES.push(event);
+        return;
     }
   },
 };
@@ -86,7 +89,7 @@ async function main() {
     .option("src", {
       description: "glob expression matching src files to compile",
       type: "string",
-      default: "**/*.{js,ts,jsx,tsx,mjs}",
+      default: "**/*.*",
     })
     .parseSync();
 
@@ -95,7 +98,7 @@ async function main() {
 
   // no file extension specified
   if (!src.includes(".")) {
-    src = src + ".{js,ts,jsx,tsx,mjs}";
+    src = src;
   }
 
   const globOptions = {
@@ -112,20 +115,53 @@ async function main() {
     ],
   };
 
+  const jsFileExtensionRE = /(js|ts|jsx|tsx|mjs)$/;
+  const packageJsonRE = /package\.json$/;
+  const knownIncompatibleLibrariesUsage = new Set();
+
   for (const path of await glob(src, globOptions)) {
     const source = await fs.readFile(path, "utf-8");
-    spinner.text = `Compiling ${path}`;
-    compile(source, path);
+    if (jsFileExtensionRE.exec(path) !== null) {
+      spinner.text = `Compiling ${path}`;
+      compile(source, path);
 
-    if (!STRICT_MODE_USAGE) {
-      STRICT_MODE_USAGE = StrictModeRE.exec(source) !== null;
+      if (!STRICT_MODE_USAGE) {
+        STRICT_MODE_USAGE = StrictModeRE.exec(source) !== null;
+      }
+    } else if (packageJsonRE.exec(path) !== null) {
+      const contents = JSON.parse(source);
+      const deps = contents.dependencies;
+      for (const library of config.knownIncompatibleLibraries) {
+        if (Object.hasOwn(deps, library)) {
+          knownIncompatibleLibrariesUsage.add(library);
+        }
+      }
     }
   }
   spinner.stop();
 
-  console.log(`Successful compilation: ${SUCCESS.length}`);
-  console.log(`Failed compilation: ${ACTIONABLE_FAILURES.length}`);
-  console.log(`StrictMode usage: ${STRICT_MODE_USAGE}`);
+  const totalComponents =
+    SUCCESS.length + OTHER_FAILURES.length + ACTIONABLE_FAILURES.length;
+  console.log(
+    chalk.green(
+      `Successfully compiled ${SUCCESS.length} out of ${totalComponents} components.`
+    )
+  );
+
+  if (STRICT_MODE_USAGE) {
+    console.log(chalk.green("StrictMode usage found."));
+  } else {
+    console.log(chalk.red("StrictMode usage not found."));
+  }
+
+  if (knownIncompatibleLibrariesUsage.size > 0) {
+    console.log(chalk.red(`Found the following incompatible libraries:`));
+    for (const library of knownIncompatibleLibrariesUsage) {
+      console.log(library);
+    }
+  } else {
+    console.log(chalk.green(`Found no usage of incompatible libraries.`));
+  }
 }
 
 main();
