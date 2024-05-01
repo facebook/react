@@ -872,12 +872,18 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         instruction.lvalue.identifier.id,
         instruction.value.place.identifier.id
       );
-    } else if (instruction.value.kind === "CallExpression") {
-      const callee = instruction.value.callee;
+    } else if (
+      instruction.value.kind === "CallExpression" ||
+      instruction.value.kind === "MethodCall"
+    ) {
+      let callee =
+        instruction.value.kind === "CallExpression"
+          ? instruction.value.callee
+          : instruction.value.property;
       if (getHookKind(state.env, callee.identifier) != null) {
         const signature = getFunctionCallSignature(
           this.env,
-          instruction.value.callee.identifier.type
+          callee.identifier.type
         );
         /*
          * Hook values are assumed to escape by default since they can be inputs
