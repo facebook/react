@@ -185,6 +185,9 @@ export const defaultOptions: PluginOptions = {
   eslintSuppressionRules: null,
   flowSuppressions: false,
   ignoreUseNoForget: false,
+  sources: (filename) => {
+    return filename.indexOf("node_modules") === -1;
+  },
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {
