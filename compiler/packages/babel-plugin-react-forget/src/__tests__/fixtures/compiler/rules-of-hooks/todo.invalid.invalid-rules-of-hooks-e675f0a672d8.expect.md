@@ -20,7 +20,7 @@ function List(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @skip
+import { c as useMemoCache } from "react"; // @skip
 // Passed but should have failed
 
 // Invalid because it's dangerous and might not warn otherwise.

@@ -18,7 +18,7 @@ import {
   shouldInstrument,
   makeReadOnly,
 } from "react-forget-runtime";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEmitFreeze @instrumentForget
+import { c as useMemoCache } from "react"; // @enableEmitFreeze @instrumentForget
 
 function useFoo(props) {
   if (__DEV__ && shouldInstrument)

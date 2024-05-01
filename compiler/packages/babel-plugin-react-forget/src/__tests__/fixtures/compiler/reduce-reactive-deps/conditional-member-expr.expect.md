@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
+import { c as useMemoCache } from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a` as a dependency (since `props.a.b` is
 // a conditional dependency, i.e. gated behind control flow)
 

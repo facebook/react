@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enablePreserveExistingMemoizationGuarantees
+import { c as useMemoCache } from "react"; // @enablePreserveExistingMemoizationGuarantees
 const { mutate } = require("shared-runtime");
 
 function Component(props) {

@@ -31,7 +31,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableTransitivelyFreezeFunctionExpressions
+import { c as useMemoCache } from "react"; // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
   const $ = useMemoCache(10);
   const { data, loadNext, isLoadingNext } =

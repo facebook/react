@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // When a conditional dependency `props.a.b.c` has no unconditional dependency
+import { c as useMemoCache } from "react"; // When a conditional dependency `props.a.b.c` has no unconditional dependency
 // in its subpath or superpath, we should find the nearest unconditional access
 
 import { identity } from "shared-runtime";

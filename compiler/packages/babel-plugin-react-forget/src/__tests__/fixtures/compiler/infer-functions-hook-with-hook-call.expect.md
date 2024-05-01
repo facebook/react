@@ -13,7 +13,7 @@ function useStateValue(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @compilationMode(infer)
 function useStateValue(props) {
   const $ = useMemoCache(2);
   const [state] = useState(null);

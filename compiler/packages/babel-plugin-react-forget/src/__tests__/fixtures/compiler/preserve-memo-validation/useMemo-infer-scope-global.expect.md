@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
+import { useMemo, c as useMemoCache } from "react";
 import { CONST_STRING0 } from "shared-runtime";
 
 // It's correct to infer a useMemo block has no reactive dependencies

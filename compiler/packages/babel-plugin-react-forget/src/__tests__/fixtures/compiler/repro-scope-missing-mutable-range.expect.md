@@ -18,7 +18,7 @@ function HomeDiscoStoreItemTileRating(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function HomeDiscoStoreItemTileRating(props) {
   const $ = useMemoCache(4);
   const item = useFragment();

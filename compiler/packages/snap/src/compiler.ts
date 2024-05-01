@@ -38,7 +38,8 @@ function makePluginOptions(
   let enableEmitFreeze = null;
   let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = "all";
-  let enableUseMemoCachePolyfill = false;
+  // TODO make this `null` to use the default runtime module, needs an upgrade to React 19
+  let runtimeModule = "react";
   let panicThreshold: PanicThresholdOptions = "all_errors";
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
@@ -90,8 +91,9 @@ function makePluginOptions(
       importSpecifierName: "$dispatcherGuard",
     };
   }
-  if (firstLine.includes("@enableUseMemoCachePolyfill")) {
-    enableUseMemoCachePolyfill = true;
+  const runtimeModuleMatch = /@runtimeModule="([^"]+)"/.exec(firstLine);
+  if (runtimeModuleMatch) {
+    runtimeModule = runtimeModuleMatch[1];
   }
   if (firstLine.includes("@panicThreshold(none)")) {
     panicThreshold = "none";
@@ -177,7 +179,7 @@ function makePluginOptions(
     gating,
     panicThreshold,
     noEmit: false,
-    enableUseMemoCachePolyfill,
+    runtimeModule,
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,

@@ -12,7 +12,7 @@ const Component = (props) => {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @compilationMode(infer)
 const Component = (props) => {
   const $ = useMemoCache(1);
   let t0;

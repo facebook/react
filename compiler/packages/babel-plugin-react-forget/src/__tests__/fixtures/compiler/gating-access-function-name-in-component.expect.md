@@ -19,7 +19,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @gating
+import { c as useMemoCache } from "react"; // @gating
 const Component = isForgetEnabled_Fixtures()
   ? function Component() {
       const $ = useMemoCache(1);

@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback, unstable_useMemoCache as useMemoCache } from "react";
+import { useCallback, c as useMemoCache } from "react";
 import { makeArray } from "shared-runtime";
 
 // This case is fine, as all reassignments happen before the useCallback

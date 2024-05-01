@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useRef, unstable_useMemoCache as useMemoCache } from "react";
+import { useRef, c as useMemoCache } from "react";
 import { addOne } from "shared-runtime";
 
 function useKeyCommand() {

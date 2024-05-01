@@ -83,15 +83,15 @@ export type PluginOptions = {
   compilationMode: CompilationMode;
 
   /*
-   * If enabled, Forget will import `useMemoCache` from a polyfill instead of React. Use this if
-   * you are for whatever reason unable to use an experimental version of React.
+   * If enabled, Forget will import `useMemoCache` from the given module
+   * instead of `react/compiler-runtime`.
    *
    * ```
-   * // If specified:
-   * import {unstable_useMemoCache} from 'react-forget-runtime';
+   * // If set to "react-forget-runtime"
+   * import {c as useMemoCache} from 'react-forget-runtime';
    * ```
    */
-  enableUseMemoCachePolyfill: boolean;
+  runtimeModule?: string | null | undefined;
 
   /**
    * By default React Compiler will skip compilation of code that suppresses the default
@@ -181,7 +181,7 @@ export const defaultOptions: PluginOptions = {
   logger: null,
   gating: null,
   noEmit: false,
-  enableUseMemoCachePolyfill: false,
+  runtimeModule: null,
   eslintSuppressionRules: null,
   flowSuppressions: false,
   ignoreUseNoForget: false,

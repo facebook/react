@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we correctly track a subpath if the subpath itself is accessed as
+import { c as useMemoCache } from "react"; // Test that we correctly track a subpath if the subpath itself is accessed as
 // a dependency
 function TestOverlappingTracked(props) {
   const $ = useMemoCache(2);

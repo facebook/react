@@ -17,7 +17,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact true
+import { c as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact true
 function Component(props) {
   const $ = useMemoCache(3);
   let t0;

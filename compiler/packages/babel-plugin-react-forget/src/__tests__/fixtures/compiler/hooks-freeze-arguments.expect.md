@@ -18,7 +18,7 @@ function call(x) {}
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function Component() {
   const $ = useMemoCache(1);
   let t0;

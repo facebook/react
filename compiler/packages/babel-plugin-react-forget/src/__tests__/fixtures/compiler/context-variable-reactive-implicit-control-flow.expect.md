@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 import { conditionalInvoke } from "shared-runtime";
 
 // same as context-variable-reactive-explicit-control-flow.js, but make

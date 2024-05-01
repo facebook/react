@@ -37,7 +37,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { c as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
   const $ = useMemoCache(9);
   const items = useItems();

@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
+import { useMemo, c as useMemoCache } from "react";
 
 // Compiler can produce any memoization it finds valid if the
 // source listed no memo deps

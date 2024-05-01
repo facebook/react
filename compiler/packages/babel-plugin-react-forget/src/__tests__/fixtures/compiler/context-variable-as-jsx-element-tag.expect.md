@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
+import { useMemo, c as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component(props) {

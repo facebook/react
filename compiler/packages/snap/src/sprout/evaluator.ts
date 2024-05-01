@@ -13,6 +13,9 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { initFbt, toJSON } from "./shared-runtime";
 
+// @ts-ignore
+React.c = React.unstable_useMemoCache;
+
 /**
  * Set up the global environment for JSDOM tests.
  * This is a hack to let us share code and setup between the test

@@ -17,7 +17,7 @@ function VideoTab() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateRefAccessDuringRender false
+import { c as useMemoCache } from "react"; // @validateRefAccessDuringRender false
 function VideoTab() {
   const $ = useMemoCache(3);
   const ref = useRef();

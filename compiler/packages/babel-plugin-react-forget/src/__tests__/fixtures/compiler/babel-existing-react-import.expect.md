@@ -23,11 +23,7 @@ function Component2(props) {
 ## Code
 
 ```javascript
-import {
-  useState,
-  useMemo,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useState, useMemo, c as useMemoCache } from "react";
 
 function Component(props) {
   const $ = useMemoCache(4);

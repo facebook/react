@@ -14,7 +14,7 @@ export default React.forwardRef(function notNamedLikeAComponent(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @gating @compilationMode(infer)
 import React from "react";
 export default React.forwardRef(
   isForgetEnabled_Fixtures()

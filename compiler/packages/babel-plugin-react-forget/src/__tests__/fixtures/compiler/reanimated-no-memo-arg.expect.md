@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableCustomTypeDefinitionForReAnimated
+import { c as useMemoCache } from "react"; // @enableCustomTypeDefinitionForReAnimated
 function Component() {
   const $ = useMemoCache(2);
   const radius = useSharedValue(50);

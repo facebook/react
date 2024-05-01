@@ -33,7 +33,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
+import { c as useMemoCache } from "react"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const $ = useMemoCache(7);
   const logEvent = useLogging(props.appId);

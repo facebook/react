@@ -25,11 +25,7 @@ function Component2(props) {
 
 ```javascript
 import * as React from "react";
-import {
-  useState,
-  useMemo,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useState, useMemo, c as useMemoCache } from "react";
 
 function Component(props) {
   const $ = useMemoCache(4);

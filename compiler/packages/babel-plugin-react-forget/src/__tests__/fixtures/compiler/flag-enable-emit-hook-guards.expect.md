@@ -42,7 +42,7 @@ import {
   useContext,
   useEffect,
   useState,
-  unstable_useMemoCache as useMemoCache,
+  c as useMemoCache,
 } from "react";
 import {
   CONST_STRING0,

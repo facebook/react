@@ -12,7 +12,7 @@ function useDiv(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @compilationMode(infer)
 function useDiv(props) {
   const $ = useMemoCache(1);
   let t0;

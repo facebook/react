@@ -34,11 +34,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import {
-  useEffect,
-  useState,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useEffect, useState, c as useMemoCache } from "react";
 import { mutate } from "shared-runtime";
 
 function Component(props) {

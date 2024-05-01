@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Some reactive scopes are created within a conditional. If a child scope
+import { c as useMemoCache } from "react"; // Some reactive scopes are created within a conditional. If a child scope
 // is within a conditional, its reactive dependencies should be propagated
 // as conditionals
 //

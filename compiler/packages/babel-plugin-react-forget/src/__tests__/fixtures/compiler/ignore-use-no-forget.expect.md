@@ -19,7 +19,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @ignoreUseNoForget
+import { c as useMemoCache } from "react"; // @ignoreUseNoForget
 function Component(prop) {
   "use no forget";
   const $ = useMemoCache(4);

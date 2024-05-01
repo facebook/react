@@ -12,7 +12,7 @@ React.forwardRef((props) => {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @compilationMode(infer)
 React.forwardRef((props) => {
   const $ = useMemoCache(1);
   let t0;

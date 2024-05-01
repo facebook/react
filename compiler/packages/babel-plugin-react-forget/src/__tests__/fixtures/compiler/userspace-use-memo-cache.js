@@ -1,4 +1,4 @@
-// @enableUseMemoCachePolyfill
+// @runtimeModule="react-forget-runtime"
 function Component(props) {
   const [x, setX] = useState(1);
   let y;

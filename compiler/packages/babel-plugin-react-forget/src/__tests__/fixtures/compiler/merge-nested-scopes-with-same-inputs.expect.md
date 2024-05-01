@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 import { setProperty } from "shared-runtime";
 
 function Component(props) {

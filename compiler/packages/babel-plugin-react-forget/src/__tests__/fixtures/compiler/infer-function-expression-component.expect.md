@@ -13,7 +13,7 @@ const Component = function ComponentName(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react"; // @compilationMode(infer)
 
 const Component = function ComponentName(props) {
   const $ = useMemoCache(1);

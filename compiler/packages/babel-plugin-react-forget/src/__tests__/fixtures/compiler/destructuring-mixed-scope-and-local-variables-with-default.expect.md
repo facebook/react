@@ -44,7 +44,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 import { Stringify, graphql } from "shared-runtime";
 
 function useFragment(_arg1, _arg2) {

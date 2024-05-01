@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMemoizationComments
+import { c as useMemoCache } from "react"; // @enableMemoizationComments
 import { addOne, getNumber, identity } from "shared-runtime";
 
 function Component(props) {

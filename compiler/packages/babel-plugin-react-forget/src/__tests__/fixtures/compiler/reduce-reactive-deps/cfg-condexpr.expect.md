@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b should be added as a unconditional dependency to the reactive
+import { c as useMemoCache } from "react"; // props.a.b should be added as a unconditional dependency to the reactive
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 

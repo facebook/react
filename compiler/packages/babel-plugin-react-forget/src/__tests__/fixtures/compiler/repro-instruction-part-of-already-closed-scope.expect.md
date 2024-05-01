@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact
+import { c as useMemoCache } from "react"; // @enableAssumeHooksFollowRulesOfReact
 import { Stringify, identity, useHook } from "shared-runtime";
 
 function Component(t0) {

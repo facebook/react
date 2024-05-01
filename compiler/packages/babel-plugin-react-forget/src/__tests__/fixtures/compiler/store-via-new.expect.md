@@ -14,7 +14,7 @@ function Foo() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function Foo() {
   const $ = useMemoCache(1);
   let x;

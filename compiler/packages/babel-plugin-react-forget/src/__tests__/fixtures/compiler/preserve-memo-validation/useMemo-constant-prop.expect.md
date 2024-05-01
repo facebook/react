@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
+import { useMemo, c as useMemoCache } from "react";
 import { identity } from "shared-runtime";
 
 function useFoo(cond) {

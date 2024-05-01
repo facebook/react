@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useEffect, unstable_useMemoCache as useMemoCache } from "react";
+import { useEffect, c as useMemoCache } from "react";
 
 function Foo(props, ref) {
   const $ = useMemoCache(4);

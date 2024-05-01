@@ -18,7 +18,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // x's mutable range should extend to `mutate(y)`
+import { c as useMemoCache } from "react"; // x's mutable range should extend to `mutate(y)`
 
 function Component(props) {
   const $ = useMemoCache(2);

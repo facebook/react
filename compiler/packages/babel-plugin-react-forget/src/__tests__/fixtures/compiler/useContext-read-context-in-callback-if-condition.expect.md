@@ -32,11 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import {
-  createContext,
-  useContext,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { createContext, useContext, c as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
 const FooContext = createContext({ current: true });

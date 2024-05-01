@@ -46,7 +46,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableReactiveScopesInHIR:false
+import { c as useMemoCache } from "react"; // @enableReactiveScopesInHIR:false
 import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
 /**
  * `button` and `dispatcher` must end up in the same memo block. It would be

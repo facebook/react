@@ -34,7 +34,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 import { StaticText1, StaticText2 } from "shared-runtime";
 
 function MaybeMutable() {

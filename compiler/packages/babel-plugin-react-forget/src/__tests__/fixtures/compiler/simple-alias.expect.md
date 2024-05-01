@@ -19,7 +19,7 @@ function foo() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function mutate() {}
 function foo() {
   const $ = useMemoCache(2);

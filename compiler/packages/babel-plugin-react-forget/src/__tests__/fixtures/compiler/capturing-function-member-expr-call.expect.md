@@ -19,7 +19,7 @@ function component({ mutator }) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function component(t0) {
   const $ = useMemoCache(7);
   const { mutator } = t0;

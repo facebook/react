@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback, unstable_useMemoCache as useMemoCache } from "react";
+import { useCallback, c as useMemoCache } from "react";
 import { identity, mutate } from "shared-runtime";
 
 function useHook(propA, propB) {

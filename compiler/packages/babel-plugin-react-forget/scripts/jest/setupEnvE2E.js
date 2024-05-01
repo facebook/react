@@ -12,5 +12,5 @@ const React = require("react");
  * As a result, our e2e transpiled code does not contain an import for `useMemoCache`
  * This is a hack.
  */
-React.useMemoCache = React.unstable_useMemoCache;
+React.c = React.unstable_useMemoCache;
 globalThis.useMemoCache = React.unstable_useMemoCache;

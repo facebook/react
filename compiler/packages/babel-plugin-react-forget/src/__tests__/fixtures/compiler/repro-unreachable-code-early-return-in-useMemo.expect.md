@@ -41,11 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
-import {
-  useMemo,
-  useState,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useMemo, useState, c as useMemoCache } from "react";
 import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component(t0) {

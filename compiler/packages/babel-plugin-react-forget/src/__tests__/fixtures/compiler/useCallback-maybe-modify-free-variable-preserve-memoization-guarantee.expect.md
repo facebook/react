@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees
-import { useCallback, unstable_useMemoCache as useMemoCache } from "react";
+import { useCallback, c as useMemoCache } from "react";
 import {
   identity,
   makeObject_Primitives,

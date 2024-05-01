@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @hookPattern:".*\b(use[^$]+)$"
+import { c as useMemoCache } from "react"; // @hookPattern:".*\b(use[^$]+)$"
 
 import * as React from "react";
 import { makeArray, useHook } from "shared-runtime";

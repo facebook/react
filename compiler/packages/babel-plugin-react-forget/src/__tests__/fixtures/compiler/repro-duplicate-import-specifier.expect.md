@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import type { SetStateAction, Dispatch } from "react";
-import { useState, unstable_useMemoCache as useMemoCache } from "react";
+import { useState, c as useMemoCache } from "react";
 
 function Component(_props) {
   const $ = useMemoCache(2);

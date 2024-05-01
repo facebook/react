@@ -61,14 +61,15 @@ export function addImportsToProgram(
 }
 
 /*
- * Matches `import { ... } from 'react';`
- * but not `import * as React from 'react';`
+ * Matches `import { ... } from <moduleName>;`
+ * but not `import * as React from <moduleName>;`
  */
-export function isNonNamespacedImportOfReact(
-  importDeclPath: NodePath<t.ImportDeclaration>
+function isNonNamespacedImport(
+  importDeclPath: NodePath<t.ImportDeclaration>,
+  moduleName: string
 ): boolean {
   return (
-    importDeclPath.get("source").node.value === "react" &&
+    importDeclPath.get("source").node.value === moduleName &&
     importDeclPath
       .get("specifiers")
       .every((specifier) => specifier.isImportSpecifier()) &&
@@ -77,12 +78,15 @@ export function isNonNamespacedImportOfReact(
   );
 }
 
-export function findExistingImports(program: NodePath<t.Program>): {
+function findExistingImports(
+  program: NodePath<t.Program>,
+  moduleName: string
+): {
   didInsertUseMemoCache: boolean;
-  hasExistingReactImport: boolean;
+  hasExistingImport: boolean;
 } {
   let didInsertUseMemoCache = false;
-  let hasExistingReactImport = false;
+  let hasExistingImport = false;
   program.traverse({
     CallExpression(callExprPath) {
       const callee = callExprPath.get("callee");
@@ -97,38 +101,36 @@ export function findExistingImports(program: NodePath<t.Program>): {
       }
     },
     ImportDeclaration(importDeclPath) {
-      if (isNonNamespacedImportOfReact(importDeclPath)) {
-        hasExistingReactImport = true;
+      if (isNonNamespacedImport(importDeclPath, moduleName)) {
+        hasExistingImport = true;
       }
     },
   });
 
   return {
     didInsertUseMemoCache,
-    hasExistingReactImport,
+    hasExistingImport,
   };
 }
 
 /*
- * If an existing import of React exists (ie `import {useMemo} from 'React'`), inject useMemoCache
+ * If an existing import of React exists (ie `import {useMemo} from 'react'`), inject useMemoCache
  * into the list of destructured variables.
  */
-export function updateExistingReactImportDeclaration(
-  program: NodePath<t.Program>
+function updateExistingImportDeclaration(
+  program: NodePath<t.Program>,
+  moduleName: string
 ): boolean {
   let didInsertUseMemoCache = false;
   program.traverse({
     ImportDeclaration(importDeclPath) {
       if (
         !didInsertUseMemoCache &&
-        isNonNamespacedImportOfReact(importDeclPath)
+        isNonNamespacedImport(importDeclPath, moduleName)
       ) {
         importDeclPath.pushContainer(
           "specifiers",
-          t.importSpecifier(
-            t.identifier("useMemoCache"),
-            t.identifier("unstable_useMemoCache")
-          )
+          t.importSpecifier(t.identifier("useMemoCache"), t.identifier("c"))
         );
         didInsertUseMemoCache = true;
       }
@@ -141,37 +143,33 @@ export function updateUseMemoCacheImport(
   program: NodePath<t.Program>,
   options: PluginOptions
 ): void {
+  const moduleName = options.runtimeModule ?? "react/compiler-runtime";
   /*
    * If there isn't already an import of * as React, insert it so useMemoCache doesn't
    * throw
    */
-  const { didInsertUseMemoCache, hasExistingReactImport } =
-    findExistingImports(program);
+  const { didInsertUseMemoCache, hasExistingImport } = findExistingImports(
+    program,
+    moduleName
+  );
 
-  // unstable_useMemoCache wasn't already imported, nothing to do
   if (!didInsertUseMemoCache) {
+    // useMemoCache was not generated, nothing to do
     return;
   }
 
-  if (options.enableUseMemoCachePolyfill === false) {
-    /*
-     * If Forget did successfully compile inject/update an import of
-     * `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
-     * `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
-     */
-    if (hasExistingReactImport) {
-      const didUpdateImport = updateExistingReactImportDeclaration(program);
-      if (didUpdateImport === false) {
-        throw new Error(
-          "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
-        );
-      }
-    } else {
-      addUseMemoCacheImportDeclaration(program, "react");
+  if (hasExistingImport) {
+    const didUpdateImport = updateExistingImportDeclaration(
+      program,
+      moduleName
+    );
+    if (!didUpdateImport) {
+      throw new Error(
+        `Expected an ImportDeclaration of \`${moduleName}\` in order to update ImportSpecifiers with useMemoCache`
+      );
     }
   } else {
-    // import useMemoCache from userspace module
-    addUseMemoCacheImportDeclaration(program, "react-forget-runtime");
+    addUseMemoCacheImportDeclaration(program, moduleName);
   }
 }
 
@@ -182,12 +180,7 @@ function addUseMemoCacheImportDeclaration(
   program.unshiftContainer(
     "body",
     t.importDeclaration(
-      [
-        t.importSpecifier(
-          t.identifier("useMemoCache"),
-          t.identifier("unstable_useMemoCache")
-        ),
-      ],
+      [t.importSpecifier(t.identifier("useMemoCache"), t.identifier("c"))],
       t.stringLiteral(moduleName)
     )
   );

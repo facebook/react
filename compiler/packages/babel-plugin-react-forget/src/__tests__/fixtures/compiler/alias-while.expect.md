@@ -26,7 +26,7 @@ function mutate(x, y) {}
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 function foo(cond) {
   const $ = useMemoCache(2);
   let a;

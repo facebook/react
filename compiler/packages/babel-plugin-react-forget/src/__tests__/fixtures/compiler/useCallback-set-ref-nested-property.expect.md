@@ -28,11 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import {
-  useCallback,
-  useRef,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useCallback, useRef, c as useMemoCache } from "react";
 
 // Identical to useCallback-set-ref-nested-property-preserve-memoization,
 // but with a different set of compiler flags

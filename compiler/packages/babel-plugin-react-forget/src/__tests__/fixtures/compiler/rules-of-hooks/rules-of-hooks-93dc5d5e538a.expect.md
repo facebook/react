@@ -17,7 +17,7 @@ function RegressionTest() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Valid because the loop doesn't change the order of hooks calls.
+import { c as useMemoCache } from "react"; // Valid because the loop doesn't change the order of hooks calls.
 function RegressionTest() {
   const $ = useMemoCache(1);
   const res = [];

@@ -426,7 +426,7 @@ export function compileProgram(
     }
   }
 
-  // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
+  // Forget compiled the component, we need to update existing imports of useMemoCache
   if (compiledFns.length > 0) {
     updateUseMemoCacheImport(program, options);
     addImportsToProgram(program, externalFunctions);
@@ -508,10 +508,7 @@ function hasUseMemoCacheCall(
   let hasUseMemoCache = false;
   fn.traverse({
     Identifier(path) {
-      if (
-        path.node.name === "useMemoCache" ||
-        path.node.name === "unstable_useMemoCache"
-      ) {
+      if (path.node.name === "useMemoCache") {
         hasUseMemoCache = true;
       }
     },

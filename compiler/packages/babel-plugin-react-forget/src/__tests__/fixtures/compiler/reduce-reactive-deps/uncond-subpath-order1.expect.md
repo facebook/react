@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Determine that we only need to track p.a here
+import { c as useMemoCache } from "react"; // Determine that we only need to track p.a here
 // Ordering of access should not matter
 function TestDepsSubpathOrder1(props) {
   const $ = useMemoCache(2);

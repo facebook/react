@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // When an unconditional dependency `props.a` is the subpath of a conditional
+import { c as useMemoCache } from "react"; // When an unconditional dependency `props.a` is the subpath of a conditional
 // dependency `props.a.b`, we can safely overestimate and only track `props.a`
 // as a dependency
 

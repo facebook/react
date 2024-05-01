@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 // @validateMemoizedEffectDependencies
 
-import { useEffect, unstable_useMemoCache as useMemoCache } from "react";
+import { useEffect, c as useMemoCache } from "react";
 
 function Component(props) {
   const $ = useMemoCache(5);

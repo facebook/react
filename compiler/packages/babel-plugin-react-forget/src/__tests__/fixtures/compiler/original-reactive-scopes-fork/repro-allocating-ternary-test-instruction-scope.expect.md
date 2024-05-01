@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableReactiveScopesInHIR:false
+import { c as useMemoCache } from "react"; // @enableReactiveScopesInHIR:false
 import { identity, makeObject_Primitives } from "shared-runtime";
 
 function useTest(t0) {

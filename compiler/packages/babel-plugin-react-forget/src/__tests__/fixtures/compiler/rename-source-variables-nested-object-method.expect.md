@@ -35,7 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableChangeVariableCodegen
+import { c as useMemoCache } from "react"; // @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";

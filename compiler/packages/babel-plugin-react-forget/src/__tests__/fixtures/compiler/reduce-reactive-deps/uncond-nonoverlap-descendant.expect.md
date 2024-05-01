@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we can track non-overlapping dependencies separately.
+import { c as useMemoCache } from "react"; // Test that we can track non-overlapping dependencies separately.
 // (not needed for correctness but for dependency granularity)
 function TestNonOverlappingDescendantTracked(props) {
   const $ = useMemoCache(4);

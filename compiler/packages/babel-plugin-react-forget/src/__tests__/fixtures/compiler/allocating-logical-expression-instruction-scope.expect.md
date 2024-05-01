@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 /**
  * This is a weird case as data has type `BuiltInMixedReadonly`.
  * The only scoped value we currently infer in this program is the

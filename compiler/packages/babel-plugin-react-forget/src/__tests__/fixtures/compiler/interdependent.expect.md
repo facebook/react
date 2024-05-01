@@ -27,7 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 /**
  * Should produce 1 scope:
  *

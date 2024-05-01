@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
+import { c as useMemoCache } from "react"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
 // We should codegen the correct member expressions
 function Component(props) {
   const $ = useMemoCache(3);

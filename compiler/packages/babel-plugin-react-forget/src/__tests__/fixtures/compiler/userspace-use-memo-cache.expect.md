@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableUseMemoCachePolyfill
+// @runtimeModule="react-forget-runtime"
 function Component(props) {
   const [x, setX] = useState(1);
   let y;
@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react-forget-runtime"; // @enableUseMemoCachePolyfill
+import { c as useMemoCache } from "react-forget-runtime"; // @runtimeModule="react-forget-runtime"
 function Component(props) {
   const $ = useMemoCache(5);
   const [x, setX] = useState(1);

@@ -31,11 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import {
-  useMemo,
-  useState,
-  unstable_useMemoCache as useMemoCache,
-} from "react";
+import { useMemo, useState, c as useMemoCache } from "react";
 import { arrayPush } from "shared-runtime";
 
 // useMemo-produced values can exist in nested reactive blocks, as long

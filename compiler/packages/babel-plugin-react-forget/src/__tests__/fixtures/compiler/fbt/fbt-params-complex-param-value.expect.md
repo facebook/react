@@ -17,7 +17,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react";
 import fbt from "fbt";
 
 function Component(props) {

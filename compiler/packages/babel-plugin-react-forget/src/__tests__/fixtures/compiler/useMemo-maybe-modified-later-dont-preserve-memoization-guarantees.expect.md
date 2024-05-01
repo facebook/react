@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees:false
-import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
+import { useMemo, c as useMemoCache } from "react";
 import { identity, makeObject_Primitives, mutate } from "shared-runtime";
 
 function Component(props) {
