@@ -1,5 +1,5 @@
 {
-  "name": "React Forget Playground",
+  "name": "React Compiler Playground",
   "short_name": "React REPL",
   "display": "standalone",
   "start_url": "/",

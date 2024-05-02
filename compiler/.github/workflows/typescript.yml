@@ -1,4 +1,4 @@
-name: Forget (TypeScript)
+name: React Compiler (TypeScript)
 
 on:
   push:

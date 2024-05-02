@@ -1,6 +1,6 @@
-# React Forget
+# React Compiler
 
-React Forget is an experimental Babel plugin to automatically memoize React Hooks and Components.
+React Compiler is an experimental Babel plugin to automatically memoize React Hooks and Components.
 
 ## Development
 

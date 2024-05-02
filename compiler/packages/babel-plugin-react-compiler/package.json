@@ -1,7 +1,7 @@
 {
   "name": "babel-plugin-react-compiler",
   "version": "0.0.1",
-  "description": "Babel plugin for React Forget.",
+  "description": "Babel plugin for React Compiler.",
   "main": "dist/index.js",
   "license": "MIT",
   "files": [

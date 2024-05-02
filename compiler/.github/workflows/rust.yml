@@ -1,4 +1,4 @@
-name: Forget (Rust)
+name: React Compiler (Rust)
 
 on:
   push:

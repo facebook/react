@@ -4,12 +4,12 @@ members = ["crates/*"]
 
 [workspace.package]
 authors     = ["The React Team https://react.dev/community/team"]
-description = "React Forget Compiler"
+description = "React Compiler"
 edition     = "2021"
-homepage    = "https://github.com/facebook/react-forget"
-keywords    = ["JavaScript", "TypeScript", "React", "React Forget", "Forget", "Compiler"]
+homepage    = "https://github.com/facebook/react"
+keywords    = ["JavaScript", "TypeScript", "React", "React Compiler", "Compiler"]
 license     = "MIT"
-repository  = "https://github.com/facebook/react-forget"
+repository  = "https://github.com/facebook/react"
 
 [workspace.dependencies]
 # workspace crates
