@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b1926ec8be22ff21a461aebe15a8dec>>
+ * @generated SignedSource<<438e1cd98ae204c6c07245d77bdf2eb2>>
  */
 
 'use strict';
@@ -2003,7 +2003,8 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
     passChildrenWhenCloningPersistedNodes = dynamicFlags.passChildrenWhenCloningPersistedNodes,
     useModernStrictMode = dynamicFlags.useModernStrictMode,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
+    enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath; // The rest of the flags are static for better dead code elimination.
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -2352,14 +2353,70 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
 
   return updatePayload;
 }
+
+function fastAddProperties(updatePayload, nextProps, validAttributes) {
+  var attributeConfig;
+  var nextProp;
+
+  for (var propKey in nextProps) {
+    nextProp = nextProps[propKey];
+
+    if (nextProp === undefined) {
+      continue;
+    }
+
+    attributeConfig = validAttributes[propKey];
+
+    if (attributeConfig === undefined) {
+      continue;
+    }
+
+    if (typeof nextProp === 'function') {
+      nextProp = true;
+    }
+
+    if (typeof attributeConfig !== 'object') {
+      if (!updatePayload) {
+        updatePayload = {};
+      }
+
+      updatePayload[propKey] = nextProp;
+      continue;
+    }
+
+    if (typeof attributeConfig.process === 'function') {
+      if (!updatePayload) {
+        updatePayload = {};
+      }
+
+      updatePayload[propKey] = attributeConfig.process(nextProp);
+      continue;
+    }
+
+    if (isArray(nextProp)) {
+      for (var i = 0; i < nextProp.length; i++) {
+        updatePayload = fastAddProperties(updatePayload, nextProp[i], attributeConfig);
+      }
+
+      continue;
+    }
+
+    updatePayload = fastAddProperties(updatePayload, nextProp, attributeConfig);
+  }
+
+  return updatePayload;
+}
 /**
  * addProperties adds all the valid props to the payload after being processed.
  */
 
 
 function addProperties(updatePayload, props, validAttributes) {
-  // TODO: Fast path
-  return diffProperties(updatePayload, emptyObject$1, props, validAttributes);
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(updatePayload, props, validAttributes);
+  } else {
+    return diffProperties(updatePayload, emptyObject$1, props, validAttributes);
+  }
 }
 /**
  * clearProperties clears all the previous props by adding a null sentinel
@@ -26075,7 +26132,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-197956b7';
+var ReactVersion = '19.0.0-beta-8a57d9cf';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

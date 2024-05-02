@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<659c779c0ac134a5010cd8f6556b1b17>>
+ * @generated SignedSource<<ce4cd05ddf193df647a49f1ddbcc0aed>>
  */
 
 'use strict';
@@ -25,7 +25,8 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 
 var enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
     enableRenderableContext = dynamicFlags.enableRenderableContext,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses;
+ // The rest of the flags are static for better dead code elimination.
 var enableDebugTracing = false;
 var enableScopeAPI = false;
 var enableLegacyHidden = false;

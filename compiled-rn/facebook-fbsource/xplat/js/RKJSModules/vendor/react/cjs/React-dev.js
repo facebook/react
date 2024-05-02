@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0f88cc3fda756e3467304abd247a3db7>>
+ * @generated SignedSource<<f47b166be53dccb56c8e3adcf1ba0dfb>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-6a68f48e';
+var ReactVersion = '19.0.0-beta-45cd200f';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -36,7 +36,8 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 var enableAsyncActions = dynamicFlags.enableAsyncActions,
     enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
     enableRenderableContext = dynamicFlags.enableRenderableContext,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses; // The rest of the flags are static for better dead code elimination.
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses;
+ // The rest of the flags are static for better dead code elimination.
 var enableDebugTracing = false;
 var enableScopeAPI = false;
 var enableLegacyHidden = false;

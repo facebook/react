@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ad84473bdbce0975ceaaac6469a759ac>>
+ * @generated SignedSource<<97e06df55397eea2903e5bffade5f61e>>
  */
 
 "use strict";
@@ -983,6 +983,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+  enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1091,12 +1092,7 @@ function diffNestedProperty(
 function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!nextProp) return updatePayload;
   if (!isArrayImpl(nextProp))
-    return diffProperties(
-      updatePayload,
-      emptyObject$1,
-      nextProp,
-      validAttributes
-    );
+    return addProperties(updatePayload, nextProp, validAttributes);
   for (var i = 0; i < nextProp.length; i++)
     updatePayload = addNestedProperty(
       updatePayload,
@@ -1205,6 +1201,44 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
                 attributeConfig
               )))));
   return updatePayload;
+}
+function fastAddProperties(updatePayload, nextProps, validAttributes) {
+  var propKey;
+  for (propKey in nextProps) {
+    var nextProp = nextProps[propKey];
+    if (void 0 !== nextProp) {
+      var attributeConfig = validAttributes[propKey];
+      if (void 0 !== attributeConfig)
+        if (
+          ("function" === typeof nextProp && (nextProp = !0),
+          "object" !== typeof attributeConfig)
+        )
+          updatePayload || (updatePayload = {}),
+            (updatePayload[propKey] = nextProp);
+        else if ("function" === typeof attributeConfig.process)
+          updatePayload || (updatePayload = {}),
+            (updatePayload[propKey] = attributeConfig.process(nextProp));
+        else if (isArrayImpl(nextProp))
+          for (var i = 0; i < nextProp.length; i++)
+            updatePayload = fastAddProperties(
+              updatePayload,
+              nextProp[i],
+              attributeConfig
+            );
+        else
+          updatePayload = fastAddProperties(
+            updatePayload,
+            nextProp,
+            attributeConfig
+          );
+    }
+  }
+  return updatePayload;
+}
+function addProperties(updatePayload, props, validAttributes) {
+  return enableAddPropertiesFastPath
+    ? fastAddProperties(updatePayload, props, validAttributes)
+    : diffProperties(updatePayload, emptyObject$1, props, validAttributes);
 }
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
@@ -1604,9 +1638,8 @@ var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
   var node = instance.node;
-  var JSCompiler_inline_result = diffProperties(
+  var JSCompiler_inline_result = addProperties(
     null,
-    emptyObject$1,
     { style: { display: "none" } },
     instance.canonical.viewConfig.validAttributes
   );
@@ -7351,9 +7384,8 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
-        newChildSet = diffProperties(
+        newChildSet = addProperties(
           null,
-          emptyObject$1,
           newProps,
           renderLanes.validAttributes
         );
@@ -10613,7 +10645,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-beta-9a489885",
+    version: "19.0.0-beta-5fd3967c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10656,7 +10688,7 @@ var internals$jscomp$inline_1385 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-9a489885"
+  reconcilerVersion: "19.0.0-beta-5fd3967c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1386 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
