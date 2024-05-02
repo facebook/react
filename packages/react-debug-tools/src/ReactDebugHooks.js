@@ -177,15 +177,20 @@ function readContext<T>(context: ReactContext<T>): T {
       );
     }
 
+    let value: T;
     // For now we don't expose readContext usage in the hooks debugging info.
-    const value = hasOwnProperty.call(currentContextDependency, 'memoizedValue')
-      ? // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-        ((currentContextDependency.memoizedValue: any): T)
-      : // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
-        // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-        ((currentContextDependency.context._currentValue: any): T);
-    // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-    currentContextDependency = currentContextDependency.next;
+    if (hasOwnProperty.call(currentContextDependency, 'memoizedValue')) {
+      // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+      value = ((currentContextDependency.memoizedValue: any): T);
+
+      // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+      currentContextDependency = currentContextDependency.next;
+    } else {
+      // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
+      // Multiple reads of the same context were also only tracked as a single dependency.
+      // We just give up on advancing context dependencies and solely rely on `setupContexts`.
+      value = context._currentValue;
+    }
 
     return value;
   }
