@@ -208,7 +208,7 @@ export function processReply(
     return '$' + tag + blobId.toString(16);
   }
 
-  function serializeReadableStream(stream: ReadableStream): string {
+  function serializeBinaryReader(reader: any): string {
     if (formData === null) {
       // Upgrade to use FormData to allow us to stream this value.
       formData = new FormData();
@@ -218,23 +218,43 @@ export function processReply(
     pendingParts++;
     const streamId = nextPartId++;
 
-    // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
-    // receiving side. It also implies that different chunks can be split up or merged as opposed
-    // to a readable stream that happens to have Uint8Array as the type which might expect it to be
-    // received in the same slices.
-    // $FlowFixMe: This is a Node.js extension.
-    let supportsBYOB: void | boolean = stream.supportsBYOB;
-    if (supportsBYOB === undefined) {
-      try {
-        // $FlowFixMe[extra-arg]: This argument is accepted.
-        stream.getReader({mode: 'byob'}).releaseLock();
-        supportsBYOB = true;
-      } catch (x) {
-        supportsBYOB = false;
+    const buffer = [];
+
+    function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
+      if (entry.done) {
+        const blobId = nextPartId++;
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        data.append(formFieldPrefix + blobId, new Blob(buffer));
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        data.append(
+          formFieldPrefix + streamId,
+          '"$o' + blobId.toString(16) + '"',
+        );
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        buffer.push(entry.value);
+        reader.read(new Uint8Array(1024)).then(progress, reject);
       }
     }
+    reader.read(new Uint8Array(1024)).then(progress, reject);
 
-    const reader = stream.getReader();
+    return '$r' + streamId.toString(16);
+  }
+
+  function serializeReader(reader: ReadableStreamReader): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
 
     function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
       if (entry.done) {
@@ -258,7 +278,20 @@ export function processReply(
     }
     reader.read().then(progress, reject);
 
-    return '$' + (supportsBYOB ? 'r' : 'R') + streamId.toString(16);
+    return '$R' + streamId.toString(16);
+  }
+
+  function serializeReadableStream(stream: ReadableStream): string {
+    // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
+    // receiving side. For binary streams, we serialize them as plain Blobs.
+    let binaryReader;
+    try {
+      // $FlowFixMe[extra-arg]: This argument is accepted.
+      binaryReader = stream.getReader({mode: 'byob'});
+    } catch (x) {
+      return serializeReader(stream.getReader());
+    }
+    return serializeBinaryReader(binaryReader);
   }
 
   function serializeAsyncIterable(
