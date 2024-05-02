@@ -49,7 +49,6 @@ const __NEXT_RN_MAJOR__ = true;
 export const disableClientCache = __NEXT_RN_MAJOR__;
 export const disableLegacyContext = __NEXT_RN_MAJOR__;
 export const enableTaint = __NEXT_RN_MAJOR__;
-export const enableUnifiedSyncLane = __NEXT_RN_MAJOR__;
 export const enableFizzExternalRuntime = __NEXT_RN_MAJOR__; // DOM-only
 export const enableBinaryFlight = __NEXT_RN_MAJOR__; // DOM-only
 export const enableFlightReadableStream = __NEXT_RN_MAJOR__; // DOM-only

@@ -27,7 +27,6 @@ export const {
   enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
-  enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
   useModernStrictMode,
   disableDefaultPropsExceptForClasses,
