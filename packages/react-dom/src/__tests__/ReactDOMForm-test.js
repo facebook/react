@@ -481,6 +481,7 @@ describe('ReactDOMForm', () => {
   it('can read the clicked button in the formdata event', async () => {
     const inputRef = React.createRef();
     const buttonRef = React.createRef();
+    const outsideButtonRef = React.createRef();
     let button;
     let title;
 
@@ -492,14 +493,27 @@ describe('ReactDOMForm', () => {
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(
-        <form action={action}>
-          <input type="text" name="title" defaultValue="hello" />
-          <input type="submit" name="button" value="save" />
-          <input type="submit" name="button" value="delete" ref={inputRef} />
-          <button name="button" value="edit" ref={buttonRef}>
-            Edit
+        <>
+          <form action={action}>
+            <input type="text" name="title" defaultValue="hello" />
+            <input type="submit" name="button" value="save" />
+            <input type="submit" name="button" value="delete" ref={inputRef} />
+            <button name="button" value="edit" ref={buttonRef}>
+              Edit
+            </button>
+          </form>
+          <form id="form" action={action}>
+            <input type="text" name="title" defaultValue="hello" />
+          </form>
+          <button
+            form="form"
+            name="button"
+            value="outside"
+            ref={outsideButtonRef}>
+            Button outside form
           </button>
-        </form>,
+          ,
+        </>,
       );
     });
 
@@ -518,6 +532,11 @@ describe('ReactDOMForm', () => {
     await submit(buttonRef.current);
 
     expect(button).toBe('edit');
+    expect(title).toBe('hello');
+
+    await submit(outsideButtonRef.current);
+
+    expect(button).toBe('outside');
     expect(title).toBe('hello');
 
     // Ensure that the type field got correctly restored
