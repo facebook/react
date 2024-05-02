@@ -962,4 +962,77 @@ describe('ReactFlightDOMForm', () => {
     expect(form2.textContent).toBe('error message');
     expect(form2.firstChild.tagName).toBe('DIV');
   });
+
+  // @gate enableAsyncActions && enableBinaryFlight
+  it('useActionState can return binary state during MPA form submission', async () => {
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return new Blob([new Uint8Array([104, 105])]);
+      },
+    );
+
+    let blob;
+
+    function Form({action}) {
+      const [errorMsg, dispatch] = useActionState(action, null);
+      if (errorMsg) {
+        blob = errorMsg;
+      }
+      return <form action={dispatch} />;
+    }
+
+    const FormRef = await clientExports(Form);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <FormRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form1 = container.getElementsByTagName('form')[0];
+    expect(form1.textContent).toBe('');
+
+    async function submitTheForm() {
+      const form = container.getElementsByTagName('form')[0];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        <FormRef action={serverAction} />,
+        webpackMap,
+      );
+      const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+        postbackRscStream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse,
+        {formState: formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+    }
+
+    await expect(submitTheForm).toErrorDev(
+      'Warning: Failed to serialize an action for progressive enhancement:\n' +
+        'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
+    );
+
+    expect(blob instanceof Blob).toBe(true);
+    expect(blob.size).toBe(2);
+  });
 });
