@@ -31403,7 +31403,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-f210ddff';
+var ReactVersion = '19.0.0-www-classic-af3b0dd2';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -34520,6 +34520,11 @@ function extractEvents$1(dispatchQueue, domEventName, maybeTargetInst, nativeEve
       var temp = submitter.ownerDocument.createElement('input');
       temp.name = submitter.name;
       temp.value = submitter.value;
+
+      if (form.id) {
+        temp.setAttribute('form', form.id);
+      }
+
       submitter.parentNode.insertBefore(temp, submitter);
       formData = new FormData(form);
       temp.parentNode.removeChild(temp);

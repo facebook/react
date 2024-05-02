@@ -13164,6 +13164,8 @@ function extractEvents$1(
                   var temp = submitter.ownerDocument.createElement("input");
                   temp.name = submitter.name;
                   temp.value = submitter.value;
+                  nativeEventTarget.id &&
+                    temp.setAttribute("form", nativeEventTarget.id);
                   submitter.parentNode.insertBefore(temp, submitter);
                   var formData = new FormData(nativeEventTarget);
                   temp.parentNode.removeChild(temp);
@@ -16757,7 +16759,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1728 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-870388f5",
+  version: "19.0.0-www-modern-127bc272",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2202 = {
@@ -16787,7 +16789,7 @@ var internals$jscomp$inline_2202 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-870388f5"
+  reconcilerVersion: "19.0.0-www-modern-127bc272"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2203 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17312,4 +17314,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-870388f5";
+exports.version = "19.0.0-www-modern-127bc272";
