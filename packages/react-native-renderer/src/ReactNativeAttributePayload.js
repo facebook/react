@@ -444,12 +444,15 @@ function diffProperties(
   return updatePayload;
 }
 
-function fastAddProperties(updatePayload, nextProps, validAttributes) {
-  var attributeConfig;
-  var nextProp;
+function fastAddProperties(
+  updatePayload: null | Object,
+  nextProps: Object,
+  validAttributes: AttributeConfiguration,
+): null | Object {
+  let attributeConfig;
+  let nextProp;
 
-  for (var propKey in nextProps) {
-
+  for (const propKey in nextProps) {
     nextProp = nextProps[propKey];
 
     if (nextProp === undefined) {
@@ -462,34 +465,42 @@ function fastAddProperties(updatePayload, nextProps, validAttributes) {
       continue;
     }
 
-    if (typeof nextProp === "function") {
-      nextProp = true;
+    if (typeof nextProp === 'function') {
+      nextProp = (true: any);
     }
 
-    if (typeof attributeConfig !== "object") {
+    if (typeof attributeConfig !== 'object') {
       if (!updatePayload) {
-        updatePayload = {};
+        updatePayload = ({}: {[string]: $FlowFixMe});
       }
       updatePayload[propKey] = nextProp;
       continue;
     }
 
-    if (typeof attributeConfig.process === "function") {
+    if (typeof attributeConfig.process === 'function') {
       if (!updatePayload) {
-        updatePayload = {};
+        updatePayload = ({}: {[string]: $FlowFixMe});
       }
       updatePayload[propKey] = attributeConfig.process(nextProp);
       continue;
     }
 
     if (isArray(nextProp)) {
-      for (var i = 0; i < nextProp.length; i++) {
-        updatePayload = fastAddProperties(updatePayload, nextProp[i], attributeConfig);
+      for (let i = 0; i < nextProp.length; i++) {
+        updatePayload = fastAddProperties(
+          updatePayload,
+          nextProp[i],
+          ((attributeConfig: any): AttributeConfiguration),
+        );
       }
       continue;
     }
 
-    updatePayload = fastAddProperties(updatePayload, nextProp, attributeConfig);
+    updatePayload = fastAddProperties(
+      updatePayload,
+      nextProp,
+      ((attributeConfig: any): AttributeConfiguration),
+    );
   }
 
   return updatePayload;
@@ -498,7 +509,11 @@ function fastAddProperties(updatePayload, nextProps, validAttributes) {
 /**
  * addProperties adds all the valid props to the payload after being processed.
  */
-function addProperties(updatePayload, props, validAttributes) {
+function addProperties(
+  updatePayload: null | Object,
+  props: Object,
+  validAttributes: AttributeConfiguration,
+): null | Object {
   return fastAddProperties(updatePayload, props, validAttributes);
 }
 
