@@ -63,7 +63,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-b38d5faf';
+var ReactVersion = '19.0.0-www-modern-3acd2c75';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -160,7 +160,8 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache; // On WWW, true is used for a new modern build.
+    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache;
+ // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;

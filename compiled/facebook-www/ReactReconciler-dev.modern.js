@@ -116,7 +116,8 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     favorSafetyOverHydrationPerf = dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache; // On WWW, true is used for a new modern build.
+    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache;
+ // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -27925,7 +27926,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-30613c5e';
+var ReactVersion = '19.0.0-www-modern-e8748e87';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

@@ -113,7 +113,8 @@ var enableTrustedTypesIntegration = dynamicFeatureFlags.enableTrustedTypesIntegr
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     favorSafetyOverHydrationPerf = dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache; // On WWW, true is used for a new modern build.
+    enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache;
+ // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -30578,7 +30579,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-1407495b';
+var ReactVersion = '19.0.0-www-modern-826b7a52';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
