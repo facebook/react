@@ -18,6 +18,11 @@ import type {
   Wall,
 } from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {
+  ViewAttributeSource,
+  ViewElementSource,
+  CanViewElementSource,
+} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 type Config = {
   checkBridgeProtocolCompatibility?: boolean,
@@ -46,13 +51,23 @@ type InitializationOptions = {
   bridge: FrontendBridge,
   store: Store,
   theme?: BrowserTheme,
+  viewAttributeSourceFunction?: ViewAttributeSource,
+  viewElementSourceFunction?: ViewElementSource,
+  canViewElementSourceFunction?: CanViewElementSource,
 };
 
 export function initialize(
   contentWindow: Element | Document,
   options: InitializationOptions,
 ): void {
-  const {bridge, store, theme = 'light'} = options;
+  const {
+    bridge,
+    store,
+    theme = 'light',
+    viewAttributeSourceFunction,
+    viewElementSourceFunction,
+    canViewElementSourceFunction,
+  } = options;
   const root = createRoot(contentWindow);
 
   root.render(
@@ -63,6 +78,9 @@ export function initialize(
       showTabBar={true}
       warnIfLegacyBackendDetected={true}
       enabledInspectedElementContextMenu={true}
+      viewAttributeSourceFunction={viewAttributeSourceFunction}
+      viewElementSourceFunction={viewElementSourceFunction}
+      canViewElementSourceFunction={canViewElementSourceFunction}
     />,
   );
 }
