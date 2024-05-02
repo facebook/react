@@ -833,6 +833,7 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
+  // @reactVersion >= 16.8
   it('should inspect the value of the current provider in useContext reading the same context multiple times', async () => {
     const ContextA = React.createContext('default A');
     const ContextB = React.createContext('default B');
