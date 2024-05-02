@@ -327,7 +327,14 @@ function loadServerReference<T>(
     }
   }
   promise.then(
-    createModelResolver(parentChunk, parentObject, key),
+    createModelResolver(
+      parentChunk,
+      parentObject,
+      key,
+      false,
+      response,
+      createModel,
+    ),
     createModelReject(parentChunk),
   );
   // We need a placeholder value that will be replaced later.
@@ -406,19 +413,24 @@ function createModelResolver<T>(
   chunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
+  cyclic: boolean,
+  response: Response,
+  map: (response: Response, model: any) => T,
 ): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
     blocked = initializingChunkBlockedModel;
-    blocked.deps++;
+    if (!cyclic) {
+      blocked.deps++;
+    }
   } else {
     blocked = initializingChunkBlockedModel = {
-      deps: 1,
+      deps: cyclic ? 0 : 1,
       value: (null: any),
     };
   }
   return value => {
-    parentObject[key] = value;
+    parentObject[key] = map(response, value);
 
     // If this is the root object for a model reference, where `blocked.value`
     // is a stale `null`, the resolved value can be used directly.
@@ -446,16 +458,61 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
-function getOutlinedModel(response: Response, id: number): any {
+function getOutlinedModel<T>(
+  response: Response,
+  id: number,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any) => T,
+): T {
   const chunk = getChunk(response, id);
-  if (chunk.status === RESOLVED_MODEL) {
-    initializeModelChunk(chunk);
+  switch (chunk.status) {
+    case RESOLVED_MODEL:
+      initializeModelChunk(chunk);
+      break;
   }
-  if (chunk.status !== INITIALIZED) {
-    // We know that this is emitted earlier so otherwise it's an error.
-    throw chunk.reason;
+  // The status might have changed after initialization.
+  switch (chunk.status) {
+    case INITIALIZED:
+      return map(response, chunk.value);
+    case PENDING:
+    case BLOCKED:
+      const parentChunk = initializingChunk;
+      chunk.then(
+        createModelResolver(
+          parentChunk,
+          parentObject,
+          key,
+          false,
+          response,
+          map,
+        ),
+        createModelReject(parentChunk),
+      );
+      return (null: any);
+    default:
+      throw chunk.reason;
   }
-  return chunk.value;
+}
+
+function createMap(
+  response: Response,
+  model: Array<[any, any]>,
+): Map<any, any> {
+  return new Map(model);
+}
+
+function createSet(response: Response, model: Array<any>): Set<any> {
+  return new Set(model);
+}
+
+function extractIterator(response: Response, model: Array<any>): Iterator<any> {
+  // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+  return model[Symbol.iterator]();
+}
+
+function createModel(response: Response, model: any): any {
+  return model;
 }
 
 function parseTypedArray(
@@ -481,10 +538,17 @@ function parseTypedArray(
         });
 
   // Since loading the buffer is an async operation we'll be blocking the parent
-  // chunk. TODO: This is not safe if the parent chunk needs a mapper like Map.
+  // chunk.
   const parentChunk = initializingChunk;
   promise.then(
-    createModelResolver(parentChunk, parentObject, parentKey),
+    createModelResolver(
+      parentChunk,
+      parentObject,
+      parentKey,
+      false,
+      response,
+      createModel,
+    ),
     createModelReject(parentChunk),
   );
   return null;
@@ -728,7 +792,7 @@ function parseModelString(
         const id = parseInt(value.slice(2), 16);
         // TODO: Just encode this in the reference inline instead of as a model.
         const metaData: {id: ServerReferenceId, bound: Thenable<Array<any>>} =
-          getOutlinedModel(response, id);
+          getOutlinedModel(response, id, obj, key, createModel);
         return loadServerReference(
           response,
           metaData.id,
@@ -745,14 +809,12 @@ function parseModelString(
       case 'Q': {
         // Map
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Map(data);
+        return getOutlinedModel(response, id, obj, key, createMap);
       }
       case 'W': {
         // Set
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Set(data);
+        return getOutlinedModel(response, id, obj, key, createSet);
       }
       case 'K': {
         // FormData
@@ -774,8 +836,7 @@ function parseModelString(
       case 'i': {
         // Iterator
         const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return data[Symbol.iterator]();
+        return getOutlinedModel(response, id, obj, key, extractIterator);
       }
       case 'I': {
         // $Infinity
@@ -873,27 +934,7 @@ function parseModelString(
 
     // We assume that anything else is a reference ID.
     const id = parseInt(value.slice(1), 16);
-    const chunk = getChunk(response, id);
-    switch (chunk.status) {
-      case RESOLVED_MODEL:
-        initializeModelChunk(chunk);
-        break;
-    }
-    // The status might have changed after initialization.
-    switch (chunk.status) {
-      case INITIALIZED:
-        return chunk.value;
-      case PENDING:
-      case BLOCKED:
-        const parentChunk = initializingChunk;
-        chunk.then(
-          createModelResolver(parentChunk, obj, key),
-          createModelReject(parentChunk),
-        );
-        return null;
-      default:
-        throw chunk.reason;
-    }
+    return getOutlinedModel(response, id, obj, key, createModel);
   }
   return value;
 }
