@@ -78,6 +78,7 @@ export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableEarlyReturnForPropDiffing = false;
+export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = true;
 

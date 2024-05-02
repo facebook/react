@@ -15,6 +15,7 @@ import {
 import isArray from 'shared/isArray';
 
 import {enableEarlyReturnForPropDiffing} from 'shared/ReactFeatureFlags';
+import {enableAddPropertiesFastPath} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -514,7 +515,11 @@ function addProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  return fastAddProperties(updatePayload, props, validAttributes);
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(updatePayload, props, validAttributes);
+  } else {
+    return diffProperties(updatePayload, emptyObject, props, validAttributes);
+  }
 }
 
 /**
