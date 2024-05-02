@@ -228,6 +228,13 @@ jobs:
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
       - store_artifacts:
           path: ./build/devtools.tgz
+      # Simplifies getting the extension for local testing
+      - store_artifacts:
+          path: ./build/devtools/chrome-extension.zip
+          destination: react-devtools-chrome-extension.zip
+      - store_artifacts:
+          path: ./build/devtools/firefox-extension.zip
+          destination: react-devtools-firefox-extension.zip
 
   run_devtools_e2e_tests:
     docker: *docker
