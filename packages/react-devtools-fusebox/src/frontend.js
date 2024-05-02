@@ -62,6 +62,7 @@ export function initialize(
       store={store}
       showTabBar={true}
       warnIfLegacyBackendDetected={true}
+      enabledInspectedElementContextMenu={true}
     />,
   );
 }
