@@ -123,6 +123,8 @@ export const enableServerComponentLogs = __EXPERIMENTAL__;
 
 export const enableEarlyReturnForPropDiffing = false;
 
+export const enableAddPropertiesFastPath = false;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */

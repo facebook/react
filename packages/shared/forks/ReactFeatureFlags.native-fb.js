@@ -31,6 +31,7 @@ export const {
   passChildrenWhenCloningPersistedNodes,
   useModernStrictMode,
   disableDefaultPropsExceptForClasses,
+  enableAddPropertiesFastPath,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
