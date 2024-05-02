@@ -19,8 +19,8 @@ import {
   run,
   ValueKind,
   type Hook,
-} from "babel-plugin-react-forget/src";
-import { type ReactFunctionType } from "babel-plugin-react-forget/src/HIR/Environment";
+} from "babel-plugin-react-compiler/src";
+import { type ReactFunctionType } from "babel-plugin-react-compiler/src/HIR/Environment";
 import clsx from "clsx";
 import invariant from "invariant";
 import { useSnackbar } from "notistack";

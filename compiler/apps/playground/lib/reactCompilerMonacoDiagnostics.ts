@@ -9,7 +9,7 @@ import { Monaco } from "@monaco-editor/react";
 import {
   CompilerErrorDetail,
   ErrorSeverity,
-} from "babel-plugin-react-forget/src";
+} from "babel-plugin-react-compiler/src";
 import { MarkerSeverity, type editor } from "monaco-editor";
 
 function mapReactCompilerSeverityToMonaco(

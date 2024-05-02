@@ -77,7 +77,7 @@ function buildTypeOfReactForget(): t.Statement {
 }
 
 /**
- * COPIED FROM babel-plugin-react-forget/src/Entrypoint/BabelUtils.ts
+ * COPIED FROM babel-plugin-react-compiler/src/Entrypoint/BabelUtils.ts
  */
 type ComponentDeclaration = t.FunctionDeclaration & {
   __componentDeclaration: boolean;

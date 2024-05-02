@@ -13,7 +13,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/outline";
 import MonacoEditor, { DiffEditor } from "@monaco-editor/react";
-import { type CompilerError } from "babel-plugin-react-forget/src";
+import { type CompilerError } from "babel-plugin-react-compiler/src";
 import parserBabel from "prettier/plugins/babel";
 import * as prettierPluginEstree from "prettier/plugins/estree";
 import * as prettier from "prettier/standalone";

@@ -14,7 +14,7 @@ module.exports = function (api) {
         test: /^((?!node_modules).)*$/g,
         plugins: [
           [
-            "babel-plugin-react-forget",
+            "babel-plugin-react-compiler",
             {
               compilationMode: "infer",
               panicThreshold: "NONE",

@@ -7,7 +7,7 @@
 
 import { jsx } from "@babel/plugin-syntax-jsx";
 import babelJest from "babel-jest";
-import { compile } from "babel-plugin-react-forget";
+import { compile } from "babel-plugin-react-compiler";
 import { execSync } from "child_process";
 
 import type { NodePath, Visitor } from "@babel/traverse";
@@ -16,7 +16,7 @@ import * as t from "@babel/types";
 import {
   EnvironmentConfig,
   validateEnvironmentConfig,
-} from "babel-plugin-react-forget";
+} from "babel-plugin-react-compiler";
 import { basename } from "path";
 
 /**
@@ -48,7 +48,7 @@ module.exports = (useForget: boolean) => {
                      * (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
                      */
                     compilerCacheKey: execSync(
-                      "yarn --silent --cwd ../.. hash packages/babel-plugin-react-forget/dist"
+                      "yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist"
                     ).toString(),
                     transformOptionsCacheKey: forgetOptions,
                     e2eTransformerCacheKey,

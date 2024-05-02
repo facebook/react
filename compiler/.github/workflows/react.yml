@@ -16,10 +16,10 @@ jobs:
           cache: "yarn"
           cache-dependency-path: yarn.lock
       - run: yarn install --frozen-lockfile
-      - run: yarn workspace babel-plugin-react-forget run build
+      - run: yarn workspace babel-plugin-react-compiler run build
       - run: yarn link
-        working-directory: packages/babel-plugin-react-forget
-      - run: yarn link babel-plugin-react-forget
+        working-directory: packages/babel-plugin-react-compiler
+      - run: yarn link babel-plugin-react-compiler
         working-directory: react
       - run: yarn install --frozen-lockfile
         working-directory: react

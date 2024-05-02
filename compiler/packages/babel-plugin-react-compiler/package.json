@@ -1,5 +1,5 @@
 {
-  "name": "babel-plugin-react-forget",
+  "name": "babel-plugin-react-compiler",
   "version": "0.0.1",
   "description": "Babel plugin for React Forget.",
   "main": "dist/index.js",

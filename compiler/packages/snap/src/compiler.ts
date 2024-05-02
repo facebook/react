@@ -16,9 +16,9 @@ import type {
   CompilationMode,
   PanicThresholdOptions,
   PluginOptions,
-} from "babel-plugin-react-forget/src/Entrypoint";
-import type { Effect, ValueKind } from "babel-plugin-react-forget/src/HIR";
-import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
+} from "babel-plugin-react-compiler/src/Entrypoint";
+import type { Effect, ValueKind } from "babel-plugin-react-compiler/src/HIR";
+import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-compiler/src/HIR/Environment";
 import * as HermesParser from "hermes-parser";
 import invariant from "invariant";
 import path from "path";

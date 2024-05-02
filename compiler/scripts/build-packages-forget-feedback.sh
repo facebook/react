@@ -21,7 +21,7 @@ yarn install --silent
 rm -rf forget-feedback/dist
 mkdir forget-feedback/dist
 
-packages=("babel-plugin-react-forget" "eslint-plugin-react-compiler" "react-forget-runtime")
+packages=("babel-plugin-react-compiler" "eslint-plugin-react-compiler" "react-forget-runtime")
 for package in ${packages[@]}; do
   echo "Building" $package
   yarn workspace $package run build

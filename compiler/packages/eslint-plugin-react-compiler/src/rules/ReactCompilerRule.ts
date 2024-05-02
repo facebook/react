@@ -17,7 +17,7 @@ import ReactForgetBabelPlugin, {
   type CompilerError,
   type CompilerErrorDetail,
   type PluginOptions,
-} from "babel-plugin-react-forget/src";
+} from "babel-plugin-react-compiler/src";
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
@@ -48,7 +48,10 @@ function isReportableDiagnostic(
     case ErrorSeverity.Todo:
       break;
     default:
-      assertExhaustive(detail.severity, "Unhandled error severity");
+      assertExhaustive(
+        detail.severity,
+        `Unhandled error severity \`${detail.severity}\``
+      );
   }
 
   return (

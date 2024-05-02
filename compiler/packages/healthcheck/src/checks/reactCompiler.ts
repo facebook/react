@@ -10,8 +10,8 @@ import {
   runReactForgetBabelPlugin,
   type CompilerErrorDetailOptions,
   type PluginOptions,
-} from "babel-plugin-react-forget/src";
-import { LoggerEvent } from "babel-plugin-react-forget/src/Entrypoint";
+} from "babel-plugin-react-compiler/src";
+import { LoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
 import chalk from "chalk";
 
 const SucessfulCompilation: Array<LoggerEvent> = [];
@@ -59,7 +59,7 @@ function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
     case ErrorSeverity.Todo:
       return false;
     default:
-      throw new Error("Unhandled error severity");
+      throw new Error(`Unhandled error severity \`${detail.severity}\``);
   }
 }
 

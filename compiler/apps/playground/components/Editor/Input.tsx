@@ -6,7 +6,7 @@
  */
 
 import MonacoEditor, { loader, type Monaco } from "@monaco-editor/react";
-import { CompilerErrorDetail } from "babel-plugin-react-forget/src";
+import { CompilerErrorDetail } from "babel-plugin-react-compiler/src";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import * as monaco from "monaco-editor";
