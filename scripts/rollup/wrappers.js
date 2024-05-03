@@ -56,34 +56,34 @@ const license = ` * Copyright (c) Meta Platforms, Inc. and affiliates.
 
 const topLevelDefinitionWrappers = {
   /***************** NODE_ES2015 *****************/
-  [NODE_ES2015](source, globalName, filename, moduleType) {
+  [NODE_ES2015](source, filename) {
     return `'use strict';
 
 ${source}`;
   },
 
   /***************** ESM_DEV *****************/
-  [ESM_DEV](source, globalName, filename, moduleType) {
+  [ESM_DEV](source, filename) {
     return source;
   },
 
   /***************** ESM_PROD *****************/
-  [ESM_PROD](source, globalName, filename, moduleType) {
+  [ESM_PROD](source, filename) {
     return source;
   },
 
   /***************** BUN_DEV *****************/
-  [BUN_DEV](source, globalName, filename, moduleType) {
+  [BUN_DEV](source, filename) {
     return source;
   },
 
   /***************** BUN_PROD *****************/
-  [BUN_PROD](source, globalName, filename, moduleType) {
+  [BUN_PROD](source, filename) {
     return source;
   },
 
   /***************** NODE_DEV *****************/
-  [NODE_DEV](source, globalName, filename, moduleType) {
+  [NODE_DEV](source, filename) {
     return `'use strict';
 
 if (process.env.NODE_ENV !== "production") {
@@ -94,17 +94,17 @@ ${source}
   },
 
   /***************** NODE_PROD *****************/
-  [NODE_PROD](source, globalName, filename, moduleType) {
+  [NODE_PROD](source, filename) {
     return source;
   },
 
   /***************** NODE_PROFILING *****************/
-  [NODE_PROFILING](source, globalName, filename, moduleType) {
+  [NODE_PROFILING](source, filename) {
     return source;
   },
 
   /****************** FB_WWW_DEV ******************/
-  [FB_WWW_DEV](source, globalName, filename, moduleType) {
+  [FB_WWW_DEV](source, filename) {
     return `'use strict';
 
 if (__DEV__) {
@@ -115,17 +115,17 @@ ${source}
   },
 
   /****************** FB_WWW_PROD ******************/
-  [FB_WWW_PROD](source, globalName, filename, moduleType) {
+  [FB_WWW_PROD](source, filename) {
     return source;
   },
 
   /****************** FB_WWW_PROFILING ******************/
-  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+  [FB_WWW_PROFILING](source, filename) {
     return source;
   },
 
   /****************** RN_OSS_DEV ******************/
-  [RN_OSS_DEV](source, globalName, filename, moduleType) {
+  [RN_OSS_DEV](source, filename) {
     return `'use strict';
 
 if (__DEV__) {
@@ -136,17 +136,17 @@ ${source}
   },
 
   /****************** RN_OSS_PROD ******************/
-  [RN_OSS_PROD](source, globalName, filename, moduleType) {
+  [RN_OSS_PROD](source, filename) {
     return source;
   },
 
   /****************** RN_OSS_PROFILING ******************/
-  [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
+  [RN_OSS_PROFILING](source, filename) {
     return source;
   },
 
   /****************** RN_FB_DEV ******************/
-  [RN_FB_DEV](source, globalName, filename, moduleType) {
+  [RN_FB_DEV](source, filename) {
     return `'use strict';
 
 if (__DEV__) {
@@ -157,19 +157,19 @@ ${source}
   },
 
   /****************** RN_FB_PROD ******************/
-  [RN_FB_PROD](source, globalName, filename, moduleType) {
+  [RN_FB_PROD](source, filename) {
     return source;
   },
 
   /****************** RN_FB_PROFILING ******************/
-  [RN_FB_PROFILING](source, globalName, filename, moduleType) {
+  [RN_FB_PROFILING](source, filename) {
     return source;
   },
 };
 
 const reconcilerWrappers = {
   /***************** NODE_DEV (reconciler only) *****************/
-  [NODE_DEV](source, globalName, filename, moduleType) {
+  [NODE_DEV](source, filename) {
     return `'use strict';
 
 if (process.env.NODE_ENV !== "production") {
@@ -185,7 +185,7 @@ ${source}
   },
 
   /***************** NODE_PROD (reconciler only) *****************/
-  [NODE_PROD](source, globalName, filename, moduleType) {
+  [NODE_PROD](source, filename) {
     return `module.exports = function $$$reconciler($$$config) {
 
     var exports = {};
@@ -198,7 +198,7 @@ Object.defineProperty(module.exports, "__esModule", { value: true });
   },
 
   /***************** NODE_PROFILING (reconciler only) *****************/
-  [NODE_PROFILING](source, globalName, filename, moduleType) {
+  [NODE_PROFILING](source, filename) {
     return `module.exports = function $$$reconciler($$$config) {
     var exports = {};
 ${source}
@@ -210,7 +210,7 @@ Object.defineProperty(module.exports, "__esModule", { value: true });
   },
 
   /***************** FB_WWW_DEV (reconciler only) *****************/
-  [FB_WWW_DEV](source, globalName, filename, moduleType) {
+  [FB_WWW_DEV](source, filename) {
     return `'use strict';
 
 if (__DEV__) {
@@ -226,7 +226,7 @@ ${source}
   },
 
   /***************** FB_WWW_PROD (reconciler only) *****************/
-  [FB_WWW_PROD](source, globalName, filename, moduleType) {
+  [FB_WWW_PROD](source, filename) {
     return `module.exports = function $$$reconciler($$$config) {
 
       var exports = {};
@@ -239,7 +239,7 @@ ${source}
   },
 
   /***************** FB_WWW_PROFILING (reconciler only) *****************/
-  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+  [FB_WWW_PROFILING](source, filename) {
     return `module.exports = function $$$reconciler($$$config) {
       var exports = {};
   ${source}
@@ -253,7 +253,7 @@ ${source}
 
 const licenseHeaderWrappers = {
   /***************** NODE_ES2015 *****************/
-  [NODE_ES2015](source, globalName, filename, moduleType) {
+  [NODE_ES2015](source, filename) {
     return `/**
  * @license React
  * ${filename}
@@ -265,9 +265,9 @@ ${source}`;
   },
 
   /***************** ESM_DEV *****************/
-  [ESM_DEV](source, globalName, filename, moduleType) {
+  [ESM_DEV](source, filename) {
     return `/**
-* @license React
+ * @license React
  * ${filename}
  *
 ${license}
@@ -277,9 +277,9 @@ ${source}`;
   },
 
   /***************** ESM_PROD *****************/
-  [ESM_PROD](source, globalName, filename, moduleType) {
+  [ESM_PROD](source, filename) {
     return `/**
-* @license React
+ * @license React
  * ${filename}
  *
 ${license}
@@ -289,9 +289,9 @@ ${source}`;
   },
 
   /***************** BUN_DEV *****************/
-  [BUN_DEV](source, globalName, filename, moduleType) {
+  [BUN_DEV](source, filename) {
     return `/**
-* @license React
+ * @license React
  * ${filename}
  *
 ${license}
@@ -301,7 +301,7 @@ ${source}`;
   },
 
   /***************** BUN_PROD *****************/
-  [BUN_PROD](source, globalName, filename, moduleType) {
+  [BUN_PROD](source, filename) {
     return `/**
  * @license React
  * ${filename}
@@ -313,7 +313,7 @@ ${source}`;
   },
 
   /***************** NODE_DEV *****************/
-  [NODE_DEV](source, globalName, filename, moduleType) {
+  [NODE_DEV](source, filename) {
     return `/**
  * @license React
  * ${filename}
@@ -325,7 +325,7 @@ ${source}`;
   },
 
   /***************** NODE_PROD *****************/
-  [NODE_PROD](source, globalName, filename, moduleType) {
+  [NODE_PROD](source, filename) {
     return `/**
  * @license React
  * ${filename}
@@ -337,7 +337,7 @@ ${source}`;
   },
 
   /***************** NODE_PROFILING *****************/
-  [NODE_PROFILING](source, globalName, filename, moduleType) {
+  [NODE_PROFILING](source, filename) {
     return `/**
  * @license React
  * ${filename}
@@ -349,7 +349,7 @@ ${source}`;
   },
 
   /****************** FB_WWW_DEV ******************/
-  [FB_WWW_DEV](source, globalName, filename, moduleType) {
+  [FB_WWW_DEV](source, filename) {
     return `/**
 ${license}
  *
@@ -363,7 +363,7 @@ ${source}`;
   },
 
   /****************** FB_WWW_PROD ******************/
-  [FB_WWW_PROD](source, globalName, filename, moduleType) {
+  [FB_WWW_PROD](source, filename) {
     return `/**
 ${license}
  *
@@ -377,7 +377,7 @@ ${source}`;
   },
 
   /****************** FB_WWW_PROFILING ******************/
-  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+  [FB_WWW_PROFILING](source, filename) {
     return `/**
 ${license}
  *
@@ -391,7 +391,7 @@ ${source}`;
   },
 
   /****************** RN_OSS_DEV ******************/
-  [RN_OSS_DEV](source, globalName, filename, moduleType) {
+  [RN_OSS_DEV](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -405,7 +405,7 @@ ${source}`);
   },
 
   /****************** RN_OSS_PROD ******************/
-  [RN_OSS_PROD](source, globalName, filename, moduleType) {
+  [RN_OSS_PROD](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -419,7 +419,7 @@ ${source}`);
   },
 
   /****************** RN_OSS_PROFILING ******************/
-  [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
+  [RN_OSS_PROFILING](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -433,7 +433,7 @@ ${source}`);
   },
 
   /****************** RN_FB_DEV ******************/
-  [RN_FB_DEV](source, globalName, filename, moduleType) {
+  [RN_FB_DEV](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -447,7 +447,7 @@ ${source}`);
   },
 
   /****************** RN_FB_PROD ******************/
-  [RN_FB_PROD](source, globalName, filename, moduleType) {
+  [RN_FB_PROD](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -461,7 +461,7 @@ ${source}`);
   },
 
   /****************** RN_FB_PROFILING ******************/
-  [RN_FB_PROFILING](source, globalName, filename, moduleType) {
+  [RN_FB_PROFILING](source, filename) {
     return signFile(`/**
 ${license}
  *
@@ -478,7 +478,6 @@ ${source}`);
 function wrapWithTopLevelDefinitions(
   source,
   bundleType,
-  globalName,
   filename,
   moduleType,
   wrapWithModuleBoundaries
@@ -521,7 +520,7 @@ function wrapWithTopLevelDefinitions(
       );
     }
 
-    return wrapper(source, globalName, filename, moduleType);
+    return wrapper(source, filename);
   }
 
   // All the other packages.
@@ -530,16 +529,10 @@ function wrapWithTopLevelDefinitions(
     throw new Error(`Unsupported build type: ${bundleType}.`);
   }
 
-  return wrapper(source, globalName, filename, moduleType);
+  return wrapper(source, filename);
 }
 
-function wrapWithLicenseHeader(
-  source,
-  bundleType,
-  globalName,
-  filename,
-  moduleType
-) {
+function wrapWithLicenseHeader(source, bundleType, filename) {
   if (bundleType === BROWSER_SCRIPT) {
     // Bundles of type BROWSER_SCRIPT get sent straight to the browser without
     // additional processing. So we should exclude any extra wrapper comments.
@@ -552,7 +545,7 @@ function wrapWithLicenseHeader(
     throw new Error(`Unsupported build type: ${bundleType}.`);
   }
 
-  return wrapper(source, globalName, filename, moduleType);
+  return wrapper(source, filename);
 }
 
 module.exports = {

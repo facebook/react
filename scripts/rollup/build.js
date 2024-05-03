@@ -199,13 +199,7 @@ let getRollupInteropValue = id => {
   return 'esModule';
 };
 
-function getRollupOutputOptions(
-  outputPath,
-  format,
-  globals,
-  globalName,
-  bundleType
-) {
+function getRollupOutputOptions(outputPath, format, globals, bundleType) {
   const isProduction = isProductionBundleType(bundleType);
 
   return {
@@ -214,7 +208,6 @@ function getRollupOutputOptions(
     globals,
     freeze: !isProduction,
     interop: getRollupInteropValue,
-    name: globalName,
     sourcemap: false,
     esModule: false,
     exports: 'auto',
@@ -351,7 +344,6 @@ function getPlugins(
   filename,
   packageName,
   bundleType,
-  globalName,
   moduleType,
   pureExternalModules,
   bundle
@@ -424,7 +416,6 @@ function getPlugins(
           return Wrappers.wrapWithTopLevelDefinitions(
             source,
             bundleType,
-            globalName,
             filename,
             moduleType,
             bundle.wrapWithModuleBoundaries
@@ -488,7 +479,6 @@ function getPlugins(
           return Wrappers.wrapWithLicenseHeader(
             source,
             bundleType,
-            globalName,
             filename,
             moduleType
           );
@@ -651,7 +641,6 @@ async function createBundle(bundle, bundleType) {
       filename,
       packageName,
       bundleType,
-      bundle.global,
       bundle.moduleType,
       pureExternalModules,
       bundle
@@ -674,7 +663,6 @@ async function createBundle(bundle, bundleType) {
     mainOutputPath,
     format,
     peerGlobals,
-    bundle.global,
     bundleType
   );
 
