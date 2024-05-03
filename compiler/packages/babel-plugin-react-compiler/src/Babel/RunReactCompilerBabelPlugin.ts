@@ -10,7 +10,7 @@ import { transformFromAstSync } from "@babel/core";
 import * as BabelParser from "@babel/parser";
 import invariant from "invariant";
 import type { PluginOptions } from "../Entrypoint";
-import ReactForgetBabelPlugin from "./BabelPlugin";
+import BabelPluginReactCompiler from "./BabelPlugin";
 
 export const DEFAULT_PLUGINS = ["babel-plugin-fbt", "babel-plugin-fbt-runtime"];
 export function runBabelPluginReactCompiler(
@@ -31,7 +31,7 @@ export function runBabelPluginReactCompiler(
     highlightCode: false,
     retainLines: true,
     plugins: [
-      [ReactForgetBabelPlugin, options],
+      [BabelPluginReactCompiler, options],
       "babel-plugin-fbt",
       "babel-plugin-fbt-runtime",
     ],

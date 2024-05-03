@@ -57,7 +57,7 @@ function compile(
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const { default: ReactForgetBabelPlugin } = require(COMPILER_PATH) as {
+    const { default: BabelPluginReactCompiler } = require(COMPILER_PATH) as {
       default: PluginObj;
     };
     const { toggleLogging } = require(LOGGER_PATH);
@@ -72,7 +72,7 @@ function compile(
       input,
       fixturePath,
       parseConfigPragma,
-      ReactForgetBabelPlugin,
+      BabelPluginReactCompiler,
       includeEvaluator
     );
 

@@ -37,5 +37,5 @@ declare global {
   let __DEV__: boolean | null | undefined;
 }
 
-import ReactForgetBabelPlugin from "./Babel/BabelPlugin";
-export default ReactForgetBabelPlugin;
+import BabelPluginReactCompiler from "./Babel/BabelPlugin";
+export default BabelPluginReactCompiler;

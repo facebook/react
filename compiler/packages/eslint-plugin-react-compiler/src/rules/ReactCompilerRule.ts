@@ -9,7 +9,7 @@ import { transformFromAstSync } from "@babel/core";
 // @ts-expect-error
 import PluginProposalPrivateMethods from "@babel/plugin-proposal-private-methods";
 import type { SourceLocation as BabelSourceLocation } from "@babel/types";
-import ReactForgetBabelPlugin, {
+import BabelPluginReactCompiler, {
   CompilerSuggestionOperation,
   ErrorSeverity,
   parsePluginOptions,
@@ -150,7 +150,7 @@ const rule: Rule.RuleModule = {
           retainLines: true,
           plugins: [
             [PluginProposalPrivateMethods, { loose: true }],
-            [ReactForgetBabelPlugin, options],
+            [BabelPluginReactCompiler, options],
           ],
           sourceType: "module",
         });

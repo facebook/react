@@ -15,7 +15,7 @@ const PanicThresholdOptionsSchema = z.enum([
   /*
    * Any errors will panic the compiler by throwing an exception, which will
    * bubble up to the nearest exception handler above the Forget transform.
-   * If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
+   * If Forget is invoked through `BabelPluginReactCompiler`, this will at the least
    * skip Forget compilation for the rest of current file.
    */
   "all_errors",

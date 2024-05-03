@@ -17,7 +17,7 @@ import {
  * @param {*} _babel
  * @returns
  */
-export default function ReactForgetBabelPlugin(
+export default function BabelPluginReactCompiler(
   _babel: typeof BabelCore
 ): BabelCore.PluginObj {
   return {
