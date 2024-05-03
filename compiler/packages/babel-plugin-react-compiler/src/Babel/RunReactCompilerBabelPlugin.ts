@@ -13,7 +13,7 @@ import type { PluginOptions } from "../Entrypoint";
 import ReactForgetBabelPlugin from "./BabelPlugin";
 
 export const DEFAULT_PLUGINS = ["babel-plugin-fbt", "babel-plugin-fbt-runtime"];
-export function runReactForgetBabelPlugin(
+export function runBabelPluginReactCompiler(
   text: string,
   file: string,
   language: "flow" | "typescript",

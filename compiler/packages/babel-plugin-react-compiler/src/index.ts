@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { runReactForgetBabelPlugin } from "./Babel/RunReactForgetBabelPlugin";
+export { runBabelPluginReactCompiler } from "./Babel/RunReactCompilerBabelPlugin";
 export {
   CompilerError,
   CompilerErrorDetail,

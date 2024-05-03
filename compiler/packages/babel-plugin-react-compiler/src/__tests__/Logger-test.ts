@@ -7,7 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
-import { runReactForgetBabelPlugin } from "../Babel/RunReactForgetBabelPlugin";
+import { runBabelPluginReactCompiler } from "../Babel/RunReactCompilerBabelPlugin";
 import type { Logger, LoggerEvent } from "../Entrypoint";
 
 it("logs succesful compilation", () => {
@@ -18,7 +18,7 @@ it("logs succesful compilation", () => {
     },
   };
 
-  const _ = runReactForgetBabelPlugin(
+  const _ = runBabelPluginReactCompiler(
     "function Component(props) { return <div>{props}</div> }",
     "test.js",
     "flow",
@@ -43,7 +43,7 @@ it("logs failed compilation", () => {
   };
 
   expect(() => {
-    runReactForgetBabelPlugin(
+    runBabelPluginReactCompiler(
       "function Component(props) { props.foo = 1; return <div>{props}</div> }",
       "test.js",
       "flow",

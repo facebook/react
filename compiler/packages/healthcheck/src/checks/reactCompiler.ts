@@ -7,7 +7,7 @@
 
 import {
   ErrorSeverity,
-  runReactForgetBabelPlugin,
+  runBabelPluginReactCompiler,
   type CompilerErrorDetailOptions,
   type PluginOptions,
 } from "babel-plugin-react-compiler/src";
@@ -65,7 +65,7 @@ function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
 
 function compile(sourceCode: string, filename: string) {
   try {
-    runReactForgetBabelPlugin(
+    runBabelPluginReactCompiler(
       sourceCode,
       filename,
       "typescript",

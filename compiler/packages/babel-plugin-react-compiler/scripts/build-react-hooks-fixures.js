@@ -9,8 +9,8 @@
 
 const { tests } = require("./eslint-plugin-react-hooks-test-cases");
 const {
-  runReactForgetBabelPlugin,
-} = require("../dist/Babel/RunReactForgetBabelPlugin");
+  runBabelPluginReactCompiler,
+} = require("../dist/Babel/RunReactCompilerBabelPlugin");
 const fs = require("fs");
 const path = require("path");
 const prettier = require("prettier");
@@ -45,14 +45,19 @@ for (const fixture of fixtures) {
   let passes = true;
   try {
     // Does the fixture pass with hooks validation disabled? if not skip it
-    runReactForgetBabelPlugin(fixture.code, "rules-of-hooks.js", "typescript", {
-      environment: {
-        validateHooksUsage: false,
-      },
-    });
+    runBabelPluginReactCompiler(
+      fixture.code,
+      "rules-of-hooks.js",
+      "typescript",
+      {
+        environment: {
+          validateHooksUsage: false,
+        },
+      }
+    );
     // Does the fixture pass with hooks validation enabled?
     try {
-      runReactForgetBabelPlugin(
+      runBabelPluginReactCompiler(
         fixture.code,
         "rules-of-hooks.js",
         "typescript",
