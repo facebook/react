@@ -16,11 +16,10 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
-if (typeof Blob === 'undefined') {
-  global.Blob = require('buffer').Blob;
-}
-if (typeof File === 'undefined') {
-  global.File = require('buffer').File;
+global.Blob = require('buffer').Blob;
+if (typeof File === 'undefined' || typeof FormData === 'undefined') {
+  global.File = require('buffer').File || require('undici').File;
+  global.FormData = require('undici').FormData;
 }
 
 // let serverExports;
@@ -43,13 +42,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
   });
-
-  if (typeof FormData === 'undefined') {
-    // We can't test if we don't have a native FormData implementation because the JSDOM one
-    // is missing the arrayBuffer() method.
-    it('cannot test', () => {});
-    return;
-  }
 
   it('can encode a reply', async () => {
     const body = await ReactServerDOMClient.encodeReply({some: 'object'});
@@ -89,6 +81,8 @@ describe('ReactFlightDOMReplyEdge', () => {
     );
 
     expect(result).toEqual(buffers);
+    // Array buffers can't use the toEqual helper.
+    expect(new Uint8Array(result[0])).toEqual(new Uint8Array(buffers[0]));
   });
 
   // @gate enableBinaryFlight
@@ -109,35 +103,33 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  if (typeof FormData !== 'undefined' && typeof File !== 'undefined') {
-    it('can transport FormData (blobs)', async () => {
-      const bytes = new Uint8Array([
-        123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
-      ]);
-      const blob = new Blob([bytes, bytes], {
-        type: 'application/x-test',
-      });
-
-      const formData = new FormData();
-      formData.append('hi', 'world');
-      formData.append('file', blob, 'filename.test');
-
-      expect(formData.get('file') instanceof File).toBe(true);
-      expect(formData.get('file').name).toBe('filename.test');
-
-      const body = await ReactServerDOMClient.encodeReply(formData);
-      const result = await ReactServerDOMServer.decodeReply(
-        body,
-        webpackServerMap,
-      );
-
-      expect(result instanceof FormData).toBe(true);
-      expect(result.get('hi')).toBe('world');
-      const resultBlob = result.get('file');
-      expect(resultBlob instanceof Blob).toBe(true);
-      expect(resultBlob.name).toBe('filename.test'); // In this direction we allow file name to pass through but not other direction.
-      expect(resultBlob.size).toBe(bytes.length * 2);
-      expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  it('can transport FormData (blobs)', async () => {
+    const bytes = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+    const blob = new Blob([bytes, bytes], {
+      type: 'application/x-test',
     });
-  }
+
+    const formData = new FormData();
+    formData.append('hi', 'world');
+    formData.append('file', blob, 'filename.test');
+
+    expect(formData.get('file') instanceof File).toBe(true);
+    expect(formData.get('file').name).toBe('filename.test');
+
+    const body = await ReactServerDOMClient.encodeReply(formData);
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    expect(result instanceof FormData).toBe(true);
+    expect(result.get('hi')).toBe('world');
+    const resultBlob = result.get('file');
+    expect(resultBlob instanceof Blob).toBe(true);
+    expect(resultBlob.name).toBe('filename.test'); // In this direction we allow file name to pass through but not other direction.
+    expect(resultBlob.size).toBe(bytes.length * 2);
+    expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  });
 });

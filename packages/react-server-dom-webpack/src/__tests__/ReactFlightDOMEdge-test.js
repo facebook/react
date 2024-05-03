@@ -15,11 +15,10 @@ global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-if (typeof Blob === 'undefined') {
-  global.Blob = require('buffer').Blob;
-}
-if (typeof File === 'undefined') {
-  global.File = require('buffer').File;
+global.Blob = require('buffer').Blob;
+if (typeof File === 'undefined' || typeof FormData === 'undefined') {
+  global.File = require('buffer').File || require('undici').File;
+  global.FormData = require('undici').FormData;
 }
 // Patch for Edge environments for global scope
 global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
@@ -383,45 +382,40 @@ describe('ReactFlightDOMEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  if (typeof FormData !== 'undefined' && typeof File !== 'undefined') {
-    // @gate enableBinaryFlight
-    it('can transport FormData (blobs)', async () => {
-      const bytes = new Uint8Array([
-        123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
-      ]);
-      const blob = new Blob([bytes, bytes], {
-        type: 'application/x-test',
-      });
-
-      const formData = new FormData();
-      formData.append('hi', 'world');
-      formData.append('file', blob, 'filename.test');
-
-      expect(formData.get('file') instanceof File).toBe(true);
-      expect(formData.get('file').name).toBe('filename.test');
-
-      const stream = passThrough(
-        ReactServerDOMServer.renderToReadableStream(formData),
-      );
-      const result = await ReactServerDOMClient.createFromReadableStream(
-        stream,
-        {
-          ssrManifest: {
-            moduleMap: null,
-            moduleLoading: null,
-          },
-        },
-      );
-
-      expect(result instanceof FormData).toBe(true);
-      expect(result.get('hi')).toBe('world');
-      const resultBlob = result.get('file');
-      expect(resultBlob instanceof Blob).toBe(true);
-      expect(resultBlob.name).toBe('blob'); // We should not pass through the file name for security.
-      expect(resultBlob.size).toBe(bytes.length * 2);
-      expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  // @gate enableBinaryFlight
+  it('can transport FormData (blobs)', async () => {
+    const bytes = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+    const blob = new Blob([bytes, bytes], {
+      type: 'application/x-test',
     });
-  }
+
+    const formData = new FormData();
+    formData.append('hi', 'world');
+    formData.append('file', blob, 'filename.test');
+
+    expect(formData.get('file') instanceof File).toBe(true);
+    expect(formData.get('file').name).toBe('filename.test');
+
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(formData),
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    expect(result instanceof FormData).toBe(true);
+    expect(result.get('hi')).toBe('world');
+    const resultBlob = result.get('file');
+    expect(resultBlob instanceof Blob).toBe(true);
+    expect(resultBlob.name).toBe('blob'); // We should not pass through the file name for security.
+    expect(resultBlob.size).toBe(bytes.length * 2);
+    expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  });
 
   it('can pass an async import that resolves later to an outline object like a Map', async () => {
     let resolve;
