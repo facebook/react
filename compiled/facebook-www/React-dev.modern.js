@@ -25,7 +25,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var ReactVersion = '19.0.0-www-modern-65139682';
+          var ReactVersion = '19.0.0-www-modern-1ac5c7b0';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -34,8 +34,8 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
-    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
- // On WWW, true is used for a new modern build.
+    disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+    enableFastJSX = dynamicFeatureFlags.enableFastJSX; // On WWW, true is used for a new modern build.
 // because JSX is an extremely hot path.
 
 var disableStringRefs = false;
@@ -1227,6 +1227,9 @@ var didWarnAboutOldJSXRuntime;
   didWarnAboutElementRef = {};
 }
 
+var enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp;
+var enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && disableStringRefs;
+
 function hasValidRef(config) {
   {
     if (hasOwnProperty.call(config, 'ref')) {
@@ -1599,7 +1602,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
 
     var props;
 
-    if (enableRefAsProp && disableStringRefs && !('key' in config)) {
+    if ((enableFastJSXWithoutStringRefs || enableFastJSXWithStringRefs && !('ref' in config)) && !('key' in config)) {
       // If key was not spread in, we can reuse the original props object. This
       // only works for `jsx`, not `createElement`, because `jsx` is a compiler
       // target and the compiler always passes a new object. For `createElement`,

@@ -17,6 +17,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  enableFastJSX = dynamicFeatureFlags.enableFastJSX,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -93,6 +94,8 @@ function getOwner() {
   var dispatcher = ReactSharedInternals.A;
   return null === dispatcher ? null : dispatcher.getOwner();
 }
+var enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp,
+  enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   enableRefAsProp &&
     ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
@@ -113,13 +116,19 @@ function jsxProd(type, config, maybeKey) {
   void 0 === config.ref ||
     enableRefAsProp ||
     ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type)));
-  maybeKey = {};
-  for (var propName in config)
-    "key" === propName ||
-      (!enableRefAsProp && "ref" === propName) ||
-      (enableRefAsProp && "ref" === propName
-        ? (maybeKey.ref = coerceStringRef(config[propName], getOwner(), type))
-        : (maybeKey[propName] = config[propName]));
+  if (
+    (!enableFastJSXWithoutStringRefs &&
+      (!enableFastJSXWithStringRefs || "ref" in config)) ||
+    "key" in config
+  ) {
+    maybeKey = {};
+    for (var propName in config)
+      "key" === propName ||
+        (!enableRefAsProp && "ref" === propName) ||
+        (enableRefAsProp && "ref" === propName
+          ? (maybeKey.ref = coerceStringRef(config[propName], getOwner(), type))
+          : (maybeKey[propName] = config[propName]));
+  } else maybeKey = config;
   if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
     config = type.defaultProps;
     for (var propName$0 in config)
@@ -675,4 +684,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-classic-8ffd6973";
+exports.version = "19.0.0-www-classic-af056f91";
