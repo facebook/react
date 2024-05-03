@@ -14,10 +14,7 @@
 
 if (__DEV__) {
   (function() {
-
-          'use strict';
-
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+'use strict';
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
@@ -25,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var React = require('react');
+var React = require('react');
 var Transform = require('art/core/transform');
 var Mode$1 = require('art/modes/current');
 var Scheduler = require('scheduler');
@@ -63,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-0ce7839f';
+var ReactVersion = '19.0.0-www-classic-bcc8c760';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -26679,7 +26676,6 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = Shape;
 exports.Surface = Surface;
 exports.Text = Text;
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
@@ -26687,6 +26683,6 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
 }
-        
+
   })();
 }
