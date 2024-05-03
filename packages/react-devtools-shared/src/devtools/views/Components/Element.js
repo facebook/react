@@ -21,6 +21,7 @@ import IndexableDisplayName from './IndexableDisplayName';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from 'react-devtools-shared/src/frontend/types';
+import { sanitizeString } from './utils';
 
 import styles from './Element.css';
 import Icon from '../Icon';
@@ -168,7 +169,7 @@ export default function Element({data, index, style}: Props): React.Node {
               className={styles.KeyValue}
               title={key}
               onDoubleClick={handleKeyDoubleClick}>
-              {key}
+              {sanitizeString(key)}
             </span>
             "
           </Fragment>
