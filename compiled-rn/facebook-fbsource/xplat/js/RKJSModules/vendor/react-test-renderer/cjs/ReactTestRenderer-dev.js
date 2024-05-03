@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<000c06a477839c734ee52d10d49394b6>>
+ * @generated SignedSource<<3cde5a560aeab39ea15c34b2e5562835>>
  */
 
 'use strict';
@@ -278,20 +278,20 @@ function getComponentNameFromType(type) {
     switch (type.$$typeof) {
       case REACT_PROVIDER_TYPE:
         {
-          var provider = type;
-          return getContextName$1(provider._context) + '.Provider';
+          return null;
         }
 
       case REACT_CONTEXT_TYPE:
         var context = type;
 
         {
-          return getContextName$1(context) + '.Consumer';
+          return getContextName$1(context) + '.Provider';
         }
 
       case REACT_CONSUMER_TYPE:
         {
-          return null;
+          var consumer = type;
+          return getContextName$1(consumer._context) + '.Consumer';
         }
 
       case REACT_FORWARD_REF_TYPE:
@@ -355,14 +355,14 @@ function getComponentNameFromFiber(fiber) {
 
     case ContextConsumer:
       {
-        var context = type;
-        return getContextName(context) + '.Consumer';
+        var consumer = type;
+        return getContextName(consumer._context) + '.Consumer';
       }
 
     case ContextProvider:
       {
-        var provider = type;
-        return getContextName(provider._context) + '.Provider';
+        var _context = type;
+        return getContextName(_context) + '.Provider';
       }
 
     case DehydratedFragment:
@@ -2667,37 +2667,283 @@ function is(x, y) {
 var objectIs = // $FlowFixMe[method-unbinding]
 typeof Object.is === 'function' ? Object.is : is;
 
+var prefix;
 function describeBuiltInComponentFrame(name) {
   {
-    return describeComponentFrame(name);
+    if (prefix === undefined) {
+      // Extract the VM specific prefix used by each line.
+      try {
+        throw Error();
+      } catch (x) {
+        var match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = match && match[1] || '';
+      }
+    } // We use the prefix to ensure our stacks line up with native stack frames.
+
+
+    return '\n' + prefix + name;
   }
 }
 function describeDebugInfoFrame(name, env) {
   return describeBuiltInComponentFrame(name + (env ? ' (' + env + ')' : ''));
 }
+var reentry = false;
+var componentFrameCache;
 
 {
   var PossiblyWeakMap$1 = typeof WeakMap === 'function' ? WeakMap : Map;
-  new PossiblyWeakMap$1();
+  componentFrameCache = new PossiblyWeakMap$1();
 }
+/**
+ * Leverages native browser/VM stack frames to get proper details (e.g.
+ * filename, line + col number) for a single component in a component stack. We
+ * do this by:
+ *   (1) throwing and catching an error in the function - this will be our
+ *       control error.
+ *   (2) calling the component which will eventually throw an error that we'll
+ *       catch - this will be our sample error.
+ *   (3) diffing the control and sample error stacks to find the stack frame
+ *       which represents our component.
+ */
 
-function describeComponentFrame(name) {
-  return '\n    in ' + (name || 'Unknown');
+
+function describeNativeComponentFrame(fn, construct) {
+  // If something asked for a stack inside a fake render, it should get ignored.
+  if (!fn || reentry) {
+    return '';
+  }
+
+  {
+    var frame = componentFrameCache.get(fn);
+
+    if (frame !== undefined) {
+      return frame;
+    }
+  }
+
+  reentry = true;
+  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
+
+  Error.prepareStackTrace = undefined;
+  var previousDispatcher = null;
+
+  {
+    previousDispatcher = ReactSharedInternals.H; // Set the dispatcher in DEV because this might be call in the render function
+    // for warnings.
+
+    ReactSharedInternals.H = null;
+    disableLogs();
+  }
+  /**
+   * Finding a common stack frame between sample and control errors can be
+   * tricky given the different types and levels of stack trace truncation from
+   * different JS VMs. So instead we'll attempt to control what that common
+   * frame should be through this object method:
+   * Having both the sample and control errors be in the function under the
+   * `DescribeNativeComponentFrameRoot` property, + setting the `name` and
+   * `displayName` properties of the function ensures that a stack
+   * frame exists that has the method name `DescribeNativeComponentFrameRoot` in
+   * it for both control and sample stacks.
+   */
+
+
+  var RunInRootFrame = {
+    DetermineComponentFrameRoot: function () {
+      var control;
+
+      try {
+        // This should throw.
+        if (construct) {
+          // Something should be setting the props in the constructor.
+          var Fake = function () {
+            throw Error();
+          }; // $FlowFixMe[prop-missing]
+
+
+          Object.defineProperty(Fake.prototype, 'props', {
+            set: function () {
+              // We use a throwing setter instead of frozen or non-writable props
+              // because that won't throw in a non-strict mode function.
+              throw Error();
+            }
+          });
+
+          if (typeof Reflect === 'object' && Reflect.construct) {
+            // We construct a different control for this case to include any extra
+            // frames added by the construct call.
+            try {
+              Reflect.construct(Fake, []);
+            } catch (x) {
+              control = x;
+            }
+
+            Reflect.construct(fn, [], Fake);
+          } else {
+            try {
+              Fake.call();
+            } catch (x) {
+              control = x;
+            } // $FlowFixMe[prop-missing] found when upgrading Flow
+
+
+            fn.call(Fake.prototype);
+          }
+        } else {
+          try {
+            throw Error();
+          } catch (x) {
+            control = x;
+          } // TODO(luna): This will currently only throw if the function component
+          // tries to access React/ReactDOM/props. We should probably make this throw
+          // in simple components too
+
+
+          var maybePromise = fn(); // If the function component returns a promise, it's likely an async
+          // component, which we don't yet support. Attach a noop catch handler to
+          // silence the error.
+          // TODO: Implement component stacks for async client components?
+
+          if (maybePromise && typeof maybePromise.catch === 'function') {
+            maybePromise.catch(function () {});
+          }
+        }
+      } catch (sample) {
+        // This is inlined manually because closure doesn't do it for us.
+        if (sample && control && typeof sample.stack === 'string') {
+          return [sample.stack, control.stack];
+        }
+      }
+
+      return [null, null];
+    }
+  }; // $FlowFixMe[prop-missing]
+
+  RunInRootFrame.DetermineComponentFrameRoot.displayName = 'DetermineComponentFrameRoot';
+  var namePropDescriptor = Object.getOwnPropertyDescriptor(RunInRootFrame.DetermineComponentFrameRoot, 'name'); // Before ES6, the `name` property was not configurable.
+
+  if (namePropDescriptor && namePropDescriptor.configurable) {
+    // V8 utilizes a function's `name` property when generating a stack trace.
+    Object.defineProperty(RunInRootFrame.DetermineComponentFrameRoot, // Configurable properties can be updated even if its writable descriptor
+    // is set to `false`.
+    // $FlowFixMe[cannot-write]
+    'name', {
+      value: 'DetermineComponentFrameRoot'
+    });
+  }
+
+  try {
+    var _RunInRootFrame$Deter = RunInRootFrame.DetermineComponentFrameRoot(),
+        sampleStack = _RunInRootFrame$Deter[0],
+        controlStack = _RunInRootFrame$Deter[1];
+
+    if (sampleStack && controlStack) {
+      // This extracts the first frame from the sample that isn't also in the control.
+      // Skipping one frame that we assume is the frame that calls the two.
+      var sampleLines = sampleStack.split('\n');
+      var controlLines = controlStack.split('\n');
+      var s = 0;
+      var c = 0;
+
+      while (s < sampleLines.length && !sampleLines[s].includes('DetermineComponentFrameRoot')) {
+        s++;
+      }
+
+      while (c < controlLines.length && !controlLines[c].includes('DetermineComponentFrameRoot')) {
+        c++;
+      } // We couldn't find our intentionally injected common root frame, attempt
+      // to find another common root frame by search from the bottom of the
+      // control stack...
+
+
+      if (s === sampleLines.length || c === controlLines.length) {
+        s = sampleLines.length - 1;
+        c = controlLines.length - 1;
+
+        while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+          // We expect at least one stack frame to be shared.
+          // Typically this will be the root most one. However, stack frames may be
+          // cut off due to maximum stack limits. In this case, one maybe cut off
+          // earlier than the other. We assume that the sample is longer or the same
+          // and there for cut off earlier. So we should find the root most frame in
+          // the sample somewhere in the control.
+          c--;
+        }
+      }
+
+      for (; s >= 1 && c >= 0; s--, c--) {
+        // Next we find the first one that isn't the same which should be the
+        // frame that called our sample function and the control.
+        if (sampleLines[s] !== controlLines[c]) {
+          // In V8, the first line is describing the message but other VMs don't.
+          // If we're about to return the first line, and the control is also on the same
+          // line, that's a pretty good indicator that our sample threw at same line as
+          // the control. I.e. before we entered the sample frame. So we ignore this result.
+          // This can happen if you passed a class to function component, or non-function.
+          if (s !== 1 || c !== 1) {
+            do {
+              s--;
+              c--; // We may still have similar intermediate frames from the construct call.
+              // The next one that isn't the same should be our match though.
+
+              if (c < 0 || sampleLines[s] !== controlLines[c]) {
+                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+                var _frame = '\n' + sampleLines[s].replace(' at new ', ' at '); // If our component frame is labeled "<anonymous>"
+                // but we have a user-provided "displayName"
+                // splice it in to make the stack more readable.
+
+
+                if (fn.displayName && _frame.includes('<anonymous>')) {
+                  _frame = _frame.replace('<anonymous>', fn.displayName);
+                }
+
+                if (true) {
+                  if (typeof fn === 'function') {
+                    componentFrameCache.set(fn, _frame);
+                  }
+                } // Return the line we found.
+
+
+                return _frame;
+              }
+            } while (s >= 1 && c >= 0);
+          }
+
+          break;
+        }
+      }
+    }
+  } finally {
+    reentry = false;
+
+    {
+      ReactSharedInternals.H = previousDispatcher;
+      reenableLogs();
+    }
+
+    Error.prepareStackTrace = previousPrepareStackTrace;
+  } // Fallback to just using the name if we couldn't make it throw.
+
+
+  var name = fn ? fn.displayName || fn.name : '';
+  var syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
+
+  {
+    if (typeof fn === 'function') {
+      componentFrameCache.set(fn, syntheticFrame);
+    }
+  }
+
+  return syntheticFrame;
 }
 
 function describeClassComponentFrame(ctor) {
   {
-    return describeFunctionComponentFrame(ctor);
+    return describeNativeComponentFrame(ctor, true);
   }
 }
 function describeFunctionComponentFrame(fn) {
   {
-    if (!fn) {
-      return '';
-    }
-
-    var name = fn.displayName || fn.name || null;
-    return describeComponentFrame(name);
+    return describeNativeComponentFrame(fn, false);
   }
 }
 
@@ -13783,7 +14029,7 @@ function updateContextProvider(current, workInProgress, renderLanes) {
   var context;
 
   {
-    context = workInProgress.type._context;
+    context = workInProgress.type;
   }
 
   var newProps = workInProgress.pendingProps;
@@ -13828,13 +14074,8 @@ function updateContextConsumer(current, workInProgress, renderLanes) {
   var context;
 
   {
-    context = workInProgress.type;
-
-    {
-      if (context._context !== undefined) {
-        context = context._context;
-      }
-    }
+    var consumerType = workInProgress.type;
+    context = consumerType._context;
   }
 
   var newProps = workInProgress.pendingProps;
@@ -14037,7 +14278,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(current, workInProgress, renderL
         var context;
 
         {
-          context = workInProgress.type._context;
+          context = workInProgress.type;
         }
 
         pushProvider(workInProgress, context, newValue);
@@ -15583,7 +15824,7 @@ function completeWork(current, workInProgress, renderLanes) {
       var context;
 
       {
-        context = workInProgress.type._context;
+        context = workInProgress.type;
       }
 
       popProvider(context, workInProgress);
@@ -15999,7 +16240,7 @@ function unwindWork(current, workInProgress, renderLanes) {
       var context;
 
       {
-        context = workInProgress.type._context;
+        context = workInProgress.type;
       }
 
       popProvider(context, workInProgress);
@@ -16091,7 +16332,7 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
       var context;
 
       {
-        context = interruptedWork.type._context;
+        context = interruptedWork.type;
       }
 
       popProvider(context, interruptedWork);
@@ -21737,9 +21978,90 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
   }
 }
 
+function recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, parentFiber, isInStrictMode) {
+  if ((parentFiber.subtreeFlags & (PlacementDEV | Visibility)) === NoFlags$1) {
+    // Parent's descendants have already had effects double invoked.
+    // Early exit to avoid unnecessary tree traversal.
+    return;
+  }
+
+  var child = parentFiber.child;
+
+  while (child !== null) {
+    doubleInvokeEffectsInDEVIfNecessary(root, child, isInStrictMode);
+    child = child.sibling;
+  }
+} // Unconditionally disconnects and connects passive and layout effects.
+
+
+function doubleInvokeEffectsOnFiber(root, fiber) {
+  var shouldDoubleInvokePassiveEffects = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  disappearLayoutEffects(fiber);
+
+  if (shouldDoubleInvokePassiveEffects) {
+    disconnectPassiveEffect(fiber);
+  }
+
+  reappearLayoutEffects(root, fiber.alternate, fiber, false);
+
+  if (shouldDoubleInvokePassiveEffects) {
+    reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+  }
+}
+
+function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) {
+  var isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
+  var isInStrictMode = parentIsInStrictMode || isStrictModeFiber; // First case: the fiber **is not** of type OffscreenComponent. No
+  // special rules apply to double invoking effects.
+
+  if (fiber.tag !== OffscreenComponent) {
+    if (fiber.flags & PlacementDEV) {
+      setCurrentFiber(fiber);
+
+      if (isInStrictMode) {
+        doubleInvokeEffectsOnFiber(root, fiber, (fiber.mode & NoStrictPassiveEffectsMode) === NoMode);
+      }
+
+      resetCurrentFiber();
+    } else {
+      recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
+    }
+
+    return;
+  } // Second case: the fiber **is** of type OffscreenComponent.
+  // This branch contains cases specific to Offscreen.
+
+
+  if (fiber.memoizedState === null) {
+    // Only consider Offscreen that is visible.
+    // TODO (Offscreen) Handle manual mode.
+    setCurrentFiber(fiber);
+
+    if (isInStrictMode && fiber.flags & Visibility) {
+      // Double invoke effects on Offscreen's subtree only
+      // if it is visible and its visibility has changed.
+      doubleInvokeEffectsOnFiber(root, fiber);
+    } else if (fiber.subtreeFlags & PlacementDEV) {
+      // Something in the subtree could have been suspended.
+      // We need to continue traversal and find newly inserted fibers.
+      recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
+    }
+
+    resetCurrentFiber();
+  }
+}
+
 function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
   {
-    {
+    if ((root.tag !== LegacyRoot)) {
+      var doubleInvokeEffects = true;
+
+      if ((root.tag === ConcurrentRoot) && !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))) {
+        doubleInvokeEffects = false;
+      }
+
+      recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, root.current, doubleInvokeEffects);
+    } else {
       legacyCommitDoubleInvokeEffectsInDEV(root.current, hasPassiveEffects);
     }
   }
@@ -22729,20 +23051,20 @@ key, pendingProps, owner, mode, lanes) {
           if (typeof type === 'object' && type !== null) {
             switch (type.$$typeof) {
               case REACT_PROVIDER_TYPE:
-                {
-                  fiberTag = ContextProvider;
-                  break getTag;
-                }
 
               // Fall through
 
               case REACT_CONTEXT_TYPE:
                 {
-                  fiberTag = ContextConsumer;
+                  fiberTag = ContextProvider;
                   break getTag;
                 }
 
               case REACT_CONSUMER_TYPE:
+                {
+                  fiberTag = ContextConsumer;
+                  break getTag;
+                }
 
               // Fall through
 
@@ -22989,7 +23311,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-fd8f46d6';
+var ReactVersion = '19.0.0-beta-860ea752';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

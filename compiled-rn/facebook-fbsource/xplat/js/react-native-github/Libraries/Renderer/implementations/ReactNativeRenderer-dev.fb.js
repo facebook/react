@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bedf6c7a6f00f33bfdcba4960c3569a5>>
+ * @generated SignedSource<<af158c6fdf92fc4e43e592ad1c7a98ee>>
  */
 
 'use strict';
@@ -2342,16 +2342,13 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 
 var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     consoleManagedByDevToolsDuringStrictMode = dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
-    enableAsyncActions = dynamicFlags.enableAsyncActions,
     enableEarlyReturnForPropDiffing = dynamicFlags.enableEarlyReturnForPropDiffing,
-    enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
-    enableRenderableContext = dynamicFlags.enableRenderableContext,
     enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-    useModernStrictMode = dynamicFlags.useModernStrictMode,
     disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
     enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath; // The rest of the flags are static for better dead code elimination.
+var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -2471,28 +2468,21 @@ function getComponentNameFromType(type) {
 
     switch (type.$$typeof) {
       case REACT_PROVIDER_TYPE:
-        if (enableRenderableContext) {
+        {
           return null;
-        } else {
-          var provider = type;
-          return getContextName$1(provider._context) + '.Provider';
         }
 
       case REACT_CONTEXT_TYPE:
         var context = type;
 
-        if (enableRenderableContext) {
+        {
           return getContextName$1(context) + '.Provider';
-        } else {
-          return getContextName$1(context) + '.Consumer';
         }
 
       case REACT_CONSUMER_TYPE:
-        if (enableRenderableContext) {
+        {
           var consumer = type;
           return getContextName$1(consumer._context) + '.Consumer';
-        } else {
-          return null;
         }
 
       case REACT_FORWARD_REF_TYPE:
@@ -2555,21 +2545,15 @@ function getComponentNameFromFiber(fiber) {
       return 'Cache';
 
     case ContextConsumer:
-      if (enableRenderableContext) {
+      {
         var consumer = type;
         return getContextName(consumer._context) + '.Consumer';
-      } else {
-        var context = type;
-        return getContextName(context) + '.Consumer';
       }
 
     case ContextProvider:
-      if (enableRenderableContext) {
+      {
         var _context = type;
         return getContextName(_context) + '.Provider';
-      } else {
-        var provider = type;
-        return getContextName(provider._context) + '.Provider';
       }
 
     case DehydratedFragment:
@@ -5646,7 +5630,7 @@ typeof Object.is === 'function' ? Object.is : is;
 
 var prefix;
 function describeBuiltInComponentFrame(name) {
-  if (enableComponentStackLocations) {
+  {
     if (prefix === undefined) {
       // Extract the VM specific prefix used by each line.
       try {
@@ -5659,8 +5643,6 @@ function describeBuiltInComponentFrame(name) {
 
 
     return '\n' + prefix + name;
-  } else {
-    return describeComponentFrame(name);
   }
 }
 function describeDebugInfoFrame(name, env) {
@@ -5915,27 +5897,14 @@ function describeNativeComponentFrame(fn, construct) {
   return syntheticFrame;
 }
 
-function describeComponentFrame(name) {
-  return '\n    in ' + (name || 'Unknown');
-}
-
 function describeClassComponentFrame(ctor) {
-  if (enableComponentStackLocations) {
+  {
     return describeNativeComponentFrame(ctor, true);
-  } else {
-    return describeFunctionComponentFrame(ctor);
   }
 }
 function describeFunctionComponentFrame(fn) {
-  if (enableComponentStackLocations) {
+  {
     return describeNativeComponentFrame(fn, false);
-  } else {
-    if (!fn) {
-      return '';
-    }
-
-    var name = fn.displayName || fn.name || null;
-    return describeComponentFrame(name);
   }
 }
 
@@ -6109,7 +6078,7 @@ function getHostContext() {
 }
 
 function pushHostContext(fiber) {
-  if (enableAsyncActions) {
+  {
     var stateHook = fiber.memoizedState;
 
     if (stateHook !== null) {
@@ -6138,7 +6107,7 @@ function popHostContext(fiber) {
     pop(contextFiberStackCursor, fiber);
   }
 
-  if (enableAsyncActions) {
+  {
     if (hostTransitionProviderCursor.current === fiber) {
       // Do not pop unless this Fiber provided the current context. This is mostly
       // a performance optimization, but conveniently it also prevents a potential
@@ -10519,16 +10488,10 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
 }
 
 function renderTransitionAwareHostComponentWithHooks(current, workInProgress, lanes) {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
 
   return renderWithHooks(current, workInProgress, TransitionAwareHostComponent, null, null, lanes);
 }
 function TransitionAwareHostComponent() {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
 
   var dispatcher = ReactSharedInternals.H;
 
@@ -10991,7 +10954,7 @@ function updateReducerImpl(hook, current, reducer) {
         // Check if this is an optimistic update.
         var revertLane = update.revertLane;
 
-        if (!enableAsyncActions || revertLane === NoLane) {
+        if (revertLane === NoLane) {
           // This is not an optimistic update, and we're going to apply it now.
           // But, if there were earlier updates that were skipped, we need to
           // leave this update in the queue so it can be rebased later.
@@ -12051,7 +12014,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
     _callbacks: new Set()
   };
 
-  if (enableAsyncActions) {
+  {
     // We don't really need to use an optimistic update here, because we
     // schedule a second "revert" update below (which we use to suspend the
     // transition until the async action scope has finished). But we'll use an
@@ -12060,10 +12023,6 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
     // share the same lane.
     ReactSharedInternals.T = currentTransition;
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
-  } else {
-    ReactSharedInternals.T = null;
-    dispatchSetState(fiber, queue, pendingState);
-    ReactSharedInternals.T = currentTransition;
   }
 
   {
@@ -12091,13 +12050,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
       } else {
         dispatchSetState(fiber, queue, finishedState);
       }
-    } else {
-      // Async actions are not enabled.
-      dispatchSetState(fiber, queue, finishedState);
-      callback();
     }
   } catch (error) {
-    if (enableAsyncActions) {
+    {
       // This is a trick to get the `useTransition` hook to rethrow the error.
       // When it unwraps the thenable with the `use` algorithm, the error
       // will be thrown.
@@ -12107,10 +12062,6 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
         reason: error
       };
       dispatchSetState(fiber, queue, rejectedThenable);
-    } else {
-      // The error rethrowing behavior is only enabled when the async actions
-      // feature is on, even for sync actions.
-      throw error;
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
@@ -12162,9 +12113,6 @@ function rerenderTransition() {
 }
 
 function useHostTransitionStatus() {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
 
   var status = readContext(HostTransitionContext);
   return status !== null ? status : NotPendingTransition;
@@ -12513,13 +12461,13 @@ var ContextOnlyDispatcher = {
   ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 }
 
-if (enableAsyncActions) {
+{
   ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
   ContextOnlyDispatcher.useFormState = throwInvalidHookError;
   ContextOnlyDispatcher.useActionState = throwInvalidHookError;
 }
 
-if (enableAsyncActions) {
+{
   ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
 }
 
@@ -12661,7 +12609,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnMountInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     HooksDispatcherOnMountInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -12677,7 +12625,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnMountInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       mountHookTypesDev();
@@ -12800,7 +12748,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnMountWithHookTypesInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     HooksDispatcherOnMountWithHookTypesInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -12817,7 +12765,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnMountWithHookTypesInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       updateHookTypesDev();
@@ -12940,7 +12888,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnUpdateInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     HooksDispatcherOnUpdateInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -12957,7 +12905,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnUpdateInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       updateHookTypesDev();
@@ -13080,7 +13028,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnRerenderInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     HooksDispatcherOnRerenderInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -13097,7 +13045,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     HooksDispatcherOnRerenderInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       updateHookTypesDev();
@@ -13242,7 +13190,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     InvalidNestedHooksDispatcherOnMountInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -13260,7 +13208,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnMountInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       warnInvalidHookAccess();
@@ -13406,7 +13354,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnUpdateInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     InvalidNestedHooksDispatcherOnUpdateInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -13424,7 +13372,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnUpdateInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       warnInvalidHookAccess();
@@ -13570,7 +13518,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnRerenderInDEV.useHostTransitionStatus = useHostTransitionStatus;
 
     InvalidNestedHooksDispatcherOnRerenderInDEV.useFormState = function useFormState(action, initialState, permalink) {
@@ -13588,7 +13536,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  if (enableAsyncActions) {
+  {
     InvalidNestedHooksDispatcherOnRerenderInDEV.useOptimistic = function useOptimistic(passthrough, reducer) {
       currentHookNameInDev = 'useOptimistic';
       warnInvalidHookAccess();
@@ -16019,7 +15967,7 @@ function updateHostComponent$1(current, workInProgress, renderLanes) {
     workInProgress.flags |= ContentReset;
   }
 
-  if (enableAsyncActions) {
+  {
     var memoizedState = workInProgress.memoizedState;
 
     if (memoizedState !== null) {
@@ -17137,10 +17085,8 @@ var hasWarnedAboutUsingNoValuePropOnContextProvider = false;
 function updateContextProvider(current, workInProgress, renderLanes) {
   var context;
 
-  if (enableRenderableContext) {
+  {
     context = workInProgress.type;
-  } else {
-    context = workInProgress.type._context;
   }
 
   var newProps = workInProgress.pendingProps;
@@ -17184,17 +17130,9 @@ function updateContextProvider(current, workInProgress, renderLanes) {
 function updateContextConsumer(current, workInProgress, renderLanes) {
   var context;
 
-  if (enableRenderableContext) {
+  {
     var consumerType = workInProgress.type;
     context = consumerType._context;
-  } else {
-    context = workInProgress.type;
-
-    {
-      if (context._context !== undefined) {
-        context = context._context;
-      }
-    }
   }
 
   var newProps = workInProgress.pendingProps;
@@ -17396,10 +17334,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(current, workInProgress, renderL
         var newValue = workInProgress.memoizedProps.value;
         var context;
 
-        if (enableRenderableContext) {
+        {
           context = workInProgress.type;
-        } else {
-          context = workInProgress.type._context;
         }
 
         pushProvider(workInProgress, context, newValue);
@@ -18161,7 +18097,7 @@ function requestCurrentTransition() {
 }
 
 function handleAsyncAction(transition, thenable) {
-  if (enableAsyncActions) {
+  {
     // This is an async action.
     entangleAsyncAction(transition, thenable);
   }
@@ -18949,10 +18885,8 @@ function completeWork(current, workInProgress, renderLanes) {
       // Pop provider fiber
       var context;
 
-      if (enableRenderableContext) {
+      {
         context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
       }
 
       popProvider(context, workInProgress);
@@ -19367,10 +19301,8 @@ function unwindWork(current, workInProgress, renderLanes) {
     case ContextProvider:
       var context;
 
-      if (enableRenderableContext) {
+      {
         context = workInProgress.type;
-      } else {
-        context = workInProgress.type._context;
       }
 
       popProvider(context, workInProgress);
@@ -19461,10 +19393,8 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
     case ContextProvider:
       var context;
 
-      if (enableRenderableContext) {
+      {
         context = interruptedWork.type;
-      } else {
-        context = interruptedWork.type._context;
       }
 
       popProvider(context, interruptedWork);
@@ -25262,7 +25192,7 @@ function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) 
 
 function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
   {
-    if (useModernStrictMode && (root.tag !== LegacyRoot)) {
+    if ((root.tag !== LegacyRoot)) {
       var doubleInvokeEffects = true;
 
       if ((root.tag === ConcurrentRoot) && !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))) {
@@ -26268,24 +26198,17 @@ key, pendingProps, owner, mode, lanes) {
           if (typeof type === 'object' && type !== null) {
             switch (type.$$typeof) {
               case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  fiberTag = ContextProvider;
-                  break getTag;
-                }
 
               // Fall through
 
               case REACT_CONTEXT_TYPE:
-                if (enableRenderableContext) {
+                {
                   fiberTag = ContextProvider;
-                  break getTag;
-                } else {
-                  fiberTag = ContextConsumer;
                   break getTag;
                 }
 
               case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
+                {
                   fiberTag = ContextConsumer;
                   break getTag;
                 }
@@ -26544,7 +26467,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-f77489ba';
+var ReactVersion = '19.0.0-beta-4aa1a800';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

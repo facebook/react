@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f47b166be53dccb56c8e3adcf1ba0dfb>>
+ * @generated SignedSource<<ab6461aaac1e5e9824380130b8d84e2c>>
  */
 
 'use strict';
@@ -27,18 +27,16 @@ if (
 }
           var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-45cd200f';
+var ReactVersion = '19.0.0-beta-b4f8872e';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 
-var enableAsyncActions = dynamicFlags.enableAsyncActions,
-    enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
-    enableRenderableContext = dynamicFlags.enableRenderableContext,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses;
+var disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses;
  // The rest of the flags are static for better dead code elimination.
 var enableDebugTracing = false;
+var enableRenderableContext = true;
 var enableScopeAPI = false;
 var enableLegacyHidden = false;
 var enableTransitionTracing = false;
@@ -554,28 +552,21 @@ function getComponentNameFromType(type) {
 
     switch (type.$$typeof) {
       case REACT_PROVIDER_TYPE:
-        if (enableRenderableContext) {
+        {
           return null;
-        } else {
-          var provider = type;
-          return getContextName$1(provider._context) + '.Provider';
         }
 
       case REACT_CONTEXT_TYPE:
         var context = type;
 
-        if (enableRenderableContext) {
+        {
           return getContextName$1(context) + '.Provider';
-        } else {
-          return getContextName$1(context) + '.Consumer';
         }
 
       case REACT_CONSUMER_TYPE:
-        if (enableRenderableContext) {
+        {
           var consumer = type;
           return getContextName$1(consumer._context) + '.Consumer';
-        } else {
-          return null;
         }
 
       case REACT_FORWARD_REF_TYPE:
@@ -623,7 +614,7 @@ function isValidElementType(type) {
   }
 
   if (typeof type === 'object' && type !== null) {
-    if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || !enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE || enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
+    if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || !enableRenderableContext  || type.$$typeof === REACT_CONSUMER_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
     // types supported by any Flight configuration anywhere since
     // we don't know which Flight build this will end up being used
     // with.
@@ -731,7 +722,7 @@ function reenableLogs() {
 
 var prefix;
 function describeBuiltInComponentFrame(name) {
-  if (enableComponentStackLocations) {
+  {
     if (prefix === undefined) {
       // Extract the VM specific prefix used by each line.
       try {
@@ -744,8 +735,6 @@ function describeBuiltInComponentFrame(name) {
 
 
     return '\n' + prefix + name;
-  } else {
-    return describeComponentFrame(name);
   }
 }
 var reentry = false;
@@ -996,20 +985,9 @@ function describeNativeComponentFrame(fn, construct) {
 
   return syntheticFrame;
 }
-
-function describeComponentFrame(name) {
-  return '\n    in ' + (name || 'Unknown');
-}
 function describeFunctionComponentFrame(fn) {
-  if (enableComponentStackLocations) {
+  {
     return describeNativeComponentFrame(fn, false);
-  } else {
-    if (!fn) {
-      return '';
-    }
-
-    var name = fn.displayName || fn.name || null;
-    return describeComponentFrame(name);
   }
 }
 
@@ -1025,10 +1003,8 @@ function describeUnknownElementTypeFrameInDEV(type) {
   }
 
   if (typeof type === 'function') {
-    if (enableComponentStackLocations) {
+    {
       return describeNativeComponentFrame(type, shouldConstruct(type));
-    } else {
-      return describeFunctionComponentFrame(type);
     }
   }
 
@@ -1117,21 +1093,15 @@ function getComponentNameFromFiber(fiber) {
       return 'Cache';
 
     case ContextConsumer:
-      if (enableRenderableContext) {
+      {
         var consumer = type;
         return getContextName(consumer._context) + '.Consumer';
-      } else {
-        var context = type;
-        return getContextName(context) + '.Consumer';
       }
 
     case ContextProvider:
-      if (enableRenderableContext) {
+      {
         var _context = type;
         return getContextName(_context) + '.Provider';
-      } else {
-        var provider = type;
-        return getContextName(provider._context) + '.Provider';
       }
 
     case DehydratedFragment:
@@ -2489,70 +2459,12 @@ function createContext(defaultValue) {
     Consumer: null
   };
 
-  if (enableRenderableContext) {
+  {
     context.Provider = context;
     context.Consumer = {
       $$typeof: REACT_CONSUMER_TYPE,
       _context: context
     };
-  } else {
-    context.Provider = {
-      $$typeof: REACT_PROVIDER_TYPE,
-      _context: context
-    };
-
-    {
-      var Consumer = {
-        $$typeof: REACT_CONTEXT_TYPE,
-        _context: context
-      };
-      Object.defineProperties(Consumer, {
-        Provider: {
-          get: function () {
-            return context.Provider;
-          },
-          set: function (_Provider) {
-            context.Provider = _Provider;
-          }
-        },
-        _currentValue: {
-          get: function () {
-            return context._currentValue;
-          },
-          set: function (_currentValue) {
-            context._currentValue = _currentValue;
-          }
-        },
-        _currentValue2: {
-          get: function () {
-            return context._currentValue2;
-          },
-          set: function (_currentValue2) {
-            context._currentValue2 = _currentValue2;
-          }
-        },
-        _threadCount: {
-          get: function () {
-            return context._threadCount;
-          },
-          set: function (_threadCount) {
-            context._threadCount = _threadCount;
-          }
-        },
-        Consumer: {
-          get: function () {
-            return context.Consumer;
-          }
-        },
-        displayName: {
-          get: function () {
-            return context.displayName;
-          },
-          set: function (displayName) {}
-        }
-      });
-      context.Consumer = Consumer;
-    }
   }
 
   {
@@ -2897,9 +2809,7 @@ function useOptimistic(passthrough, reducer) {
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 function useActionState(action, initialState, permalink) {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
+  {
     var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
     return dispatcher.useActionState(action, initialState, permalink);
@@ -2951,7 +2861,7 @@ function startTransition(scope, options) {
     ReactSharedInternals.T._updatedFibers = new Set();
   }
 
-  if (enableAsyncActions) {
+  {
     try {
       var returnValue = scope();
 
@@ -2963,15 +2873,6 @@ function startTransition(scope, options) {
       }
     } catch (error) {
       reportGlobalError(error);
-    } finally {
-      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactSharedInternals.T = prevTransition;
-    }
-  } else {
-    // When async actions are not enabled, startTransition does not
-    // capture errors.
-    try {
-      scope();
     } finally {
       warnAboutTransitionSubscriptions(prevTransition, currentTransition);
       ReactSharedInternals.T = prevTransition;

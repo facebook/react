@@ -7,21 +7,17 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bde59d9748423e65ff411acf53cbb3fe>>
+ * @generated SignedSource<<9ea1237f908f176144eb5e942e6b346c>>
  */
 
 "use strict";
-var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-  enableAsyncActions = dynamicFlagsUntyped.enableAsyncActions,
-  enableRenderableContext = dynamicFlagsUntyped.enableRenderableContext,
-  disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+var disableDefaultPropsExceptForClasses =
+    require("ReactNativeInternalFeatureFlags").disableDefaultPropsExceptForClasses,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
@@ -491,17 +487,11 @@ exports.createContext = function (defaultValue) {
     Provider: null,
     Consumer: null
   };
-  enableRenderableContext
-    ? ((defaultValue.Provider = defaultValue),
-      (defaultValue.Consumer = {
-        $$typeof: REACT_CONSUMER_TYPE,
-        _context: defaultValue
-      }))
-    : ((defaultValue.Provider = {
-        $$typeof: REACT_PROVIDER_TYPE,
-        _context: defaultValue
-      }),
-      (defaultValue.Consumer = defaultValue));
+  defaultValue.Provider = defaultValue;
+  defaultValue.Consumer = {
+    $$typeof: REACT_CONSUMER_TYPE,
+    _context: defaultValue
+  };
   return defaultValue;
 };
 exports.createElement = function (type, config, children) {
@@ -565,27 +555,20 @@ exports.startTransition = function (scope) {
     callbacks = new Set();
   ReactSharedInternals.T = { _callbacks: callbacks };
   var currentTransition = ReactSharedInternals.T;
-  if (enableAsyncActions)
-    try {
-      var returnValue = scope();
-      "object" === typeof returnValue &&
-        null !== returnValue &&
-        "function" === typeof returnValue.then &&
-        (callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        }),
-        returnValue.then(noop, reportGlobalError));
-    } catch (error) {
-      reportGlobalError(error);
-    } finally {
-      ReactSharedInternals.T = prevTransition;
-    }
-  else
-    try {
-      scope();
-    } finally {
-      ReactSharedInternals.T = prevTransition;
-    }
+  try {
+    var returnValue = scope();
+    "object" === typeof returnValue &&
+      null !== returnValue &&
+      "function" === typeof returnValue.then &&
+      (callbacks.forEach(function (callback) {
+        return callback(currentTransition, returnValue);
+      }),
+      returnValue.then(noop, reportGlobalError));
+  } catch (error) {
+    reportGlobalError(error);
+  } finally {
+    ReactSharedInternals.T = prevTransition;
+  }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
@@ -605,13 +588,7 @@ exports.use = function (usable) {
   return ReactSharedInternals.H.use(usable);
 };
 exports.useActionState = function (action, initialState, permalink) {
-  if (enableAsyncActions)
-    return ReactSharedInternals.H.useActionState(
-      action,
-      initialState,
-      permalink
-    );
-  throw Error("Not implemented.");
+  return ReactSharedInternals.H.useActionState(action, initialState, permalink);
 };
 exports.useCallback = function (callback, deps) {
   return ReactSharedInternals.H.useCallback(callback, deps);
@@ -667,4 +644,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-beta-79fa2413";
+exports.version = "19.0.0-beta-d06e1498";
