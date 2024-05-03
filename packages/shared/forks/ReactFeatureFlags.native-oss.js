@@ -20,6 +20,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 const __TODO_NEXT_RN_MAJOR__ = false;
 export const enableRefAsProp = __TODO_NEXT_RN_MAJOR__;
 export const disableStringRefs = __TODO_NEXT_RN_MAJOR__;
+export const enableFastJSX = __TODO_NEXT_RN_MAJOR__;
 export const disableLegacyMode = __TODO_NEXT_RN_MAJOR__;
 export const disableDOMTestUtils = __TODO_NEXT_RN_MAJOR__;
 export const useModernStrictMode = __TODO_NEXT_RN_MAJOR__;

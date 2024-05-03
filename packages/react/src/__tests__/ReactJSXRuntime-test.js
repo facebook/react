@@ -375,9 +375,8 @@ describe('ReactJSXRuntime', () => {
     expect(didCall).toBe(false);
   });
 
-  // @gate enableRefAsProp
-  // @gate disableStringRefs
-  it('does not clone props object if key is not spread', async () => {
+  // @gate enableFastJSX && enableRefAsProp
+  it('does not clone props object if key and ref is not spread', async () => {
     const config = {
       foo: 'foo',
       bar: 'bar',
@@ -386,7 +385,7 @@ describe('ReactJSXRuntime', () => {
     const element = __DEV__
       ? JSXDEVRuntime.jsxDEV('div', config)
       : JSXRuntime.jsx('div', config);
-    expect(element.props).toBe(config);
+    expect(Object.is(element.props, config)).toBe(true);
 
     const configWithKey = {
       foo: 'foo',

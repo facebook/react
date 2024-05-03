@@ -36,6 +36,7 @@ export const {
   disableDefaultPropsExceptForClasses,
   enableNoCloningMemoCache,
   enableAddPropertiesFastPath,
+  enableFastJSX,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
