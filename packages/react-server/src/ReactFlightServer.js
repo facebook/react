@@ -73,6 +73,8 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
+  supportsComponentStorage,
+  componentStorage,
   createHints,
   initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
@@ -89,11 +91,9 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {
-  DefaultAsyncDispatcher,
-  currentOwner,
-  setCurrentOwner,
-} from './flight/ReactFlightAsyncDispatcher';
+import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
+
+import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {
   getIteratorFn,
@@ -162,7 +162,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        const owner: null | ReactComponentInfo = currentOwner;
+        const owner: null | ReactComponentInfo = resolveOwner();
         emitConsoleChunk(request, id, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
@@ -824,7 +824,11 @@ function renderFunctionComponent<Props>(
   const prevThenableState = task.thenableState;
   task.thenableState = null;
 
-  let componentDebugInfo: null | ReactComponentInfo = null;
+  // The secondArg is always undefined in Server Components since refs error early.
+  const secondArg = undefined;
+  let result;
+
+  let componentDebugInfo: ReactComponentInfo;
   if (__DEV__) {
     if (debugID === null) {
       // We don't have a chunk to assign debug info. We need to outline this
@@ -853,20 +857,25 @@ function renderFunctionComponent<Props>(
       outlineModel(request, componentDebugInfo);
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
     }
-  }
-
-  prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-  // The secondArg is always undefined in Server Components since refs error early.
-  const secondArg = undefined;
-  let result;
-  if (__DEV__) {
+    prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
     setCurrentOwner(componentDebugInfo);
     try {
-      result = Component(props, secondArg);
+      if (supportsComponentStorage) {
+        // Run the component in an Async Context that tracks the current owner.
+        result = componentStorage.run(
+          componentDebugInfo,
+          Component,
+          props,
+          secondArg,
+        );
+      } else {
+        result = Component(props, secondArg);
+      }
     } finally {
       setCurrentOwner(null);
     }
   } else {
+    prepareToUseHooksForComponent(prevThenableState, null);
     result = Component(props, secondArg);
   }
   if (typeof result === 'object' && result !== null) {
