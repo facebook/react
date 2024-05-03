@@ -34,7 +34,7 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const enableComponentStackLocations = false;
+export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
@@ -46,7 +46,7 @@ export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableRenderableContext = false;
+export const enableRenderableContext = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -64,7 +64,7 @@ export const consoleManagedByDevToolsDuringStrictMode = false;
 
 export const enableTransitionTracing = false;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 export const enableDeferRootSchedulingToMicrotask = false;

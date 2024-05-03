@@ -21,28 +21,27 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
-  enableAsyncActions,
   enableEarlyReturnForPropDiffing,
-  enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection,
-  enableRenderableContext,
   enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
-  useModernStrictMode,
   disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
+export const enableAsyncActions = true;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
+export const enableRenderableContext = true;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableCache = true;
+export const enableComponentStackLocations = true;
 export const enableLegacyCache = false;
 export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
@@ -69,6 +68,7 @@ export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
+export const useModernStrictMode = true;
 
 export const renameElementSymbol = false;
 
