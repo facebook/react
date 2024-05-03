@@ -39,8 +39,16 @@ export function memoizeFbtOperandsInSameScope(fn: HIRFunction): void {
   }
 }
 
-export const FBT_TAGS: Set<string> = new Set(["fbt", "fbt:param"]);
-export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set(["fbt:param"]);
+export const FBT_TAGS: Set<string> = new Set([
+  "fbt",
+  "fbt:param",
+  "fbs",
+  "fbs:param",
+]);
+export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set([
+  "fbt:param",
+  "fbs:param",
+]);
 
 function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
   for (const [, block] of fn.body.blocks) {

@@ -2075,14 +2075,18 @@ function lowerExpression(
         }
         props.push({ kind: "JsxAttribute", name: propName, place: value });
       }
-      if (tag.kind === "BuiltinTag" && tag.name === "fbt") {
+      if (
+        tag.kind === "BuiltinTag" &&
+        (tag.name === "fbt" || tag.name === "fbs")
+      ) {
+        const tagName = tag.name;
         const openingIdentifier = opening.get("name");
         const tagIdentifier = openingIdentifier.isJSXIdentifier()
           ? builder.resolveIdentifier(openingIdentifier)
           : null;
         if (tagIdentifier != null) {
           CompilerError.throwTodo({
-            reason: `Support <fbt> tags where 'fbt' is a local variable instead of a global`,
+            reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
             loc: openingIdentifier.node.loc ?? GeneratedSource,
             description: null,
             suggestions: null,
@@ -2092,7 +2096,7 @@ function lowerExpression(
         expr.traverse({
           JSXNamespacedName(path) {
             if (
-              path.node.namespace.name === "fbt" &&
+              path.node.namespace.name === tagName &&
               path.node.name.name === "enum"
             ) {
               fbtEnumLocations.push(path.node.loc ?? GeneratedSource);
@@ -2101,7 +2105,7 @@ function lowerExpression(
         });
         if (fbtEnumLocations.length > 1) {
           CompilerError.throwTodo({
-            reason: `Support <fbt> tags with multiple <fbt:enum> values`,
+            reason: `Support <${tagName}> tags with multiple <${tagName}:enum> values`,
             loc: fbtEnumLocations.at(-1) ?? GeneratedSource,
             description: null,
             suggestions: null,
@@ -2110,7 +2114,10 @@ function lowerExpression(
       }
 
       let children: Array<Place>;
-      if (tag.kind === "BuiltinTag" && tag.name === "fbt") {
+      if (
+        tag.kind === "BuiltinTag" &&
+        (tag.name === "fbt" || tag.name === "fbs")
+      ) {
         children = expr
           .get("children")
           .map((child) => {
