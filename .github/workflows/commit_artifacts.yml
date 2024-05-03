@@ -145,15 +145,15 @@ jobs:
         run: |
           BASE_FOLDER='compiled-rn/facebook-fbsource/xplat/js'
           mkdir -p ${BASE_FOLDER}/react-native-github/Libraries/Renderer/
-          mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/{scheduler,react,react-is,react-test-renderer}/
+          mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/react/{scheduler,react,react-is,react-test-renderer}/
 
           # Move React Native renderer 
           mv build/react-native/implementations/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
-          mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/scheduler/
-          mv build/facebook-react-native/react/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/
-          mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-is/
-          mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-test-renderer/
+          mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/scheduler/
+          mv build/facebook-react-native/react/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react/
+          mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-is/
+          mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-test-renderer/
 
           # Delete OSS renderer. OSS renderer is synced through internal script.
           RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
