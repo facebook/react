@@ -7,17 +7,14 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ab6461aaac1e5e9824380130b8d84e2c>>
+ * @generated SignedSource<<5917bdf46559392459c712d28247d2c7>>
  */
 
 'use strict';
 
 if (__DEV__) {
   (function() {
-
-          'use strict';
-
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+'use strict';
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
@@ -25,9 +22,9 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
+var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-b4f8872e';
+var ReactVersion = '19.0.0-beta-536f9068';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -3331,7 +3328,6 @@ exports.useState = useState;
 exports.useSyncExternalStore = useSyncExternalStore;
 exports.useTransition = useTransition;
 exports.version = ReactVersion;
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
@@ -3339,6 +3335,6 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
 }
-        
+
   })();
 }

@@ -7,17 +7,14 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa761accb291cac97fef5f7da27eea9a>>
+ * @generated SignedSource<<c1c4b5e9c9be53b3abfee5f289a1221a>>
  */
 
 'use strict';
 
 if (__DEV__) {
   (function() {
-
-          'use strict';
-
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+'use strict';
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
@@ -25,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-          require('react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore');
+require('react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore');
 var React = require('react');
 var ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
@@ -26055,7 +26052,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-f64f755b';
+var ReactVersion = '19.0.0-beta-72ec4a89';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -27106,7 +27103,6 @@ exports.render = render;
 exports.sendAccessibilityEvent = sendAccessibilityEvent;
 exports.stopSurface = stopSurface;
 exports.unmountComponentAtNode = unmountComponentAtNode;
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
@@ -27114,6 +27110,6 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
 }
-        
+
   })();
 }
