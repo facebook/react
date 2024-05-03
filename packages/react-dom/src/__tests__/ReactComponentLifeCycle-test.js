@@ -14,6 +14,9 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let Scheduler;
+
+let assertLog;
 
 const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
@@ -95,6 +98,9 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    Scheduler = require('scheduler');
+
+    ({assertLog} = require('internal-test-utils'));
   });
 
   it('should not reuse an instance when it has been unmounted', async () => {
@@ -1385,6 +1391,112 @@ describe('ReactComponentLifeCycle', () => {
       root.render(<SimpleComponent value="updated" />);
     });
     expect(divRef.current.textContent).toBe('value: updated');
+  });
+
+  it('should pass previous props to shouldComponentUpdate', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    let childInstance;
+
+    class App extends React.Component {
+      render() {
+        return <Child />;
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        childInstance = this;
+        return null;
+      }
+      shouldComponentUpdate(nextProps: Object): boolean {
+        Scheduler.log(this.props === nextProps);
+        return this.props === nextProps;
+      }
+    }
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    await act(async () => {
+      childInstance.setState({updated: true});
+    });
+
+    assertLog([true]);
+  });
+
+  it('should pass previous props to shouldComponentUpdate with defaultProps', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    let childInstance;
+
+    class App extends React.Component {
+      render() {
+        return <Child />;
+      }
+    }
+
+    class Child extends React.Component {
+      static defaultProps = {name: 'Alice'};
+      render() {
+        childInstance = this;
+        return null;
+      }
+      shouldComponentUpdate(nextProps: Object): boolean {
+        Scheduler.log(this.props === nextProps);
+        return this.props === nextProps;
+      }
+    }
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    await act(async () => {
+      childInstance.setState({updated: true});
+    });
+
+    assertLog([
+      // Regression with enableRefAsProp
+      gate(flags => !flags.enableRefAsProp),
+    ]);
+  });
+
+  // @gate !disableStringRefs
+  it('should pass previous props to shouldComponentUpdate with string refs', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    let childInstance;
+
+    class App extends React.Component {
+      render() {
+        return <Child ref="someRef" />;
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        childInstance = this;
+        return 'Child';
+      }
+      shouldComponentUpdate(nextProps: Object): boolean {
+        Scheduler.log(this.props === nextProps);
+        return this.props === nextProps;
+      }
+    }
+
+    await expect(async () => {
+      await act(async () => {
+        root.render(<App />);
+      });
+    }).toErrorDev('Component "App" contains the string ref "someRef".');
+
+    await act(async () => {
+      childInstance.setState({updated: true});
+    });
+
+    assertLog([
+      // Regression with enableRefAsProp
+      gate(flags => !flags.enableRefAsProp),
+    ]);
   });
 
   it('should call getSnapshotBeforeUpdate before mutations are committed', async () => {
