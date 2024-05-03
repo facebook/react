@@ -87,8 +87,8 @@ export type PluginOptions = {
    * instead of `react/compiler-runtime`.
    *
    * ```
-   * // If set to "react-forget-runtime"
-   * import {c as useMemoCache} from 'react-forget-runtime';
+   * // If set to "react-compiler-runtime"
+   * import {c as useMemoCache} from 'react-compiler-runtime';
    * ```
    */
   runtimeModule?: string | null | undefined;

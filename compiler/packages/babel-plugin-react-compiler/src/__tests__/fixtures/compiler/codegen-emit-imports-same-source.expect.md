@@ -17,7 +17,7 @@ import {
   useRenderCounter,
   shouldInstrument,
   makeReadOnly,
-} from "react-forget-runtime";
+} from "react-compiler-runtime";
 import { c as useMemoCache } from "react"; // @enableEmitFreeze @instrumentForget
 
 function useFoo(props) {

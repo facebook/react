@@ -195,7 +195,7 @@ export function $reset($: MemoCache) {
 }
 
 export function $makeReadOnly() {
-  throw new Error("TODO: implement $makeReadOnly in react-forget-runtime");
+  throw new Error("TODO: implement $makeReadOnly in react-compiler-runtime");
 }
 
 /**

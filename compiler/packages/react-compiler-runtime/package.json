@@ -1,7 +1,7 @@
 {
-  "name": "react-forget-runtime",
+  "name": "react-compiler-runtime",
   "version": "0.0.1",
-  "description": "Runtime for React Forget",
+  "description": "Runtime for React Compiler",
   "license": "MIT",
   "main": "dist/index.js",
   "files": [

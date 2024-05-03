@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// WARNING: ensure this is synced with enum values in react-forget-runtime:GuardKind
+// WARNING: ensure this is synced with enum values in react-compiler-runtime:GuardKind
 export enum GuardKind {
   PushHookGuard = 0,
   PopHookGuard = 1,

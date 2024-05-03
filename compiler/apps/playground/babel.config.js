@@ -18,7 +18,7 @@ module.exports = function (api) {
             {
               compilationMode: "infer",
               panicThreshold: "NONE",
-              runtimeModule: "react-forget-runtime",
+              runtimeModule: "react-compiler-runtime",
             },
           ],
         ],

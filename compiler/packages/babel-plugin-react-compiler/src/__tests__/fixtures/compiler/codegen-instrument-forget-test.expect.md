@@ -23,7 +23,7 @@ function Foo(props) {
 ## Code
 
 ```javascript
-import { useRenderCounter, shouldInstrument } from "react-forget-runtime";
+import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
 import { c as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {

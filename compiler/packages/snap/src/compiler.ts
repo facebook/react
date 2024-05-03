@@ -69,11 +69,11 @@ function makePluginOptions(
   if (firstLine.includes("@instrumentForget")) {
     enableEmitInstrumentForget = {
       fn: {
-        source: "react-forget-runtime",
+        source: "react-compiler-runtime",
         importSpecifierName: "useRenderCounter",
       },
       gating: {
-        source: "react-forget-runtime",
+        source: "react-compiler-runtime",
         importSpecifierName: "shouldInstrument",
       },
       globalGating: "__DEV__",
@@ -81,13 +81,13 @@ function makePluginOptions(
   }
   if (firstLine.includes("@enableEmitFreeze")) {
     enableEmitFreeze = {
-      source: "react-forget-runtime",
+      source: "react-compiler-runtime",
       importSpecifierName: "makeReadOnly",
     };
   }
   if (firstLine.includes("@enableEmitHookGuards")) {
     enableEmitHookGuards = {
-      source: "react-forget-runtime",
+      source: "react-compiler-runtime",
       importSpecifierName: "$dispatcherGuard",
     };
   }

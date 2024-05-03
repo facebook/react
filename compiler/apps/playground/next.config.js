@@ -29,9 +29,9 @@ const nextConfig = {
 
     config.resolve.alias = {
       ...config.resolve.alias,
-      "react-forget-runtime": path.resolve(
+      "react-compiler-runtime": path.resolve(
         __dirname,
-        "../../packages/react-forget-runtime",
+        "../../packages/react-compiler-runtime",
       ),
     };
 

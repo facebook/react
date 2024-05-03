@@ -257,13 +257,13 @@ const EnvironmentConfigSchema = z.object({
    * For example:
    *   instrumentForget: {
    *     import: {
-   *       source: 'react-forget-runtime',
+   *       source: 'react-compiler-runtime',
    *       importSpecifierName: 'useRenderCounter',
    *      }
    *   }
    *
    * produces:
-   *   import {useRenderCounter} from 'react-forget-runtime';
+   *   import {useRenderCounter} from 'react-compiler-runtime';
    *
    *   function Component(props) {
    *     if (__DEV__) {

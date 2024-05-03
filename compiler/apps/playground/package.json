@@ -36,7 +36,7 @@
     "pretty-format": "^29.3.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-forget-runtime": "*"
+    "react-compiler-runtime": "*"
   },
   "devDependencies": {
     "@types/node": "18.11.9",

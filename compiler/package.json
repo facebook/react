@@ -22,7 +22,7 @@
     "start": "yarn workspace playground run start",
     "next": "yarn workspace playground run dev",
     "build": "yarn workspaces run build",
-    "dev": "concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-forget-runtime run build --watch\" \"yarn workspace playground run dev\"",
+    "dev": "concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"yarn workspace playground run dev\"",
     "test": "yarn workspaces run test",
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build"
