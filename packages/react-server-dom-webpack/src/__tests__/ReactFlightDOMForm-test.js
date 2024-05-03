@@ -17,6 +17,23 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Polyfill stream methods on JSDOM.
+global.Blob.prototype.stream = function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  const buffer = this[impl]._buffer;
+  return new ReadableStream({
+    start(c) {
+      c.enqueue(new Uint8Array(buffer));
+      c.close();
+    },
+  });
+};
+
+global.Blob.prototype.text = async function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  return this[impl]._buffer.toString('utf8');
+};
+
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
 global.setTimeout = cb => cb();
@@ -975,10 +992,12 @@ describe('ReactFlightDOMForm', () => {
 
     function Form({action}) {
       const [errorMsg, dispatch] = useActionState(action, null);
+      let text;
       if (errorMsg) {
         blob = errorMsg;
+        text = React.use(blob.text());
       }
-      return <form action={dispatch} />;
+      return <form action={dispatch}>{text}</form>;
     }
 
     const FormRef = await clientExports(Form);
@@ -1008,21 +1027,19 @@ describe('ReactFlightDOMForm', () => {
       container.innerHTML = '';
 
       const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
-        <FormRef action={serverAction} />,
+        {formState, root: <FormRef action={serverAction} />},
         webpackMap,
       );
-      const postbackResponse = ReactServerDOMClient.createFromReadableStream(
-        postbackRscStream,
-        {
+      const postbackResponse =
+        await ReactServerDOMClient.createFromReadableStream(postbackRscStream, {
           ssrManifest: {
             moduleMap: null,
             moduleLoading: null,
           },
-        },
-      );
+        });
       const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
-        postbackResponse,
-        {formState: formState},
+        postbackResponse.root,
+        {formState: postbackResponse.formState},
       );
       await readIntoContainer(postbackSsrStream);
     }
@@ -1034,5 +1051,8 @@ describe('ReactFlightDOMForm', () => {
 
     expect(blob instanceof Blob).toBe(true);
     expect(blob.size).toBe(2);
+
+    const form2 = container.getElementsByTagName('form')[0];
+    expect(form2.textContent).toBe('hi');
   });
 });
