@@ -22,10 +22,13 @@ export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
+  disableStringRefs,
   enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
   enableEarlyReturnForPropDiffing,
+  enableFastJSX,
   enableInfiniteRenderLoopDetection,
+  enableRefAsProp,
   enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
@@ -93,12 +96,6 @@ export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
-
-// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
-// because JSX is an extremely hot path.
-export const enableRefAsProp = false;
-export const disableStringRefs = false;
-export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
