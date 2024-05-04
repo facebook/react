@@ -10,6 +10,14 @@
 
 'use strict';
 
+if (typeof Blob === 'undefined') {
+  global.Blob = require('buffer').Blob;
+}
+if (typeof File === 'undefined' || typeof FormData === 'undefined') {
+  global.File = require('undici').File;
+  global.FormData = require('undici').FormData;
+}
+
 function normalizeCodeLocInfo(str) {
   return (
     str &&
@@ -513,39 +521,37 @@ describe('ReactFlight', () => {
       `);
   });
 
-  if (typeof FormData !== 'undefined') {
-    it('can transport FormData (no blobs)', async () => {
-      function ComponentClient({prop}) {
-        return `
-          formData: ${prop instanceof FormData}
-          hi: ${prop.get('hi')}
-          multiple: ${prop.getAll('multiple')}
-          content: ${JSON.stringify(Array.from(prop))}
-        `;
-      }
-      const Component = clientReference(ComponentClient);
+  it('can transport FormData (no blobs)', async () => {
+    function ComponentClient({prop}) {
+      return `
+        formData: ${prop instanceof FormData}
+        hi: ${prop.get('hi')}
+        multiple: ${prop.getAll('multiple')}
+        content: ${JSON.stringify(Array.from(prop))}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
 
-      const formData = new FormData();
-      formData.append('hi', 'world');
-      formData.append('multiple', 1);
-      formData.append('multiple', 2);
+    const formData = new FormData();
+    formData.append('hi', 'world');
+    formData.append('multiple', 1);
+    formData.append('multiple', 2);
 
-      const model = <Component prop={formData} />;
+    const model = <Component prop={formData} />;
 
-      const transport = ReactNoopFlightServer.render(model);
+    const transport = ReactNoopFlightServer.render(model);
 
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-
-      expect(ReactNoop).toMatchRenderedOutput(`
-          formData: true
-          hi: world
-          multiple: 1,2
-          content: [["hi","world"],["multiple","1"],["multiple","2"]]
-        `);
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
     });
-  }
+
+    expect(ReactNoop).toMatchRenderedOutput(`
+        formData: true
+        hi: world
+        multiple: 1,2
+        content: [["hi","world"],["multiple","1"],["multiple","2"]]
+      `);
+  });
 
   it('can transport cyclic objects', async () => {
     function ComponentClient({prop}) {
