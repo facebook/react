@@ -21,7 +21,7 @@ import IndexableDisplayName from './IndexableDisplayName';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from 'react-devtools-shared/src/frontend/types';
-import { sanitizeString } from './utils';
+import {sanitizeString} from './utils';
 
 import styles from './Element.css';
 import Icon from '../Icon';
