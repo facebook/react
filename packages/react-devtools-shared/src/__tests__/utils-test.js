@@ -390,7 +390,7 @@ describe('utils', () => {
   });
 
   describe('sanitizeString', () => {
-    it('should sanitize the string if escape characters are give', () => {
+    it('should sanitize the string if escape characters are given', () => {
       expect(sanitizeString('hello\nworld\nfoo\nbar\nbaz')).toEqual(
         'hello world foo bar baz',
       );
