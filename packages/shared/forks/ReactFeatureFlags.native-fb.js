@@ -21,13 +21,13 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
-  enableEarlyReturnForPropDiffing,
+  disableDefaultPropsExceptForClasses,
+  enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
+  enableEarlyReturnForPropDiffing,
   enableInfiniteRenderLoopDetection,
   enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
-  disableDefaultPropsExceptForClasses,
-  enableAddPropertiesFastPath,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
