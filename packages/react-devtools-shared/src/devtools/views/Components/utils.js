@@ -27,7 +27,9 @@ export function parseHookPathForEdit(
   return path.slice(index);
 }
 
-export function sanitizeString(str: string | number | null): string {
+export function sanitizeString(
+  str: string | number | null,
+): string | number | null {
   if (typeof str !== 'string') return str;
   return str.replace(/[\n\r\t]/g, ' ');
 }
