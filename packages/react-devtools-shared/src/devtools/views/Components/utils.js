@@ -27,6 +27,6 @@ export function parseHookPathForEdit(
   return path.slice(index);
 }
 
-export function sanitizeString(str:string):string{
-  return str.replace(/[^a-z0-9áéíóúñü \.,_-]/gim,"");
+export function sanitizeString(str: string): string {
+  return str.replace(/[\n\r\t]/g, ' ');
 }
