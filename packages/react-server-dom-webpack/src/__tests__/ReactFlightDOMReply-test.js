@@ -376,4 +376,165 @@ describe('ReactFlightDOMReply', () => {
     // This should've been the same reference that we already saw.
     expect(response.children).toBe(children);
   });
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming ReadableStream with objects', async () => {
+    let controller1;
+    let controller2;
+    const s1 = new ReadableStream({
+      start(c) {
+        controller1 = c;
+      },
+    });
+    const s2 = new ReadableStream({
+      start(c) {
+        controller2 = c;
+      },
+    });
+
+    const promise = ReactServerDOMClient.encodeReply({s1, s2});
+
+    controller1.enqueue({hello: 'world'});
+    controller2.enqueue({hi: 'there'});
+
+    controller1.enqueue('text1');
+    controller2.enqueue('text2');
+
+    controller1.close();
+    controller2.close();
+
+    const body = await promise;
+
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    const reader1 = result.s1.getReader();
+    const reader2 = result.s2.getReader();
+
+    expect(await reader1.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: {hi: 'there'},
+      done: false,
+    });
+
+    expect(await reader1.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader1.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(await reader2.read()).toEqual({
+      value: 'text2',
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming AsyncIterables with objects', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        const next = yield {hello: 'A'};
+        expect(next).toBe(undefined);
+        await wait;
+        yield {hi: 'B'};
+        return 'C';
+      },
+    };
+    const singleShotIterator = (async function* () {
+      const next = yield {hello: 'D'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'E'};
+      return 'F';
+    })();
+
+    await resolve();
+
+    const body = await ReactServerDOMClient.encodeReply({
+      multiShotIterable,
+      singleShotIterator,
+    });
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    const iterator1 = result.multiShotIterable[Symbol.asyncIterator]();
+    const iterator2 = result.singleShotIterator[Symbol.asyncIterator]();
+
+    expect(iterator1).not.toBe(result.multiShotIterable);
+    expect(iterator2).toBe(result.singleShotIterator);
+
+    expect(await iterator1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    expect(await iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(await iterator2.next()).toEqual({
+      value: 'F', // Return value
+      done: true,
+    });
+
+    // Multi-shot iterables should be able to do the same thing again
+    const iterator3 = result.multiShotIterable[Symbol.asyncIterator]();
+
+    expect(iterator3).not.toBe(iterator1);
+
+    // We should be able to iterate over the iterable again and it should be
+    // synchronously available using instrumented promises so that React can
+    // rerender it synchronously.
+    expect(iterator3.next().value).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(() => iterator3.next('this is not allowed')).toThrow(
+      'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+    );
+  });
 });

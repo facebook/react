@@ -1,7 +1,5 @@
 'use strict';
 
-const {resolve} = require('path');
-const {readFileSync} = require('fs');
 const {signFile, getSigningToken} = require('signedsource');
 const {bundleTypes, moduleTypes} = require('./bundles');
 
@@ -30,19 +28,25 @@ const {RECONCILER} = moduleTypes;
 
 const USE_STRICT_HEADER_REGEX = /'use strict';\n+/;
 
-function registerInternalModuleStart(globalName) {
-  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleBegin.js');
-  const file = readFileSync(path);
-  return String(file).trim();
+function wrapWithRegisterInternalModule(source) {
+  return `\
+'use strict';
+if (
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
+    'function'
+) {
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-
-function registerInternalModuleStop(globalName) {
-  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleEnd.js');
-  const file = readFileSync(path);
-
-  // Remove the 'use strict' directive from the footer.
-  // This directive is only meaningful when it is the first statement in a file or function.
-  return String(file).replace(USE_STRICT_HEADER_REGEX, '').trim();
+${source}
+if (
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
+    'function'
+) {
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
+}
+`;
 }
 
 const license = ` * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -496,11 +500,7 @@ function wrapWithTopLevelDefinitions(
 
         // Certain DEV and Profiling bundles should self-register their own module boundaries with DevTools.
         // This allows the Timeline to de-emphasize (dim) internal stack frames.
-        source = `
-          ${registerInternalModuleStart(globalName)}
-          ${source}
-          ${registerInternalModuleStop(globalName)}
-        `;
+        source = wrapWithRegisterInternalModule(source);
         break;
     }
   }

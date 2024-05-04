@@ -20,6 +20,7 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 import {
   enableRenderableContext,
   enableBinaryFlight,
+  enableFlightReadableStream,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -28,6 +29,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_PROVIDER_TYPE,
   getIteratorFn,
+  ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
 import {
@@ -187,15 +189,140 @@ export function processReply(
 
   function serializeTypedArray(
     tag: string,
-    typedArray: ArrayBuffer | $ArrayBufferView,
+    typedArray: $ArrayBufferView,
   ): string {
-    const blob = new Blob([typedArray]);
+    const blob = new Blob([
+      // We should be able to pass the buffer straight through but Node < 18 treat
+      // multi-byte array blobs differently so we first convert it to single-byte.
+      new Uint8Array(
+        typedArray.buffer,
+        typedArray.byteOffset,
+        typedArray.byteLength,
+      ),
+    ]);
     const blobId = nextPartId++;
     if (formData === null) {
       formData = new FormData();
     }
     formData.append(formFieldPrefix + blobId, blob);
     return '$' + tag + blobId.toString(16);
+  }
+
+  function serializeReadableStream(stream: ReadableStream): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
+
+    // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
+    // receiving side. It also implies that different chunks can be split up or merged as opposed
+    // to a readable stream that happens to have Uint8Array as the type which might expect it to be
+    // received in the same slices.
+    // $FlowFixMe: This is a Node.js extension.
+    let supportsBYOB: void | boolean = stream.supportsBYOB;
+    if (supportsBYOB === undefined) {
+      try {
+        // $FlowFixMe[extra-arg]: This argument is accepted.
+        stream.getReader({mode: 'byob'}).releaseLock();
+        supportsBYOB = true;
+      } catch (x) {
+        supportsBYOB = false;
+      }
+    }
+
+    const reader = stream.getReader();
+
+    function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
+      if (entry.done) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        try {
+          // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+          const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          data.append(formFieldPrefix + streamId, partJSON);
+          reader.read().then(progress, reject);
+        } catch (x) {
+          reject(x);
+        }
+      }
+    }
+    reader.read().then(progress, reject);
+
+    return '$' + (supportsBYOB ? 'r' : 'R') + streamId.toString(16);
+  }
+
+  function serializeAsyncIterable(
+    iterable: $AsyncIterable<ReactServerValue, ReactServerValue, void>,
+    iterator: $AsyncIterator<ReactServerValue, ReactServerValue, void>,
+  ): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
+
+    // Generators/Iterators are Iterables but they're also their own iterator
+    // functions. If that's the case, we treat them as single-shot. Otherwise,
+    // we assume that this iterable might be a multi-shot and allow it to be
+    // iterated more than once on the receiving server.
+    const isIterator = iterable === iterator;
+
+    // There's a race condition between when the stream is aborted and when the promise
+    // resolves so we track whether we already aborted it to avoid writing twice.
+    function progress(
+      entry:
+        | {done: false, +value: ReactServerValue, ...}
+        | {done: true, +value: ReactServerValue, ...},
+    ) {
+      if (entry.done) {
+        if (entry.value === undefined) {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        } else {
+          // Unlike streams, the last value may not be undefined. If it's not
+          // we outline it and encode a reference to it in the closing instruction.
+          try {
+            // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+            const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+            data.append(formFieldPrefix + streamId, 'C' + partJSON); // Close signal
+          } catch (x) {
+            reject(x);
+            return;
+          }
+        }
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        try {
+          // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+          const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          data.append(formFieldPrefix + streamId, partJSON);
+          iterator.next().then(progress, reject);
+        } catch (x) {
+          reject(x);
+          return;
+        }
+      }
+    }
+
+    iterator.next().then(progress, reject);
+    return '$' + (isIterator ? 'x' : 'X') + streamId.toString(16);
   }
 
   function resolveToJSON(
@@ -341,11 +468,9 @@ export function processReply(
               reject(reason);
             }
           },
-          reason => {
-            // In the future we could consider serializing this as an error
-            // that throws on the server instead.
-            reject(reason);
-          },
+          // In the future we could consider serializing this as an error
+          // that throws on the server instead.
+          reject,
         );
         return serializePromiseID(promiseId);
       }
@@ -392,7 +517,13 @@ export function processReply(
 
       if (enableBinaryFlight) {
         if (value instanceof ArrayBuffer) {
-          return serializeTypedArray('A', value);
+          const blob = new Blob([value]);
+          const blobId = nextPartId++;
+          if (formData === null) {
+            formData = new FormData();
+          }
+          formData.append(formFieldPrefix + blobId, blob);
+          return '$' + 'A' + blobId.toString(16);
         }
         if (value instanceof Int8Array) {
           // char
@@ -470,6 +601,25 @@ export function processReply(
           return serializeIteratorID(iteratorId);
         }
         return Array.from((iterator: any));
+      }
+
+      if (enableFlightReadableStream) {
+        // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+        if (
+          typeof ReadableStream === 'function' &&
+          value instanceof ReadableStream
+        ) {
+          return serializeReadableStream(value);
+        }
+        const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+          (value: any)[ASYNC_ITERATOR];
+        if (typeof getAsyncIterator === 'function') {
+          // We treat AsyncIterables as a Fragment and as such we might need to key them.
+          return serializeAsyncIterable(
+            (value: any),
+            getAsyncIterator.call((value: any)),
+          );
+        }
       }
 
       // Verify that this is a simple plain object.

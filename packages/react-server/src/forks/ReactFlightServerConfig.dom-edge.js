@@ -6,7 +6,9 @@
  *
  * @flow
  */
+
 import type {Request} from 'react-server/src/ReactFlightServer';
+import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 export * from 'react-server-dom-webpack/src/ReactFlightServerConfigWebpackBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
@@ -15,6 +17,11 @@ export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
 export const requestStorage: AsyncLocalStorage<Request | void> =
   supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+
+export const supportsComponentStorage: boolean =
+  __DEV__ && supportsRequestStorage;
+export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
+  supportsComponentStorage ? new AsyncLocalStorage() : (null: any);
 
 // We use the Node version but get access to async_hooks from a global.
 import type {HookCallbacks, AsyncHook} from 'async_hooks';
