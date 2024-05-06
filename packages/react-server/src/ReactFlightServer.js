@@ -2010,6 +2010,11 @@ function renderModelDestructive(
       );
     }
 
+    const tempRef = resolveTemporaryReference(value);
+    if (tempRef !== undefined) {
+      return serializeTemporaryReference(request, tempRef);
+    }
+
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
       if (tainted !== undefined) {
@@ -2636,6 +2641,11 @@ function renderConsoleValue(
         parentPropertyName,
         (value: any),
       );
+    }
+
+    const tempRef = resolveTemporaryReference(value);
+    if (tempRef !== undefined) {
+      return serializeTemporaryReference(request, tempRef);
     }
 
     if (counter.objectCount > 20) {

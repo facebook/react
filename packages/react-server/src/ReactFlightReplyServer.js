@@ -24,12 +24,17 @@ import {
   requireModule,
 } from 'react-client/src/ReactFlightClientConfig';
 
-import {createTemporaryReference} from './ReactFlightServerTemporaryReferences';
+import {
+  createTemporaryReference,
+  registerTemporaryReference,
+} from './ReactFlightServerTemporaryReferences';
 import {
   enableBinaryFlight,
   enableFlightReadableStream,
 } from 'shared/ReactFeatureFlags';
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
+
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 interface FlightStreamController {
   enqueueModel(json: string): void;
@@ -76,7 +81,7 @@ type CyclicChunk<T> = {
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: string,
-  reason: null,
+  reason: number,
   _response: Response,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -166,7 +171,6 @@ export type Response = {
   _prefix: string,
   _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
-  _fromJSON: (key: string, value: JSONValue) => any,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -233,12 +237,17 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
 function createResolvedModelChunk<T>(
   response: Response,
   value: string,
+  id: number,
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, null, response);
+  return new Chunk(RESOLVED_MODEL, value, id, response);
 }
 
-function resolveModelChunk<T>(chunk: SomeChunk<T>, value: string): void {
+function resolveModelChunk<T>(
+  chunk: SomeChunk<T>,
+  value: string,
+  id: number,
+): void {
   if (chunk.status !== PENDING) {
     if (enableFlightReadableStream) {
       // If we get more data to an already resolved ID, we assume that it's
@@ -258,6 +267,7 @@ function resolveModelChunk<T>(chunk: SomeChunk<T>, value: string): void {
   const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
+  resolvedChunk.reason = id;
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
@@ -290,7 +300,7 @@ function createResolvedIteratorResultChunk<T>(
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, null, response);
+  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, -1, response);
 }
 
 function resolveIteratorResultChunk<T>(
@@ -301,7 +311,7 @@ function resolveIteratorResultChunk<T>(
   // To reuse code as much code as possible we add the wrapper element as part of the JSON.
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
-  resolveModelChunk(chunk, iteratorResultJSON);
+  resolveModelChunk(chunk, iteratorResultJSON, -1);
 }
 
 function bindArgs(fn: any, args: any) {
@@ -353,6 +363,57 @@ function loadServerReference<T>(
   return (null: any);
 }
 
+function reviveModel(
+  response: Response,
+  parentObj: any,
+  parentKey: string,
+  value: JSONValue,
+  reference: void | string,
+): any {
+  if (typeof value === 'string') {
+    // We can't use .bind here because we need the "this" value.
+    return parseModelString(response, parentObj, parentKey, value, reference);
+  }
+  if (typeof value === 'object' && value !== null) {
+    if (reference !== undefined) {
+      // Store this object's reference in case it's returned later.
+      registerTemporaryReference(value, reference);
+    }
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const childRef =
+          reference !== undefined ? reference + ':' + i : undefined;
+        // $FlowFixMe[cannot-write]
+        value[i] = reviveModel(response, value, '' + i, value[i], childRef);
+      }
+    } else {
+      for (const key in value) {
+        if (hasOwnProperty.call(value, key)) {
+          const childRef =
+            reference !== undefined && key.indexOf(':') === -1
+              ? reference + ':' + key
+              : undefined;
+          const newValue = reviveModel(
+            response,
+            value,
+            key,
+            value[key],
+            childRef,
+          );
+          if (newValue !== undefined) {
+            // $FlowFixMe[cannot-write]
+            value[key] = newValue;
+          } else {
+            // $FlowFixMe[cannot-write]
+            delete value[key];
+          }
+        }
+      }
+    }
+  }
+  return value;
+}
+
 let initializingChunk: ResolvedModelChunk<any> = (null: any);
 let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
@@ -360,6 +421,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevBlocked = initializingChunkBlockedModel;
   initializingChunk = chunk;
   initializingChunkBlockedModel = null;
+
+  const rootReference =
+    chunk.reason === -1 ? undefined : chunk.reason.toString(16);
 
   const resolvedModel = chunk.value;
 
@@ -372,7 +436,15 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.reason = null;
 
   try {
-    const value: T = JSON.parse(resolvedModel, chunk._response._fromJSON);
+    const rawModel = JSON.parse(resolvedModel);
+
+    const value: T = reviveModel(
+      chunk._response,
+      {'': rawModel},
+      '',
+      rawModel,
+      rootReference,
+    );
     if (
       initializingChunkBlockedModel !== null &&
       initializingChunkBlockedModel.deps > 0
@@ -426,7 +498,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
     const backingEntry = response._formData.get(key);
     if (backingEntry != null) {
       // We assume that this is a string entry for now.
-      chunk = createResolvedModelChunk(response, (backingEntry: any));
+      chunk = createResolvedModelChunk(response, (backingEntry: any), id);
     } else {
       // We're still waiting on this entry to stream in.
       chunk = createPendingChunk(response);
@@ -643,6 +715,7 @@ function parseReadableStream<T>(
         const chunk: ResolvedModelChunk<T> = createResolvedModelChunk(
           response,
           json,
+          -1,
         );
         initializeModelChunk(chunk);
         const initializedChunk: SomeChunk<T> = chunk;
@@ -670,7 +743,7 @@ function parseReadableStream<T>(
             // to synchronous emitting.
             previousBlockedChunk = null;
           }
-          resolveModelChunk(chunk, json);
+          resolveModelChunk(chunk, json, -1);
         });
       }
     },
@@ -814,6 +887,7 @@ function parseModelString(
   obj: Object,
   key: string,
   value: string,
+  reference: void | string,
 ): any {
   if (value[0] === '$') {
     switch (value[1]) {
@@ -844,7 +918,12 @@ function parseModelString(
       }
       case 'T': {
         // Temporary Reference
-        return createTemporaryReference(value.slice(2));
+        if (reference === undefined) {
+          throw new Error(
+            'Could not reference the temporary reference. This is likely a bug in React.',
+          );
+        }
+        return createTemporaryReference(reference);
       }
       case 'Q': {
         // Map
@@ -990,13 +1069,6 @@ export function createResponse(
     _prefix: formFieldPrefix,
     _formData: backingFormData,
     _chunks: chunks,
-    _fromJSON: function (this: any, key: string, value: JSONValue) {
-      if (typeof value === 'string') {
-        // We can't use .bind here because we need the "this" value.
-        return parseModelString(response, this, key, value);
-      }
-      return value;
-    },
   };
   return response;
 }
@@ -1015,7 +1087,7 @@ export function resolveField(
     const chunk = chunks.get(id);
     if (chunk) {
       // We were waiting on this key so now we can resolve it.
-      resolveModelChunk(chunk, value);
+      resolveModelChunk(chunk, value, id);
     }
   }
 }

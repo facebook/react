@@ -377,6 +377,40 @@ describe('ReactFlightDOMReply', () => {
     expect(response.children).toBe(children);
   });
 
+  it('can return the same object using temporary references', async () => {
+    const obj = {
+      this: {is: 'a large object'},
+      with: {many: 'properties in it'},
+    };
+
+    const root = {obj};
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(root, {
+      temporaryReferences,
+    });
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    const stream = ReactServerDOMServer.renderToReadableStream({
+      root: serverPayload,
+      obj: serverPayload.obj,
+    });
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    // This should've been the same reference that we already saw because
+    // we returned it by reference.
+    expect(response.root).toBe(root);
+    expect(response.obj).toBe(obj);
+  });
+
   // @gate enableFlightReadableStream
   it('should supports streaming ReadableStream with objects', async () => {
     let controller1;

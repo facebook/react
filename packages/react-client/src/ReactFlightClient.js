@@ -915,7 +915,7 @@ function parseModelString(
       }
       case 'T': {
         // Temporary Reference
-        const id = parseInt(value.slice(2), 16);
+        const reference = '$' + value.slice(2);
         const temporaryReferences = response._tempRefs;
         if (temporaryReferences == null) {
           throw new Error(
@@ -923,7 +923,7 @@ function parseModelString(
               'Pass a temporaryReference option with the set that was used with the reply.',
           );
         }
-        return readTemporaryReference(temporaryReferences, id);
+        return readTemporaryReference(temporaryReferences, reference);
       }
       case 'Q': {
         // Map
