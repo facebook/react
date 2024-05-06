@@ -19,7 +19,7 @@ function Component(a, b) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @debug
+import { c as useMemoCache } from "react/compiler-runtime"; // @debug
 function Component(a, b) {
   const $ = useMemoCache(11);
   let t0;

@@ -23,7 +23,7 @@ export function Foo(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as useMemoCache } from "react"; // @gating @compilationMode(annotation)
+import { c as useMemoCache } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
 export default isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

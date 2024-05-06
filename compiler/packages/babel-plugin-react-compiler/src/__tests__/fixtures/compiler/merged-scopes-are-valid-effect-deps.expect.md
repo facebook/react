@@ -27,9 +27,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validateMemoizedEffectDependencies
+import { c as useMemoCache } from "react/compiler-runtime"; // @validateMemoizedEffectDependencies
 
-import { useEffect, c as useMemoCache } from "react";
+import { useEffect } from "react";
 
 function Component(props) {
   const $ = useMemoCache(5);

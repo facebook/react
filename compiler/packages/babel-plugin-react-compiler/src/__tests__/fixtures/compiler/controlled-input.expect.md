@@ -20,7 +20,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useState, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { useState } from "react";
 function component() {
   const $ = useMemoCache(3);
   const [x, setX] = useState(0);

@@ -45,7 +45,7 @@ function getNativeLogFunction(level) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function getNativeLogFunction(level) {
   const $ = useMemoCache(2);
   let t0;

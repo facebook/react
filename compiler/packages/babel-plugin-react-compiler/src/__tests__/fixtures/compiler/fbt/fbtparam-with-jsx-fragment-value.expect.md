@@ -22,7 +22,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 import fbt from "fbt";
 import { identity } from "shared-runtime";
 

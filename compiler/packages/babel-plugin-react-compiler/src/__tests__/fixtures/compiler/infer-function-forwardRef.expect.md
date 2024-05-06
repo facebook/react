@@ -12,7 +12,7 @@ React.forwardRef((props) => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react/compiler-runtime"; // @compilationMode(infer)
 React.forwardRef((props) => {
   const $ = useMemoCache(1);
   let t0;

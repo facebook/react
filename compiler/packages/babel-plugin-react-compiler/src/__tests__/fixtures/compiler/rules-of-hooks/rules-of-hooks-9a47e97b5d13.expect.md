@@ -14,7 +14,7 @@ const FancyButton = React.forwardRef(function (props, ref) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // Valid because hooks can be used in anonymous function arguments to
+import { c as useMemoCache } from "react/compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
 // forwardRef.
 const FancyButton = React.forwardRef(function (props, ref) {
   const $ = useMemoCache(3);

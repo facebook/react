@@ -21,9 +21,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo, c as useMemoCache } from "react";
+import { useMemo } from "react";
 
 // It's correct to produce memo blocks with fewer deps than source
 function useFoo(a, b) {

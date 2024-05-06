@@ -18,7 +18,7 @@ export default Renderer = (props) => (
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as useMemoCache } from "react"; // @gating
+import { c as useMemoCache } from "react/compiler-runtime"; // @gating
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = useMemoCache(2);

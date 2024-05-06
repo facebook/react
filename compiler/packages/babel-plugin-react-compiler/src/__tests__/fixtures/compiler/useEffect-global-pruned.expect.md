@@ -31,7 +31,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useEffect, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { useEffect } from "react";
 
 function someGlobal() {}
 function useFoo() {

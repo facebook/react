@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @enableReactiveScopesInHIR:false
+import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 import {
   Stringify,
   makeObject_Primitives,

@@ -32,7 +32,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @enableTransitivelyFreezeFunctionExpressions:false
+import { c as useMemoCache } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions:false
 
 function Component(props) {
   const $ = useMemoCache(9);

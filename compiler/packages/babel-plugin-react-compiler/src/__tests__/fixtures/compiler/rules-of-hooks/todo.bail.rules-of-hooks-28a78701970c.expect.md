@@ -17,7 +17,7 @@ const MemoizedFunction = React.memo((props) => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @skip
+import { c as useMemoCache } from "react/compiler-runtime"; // @skip
 // Unsupported input
 
 // Valid because hooks can be used in anonymous function arguments to

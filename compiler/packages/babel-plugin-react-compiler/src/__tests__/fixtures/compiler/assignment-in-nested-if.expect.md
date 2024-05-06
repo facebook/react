@@ -19,7 +19,7 @@ function useBar(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function useBar(props) {
   const $ = useMemoCache(1);
   let z;

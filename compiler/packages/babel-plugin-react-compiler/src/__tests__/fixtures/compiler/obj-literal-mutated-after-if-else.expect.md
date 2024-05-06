@@ -19,7 +19,7 @@ function foo(a, b, c, d) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function foo(a, b, c, d) {
   const $ = useMemoCache(3);
   let x;

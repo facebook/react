@@ -15,7 +15,7 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function component(a, b) {
   const $ = useMemoCache(3);
   let x;

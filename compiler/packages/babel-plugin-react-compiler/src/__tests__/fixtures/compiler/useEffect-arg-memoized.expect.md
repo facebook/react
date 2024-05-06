@@ -24,7 +24,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function Component(props) {
   const $ = useMemoCache(6);
   const dispatch = useDispatch();

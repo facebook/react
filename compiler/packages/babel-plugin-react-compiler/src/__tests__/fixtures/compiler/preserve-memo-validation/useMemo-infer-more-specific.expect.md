@@ -25,9 +25,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo, c as useMemoCache } from "react";
+import { useMemo } from "react";
 
 // More specific memoization always results in fewer memo block
 // executions.

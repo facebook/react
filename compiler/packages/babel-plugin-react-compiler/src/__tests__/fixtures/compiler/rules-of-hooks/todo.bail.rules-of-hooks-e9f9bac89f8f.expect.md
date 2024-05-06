@@ -17,7 +17,7 @@ const FancyButton = React.forwardRef((props, ref) => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @skip
+import { c as useMemoCache } from "react/compiler-runtime"; // @skip
 // Unsupported input
 
 // Valid because hooks can be used in anonymous arrow-function arguments

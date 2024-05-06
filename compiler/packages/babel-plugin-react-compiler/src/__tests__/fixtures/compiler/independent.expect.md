@@ -27,7 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 /**
  * Should produce 3 scopes:
  *

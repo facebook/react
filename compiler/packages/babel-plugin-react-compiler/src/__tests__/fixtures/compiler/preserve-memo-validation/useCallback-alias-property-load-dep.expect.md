@@ -23,8 +23,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
-import { useCallback, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { useCallback } from "react";
 import { sum } from "shared-runtime";
 
 function Component(t0) {

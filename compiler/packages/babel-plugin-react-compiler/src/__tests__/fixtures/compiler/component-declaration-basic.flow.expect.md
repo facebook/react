@@ -13,7 +13,7 @@ function shouldNotCompile() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 export default function Foo(t0) {
   const $ = useMemoCache(2);
   const { bar } = t0;

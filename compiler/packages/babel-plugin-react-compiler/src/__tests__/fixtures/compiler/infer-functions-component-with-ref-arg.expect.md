@@ -18,7 +18,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react/compiler-runtime"; // @compilationMode(infer)
 
 function Foo(t0, ref) {
   const $ = useMemoCache(2);

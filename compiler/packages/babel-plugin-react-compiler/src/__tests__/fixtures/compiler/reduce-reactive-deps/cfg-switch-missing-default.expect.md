@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // props.a.b should NOT be added as a unconditional dependency to the reactive
+import { c as useMemoCache } from "react/compiler-runtime"; // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in the default case.
 
 import { identity } from "shared-runtime";

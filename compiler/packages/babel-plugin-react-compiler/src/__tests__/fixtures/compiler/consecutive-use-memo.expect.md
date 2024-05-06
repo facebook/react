@@ -21,7 +21,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useMemo, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { useMemo } from "react";
 import { identity } from "shared-runtime";
 
 function useHook(t0) {

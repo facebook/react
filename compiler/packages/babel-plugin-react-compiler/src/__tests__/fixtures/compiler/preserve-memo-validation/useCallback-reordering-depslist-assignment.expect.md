@@ -30,7 +30,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useCallback, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
 // We currently produce invalid output (incorrect scoping for `y` declaration)

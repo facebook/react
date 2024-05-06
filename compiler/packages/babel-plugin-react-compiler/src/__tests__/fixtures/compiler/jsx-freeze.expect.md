@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 import { jsx as _jsx } from "react/jsx-runtime";
 import { shallowCopy } from "shared-runtime";
 

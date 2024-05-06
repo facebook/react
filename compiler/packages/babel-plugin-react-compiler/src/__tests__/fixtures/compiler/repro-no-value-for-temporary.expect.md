@@ -15,7 +15,7 @@ function Component(listItem, thread) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function Component(listItem, thread) {
   const $ = useMemoCache(7);
   let t0;

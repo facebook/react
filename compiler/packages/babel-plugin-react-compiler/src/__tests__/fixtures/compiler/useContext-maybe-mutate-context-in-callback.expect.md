@@ -30,8 +30,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { c as useMemoCache } from "react/compiler-runtime";
 import * as React from "react";
-import { useContext, c as useMemoCache } from "react";
+import { useContext } from "react";
 import { mutate } from "shared-runtime";
 
 const FooContext = React.createContext({ current: null });

@@ -19,7 +19,7 @@ function component({ mutator }) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function component(t0) {
   const $ = useMemoCache(7);
   const { mutator } = t0;

@@ -34,7 +34,7 @@ function mayMutate() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function ComponentA(props) {
   const $ = useMemoCache(6);
   let a;

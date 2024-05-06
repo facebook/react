@@ -27,9 +27,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo, c as useMemoCache } from "react";
+import { useMemo } from "react";
 
 // Todo: we currently only generate a `constVal` declaration when
 // validatePreserveExistingMemoizationGuarantees is enabled, as the

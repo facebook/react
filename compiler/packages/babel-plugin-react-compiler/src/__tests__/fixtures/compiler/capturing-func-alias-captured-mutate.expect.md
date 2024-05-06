@@ -20,7 +20,7 @@ function component(foo, bar) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function component(foo, bar) {
   const $ = useMemoCache(3);
   let y;

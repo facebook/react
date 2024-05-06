@@ -22,9 +22,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo, c as useMemoCache } from "react";
+import { useMemo } from "react";
 
 // It's correct to infer a useMemo value is non-allocating
 // and not provide it with a reactive scope

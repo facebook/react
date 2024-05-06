@@ -39,8 +39,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees:false @enableTransitivelyFreezeFunctionExpressions:false
-import { useCallback, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @enableTransitivelyFreezeFunctionExpressions:false
+import { useCallback } from "react";
 import {
   identity,
   logValue,

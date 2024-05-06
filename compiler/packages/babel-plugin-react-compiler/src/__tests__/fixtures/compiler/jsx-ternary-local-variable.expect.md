@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 import { RenderPropAsChild, StaticText1, StaticText2 } from "shared-runtime";
 
 function Component(props) {

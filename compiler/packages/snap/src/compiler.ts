@@ -38,8 +38,7 @@ function makePluginOptions(
   let enableEmitFreeze = null;
   let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = "all";
-  // TODO make this `null` to use the default runtime module, needs an upgrade to React 19
-  let runtimeModule = "react";
+  let runtimeModule = null;
   let panicThreshold: PanicThresholdOptions = "all_errors";
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false

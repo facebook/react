@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // When a conditional dependency `props.a` is a subpath of an unconditional
+import { c as useMemoCache } from "react/compiler-runtime"; // When a conditional dependency `props.a` is a subpath of an unconditional
 // dependency `props.a.b`, we can access `props.a` while preserving program
 // semantics (with respect to nullthrows).
 // deps: {`props.a`, `props.a.b`} can further reduce to just `props.a`

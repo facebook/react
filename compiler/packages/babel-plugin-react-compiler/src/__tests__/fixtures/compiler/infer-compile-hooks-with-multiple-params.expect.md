@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react/compiler-runtime"; // @compilationMode(infer)
 import { useNoAlias } from "shared-runtime";
 
 // This should be compiled by Forget

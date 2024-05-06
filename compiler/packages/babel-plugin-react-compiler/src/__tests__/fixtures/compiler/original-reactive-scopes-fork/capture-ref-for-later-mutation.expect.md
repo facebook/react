@@ -32,8 +32,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @enableReactiveScopesInHIR:false
-import { useRef, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { useRef } from "react";
 import { addOne } from "shared-runtime";
 
 function useKeyCommand() {

@@ -30,8 +30,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees
-import { useCallback, useState, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { useCallback, useState } from "react";
 import { arrayPush } from "shared-runtime";
 
 // useCallback-produced values can exist in nested reactive blocks, as long

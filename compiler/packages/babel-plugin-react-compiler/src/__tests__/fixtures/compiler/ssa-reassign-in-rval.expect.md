@@ -14,7 +14,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // Forget should call the original x (x = foo()) to compute result
+import { c as useMemoCache } from "react/compiler-runtime"; // Forget should call the original x (x = foo()) to compute result
 function Component() {
   const $ = useMemoCache(3);
   let t0;

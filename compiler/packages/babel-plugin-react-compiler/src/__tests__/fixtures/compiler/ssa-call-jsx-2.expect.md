@@ -21,7 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @Pass runMutableRangeAnalysis
+import { c as useMemoCache } from "react/compiler-runtime"; // @Pass runMutableRangeAnalysis
 function foo() {}
 
 function Component(props) {

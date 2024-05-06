@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 import * as SharedRuntime from "shared-runtime";
 function useFoo(t0) {
   const $ = useMemoCache(1);

@@ -78,7 +78,7 @@ const SomeName = () => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @skip
+import { c as useMemoCache } from "react/compiler-runtime"; // @skip
 // Unsupported input
 
 // Valid because the neither the conditions before or after the hook affect the hook call

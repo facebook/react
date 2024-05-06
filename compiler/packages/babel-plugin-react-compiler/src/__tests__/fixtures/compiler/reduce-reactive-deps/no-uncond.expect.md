@@ -35,7 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // When an object's properties are only read conditionally, we should
+import { c as useMemoCache } from "react/compiler-runtime"; // When an object's properties are only read conditionally, we should
 
 import { identity } from "shared-runtime";
 

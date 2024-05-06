@@ -24,7 +24,7 @@ function Foo(props) {
 
 ```javascript
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation)
+import { c as useMemoCache } from "react/compiler-runtime"; // @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";

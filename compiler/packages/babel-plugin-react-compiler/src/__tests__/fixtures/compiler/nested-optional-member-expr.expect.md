@@ -14,7 +14,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // We should codegen nested optional properties correctly
+import { c as useMemoCache } from "react/compiler-runtime"; // We should codegen nested optional properties correctly
 // (i.e. placing `?` in the correct PropertyLoad)
 function Component(props) {
   const $ = useMemoCache(2);

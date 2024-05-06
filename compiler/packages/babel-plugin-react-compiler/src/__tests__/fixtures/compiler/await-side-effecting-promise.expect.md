@@ -13,7 +13,7 @@ async function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 async function Component(props) {
   const $ = useMemoCache(2);
   let x;

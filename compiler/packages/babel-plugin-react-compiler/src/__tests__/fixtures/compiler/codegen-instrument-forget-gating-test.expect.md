@@ -25,7 +25,7 @@ function Foo(props) {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation) @gating
+import { c as useMemoCache } from "react/compiler-runtime"; // @instrumentForget @compilationMode(annotation) @gating
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

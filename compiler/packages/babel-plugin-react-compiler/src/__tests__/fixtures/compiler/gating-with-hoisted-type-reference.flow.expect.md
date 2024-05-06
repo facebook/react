@@ -19,7 +19,8 @@ export default memo<Props>(Component);
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { memo, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { memo } from "react";
 
 type Props = React.ElementConfig<typeof Component>;
 const Component = isForgetEnabled_Fixtures()

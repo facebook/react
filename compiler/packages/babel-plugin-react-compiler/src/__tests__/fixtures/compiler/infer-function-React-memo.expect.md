@@ -12,7 +12,7 @@ React.memo((props) => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react"; // @compilationMode(infer)
+import { c as useMemoCache } from "react/compiler-runtime"; // @compilationMode(infer)
 React.memo((props) => {
   const $ = useMemoCache(1);
   let t0;

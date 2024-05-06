@@ -33,7 +33,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 function useFoo(t0) {
   const $ = useMemoCache(3);
   const { input, cond } = t0;

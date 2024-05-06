@@ -35,7 +35,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { useState, c as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
+import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
