@@ -80,9 +80,9 @@ export const disableClientCache = true;
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
-export const enableRefAsProp = false;
-export const disableStringRefs = false;
-export const enableFastJSX = false;
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
+export const enableFastJSX = true;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;

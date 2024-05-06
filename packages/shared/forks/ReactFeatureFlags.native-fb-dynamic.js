@@ -19,10 +19,13 @@
 
 export const alwaysThrottleRetries = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
-export const enableEarlyReturnForPropDiffing = __VARIANT__;
+export const disableDefaultPropsExceptForClasses = __VARIANT__;
+export const disableStringRefs = __VARIANT__;
+export const enableAddPropertiesFastPath = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
+export const enableEarlyReturnForPropDiffing = __VARIANT__;
+export const enableFastJSX = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
+export const enableRefAsProp = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
-export const disableDefaultPropsExceptForClasses = __VARIANT__;
-export const enableAddPropertiesFastPath = __VARIANT__;
