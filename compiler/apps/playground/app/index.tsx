@@ -35,7 +35,7 @@ const Home: NextPage = () => {
         />
         <link
           rel="preload"
-          href="https://0xeac7-forget.vercel.app/fonts/Optimistic_Display_W_Lt.woff2"
+          href="/fonts/Optimistic_Display_W_Lt.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"

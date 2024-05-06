@@ -20,8 +20,7 @@
 
   @font-face {
     font-family: "Optimistic Display";
-    src: url("https://0xeac7-forget.vercel.app/fonts/Optimistic_Display_W_Lt.woff2")
-      format("woff2");
+    src: url("/fonts/Optimistic_Display_W_Lt.woff2") format("woff2");
     font-weight: 300;
     font-style: normal;
     font-display: swap;
@@ -29,8 +28,7 @@
 
   @font-face {
     font-family: "Optimistic Display";
-    src: url("https://0xeac7-forget.vercel.app/fonts/Optimistic_Display_W_Md.woff2")
-      format("woff2");
+    src: url("/fonts/Optimistic_Display_W_Md.woff2") format("woff2");
     font-weight: 500;
     font-style: normal;
     font-display: swap;
@@ -38,8 +36,7 @@
 
   @font-face {
     font-family: "Optimistic Display";
-    src: url("https://0xeac7-forget.vercel.app/fonts/Optimistic_Display_W_Bd.woff2")
-      format("woff2");
+    src: url("/fonts/Optimistic_Display_W_Bd.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
