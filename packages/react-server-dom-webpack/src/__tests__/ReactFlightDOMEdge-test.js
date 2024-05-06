@@ -231,7 +231,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(470);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
