@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<781e1307597af2cfaf5c8e440f586e5b>>
+ * @generated SignedSource<<602f7d0c17188d2b168ae473894b1450>>
  */
 
 "use strict";
@@ -15,8 +15,12 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var disableDefaultPropsExceptForClasses =
-    require("ReactNativeInternalFeatureFlags").disableDefaultPropsExceptForClasses,
+var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+  disableDefaultPropsExceptForClasses =
+    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
+  disableStringRefs = dynamicFlagsUntyped.disableStringRefs,
+  enableFastJSX = dynamicFlagsUntyped.enableFastJSX,
+  enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -89,31 +93,57 @@ var isArrayImpl = Array.isArray,
   ReactSharedInternals = { H: null, A: null, T: null },
   hasOwnProperty = Object.prototype.hasOwnProperty;
 function getOwner() {
-  var dispatcher = ReactSharedInternals.A;
-  return null === dispatcher ? null : dispatcher.getOwner();
+  if (!disableStringRefs) {
+    var dispatcher = ReactSharedInternals.A;
+    return null === dispatcher ? null : dispatcher.getOwner();
+  }
+  return null;
 }
+var enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp,
+  enableFastJSXWithoutStringRefs =
+    enableFastJSXWithStringRefs && disableStringRefs;
 function ReactElement(type, key, _ref, self, source, owner, props) {
-  return {
-    $$typeof: REACT_LEGACY_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: _ref,
-    props: props,
-    _owner: owner
-  };
+  enableRefAsProp &&
+    ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
+  return disableStringRefs
+    ? {
+        $$typeof: REACT_LEGACY_ELEMENT_TYPE,
+        type: type,
+        key: key,
+        ref: _ref,
+        props: props
+      }
+    : {
+        $$typeof: REACT_LEGACY_ELEMENT_TYPE,
+        type: type,
+        key: key,
+        ref: _ref,
+        props: props,
+        _owner: owner
+      };
 }
 function jsxProd(type, config, maybeKey) {
   var key = null,
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref &&
-    ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type)));
-  maybeKey = {};
-  for (var propName in config)
-    "key" !== propName &&
-      "ref" !== propName &&
-      (maybeKey[propName] = config[propName]);
+  void 0 === config.ref ||
+    enableRefAsProp ||
+    ((ref = config.ref),
+    disableStringRefs || (ref = coerceStringRef(ref, getOwner(), type)));
+  if (
+    (!enableFastJSXWithoutStringRefs &&
+      (!enableFastJSXWithStringRefs || "ref" in config)) ||
+    "key" in config
+  ) {
+    maybeKey = {};
+    for (var propName in config)
+      "key" === propName ||
+        (!enableRefAsProp && "ref" === propName) ||
+        (enableRefAsProp && !disableStringRefs && "ref" === propName
+          ? (maybeKey.ref = coerceStringRef(config[propName], getOwner(), type))
+          : (maybeKey[propName] = config[propName]));
+  } else maybeKey = config;
   if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
     config = type.defaultProps;
     for (var propName$0 in config)
@@ -126,10 +156,10 @@ function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
     newKey,
-    oldElement.ref,
+    enableRefAsProp ? null : oldElement.ref,
     void 0,
     void 0,
-    oldElement._owner,
+    disableStringRefs ? void 0 : oldElement._owner,
     oldElement.props
   );
 }
@@ -141,6 +171,7 @@ function isValidElement(object) {
   );
 }
 function coerceStringRef(mixedRef, owner, type) {
+  if (disableStringRefs) return mixedRef;
   if ("string" !== typeof mixedRef)
     if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
       mixedRef = "" + mixedRef;
@@ -152,25 +183,27 @@ function coerceStringRef(mixedRef, owner, type) {
   return callback;
 }
 function stringRefAsCallbackRef(stringRef, type, owner, value) {
-  if (!owner)
-    throw Error(
-      "Element ref was specified as a string (" +
-        stringRef +
-        ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
-    );
-  if (1 !== owner.tag)
-    throw Error(
-      "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
-    );
-  type = owner.stateNode;
-  if (!type)
-    throw Error(
-      "Missing owner for string ref " +
-        stringRef +
-        ". This error is likely caused by a bug in React. Please file an issue."
-    );
-  type = type.refs;
-  null === value ? delete type[stringRef] : (type[stringRef] = value);
+  if (!disableStringRefs) {
+    if (!owner)
+      throw Error(
+        "Element ref was specified as a string (" +
+          stringRef +
+          ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
+      );
+    if (1 !== owner.tag)
+      throw Error(
+        "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
+      );
+    type = owner.stateNode;
+    if (!type)
+      throw Error(
+        "Missing owner for string ref " +
+          stringRef +
+          ". This error is likely caused by a bug in React. Please file an issue."
+      );
+    type = type.refs;
+    null === value ? delete type[stringRef] : (type[stringRef] = value);
+  }
 }
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
@@ -446,13 +479,15 @@ exports.cloneElement = function (element, config, children) {
     );
   var props = assign({}, element.props),
     key = element.key,
-    ref = element.ref,
-    owner = element._owner;
+    ref = enableRefAsProp ? null : element.ref,
+    owner = disableStringRefs ? void 0 : element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((owner = getOwner()),
-      (ref = config.ref),
-      (ref = coerceStringRef(ref, owner, element.type)));
+      ((owner = disableStringRefs ? void 0 : getOwner()),
+      enableRefAsProp ||
+        ((ref = config.ref),
+        disableStringRefs ||
+          (ref = coerceStringRef(ref, owner, element.type))));
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -461,17 +496,23 @@ exports.cloneElement = function (element, config, children) {
     )
       var defaultProps = element.type.defaultProps;
     for (propName in config)
-      hasOwnProperty.call(config, propName) &&
-        "key" !== propName &&
-        "ref" !== propName &&
-        "__self" !== propName &&
-        "__source" !== propName &&
-        (props[propName] =
-          disableDefaultPropsExceptForClasses ||
-          void 0 !== config[propName] ||
-          void 0 === defaultProps
-            ? config[propName]
-            : defaultProps[propName]);
+      !hasOwnProperty.call(config, propName) ||
+        "key" === propName ||
+        (!enableRefAsProp && "ref" === propName) ||
+        "__self" === propName ||
+        "__source" === propName ||
+        (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
+        (disableDefaultPropsExceptForClasses ||
+        void 0 !== config[propName] ||
+        void 0 === defaultProps
+          ? enableRefAsProp && !disableStringRefs && "ref" === propName
+            ? (props.ref = coerceStringRef(
+                config[propName],
+                owner,
+                element.type
+              ))
+            : (props[propName] = config[propName])
+          : (props[propName] = defaultProps[propName]));
   }
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
@@ -504,16 +545,20 @@ exports.createElement = function (type, config, children) {
     key = null,
     ref = null;
   if (null != config)
-    for (propName in (void 0 !== config.ref &&
-      ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type))),
+    for (propName in (void 0 === config.ref ||
+      enableRefAsProp ||
+      ((ref = config.ref),
+      disableStringRefs || (ref = coerceStringRef(ref, getOwner(), type))),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
         "key" !== propName &&
-        "ref" !== propName &&
+        (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
-        (props[propName] = config[propName]);
+        (enableRefAsProp && !disableStringRefs && "ref" === propName
+          ? (props.ref = coerceStringRef(config[propName], getOwner(), type))
+          : (props[propName] = config[propName]));
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
   else if (1 < childrenLength) {
@@ -648,7 +693,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-beta-bc24118f";
+exports.version = "19.0.0-beta-26f66c0f";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

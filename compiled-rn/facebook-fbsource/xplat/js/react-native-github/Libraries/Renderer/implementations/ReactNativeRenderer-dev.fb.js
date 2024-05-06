@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9675f2f5127aace0edc91083bd5c4242>>
+ * @generated SignedSource<<92ed224870f6202a614121cda759ff80>>
  */
 
 'use strict';
@@ -2339,12 +2339,15 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 
 var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     consoleManagedByDevToolsDuringStrictMode = dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
-    enableEarlyReturnForPropDiffing = dynamicFlags.enableEarlyReturnForPropDiffing,
-    enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
-    enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
-    enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
     disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
-    enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath; // The rest of the flags are static for better dead code elimination.
+    disableStringRefs = dynamicFlags.disableStringRefs,
+    enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath,
+    enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
+    enableEarlyReturnForPropDiffing = dynamicFlags.enableEarlyReturnForPropDiffing,
+    enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
+    enableRefAsProp = dynamicFlags.enableRefAsProp,
+    enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane;
+ // The rest of the flags are static for better dead code elimination.
 var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
@@ -8640,7 +8643,13 @@ function unwrapThenable(thenable) {
 function coerceRef(returnFiber, current, workInProgress, element) {
   var ref;
 
-  {
+  if (enableRefAsProp) {
+    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+    // we should resolve the `ref` prop during the begin phase of the component
+    // it's attached to (HostComponent, ClassComponent, etc).
+    var refProp = element.props.ref;
+    ref = refProp !== undefined ? refProp : null;
+  } else {
     // Old behavior.
     ref = element.ref;
   } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
@@ -14504,6 +14513,19 @@ function resolveClassComponentProps(Component, baseProps, // Only resolve defaul
 alreadyResolvedDefaultProps) {
   var newProps = baseProps;
 
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in baseProps) {
+      newProps = {};
+
+      for (var propName in baseProps) {
+        if (propName !== 'ref') {
+          newProps[propName] = baseProps[propName];
+        }
+      }
+    }
+  } // Resolve default props.
+
 
   var defaultProps = Component.defaultProps;
 
@@ -15179,7 +15201,21 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   var ref = workInProgress.ref;
   var propsWithoutRef;
 
-  {
+  if (enableRefAsProp && 'ref' in nextProps) {
+    // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here.
+    propsWithoutRef = {};
+
+    for (var key in nextProps) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        propsWithoutRef[key] = nextProps[key];
+      }
+    }
+  } else {
     propsWithoutRef = nextProps;
   } // The rest is a fork of updateFunctionComponent
 
@@ -15611,7 +15647,7 @@ function markRef(current, workInProgress) {
     }
 
     if (current === null || current.ref !== ref) {
-      if (current !== null) {
+      if (!disableStringRefs && current !== null) {
         var oldRef = current.ref;
         var newRef = ref;
 
@@ -16118,7 +16154,7 @@ function validateFunctionComponentInDev(workInProgress, Component) {
       }
     }
 
-    if (workInProgress.ref !== null) {
+    if (!enableRefAsProp && workInProgress.ref !== null) {
       var info = '';
       var componentName = getComponentNameFromType(Component) || 'Unknown';
       var ownerName = getCurrentFiberOwnerNameInDevOrNull();
@@ -20315,7 +20351,9 @@ function commitAttachRef(finishedWork) {
       {
         // TODO: We should move these warnings to happen during the render
         // phase (markRef).
-        if (!ref.hasOwnProperty('current')) {
+        if (disableStringRefs && typeof ref === 'string') {
+          error('String refs are no longer supported.');
+        } else if (!ref.hasOwnProperty('current')) {
           error('Unexpected ref object provided for %s. ' + 'Use either a ref-setter function or React.createRef().', getComponentNameFromFiber(finishedWork));
         }
       } // $FlowFixMe[incompatible-use] unable to narrow type to the non-function case
@@ -26464,7 +26502,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-07071eeb';
+var ReactVersion = '19.0.0-beta-80fbc2d8';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
