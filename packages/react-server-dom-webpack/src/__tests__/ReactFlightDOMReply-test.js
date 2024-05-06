@@ -537,4 +537,13 @@ describe('ReactFlightDOMReply', () => {
       'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
     );
   });
+
+  it('can transport cyclic objects', async () => {
+    const cyclic = {obj: null};
+    cyclic.obj = cyclic;
+
+    const body = await ReactServerDOMClient.encodeReply({prop: cyclic});
+    const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    expect(root.prop.obj).toBe(root.prop);
+  });
 });

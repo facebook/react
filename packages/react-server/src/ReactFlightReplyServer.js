@@ -47,6 +47,7 @@ export type JSONValue =
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
+const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
@@ -60,6 +61,13 @@ type PendingChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
+  value: null | Array<(T) => mixed>,
+  reason: null | Array<(mixed) => mixed>,
+  _response: Response,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
+type CyclicChunk<T> = {
+  status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -98,6 +106,7 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
+  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
@@ -132,6 +141,7 @@ Chunk.prototype.then = function <T>(
       break;
     case PENDING:
     case BLOCKED:
+    case CYCLIC:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = ([]: Array<(T) => mixed>);
@@ -187,6 +197,7 @@ function wakeChunkIfInitialized<T>(
       break;
     case PENDING:
     case BLOCKED:
+    case CYCLIC:
       chunk.value = resolveListeners;
       chunk.reason = rejectListeners;
       break;
@@ -334,6 +345,7 @@ function loadServerReference<T>(
       false,
       response,
       createModel,
+      [],
     ),
     createModelReject(parentChunk),
   );
@@ -348,8 +360,19 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevBlocked = initializingChunkBlockedModel;
   initializingChunk = chunk;
   initializingChunkBlockedModel = null;
+
+  const resolvedModel = chunk.value;
+
+  // We go to the CYCLIC state until we've fully resolved this.
+  // We do this before parsing in case we try to initialize the same chunk
+  // while parsing the model. Such as in a cyclic reference.
+  const cyclicChunk: CyclicChunk<T> = (chunk: any);
+  cyclicChunk.status = CYCLIC;
+  cyclicChunk.value = null;
+  cyclicChunk.reason = null;
+
   try {
-    const value: T = JSON.parse(chunk.value, chunk._response._fromJSON);
+    const value: T = JSON.parse(resolvedModel, chunk._response._fromJSON);
     if (
       initializingChunkBlockedModel !== null &&
       initializingChunkBlockedModel.deps > 0
@@ -362,9 +385,13 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       blockedChunk.value = null;
       blockedChunk.reason = null;
     } else {
+      const resolveListeners = cyclicChunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
       initializedChunk.value = value;
+      if (resolveListeners !== null) {
+        wakeChunk(resolveListeners, value);
+      }
     }
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
@@ -416,6 +443,7 @@ function createModelResolver<T>(
   cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
+  path: Array<string>,
 ): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
@@ -430,6 +458,9 @@ function createModelResolver<T>(
     };
   }
   return value => {
+    for (let i = 1; i < path.length; i++) {
+      value = value[path[i]];
+    }
     parentObject[key] = map(response, value);
 
     // If this is the root object for a model reference, where `blocked.value`
@@ -460,11 +491,13 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
 
 function getOutlinedModel<T>(
   response: Response,
-  id: number,
+  reference: string,
   parentObject: Object,
   key: string,
   map: (response: Response, model: any) => T,
 ): T {
+  const path = reference.split(':');
+  const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
   switch (chunk.status) {
     case RESOLVED_MODEL:
@@ -474,18 +507,24 @@ function getOutlinedModel<T>(
   // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
-      return map(response, chunk.value);
+      let value = chunk.value;
+      for (let i = 1; i < path.length; i++) {
+        value = value[path[i]];
+      }
+      return map(response, value);
     case PENDING:
     case BLOCKED:
+    case CYCLIC:
       const parentChunk = initializingChunk;
       chunk.then(
         createModelResolver(
           parentChunk,
           parentObject,
           key,
-          false,
+          chunk.status === CYCLIC,
           response,
           map,
+          path,
         ),
         createModelReject(parentChunk),
       );
@@ -548,6 +587,7 @@ function parseTypedArray(
       false,
       response,
       createModel,
+      [],
     ),
     createModelReject(parentChunk),
   );
@@ -789,10 +829,10 @@ function parseModelString(
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.slice(2), 16);
+        const ref = value.slice(2);
         // TODO: Just encode this in the reference inline instead of as a model.
         const metaData: {id: ServerReferenceId, bound: Thenable<Array<any>>} =
-          getOutlinedModel(response, id, obj, key, createModel);
+          getOutlinedModel(response, ref, obj, key, createModel);
         return loadServerReference(
           response,
           metaData.id,
@@ -808,13 +848,13 @@ function parseModelString(
       }
       case 'Q': {
         // Map
-        const id = parseInt(value.slice(2), 16);
-        return getOutlinedModel(response, id, obj, key, createMap);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, obj, key, createMap);
       }
       case 'W': {
         // Set
-        const id = parseInt(value.slice(2), 16);
-        return getOutlinedModel(response, id, obj, key, createSet);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, obj, key, createSet);
       }
       case 'K': {
         // FormData
@@ -835,8 +875,8 @@ function parseModelString(
       }
       case 'i': {
         // Iterator
-        const id = parseInt(value.slice(2), 16);
-        return getOutlinedModel(response, id, obj, key, extractIterator);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, obj, key, extractIterator);
       }
       case 'I': {
         // $Infinity
@@ -933,8 +973,8 @@ function parseModelString(
     }
 
     // We assume that anything else is a reference ID.
-    const id = parseInt(value.slice(1), 16);
-    return getOutlinedModel(response, id, obj, key, createModel);
+    const ref = value.slice(1);
+    return getOutlinedModel(response, ref, obj, key, createModel);
   }
   return value;
 }
