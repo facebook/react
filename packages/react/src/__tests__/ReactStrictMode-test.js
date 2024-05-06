@@ -1567,7 +1567,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for effect double invoke', async () => {
+      it('disable logs for effect double invoke', async () => {
         let create = 0;
         let cleanup = 0;
         function Foo() {
@@ -1593,14 +1593,11 @@ describe('context legacy', () => {
         });
         expect(create).toBe(__DEV__ ? 2 : 1);
         expect(cleanup).toBe(__DEV__ ? 1 : 0);
-        expect(console.log).toBeCalledTimes(__DEV__ ? 3 : 1);
+        expect(console.log).toBeCalledTimes(1);
         // Note: we should display the first log because otherwise
         // there is a risk of suppressing warnings when they happen,
         // and on the next render they'd get deduplicated and ignored.
         expect(console.log).toBeCalledWith('foo create 1');
-        if (__DEV__) {
-          expect(console.log).toBeCalledWith('foo cleanup 1');
-        }
       });
     }
   });

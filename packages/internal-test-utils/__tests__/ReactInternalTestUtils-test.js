@@ -180,12 +180,6 @@ describe('ReactInternalTestUtils', () => {
       'create effect A',
       'create effect B',
       'create effect C',
-      'cleanup effect A',
-      'cleanup effect B',
-      'cleanup effect C',
-      'create effect A',
-      'create effect B',
-      'create effect C',
     ]);
 
     await act(() => {
