@@ -2490,4 +2490,76 @@ describe('ReactFlight', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
   });
+
+  // @gate __DEV__
+  it('does not emit duplicate chunks for already outlined elements in dev mode', async () => {
+    async function Bar({text}) {
+      return text.toUpperCase();
+    }
+
+    function Foo() {
+      const bar = <Bar text="bar" />;
+
+      return (
+        <div>
+          {bar}
+          {bar}
+        </div>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<Foo />);
+    const textDecoder = new TextDecoder();
+
+    await act(async () => {
+      const chunks = transport
+        .map(chunk => textDecoder.decode(chunk).replace(/\n$/, ''))
+        .join('\n');
+
+      expect(chunks).toEqual(
+        `
+1:{"name":"Foo","env":"Server","owner":null}
+0:D"$1"
+3:{"name":"Bar","env":"Server","owner":null}
+2:D"$3"
+0:["$","div",null,{"children":["$L2","$2"]},null]
+2:"BAR"
+`.trim(),
+      );
+    });
+  });
+
+  // @gate !__DEV__
+  it('does not emit duplicate chunks for already outlined elements in production mode', async () => {
+    async function Bar({text}) {
+      return text.toUpperCase();
+    }
+
+    function Foo() {
+      const bar = <Bar text="bar" />;
+
+      return (
+        <div>
+          {bar}
+          {bar}
+        </div>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<Foo />);
+    const textDecoder = new TextDecoder();
+
+    await act(async () => {
+      const chunks = transport
+        .map(chunk => textDecoder.decode(chunk).replace(/\n$/, ''))
+        .join('\n');
+
+      expect(chunks).toEqual(
+        `
+0:["$","div",null,{"children":["$L1","$0:props:children:0"]}]
+1:"BAR"
+`.trim(),
+      );
+    });
+  });
 });

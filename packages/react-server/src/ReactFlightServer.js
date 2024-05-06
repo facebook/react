@@ -1649,6 +1649,9 @@ function renderModel(
           task.implicitSlot,
           request.abortableTasks,
         );
+        // The suspended element was outlined, so we're using the same ID for the
+        // original value, thus ensuring that it's deduplicated if it's referenced again.
+        // request.writtenObjects.set((value: any), newTask.id);
         const ping = newTask.ping;
         (x: any).then(ping, ping);
         newTask.thenableState = getThenableStateAfterSuspending();
