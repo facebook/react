@@ -62,7 +62,6 @@ import type {
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {TemporaryReference} from './ReactFlightServerTemporaryReferences';
 
 import {
   resolveClientReferenceMetadata,
@@ -80,8 +79,8 @@ import {
 } from './ReactFlightServerConfig';
 
 import {
+  resolveTemporaryReference,
   isTemporaryReference,
-  resolveTemporaryReferenceID,
 } from './ReactFlightServerTemporaryReferences';
 
 import {
@@ -1505,10 +1504,6 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
-function serializeTemporaryReferenceID(id: string): string {
-  return '$T' + id;
-}
-
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -1647,10 +1642,9 @@ function serializeServerReference(
 
 function serializeTemporaryReference(
   request: Request,
-  temporaryReference: TemporaryReference<any>,
+  reference: string,
 ): string {
-  const id = resolveTemporaryReferenceID(temporaryReference);
-  return serializeTemporaryReferenceID(id);
+  return '$T' + reference;
 }
 
 function serializeLargeTextString(request: Request, text: string): string {
@@ -2284,8 +2278,9 @@ function renderModelDestructive(
     if (isServerReference(value)) {
       return serializeServerReference(request, (value: any));
     }
-    if (isTemporaryReference(value)) {
-      return serializeTemporaryReference(request, (value: any));
+    const tempRef = resolveTemporaryReference((value: any));
+    if (tempRef !== undefined) {
+      return serializeTemporaryReference(request, tempRef);
     }
 
     if (enableTaint) {
@@ -2818,8 +2813,10 @@ function renderConsoleValue(
         (value: any),
       );
     }
-    if (isTemporaryReference(value)) {
-      return serializeTemporaryReference(request, (value: any));
+
+    const tempRef = resolveTemporaryReference(value);
+    if (tempRef !== undefined) {
+      return serializeTemporaryReference(request, tempRef);
     }
 
     // Serialize the body of the function as an eval so it can be printed.
