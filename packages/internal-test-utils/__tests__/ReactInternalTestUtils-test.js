@@ -146,6 +146,12 @@ describe('ReactInternalTestUtils', () => {
   test('assertLog', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
+      React.useEffect(() => {
+        Scheduler.log(`create effect ${id}`);
+        return () => {
+          Scheduler.log(`cleanup effect ${id}`);
+        };
+      });
       return id;
     };
 
@@ -167,7 +173,26 @@ describe('ReactInternalTestUtils', () => {
         </React.StrictMode>
       );
     });
-    assertLog(['A', 'B', 'C']);
+    assertLog([
+      'A',
+      'B',
+      'C',
+      'create effect A',
+      'create effect B',
+      'create effect C',
+      'cleanup effect A',
+      'cleanup effect B',
+      'cleanup effect C',
+      'create effect A',
+      'create effect B',
+      'create effect C',
+    ]);
+
+    await act(() => {
+      root.render(null);
+    });
+
+    assertLog(['cleanup effect A', 'cleanup effect B', 'cleanup effect C']);
   });
 });
 
