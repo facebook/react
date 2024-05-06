@@ -884,7 +884,7 @@ const bundles = [
   /******* Reconciler Constants *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     entry: 'react-reconciler/constants',
     global: 'ReactReconcilerConstants',
     minifyWithProdErrorCodes: true,
