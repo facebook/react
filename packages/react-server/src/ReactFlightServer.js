@@ -355,10 +355,6 @@ const COMPLETED = 1;
 const ABORTED = 3;
 const ERRORED = 4;
 
-// object reference status
-const SEEN_BUT_NOT_YET_OUTLINED = -1;
-const NEVER_OUTLINED = -2;
-
 type Task = {
   id: number,
   status: 0 | 1 | 3 | 4,
@@ -392,7 +388,7 @@ export type Request = {
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
-  writtenObjects: WeakMap<Reference, number>,
+  writtenObjects: WeakMap<Reference, string>,
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
@@ -1428,7 +1424,7 @@ function createTask(
       // If we're in some kind of context we can't necessarily reuse this object depending
       // what parent components are used.
     } else {
-      request.writtenObjects.set(model, id);
+      request.writtenObjects.set(model, serializeByValueID(id));
     }
   }
   const task: Task = {
@@ -1669,16 +1665,6 @@ function serializeMap(
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
   const entries = Array.from(map);
-  for (let i = 0; i < entries.length; i++) {
-    const key = entries[i][0];
-    if (typeof key === 'object' && key !== null) {
-      const writtenObjects = request.writtenObjects;
-      const existingId = writtenObjects.get(key);
-      if (existingId === undefined) {
-        writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
-      }
-    }
-  }
   const id = outlineModel(request, entries);
   return '$Q' + id.toString(16);
 }
@@ -1691,16 +1677,6 @@ function serializeFormData(request: Request, formData: FormData): string {
 
 function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   const entries = Array.from(set);
-  for (let i = 0; i < entries.length; i++) {
-    const key = entries[i];
-    if (typeof key === 'object' && key !== null) {
-      const writtenObjects = request.writtenObjects;
-      const existingId = writtenObjects.get(key);
-      if (existingId === undefined) {
-        writtenObjects.set(key, SEEN_BUT_NOT_YET_OUTLINED);
-      }
-    }
-  }
   const id = outlineModel(request, entries);
   return '$W' + id.toString(16);
 }
@@ -1912,39 +1888,39 @@ function renderModelDestructive(
     switch ((value: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
         const writtenObjects = request.writtenObjects;
-        const existingId = writtenObjects.get(value);
-        if (existingId !== undefined) {
-          if (task.keyPath !== null || task.implicitSlot) {
-            // If we're in some kind of context we can't reuse the result of this render or
-            // previous renders of this element. We only reuse elements if they're not wrapped
-            // by another Server Component.
-          } else if (modelRoot === value) {
-            // This is the ID we're currently emitting so we need to write it
-            // once but if we discover it again, we refer to it by id.
-            modelRoot = null;
-          } else if (existingId === SEEN_BUT_NOT_YET_OUTLINED) {
-            // TODO: If we throw here we can treat this as suspending which causes an outline
-            // but that is able to reuse the same task if we're already in one but then that
-            // will be a lazy future value rather than guaranteed to exist but maybe that's good.
-            const newId = outlineModel(request, (value: any));
-            return serializeByValueID(newId);
-          } else {
-            // We've already emitted this as an outlined object, so we can refer to that by its
-            // existing ID. TODO: We should use a lazy reference since, unlike plain objects,
-            // elements might suspend so it might not have emitted yet even if we have the ID for
-            // it. However, this creates an extra wrapper when it's not needed. We should really
-            // detect whether this already was emitted and synchronously available. In that
-            // case we can refer to it synchronously and only make it lazy otherwise.
-            // We currently don't have a data structure that lets us see that though.
-            return serializeByValueID(existingId);
-          }
+        if (task.keyPath !== null || task.implicitSlot) {
+          // If we're in some kind of context we can't reuse the result of this render or
+          // previous renders of this element. We only reuse elements if they're not wrapped
+          // by another Server Component.
         } else {
-          // This is the first time we've seen this object. We may never see it again
-          // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-          writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
-          // The element's props are marked as "never outlined" so that they are inlined into
-          // the same row as the element itself.
-          writtenObjects.set((value: any).props, NEVER_OUTLINED);
+          const existingReference = writtenObjects.get(value);
+          if (existingReference !== undefined) {
+            if (modelRoot === value) {
+              // This is the ID we're currently emitting so we need to write it
+              // once but if we discover it again, we refer to it by id.
+              modelRoot = null;
+            } else {
+              // We've already emitted this as an outlined object, so we can refer to that by its
+              // existing ID. TODO: We should use a lazy reference since, unlike plain objects,
+              // elements might suspend so it might not have emitted yet even if we have the ID for
+              // it. However, this creates an extra wrapper when it's not needed. We should really
+              // detect whether this already was emitted and synchronously available. In that
+              // case we can refer to it synchronously and only make it lazy otherwise.
+              // We currently don't have a data structure that lets us see that though.
+              return existingReference;
+            }
+          } else if (parentPropertyName.indexOf(':') === -1) {
+            // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+            const parentReference = writtenObjects.get(parent);
+            if (parentReference !== undefined) {
+              // If the parent has a reference, we can refer to this object indirectly
+              // through the property name inside that parent.
+              writtenObjects.set(
+                value,
+                parentReference + ':' + parentPropertyName,
+              );
+            }
+          }
         }
 
         const element: ReactElement = (value: any);
@@ -2048,10 +2024,10 @@ function renderModelDestructive(
     }
 
     const writtenObjects = request.writtenObjects;
-    const existingId = writtenObjects.get(value);
+    const existingReference = writtenObjects.get(value);
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
-      if (existingId !== undefined) {
+      if (existingReference !== undefined) {
         if (task.keyPath !== null || task.implicitSlot) {
           // If we're in some kind of context we can't reuse the result of this render or
           // previous renders of this element. We only reuse Promises if they're not wrapped
@@ -2064,33 +2040,52 @@ function renderModelDestructive(
           modelRoot = null;
         } else {
           // We've seen this promise before, so we can just refer to the same result.
-          return serializePromiseID(existingId);
+          return existingReference;
         }
       }
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
       const promiseId = serializeThenable(request, task, (value: any));
-      writtenObjects.set(value, promiseId);
-      return serializePromiseID(promiseId);
+      const promiseReference = serializePromiseID(promiseId);
+      writtenObjects.set(value, promiseReference);
+      return promiseReference;
     }
 
-    if (existingId !== undefined) {
+    if (existingReference !== undefined) {
       if (modelRoot === value) {
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
-      } else if (existingId === SEEN_BUT_NOT_YET_OUTLINED) {
-        const newId = outlineModel(request, (value: any));
-        return serializeByValueID(newId);
-      } else if (existingId !== NEVER_OUTLINED) {
+      } else {
         // We've already emitted this as an outlined object, so we can
         // just refer to that by its existing ID.
-        return serializeByValueID(existingId);
+        return existingReference;
       }
-    } else {
-      // This is the first time we've seen this object. We may never see it again
-      // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-      writtenObjects.set(value, SEEN_BUT_NOT_YET_OUTLINED);
+    } else if (parentPropertyName.indexOf(':') === -1) {
+      // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+      const parentReference = writtenObjects.get(parent);
+      if (parentReference !== undefined) {
+        // If the parent has a reference, we can refer to this object indirectly
+        // through the property name inside that parent.
+        let propertyName = parentPropertyName;
+        if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
+          // For elements, we've converted it to an array but we'll have converted
+          // it back to an element before we read the references so the property
+          // needs to be aliased.
+          switch (parentPropertyName) {
+            case '1':
+              propertyName = 'type';
+              break;
+            case '2':
+              propertyName = 'key';
+              break;
+            case '3':
+              propertyName = 'props';
+              break;
+          }
+        }
+        writtenObjects.set(value, parentReference + ':' + propertyName);
+      }
     }
 
     if (isArray(value)) {
@@ -2657,12 +2652,12 @@ function renderConsoleValue(
     counter.objectCount++;
 
     const writtenObjects = request.writtenObjects;
-    const existingId = writtenObjects.get(value);
+    const existingReference = writtenObjects.get(value);
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
-      if (existingId !== undefined) {
+      if (existingReference !== undefined) {
         // We've seen this promise before, so we can just refer to the same result.
-        return serializePromiseID(existingId);
+        return existingReference;
       }
 
       const thenable: Thenable<any> = (value: any);
@@ -2698,10 +2693,10 @@ function renderConsoleValue(
       return serializeInfinitePromise();
     }
 
-    if (existingId !== undefined && existingId >= 0) {
+    if (existingReference !== undefined) {
       // We've already emitted this as a real object, so we can
-      // just refer to that by its existing ID.
-      return serializeByValueID(existingId);
+      // just refer to that by its existing reference.
+      return existingReference;
     }
 
     if (isArray(value)) {
@@ -3093,6 +3088,10 @@ function retryTask(request: Request, task: Task): void {
     task.implicitSlot = false;
 
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
+      // We're not in a contextual place here so we can refer to this object by this ID for
+      // any future references.
+      request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
+
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
       emitChunk(request, task, resolvedModel);
