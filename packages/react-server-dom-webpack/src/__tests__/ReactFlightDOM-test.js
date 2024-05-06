@@ -160,6 +160,45 @@ describe('ReactFlightDOM', () => {
       : children;
   }
 
+  async function Row({current, next}) {
+    const chunk = await next;
+
+    if (chunk.done) {
+      return chunk.value;
+    }
+
+    return (
+      <Suspense fallback={chunk.value}>
+        <Row current={chunk.value} next={chunk.next} />
+      </Suspense>
+    );
+  }
+
+  function createResolvablePromise() {
+    let _resolve, _reject;
+
+    const promise = new Promise((resolve, reject) => {
+      _resolve = resolve;
+      _reject = reject;
+    });
+
+    return {promise, resolve: _resolve, reject: _reject};
+  }
+
+  function createSuspendedChunk(initialValue) {
+    const {promise, resolve, reject} = createResolvablePromise();
+
+    return {
+      row: (
+        <Suspense fallback={initialValue}>
+          <Row current={initialValue} next={promise} />
+        </Suspense>
+      ),
+      resolve,
+      reject,
+    };
+  }
+
   it('should resolve HTML using Node streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
@@ -815,45 +854,6 @@ describe('ReactFlightDOM', () => {
   it('should handle streaming async server components', async () => {
     const reportedErrors = [];
 
-    const Row = async ({current, next}) => {
-      const chunk = await next;
-
-      if (chunk.done) {
-        return chunk.value;
-      }
-
-      return (
-        <Suspense fallback={chunk.value}>
-          <Row current={chunk.value} next={chunk.next} />
-        </Suspense>
-      );
-    };
-
-    function createResolvablePromise() {
-      let _resolve, _reject;
-
-      const promise = new Promise((resolve, reject) => {
-        _resolve = resolve;
-        _reject = reject;
-      });
-
-      return {promise, resolve: _resolve, reject: _reject};
-    }
-
-    function createSuspendedChunk(initialValue) {
-      const {promise, resolve, reject} = createResolvablePromise();
-
-      return {
-        row: (
-          <Suspense fallback={initialValue}>
-            <Row current={initialValue} next={promise} />
-          </Suspense>
-        ),
-        resolve,
-        reject,
-      };
-    }
-
     function makeDelayedText() {
       const {promise, resolve, reject} = createResolvablePromise();
       async function DelayedText() {
@@ -913,6 +913,67 @@ describe('ReactFlightDOM', () => {
     });
 
     expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
+    expect(reportedErrors).toEqual([]);
+  });
+
+  it('should preserve client state with streaming server components', async () => {
+    const reportedErrors = [];
+    let setState;
+
+    const StatefulClientComponent = clientExports(
+      function StatefulClientComponent({initialState}) {
+        const [state, _setState] = React.useState(initialState);
+        setState = _setState;
+        return <span>{state}</span>;
+      },
+    );
+
+    const suspendedChunk = createSuspendedChunk(<p>loading</p>);
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      suspendedChunk.row,
+      webpackMap,
+      {
+        onError(error) {
+          reportedErrors.push(error);
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    await act(() => {
+      root.render(<ClientRoot />);
+    });
+
+    expect(container.innerHTML).toBe('<p>loading</p>');
+
+    const donePromise = createResolvablePromise();
+    const value = <StatefulClientComponent initialState={0} />;
+
+    await act(async () => {
+      suspendedChunk.resolve({value, done: false, next: donePromise.promise});
+    });
+
+    expect(container.innerHTML).toBe('<span>0</span>');
+
+    await act(async () => {
+      setState(1);
+    });
+
+    expect(container.innerHTML).toBe('<span>1</span>');
+
+    await act(async () => {
+      donePromise.resolve({value, done: true});
+    });
+
+    expect(container.innerHTML).toBe('<span>1</span>');
     expect(reportedErrors).toEqual([]);
   });
 
