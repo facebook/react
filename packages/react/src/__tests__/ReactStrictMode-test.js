@@ -1345,6 +1345,8 @@ describe('context legacy', () => {
       });
     } else {
       it('disable logs for class double render', async () => {
+        throw new Error('Not implemented');
+
         let count = 0;
         class Foo extends React.Component {
           render() {
