@@ -7,8 +7,8 @@
   "files": [
     "src"
   ],
-  "dependencies": {
-    "react": "^18.2.0"
+  "peerDependencies": {
+    "react": "^18.2.0 | ^19.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",

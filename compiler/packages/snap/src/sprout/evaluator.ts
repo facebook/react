@@ -8,13 +8,15 @@
 import { render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import React, { MutableRefObject } from "react";
+// @ts-ignore
+import { c as useMemoCache } from "react/compiler-runtime";
 import util from "util";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { initFbt, toJSON } from "./shared-runtime";
 
 // @ts-ignore
-React.c = React.unstable_useMemoCache;
+React.c = useMemoCache;
 
 /**
  * Set up the global environment for JSDOM tests.
@@ -210,15 +212,23 @@ export function doEval(source: string): EvaluatorResult {
     log: mockedLog,
     warn: mockedLog,
     error: (...args: Array<any>) => {
+      if (
+        typeof args[0] === "string" &&
+        args[0].includes("ReactDOMTestUtils.act` is deprecated")
+      ) {
+        // remove this once @testing-library/react is upgraded to React 19.
+        return;
+      }
+
       const stack = new Error().stack?.split("\n", 5) ?? [];
       for (const stackFrame of stack) {
         // React warns on exceptions thrown during render, we avoid printing
         // here to reduce noise in test fixture outputs.
         if (
-          (stackFrame.includes("at logCapturedError") &&
-            stackFrame.includes("react-dom.development")) ||
+          (stackFrame.includes("at logCaughtError") &&
+            stackFrame.includes("react-dom-client.development.js")) ||
           (stackFrame.includes("at defaultOnRecoverableError") &&
-            stackFrame.includes("react-dom.development"))
+            stackFrame.includes("react-dom-client.development.js"))
         ) {
           return;
         }

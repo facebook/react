@@ -5,12 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const React = require("react");
+const ReactCompilerRuntime = require("react/compiler-runtime");
 
 /*
  * Our e2e babel transform currently only compiles functions, not programs.
  * As a result, our e2e transpiled code does not contain an import for `useMemoCache`
  * This is a hack.
  */
-React.c = React.unstable_useMemoCache;
-globalThis.useMemoCache = React.unstable_useMemoCache;
+globalThis.useMemoCache = ReactCompilerRuntime.c;

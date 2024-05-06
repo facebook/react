@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 
 function Component(props) {
   const $ = useMemoCache();
@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 
 function Component(props) {
   const $ = useMemoCache();

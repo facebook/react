@@ -1,4 +1,4 @@
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { c as useMemoCache } from "react/compiler-runtime";
 
 function Component(props) {
   const $ = useMemoCache();
