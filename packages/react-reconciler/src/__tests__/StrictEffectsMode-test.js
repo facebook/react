@@ -900,8 +900,17 @@ describe('StrictEffectsMode', () => {
       );
     });
 
+    expect(log).toEqual([
+      'Parent rendered',
+      'Parent rendered',
+      'Child rendered',
+      'Child suspended',
+      'Fallback',
+      'Fallback',
+    ]);
+
+    log = [];
     // while suspended, update
-    log.push('-----------------------after update');
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
@@ -910,9 +919,19 @@ describe('StrictEffectsMode', () => {
       );
     });
 
-    // Now resolve and commit
-    log.push('-----------------------after suspense');
+    expect(log).toEqual([
+      'Parent rendered',
+      'Parent rendered',
+      'Child rendered',
+      'Child suspended',
+      'Fallback',
+      'Fallback',
+      'Parent dep destroy',
+      'Parent dep create',
+    ]);
 
+    log = [];
+    // Now resolve and commit
     await act(() => {
       resolve();
       shouldSuspend = false;
@@ -920,22 +939,6 @@ describe('StrictEffectsMode', () => {
 
     if (gate(flags => flags.useModernStrictMode)) {
       expect(log).toEqual([
-        'Parent rendered',
-        'Parent rendered',
-        'Child rendered',
-        'Child suspended',
-        'Fallback',
-        'Fallback',
-        '-----------------------after update',
-        'Parent rendered',
-        'Parent rendered',
-        'Child rendered',
-        'Child suspended',
-        'Fallback',
-        'Fallback',
-        'Parent dep destroy',
-        'Parent dep create',
-        '-----------------------after suspense',
         'Child rendered',
         'Child rendered',
         // !!! Committed, destroy and create effect.
@@ -957,22 +960,6 @@ describe('StrictEffectsMode', () => {
       ]);
     } else {
       expect(log).toEqual([
-        'Parent rendered',
-        'Parent rendered',
-        'Child rendered',
-        'Child suspended',
-        'Fallback',
-        'Fallback',
-        '-----------------------after update',
-        'Parent rendered',
-        'Parent rendered',
-        'Child rendered',
-        'Child suspended',
-        'Fallback',
-        'Fallback',
-        'Parent dep destroy',
-        'Parent dep create',
-        '-----------------------after suspense',
         'Child rendered',
         'Child rendered',
         'Child dep destroy',
