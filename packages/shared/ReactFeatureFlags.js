@@ -104,7 +104,7 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 
 // Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
-export const enableUseMemoCacheHook = __EXPERIMENTAL__;
+export const enableUseMemoCacheHook = true;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
 
