@@ -64,7 +64,7 @@ function isReportableDiagnostic(
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
   compilationMode: "infer",
-  panicThreshold: "critical_errors",
+  panicThreshold: "all_errors",
 };
 
 const rule: Rule.RuleModule = {
