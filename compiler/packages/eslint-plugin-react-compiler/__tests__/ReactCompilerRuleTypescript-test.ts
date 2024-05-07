@@ -37,6 +37,22 @@ const tests: CompilerTestCases = {
   ],
   invalid: [
     {
+      name: "[FALSE POSITIVE] Repro for hooks as normal values",
+      filename: "test.tsx",
+      code: normalizeIndent`
+        function Button(props) {
+          const scrollview = React.useRef<ScrollView>(null);
+          return <Button thing={scrollview} />;
+        }
+      `,
+      errors: [
+        {
+          message:
+            "Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values",
+        },
+      ],
+    },
+    {
       name: "Mutating useState value",
       filename: "test.tsx",
       code: `
