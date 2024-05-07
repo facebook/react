@@ -263,7 +263,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const serializedContent = await readResult(stream1);
 
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(410);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -296,7 +296,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 590 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -324,7 +324,7 @@ describe('ReactFlightDOMEdge', () => {
       <ServerComponent recurse={20} />,
     );
     const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 64 * 20 : 0;
+    const expectedDebugInfoSize = __DEV__ ? 300 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
@@ -742,10 +742,18 @@ describe('ReactFlightDOMEdge', () => {
     // We've rendered down to the span.
     expect(greeting.type).toBe('span');
     if (__DEV__) {
-      const greetInfo = {name: 'Greeting', env: 'Server', owner: null};
+      const greetInfo = expect.objectContaining({
+        name: 'Greeting',
+        env: 'Server',
+        owner: null,
+      });
       expect(lazyWrapper._debugInfo).toEqual([
         greetInfo,
-        {name: 'Container', env: 'Server', owner: greetInfo},
+        expect.objectContaining({
+          name: 'Container',
+          env: 'Server',
+          owner: greetInfo,
+        }),
       ]);
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.

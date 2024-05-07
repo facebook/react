@@ -7,6 +7,12 @@
  * @flow
  */
 
+import type {ReactDebugInfo} from './ReactTypes';
+
+interface ConsoleTask {
+  run<T>(f: () => T): T;
+}
+
 export type ReactElement = {
   $$typeof: any,
   type: any,
@@ -18,4 +24,7 @@ export type ReactElement = {
 
   // __DEV__
   _store: {validated: boolean, ...},
+  _debugInfo: null | ReactDebugInfo,
+  _debugStack: Error,
+  _debugTask: null | ConsoleTask,
 };

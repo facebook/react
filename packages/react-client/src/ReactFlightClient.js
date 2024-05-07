@@ -43,6 +43,7 @@ import {
   enablePostpone,
   enableRefAsProp,
   enableFlightReadableStream,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -563,6 +564,7 @@ function createElement(
   key: mixed,
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
+  stack: null | string, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -623,6 +625,23 @@ function createElement(
       writable: true,
       value: null,
     });
+    if (enableOwnerStacks) {
+      Object.defineProperty(element, '_debugStack', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: {stack: stack},
+      });
+      Object.defineProperty(element, '_debugTask', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: null,
+      });
+    }
+    // TODO: We should be freezing the element but currently, we might write into
+    // _debugInfo later. We could move it into _store which remains mutable.
+    Object.freeze(element.props);
   }
   return element;
 }
@@ -1003,6 +1022,7 @@ function parseModelTuple(
       tuple[2],
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
     );
   }
   return value;

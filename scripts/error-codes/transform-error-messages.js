@@ -49,6 +49,11 @@ module.exports = function (babel) {
       errorMsgExpressions
     );
 
+    if (errorMsgLiteral === 'react-stack-top-frame') {
+      // This is a special case for generating stack traces.
+      return;
+    }
+
     let prodErrorId = errorMap[errorMsgLiteral];
     if (prodErrorId === undefined) {
       // There is no error code for this message. Add an inline comment

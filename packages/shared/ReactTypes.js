@@ -182,6 +182,7 @@ export type ReactComponentInfo = {
   +name?: string,
   +env?: string,
   +owner?: null | ReactComponentInfo,
+  +stack?: null | string,
 };
 
 export type ReactAsyncInfo = {
