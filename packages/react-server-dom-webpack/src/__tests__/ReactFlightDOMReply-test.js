@@ -361,11 +361,21 @@ describe('ReactFlightDOMReply', () => {
         temporaryReferences,
       },
     );
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
     const serverPayload = await ReactServerDOMServer.decodeReply(
       body,
       webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = ReactServerDOMServer.renderToReadableStream(serverPayload);
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      serverPayload,
+      null,
+      {
+        temporaryReferences: temporaryReferencesServer,
+      },
+    );
     const response = await ReactServerDOMClient.createFromReadableStream(
       stream,
       {
@@ -390,14 +400,22 @@ describe('ReactFlightDOMReply', () => {
     const body = await ReactServerDOMClient.encodeReply(root, {
       temporaryReferences,
     });
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
     const serverPayload = await ReactServerDOMServer.decodeReply(
       body,
       webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = ReactServerDOMServer.renderToReadableStream({
-      root: serverPayload,
-      obj: serverPayload.obj,
-    });
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      {
+        root: serverPayload,
+        obj: serverPayload.obj,
+      },
+      null,
+      {temporaryReferences: temporaryReferencesServer},
+    );
     const response = await ReactServerDOMClient.createFromReadableStream(
       stream,
       {

@@ -7,20 +7,29 @@
  * @flow
  */
 
+const TEMPORARY_REFERENCE_TAG = Symbol.for('react.temporary.reference');
+
+export opaque type TemporaryReferenceSet = WeakMap<
+  TemporaryReference<any>,
+  string,
+>;
+
 // eslint-disable-next-line no-unused-vars
 export interface TemporaryReference<T> {}
 
-const knownReferences: WeakMap<TemporaryReference<any>, string> = new WeakMap();
+export function createTemporaryReferenceSet(): TemporaryReferenceSet {
+  return new WeakMap();
+}
 
-export function isTemporaryReference(reference: Object): boolean {
-  return knownReferences.has(reference);
+export function isOpaqueTemporaryReference(reference: Object): boolean {
+  return reference.$$typeof === TEMPORARY_REFERENCE_TAG;
 }
 
 export function resolveTemporaryReference<T>(
+  temporaryReferences: TemporaryReferenceSet,
   temporaryReference: TemporaryReference<T>,
-): string {
-  // $FlowFixMe[incompatible-return]: We'll have already asserted on it.
-  return knownReferences.get(temporaryReference);
+): void | string {
+  return temporaryReferences.get(temporaryReference);
 }
 
 const proxyHandlers = {
@@ -73,23 +82,32 @@ const proxyHandlers = {
   },
 };
 
-export function createTemporaryReference<T>(id: string): TemporaryReference<T> {
-  const reference: TemporaryReference<any> = function () {
-    throw new Error(
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      `Attempted to call a temporary Client Reference from the server but it is on the client. ` +
-        `It's not possible to invoke a client function from the server, it can ` +
-        `only be rendered as a Component or passed to props of a Client Component.`,
-    );
-  };
+export function createTemporaryReference<T>(
+  temporaryReferences: TemporaryReferenceSet,
+  id: string,
+): TemporaryReference<T> {
+  const reference: TemporaryReference<any> = Object.defineProperties(
+    (function () {
+      throw new Error(
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        `Attempted to call a temporary Client Reference from the server but it is on the client. ` +
+          `It's not possible to invoke a client function from the server, it can ` +
+          `only be rendered as a Component or passed to props of a Client Component.`,
+      );
+    }: any),
+    {
+      $$typeof: {value: TEMPORARY_REFERENCE_TAG},
+    },
+  );
   const wrapper = new Proxy(reference, proxyHandlers);
-  registerTemporaryReference(wrapper, id);
+  registerTemporaryReference(temporaryReferences, wrapper, id);
   return wrapper;
 }
 
 export function registerTemporaryReference(
+  temporaryReferences: TemporaryReferenceSet,
   object: TemporaryReference<any>,
   id: string,
 ): void {
-  knownReferences.set(object, id);
+  temporaryReferences.set(object, id);
 }

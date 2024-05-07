@@ -18,6 +18,8 @@ import type {
   ClientReference as ServerReference,
 } from 'react-client/src/ReactFlightClientConfig';
 
+import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
+
 import {
   resolveServerReference,
   preloadModule,
@@ -171,6 +173,7 @@ export type Response = {
   _prefix: string,
   _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
+  _temporaryReferences: void | TemporaryReferenceSet,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -375,9 +378,16 @@ function reviveModel(
     return parseModelString(response, parentObj, parentKey, value, reference);
   }
   if (typeof value === 'object' && value !== null) {
-    if (reference !== undefined) {
+    if (
+      reference !== undefined &&
+      response._temporaryReferences !== undefined
+    ) {
       // Store this object's reference in case it's returned later.
-      registerTemporaryReference(value, reference);
+      registerTemporaryReference(
+        response._temporaryReferences,
+        value,
+        reference,
+      );
     }
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
@@ -918,12 +928,20 @@ function parseModelString(
       }
       case 'T': {
         // Temporary Reference
-        if (reference === undefined) {
+        if (
+          reference === undefined ||
+          response._temporaryReferences === undefined
+        ) {
           throw new Error(
-            'Could not reference the temporary reference. This is likely a bug in React.',
+            'Could not reference an opaque temporary reference. ' +
+              'This is likely due to misconfiguring the temporaryReferences options ' +
+              'on the server.',
           );
         }
-        return createTemporaryReference(reference);
+        return createTemporaryReference(
+          response._temporaryReferences,
+          reference,
+        );
       }
       case 'Q': {
         // Map
@@ -1061,6 +1079,7 @@ function parseModelString(
 export function createResponse(
   bundlerConfig: ServerManifest,
   formFieldPrefix: string,
+  temporaryReferences: void | TemporaryReferenceSet,
   backingFormData?: FormData = new FormData(),
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
@@ -1069,6 +1088,7 @@ export function createResponse(
     _prefix: formFieldPrefix,
     _formData: backingFormData,
     _chunks: chunks,
+    _temporaryReferences: temporaryReferences,
   };
   return response;
 }
