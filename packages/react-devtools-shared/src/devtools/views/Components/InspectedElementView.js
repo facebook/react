@@ -85,7 +85,12 @@ export default function InspectedElementView({
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
-        <InspectedElementBadges element={element} />
+        <div className={styles.InspectedElementBadgesContainer}>
+          <InspectedElementBadges
+            hocDisplayNames={element.hocDisplayNames}
+            compiledWithForget={element.compiledWithForget}
+          />
+        </div>
 
         <InspectedElementPropsTree
           bridge={bridge}
