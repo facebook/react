@@ -25,6 +25,10 @@
   line-height: var(--line-height-data);
 }
 
+.InspectedElementBadgesContainer {
+  padding: 0.25rem;
+}
+
 .Owner {
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;
