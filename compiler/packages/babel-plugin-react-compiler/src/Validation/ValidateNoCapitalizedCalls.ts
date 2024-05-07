@@ -28,6 +28,8 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
 
   const capitalLoadGlobals = new Map<IdentifierId, string>();
   const capitalizedProperties = new Map<IdentifierId, string>();
+  const reason =
+    "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter. Alternatively, if you know for a fact that this function is not a component, you can allowlist it via the compiler config";
   for (const [, block] of fn.body.blocks) {
     for (const { lvalue, value } of block.instructions) {
       switch (value.kind) {
@@ -49,8 +51,7 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const calleeName = capitalLoadGlobals.get(calleeIdentifier);
           if (calleeName != null) {
             CompilerError.throwInvalidReact({
-              reason:
-                "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter",
+              reason,
               description: `${calleeName} may be a component.`,
               loc: value.loc,
               suggestions: null,
@@ -70,8 +71,7 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
           const propertyName = capitalizedProperties.get(propertyIdentifier);
           if (propertyName != null) {
             CompilerError.throwInvalidReact({
-              reason:
-                "Capitalized functions are reserved for components, which must be invoked with JSX. If this is a component, render it with JSX. Otherwise, ensure that it has no hook calls and rename it to begin with a lowercase letter",
+              reason,
               description: `${propertyName} may be a component.`,
               loc: value.loc,
               suggestions: null,
