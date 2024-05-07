@@ -206,44 +206,55 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
-  global._test_gate = (gateFn, testName, callback) => {
+  global._test_gate = (gateFn, testName, callback, timeoutMS) => {
     let shouldPass;
     try {
       const flags = getTestFlags();
       shouldPass = gateFn(flags);
     } catch (e) {
-      test(testName, () => {
-        throw e;
-      });
+      test(
+        testName,
+        () => {
+          throw e;
+        },
+        timeoutMS
+      );
       return;
     }
     if (shouldPass) {
-      test(testName, callback);
+      test(testName, callback, timeoutMS);
     } else {
       const error = new Error(gatedErrorMessage);
       Error.captureStackTrace(error, global._test_gate);
       test(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, error));
+        expectTestToFail(callback, error, timeoutMS));
     }
   };
-  global._test_gate_focus = (gateFn, testName, callback) => {
+  global._test_gate_focus = (gateFn, testName, callback, timeoutMS) => {
     let shouldPass;
     try {
       const flags = getTestFlags();
       shouldPass = gateFn(flags);
     } catch (e) {
-      test.only(testName, () => {
-        throw e;
-      });
+      test.only(
+        testName,
+        () => {
+          throw e;
+        },
+        timeoutMS
+      );
       return;
     }
     if (shouldPass) {
-      test.only(testName, callback);
+      test.only(testName, callback, timeoutMS);
     } else {
       const error = new Error(gatedErrorMessage);
       Error.captureStackTrace(error, global._test_gate_focus);
-      test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, error));
+      test.only(
+        `[GATED, SHOULD FAIL] ${testName}`,
+        () => expectTestToFail(callback, error),
+        timeoutMS
+      );
     }
   };
 
