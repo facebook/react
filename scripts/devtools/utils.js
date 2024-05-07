@@ -10,7 +10,7 @@ const createLogger = require('progress-estimator');
 const {
   BUILD_METADATA_TEMP_DIRECTORY,
   NPM_PACKAGES,
-} = require('./configuration');
+} = require('./configurations');
 
 const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
