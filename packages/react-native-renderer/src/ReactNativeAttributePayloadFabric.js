@@ -15,6 +15,7 @@ import {
 import isArray from 'shared/isArray';
 
 import {enableEarlyReturnForPropDiffing} from 'shared/ReactFeatureFlags';
+import {enableAddPropertiesFastPath} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -444,6 +445,68 @@ function diffProperties(
   return updatePayload;
 }
 
+function fastAddProperties(
+  updatePayload: null | Object,
+  nextProps: Object,
+  validAttributes: AttributeConfiguration,
+): null | Object {
+  let attributeConfig;
+  let nextProp;
+
+  for (const propKey in nextProps) {
+    nextProp = nextProps[propKey];
+
+    if (nextProp === undefined) {
+      continue;
+    }
+
+    attributeConfig = validAttributes[propKey];
+
+    if (attributeConfig === undefined) {
+      continue;
+    }
+
+    if (typeof nextProp === 'function') {
+      nextProp = (true: any);
+    }
+
+    if (typeof attributeConfig !== 'object') {
+      if (!updatePayload) {
+        updatePayload = ({}: {[string]: $FlowFixMe});
+      }
+      updatePayload[propKey] = nextProp;
+      continue;
+    }
+
+    if (typeof attributeConfig.process === 'function') {
+      if (!updatePayload) {
+        updatePayload = ({}: {[string]: $FlowFixMe});
+      }
+      updatePayload[propKey] = attributeConfig.process(nextProp);
+      continue;
+    }
+
+    if (isArray(nextProp)) {
+      for (let i = 0; i < nextProp.length; i++) {
+        updatePayload = fastAddProperties(
+          updatePayload,
+          nextProp[i],
+          ((attributeConfig: any): AttributeConfiguration),
+        );
+      }
+      continue;
+    }
+
+    updatePayload = fastAddProperties(
+      updatePayload,
+      nextProp,
+      ((attributeConfig: any): AttributeConfiguration),
+    );
+  }
+
+  return updatePayload;
+}
+
 /**
  * addProperties adds all the valid props to the payload after being processed.
  */
@@ -452,8 +515,11 @@ function addProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  // TODO: Fast path
-  return diffProperties(updatePayload, emptyObject, props, validAttributes);
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(updatePayload, props, validAttributes);
+  } else {
+    return diffProperties(updatePayload, emptyObject, props, validAttributes);
+  }
 }
 
 /**
