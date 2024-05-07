@@ -5,19 +5,23 @@ on:
     branches: ["main"]
     paths:
       - .github/workflows/**
-      - crates/**
-      - Cargo.*
-      - ./*.toml
+      - compiler/crates/**
+      - compiler/Cargo.*
+      - compiler/*.toml
   pull_request:
     paths:
       - .github/workflows/**
-      - crates/**
-      - Cargo.*
-      - ./*.toml
+      - compiler/crates/**
+      - compiler/Cargo.*
+      - compiler/*.toml
 
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+
+defaults:
+  run:
+    working-directory: compiler
 
 jobs:
   test:
