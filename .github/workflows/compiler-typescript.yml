@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - compiler/
+      - .github/workflows/compiler-typescript.yml
+
+defaults:
+  run:
+    working-directory: compiler
 
 jobs:
   discover_yarn_workspaces:
@@ -26,12 +33,12 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler prettier:ci
       - run: yarn workspace babel-plugin-react-compiler lint
@@ -46,13 +53,13 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler jest
 
@@ -70,12 +77,12 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace ${{ matrix.workspace_name }} test
