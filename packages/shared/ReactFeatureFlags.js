@@ -125,6 +125,8 @@ export const enableEarlyReturnForPropDiffing = false;
 
 export const enableAddPropertiesFastPath = false;
 
+export const enableOwnerStacks = __EXPERIMENTAL__;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */

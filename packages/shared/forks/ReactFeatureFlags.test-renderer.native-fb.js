@@ -93,5 +93,7 @@ export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
+export const enableOwnerStacks = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
