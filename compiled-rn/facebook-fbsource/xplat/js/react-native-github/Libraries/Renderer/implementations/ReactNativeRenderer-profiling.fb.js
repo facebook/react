@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b6bd74ab5e48f155b9407635d6f44e66>>
+ * @generated SignedSource<<7ec40d981bbcdacc39e55becc570911b>>
  */
 
 "use strict";
@@ -1120,7 +1120,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   disableStringRefs = dynamicFlagsUntyped.disableStringRefs,
-  enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
   enableEarlyReturnForPropDiffing =
@@ -1484,7 +1483,12 @@ function diffNestedProperty(
 function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!nextProp) return updatePayload;
   if (!isArrayImpl(nextProp))
-    return addProperties(updatePayload, nextProp, validAttributes);
+    return diffProperties(
+      updatePayload,
+      emptyObject$1,
+      nextProp,
+      validAttributes
+    );
   for (var i = 0; i < nextProp.length; i++)
     updatePayload = addNestedProperty(
       updatePayload,
@@ -1594,44 +1598,6 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               )))));
   return updatePayload;
 }
-function fastAddProperties(updatePayload, nextProps, validAttributes) {
-  var propKey;
-  for (propKey in nextProps) {
-    var nextProp = nextProps[propKey];
-    if (void 0 !== nextProp) {
-      var attributeConfig = validAttributes[propKey];
-      if (void 0 !== attributeConfig)
-        if (
-          ("function" === typeof nextProp && (nextProp = !0),
-          "object" !== typeof attributeConfig)
-        )
-          updatePayload || (updatePayload = {}),
-            (updatePayload[propKey] = nextProp);
-        else if ("function" === typeof attributeConfig.process)
-          updatePayload || (updatePayload = {}),
-            (updatePayload[propKey] = attributeConfig.process(nextProp));
-        else if (isArrayImpl(nextProp))
-          for (var i = 0; i < nextProp.length; i++)
-            updatePayload = fastAddProperties(
-              updatePayload,
-              nextProp[i],
-              attributeConfig
-            );
-        else
-          updatePayload = fastAddProperties(
-            updatePayload,
-            nextProp,
-            attributeConfig
-          );
-    }
-  }
-  return updatePayload;
-}
-function addProperties(updatePayload, props, validAttributes) {
-  return enableAddPropertiesFastPath
-    ? fastAddProperties(updatePayload, props, validAttributes)
-    : diffProperties(updatePayload, emptyObject$1, props, validAttributes);
-}
 function mountSafeCallback_NOT_REALLY_SAFE(context, callback) {
   return function () {
     if (
@@ -1682,8 +1648,9 @@ var ReactNativeFiberHostComponent = (function () {
         );
     };
     _proto.setNativeProps = function (nativeProps) {
-      nativeProps = addProperties(
+      nativeProps = diffProperties(
         null,
+        emptyObject$1,
         nativeProps,
         this.viewConfig.validAttributes
       );
@@ -7506,7 +7473,12 @@ function completeWork(current, workInProgress, renderLanes) {
         renderLanes = rootInstanceStackCursor.current;
         current = allocateTag();
         type = getViewConfigForType(type);
-        var updatePayload = addProperties(null, newProps, type.validAttributes);
+        var updatePayload = diffProperties(
+          null,
+          emptyObject$1,
+          newProps,
+          type.validAttributes
+        );
         ReactNativePrivateInterface.UIManager.createView(
           current,
           type.uiViewClassName,
@@ -8918,8 +8890,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
               try {
                 if (((newProps = root.stateNode), viewConfig)) {
                   var viewConfig$jscomp$0 = newProps.viewConfig;
-                  var updatePayload$jscomp$0 = addProperties(
+                  var updatePayload$jscomp$0 = diffProperties(
                     null,
+                    emptyObject$1,
                     { style: { display: "none" } },
                     viewConfig$jscomp$0.validAttributes
                   );
@@ -11514,7 +11487,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1272 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-beta-350ccbc3",
+    version: "19.0.0-beta-fa7474ba",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11570,7 +11543,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-350ccbc3"
+  reconcilerVersion: "19.0.0-beta-fa7474ba"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
