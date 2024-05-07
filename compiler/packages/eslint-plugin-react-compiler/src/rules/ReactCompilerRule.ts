@@ -33,29 +33,17 @@ function isReactCompilerError(err: Error): err is CompilerError {
   return err.name === "ReactCompilerError";
 }
 
+const DEFAULT_REPORTABLE_LEVELS = new Set([
+  ErrorSeverity.InvalidReact,
+  ErrorSeverity.InvalidJS,
+]);
+let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
+
 function isReportableDiagnostic(
   detail: CompilerErrorDetail
 ): detail is CompilerErrorDetailWithLoc {
-  let isReportable = false;
-  switch (detail.severity) {
-    case ErrorSeverity.InvalidReact:
-    case ErrorSeverity.InvalidJS:
-      isReportable = true;
-      break;
-    case ErrorSeverity.InvalidConfig:
-    case ErrorSeverity.Invariant:
-    case ErrorSeverity.CannotPreserveMemoization:
-    case ErrorSeverity.Todo:
-      break;
-    default:
-      assertExhaustive(
-        detail.severity,
-        `Unhandled error severity \`${detail.severity}\``
-      );
-  }
-
   return (
-    isReportable === true &&
+    reportableLevels.has(detail.severity) &&
     detail.loc != null &&
     typeof detail.loc !== "symbol"
   );
@@ -83,8 +71,17 @@ const rule: Rule.RuleModule = {
     // Compat with older versions of eslint
     const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
     const filename = context.filename ?? context.getFilename();
+    const userOpts = context.options[0] ?? {};
+    if (
+      userOpts["reportableLevels"] != null &&
+      userOpts["reportableLevels"] instanceof Set
+    ) {
+      reportableLevels = userOpts["reportableLevels"];
+    } else {
+      reportableLevels = DEFAULT_REPORTABLE_LEVELS;
+    }
     const options: PluginOptions = {
-      ...parsePluginOptions(context.options[0] ?? {}),
+      ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
     };
 

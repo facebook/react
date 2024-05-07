@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ErrorSeverity } from "babel-plugin-react-compiler/src";
 import { RuleTester as ESLintTester } from "eslint";
 import ReactCompilerRule from "../src/rules/ReactCompilerRule";
 
@@ -105,6 +106,21 @@ const tests: CompilerTestCases = {
     },
   ],
   invalid: [
+    {
+      name: "Reportable levels can be configured",
+      options: [{ reportableLevels: new Set([ErrorSeverity.Todo]) }],
+      code: normalizeIndent`
+        function Foo(x) {
+          var y = 1;
+          return <div>{y * x}</div>;
+        }`,
+      errors: [
+        {
+          message:
+            "(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration",
+        },
+      ],
+    },
     {
       name: "[InvalidReact] ESlint suppression",
       // Indentation is intentionally weird so it doesn't add extra whitespace
