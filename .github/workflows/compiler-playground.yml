@@ -1,8 +1,16 @@
-name: Playground
+name: Compiler Playground
 
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - compiler/
+      - .github/workflows/compiler-playground.yml
+
+defaults:
+  run:
+    working-directory: compiler
 
 jobs:
   playground:
@@ -14,13 +22,13 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
       - run: yarn workspace playground test
