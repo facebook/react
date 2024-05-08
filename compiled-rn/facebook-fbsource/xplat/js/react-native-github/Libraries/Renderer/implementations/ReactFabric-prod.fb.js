@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4d85e00114107b7747eb3de320972dc1>>
+ * @generated SignedSource<<844a7fde793a6bcbd87492fec25685e4>>
  */
 
 "use strict";
@@ -1200,38 +1200,35 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               )))));
   return updatePayload;
 }
-function fastAddProperties(updatePayload, nextProps, validAttributes) {
+function fastAddProperties(payload, props, validAttributes) {
   var propKey;
-  for (propKey in nextProps) {
-    var nextProp = nextProps[propKey];
-    if (void 0 !== nextProp) {
+  for (propKey in props) {
+    var prop = props[propKey];
+    if (void 0 !== prop) {
       var attributeConfig = validAttributes[propKey];
-      if (void 0 !== attributeConfig)
-        if (
-          ("function" === typeof nextProp && (nextProp = !0),
-          "object" !== typeof attributeConfig)
-        )
-          updatePayload || (updatePayload = {}),
-            (updatePayload[propKey] = nextProp);
-        else if ("function" === typeof attributeConfig.process)
-          updatePayload || (updatePayload = {}),
-            (updatePayload[propKey] = attributeConfig.process(nextProp));
-        else if (isArrayImpl(nextProp))
-          for (var i = 0; i < nextProp.length; i++)
-            updatePayload = fastAddProperties(
-              updatePayload,
-              nextProp[i],
+      if (null != attributeConfig) {
+        var newValue = void 0;
+        "function" === typeof prop
+          ? (newValue = !0)
+          : "object" !== typeof attributeConfig
+          ? (newValue = prop)
+          : "function" === typeof attributeConfig.process
+          ? (newValue = attributeConfig.process(prop))
+          : "function" === typeof attributeConfig.diff && (newValue = prop);
+        if (void 0 !== newValue)
+          payload || (payload = {}), (payload[propKey] = newValue);
+        else if (isArrayImpl(prop))
+          for (newValue = 0; newValue < prop.length; newValue++)
+            payload = fastAddProperties(
+              payload,
+              prop[newValue],
               attributeConfig
             );
-        else
-          updatePayload = fastAddProperties(
-            updatePayload,
-            nextProp,
-            attributeConfig
-          );
+        else payload = fastAddProperties(payload, prop, attributeConfig);
+      }
     }
   }
-  return updatePayload;
+  return payload;
 }
 function addProperties(updatePayload, props, validAttributes) {
   return enableAddPropertiesFastPath
@@ -10592,7 +10589,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1124 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-beta-8abbffa0",
+    version: "19.0.0-beta-bdce1f91",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10635,7 +10632,7 @@ var internals$jscomp$inline_1356 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-8abbffa0"
+  reconcilerVersion: "19.0.0-beta-bdce1f91"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1357 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

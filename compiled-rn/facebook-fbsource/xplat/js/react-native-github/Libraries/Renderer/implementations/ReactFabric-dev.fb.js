@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<854ee92767fe1d880e62f5cc7c83d537>>
+ * @generated SignedSource<<577c7636235832d840ad016860b50817>>
  */
 
 'use strict';
@@ -2350,57 +2350,63 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
   return updatePayload;
 }
 
-function fastAddProperties(updatePayload, nextProps, validAttributes) {
+function fastAddProperties(payload, props, validAttributes) {
   var attributeConfig;
-  var nextProp;
+  var prop;
 
-  for (var propKey in nextProps) {
-    nextProp = nextProps[propKey];
+  for (var propKey in props) {
+    prop = props[propKey];
 
-    if (nextProp === undefined) {
+    if (prop === undefined) {
       continue;
     }
 
     attributeConfig = validAttributes[propKey];
 
-    if (attributeConfig === undefined) {
+    if (attributeConfig == null) {
       continue;
     }
 
-    if (typeof nextProp === 'function') {
-      nextProp = true;
+    var newValue = void 0;
+
+    if (typeof prop === 'function') {
+      // A function prop. It represents an event handler. Pass it to native as 'true'.
+      newValue = true;
+    } else if (typeof attributeConfig !== 'object') {
+      // An atomic prop. Doesn't need to be flattened.
+      newValue = prop;
+    } else if (typeof attributeConfig.process === 'function') {
+      // An atomic prop with custom processing.
+      newValue = attributeConfig.process(prop);
+    } else if (typeof attributeConfig.diff === 'function') {
+      // An atomic prop with custom diffing. We don't do diffing here.
+      newValue = prop;
     }
 
-    if (typeof attributeConfig !== 'object') {
-      if (!updatePayload) {
-        updatePayload = {};
+    if (newValue !== undefined) {
+      if (!payload) {
+        payload = {};
       }
 
-      updatePayload[propKey] = nextProp;
+      payload[propKey] = newValue;
       continue;
-    }
+    } // Not-atomic prop that needs to be flattened. Likely it's the 'style' prop.
+    // It can be an array.
 
-    if (typeof attributeConfig.process === 'function') {
-      if (!updatePayload) {
-        updatePayload = {};
-      }
 
-      updatePayload[propKey] = attributeConfig.process(nextProp);
-      continue;
-    }
-
-    if (isArray(nextProp)) {
-      for (var i = 0; i < nextProp.length; i++) {
-        updatePayload = fastAddProperties(updatePayload, nextProp[i], attributeConfig);
+    if (isArray(prop)) {
+      for (var i = 0; i < prop.length; i++) {
+        payload = fastAddProperties(payload, prop[i], attributeConfig);
       }
 
       continue;
-    }
+    } // Or it can be an object.
 
-    updatePayload = fastAddProperties(updatePayload, nextProp, attributeConfig);
+
+    payload = fastAddProperties(payload, prop, attributeConfig);
   }
 
-  return updatePayload;
+  return payload;
 }
 /**
  * addProperties adds all the valid props to the payload after being processed.
@@ -26089,7 +26095,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-bf4ea329';
+var ReactVersion = '19.0.0-beta-83bc2843';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
