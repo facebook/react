@@ -109,7 +109,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;

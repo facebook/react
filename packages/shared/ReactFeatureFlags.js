@@ -169,9 +169,6 @@ export const enableFilterEmptyStringAttributesDOM = true;
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
 
-// Changes Server Components Reconciliation when they have keys
-export const enableServerComponentKeys = true;
-
 /**
  * Enables a new error detection for infinite render loops from updates caused
  * by setState or similar outside of the component owning the state.
