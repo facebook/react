@@ -17,6 +17,23 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Polyfill stream methods on JSDOM.
+global.Blob.prototype.stream = function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  const buffer = this[impl]._buffer;
+  return new ReadableStream({
+    start(c) {
+      c.enqueue(new Uint8Array(buffer));
+      c.close();
+    },
+  });
+};
+
+global.Blob.prototype.text = async function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  return this[impl]._buffer.toString('utf8');
+};
+
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
 global.setTimeout = cb => cb();
@@ -961,5 +978,81 @@ describe('ReactFlightDOMForm', () => {
     const form2 = container.getElementsByTagName('form')[0];
     expect(form2.textContent).toBe('error message');
     expect(form2.firstChild.tagName).toBe('DIV');
+  });
+
+  // @gate enableAsyncActions && enableBinaryFlight
+  it('useActionState can return binary state during MPA form submission', async () => {
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return new Blob([new Uint8Array([104, 105])]);
+      },
+    );
+
+    let blob;
+
+    function Form({action}) {
+      const [errorMsg, dispatch] = useActionState(action, null);
+      let text;
+      if (errorMsg) {
+        blob = errorMsg;
+        text = React.use(blob.text());
+      }
+      return <form action={dispatch}>{text}</form>;
+    }
+
+    const FormRef = await clientExports(Form);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <FormRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form1 = container.getElementsByTagName('form')[0];
+    expect(form1.textContent).toBe('');
+
+    async function submitTheForm() {
+      const form = container.getElementsByTagName('form')[0];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        {formState, root: <FormRef action={serverAction} />},
+        webpackMap,
+      );
+      const postbackResponse =
+        await ReactServerDOMClient.createFromReadableStream(postbackRscStream, {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        });
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse.root,
+        {formState: postbackResponse.formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+    }
+
+    await expect(submitTheForm).toErrorDev(
+      'Warning: Failed to serialize an action for progressive enhancement:\n' +
+        'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
+    );
+
+    expect(blob instanceof Blob).toBe(true);
+    expect(blob.size).toBe(2);
+
+    const form2 = container.getElementsByTagName('form')[0];
+    expect(form2.textContent).toBe('hi');
   });
 });
