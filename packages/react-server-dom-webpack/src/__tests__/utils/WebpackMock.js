@@ -11,11 +11,16 @@ const url = require('url');
 const Module = require('module');
 
 let webpackModuleIdx = 0;
+let webpackChunkIdx = 0;
 const webpackServerModules = {};
 const webpackClientModules = {};
 const webpackErroredModules = {};
 const webpackServerMap = {};
 const webpackClientMap = {};
+const webpackChunkMap = {};
+global.__webpack_chunk_load__ = function (id) {
+  return webpackChunkMap[id];
+};
 global.__webpack_require__ = function (id) {
   if (webpackErroredModules[id]) {
     throw webpackErroredModules[id];
@@ -117,13 +122,20 @@ exports.clientExports = function clientExports(
 };
 
 // This tests server to server references. There's another case of client to server references.
-exports.serverExports = function serverExports(moduleExports) {
+exports.serverExports = function serverExports(moduleExports, blockOnChunk) {
   const idx = '' + webpackModuleIdx++;
   webpackServerModules[idx] = moduleExports;
   const path = url.pathToFileURL(idx).href;
+
+  const chunks = [];
+  if (blockOnChunk) {
+    const chunkId = webpackChunkIdx++;
+    webpackChunkMap[chunkId] = blockOnChunk;
+    chunks.push(chunkId);
+  }
   webpackServerMap[path] = {
     id: idx,
-    chunks: [],
+    chunks: chunks,
     name: '*',
   };
   // We only add this if this test is testing ESM compat.

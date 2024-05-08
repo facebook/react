@@ -86,6 +86,23 @@ describe('ReactFlightDOMReplyEdge', () => {
   });
 
   // @gate enableBinaryFlight
+  it('should be able to serialize a typed array inside a Map', async () => {
+    const array = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+    const map = new Map();
+    map.set('array', array);
+
+    const body = await ReactServerDOMClient.encodeReply(map);
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    expect(result.get('array')).toEqual(array);
+  });
+
+  // @gate enableBinaryFlight
   it('should be able to serialize a blob', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
