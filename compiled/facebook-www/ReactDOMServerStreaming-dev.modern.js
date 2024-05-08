@@ -2569,7 +2569,11 @@ var startHiddenInputChunk = stringToPrecomputedChunk('<input type="hidden"');
 function pushAdditionalFormField(value, key) {
   var target = this;
   target.push(startHiddenInputChunk);
-  validateAdditionalFormField(value);
+
+  if (typeof value !== 'string') {
+    throw new Error('File/Blob fields are not yet supported in progressive forms. ' + 'It probably means you are closing over binary data or FormData in a Server Action.');
+  }
+
   pushStringAttribute(target, 'name', key);
   pushStringAttribute(target, 'value', value);
   target.push(endOfStartTagSelfClosing);
@@ -2582,21 +2586,6 @@ function pushAdditionalFormFields(target, formData) {
   }
 }
 
-function validateAdditionalFormField(value, key) {
-  if (typeof value !== 'string') {
-    throw new Error('File/Blob fields are not yet supported in progressive forms. ' + 'Will fallback to client hydration.');
-  }
-}
-
-function validateAdditionalFormFields(formData) {
-  if (formData != null) {
-    // $FlowFixMe[prop-missing]: FormData has forEach.
-    formData.forEach(validateAdditionalFormField);
-  }
-
-  return formData;
-}
-
 function getCustomFormFields(resumableState, formAction) {
   var customAction = formAction.$$FORM_ACTION;
 
@@ -2604,13 +2593,7 @@ function getCustomFormFields(resumableState, formAction) {
     var prefix = makeFormFieldPrefix(resumableState);
 
     try {
-      var customFields = formAction.$$FORM_ACTION(prefix);
-
-      if (customFields) {
-        validateAdditionalFormFields(customFields.data);
-      }
-
-      return customFields;
+      return formAction.$$FORM_ACTION(prefix);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Rethrow suspense.
