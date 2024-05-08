@@ -4357,7 +4357,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
       expect(window.getComputedStyle(document.body).backgroundColor).toMatch(
-        'blue',
+        'rgb(0, 0, 255)',
       );
     });
 
@@ -4386,7 +4386,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
       expect(window.getComputedStyle(document.body).backgroundColor).toMatch(
-        'red',
+        'rgb(255, 0, 0)',
       );
     });
   });
