@@ -25,7 +25,7 @@ type FormStatusPending = {|
   pending: true,
   data: FormData,
   method: string,
-  action: string | (FormData => void | Promise<void>),
+  action: string | (FormData => void | Promise<void>) | null,
 |};
 
 export type FormStatus = FormStatusPending | FormStatusNotPending;
