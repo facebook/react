@@ -446,65 +446,65 @@ function diffProperties(
 }
 
 function fastAddProperties(
-  updatePayload: null | Object,
-  nextProps: Object,
+  payload: null | Object,
+  props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
   let attributeConfig;
-  let nextProp;
+  let prop;
 
-  for (const propKey in nextProps) {
-    nextProp = nextProps[propKey];
+  for (const propKey in props) {
+    prop = props[propKey];
 
-    if (nextProp === undefined) {
+    if (prop === undefined) {
       continue;
     }
 
-    attributeConfig = validAttributes[propKey];
+    attributeConfig = ((validAttributes[propKey]: any): AttributeConfiguration);
 
-    if (attributeConfig === undefined) {
+    if (attributeConfig == null) {
       continue;
     }
 
-    if (typeof nextProp === 'function') {
-      nextProp = (true: any);
+    let newValue;
+
+    if (typeof prop === 'function') {
+      // A function prop. It represents an event handler. Pass it to native as 'true'.
+      newValue = true;
+    } else if (typeof attributeConfig !== 'object') {
+      // An atomic prop. Doesn't need to be flattened.
+      newValue = prop;
+    } else if (typeof attributeConfig.process === 'function') {
+      // An atomic prop with custom processing.
+      newValue = attributeConfig.process(prop);
+    } else if (typeof attributeConfig.diff === 'function') {
+      // An atomic prop with custom diffing. We don't do diffing here.
+      newValue = prop;
     }
 
-    if (typeof attributeConfig !== 'object') {
-      if (!updatePayload) {
-        updatePayload = ({}: {[string]: $FlowFixMe});
+    if (newValue !== undefined) {
+      if (!payload) {
+        payload = ({}: {[string]: $FlowFixMe});
       }
-      updatePayload[propKey] = nextProp;
+      payload[propKey] = newValue;
       continue;
     }
 
-    if (typeof attributeConfig.process === 'function') {
-      if (!updatePayload) {
-        updatePayload = ({}: {[string]: $FlowFixMe});
-      }
-      updatePayload[propKey] = attributeConfig.process(nextProp);
-      continue;
-    }
+    // Not-atomic prop that needs to be flattened. Likely it's the 'style' prop.
 
-    if (isArray(nextProp)) {
-      for (let i = 0; i < nextProp.length; i++) {
-        updatePayload = fastAddProperties(
-          updatePayload,
-          nextProp[i],
-          ((attributeConfig: any): AttributeConfiguration),
-        );
+    // It can be an array.
+    if (isArray(prop)) {
+      for (let i = 0; i < prop.length; i++) {
+        payload = fastAddProperties(payload, prop[i], attributeConfig);
       }
       continue;
     }
 
-    updatePayload = fastAddProperties(
-      updatePayload,
-      nextProp,
-      ((attributeConfig: any): AttributeConfiguration),
-    );
+    // Or it can be an object.
+    payload = fastAddProperties(payload, prop, attributeConfig);
   }
 
-  return updatePayload;
+  return payload;
 }
 
 /**
