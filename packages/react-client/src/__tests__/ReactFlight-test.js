@@ -1694,7 +1694,6 @@ describe('ReactFlight', () => {
     expect(errors).toEqual([]);
   });
 
-  // @gate enableServerComponentKeys
   it('preserves state when keying a server component', async () => {
     function StatefulClient({name}) {
       const [state] = React.useState(name.toLowerCase());
@@ -1751,7 +1750,6 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableServerComponentKeys
   it('does not inherit keys of children inside a server component', async () => {
     function StatefulClient({name, initial}) {
       const [state] = React.useState(initial);
@@ -1824,7 +1822,6 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableServerComponentKeys
   it('shares state between single return and array return in a parent', async () => {
     function StatefulClient({name, initial}) {
       const [state] = React.useState(initial);
@@ -2065,7 +2062,6 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableServerComponentKeys
   it('preserves state with keys split across async work', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
