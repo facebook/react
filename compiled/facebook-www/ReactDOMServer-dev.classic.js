@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-classic-f3d84129';
+var ReactVersion = '19.0.0-www-classic-b547cfd9';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -2572,11 +2572,7 @@ var startHiddenInputChunk = stringToPrecomputedChunk('<input type="hidden"');
 function pushAdditionalFormField(value, key) {
   var target = this;
   target.push(startHiddenInputChunk);
-
-  if (typeof value !== 'string') {
-    throw new Error('File/Blob fields are not yet supported in progressive forms. ' + 'It probably means you are closing over binary data or FormData in a Server Action.');
-  }
-
+  validateAdditionalFormField(value);
   pushStringAttribute(target, 'name', key);
   pushStringAttribute(target, 'value', value);
   target.push(endOfStartTagSelfClosing);
@@ -2589,6 +2585,21 @@ function pushAdditionalFormFields(target, formData) {
   }
 }
 
+function validateAdditionalFormField(value, key) {
+  if (typeof value !== 'string') {
+    throw new Error('File/Blob fields are not yet supported in progressive forms. ' + 'Will fallback to client hydration.');
+  }
+}
+
+function validateAdditionalFormFields(formData) {
+  if (formData != null) {
+    // $FlowFixMe[prop-missing]: FormData has forEach.
+    formData.forEach(validateAdditionalFormField);
+  }
+
+  return formData;
+}
+
 function getCustomFormFields(resumableState, formAction) {
   var customAction = formAction.$$FORM_ACTION;
 
@@ -2596,7 +2607,13 @@ function getCustomFormFields(resumableState, formAction) {
     var prefix = makeFormFieldPrefix(resumableState);
 
     try {
-      return formAction.$$FORM_ACTION(prefix);
+      var customFields = formAction.$$FORM_ACTION(prefix);
+
+      if (customFields) {
+        validateAdditionalFormFields(customFields.data);
+      }
+
+      return customFields;
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Rethrow suspense.
