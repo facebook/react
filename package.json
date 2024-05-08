@@ -137,6 +137,7 @@
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is"
+    "react-is": "npm:react-is",
+    "jsdom": "22.1.0"
   }
 }
