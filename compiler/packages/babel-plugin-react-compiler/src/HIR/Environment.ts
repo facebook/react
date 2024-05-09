@@ -120,6 +120,13 @@ const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
+   * Enable a check that resets the memoization cache when the source code of the file changes.
+   * This is intended to support hot module reloading (HMR), where the same runtime component
+   * instance will be reused across different versions of the component source.
+   */
+  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+
+  /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
    * being mutated. With this mode enabled, Forget will still discard the actual useMemo/useCallback
    * calls and may memoize slightly differently. However, it will assume that the values produced
@@ -427,6 +434,7 @@ export class Environment {
   #nextScope: number = 0;
   logger: Logger | null;
   filename: string | null;
+  code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
 
@@ -438,11 +446,13 @@ export class Environment {
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     logger: Logger | null,
-    filename: string | null
+    filename: string | null,
+    code: string | null
   ) {
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
+    this.code = code;
     this.logger = logger;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);

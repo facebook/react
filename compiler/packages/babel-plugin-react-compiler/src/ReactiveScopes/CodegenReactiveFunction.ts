@@ -43,6 +43,7 @@ import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+import { createHmac } from "crypto";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
 export const EARLY_RETURN_SENTINEL = "react.early_return_sentinel";
@@ -78,6 +79,25 @@ export function codegenFunction(
     uniqueIdentifiers,
     null
   );
+
+  /**
+   * Hot-module reloading reuses component instances at runtime even as the source of the component changes.
+   * The generated code needs to prevent values from one version of the code being reused after a code cange.
+   * If HMR detection is enabled and we know the source code of the component, assign a cache slot to track
+   * the source hash, and later, emit code to check for source changes and reset the cache on source changes.
+   */
+  let hotModuleReloadState: { cacheIndex: number; hash: string } | null = null;
+  if (
+    fn.env.config.enableResetCacheOnSourceFileChanges &&
+    fn.env.code !== null
+  ) {
+    const hash = createHmac("sha256", fn.env.code).digest("hex");
+    hotModuleReloadState = {
+      cacheIndex: cx.nextCacheIndex,
+      hash,
+    };
+  }
+
   const compileResult = codegenReactiveFunction(cx, fn);
   if (compileResult.isErr()) {
     return compileResult;
@@ -98,8 +118,10 @@ export function codegenFunction(
 
   const cacheCount = compiled.memoSlotsUsed;
   if (cacheCount !== 0) {
+    const preface: Array<t.Statement> = [];
+
     // The import declaration for `useMemoCache` is inserted in the Babel plugin
-    compiled.body.body.unshift(
+    preface.push(
       t.variableDeclaration("const", [
         t.variableDeclarator(
           t.identifier(cx.synthesizeName("$")),
@@ -109,6 +131,71 @@ export function codegenFunction(
         ),
       ])
     );
+    if (hotModuleReloadState !== null) {
+      // HMR detection is enabled, emit code to reset the memo cache on source changes
+      const index = cx.synthesizeName("$i");
+      preface.push(
+        t.ifStatement(
+          t.binaryExpression(
+            "!==",
+            t.memberExpression(
+              t.identifier(cx.synthesizeName("$")),
+              t.numericLiteral(hotModuleReloadState.cacheIndex),
+              true
+            ),
+            t.stringLiteral(hotModuleReloadState.hash)
+          ),
+          t.blockStatement([
+            t.forStatement(
+              t.variableDeclaration("let", [
+                t.variableDeclarator(t.identifier(index), t.numericLiteral(0)),
+              ]),
+              t.binaryExpression(
+                "<",
+                t.identifier(index),
+                t.numericLiteral(cacheCount)
+              ),
+              t.assignmentExpression(
+                "+=",
+                t.identifier(index),
+                t.numericLiteral(1)
+              ),
+              t.blockStatement([
+                t.expressionStatement(
+                  t.assignmentExpression(
+                    "=",
+                    t.memberExpression(
+                      t.identifier(cx.synthesizeName("$")),
+                      t.identifier(index),
+                      true
+                    ),
+                    t.callExpression(
+                      t.memberExpression(
+                        t.identifier("Symbol"),
+                        t.identifier("for")
+                      ),
+                      [t.stringLiteral(MEMO_CACHE_SENTINEL)]
+                    )
+                  )
+                ),
+              ])
+            ),
+            t.expressionStatement(
+              t.assignmentExpression(
+                "=",
+                t.memberExpression(
+                  t.identifier(cx.synthesizeName("$")),
+                  t.numericLiteral(hotModuleReloadState.cacheIndex),
+                  true
+                ),
+                t.stringLiteral(hotModuleReloadState.hash)
+              )
+            ),
+          ])
+        )
+      );
+    }
+    compiled.body.body.unshift(...preface);
   }
 
   const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;

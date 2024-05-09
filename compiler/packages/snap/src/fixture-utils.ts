@@ -37,7 +37,7 @@ function stripExtension(filename: string, extensions: Array<string>): string {
 
 export async function readTestFilter(): Promise<TestFilter | null> {
   if (!(await exists(FILTER_PATH))) {
-    throw new Error(`testfilter file not found at ${FILTER_PATH}`);
+    throw new Error(`testfilter file not found at \`${FILTER_PATH}\``);
   }
 
   const input = await fs.readFile(FILTER_PATH, "utf8");

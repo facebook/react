@@ -36,6 +36,7 @@ export type CompilerPass = {
   opts: PluginOptions;
   filename: string | null;
   comments: Array<t.CommentBlock | t.CommentLine>;
+  code: string | null;
 };
 
 function findDirectiveEnablingMemoization(
@@ -308,7 +309,14 @@ export function compileProgram(
       }
       const config = environment.unwrap();
 
-      compiledFn = compileFn(fn, config, fnType, options.logger, pass.filename);
+      compiledFn = compileFn(
+        fn,
+        config,
+        fnType,
+        options.logger,
+        pass.filename,
+        pass.code
+      );
       options.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
         fnLoc: fn.node.loc ?? null,

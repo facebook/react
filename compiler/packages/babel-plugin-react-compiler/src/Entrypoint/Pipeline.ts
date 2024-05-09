@@ -106,7 +106,8 @@ export function* run(
   fnType: ReactFunctionType,
 
   logger: Logger | null,
-  filename: string | null
+  filename: string | null,
+  code: string | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
@@ -114,7 +115,8 @@ export function* run(
     config,
     contextIdentifiers,
     logger,
-    filename
+    filename,
+    code
   );
   yield {
     kind: "debug",
@@ -452,9 +454,10 @@ export function compileFn(
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
   logger: Logger | null,
-  filename: string | null
+  filename: string | null,
+  code: string | null
 ): CodegenFunction {
-  let generator = run(func, config, fnType, logger, filename);
+  let generator = run(func, config, fnType, logger, filename, code);
   while (true) {
     const next = generator.next();
     if (next.done) {

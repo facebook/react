@@ -33,10 +33,20 @@ export default function BabelPluginReactCompiler(
         if (pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
           opts = injectReanimatedFlag(opts);
         }
+        if (process.env["NODE_ENV"] === "development") {
+          opts = {
+            ...opts,
+            environment: {
+              ...opts.environment,
+              enableResetCacheOnSourceFileChanges: true,
+            },
+          };
+        }
         compileProgram(prog, {
           opts,
           filename: pass.filename ?? null,
           comments: pass.file.ast.comments ?? [],
+          code: pass.file.code,
         });
       },
     },

@@ -204,6 +204,7 @@ function compile(source: string): CompilerOutput {
         getReactFunctionType(id),
         null,
         null,
+        null,
       )) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
