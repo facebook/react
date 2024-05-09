@@ -9,10 +9,6 @@
 
 import type {ReactDebugInfo} from './ReactTypes';
 
-interface ConsoleTask {
-  run<T>(f: () => T): T;
-}
-
 export type ReactElement = {
   $$typeof: any,
   type: any,

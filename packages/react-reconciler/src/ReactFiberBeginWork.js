@@ -110,6 +110,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -3831,18 +3832,19 @@ function beginWork(
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
-      return remountFiber(
-        current,
-        workInProgress,
-        createFiberFromTypeAndProps(
-          workInProgress.type,
-          workInProgress.key,
-          workInProgress.pendingProps,
-          workInProgress._debugOwner || null,
-          workInProgress.mode,
-          workInProgress.lanes,
-        ),
+      const copiedFiber = createFiberFromTypeAndProps(
+        workInProgress.type,
+        workInProgress.key,
+        workInProgress.pendingProps,
+        workInProgress._debugOwner || null,
+        workInProgress.mode,
+        workInProgress.lanes,
       );
+      if (enableOwnerStacks) {
+        copiedFiber._debugStack = workInProgress._debugStack;
+        copiedFiber._debugTask = workInProgress._debugTask;
+      }
+      return remountFiber(current, workInProgress, copiedFiber);
     }
   }
 
