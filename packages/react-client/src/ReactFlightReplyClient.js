@@ -176,6 +176,8 @@ function escapeStringValue(value: string): string {
   }
 }
 
+interface Reference {}
+
 export function processReply(
   root: ReactServerValue,
   formFieldPrefix: string,
@@ -186,6 +188,8 @@ export function processReply(
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
+  const writtenObjects: WeakMap<Reference, string> = new WeakMap();
+  let modelRoot: null | ReactServerValue = root;
 
   function serializeTypedArray(
     tag: string,
@@ -427,7 +431,7 @@ export function processReply(
             // We always outline this as a separate part even though we could inline it
             // because it ensures a more deterministic encoding.
             const lazyId = nextPartId++;
-            const partJSON = JSON.stringify(resolvedModel, resolveToJSON);
+            const partJSON = serializeModel(resolvedModel, lazyId);
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
             // eslint-disable-next-line react-internal/safe-string-coercion
@@ -447,7 +451,7 @@ export function processReply(
                 // While the first promise resolved, its value isn't necessarily what we'll
                 // resolve into because we might suspend again.
                 try {
-                  const partJSON = JSON.stringify(value, resolveToJSON);
+                  const partJSON = serializeModel(value, lazyId);
                   // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
                   const data: FormData = formData;
                   // eslint-disable-next-line react-internal/safe-string-coercion
@@ -488,7 +492,7 @@ export function processReply(
         thenable.then(
           partValue => {
             try {
-              const partJSON = JSON.stringify(partValue, resolveToJSON);
+              const partJSON = serializeModel(partValue, promiseId);
               // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
               const data: FormData = formData;
               // eslint-disable-next-line react-internal/safe-string-coercion
@@ -507,6 +511,28 @@ export function processReply(
         );
         return serializePromiseID(promiseId);
       }
+
+      const existingReference = writtenObjects.get(value);
+      if (existingReference !== undefined) {
+        if (modelRoot === value) {
+          // This is the ID we're currently emitting so we need to write it
+          // once but if we discover it again, we refer to it by id.
+          modelRoot = null;
+        } else {
+          // We've already emitted this as an outlined object, so we can
+          // just refer to that by its existing ID.
+          return existingReference;
+        }
+      } else if (key.indexOf(':') === -1) {
+        // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+        const parentReference = writtenObjects.get(parent);
+        if (parentReference !== undefined) {
+          // If the parent has a reference, we can refer to this object indirectly
+          // through the property name inside that parent.
+          writtenObjects.set(value, parentReference + ':' + key);
+        }
+      }
+
       if (isArray(value)) {
         // $FlowFixMe[incompatible-return]
         return value;
@@ -530,20 +556,20 @@ export function processReply(
         return serializeFormDataReference(refId);
       }
       if (value instanceof Map) {
-        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        const mapId = nextPartId++;
+        const partJSON = serializeModel(Array.from(value), mapId);
         if (formData === null) {
           formData = new FormData();
         }
-        const mapId = nextPartId++;
         formData.append(formFieldPrefix + mapId, partJSON);
         return serializeMapID(mapId);
       }
       if (value instanceof Set) {
-        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        const setId = nextPartId++;
+        const partJSON = serializeModel(Array.from(value), setId);
         if (formData === null) {
           formData = new FormData();
         }
-        const setId = nextPartId++;
         formData.append(formFieldPrefix + setId, partJSON);
         return serializeSetID(setId);
       }
@@ -622,14 +648,14 @@ export function processReply(
         const iterator = iteratorFn.call(value);
         if (iterator === value) {
           // Iterator, not Iterable
-          const partJSON = JSON.stringify(
+          const iteratorId = nextPartId++;
+          const partJSON = serializeModel(
             Array.from((iterator: any)),
-            resolveToJSON,
+            iteratorId,
           );
           if (formData === null) {
             formData = new FormData();
           }
-          const iteratorId = nextPartId++;
           formData.append(formFieldPrefix + iteratorId, partJSON);
           return serializeIteratorID(iteratorId);
         }
@@ -784,8 +810,17 @@ export function processReply(
     );
   }
 
-  // $FlowFixMe[incompatible-type] it's not going to be undefined because we'll encode it.
-  const json: string = JSON.stringify(root, resolveToJSON);
+  function serializeModel(model: ReactServerValue, id: number): string {
+    if (typeof model === 'object' && model !== null) {
+      writtenObjects.set(model, serializeByValueID(id));
+    }
+    modelRoot = model;
+    // $FlowFixMe[incompatible-return] it's not going to be undefined because we'll encode it.
+    return JSON.stringify(model, resolveToJSON);
+  }
+
+  const json = serializeModel(root, 0);
+
   if (formData === null) {
     // If it's a simple data structure, we just use plain JSON.
     resolve(json);
