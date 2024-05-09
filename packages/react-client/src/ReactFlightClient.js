@@ -680,6 +680,7 @@ function createModelResolver<T>(
   cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
+  path: Array<string>,
 ): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
@@ -694,6 +695,9 @@ function createModelResolver<T>(
     };
   }
   return value => {
+    for (let i = 1; i < path.length; i++) {
+      value = value[path[i]];
+    }
     parentObject[key] = map(response, value);
 
     // If this is the root object for a model reference, where `blocked.value`
@@ -752,11 +756,13 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
 
 function getOutlinedModel<T>(
   response: Response,
-  id: number,
+  reference: string,
   parentObject: Object,
   key: string,
   map: (response: Response, model: any) => T,
 ): T {
+  const path = reference.split(':');
+  const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
   switch (chunk.status) {
     case RESOLVED_MODEL:
@@ -769,7 +775,11 @@ function getOutlinedModel<T>(
   // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
-      const chunkValue = map(response, chunk.value);
+      let value = chunk.value;
+      for (let i = 1; i < path.length; i++) {
+        value = value[path[i]];
+      }
+      const chunkValue = map(response, value);
       if (__DEV__ && chunk._debugInfo) {
         // If we have a direct reference to an object that was rendered by a synchronous
         // server component, it might have some debug info about how it was rendered.
@@ -809,6 +819,7 @@ function getOutlinedModel<T>(
           chunk.status === CYCLIC,
           response,
           map,
+          path,
         ),
         createModelReject(parentChunk),
       );
@@ -893,10 +904,10 @@ function parseModelString(
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.slice(2), 16);
+        const ref = value.slice(2);
         return getOutlinedModel(
           response,
-          id,
+          ref,
           parentObject,
           key,
           createServerReferenceProxy,
@@ -916,28 +927,28 @@ function parseModelString(
       }
       case 'Q': {
         // Map
-        const id = parseInt(value.slice(2), 16);
-        return getOutlinedModel(response, id, parentObject, key, createMap);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createMap);
       }
       case 'W': {
         // Set
-        const id = parseInt(value.slice(2), 16);
-        return getOutlinedModel(response, id, parentObject, key, createSet);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createSet);
       }
       case 'B': {
         // Blob
         if (enableBinaryFlight) {
-          const id = parseInt(value.slice(2), 16);
-          return getOutlinedModel(response, id, parentObject, key, createBlob);
+          const ref = value.slice(2);
+          return getOutlinedModel(response, ref, parentObject, key, createBlob);
         }
         return undefined;
       }
       case 'K': {
         // FormData
-        const id = parseInt(value.slice(2), 16);
+        const ref = value.slice(2);
         return getOutlinedModel(
           response,
-          id,
+          ref,
           parentObject,
           key,
           createFormData,
@@ -945,10 +956,10 @@ function parseModelString(
       }
       case 'i': {
         // Iterator
-        const id = parseInt(value.slice(2), 16);
+        const ref = value.slice(2);
         return getOutlinedModel(
           response,
-          id,
+          ref,
           parentObject,
           key,
           extractIterator,
@@ -1000,8 +1011,8 @@ function parseModelString(
       }
       default: {
         // We assume that anything else is a reference ID.
-        const id = parseInt(value.slice(1), 16);
-        return getOutlinedModel(response, id, parentObject, key, createModel);
+        const ref = value.slice(1);
+        return getOutlinedModel(response, ref, parentObject, key, createModel);
       }
     }
   }

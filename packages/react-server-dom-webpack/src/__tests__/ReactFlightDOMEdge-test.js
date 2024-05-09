@@ -231,7 +231,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(470);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -541,6 +541,55 @@ describe('ReactFlightDOMEdge', () => {
     expect(await readPromise).toEqual({value: 'world', done: false});
 
     expect(await iterator.next()).toEqual({value: undefined, done: true});
+  });
+
+  // @gate enableFlightReadableStream
+  it('should ideally dedupe objects inside async iterables but does not yet', async () => {
+    const obj = {
+      this: {is: 'a large objected'},
+      with: {many: 'properties in it'},
+    };
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        for (let i = 0; i < 30; i++) {
+          yield obj;
+        }
+      },
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream({
+      iterable,
+    });
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    // TODO: Ideally streams should dedupe objects but because we never outline the objects
+    // they end up not having a row to reference them nor any of its nested objects.
+    // expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeGreaterThan(400);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const items = [];
+    const iterator = result.iterable[Symbol.asyncIterator]();
+    let entry;
+    while (!(entry = await iterator.next()).done) {
+      items.push(entry.value);
+    }
+
+    // Should still match the result when parsed
+    expect(items.length).toBe(30);
+    // TODO: These should be the same
+    // expect(items[5]).toBe(items[10]); // two random items are the same instance
+    expect(items[5]).toEqual(items[10]);
   });
 
   it('warns if passing a this argument to bind() of a server reference', async () => {
