@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<638ec2a3fb10b182763567315d0fee6d>>
+ * @generated SignedSource<<71139a2081b9ee803b48b333bc213727>>
  */
 
 'use strict';
@@ -1038,7 +1038,7 @@ function elementRefGetterWithDeprecationWarning() {
  */
 
 
-function ReactElement(type, key, _ref, self, source, owner, props) {
+function ReactElement(type, key, _ref, self, source, owner, props, debugStack, debugTask) {
   var ref;
 
   if (enableRefAsProp) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0fec1dd038055b37a92b44fed9235e18>>
+ * @generated SignedSource<<8bb33a6a3191b73ecb105d7607dc2eac>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-beta-c8a63eb4';
+var ReactVersion = '19.0.0-beta-c24078b0';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -1328,7 +1328,7 @@ function elementRefGetterWithDeprecationWarning() {
  */
 
 
-function ReactElement(type, key, _ref, self, source, owner, props) {
+function ReactElement(type, key, _ref, self, source, owner, props, debugStack, debugTask) {
   var ref;
 
   if (enableRefAsProp) {
