@@ -975,7 +975,8 @@ export function performConcurrentWorkOnRoot(
       break;
     } while (true);
   }
-
+  // After the time slice is interrupted, execute ensureRootIsScheduled to
+  // see if there is a higher priority schedule.
   ensureRootIsScheduled(root);
   return getContinuationForRoot(root, originalCallbackNode);
 }
