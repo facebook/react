@@ -204,7 +204,6 @@ import {
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
 import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
-import {setCurrentOwner} from './ReactFiberCurrentOwner';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
@@ -230,8 +229,9 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   current as ReactCurrentFiberCurrent,
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
+  resetCurrentDebugFiberInDEV,
+  setCurrentDebugFiberInDEV,
+  resetCurrentFiber,
 } from './ReactCurrentFiber';
 import {
   isDevToolsPresent,
@@ -1683,9 +1683,8 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   // These should be reset immediately because they're only supposed to be set
   // when React is executing user code.
   resetHooksAfterThrow();
-  resetCurrentDebugFiberInDEV();
   if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
+    resetCurrentFiber();
   }
 
   if (thrownValue === SuspenseException) {
@@ -2377,17 +2376,15 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     next = beginWork(current, unitOfWork, entangledRenderLanes);
   }
 
-  resetCurrentDebugFiberInDEV();
+  if (__DEV__ || !disableStringRefs) {
+    resetCurrentFiber();
+  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
     completeUnitOfWork(unitOfWork);
   } else {
     workInProgress = next;
-  }
-
-  if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
   }
 }
 
@@ -2399,7 +2396,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  setCurrentDebugFiberInDEV(unitOfWork);
   const isProfilingMode =
     enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode;
   if (isProfilingMode) {
@@ -2492,17 +2488,15 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   // The begin phase finished successfully without suspending. Return to the
   // normal work loop.
 
-  resetCurrentDebugFiberInDEV();
+  if (__DEV__ || !disableStringRefs) {
+    resetCurrentFiber();
+  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
     completeUnitOfWork(unitOfWork);
   } else {
     workInProgress = next;
-  }
-
-  if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
   }
 }
 
@@ -2892,11 +2886,6 @@ function commitRootImpl(
 
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
-
-    // Reset this to null before calling lifecycles
-    if (__DEV__ || !disableStringRefs) {
-      setCurrentOwner(null);
-    }
 
     // The commit phase is broken into several sub-phases. We do a separate pass
     // of the effect list for each phase: all mutation effects come before all
