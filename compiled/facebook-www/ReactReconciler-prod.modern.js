@@ -12,6 +12,7 @@
 
 "use strict";
 module.exports = function ($$$config) {
+  function noop() {}
   function formatProdErrorMessage(code) {
     var url = "https://react.dev/errors/" + code;
     if (1 < arguments.length) {
@@ -1407,12 +1408,13 @@ module.exports = function ($$$config) {
     thenable = thenable.status;
     return "fulfilled" === thenable || "rejected" === thenable;
   }
-  function noop() {}
+  function noop$1() {}
   function trackUsedThenable(thenableState, thenable, index) {
     index = thenableState[index];
     void 0 === index
       ? thenableState.push(thenable)
-      : index !== thenable && (thenable.then(noop, noop), (thenable = index));
+      : index !== thenable &&
+        (thenable.then(noop$1, noop$1), (thenable = index));
     switch (thenable.status) {
       case "fulfilled":
         return thenable.value;
@@ -1422,7 +1424,7 @@ module.exports = function ($$$config) {
           throw Error(formatProdErrorMessage(483));
         throw thenableState;
       default:
-        if ("string" === typeof thenable.status) thenable.then(noop, noop);
+        if ("string" === typeof thenable.status) thenable.then(noop$1, noop$1);
         else {
           thenableState = workInProgressRoot;
           if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
@@ -12143,7 +12145,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-14c8fd79"
+      reconcilerVersion: "19.0.0-www-modern-1eb185ad"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
@@ -12190,7 +12192,7 @@ module.exports = function ($$$config) {
   exports.startHostTransition = function (
     formFiber,
     pendingState,
-    callback,
+    action,
     formData
   ) {
     if (5 !== formFiber.tag) throw Error(formatProdErrorMessage(476));
@@ -12200,13 +12202,15 @@ module.exports = function ($$$config) {
       queue,
       pendingState,
       NotPendingTransition,
-      function () {
-        requestCurrentTransition();
-        var resetStateQueue =
-          ensureFormComponentIsStateful(formFiber).next.queue;
-        dispatchSetState(formFiber, resetStateQueue, {});
-        return callback(formData);
-      }
+      null === action
+        ? noop
+        : function () {
+            requestCurrentTransition();
+            var resetStateQueue =
+              ensureFormComponentIsStateful(formFiber).next.queue;
+            dispatchSetState(formFiber, resetStateQueue, {});
+            return action(formData);
+          }
     );
   };
   exports.updateContainer = function (

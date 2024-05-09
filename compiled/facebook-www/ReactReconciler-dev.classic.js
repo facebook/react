@@ -6507,7 +6507,7 @@ function isThenableResolved(thenable) {
   return status === 'fulfilled' || status === 'rejected';
 }
 
-function noop() {}
+function noop$1() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   if (ReactSharedInternals.actQueue !== null) {
@@ -6550,7 +6550,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // intentionally ignore.
 
 
-      thenable.then(noop, noop);
+      thenable.then(noop$1, noop$1);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -6583,7 +6583,7 @@ function trackUsedThenable(thenableState, thenable, index) {
           // some custom userspace implementation. We treat it as "pending".
           // Attach a dummy listener, to ensure that any lazy initialization can
           // happen. Flight lazily parses JSON when the value is actually awaited.
-          thenable.then(noop, noop);
+          thenable.then(noop$1, noop$1);
         } else {
           // This is an uncached thenable that we haven't seen before.
           // Detect infinite ping loops caused by uncached promises.
@@ -10418,7 +10418,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
   }
 }
 
-function startHostTransition(formFiber, pendingState, callback, formData) {
+var noop = function () {};
+
+function startHostTransition(formFiber, pendingState, action, formData) {
 
   if (formFiber.tag !== HostComponent) {
     throw new Error('Expected the form instance to be a HostComponent. This ' + 'is a bug in React.');
@@ -10426,12 +10428,15 @@ function startHostTransition(formFiber, pendingState, callback, formData) {
 
   var stateHook = ensureFormComponentIsStateful(formFiber);
   var queue = stateHook.queue;
-  startTransition(formFiber, queue, pendingState, NotPendingTransition, // TODO: We can avoid this extra wrapper, somehow. Figure out layering
-  // once more of this function is implemented.
-  function () {
+  startTransition(formFiber, queue, pendingState, NotPendingTransition, // TODO: `startTransition` both sets the pending state and dispatches
+  // the action, if one is provided. Consider refactoring these two
+  // concerns to avoid the extra lambda.
+  action === null ? // No action was provided, but we still call `startTransition` to
+  // set the pending form status.
+  noop : function () {
     // Automatically reset the form when the action completes.
     requestFormReset(formFiber);
-    return callback(formData);
+    return action(formData);
   });
 }
 
@@ -28660,7 +28665,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-6ec34ee9';
+var ReactVersion = '19.0.0-www-classic-4ced1037';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

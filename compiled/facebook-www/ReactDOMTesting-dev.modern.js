@@ -2421,36 +2421,36 @@ function lanesToEventPriority(lanes) {
   return IdleEventPriority;
 }
 
-function noop$3() {}
+function noop$4() {}
 
 var DefaultDispatcher = {
   f
   /* flushSyncWork */
-  : noop$3,
+  : noop$4,
   r
   /* requestFormReset */
-  : noop$3,
+  : noop$4,
   D
   /* prefetchDNS */
-  : noop$3,
+  : noop$4,
   C
   /* preconnect */
-  : noop$3,
+  : noop$4,
   L
   /* preload */
-  : noop$3,
+  : noop$4,
   m
   /* preloadModule */
-  : noop$3,
+  : noop$4,
   X
   /* preinitScript */
-  : noop$3,
+  : noop$4,
   S
   /* preinitStyle */
-  : noop$3,
+  : noop$4,
   M
   /* preinitModuleScript */
-  : noop$3
+  : noop$4
 };
 var Internals = {
   Events: null,
@@ -8450,6 +8450,9 @@ transition) {
 
   return currentEventTransitionLane;
 }
+function didCurrentEventScheduleTransition() {
+  return currentEventTransitionLane !== NoLane;
+}
 
 // transition updates that occur while the async action is still in progress
 // are treated as part of the action.
@@ -9452,7 +9455,7 @@ function isThenableResolved(thenable) {
   return status === 'fulfilled' || status === 'rejected';
 }
 
-function noop$2() {}
+function noop$3() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   if (ReactSharedInternals.actQueue !== null) {
@@ -9495,7 +9498,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // intentionally ignore.
 
 
-      thenable.then(noop$2, noop$2);
+      thenable.then(noop$3, noop$3);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -9528,7 +9531,7 @@ function trackUsedThenable(thenableState, thenable, index) {
           // some custom userspace implementation. We treat it as "pending".
           // Attach a dummy listener, to ensure that any lazy initialization can
           // happen. Flight lazily parses JSON when the value is actually awaited.
-          thenable.then(noop$2, noop$2);
+          thenable.then(noop$3, noop$3);
         } else {
           // This is an uncached thenable that we haven't seen before.
           // Detect infinite ping loops caused by uncached promises.
@@ -13363,7 +13366,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
   }
 }
 
-function startHostTransition(formFiber, pendingState, callback, formData) {
+var noop$2 = function () {};
+
+function startHostTransition(formFiber, pendingState, action, formData) {
 
   if (formFiber.tag !== HostComponent) {
     throw new Error('Expected the form instance to be a HostComponent. This ' + 'is a bug in React.');
@@ -13371,12 +13376,15 @@ function startHostTransition(formFiber, pendingState, callback, formData) {
 
   var stateHook = ensureFormComponentIsStateful(formFiber);
   var queue = stateHook.queue;
-  startTransition(formFiber, queue, pendingState, NotPendingTransition, // TODO: We can avoid this extra wrapper, somehow. Figure out layering
-  // once more of this function is implemented.
-  function () {
+  startTransition(formFiber, queue, pendingState, NotPendingTransition, // TODO: `startTransition` both sets the pending state and dispatches
+  // the action, if one is provided. Consider refactoring these two
+  // concerns to avoid the extra lambda.
+  action === null ? // No action was provided, but we still call `startTransition` to
+  // set the pending form status.
+  noop$2 : function () {
     // Automatically reset the form when the action completes.
     requestFormReset$1(formFiber);
-    return callback(formData);
+    return action(formData);
   });
 }
 
@@ -30579,7 +30587,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-826b7a52';
+var ReactVersion = '19.0.0-www-modern-4ab3a53a';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -33615,10 +33623,48 @@ function extractEvents$2(dispatchQueue, domEventName, targetInst, nativeEvent, n
   }
 }
 
+function coerceFormActionProp(actionProp) {
+  // This should match the logic in ReactDOMComponent
+  if (actionProp == null || typeof actionProp === 'symbol' || typeof actionProp === 'boolean') {
+    return null;
+  } else if (typeof actionProp === 'function') {
+    return actionProp;
+  } else {
+    {
+      checkAttributeStringCoercion(actionProp, 'action');
+    }
+
+    return sanitizeURL(enableTrustedTypesIntegration ? actionProp : '' + actionProp);
+  }
+}
+
+function createFormDataWithSubmitter(form, submitter) {
+  // The submitter's value should be included in the FormData.
+  // It should be in the document order in the form.
+  // Since the FormData constructor invokes the formdata event it also
+  // needs to be available before that happens so after construction it's too
+  // late. We use a temporary fake node for the duration of this event.
+  // TODO: FormData takes a second argument that it's the submitter but this
+  // is fairly new so not all browsers support it yet. Switch to that technique
+  // when available.
+  var temp = submitter.ownerDocument.createElement('input');
+  temp.name = submitter.name;
+  temp.value = submitter.value;
+
+  if (form.id) {
+    temp.setAttribute('form', form.id);
+  }
+
+  submitter.parentNode.insertBefore(temp, submitter);
+  var formData = new FormData(form);
+  temp.parentNode.removeChild(temp);
+  return formData;
+}
 /**
  * This plugin invokes action functions on forms, inputs and buttons if
  * the form doesn't prevent default.
  */
+
 
 function extractEvents$1(dispatchQueue, domEventName, maybeTargetInst, nativeEvent, nativeEventTarget, eventSystemFlags, targetContainer) {
   if (domEventName !== 'submit') {
@@ -33633,15 +33679,16 @@ function extractEvents$1(dispatchQueue, domEventName, maybeTargetInst, nativeEve
 
   var formInst = maybeTargetInst;
   var form = nativeEventTarget;
-  var action = getFiberCurrentPropsFromNode(form).action;
+  var action = coerceFormActionProp(getFiberCurrentPropsFromNode(form).action);
   var submitter = nativeEvent.submitter;
   var submitterAction;
 
   if (submitter) {
     var submitterProps = getFiberCurrentPropsFromNode(submitter);
-    submitterAction = submitterProps ? submitterProps.formAction : submitter.getAttribute('formAction');
+    submitterAction = submitterProps ? coerceFormActionProp(submitterProps.formAction) : // The built-in Flow type is ?string, wider than the spec
+    submitter.getAttribute('formAction');
 
-    if (submitterAction != null) {
+    if (submitterAction !== null) {
       // The submitter overrides the form action.
       action = submitterAction; // If the action is a function, we don't want to pass its name
       // value to the FormData since it's controlled by the server.
@@ -33650,58 +33697,53 @@ function extractEvents$1(dispatchQueue, domEventName, maybeTargetInst, nativeEve
     }
   }
 
-  if (typeof action !== 'function') {
-    return;
-  }
-
   var event = new SyntheticEvent('action', 'action', null, nativeEvent, nativeEventTarget);
 
   function submitForm() {
     if (nativeEvent.defaultPrevented) {
-      // We let earlier events to prevent the action from submitting.
-      return;
-    } // Prevent native navigation.
+      // An earlier event prevented form submission. If a transition update was
+      // also scheduled, we should trigger a pending form status — even if
+      // no action function was provided.
+      if (didCurrentEventScheduleTransition()) {
+        // We're going to set the pending form status, but because the submission
+        // was prevented, we should not fire the action function.
+        var formData = submitter ? createFormDataWithSubmitter(form, submitter) : new FormData(form);
+        var pendingState = {
+          pending: true,
+          data: formData,
+          method: form.method,
+          action: action
+        };
 
+        {
+          Object.freeze(pendingState);
+        }
 
-    event.preventDefault();
-    var formData;
+        startHostTransition(formInst, pendingState, // Pass `null` as the action
+        // TODO: Consider splitting up startHostTransition into two separate
+        // functions, one that sets the form status and one that invokes
+        // the action.
+        null, formData);
+      }
+    } else if (typeof action === 'function') {
+      // A form action was provided. Prevent native navigation.
+      event.preventDefault(); // Dispatch the action and set a pending form status.
 
-    if (submitter) {
-      // The submitter's value should be included in the FormData.
-      // It should be in the document order in the form.
-      // Since the FormData constructor invokes the formdata event it also
-      // needs to be available before that happens so after construction it's too
-      // late. We use a temporary fake node for the duration of this event.
-      // TODO: FormData takes a second argument that it's the submitter but this
-      // is fairly new so not all browsers support it yet. Switch to that technique
-      // when available.
-      var temp = submitter.ownerDocument.createElement('input');
-      temp.name = submitter.name;
-      temp.value = submitter.value;
+      var _formData = submitter ? createFormDataWithSubmitter(form, submitter) : new FormData(form);
 
-      if (form.id) {
-        temp.setAttribute('form', form.id);
+      var _pendingState = {
+        pending: true,
+        data: _formData,
+        method: form.method,
+        action: action
+      };
+
+      {
+        Object.freeze(_pendingState);
       }
 
-      submitter.parentNode.insertBefore(temp, submitter);
-      formData = new FormData(form);
-      temp.parentNode.removeChild(temp);
-    } else {
-      formData = new FormData(form);
-    }
-
-    var pendingState = {
-      pending: true,
-      data: formData,
-      method: form.method,
-      action: action
-    };
-
-    {
-      Object.freeze(pendingState);
-    }
-
-    startHostTransition(formInst, pendingState, action, formData);
+      startHostTransition(formInst, _pendingState, action, _formData);
+    } else ;
   }
 
   dispatchQueue.push({
