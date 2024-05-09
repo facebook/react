@@ -72,8 +72,8 @@ export const renameElementSymbol = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableBinaryFlight = false;
-export const enableFlightReadableStream = false;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
