@@ -107,6 +107,8 @@ export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = true;
 
+export const enableOwnerStacks = __EXPERIMENTAL__;
+
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;

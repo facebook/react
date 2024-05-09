@@ -17,6 +17,7 @@ import {
   enableTaint,
   enableRefAsProp,
   enableServerComponentLogs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
 import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
@@ -123,6 +124,98 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
+// TODO: Make this configurable on the Request.
+const externalRegExp = /\/node\_modules\/| \(node\:| node\:|\(\<anonymous\>\)/;
+
+let callComponentFrame: null | string = null;
+let callIteratorFrame: null | string = null;
+let callLazyInitFrame: null | string = null;
+
+function isNotExternal(stackFrame: string): boolean {
+  return !externalRegExp.test(stackFrame);
+}
+
+function initCallComponentFrame(): string {
+  // Extract the stack frame of the callComponentInDEV function.
+  const error = callComponentInDEV(Error, 'react-stack-top-frame', {});
+  const stack = error.stack;
+  const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
+  const endIdx = stack.indexOf('\n', startIdx);
+  if (endIdx === -1) {
+    return stack.slice(startIdx);
+  }
+  return stack.slice(startIdx, endIdx);
+}
+
+function initCallIteratorFrame(): string {
+  // Extract the stack frame of the callIteratorInDEV function.
+  try {
+    (callIteratorInDEV: any)({next: null});
+    return '';
+  } catch (error) {
+    const stack = error.stack;
+    const startIdx = stack.startsWith('TypeError: ')
+      ? stack.indexOf('\n') + 1
+      : 0;
+    const endIdx = stack.indexOf('\n', startIdx);
+    if (endIdx === -1) {
+      return stack.slice(startIdx);
+    }
+    return stack.slice(startIdx, endIdx);
+  }
+}
+
+function initCallLazyInitFrame(): string {
+  // Extract the stack frame of the callLazyInitInDEV function.
+  const error = callLazyInitInDEV({
+    $$typeof: REACT_LAZY_TYPE,
+    _init: Error,
+    _payload: 'react-stack-top-frame',
+  });
+  const stack = error.stack;
+  const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
+  const endIdx = stack.indexOf('\n', startIdx);
+  if (endIdx === -1) {
+    return stack.slice(startIdx);
+  }
+  return stack.slice(startIdx, endIdx);
+}
+
+function filterDebugStack(error: Error): string {
+  // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
+  // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
+  // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
+  // the DevTools or framework's ignore lists to filter them out.
+  let stack = error.stack;
+  if (stack.startsWith('Error: react-stack-top-frame\n')) {
+    // V8's default formatting prefixes with the error message which we
+    // don't want/need.
+    stack = stack.slice(29);
+  }
+  const frames = stack.split('\n').slice(1);
+  if (callComponentFrame === null) {
+    callComponentFrame = initCallComponentFrame();
+  }
+  let lastFrameIdx = frames.indexOf(callComponentFrame);
+  if (lastFrameIdx === -1) {
+    if (callLazyInitFrame === null) {
+      callLazyInitFrame = initCallLazyInitFrame();
+    }
+    lastFrameIdx = frames.indexOf(callLazyInitFrame);
+    if (lastFrameIdx === -1) {
+      if (callIteratorFrame === null) {
+        callIteratorFrame = initCallIteratorFrame();
+      }
+      lastFrameIdx = frames.indexOf(callIteratorFrame);
+    }
+  }
+  if (lastFrameIdx !== -1) {
+    // Cut off everything after our "callComponent" slot since it'll be Flight internals.
+    frames.length = lastFrameIdx;
+  }
+  return frames.filter(isNotExternal).join('\n');
+}
+
 initAsyncDebugInfo();
 
 function patchConsole(consoleInst: typeof console, methodName: string) {
@@ -146,10 +239,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // Extract the stack. Not all console logs print the full stack but they have at
         // least the line it was called from. We could optimize transfer by keeping just
         // one stack frame but keeping it simple for now and include all frames.
-        let stack = new Error().stack;
-        if (stack.startsWith('Error: \n')) {
-          stack = stack.slice(8);
-        }
+        let stack = filterDebugStack(new Error('react-stack-top-frame'));
         const firstLine = stack.indexOf('\n');
         if (firstLine === -1) {
           stack = '';
@@ -621,6 +711,20 @@ function serializeReadableStream(
   return serializeByValueID(streamTask.id);
 }
 
+// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
+/** @noinline */
+function callIteratorInDEV(
+  iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
+  progress: (
+    entry:
+      | {done: false, +value: ReactClientValue, ...}
+      | {done: true, +value: ReactClientValue, ...},
+  ) => void,
+  error: (reason: mixed) => void,
+) {
+  iterator.next().then(progress, error);
+}
+
 function serializeAsyncIterable(
   request: Request,
   task: Task,
@@ -697,7 +801,11 @@ function serializeAsyncIterable(
         request.pendingChunks++;
         tryStreamTask(request, streamTask);
         enqueueFlush(request);
-        iterator.next().then(progress, error);
+        if (__DEV__) {
+          callIteratorInDEV(iterator, progress, error);
+        } else {
+          iterator.next().then(progress, error);
+        }
       } catch (x) {
         error(x);
         return;
@@ -731,7 +839,11 @@ function serializeAsyncIterable(
     }
   }
   request.abortListeners.add(error);
-  iterator.next().then(progress, error);
+  if (__DEV__) {
+    callIteratorInDEV(iterator, progress, error);
+  } else {
+    iterator.next().then(progress, error);
+  }
   return serializeByValueID(streamTask.id);
 }
 
@@ -809,13 +921,49 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
   return lazyType;
 }
 
+// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
+/** @noinline */
+function callComponentInDEV<Props, R>(
+  Component: (p: Props, arg: void) => R,
+  props: Props,
+  componentDebugInfo: ReactComponentInfo,
+): R {
+  // The secondArg is always undefined in Server Components since refs error early.
+  const secondArg = undefined;
+  setCurrentOwner(componentDebugInfo);
+  try {
+    if (supportsComponentStorage) {
+      // Run the component in an Async Context that tracks the current owner.
+      return componentStorage.run(
+        componentDebugInfo,
+        Component,
+        props,
+        secondArg,
+      );
+    } else {
+      return Component(props, secondArg);
+    }
+  } finally {
+    setCurrentOwner(null);
+  }
+}
+
+// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
+/** @noinline */
+function callLazyInitInDEV(lazy: LazyComponent<any, any>): any {
+  const payload = lazy._payload;
+  const init = lazy._init;
+  return init(payload);
+}
+
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
   key: null | string,
   Component: (p: Props, arg: void) => any,
   props: Props,
-  owner: null | ReactComponentInfo,
+  owner: null | ReactComponentInfo, // DEV-only
+  stack: null | string, // DEV-only
 ): ReactJSONValue {
   // Reset the task's thenable state before continuing, so that if a later
   // component suspends we can reuse the same task object. If the same
@@ -823,8 +971,6 @@ function renderFunctionComponent<Props>(
   const prevThenableState = task.thenableState;
   task.thenableState = null;
 
-  // The secondArg is always undefined in Server Components since refs error early.
-  const secondArg = undefined;
   let result;
 
   let componentDebugInfo: ReactComponentInfo;
@@ -850,6 +996,9 @@ function renderFunctionComponent<Props>(
         env: request.environmentName,
         owner: owner,
       };
+      if (enableOwnerStacks) {
+        (componentDebugInfo: any).stack = stack;
+      }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
@@ -857,24 +1006,11 @@ function renderFunctionComponent<Props>(
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    setCurrentOwner(componentDebugInfo);
-    try {
-      if (supportsComponentStorage) {
-        // Run the component in an Async Context that tracks the current owner.
-        result = componentStorage.run(
-          componentDebugInfo,
-          Component,
-          props,
-          secondArg,
-        );
-      } else {
-        result = Component(props, secondArg);
-      }
-    } finally {
-      setCurrentOwner(null);
-    }
+    result = callComponentInDEV(Component, props, componentDebugInfo);
   } else {
     prepareToUseHooksForComponent(prevThenableState, null);
+    // The secondArg is always undefined in Server Components since refs error early.
+    const secondArg = undefined;
     result = Component(props, secondArg);
   }
   if (typeof result === 'object' && result !== null) {
@@ -1093,6 +1229,7 @@ function renderClientElement(
   key: null | string,
   props: any,
   owner: null | ReactComponentInfo, // DEV-only
+  stack: null | string, // DEV-only
 ): ReactJSONValue {
   // We prepend the terminal client element that actually gets serialized with
   // the keys of any Server Components which are not serialized.
@@ -1103,7 +1240,9 @@ function renderClientElement(
     key = keyPath + ',' + key;
   }
   const element = __DEV__
-    ? [REACT_ELEMENT_TYPE, type, key, props, owner]
+    ? enableOwnerStacks
+      ? [REACT_ELEMENT_TYPE, type, key, props, owner, stack]
+      : [REACT_ELEMENT_TYPE, type, key, props, owner]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
     // The root Server Component had no key so it was in an implicit slot.
@@ -1151,6 +1290,7 @@ function renderElement(
   ref: mixed,
   props: any,
   owner: null | ReactComponentInfo, // DEV only
+  stack: null | string, // DEV only
 ): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
@@ -1171,13 +1311,21 @@ function renderElement(
   if (typeof type === 'function') {
     if (isClientReference(type) || isTemporaryReference(type)) {
       // This is a reference to a Client Component.
-      return renderClientElement(task, type, key, props, owner);
+      return renderClientElement(task, type, key, props, owner, stack);
     }
     // This is a Server Component.
-    return renderFunctionComponent(request, task, key, type, props, owner);
+    return renderFunctionComponent(
+      request,
+      task,
+      key,
+      type,
+      props,
+      owner,
+      stack,
+    );
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return renderClientElement(task, type, key, props, owner);
+    return renderClientElement(task, type, key, props, owner, stack);
   } else if (typeof type === 'symbol') {
     if (type === REACT_FRAGMENT_TYPE && key === null) {
       // For key-less fragments, we add a small optimization to avoid serializing
@@ -1198,17 +1346,22 @@ function renderElement(
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    return renderClientElement(task, type, key, props, owner);
+    return renderClientElement(task, type, key, props, owner, stack);
   } else if (type != null && typeof type === 'object') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return renderClientElement(task, type, key, props, owner);
+      return renderClientElement(task, type, key, props, owner, stack);
     }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
-        const payload = type._payload;
-        const init = type._init;
-        const wrappedType = init(payload);
+        let wrappedType;
+        if (__DEV__) {
+          wrappedType = callLazyInitInDEV(type);
+        } else {
+          const payload = type._payload;
+          const init = type._init;
+          wrappedType = init(payload);
+        }
         return renderElement(
           request,
           task,
@@ -1217,6 +1370,7 @@ function renderElement(
           ref,
           props,
           owner,
+          stack,
         );
       }
       case REACT_FORWARD_REF_TYPE: {
@@ -1227,10 +1381,20 @@ function renderElement(
           type.render,
           props,
           owner,
+          stack,
         );
       }
       case REACT_MEMO_TYPE: {
-        return renderElement(request, task, type.type, key, ref, props, owner);
+        return renderElement(
+          request,
+          task,
+          type.type,
+          key,
+          ref,
+          props,
+          owner,
+          stack,
+        );
       }
     }
   }
@@ -1822,6 +1986,9 @@ function renderModelDestructive(
           ref,
           props,
           __DEV__ ? element._owner : null,
+          __DEV__ && enableOwnerStacks
+            ? filterDebugStack(element._debugStack)
+            : null,
         );
       }
       case REACT_LAZY_TYPE: {
@@ -1830,9 +1997,14 @@ function renderModelDestructive(
         task.thenableState = null;
 
         const lazy: LazyComponent<any, any> = (value: any);
-        const payload = lazy._payload;
-        const init = lazy._init;
-        const resolvedModel = init(payload);
+        let resolvedModel;
+        if (__DEV__) {
+          resolvedModel = callLazyInitInDEV(lazy);
+        } else {
+          const payload = lazy._payload;
+          const init = lazy._init;
+          resolvedModel = init(payload);
+        }
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
           if (debugInfo) {

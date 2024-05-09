@@ -123,5 +123,7 @@ export const disableLegacyMode = __EXPERIMENTAL__;
 export const disableDOMTestUtils = false;
 export const enableEarlyReturnForPropDiffing = false;
 
+export const enableOwnerStacks = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

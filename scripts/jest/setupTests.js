@@ -292,9 +292,14 @@ function lazyRequireFunctionExports(moduleName) {
         // If this export is a function, return a wrapper function that lazily
         // requires the implementation from the current module cache.
         if (typeof originalModule[prop] === 'function') {
-          return function () {
+          const wrapper = function () {
             return jest.requireActual(moduleName)[prop].apply(this, arguments);
           };
+          // We use this to trick the filtering of Flight to exclude this frame.
+          Object.defineProperty(wrapper, 'name', {
+            value: '(<anonymous>)',
+          });
+          return wrapper;
         } else {
           return originalModule[prop];
         }
