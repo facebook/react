@@ -35,10 +35,12 @@ describe('ReactDOMForm', () => {
   let ReactDOMClient;
   let Scheduler;
   let assertLog;
+  let assertConsoleErrorDev;
   let waitForThrow;
   let useState;
   let Suspense;
   let startTransition;
+  let useTransition;
   let use;
   let textCache;
   let useFormStatus;
@@ -54,9 +56,12 @@ describe('ReactDOMForm', () => {
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
     waitForThrow = require('internal-test-utils').waitForThrow;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+    useTransition = React.useTransition;
     use = React.use;
     useFormStatus = ReactDOM.useFormStatus;
     requestFormReset = ReactDOM.requestFormReset;
@@ -1781,5 +1786,307 @@ describe('ReactDOMForm', () => {
 
     // The form was reset even though the action didn't finish.
     expect(inputRef.current.value).toBe('Initial');
+  });
+
+  test("regression: submitter's formAction prop is coerced correctly before checking if it exists", async () => {
+    function App({submitterAction}) {
+      return (
+        <form action={() => Scheduler.log('Form action')}>
+          <button ref={buttonRef} type="submit" formAction={submitterAction} />
+        </form>
+      );
+    }
+
+    const buttonRef = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() =>
+      root.render(
+        <App submitterAction={() => Scheduler.log('Button action')} />,
+      ),
+    );
+    await submit(buttonRef.current);
+    assertLog(['Button action']);
+
+    // When there's no button action, the form action should fire
+    await act(() => root.render(<App submitterAction={null} />));
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // Symbols are coerced to null, so this should fire the form action
+    await act(() => root.render(<App submitterAction={Symbol()} />));
+    assertConsoleErrorDev(['Invalid value for prop `formAction`']);
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // Booleans are coerced to null, so this should fire the form action
+    await act(() => root.render(<App submitterAction={true} />));
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // A string on the submitter should prevent the form action from firing
+    // and trigger the native behavior
+    await act(() => root.render(<App submitterAction="https://react.dev/" />));
+    await expect(submit(buttonRef.current)).rejects.toThrow(
+      'Navigate to: https://react.dev/',
+    );
+  });
+
+  test(
+    'useFormStatus is activated if startTransition is called ' +
+      'inside preventDefault-ed submit event',
+    async () => {
+      function Output({value}) {
+        const {pending} = useFormStatus();
+        return <Text text={pending ? `${value} (pending...)` : value} />;
+      }
+
+      function App({value}) {
+        const [, startFormTransition] = useTransition();
+
+        function onSubmit(event) {
+          event.preventDefault();
+          startFormTransition(async () => {
+            const updatedValue = event.target.elements.search.value;
+            Scheduler.log('Action started');
+            await getText('Wait');
+            Scheduler.log('Action finished');
+            startTransition(() => root.render(<App value={updatedValue} />));
+          });
+        }
+        return (
+          <form ref={formRef} onSubmit={onSubmit}>
+            <input
+              ref={inputRef}
+              type="text"
+              name="search"
+              defaultValue={value}
+            />
+            <div ref={outputRef}>
+              <Output value={value} />
+            </div>
+          </form>
+        );
+      }
+
+      const formRef = React.createRef();
+      const inputRef = React.createRef();
+      const outputRef = React.createRef();
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<App value="Initial" />));
+      assertLog(['Initial']);
+
+      // Update the input to something different
+      inputRef.current.value = 'Updated';
+
+      // Submit the form.
+      await submit(formRef.current);
+      // The form switches into a pending state.
+      assertLog(['Action started', 'Initial (pending...)']);
+      expect(outputRef.current.textContent).toBe('Initial (pending...)');
+
+      // While the submission is still pending, update the input again so we
+      // can check whether the form is reset after the action finishes.
+      inputRef.current.value = 'Updated again after submission';
+
+      // Resolve the async action
+      await act(() => resolveText('Wait'));
+      assertLog(['Action finished', 'Updated']);
+      expect(outputRef.current.textContent).toBe('Updated');
+
+      // Confirm that the form was not automatically reset (should call
+      // requestFormReset(formRef.current) to opt into this behavior)
+      expect(inputRef.current.value).toBe('Updated again after submission');
+    },
+  );
+
+  test('useFormStatus is not activated if startTransition is not called', async () => {
+    function Output({value}) {
+      const {pending} = useFormStatus();
+
+      return (
+        <Text
+          text={
+            pending
+              ? 'Should be unreachable! This test should never activate the pending state.'
+              : value
+          }
+        />
+      );
+    }
+
+    function App({value}) {
+      async function onSubmit(event) {
+        event.preventDefault();
+        const updatedValue = event.target.elements.search.value;
+        Scheduler.log('Async event handler started');
+        await getText('Wait');
+        Scheduler.log('Async event handler finished');
+        startTransition(() => root.render(<App value={updatedValue} />));
+      }
+      return (
+        <form ref={formRef} onSubmit={onSubmit}>
+          <input
+            ref={inputRef}
+            type="text"
+            name="search"
+            defaultValue={value}
+          />
+          <div ref={outputRef}>
+            <Output value={value} />
+          </div>
+        </form>
+      );
+    }
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const outputRef = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App value="Initial" />));
+    assertLog(['Initial']);
+
+    // Update the input to something different
+    inputRef.current.value = 'Updated';
+
+    // Submit the form.
+    await submit(formRef.current);
+    // Unlike the previous test, which uses startTransition to manually dispatch
+    // an action, this test uses a regular event handler, so useFormStatus is
+    // not activated.
+    assertLog(['Async event handler started']);
+    expect(outputRef.current.textContent).toBe('Initial');
+
+    // While the submission is still pending, update the input again so we
+    // can check whether the form is reset after the action finishes.
+    inputRef.current.value = 'Updated again after submission';
+
+    // Resolve the async action
+    await act(() => resolveText('Wait'));
+    assertLog(['Async event handler finished', 'Updated']);
+    expect(outputRef.current.textContent).toBe('Updated');
+
+    // Confirm that the form was not automatically reset (should call
+    // requestFormReset(formRef.current) to opt into this behavior)
+    expect(inputRef.current.value).toBe('Updated again after submission');
+  });
+
+  test('useFormStatus is not activated if event is not preventDefault-ed ', async () => {
+    function Output({value}) {
+      const {pending} = useFormStatus();
+      return <Text text={pending ? `${value} (pending...)` : value} />;
+    }
+
+    function App({value}) {
+      const [, startFormTransition] = useTransition();
+
+      function onSubmit(event) {
+        // This event is not preventDefault-ed, so the default form submission
+        // happens, and useFormStatus is not activated.
+        startFormTransition(async () => {
+          const updatedValue = event.target.elements.search.value;
+          Scheduler.log('Action started');
+          await getText('Wait');
+          Scheduler.log('Action finished');
+          startTransition(() => root.render(<App value={updatedValue} />));
+        });
+      }
+      return (
+        <form ref={formRef} onSubmit={onSubmit}>
+          <input
+            ref={inputRef}
+            type="text"
+            name="search"
+            defaultValue={value}
+          />
+          <div ref={outputRef}>
+            <Output value={value} />
+          </div>
+        </form>
+      );
+    }
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const outputRef = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App value="Initial" />));
+    assertLog(['Initial']);
+
+    // Update the input to something different
+    inputRef.current.value = 'Updated';
+
+    // Submitting the form should trigger the default navigation behavior
+    await expect(submit(formRef.current)).rejects.toThrow(
+      'Navigate to: http://localhost/',
+    );
+
+    // The useFormStatus hook was not activated
+    assertLog(['Action started', 'Initial']);
+    expect(outputRef.current.textContent).toBe('Initial');
+  });
+
+  test('useFormStatus coerces the value of the "action" prop', async () => {
+    function Status() {
+      const {pending, action} = useFormStatus();
+
+      if (pending) {
+        Scheduler.log(action);
+        return 'Pending';
+      } else {
+        return 'Not pending';
+      }
+    }
+
+    function Form({action}) {
+      const [, startFormTransition] = useTransition();
+
+      function onSubmit(event) {
+        event.preventDefault();
+        // Schedule an empty action for no other purpose than to trigger the
+        // pending state.
+        startFormTransition(async () => {});
+      }
+      return (
+        <form ref={formRef} action={action} onSubmit={onSubmit}>
+          <Status />
+        </form>
+      );
+    }
+
+    const formRef = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+
+    // Symbols are coerced to null
+    await act(() => root.render(<Form action={Symbol()} />));
+    assertConsoleErrorDev(['Invalid value for prop `action`']);
+    await submit(formRef.current);
+    assertLog([null]);
+
+    // Booleans are coerced to null
+    await act(() => root.render(<Form action={true} />));
+    await submit(formRef.current);
+    assertLog([null]);
+
+    // Strings are passed through
+    await act(() => root.render(<Form action="https://react.dev" />));
+    await submit(formRef.current);
+    assertLog(['https://react.dev']);
+
+    // Functions are passed through
+    const actionFn = () => {};
+    await act(() => root.render(<Form action={actionFn} />));
+    await submit(formRef.current);
+    assertLog([actionFn]);
+
+    // Everything else is toString-ed
+    class MyAction {
+      toString() {
+        return 'stringified action';
+      }
+    }
+    await act(() => root.render(<Form action={new MyAction()} />));
+    await submit(formRef.current);
+    assertLog(['stringified action']);
   });
 });

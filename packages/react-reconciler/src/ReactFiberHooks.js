@@ -2944,16 +2944,20 @@ function startTransition<S>(
   }
 }
 
+const noop = () => {};
+
 export function startHostTransition<F>(
   formFiber: Fiber,
   pendingState: TransitionStatus,
-  callback: F => mixed,
+  action: (F => mixed) | null,
   formData: F,
 ): void {
   if (!enableAsyncActions) {
     // Form actions are enabled, but async actions are not. Call the function,
     // but don't handle any pending or error states.
-    callback(formData);
+    if (action !== null) {
+      action(formData);
+    }
     return;
   }
 
@@ -2976,13 +2980,19 @@ export function startHostTransition<F>(
     queue,
     pendingState,
     NoPendingHostTransition,
-    // TODO: We can avoid this extra wrapper, somehow. Figure out layering
-    // once more of this function is implemented.
-    () => {
-      // Automatically reset the form when the action completes.
-      requestFormReset(formFiber);
-      return callback(formData);
-    },
+    // TODO: `startTransition` both sets the pending state and dispatches
+    // the action, if one is provided. Consider refactoring these two
+    // concerns to avoid the extra lambda.
+
+    action === null
+      ? // No action was provided, but we still call `startTransition` to
+        // set the pending form status.
+        noop
+      : () => {
+          // Automatically reset the form when the action completes.
+          requestFormReset(formFiber);
+          return action(formData);
+        },
   );
 }
 
