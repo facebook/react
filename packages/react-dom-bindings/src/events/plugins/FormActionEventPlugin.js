@@ -14,10 +14,35 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {getFiberCurrentPropsFromNode} from '../../client/ReactDOMComponentTree';
 import {startHostTransition} from 'react-reconciler/src/ReactFiberReconciler';
+import sanitizeURL from 'react-dom-bindings/src/shared/sanitizeURL';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import {SyntheticEvent} from '../SyntheticEvent';
+
+function coerceFormActionProp(
+  actionProp: mixed,
+): string | (FormData => void | Promise<void>) | null {
+  // This should match the logic in ReactDOMComponent
+  if (
+    actionProp == null ||
+    typeof actionProp === 'symbol' ||
+    typeof actionProp === 'boolean'
+  ) {
+    return null;
+  } else if (typeof actionProp === 'function') {
+    return (actionProp: any);
+  } else {
+    if (__DEV__) {
+      checkAttributeStringCoercion(actionProp, 'action');
+    }
+    return (sanitizeURL(
+      enableTrustedTypesIntegration ? actionProp : '' + (actionProp: any),
+    ): any);
+  }
+}
 
 /**
  * This plugin invokes action functions on forms, inputs and buttons if
@@ -49,9 +74,9 @@ function extractEvents(
   if (submitter) {
     const submitterProps = getFiberCurrentPropsFromNode(submitter);
     submitterAction = submitterProps
-      ? (submitterProps: any).formAction
+      ? coerceFormActionProp((submitterProps: any).formAction)
       : submitter.getAttribute('formAction');
-    if (submitterAction != null) {
+    if (submitterAction !== null) {
       // The submitter overrides the form action.
       action = submitterAction;
       // If the action is a function, we don't want to pass its name

@@ -35,6 +35,7 @@ describe('ReactDOMForm', () => {
   let ReactDOMClient;
   let Scheduler;
   let assertLog;
+  let assertConsoleErrorDev;
   let waitForThrow;
   let useState;
   let Suspense;
@@ -54,6 +55,8 @@ describe('ReactDOMForm', () => {
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
     waitForThrow = require('internal-test-utils').waitForThrow;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
@@ -1781,5 +1784,49 @@ describe('ReactDOMForm', () => {
 
     // The form was reset even though the action didn't finish.
     expect(inputRef.current.value).toBe('Initial');
+  });
+
+  test("regression: submitter's formAction prop is coerced correctly before checking if it exists", async () => {
+    function App({submitterAction}) {
+      return (
+        <form action={() => Scheduler.log('Form action')}>
+          <button ref={buttonRef} type="submit" formAction={submitterAction} />
+        </form>
+      );
+    }
+
+    const buttonRef = React.createRef();
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() =>
+      root.render(
+        <App submitterAction={() => Scheduler.log('Button action')} />,
+      ),
+    );
+    await submit(buttonRef.current);
+    assertLog(['Button action']);
+
+    // When there's no button action, the form action should fire
+    await act(() => root.render(<App submitterAction={null} />));
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // Symbols are coerced to null, so this should fire the form action
+    await act(() => root.render(<App submitterAction={Symbol()} />));
+    assertConsoleErrorDev(['Invalid value for prop `formAction`']);
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // Booleans are coerced to null, so this should fire the form action
+    await act(() => root.render(<App submitterAction={true} />));
+    await submit(buttonRef.current);
+    assertLog(['Form action']);
+
+    // A string on the submitter should prevent the form action from firing
+    // and trigger the native behavior
+    await act(() => root.render(<App submitterAction="https://react.dev/" />));
+    await expect(submit(buttonRef.current)).rejects.toThrow(
+      'Navigate to: https://react.dev/',
+    );
   });
 });
