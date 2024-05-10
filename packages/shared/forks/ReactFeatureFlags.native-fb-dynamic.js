@@ -23,7 +23,6 @@ export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableStringRefs = __VARIANT__;
 export const enableAddPropertiesFastPath = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
-export const enableEarlyReturnForPropDiffing = __VARIANT__;
 export const enableFastJSX = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;

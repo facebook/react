@@ -121,8 +121,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
-export const enableEarlyReturnForPropDiffing = false;
-
 export const enableAddPropertiesFastPath = false;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;

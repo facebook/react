@@ -25,7 +25,6 @@ export const {
   disableStringRefs,
   enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
-  enableEarlyReturnForPropDiffing,
   enableFastJSX,
   enableInfiniteRenderLoopDetection,
   enableRefAsProp,
