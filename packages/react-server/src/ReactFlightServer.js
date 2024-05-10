@@ -11,6 +11,8 @@ import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
+import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
+
 import {
   enableBinaryFlight,
   enablePostpone,
@@ -62,7 +64,6 @@ import type {
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {TemporaryReference} from './ReactFlightServerTemporaryReferences';
 
 import {
   resolveClientReferenceMetadata,
@@ -80,8 +81,8 @@ import {
 } from './ReactFlightServerConfig';
 
 import {
-  isTemporaryReference,
-  resolveTemporaryReferenceID,
+  resolveTemporaryReference,
+  isOpaqueTemporaryReference,
 } from './ReactFlightServerTemporaryReferences';
 
 import {
@@ -389,6 +390,7 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
   writtenObjects: WeakMap<Reference, string>,
+  temporaryReferences: void | TemporaryReferenceSet,
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
@@ -447,6 +449,7 @@ export function createRequest(
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
   environmentName: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
 ): Request {
   if (
     ReactSharedInternals.A !== null &&
@@ -486,6 +489,7 @@ export function createRequest(
     writtenClientReferences: new Map(),
     writtenServerReferences: new Map(),
     writtenObjects: new WeakMap(),
+    temporaryReferences: temporaryReferences,
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     taintCleanupQueue: cleanupQueue,
@@ -1305,7 +1309,7 @@ function renderElement(
     }
   }
   if (typeof type === 'function') {
-    if (isClientReference(type) || isTemporaryReference(type)) {
+    if (isClientReference(type) || isOpaqueTemporaryReference(type)) {
       // This is a reference to a Client Component.
       return renderClientElement(task, type, key, props, owner, stack);
     }
@@ -1505,10 +1509,6 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
-function serializeTemporaryReferenceID(id: string): string {
-  return '$T' + id;
-}
-
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
@@ -1647,10 +1647,9 @@ function serializeServerReference(
 
 function serializeTemporaryReference(
   request: Request,
-  temporaryReference: TemporaryReference<any>,
+  reference: string,
 ): string {
-  const id = resolveTemporaryReferenceID(temporaryReference);
-  return serializeTemporaryReferenceID(id);
+  return '$T' + reference;
 }
 
 function serializeLargeTextString(request: Request, text: string): string {
@@ -2016,6 +2015,16 @@ function renderModelDestructive(
       );
     }
 
+    if (request.temporaryReferences !== undefined) {
+      const tempRef = resolveTemporaryReference(
+        request.temporaryReferences,
+        value,
+      );
+      if (tempRef !== undefined) {
+        return serializeTemporaryReference(request, tempRef);
+      }
+    }
+
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
       if (tainted !== undefined) {
@@ -2284,8 +2293,14 @@ function renderModelDestructive(
     if (isServerReference(value)) {
       return serializeServerReference(request, (value: any));
     }
-    if (isTemporaryReference(value)) {
-      return serializeTemporaryReference(request, (value: any));
+    if (request.temporaryReferences !== undefined) {
+      const tempRef = resolveTemporaryReference(
+        request.temporaryReferences,
+        value,
+      );
+      if (tempRef !== undefined) {
+        return serializeTemporaryReference(request, tempRef);
+      }
     }
 
     if (enableTaint) {
@@ -2295,7 +2310,13 @@ function renderModelDestructive(
       }
     }
 
-    if (/^on[A-Z]/.test(parentPropertyName)) {
+    if (isOpaqueTemporaryReference(value)) {
+      throw new Error(
+        'Could not reference an opaque temporary reference. ' +
+          'This is likely due to misconfiguring the temporaryReferences options ' +
+          'on the server.',
+      );
+    } else if (/^on[A-Z]/.test(parentPropertyName)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
           describeObjectForErrorMessage(parent, parentPropertyName) +
@@ -2642,6 +2663,15 @@ function renderConsoleValue(
         (value: any),
       );
     }
+    if (request.temporaryReferences !== undefined) {
+      const tempRef = resolveTemporaryReference(
+        request.temporaryReferences,
+        value,
+      );
+      if (tempRef !== undefined) {
+        return serializeTemporaryReference(request, tempRef);
+      }
+    }
 
     if (counter.objectCount > 20) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
@@ -2818,8 +2848,14 @@ function renderConsoleValue(
         (value: any),
       );
     }
-    if (isTemporaryReference(value)) {
-      return serializeTemporaryReference(request, (value: any));
+    if (request.temporaryReferences !== undefined) {
+      const tempRef = resolveTemporaryReference(
+        request.temporaryReferences,
+        value,
+      );
+      if (tempRef !== undefined) {
+        return serializeTemporaryReference(request, tempRef);
+      }
     }
 
     // Serialize the body of the function as an eval so it can be printed.

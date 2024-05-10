@@ -9,20 +9,27 @@
 
 const TEMPORARY_REFERENCE_TAG = Symbol.for('react.temporary.reference');
 
-// eslint-disable-next-line no-unused-vars
-export opaque type TemporaryReference<T> = {
-  $$typeof: symbol,
-  $$id: string,
-};
+export opaque type TemporaryReferenceSet = WeakMap<
+  TemporaryReference<any>,
+  string,
+>;
 
-export function isTemporaryReference(reference: Object): boolean {
+// eslint-disable-next-line no-unused-vars
+export interface TemporaryReference<T> {}
+
+export function createTemporaryReferenceSet(): TemporaryReferenceSet {
+  return new WeakMap();
+}
+
+export function isOpaqueTemporaryReference(reference: Object): boolean {
   return reference.$$typeof === TEMPORARY_REFERENCE_TAG;
 }
 
-export function resolveTemporaryReferenceID<T>(
+export function resolveTemporaryReference<T>(
+  temporaryReferences: TemporaryReferenceSet,
   temporaryReference: TemporaryReference<T>,
-): string {
-  return temporaryReference.$$id;
+): void | string {
+  return temporaryReferences.get(temporaryReference);
 }
 
 const proxyHandlers = {
@@ -37,10 +44,6 @@ const proxyHandlers = {
         // These names are a little too common. We should probably have a way to
         // have the Flight runtime extract the inner target instead.
         return target.$$typeof;
-      case '$$id':
-        return target.$$id;
-      case '$$async':
-        return target.$$async;
       case 'name':
         return undefined;
       case 'displayName':
@@ -79,7 +82,10 @@ const proxyHandlers = {
   },
 };
 
-export function createTemporaryReference<T>(id: string): TemporaryReference<T> {
+export function createTemporaryReference<T>(
+  temporaryReferences: TemporaryReferenceSet,
+  id: string,
+): TemporaryReference<T> {
   const reference: TemporaryReference<any> = Object.defineProperties(
     (function () {
       throw new Error(
@@ -91,9 +97,17 @@ export function createTemporaryReference<T>(id: string): TemporaryReference<T> {
     }: any),
     {
       $$typeof: {value: TEMPORARY_REFERENCE_TAG},
-      $$id: {value: id},
     },
   );
+  const wrapper = new Proxy(reference, proxyHandlers);
+  registerTemporaryReference(temporaryReferences, wrapper, id);
+  return wrapper;
+}
 
-  return new Proxy(reference, proxyHandlers);
+export function registerTemporaryReference(
+  temporaryReferences: TemporaryReferenceSet,
+  object: TemporaryReference<any>,
+  id: string,
+): void {
+  temporaryReferences.set(object, id);
 }
