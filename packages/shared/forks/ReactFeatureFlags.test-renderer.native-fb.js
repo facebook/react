@@ -88,7 +88,6 @@ export const disableLegacyMode = false;
 export const disableDOMTestUtils = false;
 
 export const disableDefaultPropsExceptForClasses = false;
-export const enableEarlyReturnForPropDiffing = false;
 export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;

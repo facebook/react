@@ -14,8 +14,6 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {enableEarlyReturnForPropDiffing} from 'shared/ReactFeatureFlags';
-
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
 const emptyObject = {};
@@ -485,11 +483,6 @@ export function diff(
   nextProps: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  if (enableEarlyReturnForPropDiffing) {
-    if (prevProps === nextProps) {
-      return null; // no change
-    }
-  }
   return diffProperties(
     null, // updatePayload
     prevProps,
