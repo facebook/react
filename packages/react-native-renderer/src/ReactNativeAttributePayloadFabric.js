@@ -16,7 +16,10 @@ import isArray from 'shared/isArray';
 
 import {enableShallowPropDiffing} from 'shared/ReactFeatureFlags';
 
-import type {AttributeConfiguration} from './ReactNativeTypes';
+import type {
+  AnyAttributeType,
+  AttributeConfiguration,
+} from './ReactNativeTypes';
 
 const emptyObject = {};
 
@@ -97,10 +100,7 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        const nextValue =
-          typeof attributeConfig.process === 'function'
-            ? attributeConfig.process(nextProp)
-            : nextProp;
+        const nextValue = processProperty(nextProp, attributeConfig);
         updatePayload[propKey] = nextValue;
       }
       // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -326,10 +326,7 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        const nextValue =
-          typeof attributeConfig.process === 'function'
-            ? attributeConfig.process(nextProp)
-            : nextProp;
+        const nextValue = processProperty(nextProp, attributeConfig);
         updatePayload[propKey] = nextValue;
       }
       continue;
@@ -360,11 +357,7 @@ function diffProperties(
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        const nextValue =
-          typeof attributeConfig.process === 'function'
-            ? // $FlowFixMe[incompatible-use] found when upgrading Flow
-              attributeConfig.process(nextProp)
-            : nextProp;
+        const nextValue = processProperty(nextProp, attributeConfig);
         (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
         ] = nextValue;
@@ -445,6 +438,29 @@ function diffProperties(
   return updatePayload;
 }
 
+function processProperty(
+  prop: mixed,
+  attributeConfig: AnyAttributeType,
+): mixed {
+  if (typeof attributeConfig !== 'object') {
+    return prop;
+  }
+
+  const {process} = attributeConfig;
+  if (typeof process !== 'function') {
+    return prop;
+  }
+
+  if (
+    typeof attributeConfig.enableNativeProcessing === 'function' &&
+    attributeConfig.enableNativeProcessing()
+  ) {
+    return prop;
+  }
+
+  return process(prop);
+}
+
 function fastAddProperties(
   payload: null | Object,
   props: Object,
@@ -486,7 +502,10 @@ function fastAddProperties(
       newValue = prop;
     } else if (typeof attributeConfig.process === 'function') {
       // An atomic prop with custom processing.
-      newValue = attributeConfig.process(prop);
+      newValue = processProperty(
+        prop,
+        ((attributeConfig: any): AnyAttributeType),
+      );
     } else if (typeof attributeConfig.diff === 'function') {
       // An atomic prop with custom diffing. We don't need to do diffing when adding props.
       newValue = prop;

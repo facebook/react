@@ -102,6 +102,28 @@ describe('ReactNativeAttributePayloadFabric.create', () => {
     expect(processA).toBeCalledWith(2);
   });
 
+  it('should not use the process attribute when "enableNativeProcessing" returns true', () => {
+    const processA = jest.fn(a => a + 1);
+    expect(
+      create(
+        {a: 2},
+        {a: {process: processA, enableNativeProcessing: () => true}},
+      ),
+    ).toEqual({a: 2});
+    expect(processA).not.toHaveBeenCalled();
+  });
+
+  it('should use the process attribute when "enableNativeProcessing" returns false', () => {
+    const processA = jest.fn(a => a + 1);
+    expect(
+      create(
+        {a: 2},
+        {a: {process: processA, enableNativeProcessing: () => false}},
+      ),
+    ).toEqual({a: 3});
+    expect(processA).toBeCalledWith(2);
+  });
+
   it('should work with undefined styles', () => {
     expect(create({style: undefined}, {style: {b: true}})).toEqual(null);
     expect(create({style: {a: '#ffffff', b: 1}}, {style: {b: true}})).toEqual({

@@ -39,6 +39,7 @@ export type AttributeType<T, V> =
   | $ReadOnly<{
       diff?: (arg1: T, arg2: T) => boolean,
       process?: (arg1: V) => T,
+      enableNativeProcessing?: () => boolean,
     }>;
 
 // We either force that `diff` and `process` always use mixed,
