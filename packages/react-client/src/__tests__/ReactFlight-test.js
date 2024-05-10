@@ -938,12 +938,28 @@ describe('ReactFlight', () => {
     });
   });
 
+  // @gate renameElementSymbol
   it('should emit descriptions of errors in dev', async () => {
     const ClientErrorBoundary = clientReference(ErrorBoundary);
 
     function Throw({value}) {
       throw value;
     }
+
+    function RenderInlined() {
+      const inlinedElement = {
+        $$typeof: Symbol.for('react.element'),
+        type: () => {},
+        key: null,
+        ref: null,
+        props: {},
+        _owner: null,
+      };
+      return inlinedElement;
+    }
+
+    // We wrap in lazy to ensure the errors throws lazily.
+    const LazyInlined = React.lazy(async () => ({default: RenderInlined}));
 
     const testCases = (
       <>
@@ -1008,6 +1024,18 @@ describe('ReactFlight', () => {
         <ClientErrorBoundary expectedMessage={'["array"]'}>
           <div>
             <Throw value={['array']} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary
+          expectedMessage={
+            'A React Element from an older version of React was rendered. ' +
+            'This is not supported. It can happen if:\n' +
+            '- Multiple copies of the "react" package is used.\n' +
+            '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
+            '- A compiler tries to "inline" JSX instead of using the runtime.'
+          }>
+          <div>
+            <LazyInlined />
           </div>
         </ClientErrorBoundary>
       </>
