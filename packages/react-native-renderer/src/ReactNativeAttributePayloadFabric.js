@@ -452,8 +452,8 @@ function processProperty(
   }
 
   if (
-    typeof attributeConfig.useNativeProcessing === 'function' &&
-    attributeConfig.useNativeProcessing()
+    typeof attributeConfig.enableNativeProcessing === 'function' &&
+    attributeConfig.enableNativeProcessing()
   ) {
     return prop;
   }
