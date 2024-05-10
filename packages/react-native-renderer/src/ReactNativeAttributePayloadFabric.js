@@ -446,7 +446,7 @@ function processProperty(
     return prop;
   }
 
-  const process = {attributeConfig};
+  const {process} = attributeConfig;
   if (typeof process !== 'function') {
     return prop;
   }
