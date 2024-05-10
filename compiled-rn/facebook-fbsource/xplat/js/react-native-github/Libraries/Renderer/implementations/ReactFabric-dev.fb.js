@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<577c7636235832d840ad016860b50817>>
+ * @generated SignedSource<<992be7ad266e7af316abc8834205d869>>
  */
 
 'use strict';
@@ -1995,7 +1995,6 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     disableStringRefs = dynamicFlags.disableStringRefs,
     enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
-    enableEarlyReturnForPropDiffing = dynamicFlags.enableEarlyReturnForPropDiffing,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
     enableRefAsProp = dynamicFlags.enableRefAsProp,
     enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
@@ -2436,12 +2435,6 @@ function create(props, validAttributes) {
   props, validAttributes);
 }
 function diff(prevProps, nextProps, validAttributes) {
-  if (enableEarlyReturnForPropDiffing) {
-    if (prevProps === nextProps) {
-      return null; // no change
-    }
-  }
-
   return diffProperties(null, // updatePayload
   prevProps, nextProps, validAttributes);
 }
@@ -26095,7 +26088,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-83bc2843';
+var ReactVersion = '19.0.0-beta-8cbbbfb0';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

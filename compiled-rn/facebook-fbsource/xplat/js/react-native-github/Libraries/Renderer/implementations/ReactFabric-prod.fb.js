@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<844a7fde793a6bcbd87492fec25685e4>>
+ * @generated SignedSource<<bf7fa797d0242d954cf0ad22f15590ac>>
  */
 
 "use strict";
@@ -974,8 +974,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
-  enableEarlyReturnForPropDiffing =
-    dynamicFlagsUntyped.enableEarlyReturnForPropDiffing,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
   enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
@@ -7297,15 +7295,12 @@ function completeWork(current, workInProgress, renderLanes) {
               : createChildNodeSet()),
             appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
           b: {
-            oldProps =
-              enableEarlyReturnForPropDiffing && oldProps === newProps
-                ? null
-                : diffProperties(
-                    null,
-                    oldProps,
-                    newProps,
-                    renderLanes.canonical.viewConfig.validAttributes
-                  );
+            oldProps = diffProperties(
+              null,
+              oldProps,
+              newProps,
+              renderLanes.canonical.viewConfig.validAttributes
+            );
             renderLanes.canonical.currentProps = newProps;
             newProps = renderLanes.node;
             if (current)
@@ -10589,7 +10584,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1124 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-beta-bdce1f91",
+    version: "19.0.0-beta-0e5aa221",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10632,7 +10627,7 @@ var internals$jscomp$inline_1356 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-bdce1f91"
+  reconcilerVersion: "19.0.0-beta-0e5aa221"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1357 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b948a7523c731b45fbc28f4bfeb2bf96>>
+ * @generated SignedSource<<c616f3c5557c8235bca7c732a1bd4ad9>>
  */
 
 'use strict';
@@ -2342,7 +2342,6 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
     disableStringRefs = dynamicFlags.disableStringRefs,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
-    enableEarlyReturnForPropDiffing = dynamicFlags.enableEarlyReturnForPropDiffing,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
     enableRefAsProp = dynamicFlags.enableRefAsProp,
     enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane;
@@ -3391,12 +3390,6 @@ function create(props, validAttributes) {
   props, validAttributes);
 }
 function diff(prevProps, nextProps, validAttributes) {
-  if (enableEarlyReturnForPropDiffing) {
-    if (prevProps === nextProps) {
-      return null; // no change
-    }
-  }
-
   return diffProperties(null, // updatePayload
   prevProps, nextProps, validAttributes);
 }
@@ -26445,7 +26438,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-303370bf';
+var ReactVersion = '19.0.0-beta-ddb899dd';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

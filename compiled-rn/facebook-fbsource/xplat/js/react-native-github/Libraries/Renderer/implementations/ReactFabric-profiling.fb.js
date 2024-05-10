@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d71fe8fc880922e5df9a2a0cbab38d57>>
+ * @generated SignedSource<<79240e3cc80ad4ba1c6a4a8fd2e22e28>>
  */
 
 "use strict";
@@ -978,8 +978,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
-  enableEarlyReturnForPropDiffing =
-    dynamicFlagsUntyped.enableEarlyReturnForPropDiffing,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
   enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
@@ -7563,15 +7561,12 @@ function completeWork(current, workInProgress, renderLanes) {
               : createChildNodeSet()),
             appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
           b: {
-            oldProps =
-              enableEarlyReturnForPropDiffing && oldProps === newProps
-                ? null
-                : diffProperties(
-                    null,
-                    oldProps,
-                    newProps,
-                    renderLanes.canonical.viewConfig.validAttributes
-                  );
+            oldProps = diffProperties(
+              null,
+              oldProps,
+              newProps,
+              renderLanes.canonical.viewConfig.validAttributes
+            );
             renderLanes.canonical.currentProps = newProps;
             newProps = renderLanes.node;
             if (current)
@@ -11294,7 +11289,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1204 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-beta-13e56181",
+    version: "19.0.0-beta-6dfa24ac",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11350,7 +11345,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-13e56181"
+  reconcilerVersion: "19.0.0-beta-6dfa24ac"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
