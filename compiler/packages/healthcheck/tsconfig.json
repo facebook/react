@@ -1,9 +1,10 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "dist",
+    "module": "ES2015",
+    "moduleResolution": "Bundler",
+    "rootDir": "../",
+    "noEmit": true,
     "jsx": "react-jsxdev",
     "lib": ["ES2022"],
 
