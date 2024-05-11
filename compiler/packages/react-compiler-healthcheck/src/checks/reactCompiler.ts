@@ -99,9 +99,7 @@ function compile(sourceCode: string, filename: string) {
       "typescript",
       COMPILER_OPTIONS
     );
-  } catch (e) {
-    console.error(e);
-  }
+  } catch {}
 }
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx|mjs)$/;
