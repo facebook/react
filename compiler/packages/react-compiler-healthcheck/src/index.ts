@@ -20,7 +20,7 @@ async function main() {
     .option("src", {
       description: "glob expression matching src files to compile",
       type: "string",
-      default: "**/*.*",
+      default: "**/*.{js,jsx,ts,tsx,json}",
     })
     .parseSync();
 
