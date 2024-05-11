@@ -7,7 +7,7 @@
 
 import chalk from "chalk";
 
-const JsFileExtensionRE = /(js|ts|jsx|tsx|mjs)$/;
+const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 const StrictModeRE = /\<StrictMode\>/;
 let StrictModeUsage = false;
 

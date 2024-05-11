@@ -102,7 +102,7 @@ function compile(sourceCode: string, filename: string) {
   } catch {}
 }
 
-const JsFileExtensionRE = /(js|ts|jsx|tsx|mjs)$/;
+const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 
 export default {
   run(source: string, path: string): void {
