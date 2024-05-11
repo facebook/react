@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
+import type * as BabelCore from "@babel/core";
+import { transformFromAstSync } from "@babel/core";
+import * as BabelParser from "@babel/parser";
+import BabelPluginReactCompiler, {
   ErrorSeverity,
-  runBabelPluginReactCompiler,
   type CompilerErrorDetailOptions,
   type PluginOptions,
 } from "babel-plugin-react-compiler/src";
@@ -63,6 +65,32 @@ function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
   }
 }
 
+function runBabelPluginReactCompiler(
+  text: string,
+  file: string,
+  language: "flow" | "typescript",
+  options: Partial<PluginOptions> | null
+): BabelCore.BabelFileResult {
+  const ast = BabelParser.parse(text, {
+    sourceFilename: file,
+    plugins: [language, "jsx"],
+    sourceType: "module",
+  });
+  const result = transformFromAstSync(ast, text, {
+    filename: file,
+    highlightCode: false,
+    retainLines: true,
+    plugins: [[BabelPluginReactCompiler, options]],
+    sourceType: "module",
+  });
+  if (result?.code == null) {
+    throw new Error(
+      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
+    );
+  }
+  return result;
+}
+
 function compile(sourceCode: string, filename: string) {
   try {
     runBabelPluginReactCompiler(
@@ -71,7 +99,9 @@ function compile(sourceCode: string, filename: string) {
       "typescript",
       COMPILER_OPTIONS
     );
-  } catch {}
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx|mjs)$/;

@@ -2,13 +2,16 @@
   "name": "healthcheck",
   "version": "0.0.0",
   "description": "Health check script to test violations of the rules of react.",
-  "main": "dist/index.js",
+  "bin": "dist/index.js",
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "babel-plugin-react-compiler": "*",
+    "@babel/core": "^7.24.4",
+    "@babel/parser": "^7.24.4",
+    "zod": "^3.22.4",
+    "zod-validation-error": "^3.0.3",
     "chalk": "4",
     "fast-glob": "^3.3.2",
     "ora": "5.4.1",

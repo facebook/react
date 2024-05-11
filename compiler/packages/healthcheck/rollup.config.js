@@ -15,7 +15,16 @@ import terser from "@rollup/plugin-terser";
 import prettier from "rollup-plugin-prettier";
 import banner2 from "rollup-plugin-banner2";
 
-const NO_INLINE = new Set([]);
+const NO_INLINE = new Set([
+  "@babel/core",
+  "@babel/parser",
+  "chalk",
+  "fast-glob",
+  "ora",
+  "yargs",
+  "zod",
+  "zod-validation-error",
+]);
 
 const DEV_ROLLUP_CONFIG = {
   input: "src/index.ts",
@@ -48,7 +57,9 @@ const DEV_ROLLUP_CONFIG = {
     }),
     prettier(),
     banner2(
-      () => `/**
+      () => `#!/usr/bin/env node
+
+/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
