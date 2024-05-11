@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableCustomTypeDefinitionForReAnimated
+// @enableCustomTypeDefinitionForReanimated
 function Component() {
   const radius = useSharedValue(50);
 
@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableCustomTypeDefinitionForReAnimated
+import { c as useMemoCache } from "react/compiler-runtime"; // @enableCustomTypeDefinitionForReanimated
 function Component() {
   const $ = useMemoCache(2);
   const radius = useSharedValue(50);

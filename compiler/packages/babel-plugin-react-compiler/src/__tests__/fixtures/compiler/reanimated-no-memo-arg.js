@@ -1,4 +1,4 @@
-// @enableCustomTypeDefinitionForReAnimated
+// @enableCustomTypeDefinitionForReanimated
 function Component() {
   const radius = useSharedValue(50);
 

@@ -349,7 +349,7 @@ const EnvironmentConfigSchema = z.object({
    * definitions for reanimated library to make it's Babel plugin work
    * with the compiler.
    */
-  enableCustomTypeDefinitionForReAnimated: z.boolean().default(false),
+  enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
   /**
    * If specified, this value is used as a pattern for determing which global values should be
@@ -480,7 +480,7 @@ export class Environment {
       );
     }
 
-    if (config.enableCustomTypeDefinitionForReAnimated) {
+    if (config.enableCustomTypeDefinitionForReanimated) {
       installReAnimatedTypes(this.#globals, this.#shapes);
     }
 

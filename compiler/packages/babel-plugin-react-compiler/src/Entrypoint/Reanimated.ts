@@ -28,7 +28,7 @@ export function injectReanimatedFlag(options: PluginOptions): PluginOptions {
     ...options,
     environment: {
       ...options.environment,
-      enableCustomTypeDefinitionForReAnimated: true,
+      enableCustomTypeDefinitionForReanimated: true,
     },
   };
 }
