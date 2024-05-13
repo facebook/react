@@ -30,16 +30,12 @@ async function main() {
   const globOptions = {
     onlyFiles: true,
     ignore: [
-      "*/node_modules/**",
-      "*/dist/**",
-      "*/tests/**",
-      "*/__tests__/**",
-      "node_modules/**",
-      "dist/**",
-      "tests/**",
-      "__tests__/**",
-      "__mocks__/**",
-      "__e2e__/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/__mocks__/**",
+      "**/__e2e__/**",
     ],
   };
 

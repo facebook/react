@@ -16,9 +16,11 @@ export default {
     if (packageJsonRE.exec(path) !== null) {
       const contents = JSON.parse(source);
       const deps = contents.dependencies;
-      for (const library of config.knownIncompatibleLibraries) {
-        if (Object.hasOwn(deps, library)) {
-          knownIncompatibleLibrariesUsage.add(library);
+      if (deps != null) {
+        for (const library of config.knownIncompatibleLibraries) {
+          if (Object.hasOwn(deps, library)) {
+            knownIncompatibleLibrariesUsage.add(library);
+          }
         }
       }
     }
