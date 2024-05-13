@@ -106,3 +106,7 @@ function filterDebugStack(error: Error): string {
   }
   return frames.filter(isNotExternal).join('\n');
 }
+
+export function formatOwnerStack(ownerStackTrace: Error): string {
+  return filterDebugStack(ownerStackTrace);
+}

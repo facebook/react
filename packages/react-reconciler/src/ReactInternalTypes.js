@@ -195,7 +195,7 @@ export type Fiber = {
 
   _debugInfo?: ReactDebugInfo | null,
   _debugOwner?: ReactComponentInfo | Fiber | null,
-  _debugStack?: Error | null,
+  _debugStack?: string | Error | null,
   _debugTask?: ConsoleTask | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
