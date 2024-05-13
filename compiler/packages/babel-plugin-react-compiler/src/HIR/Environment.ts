@@ -437,6 +437,7 @@ export class Environment {
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
+  useMemoCacheIdentifier: string;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -447,13 +448,15 @@ export class Environment {
     contextIdentifiers: Set<t.Identifier>,
     logger: Logger | null,
     filename: string | null,
-    code: string | null
+    code: string | null,
+    useMemoCacheIdentifier: string
   ) {
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
     this.code = code;
     this.logger = logger;
+    this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
 

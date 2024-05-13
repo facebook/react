@@ -23,10 +23,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { createHookWrapper, mutateAndReturn } from "shared-runtime";
 function useHook(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const { value } = t0;
   let t1;
   if ($[0] !== value) {

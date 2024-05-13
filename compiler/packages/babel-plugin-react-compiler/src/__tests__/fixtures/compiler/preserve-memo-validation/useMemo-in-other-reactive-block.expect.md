@@ -30,14 +30,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useMemo, useState } from "react";
 import { arrayPush } from "shared-runtime";
 
 // useMemo-produced values can exist in nested reactive blocks, as long
 // as their reactive dependencies are a subset of depslist from source
 function useFoo(minWidth, otherProp) {
-  const $ = useMemoCache(10);
+  const $ = _c(10);
   const [width] = useState(1);
   let style;
   let x;

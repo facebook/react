@@ -22,12 +22,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees
 import { useMemo } from "react";
 import { identity, makeObject_Primitives, mutate } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

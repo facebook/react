@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 
 import { Stringify, identity, makeArray, mutate } from "shared-runtime";
 
@@ -52,7 +52,7 @@ import { Stringify, identity, makeArray, mutate } from "shared-runtime";
  * handles this correctly.
  */
 function Foo(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const { cond1, cond2 } = t0;
   const arr = makeArray({ a: 2 }, 2, []);
   let t1;

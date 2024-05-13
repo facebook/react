@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 
 /**
  * This is a weird case as data has type `BuiltInMixedReadonly`.
@@ -36,7 +36,7 @@ import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveSc
 import { useFragment } from "shared-runtime";
 
 function Foo() {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   const data = useFragment();
   const t0 = data?.toString() || "";
   let t1;

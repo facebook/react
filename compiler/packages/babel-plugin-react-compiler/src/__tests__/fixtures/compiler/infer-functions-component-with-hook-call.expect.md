@@ -13,9 +13,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   const [state] = useState(null);
   let t0;
   if ($[0] !== state) {

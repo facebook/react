@@ -36,11 +36,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { useCallback } from "react";
 
 function Component(t0) {
-  const $ = useMemoCache(11);
+  const $ = _c(11);
   const { entity, children } = t0;
   let t1;
   if ($[0] !== entity) {

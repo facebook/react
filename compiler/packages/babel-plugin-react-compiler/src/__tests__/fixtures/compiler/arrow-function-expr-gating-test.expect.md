@@ -13,10 +13,10 @@ export default ErrorView;
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as useMemoCache } from "react/compiler-runtime"; // @gating
+import { c as _c } from "react/compiler-runtime"; // @gating
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
-      const $ = useMemoCache(2);
+      const $ = _c(2);
       let t0;
       if ($[0] !== error) {
         t0 = <MessageBox error={error} />;

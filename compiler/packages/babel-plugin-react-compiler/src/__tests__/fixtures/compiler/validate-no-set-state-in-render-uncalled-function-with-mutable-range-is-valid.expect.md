@@ -33,9 +33,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
+import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
   let t0;

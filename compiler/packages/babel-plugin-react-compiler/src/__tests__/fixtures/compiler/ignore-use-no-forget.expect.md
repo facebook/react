@@ -19,10 +19,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @ignoreUseNoForget
+import { c as _c } from "react/compiler-runtime"; // @ignoreUseNoForget
 function Component(prop) {
   "use no forget";
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let t0;
   if ($[0] !== prop.x) {
     t0 = prop.x.toFixed();

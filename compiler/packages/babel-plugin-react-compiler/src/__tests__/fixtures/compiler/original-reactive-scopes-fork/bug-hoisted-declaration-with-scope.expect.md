@@ -46,7 +46,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
 /**
  * `button` and `dispatcher` must end up in the same memo block. It would be
@@ -61,7 +61,7 @@ import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
  * (kind: exception) Cannot access 'dispatcher' before initialization
  */
 function useFoo(t0) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const { onClose } = t0;
   let t1;
   if ($[0] !== onClose || $[1] !== dispatcher) {

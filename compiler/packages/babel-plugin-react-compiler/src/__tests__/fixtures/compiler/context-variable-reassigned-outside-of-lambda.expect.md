@@ -23,11 +23,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { Stringify } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let callback;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let x;

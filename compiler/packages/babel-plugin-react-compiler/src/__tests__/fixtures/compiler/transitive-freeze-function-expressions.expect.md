@@ -31,9 +31,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions
+import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
-  const $ = useMemoCache(10);
+  const $ = _c(10);
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
   let t0;

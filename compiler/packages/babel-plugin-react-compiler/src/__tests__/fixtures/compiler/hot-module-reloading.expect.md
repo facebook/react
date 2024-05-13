@@ -23,12 +23,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableResetCacheOnSourceFileChanges
+import { c as _c } from "react/compiler-runtime"; // @enableResetCacheOnSourceFileChanges
 import { useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(8);
+  const $ = _c(8);
   if (
     $[0] !== "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9"
   ) {

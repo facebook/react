@@ -19,10 +19,10 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as useMemoCache } from "react/compiler-runtime"; // @gating
+import { c as _c } from "react/compiler-runtime"; // @gating
 const Component = isForgetEnabled_Fixtures()
   ? function Component() {
-      const $ = useMemoCache(1);
+      const $ = _c(1);
       const name = Component.name;
       let t0;
       if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

@@ -25,11 +25,11 @@ function Component({ name, data, icon }) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 
 function Component(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const { name, data, icon } = t0;
   let t1;
   if ($[0] !== name || $[1] !== icon || $[2] !== data) {

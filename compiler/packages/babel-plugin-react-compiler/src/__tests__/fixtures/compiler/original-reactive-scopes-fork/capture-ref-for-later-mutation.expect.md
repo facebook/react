@@ -32,12 +32,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 import { useRef } from "react";
 import { addOne } from "shared-runtime";
 
 function useKeyCommand() {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   const currentPosition = useRef(0);
   const handleKey = (direction) => () => {
     const position = currentPosition.current;

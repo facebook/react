@@ -22,12 +22,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import * as React from "react";
 import { calculateExpensiveNumber } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const [x] = React.useState(0);
   let t0;
   let t1;

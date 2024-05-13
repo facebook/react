@@ -22,12 +22,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // To preserve the nullthrows behavior and reactive deps of this code,
+import { c as _c } from "react/compiler-runtime"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a` as a dependency (since `props.a.b` is
 // a conditional dependency, i.e. gated behind control flow)
 
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let x;
   if ($[0] !== props.a) {
     x = [];

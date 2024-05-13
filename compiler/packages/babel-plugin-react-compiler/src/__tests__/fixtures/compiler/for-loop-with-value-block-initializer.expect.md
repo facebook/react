@@ -30,10 +30,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 const TOTAL = 10;
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let items;
   if ($[0] !== props.start || $[1] !== props.items) {
     items = [];

@@ -60,7 +60,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import {
   Stringify,
   makeObject_Primitives,
@@ -94,7 +94,7 @@ import {
  * than `obj` (e.g. the invariant `myDiv.props.value === obj` always holds).
  */
 function useFoo(t0) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const { data } = t0;
   let obj;
   let myDiv = null;

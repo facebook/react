@@ -125,7 +125,7 @@ export function codegenFunction(
       t.variableDeclaration("const", [
         t.variableDeclarator(
           t.identifier(cx.synthesizeName("$")),
-          t.callExpression(t.identifier("useMemoCache"), [
+          t.callExpression(t.identifier(fn.env.useMemoCacheIdentifier), [
             t.numericLiteral(cacheCount),
           ])
         ),

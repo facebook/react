@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import * as React from "react";
 import { useContext } from "react";
 import { mutate } from "shared-runtime";
@@ -38,7 +38,7 @@ import { mutate } from "shared-runtime";
 const FooContext = React.createContext({ current: null });
 
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   const Foo = useContext(FooContext);
   let t0;
   if ($[0] !== Foo.current) {

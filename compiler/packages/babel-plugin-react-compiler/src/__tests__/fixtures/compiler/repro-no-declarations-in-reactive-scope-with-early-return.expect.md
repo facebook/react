@@ -37,9 +37,9 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
-  const $ = useMemoCache(9);
+  const $ = _c(9);
   const items = useItems();
   let t0;
   let t1;

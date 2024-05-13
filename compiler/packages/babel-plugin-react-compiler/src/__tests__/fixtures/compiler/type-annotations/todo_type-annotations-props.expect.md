@@ -20,9 +20,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableUseTypeAnnotations
+import { c as _c } from "react/compiler-runtime"; // @enableUseTypeAnnotations
 function useArray(items) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let t0;
   if ($[0] !== items) {
     let t1;

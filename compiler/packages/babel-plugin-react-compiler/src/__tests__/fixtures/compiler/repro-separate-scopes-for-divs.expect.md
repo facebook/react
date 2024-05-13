@@ -39,12 +39,12 @@ const styles = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 const DISPLAY = true;
 function Component(t0) {
-  const $ = useMemoCache(9);
+  const $ = _c(9);
   const { cond: t1, id } = t0;
   const cond = t1 === undefined ? false : t1;
   let t2;

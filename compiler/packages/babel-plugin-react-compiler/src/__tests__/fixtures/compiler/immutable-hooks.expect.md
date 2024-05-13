@@ -17,9 +17,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact true
+import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact true
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};

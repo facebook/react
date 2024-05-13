@@ -22,9 +22,9 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @debug
+import { c as _c } from "react/compiler-runtime"; // @debug
 function component(a, b) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let t0;
   if ($[0] !== a) {
     t0 = { a };

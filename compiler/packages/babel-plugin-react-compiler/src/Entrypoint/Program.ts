@@ -23,7 +23,7 @@ import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { isHookDeclaration } from "../Utils/HookDeclaration";
 import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
-import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
+import { addImportsToProgram, updateMemoCacheFunctionImport } from "./Imports";
 import { PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
 import {
@@ -248,6 +248,11 @@ export function compileProgram(
   }
 
   const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
+  const useMemoCacheIdentifier = program.scope.generateUidIdentifier("c");
+  const moduleName = options.runtimeModule ?? "react/compiler-runtime";
+  if (hasMemoCacheFunctionImport(program, moduleName)) {
+    return;
+  }
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -313,6 +318,7 @@ export function compileProgram(
         fn,
         config,
         fnType,
+        useMemoCacheIdentifier.name,
         options.logger,
         pass.filename,
         pass.code
@@ -436,7 +442,21 @@ export function compileProgram(
 
   // Forget compiled the component, we need to update existing imports of useMemoCache
   if (compiledFns.length > 0) {
-    updateUseMemoCacheImport(program, options);
+    let needsMemoCacheFunctionImport = false;
+    for (const fn of compiledFns) {
+      if (fn.compiledFn.memoSlotsUsed > 0) {
+        needsMemoCacheFunctionImport = true;
+        break;
+      }
+    }
+
+    if (needsMemoCacheFunctionImport) {
+      updateMemoCacheFunctionImport(
+        program,
+        moduleName,
+        useMemoCacheIdentifier.name
+      );
+    }
     addImportsToProgram(program, externalFunctions);
   }
 }
@@ -445,9 +465,6 @@ function getReactFunctionType(
   fn: BabelFn,
   pass: CompilerPass
 ): ReactFunctionType | null {
-  if (hasUseMemoCacheCall(fn)) {
-    return null;
-  }
   const hookPattern = pass.opts.environment?.hookPattern ?? null;
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
@@ -508,15 +525,30 @@ function getReactFunctionType(
   }
 }
 
-function hasUseMemoCacheCall(
-  fn: NodePath<
-    t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
-  >
+/**
+ * Returns true if the program contains an `import {c} from "<moduleName>"` declaration,
+ * regardless of the local name of the 'c' specifier and the presence of other specifiers
+ * in the same declaration.
+ */
+function hasMemoCacheFunctionImport(
+  program: NodePath<t.Program>,
+  moduleName: string
 ): boolean {
   let hasUseMemoCache = false;
-  fn.traverse({
-    Identifier(path) {
-      if (path.node.name === "useMemoCache") {
+  program.traverse({
+    ImportSpecifier(path) {
+      const imported = path.get("imported");
+      let importedName: string | null = null;
+      if (imported.isIdentifier()) {
+        importedName = imported.node.name;
+      } else if (imported.isStringLiteral()) {
+        importedName = imported.node.value;
+      }
+      if (
+        importedName === "c" &&
+        path.parentPath.isImportDeclaration() &&
+        path.parentPath.get("source").node.value === moduleName
+      ) {
         hasUseMemoCache = true;
       }
     },

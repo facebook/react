@@ -23,9 +23,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const x = makeObject();
   const user = useFragment(
     graphql`fragment Component_user on User { ... }`,

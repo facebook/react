@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @hookPattern:".*\b(use[^$]+)$"
+import { c as _c } from "react/compiler-runtime"; // @hookPattern:".*\b(use[^$]+)$"
 
 import * as React from "react";
 import { makeArray, useHook } from "shared-runtime";
@@ -46,7 +46,7 @@ const React$useMemo = React.useMemo;
 const Internal$Reassigned$useHook = useHook;
 
 function Component() {
-  const $ = useMemoCache(8);
+  const $ = _c(8);
   const [state] = React$useState(0);
   const object = Internal$Reassigned$useHook();
   let t0;

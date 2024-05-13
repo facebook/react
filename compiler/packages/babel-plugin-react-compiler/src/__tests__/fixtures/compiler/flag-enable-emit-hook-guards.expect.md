@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { $dispatcherGuard } from "react-compiler-runtime";
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableEmitHookGuards
+import { c as _c } from "react/compiler-runtime"; // @enableEmitHookGuards
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   CONST_STRING0,
@@ -49,7 +49,7 @@ import {
 
 const MyContext = createContext("my context value");
 function Component(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   try {
     $dispatcherGuard(0);
     const { value } = t0;

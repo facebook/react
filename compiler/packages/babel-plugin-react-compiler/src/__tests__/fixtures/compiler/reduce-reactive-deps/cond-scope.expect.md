@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // Some reactive scopes are created within a conditional. If a child scope
+import { c as _c } from "react/compiler-runtime"; // Some reactive scopes are created within a conditional. If a child scope
 // is within a conditional, its reactive dependencies should be propagated
 // as conditionals
 //
@@ -62,7 +62,7 @@ import { c as useMemoCache } from "react/compiler-runtime"; // Some reactive sco
 import { CONST_FALSE, identity } from "shared-runtime";
 
 function useReactiveDepsInCondScope(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let x;
   if ($[0] !== props) {
     x = {};

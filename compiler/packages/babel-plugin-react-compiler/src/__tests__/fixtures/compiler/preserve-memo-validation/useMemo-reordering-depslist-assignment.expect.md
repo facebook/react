@@ -26,11 +26,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { useMemo } from "react";
 
 function useFoo(arr1, arr2) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   let t0;
   if ($[0] !== arr1) {
     t0 = [arr1];

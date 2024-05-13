@@ -31,11 +31,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { makeObject_Primitives } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   const useFeature = makeObject_Primitives();
   let x;
   if (useFeature) {

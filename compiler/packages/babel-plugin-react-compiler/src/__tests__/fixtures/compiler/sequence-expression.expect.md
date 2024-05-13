@@ -17,9 +17,9 @@ function foo() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function sequence(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (Math.max(1, 2), foo());

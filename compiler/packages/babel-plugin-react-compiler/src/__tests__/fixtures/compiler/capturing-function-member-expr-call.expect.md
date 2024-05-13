@@ -19,9 +19,9 @@ function component({ mutator }) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function component(t0) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   const { mutator } = t0;
   let t1;
   if ($[0] !== mutator) {

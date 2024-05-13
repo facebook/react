@@ -23,11 +23,11 @@ export function Foo(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as useMemoCache } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
+import { c as _c } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
 export default isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";
-      const $ = useMemoCache(2);
+      const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
         t0 = <div>{props.bar}</div>;
@@ -50,7 +50,7 @@ function NoForget(props) {
 export const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
       "use forget";
-      const $ = useMemoCache(2);
+      const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
         t0 = <Foo>{props.bar}</Foo>;

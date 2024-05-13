@@ -20,7 +20,7 @@ function List(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @skip
+import { c as _c } from "react/compiler-runtime"; // @skip
 // Passed but should have failed
 
 // Invalid because it's dangerous and might not warn otherwise.
@@ -30,7 +30,7 @@ function renderItem() {
 }
 
 function List(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let t0;
   if ($[0] !== props.items) {
     t0 = props.items.map(renderItem);

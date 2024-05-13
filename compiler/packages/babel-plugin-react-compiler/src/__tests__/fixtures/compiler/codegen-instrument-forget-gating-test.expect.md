@@ -25,13 +25,13 @@ function Foo(props) {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as useMemoCache } from "react/compiler-runtime"; // @instrumentForget @compilationMode(annotation) @gating
+import { c as _c } from "react/compiler-runtime"; // @instrumentForget @compilationMode(annotation) @gating
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";
       if (__DEV__ && shouldInstrument)
         useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
-      const $ = useMemoCache(2);
+      const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
         t0 = <div>{props.bar}</div>;
@@ -55,7 +55,7 @@ const Foo = isForgetEnabled_Fixtures()
       "use forget";
       if (__DEV__ && shouldInstrument)
         useRenderCounter("Foo", "/codegen-instrument-forget-gating-test.ts");
-      const $ = useMemoCache(2);
+      const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
         t0 = <Foo>{props.bar}</Foo>;

@@ -23,12 +23,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useMemo } from "react";
 import { identity } from "shared-runtime";
 
 function useFoo(data) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let t0;
   let t1;
   if ($[0] !== data.a) {

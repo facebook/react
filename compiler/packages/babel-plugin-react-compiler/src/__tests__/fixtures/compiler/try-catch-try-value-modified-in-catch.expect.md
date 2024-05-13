@@ -26,11 +26,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let t0;
   if ($[0] !== props.y || $[1] !== props.e) {
     t0 = Symbol.for("react.early_return_sentinel");

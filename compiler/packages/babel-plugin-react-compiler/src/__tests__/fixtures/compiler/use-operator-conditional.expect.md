@@ -50,13 +50,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { ValidateMemoization } from "shared-runtime";
 import { use, useMemo } from "react";
 
 const FooContext = React.createContext(null);
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.cond) {
     t0 = <Inner cond={props.cond} />;
@@ -78,7 +78,7 @@ function Component(props) {
 }
 
 function Inner(props) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   let input;
   input = null;
   if (props.cond) {

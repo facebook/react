@@ -31,12 +31,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 import { Stringify } from "shared-runtime";
 
 export function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let count = 0;
   if (props.items) {
     count = props.items.length;

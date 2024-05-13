@@ -104,7 +104,7 @@ export function* run(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
-
+  useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
   code: string | null
@@ -116,7 +116,8 @@ export function* run(
     contextIdentifiers,
     logger,
     filename,
-    code
+    code,
+    useMemoCacheIdentifier
   );
   yield {
     kind: "debug",
@@ -453,11 +454,20 @@ export function compileFn(
   >,
   config: EnvironmentConfig,
   fnType: ReactFunctionType,
+  useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
   code: string | null
 ): CodegenFunction {
-  let generator = run(func, config, fnType, logger, filename, code);
+  let generator = run(
+    func,
+    config,
+    fnType,
+    useMemoCacheIdentifier,
+    logger,
+    filename,
+    code
+  );
   while (true) {
     const next = generator.next();
     if (next.done) {

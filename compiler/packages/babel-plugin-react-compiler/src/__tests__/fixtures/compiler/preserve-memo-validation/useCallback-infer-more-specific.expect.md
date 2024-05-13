@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
 import { useCallback } from "react";
 
@@ -35,7 +35,7 @@ import { useCallback } from "react";
 //  x_new != x_prev does NOT imply x.y.z_new != x.y.z_prev
 //  x.y.z_new != x.y.z_prev does imply x_new != x_prev
 function useHook(x) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let t0;
   if ($[0] !== x.y.z) {
     t0 = () => [x.y.z];

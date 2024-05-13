@@ -18,9 +18,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let x;
   if ($[0] !== props) {
     x = [0, 1, 2, 3];

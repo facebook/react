@@ -78,7 +78,7 @@ const SomeName = () => {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @skip
+import { c as _c } from "react/compiler-runtime"; // @skip
 // Unsupported input
 
 // Valid because the neither the conditions before or after the hook affect the hook call
@@ -86,7 +86,7 @@ import { c as useMemoCache } from "react/compiler-runtime"; // @skip
 const useSomeHook = () => {};
 
 const SomeName = () => {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   (FILLER ?? FILLER, FILLER) ?? FILLER;
   (FILLER ?? FILLER, FILLER) ?? FILLER;
   (FILLER ?? FILLER, FILLER) ?? FILLER;

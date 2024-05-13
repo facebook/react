@@ -29,9 +29,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react-forget-runtime"; // @runtimeModule="react-forget-runtime"
+import { c as _c } from "react-forget-runtime"; // @runtimeModule="react-forget-runtime"
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   const [x, setX] = useState(1);
   let y;
   if ($[0] !== props.cond || $[1] !== x) {

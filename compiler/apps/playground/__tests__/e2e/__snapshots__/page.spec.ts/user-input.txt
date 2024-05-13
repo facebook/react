@@ -1,5 +1,5 @@
 function TestComponent(t0) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   const { x } = t0;
   let t1;
   if ($[0] !== x) {

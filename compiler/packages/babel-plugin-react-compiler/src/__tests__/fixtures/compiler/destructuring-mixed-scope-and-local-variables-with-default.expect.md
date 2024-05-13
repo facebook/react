@@ -44,7 +44,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { Stringify, graphql } from "shared-runtime";
 
 function useFragment(_arg1, _arg2) {
@@ -56,7 +56,7 @@ function useFragment(_arg1, _arg2) {
 }
 
 function Component(props) {
-  const $ = useMemoCache(14);
+  const $ = _c(14);
   const post = useFragment(graphql`...`, props.post);
   let media;
   let allUrls;

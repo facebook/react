@@ -14,10 +14,10 @@ const MemoizedFunction = memo(function (props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
+import { c as _c } from "react/compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
 // memo.
 const MemoizedFunction = memo(function (props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   useHook();
   let t0;
   if ($[0] !== props) {

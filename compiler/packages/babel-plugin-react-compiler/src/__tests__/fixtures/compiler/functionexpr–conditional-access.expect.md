@@ -21,9 +21,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
+import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props) {
     t0 = function getLength() {

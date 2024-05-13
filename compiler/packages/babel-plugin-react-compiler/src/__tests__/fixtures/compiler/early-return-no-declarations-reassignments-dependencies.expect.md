@@ -50,7 +50,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { makeArray } from "shared-runtime";
 
 /**
@@ -69,7 +69,7 @@ import { makeArray } from "shared-runtime";
 let ENABLE_FEATURE = false;
 
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Symbol.for("react.early_return_sentinel");

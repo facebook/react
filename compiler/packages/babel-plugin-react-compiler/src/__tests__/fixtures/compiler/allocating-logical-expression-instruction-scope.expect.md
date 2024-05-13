@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 /**
  * This is a weird case as data has type `BuiltInMixedReadonly`.
  * The only scoped value we currently infer in this program is the
@@ -33,7 +33,7 @@ import { c as useMemoCache } from "react/compiler-runtime";
 import { useFragment } from "shared-runtime";
 
 function Foo() {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const data = useFragment();
   let t0;
   if ($[0] !== data) {

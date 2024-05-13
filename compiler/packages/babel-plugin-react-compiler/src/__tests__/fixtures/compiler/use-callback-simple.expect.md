@@ -14,9 +14,9 @@ function component() {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function component() {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const [count, setCount] = useState(0);
   let t0;
   if ($[0] !== count) {

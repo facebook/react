@@ -10,7 +10,6 @@ import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
 import { ExternalFunction, GeneratedSource } from "../HIR";
 import { getOrInsertDefault } from "../Utils/utils";
-import { PluginOptions } from "./Options";
 
 export function addImportsToProgram(
   path: NodePath<t.Program>,
@@ -78,28 +77,12 @@ function isNonNamespacedImport(
   );
 }
 
-function findExistingImports(
+function hasExistingNonNamespacedImportOfModule(
   program: NodePath<t.Program>,
   moduleName: string
-): {
-  didInsertUseMemoCache: boolean;
-  hasExistingImport: boolean;
-} {
-  let didInsertUseMemoCache = false;
+): boolean {
   let hasExistingImport = false;
   program.traverse({
-    CallExpression(callExprPath) {
-      const callee = callExprPath.get("callee");
-      const args = callExprPath.get("arguments");
-      if (
-        callee.isIdentifier() &&
-        callee.node.name === "useMemoCache" &&
-        args.length === 1 &&
-        args[0].isNumericLiteral()
-      ) {
-        didInsertUseMemoCache = true;
-      }
-    },
     ImportDeclaration(importDeclPath) {
       if (isNonNamespacedImport(importDeclPath, moduleName)) {
         hasExistingImport = true;
@@ -107,19 +90,17 @@ function findExistingImports(
     },
   });
 
-  return {
-    didInsertUseMemoCache,
-    hasExistingImport,
-  };
+  return hasExistingImport;
 }
 
 /*
  * If an existing import of React exists (ie `import {useMemo} from 'react'`), inject useMemoCache
  * into the list of destructured variables.
  */
-function updateExistingImportDeclaration(
+function addMemoCacheFunctionSpecifierToExistingImport(
   program: NodePath<t.Program>,
-  moduleName: string
+  moduleName: string,
+  identifierName: string
 ): boolean {
   let didInsertUseMemoCache = false;
   program.traverse({
@@ -130,7 +111,7 @@ function updateExistingImportDeclaration(
       ) {
         importDeclPath.pushContainer(
           "specifiers",
-          t.importSpecifier(t.identifier("useMemoCache"), t.identifier("c"))
+          t.importSpecifier(t.identifier(identifierName), t.identifier("c"))
         );
         didInsertUseMemoCache = true;
       }
@@ -139,29 +120,25 @@ function updateExistingImportDeclaration(
   return didInsertUseMemoCache;
 }
 
-export function updateUseMemoCacheImport(
+export function updateMemoCacheFunctionImport(
   program: NodePath<t.Program>,
-  options: PluginOptions
+  moduleName: string,
+  useMemoCacheIdentifier: string
 ): void {
-  const moduleName = options.runtimeModule ?? "react/compiler-runtime";
   /*
    * If there isn't already an import of * as React, insert it so useMemoCache doesn't
    * throw
    */
-  const { didInsertUseMemoCache, hasExistingImport } = findExistingImports(
+  const hasExistingImport = hasExistingNonNamespacedImportOfModule(
     program,
     moduleName
   );
 
-  if (!didInsertUseMemoCache) {
-    // useMemoCache was not generated, nothing to do
-    return;
-  }
-
   if (hasExistingImport) {
-    const didUpdateImport = updateExistingImportDeclaration(
+    const didUpdateImport = addMemoCacheFunctionSpecifierToExistingImport(
       program,
-      moduleName
+      moduleName,
+      useMemoCacheIdentifier
     );
     if (!didUpdateImport) {
       throw new Error(
@@ -169,18 +146,23 @@ export function updateUseMemoCacheImport(
       );
     }
   } else {
-    addUseMemoCacheImportDeclaration(program, moduleName);
+    addMemoCacheFunctionImportDeclaration(
+      program,
+      moduleName,
+      useMemoCacheIdentifier
+    );
   }
 }
 
-function addUseMemoCacheImportDeclaration(
+function addMemoCacheFunctionImportDeclaration(
   program: NodePath<t.Program>,
-  moduleName: string
+  moduleName: string,
+  localName: string
 ): void {
   program.unshiftContainer(
     "body",
     t.importDeclaration(
-      [t.importSpecifier(t.identifier("useMemoCache"), t.identifier("c"))],
+      [t.importSpecifier(t.identifier(localName), t.identifier("c"))],
       t.stringLiteral(moduleName)
     )
   );

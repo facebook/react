@@ -66,12 +66,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 /**
  * props.b does *not* influence `a`
  */
 function ComponentA(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let a_DEBUG;
   let t0;
   if ($[0] !== props) {
@@ -103,7 +103,7 @@ function ComponentA(props) {
  * props.b *does* influence `a`
  */
 function ComponentB(props) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let a;
   if ($[0] !== props) {
     a = [];
@@ -125,7 +125,7 @@ function ComponentB(props) {
  * props.b *does* influence `a`, but only in a way that is never observable
  */
 function ComponentC(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let a;
   let t0;
   if ($[0] !== props) {
@@ -158,7 +158,7 @@ function ComponentC(props) {
  * props.b *does* influence `a`
  */
 function ComponentD(props) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let a;
   let t0;
   if ($[0] !== props) {

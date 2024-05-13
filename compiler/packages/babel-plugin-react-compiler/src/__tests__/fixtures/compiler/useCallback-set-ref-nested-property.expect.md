@@ -28,13 +28,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { useCallback, useRef } from "react";
 
 // Identical to useCallback-set-ref-nested-property-preserve-memoization,
 // but with a different set of compiler flags
 function Component(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = { inner: null };

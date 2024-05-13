@@ -20,11 +20,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function Component(props) {
-  const $0 = useMemoCache(1);
+  const $0 = _c(1);
   let t0;
   if ($0[0] === Symbol.for("react.memo_cache_sentinel")) {
     const $ = identity("jQuery");

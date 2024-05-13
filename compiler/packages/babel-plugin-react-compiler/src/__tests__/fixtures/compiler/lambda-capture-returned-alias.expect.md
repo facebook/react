@@ -26,14 +26,14 @@ function CaptureNotMutate(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // Here, element should not be memoized independently of aliasedElement, since
+import { c as _c } from "react/compiler-runtime"; // Here, element should not be memoized independently of aliasedElement, since
 // it is captured by fn.
 // AnalyzeFunctions currently does not find captured objects.
 //  - mutated context refs are declared as `Capture` effect in `FunctionExpression.deps`
 //  - all other context refs are left as Unknown. InferReferenceEffects currently demotes
 //    them to reads
 function CaptureNotMutate(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.x) {
     t0 = foo(props.x);

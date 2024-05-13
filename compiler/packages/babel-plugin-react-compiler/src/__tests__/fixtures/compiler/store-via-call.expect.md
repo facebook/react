@@ -14,9 +14,9 @@ function foo() {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function foo() {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};

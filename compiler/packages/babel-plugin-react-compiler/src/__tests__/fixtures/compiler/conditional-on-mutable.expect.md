@@ -34,9 +34,9 @@ function mayMutate() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function ComponentA(props) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   let a;
   let b;
   if ($[0] !== props) {
@@ -68,7 +68,7 @@ function ComponentA(props) {
 }
 
 function ComponentB(props) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   let a;
   let b;
   if ($[0] !== props) {

@@ -17,9 +17,9 @@ function VideoTab() {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validateRefAccessDuringRender false
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender false
 function VideoTab() {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const ref = useRef();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

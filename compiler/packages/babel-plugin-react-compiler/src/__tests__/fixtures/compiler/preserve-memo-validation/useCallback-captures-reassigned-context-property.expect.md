@@ -29,12 +29,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
 function Foo(props) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   let contextVar;
   if ($[0] !== props.cond) {
     if (props.cond) {

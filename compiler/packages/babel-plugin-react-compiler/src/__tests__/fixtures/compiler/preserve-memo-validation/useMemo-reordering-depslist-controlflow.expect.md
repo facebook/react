@@ -35,12 +35,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { useMemo } from "react";
 import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
-  const $ = useMemoCache(11);
+  const $ = _c(11);
   const { arr1, arr2, foo } = t0;
   let t1;
   if ($[0] !== arr1) {

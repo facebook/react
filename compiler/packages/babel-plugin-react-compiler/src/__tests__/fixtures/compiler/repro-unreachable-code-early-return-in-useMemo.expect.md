@@ -40,12 +40,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 import { useMemo, useState } from "react";
 import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component(t0) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   const { value } = t0;
   let t1;
   bb0: {

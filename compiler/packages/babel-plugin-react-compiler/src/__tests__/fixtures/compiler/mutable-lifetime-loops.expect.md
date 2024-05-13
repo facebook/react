@@ -60,7 +60,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function mutate(x, y) {
   "use no forget";
   if (x != null) {
@@ -76,7 +76,7 @@ function cond(x) {
 }
 
 function testFunction(props) {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let a = {};

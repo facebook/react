@@ -27,7 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 /**
  * Should produce 3 scopes:
  *
@@ -39,7 +39,7 @@ import { c as useMemoCache } from "react/compiler-runtime";
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   let t0;
   if ($[0] !== props.a) {
     t0 = compute(props.a);

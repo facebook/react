@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { CONST_STRING0, Text } from "shared-runtime";
 function useFoo() {
   "use no forget";
@@ -34,7 +34,7 @@ function useFoo() {
 }
 
 function Test() {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   const { tab } = useFoo();
   tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING0;
   let t0;

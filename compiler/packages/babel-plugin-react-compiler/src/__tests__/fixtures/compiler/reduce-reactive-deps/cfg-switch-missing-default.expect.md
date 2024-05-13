@@ -30,13 +30,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // props.a.b should NOT be added as a unconditional dependency to the reactive
+import { c as _c } from "react/compiler-runtime"; // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in the default case.
 
 import { identity } from "shared-runtime";
 
 function useCondDepInSwitchMissingDefault(props, other) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   let x;
   if ($[0] !== other || $[1] !== props) {
     x = {};

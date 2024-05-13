@@ -17,12 +17,12 @@ function ArrayAtTest(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // arrayInstance.at should have the following effects:
+import { c as _c } from "react/compiler-runtime"; // arrayInstance.at should have the following effects:
 //  - read on arg0
 //  - read on receiver
 //  - mutate on lvalue
 function ArrayAtTest(props) {
-  const $ = useMemoCache(9);
+  const $ = _c(9);
   let t0;
   if ($[0] !== props.x) {
     t0 = foo(props.x);

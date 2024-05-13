@@ -27,14 +27,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 
 import { useCallback } from "react";
 import { makeArray } from "shared-runtime";
 
 // This case is fine, as all reassignments happen before the useCallback
 function Foo(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let x;
   if ($[0] !== props) {
     x = [];

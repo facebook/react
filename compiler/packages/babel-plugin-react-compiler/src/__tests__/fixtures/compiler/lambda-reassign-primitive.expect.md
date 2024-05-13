@@ -28,13 +28,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // writing to primitives is not a 'mutate' or 'store' to context references,
+import { c as _c } from "react/compiler-runtime"; // writing to primitives is not a 'mutate' or 'store' to context references,
 // under current analysis in AnalyzeFunctions.
 // <unknown> $23:TFunction = Function @deps[<unknown>
 //   $21:TPrimitive,<unknown> $22:TPrimitive]:
 
 function Component() {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     x = 40;

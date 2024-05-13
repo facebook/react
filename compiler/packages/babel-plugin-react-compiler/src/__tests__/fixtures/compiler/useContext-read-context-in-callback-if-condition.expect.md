@@ -32,14 +32,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { createContext, useContext } from "react";
 import { Stringify } from "shared-runtime";
 
 const FooContext = createContext({ current: true });
 
 function Component(props) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   const foo = useContext(FooContext);
   let t0;
   if ($[0] !== foo.current) {

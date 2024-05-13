@@ -14,9 +14,9 @@ export default function foo(x, y) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 export default function foo(x, y) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   if (x) {
     let t0;
     if ($[0] !== y) {

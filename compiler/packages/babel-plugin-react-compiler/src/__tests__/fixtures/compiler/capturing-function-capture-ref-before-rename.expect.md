@@ -22,9 +22,9 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function component(a, b) {
-  const $ = useMemoCache(7);
+  const $ = _c(7);
   let z;
   if ($[0] !== a) {
     z = { a };

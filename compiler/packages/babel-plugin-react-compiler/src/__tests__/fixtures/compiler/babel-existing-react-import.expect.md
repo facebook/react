@@ -23,11 +23,11 @@ function Component2(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { useState, useMemo } from "react";
 
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const [x] = useState(0);
   let t0;
   let t1;
@@ -52,7 +52,7 @@ function Component(props) {
 }
 
 function Component2(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const [x] = useState(0);
   let t0;
   let t1;

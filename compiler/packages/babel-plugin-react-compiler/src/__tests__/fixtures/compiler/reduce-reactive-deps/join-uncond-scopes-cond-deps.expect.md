@@ -41,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // This tests an optimization, NOT a correctness property.
+import { c as _c } from "react/compiler-runtime"; // This tests an optimization, NOT a correctness property.
 // When propagating reactive dependencies of an inner scope up to its parent,
 // we prefer to retain granularity.
 //
@@ -61,7 +61,7 @@ import { c as useMemoCache } from "react/compiler-runtime"; // This tests an opt
 import { CONST_TRUE, setProperty } from "shared-runtime";
 
 function useJoinCondDepsInUncondScopes(props) {
-  const $ = useMemoCache(8);
+  const $ = _c(8);
   let x;
   let y;
   if ($[0] !== props.a.b) {

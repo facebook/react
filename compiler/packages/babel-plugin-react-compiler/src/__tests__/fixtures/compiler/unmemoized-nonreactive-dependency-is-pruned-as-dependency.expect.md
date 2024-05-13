@@ -25,11 +25,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import { mutate, useNoAlias } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
 
   const x = [];
   useNoAlias();

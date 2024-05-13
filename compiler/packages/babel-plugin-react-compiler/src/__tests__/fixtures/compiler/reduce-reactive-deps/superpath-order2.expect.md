@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // When an unconditional dependency `props.a` is the subpath of a conditional
+import { c as _c } from "react/compiler-runtime"; // When an unconditional dependency `props.a` is the subpath of a conditional
 // dependency `props.a.b`, we can safely overestimate and only track `props.a`
 // as a dependency
 
@@ -45,7 +45,7 @@ import { identity } from "shared-runtime";
 
 // ordering of accesses should not matter
 function useConditionalSuperpath2(t0) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const { props, cond } = t0;
   let x;
   if ($[0] !== cond || $[1] !== props.a) {

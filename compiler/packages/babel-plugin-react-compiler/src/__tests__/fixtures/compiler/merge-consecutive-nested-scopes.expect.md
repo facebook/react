@@ -24,11 +24,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 const { getNumber } = require("shared-runtime");
 
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let x;
   if (props.cond) {
     let t0;

@@ -22,12 +22,12 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 import React from "react";
 import { shallowCopy } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.width) {
     t0 = { style: { width: props.width } };

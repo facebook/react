@@ -18,9 +18,9 @@ function foo(a, b, c) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   let t0;
   if ($[0] !== a) {
     t0 = makeObject(a);

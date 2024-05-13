@@ -35,14 +35,14 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableChangeVariableCodegen
+import { c as _c } from "react/compiler-runtime"; // @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";
 const t0 = "module_t0";
 const c_0 = "module_c_0";
 function useFoo(props) {
-  const $0 = useMemoCache(2);
+  const $0 = _c(2);
   const c_00 = $0[0] !== props.value;
   let t1;
   if (c_00) {

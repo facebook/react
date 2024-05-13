@@ -23,9 +23,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableUseTypeAnnotations
+import { c as _c } from "react/compiler-runtime"; // @enableUseTypeAnnotations
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let t0;
   if ($[0] !== props.id) {
     t0 = makeArray(props.id);
@@ -48,7 +48,7 @@ function Component(props) {
 }
 
 function makeArray(x) {
-  const $ = useMemoCache(2);
+  const $ = _c(2);
   let t0;
   if ($[0] !== x) {
     t0 = [x];

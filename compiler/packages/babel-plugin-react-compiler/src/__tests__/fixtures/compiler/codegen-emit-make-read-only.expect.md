@@ -20,10 +20,10 @@ function MyComponentName(props) {
 
 ```javascript
 import { makeReadOnly } from "react-compiler-runtime";
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableEmitFreeze true
+import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze true
 
 function MyComponentName(props) {
-  const $ = useMemoCache(5);
+  const $ = _c(5);
   let x;
   if ($[0] !== props.a || $[1] !== props.b) {
     x = {};

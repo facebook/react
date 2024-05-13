@@ -202,6 +202,7 @@ function compile(source: string): CompilerOutput {
           customHooks: new Map([...COMMON_HOOKS]),
         },
         getReactFunctionType(id),
+        "_c",
         null,
         null,
         null,

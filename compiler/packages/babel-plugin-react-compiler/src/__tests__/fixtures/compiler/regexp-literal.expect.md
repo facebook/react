@@ -18,9 +18,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   let t0;
   let value;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

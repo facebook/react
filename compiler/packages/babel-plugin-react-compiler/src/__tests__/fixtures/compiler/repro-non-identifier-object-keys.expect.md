@@ -23,9 +23,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime";
 function Foo() {
-  const $ = useMemoCache(1);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = { "a.b": 1, "a\b": 2, "a/b": 3, "a+b": 4, "a b": 5 };

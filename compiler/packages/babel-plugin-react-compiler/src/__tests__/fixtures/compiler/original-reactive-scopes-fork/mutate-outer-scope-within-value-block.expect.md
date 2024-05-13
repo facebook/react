@@ -43,7 +43,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
 
 /**
@@ -68,7 +68,7 @@ import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
  * should be merged.
  */
 function useFoo(t0) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const { input } = t0;
   const arr = shallowCopy(input);
   let t1;

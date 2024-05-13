@@ -60,7 +60,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
 import { identity, mutate } from "shared-runtime";
 
 /**
@@ -92,7 +92,7 @@ import { identity, mutate } from "shared-runtime";
  *
  */
 function useFoo(t0) {
-  const $ = useMemoCache(6);
+  const $ = _c(6);
   const { a, b } = t0;
   let z;
   let y;

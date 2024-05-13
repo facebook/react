@@ -16,9 +16,9 @@ function Foo({ a }) {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // @validateRefAccessDuringRender:false
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender:false
 function Foo(t0) {
-  const $ = useMemoCache(4);
+  const $ = _c(4);
   const { a } = t0;
   const ref = useRef();
   const val = ref.current;

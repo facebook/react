@@ -35,13 +35,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as useMemoCache } from "react/compiler-runtime"; // When an object's properties are only read conditionally, we should
+import { c as _c } from "react/compiler-runtime"; // When an object's properties are only read conditionally, we should
 
 import { identity } from "shared-runtime";
 
 // track the base object as a dependency.
 function useOnlyConditionalDependencies(t0) {
-  const $ = useMemoCache(3);
+  const $ = _c(3);
   const { props, cond } = t0;
   let x;
   if ($[0] !== cond || $[1] !== props) {
