@@ -159,6 +159,8 @@ import {
   requestCurrentTransition,
 } from './ReactFiberTransition';
 
+import {callComponentInDEV} from './ReactFiberCallUserSpace';
+
 export type Update<S, A> = {
   lane: Lane,
   revertLane: Lane,
@@ -590,7 +592,9 @@ export function renderWithHooks<Props, SecondArg>(
     (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
-  let children = Component(props, secondArg);
+  let children = __DEV__
+    ? callComponentInDEV(Component, props, secondArg)
+    : Component(props, secondArg);
   shouldDoubleInvokeUserFnsInHooksDEV = false;
 
   // Check if there was a render phase update
@@ -822,7 +826,9 @@ function renderWithHooksAgain<Props, SecondArg>(
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
 
-    children = Component(props, secondArg);
+    children = __DEV__
+      ? callComponentInDEV(Component, props, secondArg)
+      : Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
