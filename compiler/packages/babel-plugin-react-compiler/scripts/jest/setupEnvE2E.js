@@ -9,7 +9,8 @@ const ReactCompilerRuntime = require("react/compiler-runtime");
 
 /*
  * Our e2e babel transform currently only compiles functions, not programs.
- * As a result, our e2e transpiled code does not contain an import for `useMemoCache`
- * This is a hack.
+ * As a result, our e2e transpiled code does not contain an import for the
+ * memo cache function. As a temporary hack, we add a `_c` global, which is
+ * the name that is used for the import by default.
  */
-globalThis.useMemoCache = ReactCompilerRuntime.c;
+globalThis._c = ReactCompilerRuntime.c;

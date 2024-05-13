@@ -176,7 +176,15 @@ function ReactForgetFunctionTransform() {
         }
       }
 
-      const compiled = compile(fn, forgetOptions, "Other", null, null);
+      const compiled = compile(
+        fn,
+        forgetOptions,
+        "Other",
+        "_c",
+        null,
+        null,
+        null
+      );
       compiledFns.add(compiled);
 
       const fun = t.functionDeclaration(
