@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "license": "MIT",
   "files": [
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",

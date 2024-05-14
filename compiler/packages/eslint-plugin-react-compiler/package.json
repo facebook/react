@@ -6,6 +6,9 @@
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "tsc && jest"
   },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
