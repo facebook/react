@@ -1,30 +1,15 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-'use strict';
-
-const minimatch = require('minimatch');
-const {ESLint} = require('eslint');
-const listChangedFiles = require('../shared/listChangedFiles');
-
-const allPaths = ['**/*.js'];
-
-let changedFiles = null;
-
 async function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
   const eslint = new ESLint(options);
   const formatter = await eslint.loadFormatter();
+
+  let changedFiles = null; // Scoped variable
 
   if (onlyChanged && changedFiles === null) {
     // Calculate lazily.
     changedFiles = [...listChangedFiles()];
   }
   const finalFilePatterns = onlyChanged
-    ? intersect(changedFiles, filePatterns)
+    ? intersect(changedFiles || [], filePatterns) // Ensure changedFiles is an array
     : filePatterns;
   const results = await eslint.lintFiles(finalFilePatterns);
 
@@ -60,29 +45,3 @@ async function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
     warningCount: warningCount - ignoredMessageCount,
   };
 }
-
-function intersect(files, patterns) {
-  let intersection = [];
-  patterns.forEach(pattern => {
-    intersection = [
-      ...intersection,
-      ...minimatch.match(files, pattern, {matchBase: true}),
-    ];
-  });
-  return [...new Set(intersection)];
-}
-
-async function runESLint({onlyChanged, ...options}) {
-  if (typeof onlyChanged !== 'boolean') {
-    throw new Error('Pass options.onlyChanged as a boolean.');
-  }
-  const {errorCount, warningCount, output} = await runESLintOnFilesWithOptions(
-    allPaths,
-    onlyChanged,
-    options
-  );
-  console.log(output);
-  return errorCount === 0 && warningCount === 0;
-}
-
-module.exports = runESLint;
