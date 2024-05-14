@@ -728,7 +728,12 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
  */
 export function createElement(type, config, children) {
   if (__DEV__) {
-    if (!isValidElementType(type)) {
+    if (!enableOwnerStacks && !isValidElementType(type)) {
+      // This is just an optimistic check that provides a better stack trace before
+      // owner stacks. It's really up to the renderer if it's a valid element type.
+      // When owner stacks are enabled, we instead warn in the renderer and it'll
+      // have the stack trace of the JSX element anyway.
+      //
       // This is an invalid element type.
       //
       // We warn in this case but don't throw. We expect the element creation to
