@@ -2,7 +2,9 @@
   "name": "react-compiler-healthcheck",
   "version": "0.0.0",
   "description": "Health check script to test violations of the rules of react.",
-  "bin": "dist/index.js",
+  "bin": {
+    "react-compiler-healthcheck": "dist/index.js"
+  },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "echo 'no tests'"
