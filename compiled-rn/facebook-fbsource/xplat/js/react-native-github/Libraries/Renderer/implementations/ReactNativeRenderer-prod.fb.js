@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<40e897e52212d86ac96cac9227ed5e6e>>
+ * @generated SignedSource<<579d7df14fefede0635f3015ce4ffc4b>>
  */
 
 "use strict";
@@ -1121,7 +1121,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
   enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
-  enableUnifiedSyncLane = dynamicFlagsUntyped.enableUnifiedSyncLane,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1699,14 +1698,11 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
-  nextTransitionLane = 128,
+var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -6032,8 +6028,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       JSCompiler_temp = workInProgressRoot;
       if (null !== JSCompiler_temp) {
         nextProps = renderLanes & -renderLanes;
-        if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-          nextProps = 1;
+        if (0 !== (nextProps & 42)) nextProps = 1;
         else
           switch (nextProps) {
             case 2:
@@ -10024,7 +10019,7 @@ function commitRootImpl(
   remainingLanes = root.pendingLanes;
   (enableInfiniteRenderLoopDetection &&
     (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -10773,7 +10768,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1192 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-beta-f099a637",
+    version: "19.0.0-beta-f1237942",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10816,7 +10811,7 @@ var internals$jscomp$inline_1441 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-f099a637"
+  reconcilerVersion: "19.0.0-beta-f1237942"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1442 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

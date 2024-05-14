@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<992be7ad266e7af316abc8834205d869>>
+ * @generated SignedSource<<ca956efb4aaf22602f53006d2b2ee8b9>>
  */
 
 'use strict';
@@ -1997,7 +1997,6 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
     enableRefAsProp = dynamicFlags.enableRefAsProp,
-    enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
     passChildrenWhenCloningPersistedNodes = dynamicFlags.passChildrenWhenCloningPersistedNodes; // The rest of the flags are static for better dead code elimination.
 var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
@@ -3262,7 +3261,7 @@ var DefaultHydrationLane =
 var DefaultLane =
 /*                     */
 32;
-var SyncUpdateLanes = enableUnifiedSyncLane ? SyncLane | InputContinuousLane | DefaultLane : SyncLane;
+var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane ;
 var TransitionHydrationLane =
 /*                */
 64;
@@ -3417,7 +3416,7 @@ var nextTransitionLane = TransitionLane1;
 var nextRetryLane = RetryLane1;
 
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
+  {
     var pendingSyncLanes = lanes & SyncUpdateLanes;
 
     if (pendingSyncLanes !== 0) {
@@ -4000,7 +3999,7 @@ function getBumpedLaneForHydration(root, renderLanes) {
   var renderLane = getHighestPriorityLane(renderLanes);
   var lane;
 
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+  if ((renderLane & SyncUpdateLanes) !== NoLane) {
     lane = SyncHydrationLane;
   } else {
     switch (renderLane) {
@@ -26088,7 +26087,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-8cbbbfb0';
+var ReactVersion = '19.0.0-beta-79d761af';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

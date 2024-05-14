@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<79240e3cc80ad4ba1c6a4a8fd2e22e28>>
+ * @generated SignedSource<<0374c4a21842dbd2133ac56c8fae0c36>>
  */
 
 "use strict";
@@ -981,7 +981,6 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
   enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
-  enableUnifiedSyncLane = dynamicFlagsUntyped.enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   emptyObject$1 = {},
@@ -1429,7 +1428,6 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2;
 function getLabelForLane(lane) {
   if (lane & 1) return "SyncHydrationLane";
   if (lane & 2) return "Sync";
@@ -1449,10 +1447,8 @@ function getLabelForLane(lane) {
 var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -6215,8 +6211,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       JSCompiler_temp = workInProgressRoot;
       if (null !== JSCompiler_temp) {
         nextProps = renderLanes & -renderLanes;
-        if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-          nextProps = 1;
+        if (0 !== (nextProps & 42)) nextProps = 1;
         else
           switch (nextProps) {
             case 2:
@@ -10461,7 +10456,7 @@ function commitRootImpl(
   remainingLanes = root.pendingLanes;
   (enableInfiniteRenderLoopDetection &&
     (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
         ? nestedUpdateCount++
@@ -11289,7 +11284,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1204 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-beta-6dfa24ac",
+    version: "19.0.0-beta-d0d9e719",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11345,7 +11340,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-beta-6dfa24ac"
+  reconcilerVersion: "19.0.0-beta-d0d9e719"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

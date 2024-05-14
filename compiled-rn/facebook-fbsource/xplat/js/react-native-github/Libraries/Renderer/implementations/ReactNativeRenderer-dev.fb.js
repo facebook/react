@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c616f3c5557c8235bca7c732a1bd4ad9>>
+ * @generated SignedSource<<474b9244c3c9a13025741c295280cf4c>>
  */
 
 'use strict';
@@ -2343,8 +2343,7 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     disableStringRefs = dynamicFlags.disableStringRefs,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
-    enableRefAsProp = dynamicFlags.enableRefAsProp,
-    enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane;
+    enableRefAsProp = dynamicFlags.enableRefAsProp;
  // The rest of the flags are static for better dead code elimination.
 var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
@@ -4054,7 +4053,7 @@ var DefaultHydrationLane =
 var DefaultLane =
 /*                     */
 32;
-var SyncUpdateLanes = enableUnifiedSyncLane ? SyncLane | InputContinuousLane | DefaultLane : SyncLane;
+var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane ;
 var TransitionHydrationLane =
 /*                */
 64;
@@ -4209,7 +4208,7 @@ var nextTransitionLane = TransitionLane1;
 var nextRetryLane = RetryLane1;
 
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
+  {
     var pendingSyncLanes = lanes & SyncUpdateLanes;
 
     if (pendingSyncLanes !== 0) {
@@ -4792,7 +4791,7 @@ function getBumpedLaneForHydration(root, renderLanes) {
   var renderLane = getHighestPriorityLane(renderLanes);
   var lane;
 
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+  if ((renderLane & SyncUpdateLanes) !== NoLane) {
     lane = SyncHydrationLane;
   } else {
     switch (renderLane) {
@@ -26438,7 +26437,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-ddb899dd';
+var ReactVersion = '19.0.0-beta-f6541054';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
