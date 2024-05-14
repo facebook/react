@@ -14,6 +14,7 @@
     "index.js",
     "cjs/",
     "compiler-runtime.js",
+    "compiler-runtime.react-server.js",
     "jsx-runtime.js",
     "jsx-runtime.react-server.js",
     "jsx-dev-runtime.js",
@@ -36,7 +37,7 @@
       "default": "./jsx-dev-runtime.js"
     },
     "./compiler-runtime": {
-      "react-server": "./compiler-runtime.js",
+      "react-server": "./compiler-runtime.react-server.js",
       "default": "./compiler-runtime.js"
     },
     "./src/*": "./src/*"
