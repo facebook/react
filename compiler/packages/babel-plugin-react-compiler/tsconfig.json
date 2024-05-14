@@ -3,9 +3,6 @@
   "compilerOptions": {
     "module": "ES2015",
     "moduleResolution": "Bundler",
-    "declaration": true,
-    "declarationDir": "./dist",
-    "declarationMap": false,
     "rootDir": "src",
     "outDir": "dist",
     // https://github.com/microsoft/TypeScript/issues/30925
