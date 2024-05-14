@@ -30,17 +30,22 @@ describe('ReactElementValidator', () => {
     act = require('internal-test-utils').act;
     ComponentClass = class extends React.Component {
       render() {
-        return React.createElement('div');
+        return React.createElement('div', null, this.props.children);
       }
     };
   });
 
-  it('warns for keys for arrays of elements in rest args', () => {
-    expect(() => {
-      React.createElement(ComponentClass, null, [
-        React.createElement(ComponentClass),
-        React.createElement(ComponentClass),
-      ]);
+  it('warns for keys for arrays of elements in rest args', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() =>
+        root.render(
+          React.createElement(ComponentClass, null, [
+            React.createElement(ComponentClass),
+            React.createElement(ComponentClass),
+          ]),
+        ),
+      );
     }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
@@ -67,14 +72,18 @@ describe('ReactElementValidator', () => {
       await act(() => root.render(React.createElement(ComponentWrapper)));
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `InnerClass`. ' +
+        '\n\nCheck the render method of `' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? 'ComponentClass'
+          : 'InnerClass') +
+        '`. ' +
         'It was passed a child from ComponentWrapper. ',
     );
   });
 
   it('warns for keys for arrays with no owner or parent info', async () => {
-    function Anonymous() {
-      return <div />;
+    function Anonymous({children}) {
+      return <div>{children}</div>;
     }
     Object.defineProperty(Anonymous, 'name', {value: undefined});
 
@@ -84,9 +93,16 @@ describe('ReactElementValidator', () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => root.render(<Anonymous>{divs}</Anonymous>));
     }).toErrorDev(
-      'Warning: Each child in a list should have a unique ' +
-        '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-        '    in div (at **)',
+      gate(flags => flags.enableOwnerStacks)
+        ? // For owner stacks the parent being validated is the div.
+          'Warning: Each child in a list should have a unique ' +
+            '"key" prop.' +
+            '\n\nCheck the top-level render call using <div>. ' +
+            'See https://react.dev/link/warning-keys for more information.\n' +
+            '    in div (at **)'
+        : 'Warning: Each child in a list should have a unique ' +
+            '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+            '    in div (at **)',
     );
   });
 
@@ -126,6 +142,9 @@ describe('ReactElementValidator', () => {
         '"key" prop.\n\nCheck the render method of `Component`. See ' +
         'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
+        // TODO: Because this validates after the div has been mounted, it is part of
+        // the parent stack but since owner stacks will switch to owners this goes away again.
+        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
@@ -153,7 +172,7 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  it('warns for keys for iterables of elements in rest args', () => {
+  it('warns for keys for iterables of elements in rest args', async () => {
     const iterable = {
       '@@iterator': function () {
         let i = 0;
@@ -169,9 +188,23 @@ describe('ReactElementValidator', () => {
       },
     };
 
-    expect(() =>
-      React.createElement(ComponentClass, null, iterable),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() =>
+        root.render(React.createElement(ComponentClass, null, iterable)),
+      );
+    }).toErrorDev(
+      gate(flag => flag.enableOwnerStacks)
+        ? 'Each child in a list should have a unique "key" prop.'
+        : // Since each pass generates a new element, it doesn't get marked as
+          // validated and it gets rechecked each time.
+
+          [
+            'Each child in a list should have a unique "key" prop.',
+            'Each child in a list should have a unique "key" prop.',
+            'Each child in a list should have a unique "key" prop.',
+          ],
+    );
   });
 
   it('does not warns for arrays of elements with keys', () => {
@@ -226,8 +259,12 @@ describe('ReactElementValidator', () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => root.render(React.createElement(ParentComp)));
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
+      'Each child in a list should have a unique "key" prop.' +
+        '\n\nCheck the render method of `ParentComp`. It was passed a child from MyComp. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
+        // TODO: Because this validates after the div has been mounted, it is part of
+        // the parent stack but since owner stacks will switch to owners this goes away again.
+        '    in div (at **)\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
     );

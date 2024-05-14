@@ -1015,7 +1015,9 @@ describe('ReactChildren', () => {
       }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://react.dev/link/warning-keys for more information.' +
+          '\n\nCheck the top-level render call using <ComponentReturningArray>. It was passed a child from ComponentReturningArray. ' +
+          'See https://react.dev/link/warning-keys for more information.' +
+          '\n    in div (at **)' +
           '\n    in ComponentReturningArray (at **)',
       );
     });
@@ -1044,8 +1046,9 @@ describe('ReactChildren', () => {
       }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://react.dev/link/warning-keys for more information.',
-        {withoutStack: true}, // There's nothing on the stack
+          '\n\nCheck the top-level render call using <Root>. ' +
+          'See https://react.dev/link/warning-keys for more information.' +
+          '\n    in div (at **)',
       );
     });
   });

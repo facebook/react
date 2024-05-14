@@ -128,18 +128,61 @@ if (__DEV__) {
     // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
     child._store.validated = true;
 
-    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber);
 
-    if (ownerHasKeyUseWarning[componentName]) {
+    const componentKey = componentName || 'null';
+    if (ownerHasKeyUseWarning[componentKey]) {
       return;
     }
-    ownerHasKeyUseWarning[componentName] = true;
+    ownerHasKeyUseWarning[componentKey] = true;
 
+    const childOwner = child._owner;
+    const parentOwner = returnFiber._debugOwner;
+
+    let currentComponentErrorInfo = '';
+    if (parentOwner && typeof parentOwner.tag === 'number') {
+      const name = getComponentNameFromFiber((parentOwner: any));
+      if (name) {
+        currentComponentErrorInfo =
+          '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+    if (!currentComponentErrorInfo) {
+      if (componentName) {
+        currentComponentErrorInfo = `\n\nCheck the top-level render call using <${componentName}>.`;
+      }
+    }
+
+    // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+    let childOwnerAppendix = '';
+    if (childOwner != null && parentOwner !== childOwner) {
+      let ownerName = null;
+      if (typeof childOwner.tag === 'number') {
+        ownerName = getComponentNameFromFiber((childOwner: any));
+      } else if (typeof childOwner.name === 'string') {
+        ownerName = childOwner.name;
+      }
+      if (ownerName) {
+        // Give the component that originally created this child.
+        childOwnerAppendix = ` It was passed a child from ${ownerName}.`;
+      }
+    }
+
+    // We create a fake Fiber for the child to log the stack trace from.
+    const fiber = createFiberFromElement((child: any), returnFiber.mode, 0);
+    fiber.return = returnFiber;
+
+    const prevDebugFiber = getCurrentDebugFiberInDEV();
+    setCurrentDebugFiberInDEV(fiber);
     console.error(
-      'Each child in a list should have a unique ' +
-        '"key" prop. See https://react.dev/link/warning-keys for ' +
-        'more information.',
+      'Each child in a list should have a unique "key" prop.' +
+        '%s%s See https://react.dev/link/warning-keys for more information.',
+      currentComponentErrorInfo,
+      childOwnerAppendix,
     );
+    setCurrentDebugFiberInDEV(prevDebugFiber);
   };
 }
 

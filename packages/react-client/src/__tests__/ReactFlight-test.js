@@ -1143,6 +1143,9 @@ describe('ReactFlight', () => {
         '\n' +
         'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
+        // TODO: Because this validates after the div has been mounted, it is part of
+        // the parent stack but since owner stacks will switch to owners this goes away again.
+        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
         '    in Component (at **)\n' +
         '    in Indirection (at **)\n' +
         '    in App (at **)',

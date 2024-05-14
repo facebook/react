@@ -995,7 +995,13 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
-    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev(
+      '    in Text (at **)\n' +
+        // TODO: Because this validates after the div has been mounted, it is part of
+        // the parent stack but since owner stacks will switch to owners this goes away again.
+        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
+        '    in Foo (at **)',
+    );
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 

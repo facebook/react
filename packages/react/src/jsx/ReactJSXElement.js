@@ -1047,19 +1047,6 @@ export function cloneElement(element, config, children) {
   return clonedElement;
 }
 
-function getDeclarationErrorAddendum() {
-  if (__DEV__) {
-    const owner = getOwner();
-    if (owner) {
-      const name = getComponentNameFromType(owner.type);
-      if (name) {
-        return '\n\nCheck the render method of `' + name + '`.';
-      }
-    }
-    return '';
-  }
-}
-
 /**
  * Ensure that every element either is passed in a static location, in an
  * array with an explicit keys property defined, or in an object literal
@@ -1138,6 +1125,10 @@ const ownerHasKeyUseWarning = {};
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
+  if (enableOwnerStacks) {
+    // Skip. Will verify in renderer instead.
+    return;
+  }
   if (__DEV__) {
     if (!element._store || element._store.validated || element.key != null) {
       return;
@@ -1191,8 +1182,14 @@ function validateExplicitKey(element, parentType) {
 
 function getCurrentComponentErrorInfo(parentType) {
   if (__DEV__) {
-    let info = getDeclarationErrorAddendum();
-
+    let info = '';
+    const owner = getOwner();
+    if (owner) {
+      const name = getComponentNameFromType(owner.type);
+      if (name) {
+        info = '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
     if (!info) {
       const parentName = getComponentNameFromType(parentType);
       if (parentName) {
