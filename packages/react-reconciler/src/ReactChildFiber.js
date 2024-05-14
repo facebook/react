@@ -62,6 +62,11 @@ import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
+import {
+  getCurrentFiber as getCurrentDebugFiberInDEV,
+  setCurrentFiber as setCurrentDebugFiberInDEV,
+} from './ReactCurrentFiber';
+
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
 let thenableIndexCounter: number = 0;
@@ -136,6 +141,52 @@ if (__DEV__) {
         'more information.',
     );
   };
+}
+
+// Given a fragment, validate that it can only be provided with fragment props
+// We do this here instead of BeginWork because the Fragment fiber doesn't have
+// the whole props object, only the children and is shared with arrays.
+function validateFragmentProps(
+  element: ReactElement,
+  fiber: null | Fiber,
+  returnFiber: Fiber,
+) {
+  if (__DEV__) {
+    const keys = Object.keys(element.props);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (key !== 'children' && key !== 'key') {
+        if (fiber === null) {
+          // For unkeyed root fragments there's no Fiber. We create a fake one just for
+          // error stack handling.
+          fiber = createFiberFromElement(element, returnFiber.mode, 0);
+          fiber.return = returnFiber;
+        }
+        const prevDebugFiber = getCurrentDebugFiberInDEV();
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          'Invalid prop `%s` supplied to `React.Fragment`. ' +
+            'React.Fragment can only have `key` and `children` props.',
+          key,
+        );
+        setCurrentDebugFiberInDEV(prevDebugFiber);
+        break;
+      }
+    }
+
+    if (!enableRefAsProp && element.ref !== null) {
+      if (fiber === null) {
+        // For unkeyed root fragments there's no Fiber. We create a fake one just for
+        // error stack handling.
+        fiber = createFiberFromElement(element, returnFiber.mode, 0);
+        fiber.return = returnFiber;
+      }
+      const prevDebugFiber = getCurrentDebugFiberInDEV();
+      setCurrentDebugFiberInDEV(fiber);
+      console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
+      setCurrentDebugFiberInDEV(prevDebugFiber);
+    }
+  }
 }
 
 function unwrapThenable<T>(thenable: Thenable<T>): T {
@@ -416,7 +467,7 @@ function createChildReconciler(
   ): Fiber {
     const elementType = element.type;
     if (elementType === REACT_FRAGMENT_TYPE) {
-      return updateFragment(
+      const updated = updateFragment(
         returnFiber,
         current,
         element.props.children,
@@ -424,6 +475,8 @@ function createChildReconciler(
         element.key,
         debugInfo,
       );
+      validateFragmentProps(element, updated, returnFiber);
+      return updated;
     }
     if (current !== null) {
       if (
@@ -1481,6 +1534,7 @@ function createChildReconciler(
               existing._debugOwner = element._owner;
               existing._debugInfo = debugInfo;
             }
+            validateFragmentProps(element, existing, returnFiber);
             return existing;
           }
         } else {
@@ -1530,6 +1584,7 @@ function createChildReconciler(
       if (__DEV__) {
         created._debugInfo = debugInfo;
       }
+      validateFragmentProps(element, created, returnFiber);
       return created;
     } else {
       const created = createFiberFromElement(element, returnFiber.mode, lanes);
@@ -1607,6 +1662,7 @@ function createChildReconciler(
       newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
+      validateFragmentProps(newChild, null, returnFiber);
       newChild = newChild.props.children;
     }
 

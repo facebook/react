@@ -708,7 +708,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    const element = ReactElement(
+    return ReactElement(
       type,
       key,
       ref,
@@ -719,12 +719,6 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
       __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
     );
-
-    if (type === REACT_FRAGMENT_TYPE) {
-      validateFragmentProps(element);
-    }
-
-    return element;
   }
 }
 
@@ -900,7 +894,7 @@ export function createElement(type, config, children) {
     }
   }
 
-  const element = ReactElement(
+  return ReactElement(
     type,
     key,
     ref,
@@ -911,12 +905,6 @@ export function createElement(type, config, children) {
     __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
     __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
   );
-
-  if (type === REACT_FRAGMENT_TYPE) {
-    validateFragmentProps(element);
-  }
-
-  return element;
 }
 
 export function cloneAndReplaceKey(oldElement, newKey) {
@@ -1209,36 +1197,6 @@ function getCurrentComponentErrorInfo(parentType) {
       }
     }
     return info;
-  }
-}
-
-/**
- * Given a fragment, validate that it can only be provided with fragment props
- * @param {ReactElement} fragment
- */
-function validateFragmentProps(fragment) {
-  // TODO: Move this to render phase instead of at element creation.
-  if (__DEV__) {
-    const keys = Object.keys(fragment.props);
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      if (key !== 'children' && key !== 'key') {
-        setCurrentlyValidatingElement(fragment);
-        console.error(
-          'Invalid prop `%s` supplied to `React.Fragment`. ' +
-            'React.Fragment can only have `key` and `children` props.',
-          key,
-        );
-        setCurrentlyValidatingElement(null);
-        break;
-      }
-    }
-
-    if (!enableRefAsProp && fragment.ref !== null) {
-      setCurrentlyValidatingElement(fragment);
-      console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      setCurrentlyValidatingElement(null);
-    }
   }
 }
 
