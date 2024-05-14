@@ -26,5 +26,4 @@ export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableFastJSX = __VARIANT__;
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableRefAsProp = __VARIANT__;
-export const enableUnifiedSyncLane = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
