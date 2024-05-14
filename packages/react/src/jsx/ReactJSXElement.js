@@ -1160,29 +1160,27 @@ function validateExplicitKey(element, parentType) {
       childOwner = ` It was passed a child from ${ownerName}.`;
     }
 
-    setCurrentlyValidatingElement(element);
+    const prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
+    ReactSharedInternals.getCurrentStack = function () {
+      const owner = element._owner;
+      // Add an extra top frame while an element is being validated
+      let stack = describeUnknownElementTypeFrameInDEV(
+        element.type,
+        owner ? owner.type : null,
+      );
+      // Delegate to the injected renderer-specific implementation
+      if (prevGetCurrentStack) {
+        stack += prevGetCurrentStack() || '';
+      }
+      return stack;
+    };
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://react.dev/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
-    setCurrentlyValidatingElement(null);
-  }
-}
-
-function setCurrentlyValidatingElement(element) {
-  if (__DEV__) {
-    if (element) {
-      const owner = element._owner;
-      const stack = describeUnknownElementTypeFrameInDEV(
-        element.type,
-        owner ? owner.type : null,
-      );
-      ReactSharedInternals.setExtraStackFrame(stack);
-    } else {
-      ReactSharedInternals.setExtraStackFrame(null);
-    }
+    ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
   }
 }
 
