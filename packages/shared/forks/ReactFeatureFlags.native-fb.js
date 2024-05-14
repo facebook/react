@@ -28,7 +28,6 @@ export const {
   enableFastJSX,
   enableInfiniteRenderLoopDetection,
   enableRefAsProp,
-  enableUnifiedSyncLane,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
 
@@ -42,6 +41,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableUnifiedSyncLane = true;
 export const enableCache = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyCache = false;
