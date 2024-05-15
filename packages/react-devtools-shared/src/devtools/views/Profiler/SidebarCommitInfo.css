@@ -1,0 +1,59 @@
+.Toolbar {
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.Content {
+  padding: 0.5rem;
+  user-select: none;
+  overflow: auto;
+}
+
+.List {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ListItem {
+  margin: 0 0 0.5rem;
+}
+
+.Label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+}
+
+.Value {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
+
+.NothingSelected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-dim);
+}
+
+.DurationsList {
+  list-style: none;
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  background: var(--color-background-inactive);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.DurationsListItem {
+  margin: 0.25rem 0 0 0;
+}
+.DurationsListItem:first-of-type {
+  margin: 0;
+}

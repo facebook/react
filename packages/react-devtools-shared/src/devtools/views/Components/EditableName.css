@@ -1,0 +1,9 @@
+.Input {
+  flex: 0 1 auto;
+  box-shadow: 0px 1px 3px transparent;
+  color: var(--color-text);
+}
+.Input:focus {
+  color: var(--color-text);
+  box-shadow: 0px 1px 3px var(--color-shadow);
+}

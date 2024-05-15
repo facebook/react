@@ -1,0 +1,60 @@
+.ErrorTree, .WarningTree {
+  padding: 0.25rem 0 0 0;
+}
+
+.HeaderRow {
+  padding: 0 0.25rem;
+}
+
+.HeaderRow {
+  padding: 0 0.25rem;
+}
+
+.Error, .Warning {
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.Error {
+  border-top: 1px solid var(--color-console-error-border);
+  background-color: var(--color-console-error-background);
+  color: var(--color-error-text);
+  padding: 0 0.5rem;
+}
+
+.Warning {
+  border-top: 1px solid var(--color-console-warning-border);
+  background-color: var(--color-console-warning-background);
+  color: var(--color-warning-text);
+  padding: 0 0.5rem;
+}
+
+.Message {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ErrorBadge,
+.WarningBadge {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 0.75rem;
+  line-height: 0.75rem;
+  text-align: center;
+  border-radius: 0.25rem;
+  margin-right: 0.25rem;
+  font-size: var(--font-size-monospace-small);
+}
+
+.ErrorBadge {
+  background-color: var(--color-console-error-icon);
+  color: var(--color-console-error-badge-text);
+}
+
+.WarningBadge {
+  background-color: var(--color-console-warning-icon);
+  color: var(--color-console-warning-badge-text);
+}

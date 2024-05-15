@@ -1,0 +1,81 @@
+name: "⚛️ 🛠 DevTools bug report"
+description: "Report a problem with React DevTools. Please provide enough information that we can reproduce the problem."
+title: "[DevTools Bug]: "
+labels: ["Component: Developer Tools", "Type: Bug", "Status: Unconfirmed"]
+body:
+- type: input
+  attributes:
+    label: Website or app
+    description: |
+      Which website or app were you using when the bug happened?
+
+      This should be a public URL, GitHub repo, or Code Sandbox app so the React team can reproduce the error being reported. (Please no localhost URLs.)
+    placeholder: |
+      e.g. website URL, public GitHub repo, or Code Sandbox app
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Repro steps
+    description: |
+      What were you doing on the website or app when the bug happened? Detailed information helps maintainers reproduce and fix bugs.
+
+      Issues filed without repro steps will be closed.
+    placeholder: |
+      Example bug report:
+      1. Log in with username/password
+      2. Click "Messages" on the left menu
+      3. Open any message in the list
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: How often does this bug happen?
+    description: |
+      Following the repro steps above, how easily are you able to reproduce this bug?
+    options:
+      - Every time
+      - Often
+      - Sometimes
+      - Only once
+  validations:
+    required: true
+- type: input
+  id: automated_package
+  attributes:
+    label: DevTools package (automated)
+    description: |
+      Please do not edit this field.
+- type: input
+  id: automated_version
+  attributes:
+    label: DevTools version (automated)
+    description: |
+      Please do not edit this field.
+- type: input
+  id: automated_error_message
+  attributes:
+    label: Error message (automated)
+    description: |
+      Please do not edit this field.
+- type: textarea
+  id: automated_call_stack
+  attributes:
+    label: Error call stack (automated)
+    description: |
+      Please do not edit this field.
+    render: text
+- type: textarea
+  id: automated_component_stack
+  attributes:
+    label: Error component stack (automated)
+    description: |
+      Please do not edit this field.
+    render: text
+- type: textarea
+  id: automated_github_query_string
+  attributes:
+    label: GitHub query string (automated)
+    description: |
+      Please do not edit this field.
+    render: text

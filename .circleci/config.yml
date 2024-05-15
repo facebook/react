@@ -1,0 +1,689 @@
+version: 2.1
+
+aliases:
+  - &docker
+    - image: cimg/node:18.20.1-browsers
+
+  - &environment
+    TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+  - &restore_yarn_cache_fixtures_dom
+    restore_cache:
+      name: Restore yarn cache for fixtures/dom
+      keys:
+        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+
+  - &yarn_install_fixtures_dom
+    run:
+      name: Install dependencies in fixtures/dom
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &yarn_install_fixtures_dom_retry
+    run:
+      name: Install dependencies in fixtures/dom (retry)
+      when: on_fail
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &save_yarn_cache_fixtures_dom
+    save_cache:
+      name: Save yarn cache for fixtures/dom
+      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+      paths:
+        - ~/.cache/yarn
+
+  - &TEST_PARALLELISM 20
+
+  - &attach_workspace
+    at: build
+
+commands:
+  setup_node_modules:
+    description: "Restore node_modules"
+    steps:
+      - restore_cache:
+          name: Restore yarn cache
+          keys:
+            - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+          environment:
+          # If we start needing the Electron binary, please ensure the binary is cached in CI following https://www.electronjs.org/docs/latest/tutorial/installation
+            ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+      - save_cache:
+          name: Save yarn cache
+          key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+
+# The CircleCI API doesn't yet support triggering a specific workflow, but it
+# does support triggering a pipeline. So as a workaround you can triggger the
+# entire pipeline and use parameters to disable everything except the workflow
+# you want. CircleCI recommends this workaround here:
+# https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
+parameters:
+  # This is only set when triggering the CI pipeline via an API request.
+  prerelease_commit_sha:
+    type: string
+    default: ''
+
+jobs:
+  yarn_lint:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: node ./scripts/prettier/index
+      - run: node ./scripts/tasks/eslint
+      - run: ./scripts/circleci/check_license.sh
+      - run: ./scripts/circleci/test_print_warnings.sh
+
+  yarn_flow:
+    docker: *docker
+    environment: *environment
+    parallelism: 5
+
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: node ./scripts/tasks/flow-ci
+
+
+  yarn_flags:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn flags
+
+  scrape_warning_messages:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - setup_node_modules
+      - run:
+          command: |
+            mkdir -p ./build/__test_utils__
+            node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  yarn_build:
+    docker: *docker
+    environment: *environment
+    parallelism: 40
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  download_build:
+    docker: *docker
+    environment: *environment
+    parameters:
+      revision:
+        type: string
+    steps:
+      - checkout
+      - setup_node_modules
+      - run:
+          name: Download artifacts for revision
+          command: |
+              git fetch origin main
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=<< parameters.revision >> --allowBrokenCI
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  download_base_build_for_sizebot:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - setup_node_modules
+      - run:
+          name: Download artifacts for base revision
+          command: |
+            git fetch origin main
+            cd ./scripts/release && yarn && cd ../../
+            scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+            mv ./build ./base-build
+
+      - run:
+          # TODO: The `download-experimental-build` script copies the npm
+          # packages into the `node_modules` directory. This is a historical
+          # quirk of how the release script works. Let's pretend they
+          # don't exist.
+          name: Delete extraneous files
+          command: rm -rf ./base-build/node_modules
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - base-build
+
+  process_artifacts_combined:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - store_artifacts:
+          path: ./build2.tgz
+      - store_artifacts:
+          path: ./build.tgz
+
+  sizebot:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
+      - setup_node_modules
+      - run:
+          command: node ./scripts/tasks/danger
+      - store_artifacts:
+          path: sizebot-message.md
+
+  build_devtools_and_process_artifacts:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
+      - store_artifacts:
+          path: ./build/devtools.tgz
+      # Simplifies getting the extension for local testing
+      - store_artifacts:
+          path: ./build/devtools/chrome-extension.zip
+          destination: react-devtools-chrome-extension.zip
+      - store_artifacts:
+          path: ./build/devtools/firefox-extension.zip
+          destination: react-devtools-firefox-extension.zip
+
+  run_devtools_e2e_tests:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run:
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/run_devtools_e2e_tests.js
+
+  run_fixtures_flight_tests:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - setup_node_modules
+      - restore_cache:
+          name: Restore yarn cache of fixture
+          keys:
+            - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install fixture dependencies
+          working_directory: fixtures/flight
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - save_cache:
+          name: Save yarn cache of fixture
+          key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          working_directory: fixtures/flight
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          name: Run tests
+          working_directory: fixtures/flight
+          command: yarn test
+          environment:
+          # Otherwise the webserver is a blackbox
+            DEBUG: pw:webserver
+      - store_artifacts:
+          path: fixtures/flight/playwright-report
+      - store_artifacts:
+          path: fixtures/flight/test-results
+
+  run_devtools_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+
+  run_devtools_e2e_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run:
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/run_devtools_e2e_tests.js << parameters.version >>
+      - run:
+          name: Cleanup build regression folder
+          command: rm -r ./build-regression
+      - store_artifacts:
+          path: ./tmp/screenshots
+
+  yarn_lint_build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run: yarn lint-build
+
+  yarn_check_release_dependencies:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run: yarn check-release-dependencies
+
+
+  check_error_codes:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - setup_node_modules
+      - run:
+          name: Search build artifacts for unminified errors
+          command: |
+            yarn extract-errors
+            git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+
+  check_generated_fizz_runtime:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - setup_node_modules
+      - run:
+          name: Confirm generated inline Fizz runtime is up to date
+          command: |
+            yarn generate-inline-fizz-runtime
+            git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+
+  yarn_test:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn test <<parameters.args>> --ci
+
+  yarn_test_build:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - run: yarn test --build <<parameters.args>> --ci
+
+  RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - setup_node_modules
+      - *restore_yarn_cache_fixtures_dom
+      - *yarn_install_fixtures_dom
+      - *yarn_install_fixtures_dom_retry
+      - *save_yarn_cache_fixtures_dom
+      - run:
+          name: Run DOM fixture tests
+          environment:
+            RELEASE_CHANNEL: stable
+          working_directory: fixtures/dom
+          command: |
+            yarn predev
+            yarn test --maxWorkers=2
+
+  publish_prerelease:
+    parameters:
+      commit_sha:
+        type: string
+      release_channel:
+        type: string
+      dist_tag:
+        type: string
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - setup_node_modules
+      - run:
+          name: Run publish script
+          command: |
+            git fetch origin main
+            cd ./scripts/release && yarn && cd ../../
+            scripts/release/prepare-release-from-ci.js --skipTests -r << parameters.release_channel >> --commit=<< parameters.commit_sha >>
+            cp ./scripts/release/ci-npmrc ~/.npmrc
+            scripts/release/publish.js --ci --tags << parameters.dist_tag >>
+
+workflows:
+
+  build_and_test:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    jobs:
+      - yarn_flags:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - yarn_flow:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - check_generated_fizz_runtime:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - yarn_lint:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - yarn_test:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+                - "-r=www-classic --env=development --variant=false"
+                - "-r=www-classic --env=production --variant=false"
+                - "-r=www-classic --env=development --variant=true"
+                - "-r=www-classic --env=production --variant=true"
+                - "-r=www-modern --env=development --variant=false"
+                - "-r=www-modern --env=production --variant=false"
+                - "-r=www-modern --env=development --variant=true"
+                - "-r=www-modern --env=production --variant=true"
+
+                # TODO: Test more persistent configurations?
+                - '-r=stable --env=development --persistent'
+                - '-r=experimental --env=development --persistent'
+      - yarn_build:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - scrape_warning_messages:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - process_artifacts_combined:
+          requires:
+            - scrape_warning_messages
+            - yarn_build
+      - yarn_test_build:
+          requires:
+            - yarn_build
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+
+                # Dev Tools
+                - "--project=devtools -r=experimental"
+
+                # TODO: Update test config to support www build tests
+                # - "-r=www-classic --env=development --variant=false"
+                # - "-r=www-classic --env=production --variant=false"
+                # - "-r=www-classic --env=development --variant=true"
+                # - "-r=www-classic --env=production --variant=true"
+                # - "-r=www-modern --env=development --variant=false"
+                # - "-r=www-modern --env=production --variant=false"
+                # - "-r=www-modern --env=development --variant=true"
+                # - "-r=www-modern --env=production --variant=true"
+
+                # TODO: Test more persistent configurations?
+      - download_base_build_for_sizebot:
+          filters:
+            branches:
+              ignore:
+                - main
+                - builds/facebook-www
+      - sizebot:
+          filters:
+            branches:
+              ignore:
+                - main
+          requires:
+            - download_base_build_for_sizebot
+            - yarn_build
+      - yarn_lint_build:
+          requires:
+            - yarn_build
+      - yarn_check_release_dependencies:
+          requires:
+            - yarn_build
+      - check_error_codes:
+          requires:
+            - yarn_build
+      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+          requires:
+            - yarn_build
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build
+      - run_devtools_e2e_tests:
+          requires:
+            - build_devtools_and_process_artifacts
+      - run_fixtures_flight_tests:
+          requires:
+            - yarn_build
+
+  devtools_regression_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # DevTools regression tests run once a day
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - download_build:
+          revision: << pipeline.git.revision >>
+      - build_devtools_and_process_artifacts:
+          requires:
+            - download_build
+      - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0"
+                - "18.0"
+      - run_devtools_e2e_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0"
+                - "18.0"
+
+  # Used to publish a prerelease manually via the command line
+  publish_preleases:
+    when: << pipeline.parameters.prerelease_commit_sha >>
+    jobs:
+      - publish_prerelease:
+          name: Publish to Canary channel
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: stable
+          # The tags to use when publishing canaries. The main one we should
+          # always include is "canary" but we can use multiple (e.g. alpha,
+          # beta, rc). To declare multiple, use a comma-separated string, like
+          # this:
+          #   dist_tag: "canary,alpha,beta,rc"
+          #
+          # TODO: We currently tag canaries with "next" in addition to "canary"
+          # because this used to be called the "next" channel and some
+          # downstream consumers might still expect that tag. We can remove this
+          # after some time has elapsed and the change has been communicated.
+          dist_tag: "canary,next,rc"
+      - publish_prerelease:
+          name: Publish to Experimental channel
+          requires:
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Canary channel
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: experimental
+          dist_tag: experimental
+
+  # Publishes on a cron schedule
+  publish_preleases_nightly:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # At 10 minutes past 16:00 on Mon, Tue, Wed, Thu, and Fri
+          cron: "10 16 * * 1,2,3,4,5"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - publish_prerelease:
+          name: Publish to Canary channel
+          commit_sha: << pipeline.git.revision >>
+          release_channel: stable
+          dist_tag: "canary,next,rc"
+      - publish_prerelease:
+          name: Publish to Experimental channel
+          requires:
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Canary channel
+          commit_sha: << pipeline.git.revision >>
+          release_channel: experimental
+          dist_tag: experimental

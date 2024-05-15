@@ -1,0 +1,23 @@
+{
+  "name": "react-dom-bindings",
+  "description": "React implementation details for react-dom.",
+  "version": "19.0.0",
+  "private": true,
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-dom-bindings"
+  },
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://react.dev/",
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

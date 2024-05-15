@@ -1,0 +1,59 @@
+{
+  "manifest_version": 2,
+  "name": "React Developer Tools",
+  "description": "Adds React debugging tools to the Firefox Developer Tools.",
+  "version": "5.2.0",
+  "applications": {
+    "gecko": {
+      "id": "@react-devtools",
+      "strict_min_version": "102.0"
+    }
+  },
+  "icons": {
+    "16": "icons/16-production.png",
+    "32": "icons/32-production.png",
+    "48": "icons/48-production.png",
+    "128": "icons/128-production.png"
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "icons/16-disabled.png",
+      "32": "icons/32-disabled.png",
+      "48": "icons/48-disabled.png",
+      "128": "icons/128-disabled.png"
+    },
+    "default_popup": "popups/disabled.html",
+    "browser_style": true
+  },
+  "devtools_page": "main.html",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' blob:; object-src 'self'",
+  "web_accessible_resources": [
+    "main.html",
+    "panel.html",
+    "build/*.js"
+  ],
+  "background": {
+    "scripts": [
+      "build/background.js"
+    ]
+  },
+  "permissions": [
+    "file:///*",
+    "http://*/*",
+    "https://*/*",
+    "clipboardWrite",
+    "scripting",
+    "devtools"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "build/prepareInjection.js"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}

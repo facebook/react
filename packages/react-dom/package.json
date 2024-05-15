@@ -1,0 +1,126 @@
+{
+  "name": "react-dom",
+  "version": "19.0.0",
+  "description": "React package for working with the DOM.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://react.dev/",
+  "dependencies": {
+    "scheduler": "^0.23.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "client.js",
+    "client.react-server.js",
+    "index.js",
+    "profiling.js",
+    "profiling.react-server.js",
+    "react-dom.react-server.js",
+    "server.browser.js",
+    "server.bun.js",
+    "server.edge.js",
+    "server.js",
+    "server.node.js",
+    "server.react-server.js",
+    "static.browser.js",
+    "static.edge.js",
+    "static.js",
+    "static.node.js",
+    "static.react-server.js",
+    "test-utils.js",
+    "unstable_testing.js",
+    "unstable_testing.react-server.js",
+    "unstable_server-external-runtime.js",
+    "cjs/"
+  ],
+  "exports": {
+    ".": {
+      "react-server": "./react-dom.react-server.js",
+      "default": "./index.js"
+    },
+    "./client": {
+      "react-server": "./client.react-server.js",
+      "default": "./client.js"
+    },
+    "./server": {
+      "react-server": "./server.react-server.js",
+      "workerd": "./server.edge.js",
+      "bun": "./server.bun.js",
+      "deno": "./server.browser.js",
+      "worker": "./server.browser.js",
+      "browser": "./server.browser.js",
+      "node": "./server.node.js",
+      "edge-light": "./server.edge.js",
+      "default": "./server.node.js"
+    },
+    "./server.browser": {
+      "react-server": "./server.react-server.js",
+      "default": "./server.browser.js"
+    },
+    "./server.bun": {
+      "react-server": "./server.react-server.js",
+      "default": "./server.bun.js"
+    },
+    "./server.edge": {
+      "react-server": "./server.react-server.js",
+      "default": "./server.edge.js"
+    },
+    "./server.node": {
+      "react-server": "./server.react-server.js",
+      "default": "./server.node.js"
+    },
+    "./static": {
+      "react-server": "./static.react-server.js",
+      "workerd": "./static.edge.js",
+      "deno": "./static.browser.js",
+      "worker": "./static.browser.js",
+      "browser": "./static.browser.js",
+      "node": "./static.node.js",
+      "edge-light": "./static.edge.js",
+      "default": "./static.node.js"
+    },
+    "./static.browser": {
+      "react-server": "./static.react-server.js",
+      "default": "./static.browser.js"
+    },
+    "./static.edge": {
+      "react-server": "./static.react-server.js",
+      "default": "./static.edge.js"
+    },
+    "./static.node": {
+      "react-server": "./static.react-server.js",
+      "default": "./static.node.js"
+    },
+    "./profiling": {
+      "react-server": "./profiling.react-server.js",
+      "default": "./profiling.js"
+    },
+    "./test-utils": "./test-utils.js",
+    "./unstable_testing": {
+      "react-server": "./unstable_testing.react-server.js",
+      "default": "./unstable_testing.js"
+    },
+    "./unstable_server-external-runtime": "./unstable_server-external-runtime.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "browser": {
+    "./server.js": "./server.browser.js",
+    "./static.js": "./static.browser.js"
+  }
+}

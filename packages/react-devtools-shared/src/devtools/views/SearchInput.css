@@ -1,0 +1,38 @@
+.SearchInput {
+  flex: 1 1;
+  display: flex;
+  align-items: center;
+}
+
+.Input {
+  flex: 1 1 100px;
+  width: 100px;
+  font-size: var(--font-size-sans-large);
+  outline: none;
+  border: none;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  padding-left: 1.5rem;
+  margin-left: -1rem;
+}
+
+.InputIcon {
+  pointer-events: none;
+  z-index: 2;
+  color: var(--color-dimmer);
+}
+
+.IndexLabel {
+  color: var(--color-dim);
+  font-size: var(--font-size-sans-normal);
+  white-space: pre;
+}
+
+.LeftVRule{
+  height: 20px;
+  width: 1px;
+  background-color: var(--color-border);
+}
+.LeftVRule {
+  margin: 0 0.25rem 0 0.5rem;
+}

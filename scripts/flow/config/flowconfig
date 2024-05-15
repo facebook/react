@@ -1,0 +1,40 @@
+[ignore]
+.*/scripts/bench/.*
+.*/build/.*
+.*/fixtures/.*
+# Any hidden directory
+.*/\..*
+
+# These shims are copied into external projects:
+.*/rollup/shims/facebook-www/.*
+.*/rollup/shims/react-native/.*
+
+.*/node_modules/fbjs/lib/keyMirrorRecursive.js.flow
+.*/node_modules/resolve/test/.*
+.*/__mocks__/.*
+.*/__tests__/.*
+
+# TODO: noop should get its own inlinedHostConfig entry
+.*/packages/react-noop-renderer/.*
+
+%REACT_RENDERER_FLOW_IGNORES%
+
+[libs]
+./node_modules/fbjs/flow/lib/dev.js
+./scripts/flow/environment.js
+./scripts/flow/react-devtools.js
+./scripts/flow/react-native-host-hooks.js
+./scripts/flow/xplat.js
+
+[lints]
+untyped-type-import=error
+
+[options]
+%CI_MAX_WORKERS%
+munge_underscores=false
+
+# Substituted by createFlowConfig.js:
+%REACT_RENDERER_FLOW_OPTIONS%
+
+[version]
+%FLOW_VERSION%

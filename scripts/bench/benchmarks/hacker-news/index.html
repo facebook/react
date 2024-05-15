@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>React Hacker News Benchmark</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      performance.mark('Load React');
+      performance.mark('Load React+ReactDOM');
+    </script>
+    <script src="react.production.min.js"></script>
+    <script>
+      performance.measure('Load React', 'Load React');
+    </script>
+    <script>
+      performance.mark('Load ReactDOM');
+    </script>
+    <script src="react-dom.production.min.js"></script>
+    <script>
+      performance.measure('Load ReactDOM', 'Load ReactDOM');
+      performance.measure('Load React+ReactDOM', 'Load React+ReactDOM');
+    </script>
+    <script src="top-stories.js"></script>
+    <script src="benchmark.js"></script>
+    <script>
+      performance.mark('Initial Render');
+      render();
+      performance.measure('Initial Render', 'Initial Render');
+      requestAnimationFrame(() => {
+        performance.mark('Update Render');
+        render();
+        performance.measure('Update Render', 'Update Render');
+      });
+    </script>
+  </body>
+</html>

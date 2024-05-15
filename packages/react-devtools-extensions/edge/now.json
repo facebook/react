@@ -1,0 +1,5 @@
+{
+  "name": "react-devtools-experimental-edge",
+  "alias": ["react-devtools-experimental-edge"],
+  "files": ["index.html", "ReactDevTools.zip"]
+}
