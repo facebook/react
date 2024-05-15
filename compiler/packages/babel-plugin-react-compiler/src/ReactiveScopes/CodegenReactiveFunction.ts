@@ -2040,6 +2040,9 @@ function codegenJsxAttribute(
       switch (innerValue.type) {
         case "StringLiteral": {
           value = innerValue;
+          if (value.value.indexOf('"') !== -1) {
+            value = createJsxExpressionContainer(value.loc, value);
+          }
           break;
         }
         default: {
