@@ -342,7 +342,7 @@ function ReactElement(
       configurable: false,
       enumerable: false,
       writable: true,
-      value: false,
+      value: 0,
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -1073,7 +1073,7 @@ function validateChildKeys(node, parentType) {
     } else if (isValidElement(node)) {
       // This element was passed in a valid location.
       if (node._store) {
-        node._store.validated = true;
+        node._store.validated = 1;
       }
     } else {
       const iteratorFn = getIteratorFn(node);
@@ -1133,7 +1133,7 @@ function validateExplicitKey(element, parentType) {
     if (!element._store || element._store.validated || element.key != null) {
       return;
     }
-    element._store.validated = true;
+    element._store.validated = 1;
 
     const currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {

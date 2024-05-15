@@ -114,7 +114,11 @@ if (__DEV__) {
     if (child === null || typeof child !== 'object') {
       return;
     }
-    if (!child._store || child._store.validated || child.key != null) {
+    if (
+      !child._store ||
+      ((child._store.validated || child.key != null) &&
+        child._store.validated !== 2)
+    ) {
       return;
     }
 
@@ -126,7 +130,7 @@ if (__DEV__) {
     }
 
     // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
-    child._store.validated = true;
+    child._store.validated = 1;
 
     const componentName = getComponentNameFromFiber(returnFiber);
 
@@ -171,6 +175,9 @@ if (__DEV__) {
     }
 
     // We create a fake Fiber for the child to log the stack trace from.
+    // TODO: Refactor the warnForMissingKey calls to happen after fiber creation
+    // so that we can get access to the fiber that will eventually be created.
+    // That way the log can show up associated with the right instance in DevTools.
     const fiber = createFiberFromElement((child: any), returnFiber.mode, 0);
     fiber.return = returnFiber;
 

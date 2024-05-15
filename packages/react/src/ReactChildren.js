@@ -207,17 +207,20 @@ function mapIntoArray(
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
           // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-          if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
-            checkKeyStringCoercion(mappedChild.key);
+          if (mappedChild.key != null) {
+            if (!child || child.key !== mappedChild.key) {
+              checkKeyStringCoercion(mappedChild.key);
+            }
           }
         }
-        mappedChild = cloneAndReplaceKey(
+        const newChild = cloneAndReplaceKey(
           mappedChild,
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
             // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
+            (mappedChild.key != null &&
+            (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
                   // $FlowFixMe[unsafe-addition]
                   '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
@@ -225,6 +228,17 @@ function mapIntoArray(
               : '') +
             childKey,
         );
+        if (__DEV__) {
+          if (nameSoFar !== '' && mappedChild.key == null) {
+            // We need to validate that this child should have had a key before assigning it one.
+            if (!newChild._store.validated) {
+              // We mark this child as having failed validation but we let the actual renderer
+              // print the warning later.
+              newChild._store.validated = 2;
+            }
+          }
+        }
+        mappedChild = newChild;
       }
       array.push(mappedChild);
     }

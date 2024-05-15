@@ -624,13 +624,13 @@ function createElement(
     // Unfortunately, _store is enumerable in jest matchers so for equality to
     // work, I need to keep it or make _store non-enumerable in the other file.
     element._store = ({}: {
-      validated?: boolean,
+      validated?: number,
     });
     Object.defineProperty(element._store, 'validated', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: true, // This element has already been validated on the server.
+      value: 1, // This element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
