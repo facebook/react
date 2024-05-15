@@ -337,6 +337,8 @@ export opaque type Request = {
   onPostpone: (reason: string, postponeInfo: ThrownInfo) => void,
   // Form state that was the result of an MPA submission, if it was provided.
   formState: null | ReactFormState<any, any>,
+  // DEV-only, warning dedupe
+  didWarnForKey?: null | WeakSet<ComponentStackNode>,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -409,6 +411,9 @@ export function createRequest(
     onFatalError: onFatalError === undefined ? noop : onFatalError,
     formState: formState === undefined ? null : formState,
   };
+  if (__DEV__) {
+    request.didWarnForKey = null;
+  }
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(
     request,
@@ -785,6 +790,19 @@ function createClassComponentStack(
     parent: task.componentStack,
     type,
   };
+}
+
+function createComponentStackFromType(
+  task: Task,
+  type: Function | string,
+): ComponentStackNode {
+  if (typeof type === 'string') {
+    return createBuiltInComponentStack(task, type);
+  }
+  if (shouldConstruct(type)) {
+    return createClassComponentStack(task, type);
+  }
+  return createFunctionComponentStack(task, type);
 }
 
 type ThrownInfo = {
@@ -2597,6 +2615,59 @@ function replayFragment(
   }
 }
 
+function warnForMissingKey(request: Request, task: Task, child: mixed): void {
+  if (__DEV__) {
+    if (
+      child === null ||
+      typeof child !== 'object' ||
+      (child.$$typeof !== REACT_ELEMENT_TYPE &&
+        child.$$typeof !== REACT_PORTAL_TYPE)
+    ) {
+      return;
+    }
+
+    if (
+      !child._store ||
+      ((child._store.validated || child.key != null) &&
+        child._store.validated !== 2)
+    ) {
+      return;
+    }
+
+    if (typeof child._store !== 'object') {
+      throw new Error(
+        'React Component in warnForMissingKey should have a _store. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+
+    // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
+    child._store.validated = 1;
+
+    let didWarnForKey = request.didWarnForKey;
+    if (didWarnForKey == null) {
+      didWarnForKey = request.didWarnForKey = new WeakSet();
+    }
+    const parentStackFrame = task.componentStack;
+    if (parentStackFrame === null || didWarnForKey.has(parentStackFrame)) {
+      // We already warned for other children in this parent.
+      return;
+    }
+    didWarnForKey.add(parentStackFrame);
+
+    // We create a fake component stack for the child to log the stack trace from.
+    const stackFrame = createComponentStackFromType(task, (child: any).type);
+    task.componentStack = stackFrame;
+    console.error(
+      'Each child in a list should have a unique "key" prop.' +
+        '%s%s See https://react.dev/link/warning-keys for more information.',
+      '',
+      '',
+    );
+    task.componentStack = stackFrame.parent;
+  }
+}
+
 function renderChildrenArray(
   request: Request,
   task: Task,
@@ -2618,6 +2689,7 @@ function renderChildrenArray(
       return;
     }
   }
+
   const prevTreeContext = task.treeContext;
   const totalChildren = children.length;
 
@@ -2650,6 +2722,9 @@ function renderChildrenArray(
 
   for (let i = 0; i < totalChildren; i++) {
     const node = children[i];
+    if (__DEV__) {
+      warnForMissingKey(request, task, node);
+    }
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
     // We need to use the non-destructive form so that we can safely pop back
     // up and render the sibling if something suspends.
