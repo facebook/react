@@ -123,7 +123,9 @@ export default {
     );
 
     if (verbose) {
-      for (const compilation of SucessfulCompilation) {
+      for (const compilation of [...SucessfulCompilation, ...ActionableFailures, ...OtherFailures]) {
+        const filename = compilation.fnLoc?.filename;
+
         if (compilation.kind === "CompileSuccess") {
           const name = compilation.fnName;
           const isHook = name?.startsWith('use');
@@ -131,12 +133,22 @@ export default {
           if (name) {
             console.log(
               chalk.green(
-                `Successfully compiled ${isHook ? "hook" : "component" } [${name}](${compilation.fnLoc?.filename})`
+                `Successfully compiled ${isHook ? "hook" : "component" } [${name}](${filename})`
               )
             );
           } else {
-            console.log(chalk.green(`Successfully compiled [${compilation.fnLoc?.filename}]`));
+            console.log(chalk.green(`Successfully compiled ${compilation.fnLoc?.filename}`));
           }
+        }
+
+        if (compilation.kind === "CompileError") {
+          const reason = compilation.detail.description;
+  
+          console.log(
+            chalk.red(
+              `Failed to compile ${filename}${reason? `\n Reason: ${reason}` : ''}`
+            )
+          );
         }
       }
     }
