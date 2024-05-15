@@ -69,6 +69,10 @@ async function getDateStringForCommit(commit) {
  * the command only report what it would have done, instead of actually publishing to npm.
  */
 async function main() {
+  const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
+  if (currBranchName !== "main") {
+    throw new Error("This script must be run from the `main` branch");
+  }
   const argv = yargs(process.argv.slice(2))
     .option("packages", {
       description: "which packages to publish, defaults to all",
