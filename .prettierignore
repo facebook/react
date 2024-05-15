@@ -1,5 +1,6 @@
 build
 
+compiler
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/firefox/build

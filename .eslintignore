@@ -13,6 +13,9 @@ scripts/bench/benchmarks/**/*.js
 # React repository clone
 scripts/bench/remote-repo/
 
+# Compiler uses its own lint setup
+compiler/
+
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/firefox/build
