@@ -10,7 +10,7 @@ const PUBLISHABLE_PACKAGES = [
   "eslint-plugin-react-compiler",
   "react-compiler-healthcheck",
 ];
-const TIME_TO_RECONSIDER = 10_000;
+const TIME_TO_RECONSIDER = 1_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
@@ -189,16 +189,8 @@ async function main() {
       spinner.start(`Publishing ${pkgName} to npm\n`);
 
       const opts = debug === true ? ["publish", "--dry-run"] : ["publish"];
-      console.log(`Command that would have run: npm ${opts.join(" ")}`);
-      throw new Error(
-        "This error is intentional, please double check scripts/publish.js and remove this error prior to publishing"
-      );
-
       try {
-        await spawnHelper("npm", opts, {
-          cwd: pkgDir,
-          stdio: "inherit",
-        });
+        await execHelper(`npm ${opts.join(" ")}`, { cwd: pkgDir });
         console.log("\n");
       } catch (e) {
         spinner.fail(e.toString());
