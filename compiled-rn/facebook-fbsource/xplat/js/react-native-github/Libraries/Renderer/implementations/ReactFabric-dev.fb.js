@@ -26087,7 +26087,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-beta-79d761af';
+var ReactVersion = '19.0.0-rc-79d761af';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
