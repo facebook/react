@@ -114,29 +114,25 @@ const rule: Rule.RuleModule = {
     }
 
     let babelAST;
-    try {
-      // first try parsing with the faster Hermes that also supports JS, Flow
-      // and most TS syntax
+    if (
+      context.filename.endsWith(".tsx") ||
+      context.filename.endsWith(".ts")
+    ) {
+      try {
+        const { parse: babelParse } = require("@babel/parser");
+        babelAST = babelParse(sourceCode, {
+          filename,
+          sourceType: "unambiguous",
+          plugins: ["typescript", "jsx"],
+        });
+      } catch {}
+    } else {
       babelAST = HermesParser.parse(sourceCode, {
         babel: true,
         enableExperimentalComponentSyntax: true,
         sourceFilename: filename,
         sourceType: "module",
       });
-    } catch {
-      // If Hermes fails, try Babel for advanced TS syntax.
-      if (
-        context.filename.endsWith(".tsx") ||
-        context.filename.endsWith(".ts")
-      ) {
-        try {
-          const { parse: babelParse } = require("@babel/parser");
-          babelAST = babelParse(sourceCode, {
-            sourceType: "unambiguous",
-            plugins: ["typescript", "jsx"],
-          });
-        } catch {}
-      }
     }
 
     if (babelAST != null) {
