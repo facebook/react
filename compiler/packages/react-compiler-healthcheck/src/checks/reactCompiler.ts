@@ -111,7 +111,7 @@ export default {
     }
   },
 
-  report(): void {
+  report(verbose: boolean): void {
     const totalComponents =
       SucessfulCompilation.length +
       OtherFailures.length +
@@ -121,5 +121,24 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
       )
     );
+
+    if (verbose) {
+      for (const compilation of SucessfulCompilation) {
+        if (compilation.kind === "CompileSuccess") {
+          const name = compilation.fnName;
+          const isHook = name?.startsWith('use');
+
+          if (name) {
+            console.log(
+              chalk.green(
+                `Successfully compiled ${isHook ? "hook" : "component" } [${name}](${compilation.fnLoc?.filename})`
+              )
+            );
+          } else {
+            console.log(chalk.green(`Successfully compiled [${compilation.fnLoc?.filename}]`));
+          }
+        }
+      }
+    }
   },
 };
