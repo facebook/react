@@ -1,0 +1,143 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-pass-hook-as-prop.js
+---
+Input:
+function Component(props) {
+  return <Child foo={useFoo} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Child",
+                  "loc": null,
+                  "range": [
+                    38,
+                    43
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "foo",
+                      "loc": null,
+                      "range": [
+                        44,
+                        47
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "useFoo",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          49,
+                          55
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        48,
+                        56
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      44,
+                      56
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  37,
+                  59
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                37,
+                59
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              60
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          62
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        62
+      ],
+      "loc": null,
+      "range": [
+        0,
+        62
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    62
+  ]
+}

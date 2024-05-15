@@ -1,0 +1,41 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/simple-ssa.js
+---
+Input:
+function Component(props) {
+  let a;
+  if (props) {
+    a = 1;
+  } else {
+    a = 2;
+  }
+  return a;
+}
+
+
+Output:
+function Component(
+  unknown props$10,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $12 = DeclareLocal Let unknown a$11
+  [1] unknown $13 = LoadLocal unknown props$10
+  [2] If unknown $13 consequent=bb2 alternate=bb3 fallthrough=bb1
+bb2 (block)
+  predecessors: bb0
+  [3] unknown $14 = 1
+  [4] unknown $16 = StoreLocal Reassign unknown a$15 = unknown $14
+  [5] Goto bb1
+bb3 (block)
+  predecessors: bb0
+  [6] unknown $17 = 2
+  [7] unknown $19 = StoreLocal Reassign unknown a$18 = unknown $17
+  [8] Goto bb1
+bb1 (block)
+  predecessors: bb2, bb3
+  a$20: phi(bb2: a$15, bb3: a$18)
+  [9] unknown $21 = LoadLocal unknown a$20
+  [10] Return unknown $21

@@ -1,0 +1,171 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/nonoptional-load-from-optional-memberexpr.js
+---
+Input:
+// Note that `a?.b.c` is semantically different from `(a?.b).c`
+// Here, 'props?.a` is an optional chain, and `.b` is an unconditional load
+// (nullthrows if a is nullish)
+
+function Component(props) {
+  let x = (props?.a).b;
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          182,
+          191
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            192,
+            197
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    207,
+                    208
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "OptionalMemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        212,
+                        217
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "a",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        219,
+                        220
+                      ]
+                    },
+                    "computed": false,
+                    "optional": true,
+                    "loc": null,
+                    "range": [
+                      212,
+                      220
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      222,
+                      223
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    211,
+                    223
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  207,
+                  223
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              203,
+              224
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                234,
+                235
+              ]
+            },
+            "loc": null,
+            "range": [
+              227,
+              236
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          199,
+          238
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        173,
+        238
+      ],
+      "loc": null,
+      "range": [
+        173,
+        238
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    173,
+    238
+  ]
+}

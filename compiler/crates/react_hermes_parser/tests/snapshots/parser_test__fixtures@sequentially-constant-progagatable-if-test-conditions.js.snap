@@ -1,0 +1,767 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/sequentially-constant-progagatable-if-test-conditions.js
+---
+Input:
+function Component() {
+  let a = 1;
+
+  let b;
+  if (a === 1) {
+    b = true;
+  } else {
+    b = false;
+  }
+
+  let c;
+  if (b) {
+    c = "hello";
+  } else {
+    c = null;
+  }
+
+  let d;
+  if (c === "hello") {
+    d = 42.0;
+  } else {
+    d = 42.001;
+  }
+
+  let e;
+  if (d === 42.0) {
+    e = "ok";
+  } else {
+    e = "nope";
+  }
+
+  // should constant-propagate to "ok"
+  return e;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    29,
+                    30
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    33,
+                    34
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  34
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              35
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    43,
+                    44
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  43,
+                  44
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              39,
+              45
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  52,
+                  53
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 1.0,
+                "loc": null,
+                "range": [
+                  58,
+                  59
+                ]
+              },
+              "loc": null,
+              "range": [
+                52,
+                59
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        67,
+                        68
+                      ]
+                    },
+                    "right": {
+                      "type": "BooleanLiteral",
+                      "value": true,
+                      "loc": null,
+                      "range": [
+                        71,
+                        75
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      67,
+                      75
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    67,
+                    76
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                61,
+                80
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        92,
+                        93
+                      ]
+                    },
+                    "right": {
+                      "type": "BooleanLiteral",
+                      "value": false,
+                      "loc": null,
+                      "range": [
+                        96,
+                        101
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      92,
+                      101
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    92,
+                    102
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                86,
+                106
+              ]
+            },
+            "loc": null,
+            "range": [
+              48,
+              106
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "c",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    114,
+                    115
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  114,
+                  115
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              110,
+              116
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "Identifier",
+              "name": "b",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                123,
+                124
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "c",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        132,
+                        133
+                      ]
+                    },
+                    "right": {
+                      "type": "StringLiteral",
+                      "value": "hello",
+                      "loc": null,
+                      "range": [
+                        136,
+                        143
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      132,
+                      143
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    132,
+                    144
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                126,
+                148
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "c",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        160,
+                        161
+                      ]
+                    },
+                    "right": {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        164,
+                        168
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      160,
+                      168
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    160,
+                    169
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                154,
+                173
+              ]
+            },
+            "loc": null,
+            "range": [
+              119,
+              173
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "d",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    181,
+                    182
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  181,
+                  182
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              177,
+              183
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "c",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  190,
+                  191
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "StringLiteral",
+                "value": "hello",
+                "loc": null,
+                "range": [
+                  196,
+                  203
+                ]
+              },
+              "loc": null,
+              "range": [
+                190,
+                203
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "d",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        211,
+                        212
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 42.0,
+                      "loc": null,
+                      "range": [
+                        215,
+                        219
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      211,
+                      219
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    211,
+                    220
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                205,
+                224
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "d",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        236,
+                        237
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 42.001,
+                      "loc": null,
+                      "range": [
+                        240,
+                        246
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      236,
+                      246
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    236,
+                    247
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                230,
+                251
+              ]
+            },
+            "loc": null,
+            "range": [
+              186,
+              251
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "e",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    259,
+                    260
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  259,
+                  260
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              255,
+              261
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "d",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  268,
+                  269
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 42.0,
+                "loc": null,
+                "range": [
+                  274,
+                  278
+                ]
+              },
+              "loc": null,
+              "range": [
+                268,
+                278
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "e",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        286,
+                        287
+                      ]
+                    },
+                    "right": {
+                      "type": "StringLiteral",
+                      "value": "ok",
+                      "loc": null,
+                      "range": [
+                        290,
+                        294
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      286,
+                      294
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    286,
+                    295
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                280,
+                299
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "e",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        311,
+                        312
+                      ]
+                    },
+                    "right": {
+                      "type": "StringLiteral",
+                      "value": "nope",
+                      "loc": null,
+                      "range": [
+                        315,
+                        321
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      311,
+                      321
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    311,
+                    322
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                305,
+                326
+              ]
+            },
+            "loc": null,
+            "range": [
+              264,
+              326
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "e",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                376,
+                377
+              ]
+            },
+            "loc": null,
+            "range": [
+              369,
+              378
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          380
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        380
+      ],
+      "loc": null,
+      "range": [
+        0,
+        380
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    380
+  ]
+}

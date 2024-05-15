@@ -1,0 +1,61 @@
+{
+  "name": "playground",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_ENV=development next dev",
+    "build": "next build && node ./scripts/downloadFonts.js",
+    "vercel-build": "yarn workspaces run build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "yarn playwright install",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@babel/core": "^7.19.1",
+    "@babel/parser": "^7.19.1",
+    "@babel/plugin-syntax-typescript": "^7.18.6",
+    "@babel/plugin-transform-block-scoping": "^7.18.9",
+    "@babel/plugin-transform-modules-commonjs": "^7.18.6",
+    "@babel/preset-react": "^7.18.6",
+    "@babel/preset-typescript": "^7.18.6",
+    "@babel/traverse": "^7.19.1",
+    "@babel/types": "^7.19.0",
+    "@heroicons/react": "^1.0.6",
+    "@monaco-editor/react": "^4.4.6",
+    "@playwright/test": "^1.42.1",
+    "@use-gesture/react": "^10.2.22",
+    "babel-plugin-react-compiler": "*",
+    "hermes-eslint": "^0.14.0",
+    "invariant": "^2.2.4",
+    "lz-string": "^1.5.0",
+    "monaco-editor": "^0.34.1",
+    "next": "^13.5.6",
+    "notistack": "^3.0.0-alpha.7",
+    "prettier": "3.0.3",
+    "pretty-format": "^29.3.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-compiler-runtime": "*"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.9",
+    "@types/prettier": "^2.7.1",
+    "@types/react": "18.0.25",
+    "@types/react-dom": "18.0.9",
+    "autoprefixer": "^10.4.13",
+    "clsx": "^1.2.1",
+    "eslint": "^8.28.0",
+    "eslint-config-next": "^13.5.6",
+    "monaco-editor-webpack-plugin": "^7.1.0",
+    "postcss": "^8.4.19",
+    "tailwindcss": "^3.2.4"
+  },
+  "resolutions": {
+    "./**/@babel/parser": "7.7.4",
+    "./**/@babel/types": "7.7.4",
+    "@babel/core": "7.2.0",
+    "@babel/traverse": "7.1.6",
+    "@babel/generator": "7.2.0"
+  }
+}

@@ -1,0 +1,237 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/complex-while.js
+---
+Input:
+function foo(a, b, c) {
+  label: if (a) {
+    while (b) {
+      if (c) {
+        break label;
+      }
+    }
+  }
+  return c;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            17
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "c",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "LabeledStatement",
+            "label": {
+              "type": "Identifier",
+              "name": "label",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                26,
+                31
+              ]
+            },
+            "body": {
+              "type": "IfStatement",
+              "test": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  37,
+                  38
+                ]
+              },
+              "consequent": {
+                "type": "BlockStatement",
+                "body": [
+                  {
+                    "type": "WhileStatement",
+                    "test": {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        53,
+                        54
+                      ]
+                    },
+                    "body": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "IfStatement",
+                          "test": {
+                            "type": "Identifier",
+                            "name": "c",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              68,
+                              69
+                            ]
+                          },
+                          "consequent": {
+                            "type": "BlockStatement",
+                            "body": [
+                              {
+                                "type": "BreakStatement",
+                                "label": {
+                                  "type": "Identifier",
+                                  "name": "label",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    87,
+                                    92
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  81,
+                                  93
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              71,
+                              101
+                            ]
+                          },
+                          "alternate": null,
+                          "loc": null,
+                          "range": [
+                            64,
+                            101
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        56,
+                        107
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      46,
+                      107
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  40,
+                  111
+                ]
+              },
+              "alternate": null,
+              "loc": null,
+              "range": [
+                33,
+                111
+              ]
+            },
+            "loc": null,
+            "range": [
+              26,
+              111
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "c",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                121,
+                122
+              ]
+            },
+            "loc": null,
+            "range": [
+              114,
+              123
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          22,
+          125
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        125
+      ],
+      "loc": null,
+      "range": [
+        0,
+        125
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    125
+  ]
+}

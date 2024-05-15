@@ -1,0 +1,196 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-useMemo-callback-args.js
+---
+Input:
+function component(a, b) {
+  let x = useMemo((c) => a, []);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            22,
+            23
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    33,
+                    34
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      37,
+                      44
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [
+                        {
+                          "type": "Identifier",
+                          "name": "c",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            46,
+                            47
+                          ]
+                        }
+                      ],
+                      "body": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          52,
+                          53
+                        ]
+                      },
+                      "generator": true,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        45,
+                        53
+                      ],
+                      "expression": true,
+                      "loc": null,
+                      "range": [
+                        45,
+                        53
+                      ]
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [],
+                      "loc": null,
+                      "range": [
+                        55,
+                        57
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    37,
+                    58
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  33,
+                  58
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              29,
+              59
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                69,
+                70
+              ]
+            },
+            "loc": null,
+            "range": [
+              62,
+              71
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          25,
+          73
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        73
+      ],
+      "loc": null,
+      "range": [
+        0,
+        73
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    73
+  ]
+}

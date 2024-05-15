@@ -1,0 +1,231 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructure-capture-global.js
+---
+Input:
+let someGlobal = {};
+function component(a) {
+  let x = { a, someGlobal };
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "kind": "let",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "someGlobal",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              4,
+              14
+            ]
+          },
+          "init": {
+            "type": "ObjectExpression",
+            "properties": [],
+            "loc": null,
+            "range": [
+              17,
+              19
+            ]
+          },
+          "loc": null,
+          "range": [
+            4,
+            19
+          ]
+        }
+      ],
+      "loc": null,
+      "range": [
+        0,
+        20
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          30,
+          39
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            40,
+            41
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          57,
+                          58
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          57,
+                          58
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        57,
+                        58
+                      ]
+                    },
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "someGlobal",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          60,
+                          70
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "someGlobal",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          60,
+                          70
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        60,
+                        70
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    55,
+                    72
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  51,
+                  72
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              47,
+              73
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                83,
+                84
+              ]
+            },
+            "loc": null,
+            "range": [
+              76,
+              85
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          43,
+          87
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        21,
+        87
+      ],
+      "loc": null,
+      "range": [
+        21,
+        87
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    87
+  ]
+}

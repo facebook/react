@@ -1,0 +1,379 @@
+---
+source: crates/react_estree/src/lib.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{serialized}\")"
+input_file: crates/react_estree/src/fixtures/simple.json
+---
+Input:
+{
+    "type": "Program",
+    "loc": {
+      "source": null,
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 1
+      }
+    },
+    "range": [
+      0,
+      51
+    ],
+    "body": [
+      {
+        "type": "FunctionDeclaration",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 1
+          }
+        },
+        "range": [
+          0,
+          51
+        ],
+        "id": {
+          "type": "Identifier",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 9
+            },
+            "end": {
+              "line": 1,
+              "column": 18
+            }
+          },
+          "range": [
+            9,
+            18
+          ],
+          "name": "Component",
+          "typeAnnotation": null,
+          "optional": false
+        },
+        "params": [
+          {
+            "type": "Identifier",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 19
+              },
+              "end": {
+                "line": 1,
+                "column": 24
+              }
+            },
+            "range": [
+              19,
+              24
+            ],
+            "name": "props",
+            "typeAnnotation": null,
+            "optional": false
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 26
+            },
+            "end": {
+              "line": 3,
+              "column": 1
+            }
+          },
+          "range": [
+            26,
+            51
+          ],
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 2
+                },
+                "end": {
+                  "line": 2,
+                  "column": 21
+                }
+              },
+              "range": [
+                30,
+                49
+              ],
+              "argument": {
+                "type": "MemberExpression",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 9
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 20
+                  }
+                },
+                "range": [
+                  37,
+                  48
+                ],
+                "object": {
+                  "type": "Identifier",
+                  "loc": {
+                    "source": null,
+                    "start": {
+                      "line": 2,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 14
+                    }
+                  },
+                  "range": [
+                    37,
+                    42
+                  ],
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "optional": false
+                },
+                "property": {
+                  "type": "Identifier",
+                  "loc": {
+                    "source": null,
+                    "start": {
+                      "line": 2,
+                      "column": 15
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 20
+                    }
+                  },
+                  "range": [
+                    43,
+                    48
+                  ],
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "optional": false
+                },
+                "computed": false
+              }
+            }
+          ]
+        },
+        "async": false,
+        "generator": false,
+        "predicate": null,
+        "expression": false,
+        "returnType": null,
+        "typeParameters": null
+      }
+    ],
+    "comments": [],
+    "errors": []
+  }
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 9
+          },
+          "end": {
+            "line": 1,
+            "column": 18
+          }
+        },
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 19
+            },
+            "end": {
+              "line": 1,
+              "column": 24
+            }
+          },
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 9
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 14
+                  }
+                },
+                "range": [
+                  37,
+                  42
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "value",
+                "typeAnnotation": null,
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 15
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 20
+                  }
+                },
+                "range": [
+                  43,
+                  48
+                ]
+              },
+              "computed": false,
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 9
+                },
+                "end": {
+                  "line": 2,
+                  "column": 20
+                }
+              },
+              "range": [
+                37,
+                48
+              ]
+            },
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 2,
+                "column": 2
+              },
+              "end": {
+                "line": 2,
+                "column": 21
+              }
+            },
+            "range": [
+              30,
+              49
+            ]
+          }
+        ],
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 26
+          },
+          "end": {
+            "line": 3,
+            "column": 1
+          }
+        },
+        "range": [
+          26,
+          51
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": null,
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 1
+        }
+      },
+      "range": [
+        0,
+        51
+      ]
+    }
+  ],
+  "sourceType": "module",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 3,
+      "column": 1
+    }
+  },
+  "range": [
+    0,
+    51
+  ]
+}

@@ -1,0 +1,204 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-assign-hook-to-local.js
+---
+Input:
+function Component(props) {
+  const x = useState;
+  const state = x(null);
+  return state[0];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "useState",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    40,
+                    48
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  48
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              49
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "state",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    58,
+                    63
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      66,
+                      67
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        68,
+                        72
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    66,
+                    73
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  58,
+                  73
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              52,
+              74
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "state",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  84,
+                  89
+                ]
+              },
+              "property": {
+                "type": "NumericLiteral",
+                "value": 0.0,
+                "loc": null,
+                "range": [
+                  90,
+                  91
+                ]
+              },
+              "computed": true,
+              "loc": null,
+              "range": [
+                84,
+                92
+              ]
+            },
+            "loc": null,
+            "range": [
+              77,
+              93
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          95
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        95
+      ],
+      "loc": null,
+      "range": [
+        0,
+        95
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    95
+  ]
+}

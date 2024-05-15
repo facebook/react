@@ -1,0 +1,226 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-arrayexpression.js
+---
+Input:
+function Component(props) {
+  const a = 1;
+  const b = 2;
+  const x = [a, b];
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    40,
+                    41
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  41
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              42
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    55,
+                    56
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  51,
+                  56
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              45,
+              57
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    66,
+                    67
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "a",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        71,
+                        72
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        74,
+                        75
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    70,
+                    76
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  66,
+                  76
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              60,
+              77
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                87,
+                88
+              ]
+            },
+            "loc": null,
+            "range": [
+              80,
+              89
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          91
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        91
+      ],
+      "loc": null,
+      "range": [
+        0,
+        91
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    91
+  ]
+}

@@ -1,0 +1,224 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/call-args-assignment.js
+---
+Input:
+function Component(props) {
+  let x = makeObject();
+  x.foo((x = makeObject()));
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeObject",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      38,
+                      48
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    38,
+                    50
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  50
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              51
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    54,
+                    55
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "foo",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    56,
+                    59
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  54,
+                  59
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      61,
+                      62
+                    ]
+                  },
+                  "right": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "makeObject",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        65,
+                        75
+                      ]
+                    },
+                    "arguments": [],
+                    "loc": null,
+                    "range": [
+                      65,
+                      77
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    61,
+                    77
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                54,
+                79
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              54,
+              80
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                90,
+                91
+              ]
+            },
+            "loc": null,
+            "range": [
+              83,
+              92
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          94
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        94
+      ],
+      "loc": null,
+      "range": [
+        0,
+        94
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    94
+  ]
+}

@@ -1,0 +1,187 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/optional-computed-load-static.js
+---
+Input:
+function Component(props) {
+  let x = a?.b.c[0];
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "OptionalMemberExpression",
+                  "object": {
+                    "type": "OptionalMemberExpression",
+                    "object": {
+                      "type": "OptionalMemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          38,
+                          39
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          41,
+                          42
+                        ]
+                      },
+                      "computed": false,
+                      "optional": true,
+                      "loc": null,
+                      "range": [
+                        38,
+                        42
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "c",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        43,
+                        44
+                      ]
+                    },
+                    "computed": false,
+                    "optional": false,
+                    "loc": null,
+                    "range": [
+                      38,
+                      44
+                    ]
+                  },
+                  "property": {
+                    "type": "NumericLiteral",
+                    "value": 0.0,
+                    "loc": null,
+                    "range": [
+                      45,
+                      46
+                    ]
+                  },
+                  "computed": true,
+                  "optional": false,
+                  "loc": null,
+                  "range": [
+                    38,
+                    47
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  47
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              48
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                58,
+                59
+              ]
+            },
+            "loc": null,
+            "range": [
+              51,
+              60
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          62
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        62
+      ],
+      "loc": null,
+      "range": [
+        0,
+        62
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    62
+  ]
+}

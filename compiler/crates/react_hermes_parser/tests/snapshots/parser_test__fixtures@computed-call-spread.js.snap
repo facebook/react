@@ -1,0 +1,258 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/computed-call-spread.js
+---
+Input:
+function Component(props) {
+  const x = foo[props.method](...props.a, null, ...props.b);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "foo",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        40,
+                        43
+                      ]
+                    },
+                    "property": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          44,
+                          49
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "method",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          50,
+                          56
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        44,
+                        56
+                      ]
+                    },
+                    "computed": true,
+                    "loc": null,
+                    "range": [
+                      40,
+                      57
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "SpreadElement",
+                      "argument": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            61,
+                            66
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "a",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            67,
+                            68
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          61,
+                          68
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        58,
+                        68
+                      ]
+                    },
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        70,
+                        74
+                      ]
+                    },
+                    {
+                      "type": "SpreadElement",
+                      "argument": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            79,
+                            84
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "b",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            85,
+                            86
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          79,
+                          86
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        76,
+                        86
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    87
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  87
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              88
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                98,
+                99
+              ]
+            },
+            "loc": null,
+            "range": [
+              91,
+              100
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          102
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        102
+      ],
+      "loc": null,
+      "range": [
+        0,
+        102
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    102
+  ]
+}

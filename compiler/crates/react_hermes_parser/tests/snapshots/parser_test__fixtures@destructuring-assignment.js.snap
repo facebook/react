@@ -1,0 +1,624 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructuring-assignment.js
+---
+Input:
+function foo(a, b, c) {
+  let d, g, n, o;
+  [
+    d,
+    [
+      {
+        e: { f: g },
+      },
+    ],
+  ] = a;
+  ({
+    l: {
+      m: [[n]],
+    },
+    o,
+  } = b);
+  return { d, g, n, o };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            17
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "c",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "d",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    30,
+                    31
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  30,
+                  31
+                ]
+              },
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "g",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    33,
+                    34
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  33,
+                  34
+                ]
+              },
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "n",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  36,
+                  37
+                ]
+              },
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "o",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    39,
+                    40
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  39,
+                  40
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              26,
+              41
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "ArrayPattern",
+                "elements": [
+                  {
+                    "type": "Identifier",
+                    "name": "d",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      50,
+                      51
+                    ]
+                  },
+                  {
+                    "type": "ArrayPattern",
+                    "elements": [
+                      {
+                        "type": "ObjectPattern",
+                        "properties": [
+                          {
+                            "type": "Property",
+                            "key": {
+                              "type": "Identifier",
+                              "name": "e",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                75,
+                                76
+                              ]
+                            },
+                            "value": {
+                              "type": "ObjectPattern",
+                              "properties": [
+                                {
+                                  "type": "Property",
+                                  "key": {
+                                    "type": "Identifier",
+                                    "name": "f",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      80,
+                                      81
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "Identifier",
+                                    "name": "g",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      83,
+                                      84
+                                    ]
+                                  },
+                                  "kind": "init",
+                                  "computed": false,
+                                  "shorthand": false,
+                                  "method": false,
+                                  "loc": null,
+                                  "range": [
+                                    80,
+                                    84
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                78,
+                                86
+                              ]
+                            },
+                            "kind": "init",
+                            "computed": false,
+                            "shorthand": false,
+                            "method": false,
+                            "loc": null,
+                            "range": [
+                              75,
+                              86
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          65,
+                          95
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      57,
+                      102
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  44,
+                  107
+                ]
+              },
+              "right": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  110,
+                  111
+                ]
+              },
+              "loc": null,
+              "range": [
+                44,
+                111
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              44,
+              112
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "ObjectPattern",
+                "properties": [
+                  {
+                    "type": "Property",
+                    "key": {
+                      "type": "Identifier",
+                      "name": "l",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        122,
+                        123
+                      ]
+                    },
+                    "value": {
+                      "type": "ObjectPattern",
+                      "properties": [
+                        {
+                          "type": "Property",
+                          "key": {
+                            "type": "Identifier",
+                            "name": "m",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              133,
+                              134
+                            ]
+                          },
+                          "value": {
+                            "type": "ArrayPattern",
+                            "elements": [
+                              {
+                                "type": "ArrayPattern",
+                                "elements": [
+                                  {
+                                    "type": "Identifier",
+                                    "name": "n",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      138,
+                                      139
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  137,
+                                  140
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              136,
+                              141
+                            ]
+                          },
+                          "kind": "init",
+                          "computed": false,
+                          "shorthand": false,
+                          "method": false,
+                          "loc": null,
+                          "range": [
+                            133,
+                            141
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        125,
+                        148
+                      ]
+                    },
+                    "kind": "init",
+                    "computed": false,
+                    "shorthand": false,
+                    "method": false,
+                    "loc": null,
+                    "range": [
+                      122,
+                      148
+                    ]
+                  },
+                  {
+                    "type": "Property",
+                    "key": {
+                      "type": "Identifier",
+                      "name": "o",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        154,
+                        155
+                      ]
+                    },
+                    "value": {
+                      "type": "Identifier",
+                      "name": "o",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        154,
+                        155
+                      ]
+                    },
+                    "kind": "init",
+                    "computed": false,
+                    "shorthand": true,
+                    "method": false,
+                    "loc": null,
+                    "range": [
+                      154,
+                      155
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  116,
+                  160
+                ]
+              },
+              "right": {
+                "type": "Identifier",
+                "name": "b",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  163,
+                  164
+                ]
+              },
+              "loc": null,
+              "range": [
+                116,
+                164
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              115,
+              166
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ObjectExpression",
+              "properties": [
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "d",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      178,
+                      179
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "d",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      178,
+                      179
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    178,
+                    179
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "g",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      181,
+                      182
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "g",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      181,
+                      182
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    181,
+                    182
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "n",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      184,
+                      185
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "n",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      184,
+                      185
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    184,
+                    185
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "o",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      187,
+                      188
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "o",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      187,
+                      188
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    187,
+                    188
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                176,
+                190
+              ]
+            },
+            "loc": null,
+            "range": [
+              169,
+              191
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          22,
+          193
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        193
+      ],
+      "loc": null,
+      "range": [
+        0,
+        193
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    193
+  ]
+}

@@ -1,0 +1,370 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/constant-propagation-phi.js
+---
+Input:
+function foo(a, b, c) {
+  let x;
+  if (a) {
+    x = 2 - 1;
+  } else {
+    x = 0 + 1;
+  }
+  if (x === 1) {
+    return b;
+  } else {
+    return c;
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            17
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "c",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    30,
+                    31
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  30,
+                  31
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              26,
+              32
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "Identifier",
+              "name": "a",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                39,
+                40
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        48,
+                        49
+                      ]
+                    },
+                    "right": {
+                      "type": "BinaryExpression",
+                      "left": {
+                        "type": "NumericLiteral",
+                        "value": 2.0,
+                        "loc": null,
+                        "range": [
+                          52,
+                          53
+                        ]
+                      },
+                      "operator": "-",
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          56,
+                          57
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        52,
+                        57
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      48,
+                      57
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    48,
+                    58
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                42,
+                62
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        74,
+                        75
+                      ]
+                    },
+                    "right": {
+                      "type": "BinaryExpression",
+                      "left": {
+                        "type": "NumericLiteral",
+                        "value": 0.0,
+                        "loc": null,
+                        "range": [
+                          78,
+                          79
+                        ]
+                      },
+                      "operator": "+",
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          82,
+                          83
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        78,
+                        83
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      74,
+                      83
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    84
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                68,
+                88
+              ]
+            },
+            "loc": null,
+            "range": [
+              35,
+              88
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  95,
+                  96
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 1.0,
+                "loc": null,
+                "range": [
+                  101,
+                  102
+                ]
+              },
+              "loc": null,
+              "range": [
+                95,
+                102
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      117,
+                      118
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    110,
+                    119
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                104,
+                123
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "c",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      142,
+                      143
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    135,
+                    144
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                129,
+                148
+              ]
+            },
+            "loc": null,
+            "range": [
+              91,
+              148
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          22,
+          150
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        150
+      ],
+      "loc": null,
+      "range": [
+        0,
+        150
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    150
+  ]
+}

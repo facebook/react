@@ -1,0 +1,395 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-tag-evaluation-order-non-global.js
+---
+Input:
+function Component(props) {
+  const maybeMutable = new MaybeMutable();
+  let Tag = props.component;
+  // NOTE: the order of evaluation in the lowering is incorrect:
+  // the jsx element's tag observes `Tag` after reassignment, but should observe
+  // it before the reassignment.
+  return (
+    <Tag>
+      {((Tag = props.alternateComponent), maybeMutate(maybeMutable))}
+      <Tag />
+    </Tag>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "maybeMutable",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "NewExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "MaybeMutable",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      55,
+                      67
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    51,
+                    69
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  69
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              70
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "Tag",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    77,
+                    80
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      83,
+                      88
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "component",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      89,
+                      98
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    83,
+                    98
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  77,
+                  98
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              73,
+              99
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Tag",
+                  "loc": null,
+                  "range": [
+                    295,
+                    298
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  294,
+                  299
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    299,
+                    306
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "SequenceExpression",
+                    "expressions": [
+                      {
+                        "type": "AssignmentExpression",
+                        "operator": "=",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "Tag",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            309,
+                            312
+                          ]
+                        },
+                        "right": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "props",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              315,
+                              320
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "alternateComponent",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              321,
+                              339
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            315,
+                            339
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          309,
+                          339
+                        ]
+                      },
+                      {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "Identifier",
+                          "name": "maybeMutate",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            342,
+                            353
+                          ]
+                        },
+                        "arguments": [
+                          {
+                            "type": "Identifier",
+                            "name": "maybeMutable",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              354,
+                              366
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          342,
+                          367
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      308,
+                      367
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    306,
+                    369
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    369,
+                    376
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "Tag",
+                      "loc": null,
+                      "range": [
+                        377,
+                        380
+                      ]
+                    },
+                    "attributes": [],
+                    "selfClosing": true,
+                    "loc": null,
+                    "range": [
+                      376,
+                      383
+                    ]
+                  },
+                  "children": [],
+                  "closingElement": null,
+                  "loc": null,
+                  "range": [
+                    376,
+                    383
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    383,
+                    388
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Tag",
+                  "loc": null,
+                  "range": [
+                    390,
+                    393
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  388,
+                  394
+                ]
+              },
+              "loc": null,
+              "range": [
+                294,
+                394
+              ]
+            },
+            "loc": null,
+            "range": [
+              281,
+              399
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          401
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        401
+      ],
+      "loc": null,
+      "range": [
+        0,
+        401
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    401
+  ]
+}

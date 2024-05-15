@@ -1,0 +1,115 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructuring-array-param-default.js
+---
+Input:
+function Component([a = 2]) {
+  return a;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "ArrayPattern",
+          "elements": [
+            {
+              "type": "AssignmentPattern",
+              "left": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  20,
+                  21
+                ]
+              },
+              "right": {
+                "type": "NumericLiteral",
+                "value": 2.0,
+                "loc": null,
+                "range": [
+                  24,
+                  25
+                ]
+              },
+              "loc": null,
+              "range": [
+                20,
+                25
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            19,
+            26
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "a",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                39,
+                40
+              ]
+            },
+            "loc": null,
+            "range": [
+              32,
+              41
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          28,
+          43
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        43
+      ],
+      "loc": null,
+      "range": [
+        0,
+        43
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    43
+  ]
+}
