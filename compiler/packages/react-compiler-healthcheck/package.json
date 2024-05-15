@@ -1,6 +1,6 @@
 {
   "name": "react-compiler-healthcheck",
-  "version": "0.0.0",
+  "version": "0.0.0-experimental-410375f-20240515",
   "description": "Health check script to test violations of the rules of react.",
   "bin": {
     "react-compiler-healthcheck": "dist/index.js"
@@ -12,12 +12,12 @@
   "dependencies": {
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
-    "zod": "^3.22.4",
-    "zod-validation-error": "^3.0.3",
     "chalk": "4",
     "fast-glob": "^3.3.2",
     "ora": "5.4.1",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "zod": "^3.22.4",
+    "zod-validation-error": "^3.0.3"
   },
   "devDependencies": {},
   "engines": {
