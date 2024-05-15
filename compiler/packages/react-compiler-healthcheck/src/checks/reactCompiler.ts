@@ -13,15 +13,18 @@ import BabelPluginReactCompiler, {
   type CompilerErrorDetailOptions,
   type PluginOptions,
 } from "babel-plugin-react-compiler/src";
-import { LoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
+import { LoggerEvent as RawLoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
 import chalk from "chalk";
+
+type LoggerEvent = RawLoggerEvent & {filename: string | null};
 
 const SucessfulCompilation: Array<LoggerEvent> = [];
 const ActionableFailures: Array<LoggerEvent> = [];
 const OtherFailures: Array<LoggerEvent> = [];
 
 const logger = {
-  logEvent(_: string | null, event: LoggerEvent) {
+  logEvent(filename: string | null, rawEvent: RawLoggerEvent) {
+    const event = {...rawEvent, filename};
     switch (event.kind) {
       case "CompileSuccess": {
         SucessfulCompilation.push(event);
@@ -104,6 +107,29 @@ function compile(sourceCode: string, filename: string) {
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 
+/**
+ * Counts unique source locations (filename + function definition location)
+ * in source.
+ * The compiler currently occasionally emits multiple error events for a
+ * single file (e.g. to report multiple rules of react violations in the
+ * same pass).
+ * TODO: enable non-destructive `CompilerDiagnostic` logging in dev mode,
+ * and log a "CompilationStart" event for every function we begin processing.
+ */
+function countUniqueLocInEvents(events: Array<LoggerEvent>): number {
+  const seenLocs = new Set<string>();
+  let count = 0;
+  for (const e of events) {
+    if (e.filename != null && e.fnLoc != null) {
+      seenLocs.add(`${e.filename}:${e.fnLoc.start}:${e.fnLoc.end}`);
+    } else {
+      // failed to dedup due to lack of source locations
+      count++;
+    }
+  }
+  return count + seenLocs.size;
+}
+
 export default {
   run(source: string, path: string): void {
     if (JsFileExtensionRE.exec(path) !== null) {
@@ -114,8 +140,8 @@ export default {
   report(): void {
     const totalComponents =
       SucessfulCompilation.length +
-      OtherFailures.length +
-      ActionableFailures.length;
+      countUniqueLocInEvents(OtherFailures) + 
+      countUniqueLocInEvents(ActionableFailures)
     console.log(
       chalk.green(
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
