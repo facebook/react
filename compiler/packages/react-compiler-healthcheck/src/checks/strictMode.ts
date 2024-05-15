@@ -11,6 +11,9 @@ const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 const StrictModeRE = /\<StrictMode\>/;
 let StrictModeUsage = false;
 
+const NextJSConfigRE = /next\.config\.js/;
+const StrictModeNextRE = /reactStrictMode: true/;
+
 export default {
   run(source: string, path: string): void {
     if (JsFileExtensionRE.exec(path) === null) {
@@ -19,6 +22,10 @@ export default {
 
     if (!StrictModeUsage) {
       StrictModeUsage = StrictModeRE.exec(source) !== null;
+    }
+
+    if(!StrictModeUsage && NextJSConfigRE.exec(path) !== null) {
+      StrictModeUsage = StrictModeNextRE.exec(source) !== null;
     }
   },
 
