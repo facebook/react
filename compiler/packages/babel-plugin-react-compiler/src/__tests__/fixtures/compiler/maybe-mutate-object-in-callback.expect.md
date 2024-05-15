@@ -32,34 +32,28 @@ import { c as _c } from "react/compiler-runtime";
 const { mutate } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(4);
+  const $ = _c(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = {};
+    const object = {};
+
+    t0 = () => {
+      mutate(object);
+    };
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const object = t0;
+  const onClick = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {
-      mutate(object);
-    };
-    $[1] = t1;
+  if ($[1] !== props.children) {
+    t1 = <Foo callback={onClick}>{props.children}</Foo>;
+    $[1] = props.children;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
-  const onClick = t1;
-  let t2;
-  if ($[2] !== props.children) {
-    t2 = <Foo callback={onClick}>{props.children}</Foo>;
-    $[2] = props.children;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  return t2;
+  return t1;
 }
 
 function Foo(t0) {

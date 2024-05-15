@@ -9,6 +9,7 @@ import { CompilerError } from "..";
 import {
   IdentifierId,
   InstructionId,
+  InstructionKind,
   Place,
   ReactiveBlock,
   ReactiveFunction,
@@ -20,6 +21,7 @@ import {
   ReactiveStatement,
   makeInstructionId,
 } from "../HIR";
+import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import { printReactiveScopeSummary } from "./PrintReactiveFunction";
 import {
@@ -183,6 +185,33 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
                */
               if (current !== null && instr.instruction.lvalue !== null) {
                 current.lvalues.add(instr.instruction.lvalue.identifier.id);
+              }
+              break;
+            }
+            case "StoreLocal": {
+              /**
+               * It's safe to have intervening StoreLocal instructions _if_ they are const
+               * and the last usage of the variable is at or before the next scope. This is
+               * similar to the case above for simple instructions.
+               *
+               * Reassignments are *not* safe to merge since they are a side-effect that we
+               * don't want to make conditional.
+               */
+              if (current !== null) {
+                if (
+                  instr.instruction.value.lvalue.kind === InstructionKind.Const
+                ) {
+                  for (const lvalue of eachInstructionLValue(
+                    instr.instruction
+                  )) {
+                    current.lvalues.add(lvalue.identifier.id);
+                  }
+                } else {
+                  log(
+                    `Reset scope @${current.block.scope.id} from StoreLocal in [${instr.instruction.id}]`
+                  );
+                  reset();
+                }
               }
               break;
             }

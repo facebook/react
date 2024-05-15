@@ -34,12 +34,12 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 let cond = true;
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(1);
   let a;
   let b;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
+    const f = () => {
       if (cond) {
         a = {};
         b = [];
@@ -51,19 +51,13 @@ function Component(props) {
       a.property = true;
       b.push(false);
     };
+
+    t0 = <div onClick={f} />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const f = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <div onClick={f} />;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
