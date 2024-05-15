@@ -69,6 +69,13 @@ async function getDateStringForCommit(commit) {
  * the command only report what it would have done, instead of actually publishing to npm.
  */
 async function main() {
+  const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
+  const isPristine = (await execHelper("git status --porcelain")) === "";
+  if (currBranchName !== "main" || isPristine === false) {
+    throw new Error(
+      "This script must be run from the `main` branch with no uncommitted changes",
+    );
+  }
   const argv = yargs(process.argv.slice(2))
     .option("packages", {
       description: "which packages to publish, defaults to all",
@@ -194,10 +201,14 @@ async function main() {
 
       const opts = debug === true ? ["publish", "--dry-run"] : ["publish"];
       try {
-        await spawnHelper("npm", [...opts, "--registry=http://registry.npmjs.org"], {
-          cwd: pkgDir,
-          stdio: "inherit",
-        });
+        await spawnHelper(
+          "npm",
+          [...opts, "--registry=http://registry.npmjs.org"],
+          {
+            cwd: pkgDir,
+            stdio: "inherit",
+          },
+        );
         console.log("\n");
       } catch (e) {
         spinner.fail(e.toString());
