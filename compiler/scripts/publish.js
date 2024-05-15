@@ -70,8 +70,11 @@ async function getDateStringForCommit(commit) {
  */
 async function main() {
   const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
-  if (currBranchName !== "main") {
-    throw new Error("This script must be run from the `main` branch");
+  const isPristine = (await execHelper("git status --porcelain")) === "";
+  if (currBranchName !== "main" || isPristine === false) {
+    throw new Error(
+      "This script must be run from the `main` branch with no uncommitted changes",
+    );
   }
   const argv = yargs(process.argv.slice(2))
     .option("packages", {
@@ -198,10 +201,14 @@ async function main() {
 
       const opts = debug === true ? ["publish", "--dry-run"] : ["publish"];
       try {
-        await spawnHelper("npm", [...opts, "--registry=http://registry.npmjs.org"], {
-          cwd: pkgDir,
-          stdio: "inherit",
-        });
+        await spawnHelper(
+          "npm",
+          [...opts, "--registry=http://registry.npmjs.org"],
+          {
+            cwd: pkgDir,
+            stdio: "inherit",
+          },
+        );
         console.log("\n");
       } catch (e) {
         spinner.fail(e.toString());
