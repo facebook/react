@@ -32,9 +32,9 @@ jobs:
           - target: ubuntu-latest
             os: ubuntu-latest
           - target: macos-latest
-             os: macos-latest
+            os: macos-latest
           - target: windows-latest
-             os: windows-latest
+            os: windows-latest
     runs-on: ${{ matrix.target.os }}
     steps:
       - uses: actions/checkout@v4
