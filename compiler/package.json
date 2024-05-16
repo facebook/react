@@ -49,5 +49,6 @@
   },
   "resolutions": {
     "react-is": "19.0.0-beta-b498834eab-20240506"
-  }
+  },
+  "packageManager": "yarn@1.22.22"
 }
