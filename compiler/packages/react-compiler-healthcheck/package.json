@@ -12,6 +12,7 @@
   "dependencies": {
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
+    "babel-plugin-react-compiler": "*",
     "chalk": "4",
     "fast-glob": "^3.3.2",
     "ora": "5.4.1",
