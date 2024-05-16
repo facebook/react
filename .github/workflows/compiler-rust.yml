@@ -31,11 +31,10 @@ jobs:
         target:
           - target: ubuntu-latest
             os: ubuntu-latest
-          # TODO: run on more platforms
-          # - target: macos-latest
-          #   os: macos-latest
-          # - target: windows-latest
-          #   os: windows-latest
+          - target: macos-latest
+             os: macos-latest
+          - target: windows-latest
+             os: windows-latest
     runs-on: ${{ matrix.target.os }}
     steps:
       - uses: actions/checkout@v4
