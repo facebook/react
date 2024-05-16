@@ -6,7 +6,7 @@ This document describes the goals, design principles, and high-level architectur
 
 The idea of React Compiler is to allow developers to use React's familiar declarative, component-based programming model, while ensuring that apps are fast by default. Concretely we seek to achieve the following goals:
 
-* Bound the amount of re-rendering that happens on updates to ensure that apps have predictably fast peformance by default.
+* Bound the amount of re-rendering that happens on updates to ensure that apps have predictably fast performance by default.
 * Keep startup time neutral with pre-React Compiler performance. Notably, this means holding code size increases and memoization overhead low enough to not impact startup.
 * Retain React's familiar declarative, component-oriented programming model. Ie, the solution should not fundamentally change how developers think about writing React, and should generally _remove_ concepts (the need to use React.memo(), useMemo(), and useCallback()) rather than introduce new concepts.
 * "Just work" on idiomatic React code that follows React's rules (pure render functions, the rules of hooks, etc).
@@ -47,7 +47,7 @@ The core of the compiler is largely decoupled from Babel, using its own intermed
 - Validation: We run various validation passes to check that the input is valid React, ie that it does not break the rules. This includes looking for conditional hook calls, unconditional setState calls, etc.
 - **Optimization**: Various passes such as dead code elimination and constant propagation can generally improve performance and reduce the amount of instructions to be optimized later.
 - **Type Inference** (InferTypes): We run a conservative type inference pass to identify certain key types of data that may appear in the program that are relevant for further analysis, such as which values are hooks, primitives, etc. 
-- **Inferring Reactive Scopes**: Several passes are involved in determing groups of values that are created/mutated together and the set of instructions involved in creating/mutating those values. We call these groups "reactive scopes", and each can have one or more declarations (or occassionaly a reassignment).
+- **Inferring Reactive Scopes**: Several passes are involved in determing groups of values that are created/mutated together and the set of instructions involved in creating/mutating those values. We call these groups "reactive scopes", and each can have one or more declarations (or occasionally a reassignment).
 - **Constructing/Optimizing Reactive Scopes**: Once the compiler determines the set of reactive scopes, it then transforms the program to make these scopes explicit in the HIR. The code is later converted to a ReactiveFunction, which is a hybrid of the HIR and an AST. Scopes are further pruned and transformed. For example, the compiler cannot make hook calls conditional, so any reactive scopes that contain a hook call must be pruned. If two consecutive scopes will always invalidate together, we attempt to merge them to reduce overhead, etc.
 - **Codegen**: Finally, the ReactiveFunction hybrid HIR/AST is converted back to a raw Babel AST node, and returned to the Babel plugin.
 - **Babel Plugin**: The Babel plugin replaces the original node with the new version.
