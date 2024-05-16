@@ -58,7 +58,7 @@ function parseFunctions(
     const isFlow = source
       .trim()
       .split("\n", 1)[0]
-      .match(/\s*\/\/\s*\@flow\s*/);
+      .match(/\s*\/\/\s*@flow\s*/);
     let type_transform: ParserPlugin;
     if (isFlow) {
       type_transform = "flow";
