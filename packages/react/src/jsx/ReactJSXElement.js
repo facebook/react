@@ -446,7 +446,7 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  if (!disableDefaultPropsExceptForClasses) {
+  if (!disableDefaultPropsExceptForClasses || (type && isReactClass(type))) {
     // Resolve default props
     if (type && type.defaultProps) {
       const defaultProps = type.defaultProps;
@@ -683,7 +683,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    if (!disableDefaultPropsExceptForClasses) {
+    if (!disableDefaultPropsExceptForClasses || (type && isReactClass(type))) {
       // Resolve default props
       if (type && type.defaultProps) {
         const defaultProps = type.defaultProps;
@@ -946,6 +946,10 @@ export function cloneElement(element, config, children) {
     );
   }
 
+  const shouldResolveDefaultProps =
+    !disableDefaultPropsExceptForClasses ||
+    (element.type && isReactClass(element.type));
+
   let propName;
 
   // Original props are copied
@@ -979,7 +983,7 @@ export function cloneElement(element, config, children) {
     // Remaining properties override existing props
     let defaultProps;
     if (
-      !disableDefaultPropsExceptForClasses &&
+      shouldResolveDefaultProps &&
       element.type &&
       element.type.defaultProps
     ) {
@@ -1005,7 +1009,7 @@ export function cloneElement(element, config, children) {
         !(enableRefAsProp && propName === 'ref' && config.ref === undefined)
       ) {
         if (
-          !disableDefaultPropsExceptForClasses &&
+          shouldResolveDefaultProps &&
           config[propName] === undefined &&
           defaultProps !== undefined
         ) {

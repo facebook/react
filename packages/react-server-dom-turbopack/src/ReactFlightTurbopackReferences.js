@@ -116,6 +116,8 @@ const deepProxyHandlers = {
         return undefined;
       // We need to special case this because createElement reads it if we pass this
       // reference.
+      case 'prototype':
+      case 'isReactComponent':
       case 'defaultProps':
         return undefined;
       // Avoid this attempting to be serialized.
