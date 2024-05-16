@@ -39,8 +39,7 @@ fn constant_propagation_impl(
         // for example, a phi node whose operand was eliminated because it was set in a
         // block that is no longer reached
         for block in fun.body.blocks.iter_mut() {
-            // TODO: avoid the clone here
-            let predecessors = block.predecessors.clone();
+            let predecessors = &block.predecessors;
             for phi in block.phis.iter_mut() {
                 phi.operands
                     .retain(|predecessor, _| predecessors.contains(predecessor))
