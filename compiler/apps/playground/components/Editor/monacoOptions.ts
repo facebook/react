@@ -13,6 +13,7 @@ export const monacoOptions: Partial<EditorProps["options"]> = {
   padding: { top: 8 },
   scrollbar: {
     verticalScrollbarSize: 10,
+    alwaysConsumeMouseWheel: false,
   },
   minimap: {
     enabled: false,
