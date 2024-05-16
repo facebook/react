@@ -1898,7 +1898,12 @@ describe('ReactDOMFizzServer', () => {
           </b>
         );
         if (this.props.prefix) {
-          return [readText(this.props.prefix), child];
+          return (
+            <>
+              {readText(this.props.prefix)}
+              {child}
+            </>
+          );
         }
         return child;
       }
@@ -1908,7 +1913,13 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(
         <TestProvider ctx="A">
           <div>
-            <Suspense fallback={[<Text text="Loading: " />, <TestConsumer />]}>
+            <Suspense
+              fallback={
+                <>
+                  <Text text="Loading: " />
+                  <TestConsumer />
+                </>
+              }>
               <TestProvider ctx="B">
                 <TestConsumer prefix="Hello: " />
               </TestProvider>

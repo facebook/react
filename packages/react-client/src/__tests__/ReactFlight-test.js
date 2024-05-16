@@ -1389,19 +1389,40 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
-  it('should warn in DEV a child is missing keys', () => {
+  it('should warn in DEV a child is missing keys on server component', () => {
+    function NoKey({children}) {
+      return <div key="this has a key but parent doesn't" />;
+    }
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <div>{Array(6).fill(<NoKey />)}</div>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev('Each child in a list should have a unique "key" prop.', {
+      withoutStack: gate(flags => flags.enableOwnerStacks),
+    });
+  });
+
+  it('should warn in DEV a child is missing keys in client component', async () => {
     function ParentClient({children}) {
       return children;
     }
     const Parent = clientReference(ParentClient);
-    expect(() => {
+    await expect(async () => {
       const transport = ReactNoopFlightServer.render(
         <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
       );
       ReactNoopFlightClient.read(transport);
+      await act(async () => {
+        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+      });
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
-        'See https://react.dev/link/warning-keys for more information.',
+      gate(flags => flags.enableOwnerStacks)
+        ? 'Each child in a list should have a unique "key" prop.' +
+            '\n\nCheck the top-level render call using <ParentClient>. ' +
+            'See https://react.dev/link/warning-keys for more information.'
+        : 'Each child in a list should have a unique "key" prop. ' +
+            'See https://react.dev/link/warning-keys for more information.',
     );
   });
 
@@ -2309,7 +2330,7 @@ describe('ReactFlight', () => {
     }
 
     function ThirdPartyFragmentComponent() {
-      return [<span>Who</span>, ' ', <span>dis?</span>];
+      return [<span key="1">Who</span>, ' ', <span key="2">dis?</span>];
     }
 
     function ServerComponent({transport}) {
@@ -2321,7 +2342,7 @@ describe('ReactFlight', () => {
     const promiseComponent = Promise.resolve(<ThirdPartyComponent />);
 
     const thirdPartyTransport = ReactNoopFlightServer.render(
-      [promiseComponent, lazy, <ThirdPartyFragmentComponent />],
+      [promiseComponent, lazy, <ThirdPartyFragmentComponent key="3" />],
       {
         environmentName: 'third-party',
       },
@@ -2413,8 +2434,8 @@ describe('ReactFlight', () => {
     const iteratorPromise = new Promise(r => (resolve = r));
 
     async function* ThirdPartyAsyncIterableComponent({item, initial}) {
-      yield <span>Who</span>;
-      yield <span>dis?</span>;
+      yield <span key="1">Who</span>;
+      yield <span key="2">dis?</span>;
       resolve();
     }
 
