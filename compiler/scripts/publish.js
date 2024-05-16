@@ -203,7 +203,7 @@ async function main() {
       try {
         await spawnHelper(
           "npm",
-          [...opts, "--registry=http://registry.npmjs.org"],
+          [...opts, "--registry=https://registry.npmjs.org"],
           {
             cwd: pkgDir,
             stdio: "inherit",
