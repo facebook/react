@@ -130,4 +130,32 @@ describe('ReactClassComponentPropResolution', () => {
     });
     assertLog(['componentWillUnmount: text, default']);
   });
+
+  test('resolves default props of children before calling lifecycle methods', async () => {
+    class Child {
+      static defaultProps = {
+        default: 'yo',
+      };
+
+      render() {
+        return null;
+      }
+    }
+
+    function Parent(props) {
+      Scheduler.log(props.children.props);
+      return null;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Parent>
+          <Child />
+        </Parent>,
+      );
+    });
+
+    assertLog([{default: 'yo'}]);
+  });
 });
