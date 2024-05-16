@@ -34,7 +34,7 @@ Then configure the rules you want to use under the rules section.
 ```json
 {
     "rules": {
-        "react-compiler/rule-name": 2
+        "react-compiler/react-compiler": "error"
     }
 }
 ```
