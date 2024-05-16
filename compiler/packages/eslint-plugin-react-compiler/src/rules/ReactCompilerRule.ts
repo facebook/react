@@ -114,10 +114,7 @@ const rule: Rule.RuleModule = {
     }
 
     let babelAST;
-    if (
-      context.filename.endsWith(".tsx") ||
-      context.filename.endsWith(".ts")
-    ) {
+    if (filename.endsWith(".tsx") || filename.endsWith(".ts")) {
       try {
         const { parse: babelParse } = require("@babel/parser");
         babelAST = babelParse(sourceCode, {
