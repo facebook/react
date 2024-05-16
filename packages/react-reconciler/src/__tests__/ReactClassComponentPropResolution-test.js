@@ -132,7 +132,7 @@ describe('ReactClassComponentPropResolution', () => {
   });
 
   test('resolves default props of children before calling lifecycle methods', async () => {
-    class Child {
+    class Child extends React.Component {
       static defaultProps = {
         default: 'yo',
       };
