@@ -70,13 +70,6 @@ async function getDateStringForCommit(commit) {
  * the command only report what it would have done, instead of actually publishing to npm.
  */
 async function main() {
-  const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
-  const isPristine = (await execHelper("git status --porcelain")) === "";
-  if (currBranchName !== "main" || isPristine === false) {
-    throw new Error(
-      "This script must be run from the `main` branch with no uncommitted changes",
-    );
-  }
   const argv = yargs(process.argv.slice(2))
     .option("packages", {
       description: "which packages to publish, defaults to all",
@@ -100,6 +93,17 @@ async function main() {
     .parseSync();
 
   const { packages, forReal, debug } = argv;
+
+  if (debug === false) {
+    const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
+    const isPristine = (await execHelper("git status --porcelain")) === "";
+    if (currBranchName !== "main" || isPristine === false) {
+      throw new Error(
+        "This script must be run from the `main` branch with no uncommitted changes",
+      );
+    }
+  }
+
   let pkgNames = packages;
   if (Array.isArray(packages) === false) {
     pkgNames = [packages];
