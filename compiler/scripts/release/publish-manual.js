@@ -4,7 +4,7 @@ const path = require("path");
 const yargs = require("yargs");
 const util = require("util");
 const { hashElement } = require("folder-hash");
-const promptForOTP = require('../../../scripts/release/publish-commands/prompt-for-otp');
+const promptForOTP = require("./prompt-for-otp");
 
 const PUBLISHABLE_PACKAGES = [
   "babel-plugin-react-compiler",
@@ -131,7 +131,7 @@ async function main() {
       spinner.start(`Running npm pack --dry-run\n`);
       try {
         await spawnHelper("npm", ["pack", "--dry-run"], {
-          cwd: path.resolve(__dirname, `../packages/${pkgName}`),
+          cwd: path.resolve(__dirname, `../../packages/${pkgName}`),
           stdio: "inherit",
         });
       } catch (e) {
@@ -156,7 +156,7 @@ async function main() {
     const dateString = await getDateStringForCommit(commit);
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       const { hash } = await hashElement(pkgDir, {
         encoding: "hex",
         files: { exclude: [".DS_Store", "node_modules"] },
@@ -197,7 +197,7 @@ async function main() {
     }
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       console.log(`\n========== ${pkgName} ==========\n`);
       spinner.start(`Publishing ${pkgName} to npm\n`);
 
