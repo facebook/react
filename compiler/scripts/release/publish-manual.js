@@ -130,7 +130,7 @@ async function main() {
       spinner.start(`Running npm pack --dry-run\n`);
       try {
         await spawnHelper("npm", ["pack", "--dry-run"], {
-          cwd: path.resolve(__dirname, `../packages/${pkgName}`),
+          cwd: path.resolve(__dirname, `../../packages/${pkgName}`),
           stdio: "inherit",
         });
       } catch (e) {
@@ -154,7 +154,7 @@ async function main() {
     const dateString = await getDateStringForCommit(commit);
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       const { hash } = await hashElement(pkgDir, {
         encoding: "hex",
         files: { exclude: [".DS_Store"] },
@@ -195,7 +195,7 @@ async function main() {
     }
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       console.log(`\n========== ${pkgName} ==========\n`);
       spinner.start(`Publishing ${pkgName} to npm\n`);
 
