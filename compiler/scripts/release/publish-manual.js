@@ -11,7 +11,7 @@ const PUBLISHABLE_PACKAGES = [
   "eslint-plugin-react-compiler",
   "react-compiler-healthcheck",
 ];
-const TIME_TO_RECONSIDER = 1_000;
+const TIME_TO_RECONSIDER = 3_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
