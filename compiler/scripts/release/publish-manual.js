@@ -4,13 +4,14 @@ const path = require("path");
 const yargs = require("yargs");
 const util = require("util");
 const { hashElement } = require("folder-hash");
+const promptForOTP = require("./prompt-for-otp");
 
 const PUBLISHABLE_PACKAGES = [
   "babel-plugin-react-compiler",
   "eslint-plugin-react-compiler",
   "react-compiler-healthcheck",
 ];
-const TIME_TO_RECONSIDER = 1_000;
+const TIME_TO_RECONSIDER = 3_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
@@ -130,7 +131,7 @@ async function main() {
       spinner.start(`Running npm pack --dry-run\n`);
       try {
         await spawnHelper("npm", ["pack", "--dry-run"], {
-          cwd: path.resolve(__dirname, `../packages/${pkgName}`),
+          cwd: path.resolve(__dirname, `../../packages/${pkgName}`),
           stdio: "inherit",
         });
       } catch (e) {
@@ -145,6 +146,7 @@ async function main() {
   }
 
   if (forReal === true) {
+    const otp = await promptForOTP();
     const commit = await execHelper(
       "git show -s --no-show-signature --format=%h",
       {
@@ -154,10 +156,10 @@ async function main() {
     const dateString = await getDateStringForCommit(commit);
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       const { hash } = await hashElement(pkgDir, {
         encoding: "hex",
-        files: { exclude: [".DS_Store"] },
+        files: { exclude: [".DS_Store", "node_modules"] },
       });
       const truncatedHash = hash.slice(0, 7);
       const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
@@ -195,7 +197,7 @@ async function main() {
     }
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       console.log(`\n========== ${pkgName} ==========\n`);
       spinner.start(`Publishing ${pkgName} to npm\n`);
 
@@ -203,7 +205,7 @@ async function main() {
       try {
         await spawnHelper(
           "npm",
-          [...opts, "--registry=https://registry.npmjs.org"],
+          [...opts, "--registry=https://registry.npmjs.org", `--otp=${otp}`],
           {
             cwd: pkgDir,
             stdio: "inherit",
