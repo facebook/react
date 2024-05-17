@@ -18,23 +18,17 @@ function foo() {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function foo() {
-  const $ = _c(2);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => <Child x={GLOBAL_IS_X} />;
+    const getJSX = () => <Child x={GLOBAL_IS_X} />;
+
+    t0 = getJSX();
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const getJSX = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = getJSX();
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const result = t1;
+  const result = t0;
   return result;
 }
 

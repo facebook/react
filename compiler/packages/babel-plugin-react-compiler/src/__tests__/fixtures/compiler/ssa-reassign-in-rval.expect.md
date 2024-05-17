@@ -16,27 +16,17 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // Forget should call the original x (x = foo()) to compute result
 function Component() {
-  const $ = _c(3);
+  const $ = _c(1);
   let t0;
-  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = foo();
-    t0 = x((x = bar()), 5);
+    let x = foo();
+    const result = x((x = bar()), 5);
+    t0 = [result, x];
     $[0] = t0;
-    $[1] = x;
   } else {
     t0 = $[0];
-    x = $[1];
   }
-  const result = t0;
-  let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [result, x];
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
+  return t0;
 }
 
 ```
