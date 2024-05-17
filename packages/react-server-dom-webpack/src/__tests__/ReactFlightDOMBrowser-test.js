@@ -198,6 +198,55 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
+  it('should resolve client components (with async chunks) when referenced in props', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({
+      Component,
+      children,
+    }) {
+      return <Component>{children}</Component>;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({children}) {
+        return <span>{children}</span>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server() {
+      return <ClientOuter Component={ClientInner}>Hello, World!</ClientOuter>;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Server />,
+      webpackMap,
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<span>Hello, World!</span>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 

@@ -641,7 +641,12 @@ function createElement(
     }
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    Object.freeze(element.props);
+    if (initializingChunkBlockedModel !== null) {
+      const freeze = Object.freeze.bind(Object, element.props);
+      initializingChunk.then(freeze, freeze);
+    } else {
+      Object.freeze(element.props);
+    }
   }
   return element;
 }
