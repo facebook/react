@@ -7,7 +7,7 @@ body:
   attributes:
     label: What kind of issue is this?
     description: |
-      Please indicate if this issue affects the following tools provided by React Compiler
+      Please indicate if this issue affects the following tools provided by React Compiler.
     options:
       - label: React Compiler core (the JS output is incorrect, or your app works incorrectly after optimization)
       - label: babel-plugin-react-compiler (build issue installing or using the Babel plugin)
@@ -17,7 +17,7 @@ body:
   attributes:
     label: Link to repro
     description: |
-      Please provide a repro by either sharing a [Playground link](https://playground.react.dev), or a public GitHub repo so the React team can reproduce the error being reported. (Please no localhost URLs.)
+      Please provide a repro by either sharing a [Playground link](https://playground.react.dev), or a public GitHub repo so the React team can reproduce the error being reported. Please do not share localhost links!
     placeholder: |
       e.g. public GitHub repo, or Playground link
   validations:
