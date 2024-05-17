@@ -40,7 +40,7 @@ import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMe
 import { useCallback } from "react";
 
 function Component(t0) {
-  const $ = _c(11);
+  const $ = _c(8);
   const { entity, children } = t0;
   let t1;
   if ($[0] !== entity) {
@@ -70,27 +70,18 @@ function Component(t0) {
   }
   let t4;
   if ($[6] !== children) {
-    t4 = <div>{children}</div>;
+    t4 = (
+      <div>
+        {t3}
+        <div>{children}</div>
+      </div>
+    );
     $[6] = children;
     $[7] = t4;
   } else {
     t4 = $[7];
   }
-  let t5;
-  if ($[8] !== t3 || $[9] !== t4) {
-    t5 = (
-      <div>
-        {t3}
-        {t4}
-      </div>
-    );
-    $[8] = t3;
-    $[9] = t4;
-    $[10] = t5;
-  } else {
-    t5 = $[10];
-  }
-  return t5;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {

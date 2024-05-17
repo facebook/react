@@ -44,7 +44,7 @@ import { useMemo } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(19);
+  const $ = _c(10);
   const { a, b } = t0;
   let t1;
   let t2;
@@ -75,54 +75,27 @@ function Component(t0) {
   const y = t3;
   let t4;
   if ($[5] !== a) {
-    t4 = [a];
+    t4 = <ValidateMemoization inputs={[a]} output={x} />;
     $[5] = a;
     $[6] = t4;
   } else {
     t4 = $[6];
   }
   let t5;
-  if ($[7] !== t4 || $[8] !== x) {
-    t5 = <ValidateMemoization inputs={t4} output={x} />;
-    $[7] = t4;
-    $[8] = x;
+  if ($[7] !== x || $[8] !== b) {
+    t5 = (
+      <>
+        {t4}
+        <ValidateMemoization inputs={[x, b]} output={y} />
+      </>
+    );
+    $[7] = x;
+    $[8] = b;
     $[9] = t5;
   } else {
     t5 = $[9];
   }
-  let t6;
-  if ($[10] !== x || $[11] !== b) {
-    t6 = [x, b];
-    $[10] = x;
-    $[11] = b;
-    $[12] = t6;
-  } else {
-    t6 = $[12];
-  }
-  let t7;
-  if ($[13] !== t6 || $[14] !== y) {
-    t7 = <ValidateMemoization inputs={t6} output={y} />;
-    $[13] = t6;
-    $[14] = y;
-    $[15] = t7;
-  } else {
-    t7 = $[15];
-  }
-  let t8;
-  if ($[16] !== t5 || $[17] !== t7) {
-    t8 = (
-      <>
-        {t5}
-        {t7}
-      </>
-    );
-    $[16] = t5;
-    $[17] = t7;
-    $[18] = t8;
-  } else {
-    t8 = $[18];
-  }
-  return t8;
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -45,7 +45,7 @@ import { useMemo, useState } from "react";
 import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(7);
+  const $ = _c(4);
   const { value } = t0;
   let t1;
   bb0: {
@@ -70,22 +70,13 @@ function Component(t0) {
   const result = t1;
   let t2;
   if ($[2] !== value) {
-    t2 = [value];
+    t2 = <ValidateMemoization inputs={[value]} output={result} />;
     $[2] = value;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  let t3;
-  if ($[4] !== t2 || $[5] !== result) {
-    t3 = <ValidateMemoization inputs={t2} output={result} />;
-    $[4] = t2;
-    $[5] = result;
-    $[6] = t3;
-  } else {
-    t3 = $[6];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

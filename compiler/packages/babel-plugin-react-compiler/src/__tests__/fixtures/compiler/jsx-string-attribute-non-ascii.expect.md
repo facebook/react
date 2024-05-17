@@ -51,7 +51,7 @@ function Component() {
 }
 
 function Post(t0) {
-  const $ = _c(7);
+  const $ = _c(4);
   const { author, text } = t0;
   let t1;
   if ($[0] !== author) {
@@ -63,27 +63,18 @@ function Post(t0) {
   }
   let t2;
   if ($[2] !== text) {
-    t2 = <span>{text}</span>;
+    t2 = (
+      <div>
+        {t1}
+        <span>{text}</span>
+      </div>
+    );
     $[2] = text;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  let t3;
-  if ($[4] !== t1 || $[5] !== t2) {
-    t3 = (
-      <div>
-        {t1}
-        {t2}
-      </div>
-    );
-    $[4] = t1;
-    $[5] = t2;
-    $[6] = t3;
-  } else {
-    t3 = $[6];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

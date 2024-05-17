@@ -45,7 +45,7 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function Component(statusName) {
-  const $ = _c(12);
+  const $ = _c(6);
   let t0;
   let text;
   let font;
@@ -69,31 +69,17 @@ function Component(statusName) {
   const bg = t0;
   let t1;
   if ($[4] !== text) {
-    t1 = [text];
+    t1 = (
+      <div className={bg}>
+        <span className={font}>{[text]}</span>
+      </div>
+    );
     $[4] = text;
     $[5] = t1;
   } else {
     t1 = $[5];
   }
-  let t2;
-  if ($[6] !== font || $[7] !== t1) {
-    t2 = <span className={font}>{t1}</span>;
-    $[6] = font;
-    $[7] = t1;
-    $[8] = t2;
-  } else {
-    t2 = $[8];
-  }
-  let t3;
-  if ($[9] !== bg || $[10] !== t2) {
-    t3 = <div className={bg}>{t2}</div>;
-    $[9] = bg;
-    $[10] = t2;
-    $[11] = t3;
-  } else {
-    t3 = $[11];
-  }
-  return t3;
+  return t1;
 }
 
 function foo(name) {

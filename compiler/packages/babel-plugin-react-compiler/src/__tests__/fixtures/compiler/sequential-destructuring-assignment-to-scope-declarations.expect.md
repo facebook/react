@@ -42,7 +42,7 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function Component(statusName) {
-  const $ = _c(12);
+  const $ = _c(6);
   let text;
   let t0;
   let t1;
@@ -64,31 +64,17 @@ function Component(statusName) {
   }
   let t2;
   if ($[4] !== text) {
-    t2 = [text];
+    t2 = (
+      <div className={t1}>
+        <span className={t0}>{[text]}</span>
+      </div>
+    );
     $[4] = text;
     $[5] = t2;
   } else {
     t2 = $[5];
   }
-  let t3;
-  if ($[6] !== t0 || $[7] !== t2) {
-    t3 = <span className={t0}>{t2}</span>;
-    $[6] = t0;
-    $[7] = t2;
-    $[8] = t3;
-  } else {
-    t3 = $[8];
-  }
-  let t4;
-  if ($[9] !== t1 || $[10] !== t3) {
-    t4 = <div className={t1}>{t3}</div>;
-    $[9] = t1;
-    $[10] = t3;
-    $[11] = t4;
-  } else {
-    t4 = $[11];
-  }
-  return t4;
+  return t2;
 }
 
 function foo(name) {

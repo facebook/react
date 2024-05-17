@@ -28,11 +28,11 @@ import { useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(5);
   if (
     $[0] !== "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9"
   ) {
-    for (let $i = 0; $i < 8; $i += 1) {
+    for (let $i = 0; $i < 5; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
     $[0] = "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9";
@@ -52,22 +52,13 @@ function Component(props) {
   const doubled = t0;
   let t3;
   if ($[3] !== state) {
-    t3 = [state];
+    t3 = <ValidateMemoization inputs={[state]} output={doubled} />;
     $[3] = state;
     $[4] = t3;
   } else {
     t3 = $[4];
   }
-  let t4;
-  if ($[5] !== t3 || $[6] !== doubled) {
-    t4 = <ValidateMemoization inputs={t3} output={doubled} />;
-    $[5] = t3;
-    $[6] = doubled;
-    $[7] = t4;
-  } else {
-    t4 = $[7];
-  }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

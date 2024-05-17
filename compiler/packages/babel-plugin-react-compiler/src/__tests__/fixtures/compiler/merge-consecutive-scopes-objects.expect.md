@@ -44,7 +44,7 @@ import { Stringify } from "shared-runtime";
 // prevent scome scopes from merging, which concealed a bug with the merging logic.
 // By avoiding JSX we eliminate extraneous instructions and more accurately test the merging.
 function Component(props) {
-  const $ = _c(11);
+  const $ = _c(8);
   const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -78,25 +78,20 @@ function Component(props) {
   }
   let t4;
   if ($[6] !== t2) {
-    t4 = {
-      component: "button",
-      props: { "data-testid": "button", onClick: t2, children: t3 },
-    };
+    t4 = [
+      t0,
+      t1,
+      {
+        component: "button",
+        props: { "data-testid": "button", onClick: t2, children: t3 },
+      },
+    ];
     $[6] = t2;
     $[7] = t4;
   } else {
     t4 = $[7];
   }
-  let t5;
-  if ($[8] !== t1 || $[9] !== t4) {
-    t5 = [t0, t1, t4];
-    $[8] = t1;
-    $[9] = t4;
-    $[10] = t5;
-  } else {
-    t5 = $[10];
-  }
-  return t5;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {

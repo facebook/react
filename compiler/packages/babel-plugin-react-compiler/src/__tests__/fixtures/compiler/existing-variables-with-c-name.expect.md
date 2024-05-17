@@ -33,7 +33,7 @@ import { useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c2(7);
+  const $ = _c2(4);
   const [state] = useState(0);
 
   const c = state;
@@ -54,22 +54,13 @@ function Component(props) {
   const array = t0;
   let t2;
   if ($[2] !== state) {
-    t2 = [state];
+    t2 = <ValidateMemoization inputs={[state]} output={array} />;
     $[2] = state;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  let t3;
-  if ($[4] !== t2 || $[5] !== array) {
-    t3 = <ValidateMemoization inputs={t2} output={array} />;
-    $[4] = t2;
-    $[5] = array;
-    $[6] = t3;
-  } else {
-    t3 = $[6];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

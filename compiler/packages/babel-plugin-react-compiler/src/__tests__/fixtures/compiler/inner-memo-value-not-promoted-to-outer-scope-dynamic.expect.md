@@ -24,7 +24,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(15);
+  const $ = _c(8);
   const item = useFragment(FRAGMENT, props.item);
   useFreeze(item);
   let t0;
@@ -56,37 +56,20 @@ function Component(props) {
   }
   let t2;
   if ($[6] !== t0) {
-    t2 = <span>{t0}</span>;
+    t2 = (
+      <T1>
+        <T0>
+          {t1}
+          <span>{t0}</span>
+        </T0>
+      </T1>
+    );
     $[6] = t0;
     $[7] = t2;
   } else {
     t2 = $[7];
   }
-  let t3;
-  if ($[8] !== T0 || $[9] !== t1 || $[10] !== t2) {
-    t3 = (
-      <T0>
-        {t1}
-        {t2}
-      </T0>
-    );
-    $[8] = T0;
-    $[9] = t1;
-    $[10] = t2;
-    $[11] = t3;
-  } else {
-    t3 = $[11];
-  }
-  let t4;
-  if ($[12] !== T1 || $[13] !== t3) {
-    t4 = <T1>{t3}</T1>;
-    $[12] = T1;
-    $[13] = t3;
-    $[14] = t4;
-  } else {
-    t4 = $[14];
-  }
-  return t4;
+  return t2;
 }
 
 ```

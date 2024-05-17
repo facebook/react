@@ -19,8 +19,15 @@ import {
   ReactiveScopeDependencies,
   ReactiveScopeDependency,
   ReactiveStatement,
+  Type,
   makeInstructionId,
 } from "../HIR";
+import {
+  BuiltInArrayId,
+  BuiltInFunctionId,
+  BuiltInJsxId,
+  BuiltInObjectId,
+} from "../HIR/ObjectShape";
 import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import { printReactiveScopeSummary } from "./PrintReactiveFunction";
@@ -430,6 +437,11 @@ function canMergeScopes(
         }))
       ),
       next.scope.dependencies
+    ) ||
+    [...next.scope.dependencies].some(
+      (dep) =>
+        current.scope.declarations.has(dep.identifier.id) &&
+        isAlwaysInvalidatingType(dep.identifier.type)
     )
   ) {
     log(`  outputs of prev are input to current`);
@@ -438,6 +450,20 @@ function canMergeScopes(
   log(`  cannot merge scopes:`);
   log(`  ${printReactiveScopeSummary(current.scope)}`);
   log(`  ${printReactiveScopeSummary(next.scope)}`);
+  return false;
+}
+
+function isAlwaysInvalidatingType(type: Type): boolean {
+  if (type.kind === "Object") {
+    switch (type.shapeId) {
+      case BuiltInArrayId:
+      case BuiltInObjectId:
+      case BuiltInFunctionId:
+      case BuiltInJsxId: {
+        return true;
+      }
+    }
+  }
   return false;
 }
 
