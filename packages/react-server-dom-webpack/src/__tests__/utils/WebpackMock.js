@@ -69,10 +69,15 @@ exports.clientExports = function clientExports(
   moduleExports,
   chunkId,
   chunkFilename,
+  blockOnChunk,
 ) {
   const chunks = [];
   if (chunkId) {
     chunks.push(chunkId, chunkFilename);
+
+    if (blockOnChunk) {
+      webpackChunkMap[chunkId] = blockOnChunk;
+    }
   }
   const idx = '' + webpackModuleIdx++;
   webpackClientModules[idx] = moduleExports;
