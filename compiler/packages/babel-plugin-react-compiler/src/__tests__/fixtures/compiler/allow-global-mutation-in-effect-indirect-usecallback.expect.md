@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validatePreserveExistingMemoizationGuarantees
 import { useCallback, useEffect, useState } from "react";
 
 let someGlobal = {};
@@ -33,7 +34,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useCallback, useEffect, useState } from "react";
 
 let someGlobal = {};
