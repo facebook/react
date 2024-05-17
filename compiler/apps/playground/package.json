@@ -33,6 +33,7 @@
     "notistack": "^3.0.0-alpha.7",
     "prettier": "3.0.3",
     "pretty-format": "^29.3.1",
+    "re-resizable": "^6.9.16",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-compiler-runtime": "*"
