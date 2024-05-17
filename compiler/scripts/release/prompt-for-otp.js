@@ -2,7 +2,7 @@
 
 const prompt = require("prompt-promise");
 
-const run = async (spinner) => {
+const run = async () => {
   while (true) {
     const otp = await prompt("NPM 2-factor auth code: ");
     prompt.done();
