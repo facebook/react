@@ -1453,11 +1453,6 @@ const attributes = [
     read: element => element.popoverTargetElement,
     tagName: 'button',
   },
-  {
-    name: 'popoverTargetElement',
-    read: element => element.popoverTargetElement,
-    tagName: 'button',
-  },
   {name: 'popoverTargetAction', overrideStringValue: 'show', tagName: 'button'},
   {
     name: 'poster',

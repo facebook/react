@@ -487,7 +487,7 @@ describe('SimpleEventPlugin', function () {
       await act(() => {
         root.render(
           <>
-            <button popoverTargetElement="popover">Toggle popover</button>
+            <button popoverTarget="popover">Toggle popover</button>
             <div id="popover" popover="" onToggle={onToggle}>
               popover content
             </div>

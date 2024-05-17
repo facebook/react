@@ -8476,7 +8476,7 @@
 ## `popoverTarget` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `popoverTarget=(string)`| (initial, warning)| `<null>` |
+| `popoverTarget=(string)`| (initial)| `<null>` |
 | `popoverTarget=(empty string)`| (initial)| `<null>` |
 | `popoverTarget=(array with string)`| (initial)| `<null>` |
 | `popoverTarget=(empty array)`| (initial)| `<null>` |
@@ -8498,31 +8498,6 @@
 | `popoverTarget=(null)`| (initial)| `<null>` |
 | `popoverTarget=(undefined)`| (initial)| `<null>` |
 
-## `popoverTargetElement` (on `<button>` inside `<div>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `popoverTargetElement=(string)`| (initial)| `<null>` |
-| `popoverTargetElement=(empty string)`| (initial)| `<null>` |
-| `popoverTargetElement=(array with string)`| (initial)| `<null>` |
-| `popoverTargetElement=(empty array)`| (initial)| `<null>` |
-| `popoverTargetElement=(object)`| (initial)| `<null>` |
-| `popoverTargetElement=(numeric string)`| (initial)| `<null>` |
-| `popoverTargetElement=(-1)`| (initial)| `<null>` |
-| `popoverTargetElement=(0)`| (initial)| `<null>` |
-| `popoverTargetElement=(integer)`| (initial)| `<null>` |
-| `popoverTargetElement=(NaN)`| (initial, warning)| `<null>` |
-| `popoverTargetElement=(float)`| (initial)| `<null>` |
-| `popoverTarget=(true)`| (initial, warning)| `<null>` |
-| `popoverTargetElement=(false)`| (initial, warning)| `<null>` |
-| `popoverTargetElement=(string 'true')`| (initial)| `<null>` |
-| `popoverTargetElement=(string 'false')`| (initial)| `<null>` |
-| `popoverTargetElement=(string 'on')`| (initial)| `<null>` |
-| `popoverTargetElement=(string 'off')`| (initial)| `<null>` |
-| `popoverTargetElement=(symbol)`| (initial, warning)| `<null>` |
-| `popoverTargetElement=(function)`| (initial, warning)| `<null>` |
-| `popoverTargetElement=(null)`| (initial)| `<null>` |
-| `popoverTargetElement=(undefined)`| (initial)| `<null>` |
-
 ## `popoverTargetAction` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -8537,8 +8512,8 @@
 | `popoverTargetAction=(integer)`| (initial)| `"toggle"` |
 | `popoverTargetAction=(NaN)`| (initial, warning)| `"toggle"` |
 | `popoverTargetAction=(float)`| (initial)| `"toggle"` |
-| `popoverTargetAction=(true)`| (initial)| `"toggle"` |
-| `popoverTargetAction=(false)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(true)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(false)`| (initial, warning)| `"toggle"` |
 | `popoverTargetAction=(string 'true')`| (initial)| `"toggle"` |
 | `popoverTargetAction=(string 'false')`| (initial)| `"toggle"` |
 | `popoverTargetAction=(string 'on')`| (initial)| `"toggle"` |

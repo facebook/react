@@ -2926,18 +2926,6 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev(
         'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
-
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(
-            React.createElement('button', {popoverTarget: 'some-element'}),
-          );
-        });
-      }).toErrorDev(
-        'Warning: Invalid DOM property `popoverTarget`. Did you mean `popoverTargetElement`?\n    in button',
-      );
     });
 
     it('should suggest property name if available (ssr)', () => {
@@ -2954,13 +2942,6 @@ describe('ReactDOMComponent', () => {
         ),
       ).toErrorDev(
         'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
-      );
-      expect(() =>
-        ReactDOMServer.renderToString(
-          React.createElement('button', {popoverTarget: 'some-element'}),
-        ),
-      ).toErrorDev(
-        'Warning: Invalid DOM property `popoverTarget`. Did you mean `popoverTargetElement`?\n    in button',
       );
     });
   });
