@@ -4,14 +4,13 @@ const path = require("path");
 const yargs = require("yargs");
 const util = require("util");
 const { hashElement } = require("folder-hash");
-const promptForOTP = require('../../../scripts/release/publish-commands/prompt-for-otp');
 
 const PUBLISHABLE_PACKAGES = [
   "babel-plugin-react-compiler",
   "eslint-plugin-react-compiler",
   "react-compiler-healthcheck",
 ];
-const TIME_TO_RECONSIDER = 3_000;
+const TIME_TO_RECONSIDER = 1_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
@@ -146,7 +145,6 @@ async function main() {
   }
 
   if (forReal === true) {
-    const otp = await promptForOTP();
     const commit = await execHelper(
       "git show -s --no-show-signature --format=%h",
       {
@@ -205,7 +203,7 @@ async function main() {
       try {
         await spawnHelper(
           "npm",
-          [...opts, "--registry=https://registry.npmjs.org", `--otp=${otp}`],
+          [...opts, "--registry=https://registry.npmjs.org"],
           {
             cwd: pkgDir,
             stdio: "inherit",

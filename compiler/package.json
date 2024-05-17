@@ -27,7 +27,7 @@
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
     "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
-    "npm:publish": "node scripts/publish"
+    "npm:publish": "node scripts/release/publish-manual"
   },
   "dependencies": {},
   "devDependencies": {
