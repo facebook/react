@@ -4,6 +4,7 @@ const path = require("path");
 const yargs = require("yargs");
 const util = require("util");
 const { hashElement } = require("folder-hash");
+const promptForOTP = require("./prompt-for-otp");
 
 const PUBLISHABLE_PACKAGES = [
   "babel-plugin-react-compiler",
@@ -145,6 +146,7 @@ async function main() {
   }
 
   if (forReal === true) {
+    const otp = await promptForOTP();
     const commit = await execHelper(
       "git show -s --no-show-signature --format=%h",
       {
@@ -204,7 +206,7 @@ async function main() {
       try {
         await spawnHelper(
           "npm",
-          [...opts, "--registry=https://registry.npmjs.org"],
+          [...opts, "--registry=https://registry.npmjs.org", `--otp=${otp}`],
           {
             cwd: pkgDir,
             stdio: "inherit",
