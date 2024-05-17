@@ -157,6 +157,7 @@ async function main() {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       const { hash } = await hashElement(pkgDir, {
         encoding: "hex",
+        folders: { exclude: ["node_modules"] },
         files: { exclude: [".DS_Store"] },
       });
       const truncatedHash = hash.slice(0, 7);
