@@ -25,7 +25,6 @@
     "@monaco-editor/react": "^4.4.6",
     "@playwright/test": "^1.42.1",
     "@use-gesture/react": "^10.2.22",
-    "babel-plugin-react-compiler": "*",
     "hermes-eslint": "^0.14.0",
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
