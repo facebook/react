@@ -1276,6 +1276,7 @@ const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
 const createJsxOpeningElement = withLoc(t.jsxOpeningElement);
 const createStringLiteral = withLoc(t.stringLiteral);
+const createTemplateElement = withLoc(t.templateElement);
 
 function createHookGuard(
   guard: ExternalFunction,
@@ -2041,6 +2042,20 @@ function codegenJsxAttribute(
         case "StringLiteral": {
           value = innerValue;
           if (value.value.indexOf('"') !== -1) {
+            value = createJsxExpressionContainer(value.loc, value);
+          } else {
+            // workaround for babel behavior that will escape StringLiteral value
+            value = createTemplateLiteral(
+              value.loc,
+              [
+                createTemplateElement(
+                  value.loc,
+                  { raw: value.value, cooked: value.value },
+                  true
+                ),
+              ],
+              []
+            );
             value = createJsxExpressionContainer(value.loc, value);
           }
           break;
