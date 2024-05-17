@@ -1008,6 +1008,16 @@ function lowerStatement(
       const initBlock = builder.reserve("loop");
       const testBlock = builder.reserve("loop");
 
+      if (stmt.node.await) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle for-await loops`,
+          severity: ErrorSeverity.Todo,
+          loc: stmt.node.loc ?? null,
+          suggestions: null,
+        });
+        return;
+      }
+
       const loopBlock = builder.enter("block", (_blockId) => {
         return builder.loop(label, initBlock.id, continuationBlock.id, () => {
           const body = stmt.get("body");
